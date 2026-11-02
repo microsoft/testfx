@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 Prawidłowe wartości to „allow-skipped” (wartość domyślna), która zlicza pominięte testy jako przebieg, dlatego tylko przebieg, w którym nie znaleziono żadnego testu, kończy się niepowodzeniem z kodem zakończenia 8, i „strict”, który traktuje pominięte testy jako nieuruchomione, dlatego przebieg, w którym pominięto każdy test (lub nie znaleziono żadnego testu), kończy się niepowodzeniem z kodem zakończenia 8.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">Naciśnij ponownie klawisze Ctrl+C, aby wymusić wyjście.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

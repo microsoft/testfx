@@ -855,7 +855,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
   <data name="CancellingTestSession" xml:space="preserve">
     <value>Canceling the test session...</value>
   </data>
-  <data name="PressCtrlCAgainToForceExit" xml:space="preserve">
+  <data name="PressCtrlCAgainToAbortOrForceExit" xml:space="preserve">
     <value>Press Ctrl+C again to abort, or a third time to force exit.</value>
     <comment>{Locked="Ctrl+C"}</comment>
   </data>

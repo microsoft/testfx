@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 유효한 값은 'allow-skipped'(기본값)과 'strict'입니다. 'allow-skipped'는 건너뛴 테스트를 실행된 것으로 계산하므로, 테스트를 하나도 찾지 못한 실행만 종료 코드 8로 실패합니다. 'strict'는 건너뛴 테스트를 실행되지 않은 것으로 처리하므로, 모든 테스트를 건너뛴 실행 또는 테스트를 찾지 못한 실행은 종료 코드 8로 실패합니다.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">강제 종료하려면 Ctrl+C를 한 번 더 누르세요.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

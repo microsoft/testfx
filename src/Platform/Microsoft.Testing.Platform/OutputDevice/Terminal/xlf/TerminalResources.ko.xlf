@@ -387,9 +387,9 @@
         <target state="translated">통과</target>
         <note />
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">강제 종료하려면 Ctrl+C를 한 번 더 누르세요.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">

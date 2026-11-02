@@ -41,6 +41,31 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void StartCancelling_DoesNotReuseForceExitOnlyTranslation()
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-Hans");
+            var console = new StringBuilderConsole();
+            using var reporter = new TerminalTestReporter(console, static () => false, new TerminalTestReporterOptions
+            {
+                AnsiMode = AnsiMode.NoAnsi,
+            });
+
+            reporter.StartCancelling();
+
+            string[] lines = console.Output.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+            Assert.HasCount(2, lines);
+            Assert.AreNotEqual("再次按 Ctrl+C 强制退出。", lines[1]);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    [TestMethod]
     [DataRow(null, null, "")]
     [DataRow("net8.0", null, " (net8.0|)")]
     [DataRow(null, "x64", " (x64)")]

@@ -40,7 +40,7 @@ internal sealed partial class TerminalOutputDevice
                 async () =>
                 {
                     await WriteToStandardErrorAsync(PlatformResources.CancellingTestSession).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(PlatformResources.PressCtrlCAgainToForceExit).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(PlatformResources.PressCtrlCAgainToAbortOrForceExit).ConfigureAwait(false);
                 }).ConfigureAwait(false);
         }
         else

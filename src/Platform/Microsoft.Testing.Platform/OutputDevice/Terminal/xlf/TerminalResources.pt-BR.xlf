@@ -387,9 +387,9 @@
         <target state="translated">aprovado</target>
         <note />
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">Pressione Ctrl+C de novo para forçar a saída.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">

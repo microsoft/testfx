@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 Los valores válidos son "allow-skipped" (valor predeterminado) que cuenta las pruebas omitidas como ejecutadas, por lo que solo se produce un error en una ejecución en la que no se encontró ninguna prueba con el código de salida 8 y "strict", que trata las pruebas omitidas como no ejecutadas, por lo que se produce un error en una ejecución en la que se omitió todas las pruebas (o no se encontró ninguna prueba) con el código de salida 8.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">Presione Ctrl+C de nuevo para forzar la salida.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

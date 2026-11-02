@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 Допустимые значения: allow-skipped (по умолчанию), при котором пропущенные тесты считаются выполненными, поэтому ошибкой с кодом выхода 8 завершается только запуск, в котором не найден ни один тест, и strict, при котором пропущенные тесты считаются невыполненными, поэтому ошибкой с кодом выхода 8 завершается запуск, в котором был пропущен каждый тест (или не найден ни один тест).</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">Нажмите Ctrl+C еще раз, чтобы выполнить принудительный выход.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

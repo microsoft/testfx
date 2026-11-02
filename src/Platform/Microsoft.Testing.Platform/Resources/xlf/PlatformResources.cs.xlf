@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 Platné hodnoty jsou allow-skipped (výchozí), která započítává přeskočené testy jako spuštěné. Proto selže s ukončovacím kódem 8 pouze spuštění, při kterém nebyl nalezen žádný test. Hodnota strict považuje přeskočené testy za nespuštěné, takže s ukončovacím kódem 8 selže spuštění, při kterém byly všechny testy přeskočeny (nebo nebyl nalezen žádný test).</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
         <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
-        <target state="needs-review-translation">Dalším stisknutím kombinace kláves Ctrl+C vynutíte ukončení.</target>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
