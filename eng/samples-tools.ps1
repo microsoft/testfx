@@ -116,9 +116,9 @@ function Invoke-SampleProcess {
     Write-Host "${status}: $Description (${duration}s, exit $exitCode). Transcripts: $LogFilePrefix.{stdout,stderr}.log"
     if ($exitCode -ne 0) {
         Write-Host "--- stdout: $stdoutPath ---"
-        Get-Content -LiteralPath $stdoutPath | Write-Host
+        Get-Content -LiteralPath $stdoutPath -Encoding utf8 | Write-Host
         Write-Host "--- stderr: $stderrPath ---"
-        Get-Content -LiteralPath $stderrPath | Write-Host
+        Get-Content -LiteralPath $stderrPath -Encoding utf8 | Write-Host
     }
 
     $global:LASTEXITCODE = $exitCode

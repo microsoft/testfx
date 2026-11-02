@@ -329,3 +329,56 @@ The corrected classifier SHA-256 is
 `BE61CDE46E695BC43EA23308E837C84F5AD4DBD6D936CE4B99E03C6E221E2E93`.
 This follow-up does not alter sample execution, retries, or the unrelated
 ServerMode timing assertion from an earlier pipeline run.
+
+## Unicode failure replay follow-up
+
+On 2026-11-02, a real native child at source
+`7e0bf334ceb18edf9262180135b3c86b0c82e6ef` reproduced the top-level review's
+encoding concern. The child wrote `stdout-` followed by U+00E9 and `stderr-`
+followed by U+03BB in UTF-8, then exited 17. Both transcript files retained the
+correct text. Windows PowerShell 5.1.26100.9711 replayed those UTF-8 bytes as
+Windows-1252: U+00C3/U+00A9 and U+00CE/U+00BB respectively. PowerShell 7.6.9
+replayed both correctly.
+
+The narrow correction is explicit UTF-8 decoding when replaying each
+transcript. Do not change child-process encoding, native exit handling, retry
+decisions, transcript contents, or local live-output behavior. Existing Unicode
+coverage checked only successful transcript contents, not the failure replay.
+Extend it with the same failing native child and an exact complete replay
+assertion.
+
+The same 33 final cases executed against the preserved pre-fix helper and the
+corrected helper, with identical test-file bytes:
+
+| Host and source | Passed | Failed | Skipped | Runner exit |
+| --- | ---: | ---: | ---: | ---: |
+| Windows PowerShell 5.1, pre-fix helper | 32 | 1 | 0 | 1 |
+| Windows PowerShell 5.1, corrected helper | 33 | 0 | 0 | 0 |
+| PowerShell 7, corrected helper | 33 | 0 | 0 | 0 |
+
+`FailedUnicodeOutput_ReplaysBothStreamsWithoutCorruption` fails the intended
+complete replay equality on the pre-fix helper. The corrected actual process
+capture reports U+00E9 and U+03BB again, while the child exit remains 17.
+Before/after stdout and stderr transcript file hashes are identical; only
+their replay decoding changes.
+
+From the repository root, `$evidence` denotes the task-owned directory
+containing a byte-for-byte copy of the pre-fix helper:
+
+```powershell
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\eng\test-samples-output.ps1 -ToolsPath "$evidence\samples-tools-before.ps1" -OutputDirectory .\artifacts\unicode-replay-checks\red-ps51
+# Exit 1: 32 passed, 1 intended replay assertion failure, 0 skipped.
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\eng\test-samples-output.ps1 -OutputDirectory .\artifacts\unicode-replay-checks\green-ps51
+# Exit 0: 33 passed, 0 failed, 0 skipped.
+& (Join-Path $PSHOME 'pwsh.exe') -NoLogo -NoProfile -File .\eng\test-samples-output.ps1 -OutputDirectory .\artifacts\unicode-replay-checks\green-pwsh
+# Exit 0: 33 passed, 0 failed, 0 skipped.
+```
+
+Correct helper SHA-256:
+`265D833F1D57C8EDC372FD7B058CEBC80ED8BAF2AE34EF4BAD37CC3F0123BFC2`.
+Pre-fix helper SHA-256:
+`BA0E0AECBD450BE1D7D7FDCE9ED477A23670A56D03585CFA1065598FCE4CD7EA`.
+Identical final test-file SHA-256:
+`DED576C033E6D5296F799E58D663258DFE644987EB2A1B688312E88A6D13ED73`.
+This is a regression in this PR's failure replay, not a change to the unrelated
+ServerMode startup timing assertion reported by old CI.

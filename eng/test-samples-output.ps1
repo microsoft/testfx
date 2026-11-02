@@ -71,6 +71,7 @@ switch ($Scenario) {
     "unicode" {
         [Console]::Out.WriteLine("stdout-" + [char]0xE9)
         [Console]::Error.WriteLine("stderr-" + [char]0x3BB)
+        if ($Failure -eq "Failure") { exit 17 }
     }
     "arguments" {
         $nativeArguments = [Environment]::GetCommandLineArgs()
@@ -218,6 +219,20 @@ try {
         Assert-SampleOutputEqual 0 $result.ExitCode "exit"
         Assert-SampleOutputEqual ("stdout-" + [char]0xE9 + [Environment]::NewLine) ([System.IO.File]::ReadAllText($result.StandardOutputPath)) "stdout"
         Assert-SampleOutputEqual ("stderr-" + [char]0x3BB + [Environment]::NewLine) ([System.IO.File]::ReadAllText($result.StandardErrorPath)) "stderr"
+    }
+
+    Invoke-SampleOutputCheck "FailedUnicodeOutput_ReplaysBothStreamsWithoutCorruption" {
+        $messages = @()
+        $result = Invoke-SampleProcess -FilePath $shell -Arguments @("-NoProfile", "-File", $fixture, "unicode", "-Failure", "Failure") `
+            -LogFilePrefix (Join-Path $testRoot "unicode-failure") -Description "unicode-failure" -InformationVariable messages 6>$null
+        Assert-SampleOutputEqual 17 $result.ExitCode "exit"
+        Assert-SampleOutputEqual 17 $global:LASTEXITCODE "native exit"
+        $stdout = "stdout-" + [char]0xE9
+        $stderr = "stderr-" + [char]0x3BB
+        Assert-SampleOutputEqual ($stdout + [Environment]::NewLine) ([System.IO.File]::ReadAllText($result.StandardOutputPath)) "stdout transcript"
+        Assert-SampleOutputEqual ($stderr + [Environment]::NewLine) ([System.IO.File]::ReadAllText($result.StandardErrorPath)) "stderr transcript"
+        $expectedReplay = @("--- stdout: $($result.StandardOutputPath) ---", $stdout, "--- stderr: $($result.StandardErrorPath) ---", $stderr) -join "`n"
+        Assert-SampleOutputEqual $expectedReplay (($messages | Select-Object -Skip 1 | ForEach-Object { $_.ToString() }) -join "`n") "Unicode failure replay"
     }
 
     Invoke-SampleOutputCheck "EmptyArgumentList_LaunchesTheCommand" {
