@@ -145,6 +145,74 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void ContainsAll_SpanMemoryComparerOverloads_PreserveMultiplicityAndContext()
+    {
+        string[] values = ["a", "a", "b"];
+        foreach (int shape in new[] { 0, 1, 2 })
+        {
+            string[] requested = ["A", "a"];
+            Action accepted = () => Invoke(shouldContain: true);
+            Action rejectedInverse = () => Invoke(shouldContain: false);
+            accepted.Should().NotThrow();
+            AssertFailedException inverse = rejectedInverse.Should().ThrowExactly<AssertFailedException>().Which;
+            inverse.ActualText.Should().Be("[\"a\", \"a\", \"b\"]");
+            inverse.Message.Should().Contain("multiset context").And.EndWith("Assert.DoesNotContainAll(expected, collection, <comparer>)");
+
+            requested = ["A", "A", "A"];
+            Action missing = () => Invoke(shouldContain: true);
+            Action acceptedInverse = () => Invoke(shouldContain: false);
+            acceptedInverse.Should().NotThrow();
+            AssertFailedException failure = missing.Should().ThrowExactly<AssertFailedException>().Which;
+            failure.ExpectedText.Should().Be("[\"A\", \"A\", \"A\"]");
+            failure.ActualText.Should().Be("[\"a\", \"a\", \"b\"]");
+            failure.Message.Should().Contain("missing:    [\"A\"]").And.Contain("multiset context")
+                .And.EndWith("Assert.ContainsAll(expected, collection, <comparer>)");
+
+            void Invoke(bool shouldContain)
+            {
+                if (shape == 0)
+                {
+                    Span<string> expected = requested;
+                    Span<string> collection = values;
+                    if (shouldContain)
+                    {
+                        Assert.ContainsAll(expected, collection, StringComparer.OrdinalIgnoreCase, "multiset context");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContainAll(expected, collection, StringComparer.OrdinalIgnoreCase, "multiset context");
+                    }
+                }
+                else if (shape == 1)
+                {
+                    Memory<string> expected = requested;
+                    Memory<string> collection = values;
+                    if (shouldContain)
+                    {
+                        Assert.ContainsAll(expected, collection, StringComparer.OrdinalIgnoreCase, "multiset context");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContainAll(expected, collection, StringComparer.OrdinalIgnoreCase, "multiset context");
+                    }
+                }
+                else
+                {
+                    ReadOnlyMemory<string> expected = requested;
+                    ReadOnlyMemory<string> collection = values;
+                    if (shouldContain)
+                    {
+                        Assert.ContainsAll(expected, collection, StringComparer.OrdinalIgnoreCase, "multiset context");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContainAll(expected, collection, StringComparer.OrdinalIgnoreCase, "multiset context");
+                    }
+                }
+            }
+        }
+    }
 }
 
 #endif

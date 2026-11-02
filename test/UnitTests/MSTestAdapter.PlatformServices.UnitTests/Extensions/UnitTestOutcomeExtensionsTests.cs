@@ -34,4 +34,23 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
         UnitTestOutcome resultOutcome = UnitTestOutcome.Failed.GetMoreImportantOutcome(UnitTestOutcome.Failed);
         resultOutcome.Should().Be(UnitTestOutcome.Failed);
     }
+
+    public void EveryOutcomeUsesTheDocumentedPrecedenceInBothOrders()
+    {
+        UnitTestOutcome[] precedence =
+        [
+            (UnitTestOutcome)42, UnitTestOutcome.Failed, UnitTestOutcome.Timeout, UnitTestOutcome.Inconclusive,
+            UnitTestOutcome.Ignored, UnitTestOutcome.NotRunnable, UnitTestOutcome.Passed, UnitTestOutcome.NotFound, UnitTestOutcome.InProgress,
+        ];
+
+        for (int first = 0; first < precedence.Length; first++)
+        {
+            precedence[first].GetMoreImportantOutcome(precedence[first]).Should().Be(precedence[first]);
+            for (int second = first + 1; second < precedence.Length; second++)
+            {
+                precedence[first].GetMoreImportantOutcome(precedence[second]).Should().Be(precedence[first]);
+                precedence[second].GetMoreImportantOutcome(precedence[first]).Should().Be(precedence[first]);
+            }
+        }
+    }
 }

@@ -128,6 +128,99 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void AreNotEquivalent_SpanMemoryStrictPolicy_DistinguishesAdditionalActualMembers()
+    {
+        object[] expected = [new { Id = 7 }];
+        object[] actual = [new { Id = 7, Extra = 9 }];
+        foreach (int shape in new[] { 0, 1, 2, 3 })
+        {
+            Action strict = () => Invoke(true);
+            Action nonStrict = () => Invoke(false);
+            strict.Should().NotThrow();
+            AssertFailedException failure = nonStrict.Should().ThrowExactly<AssertFailedException>().Which;
+            failure.Message.Replace("\r\n", "\n").Should().Be(
+                """
+                Assertion failed. Expected values to be structurally different.
+                structural context
+
+                not expected: [{ Id = 7 }]
+                actual:       [{ Id = 7, Extra = 9 }]
+
+                Assert.AreNotEquivalent(expected, actual)
+                """.Replace("\r\n", "\n"));
+            failure.ExpectedText.Should().Be("not equivalent to [{ Id = 7 }]");
+            failure.ActualText.Should().Be("[{ Id = 7, Extra = 9 }]");
+
+            void Invoke(bool strict)
+            {
+                switch (shape)
+                {
+                    case 0:
+                        Assert.AreNotEquivalent((ReadOnlySpan<object>)expected, actual, strict, "structural context", "expected", "actual");
+                        break;
+                    case 1:
+                        Assert.AreNotEquivalent(expected.AsSpan(), actual.AsSpan(), strict, "structural context", "expected", "actual");
+                        break;
+                    case 2:
+                        Assert.AreNotEquivalent((ReadOnlyMemory<object>)expected, actual.AsMemory(), strict, "structural context", "expected", "actual");
+                        break;
+                    default:
+                        Assert.AreNotEquivalent(expected.AsMemory(), actual.AsMemory(), strict, "structural context", "expected", "actual");
+                        break;
+                }
+            }
+        }
+
+        object[] different = [new { Id = 8 }];
+        Action readOnlyMemory = () => Assert.AreNotEquivalent((ReadOnlyMemory<object>)expected, different.AsMemory());
+        readOnlyMemory.Should().NotThrow();
+        different = [new { Id = 7 }];
+        readOnlyMemory.Should().ThrowExactly<AssertFailedException>().Which.ActualText.Should().Be("[{ Id = 7 }]");
+    }
+
+    public void AreEquivalent_SpanMemoryStrictOverloads_KeepStrictPolicyInScopedFailures()
+    {
+        object[] expected = [new { Id = 7 }];
+        object[] actual = [];
+        Action[] nonStrict =
+        [
+            () => Assert.AreEquivalent(expected.AsSpan(), actual.AsSpan(), "strict context", "expected", "actual"),
+            () => Assert.AreEquivalent((ReadOnlyMemory<object>)expected, actual.AsMemory(), "strict context", "expected", "actual"),
+            () => Assert.AreEquivalent(expected.AsMemory(), actual.AsMemory(), "strict context", "expected", "actual"),
+        ];
+        Action[] strict =
+        [
+            () => Assert.AreEquivalent(expected.AsSpan(), actual.AsSpan(), true, "strict context", "expected", "actual"),
+            () => Assert.AreEquivalent((ReadOnlyMemory<object>)expected, actual.AsMemory(), true, "strict context", "expected", "actual"),
+            () => Assert.AreEquivalent(expected.AsMemory(), actual.AsMemory(), true, "strict context", "expected", "actual"),
+        ];
+        for (int i = 0; i < strict.Length; i++)
+        {
+            actual = [new { Id = 7, Extra = 9 }];
+            nonStrict[i].Should().NotThrow();
+            int continued = 0;
+            Action rejected = () =>
+            {
+                using (Assert.Scope())
+                {
+                    strict[i]();
+                    continued++;
+                }
+            };
+            rejected.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                """
+                Assertion failed. Expected values to be structurally equivalent (strict mode).
+                Mismatch at '[0]': actual has unexpected members not present on expected: Extra.
+                strict context
+
+                Assert.AreEquivalent(expected, actual)
+                """);
+            continued.Should().Be(1);
+            actual = [new { Id = 7 }];
+            strict[i].Should().NotThrow();
+        }
+    }
 }
 
 #endif

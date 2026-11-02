@@ -561,4 +561,66 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 
     private CommandLineOption GetOption(string name)
         => _provider.GetCommandLineOptions().Single(o => o.Name == name);
+
+    [TestMethod]
+    [DataRow("show-stdout", "All", true)]
+    [DataRow("show-stdout", "fAiLeD", true)]
+    [DataRow("show-stdout", "NONE", true)]
+    [DataRow("show-stderr", "All", true)]
+    [DataRow("show-stderr", "fAiLeD", true)]
+    [DataRow("show-stderr", "NONE", true)]
+    [DataRow("show-stdout", "sometimes", false)]
+    [DataRow("show-stderr", "sometimes", false)]
+    public async Task ValidateOutputOptions_AllowedSelectionAndExactInvalidDiagnostics(string name, string argument, bool valid)
+    {
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(GetOption(name), [argument]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("show-stdout", 0)]
+    [DataRow("show-stdout", 2)]
+    [DataRow("show-stderr", 0)]
+    [DataRow("show-stderr", 2)]
+    public async Task ValidateOutputOptions_WrongArityRejectsEvenValidIndividualValues(string name, int count)
+    {
+        string[] arguments = count == 0 ? [] : ["All", "None"];
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(GetOption(name), arguments);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("bare", true)]
+    [DataRow("on", true)]
+    [DataRow("off", true)]
+    [DataRow("invalid", false)]
+    [DataRow("extra", false)]
+    public async Task ValidateFlakyOutput_BareBooleanAndInvalidPartitionsHaveExactDiagnostics(string kind, bool valid)
+    {
+        string[] arguments = kind switch
+        {
+            "bare" => [],
+            "extra" => ["on", "off"],
+            "invalid" => ["auto"],
+            _ => [kind],
+        };
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(GetOption("show-flaky-tests"), arguments);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(valid ? null : "--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOutputOptions_NoAnsiCompatibilityAndUnknownOptionRemainDistinct()
+    {
+        Assert.IsTrue((await _provider.ValidateOptionArgumentsAsync(GetOption("no-ansi"), [])).IsValid);
+        await Assert.ThrowsExactlyAsync<UnreachableException>(
+            () => _provider.ValidateOptionArgumentsAsync(new("not-registered", "unknown", ArgumentArity.Zero, isHidden: false), []));
+    }
 }

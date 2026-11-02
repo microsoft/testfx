@@ -510,6 +510,58 @@ public partial class AssertTests
                 Assert.Throws<ThrowsTestGenericException<Int32>>(() => throw new InvalidOperationException("oops"))
                 """);
     }
+
+    public void Throws_ActionOverloads_KeepStrictnessInstanceAndLazyMessage()
+    {
+        var original = new ArgumentNullException("value", "original cause");
+        Action throwing = () => throw original;
+        int formatCalls = 0;
+        string Format()
+        {
+            formatCalls++;
+            return "exception context";
+        }
+
+        Assert.Throws<ArgumentException>(throwing, "exception context").Should().BeSameAs(original);
+        Assert.ThrowsExactly<ArgumentNullException>(throwing, "exception context").Should().BeSameAs(original);
+        Assert.Throws<ArgumentException>(throwing, $"{Format()}").Should().BeSameAs(original);
+        Assert.ThrowsExactly<ArgumentNullException>(throwing, $"{Format()}").Should().BeSameAs(original);
+        formatCalls.Should().Be(0);
+
+        Action noThrow = () => { };
+        (Action Assertion, bool Strict)[] cases =
+        [
+            (() => Assert.Throws<ArgumentException>(noThrow, "exception context"), false),
+            (() => Assert.ThrowsExactly<ArgumentNullException>(noThrow, "exception context"), true),
+            (() => Assert.Throws<ArgumentException>(noThrow, $"{Format()}"), false),
+            (() => Assert.ThrowsExactly<ArgumentNullException>(noThrow, $"{Format()}"), true),
+        ];
+        foreach ((Action assertion, bool strict) in cases)
+        {
+            string expected = strict
+                ? """
+                    Assertion failed. Expected exception of exact type ArgumentNullException but no exception was thrown.
+                    exception context
+
+                    Assert.ThrowsExactly<ArgumentNullException>(noThrow)
+                    """
+                : """
+                    Assertion failed. Expected exception of type ArgumentException (or derived) but no exception was thrown.
+                    exception context
+
+                    Assert.Throws<ArgumentException>(noThrow)
+                    """;
+            assertion.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                .Should().Be(expected.Replace("\r\n", "\n"));
+        }
+
+        formatCalls.Should().Be(2);
+        Action derivedIsNotExact = () => Assert.ThrowsExactly<ArgumentException>(throwing, "strict contract");
+        derivedIsNotExact.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().StartWith("Assertion failed. Expected exception of exact type ArgumentException but caught ArgumentNullException.")
+            .And.Contain("original cause")
+            .And.EndWith("Assert.ThrowsExactly<ArgumentException>(throwing)");
+    }
 }
 
 internal sealed class ThrowsTestGenericException<T> : Exception

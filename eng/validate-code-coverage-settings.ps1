@@ -98,6 +98,18 @@ foreach ($settingsFile in $SettingsFiles) {
     $sourceIncludes = @($settings.SelectNodes("/Configuration/CodeCoverage/Sources/Include/Source") |
         ForEach-Object { $_.InnerText })
 
+    $attributes = $settings.SelectSingleNode("/Configuration/CodeCoverage/Attributes")
+    $attributeExcludes = $settings.SelectSingleNode("/Configuration/CodeCoverage/Attributes/Exclude")
+    if ($null -eq $attributes -or $attributes.GetAttribute("mergeDefaults") -ine "False" -or
+        $null -eq $attributeExcludes -or $attributeExcludes.HasChildNodes) {
+        throw "Production coverage must not exclude attribute-marked bodies in '$settingsFile'."
+    }
+
+    $doesNotReturn = $settings.SelectSingleNode("/Configuration/DoesNotReturnAttribute")
+    if ($null -eq $doesNotReturn -or $doesNotReturn.InnerText -ine "None") {
+        throw "Coverage must retain reachable assertion-scope continuations in '$settingsFile'."
+    }
+
     foreach ($pattern in $moduleIncludes) {
         if (-not $pattern.EndsWith('\.dll$') -and -not $pattern.EndsWith('\.exe$')) {
             throw "The assembly regex lost its literal extension in '$settingsFile': '$pattern'."
@@ -135,7 +147,7 @@ foreach ($settingsFile in $SettingsFiles) {
         "C:\coverage-validation\src\Polyfills\Index.cs",
         "/coverage-validation/src/Polyfills/Index.cs"
     )) {
-        Assert-PatternMatch $sourceExcludes $path $true "Compatibility shims must be excluded by '$settingsFile'."
+        Assert-PatternMatch $sourceExcludes $path $false "Compatibility bodies must remain measurable in '$settingsFile'."
     }
 
     foreach ($path in @(
