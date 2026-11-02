@@ -16,8 +16,11 @@ internal sealed class AppInsightTelemetryClient : ITelemetryClient
 
     public AppInsightTelemetryClient(string? currentSessionId, string osVersion)
     {
-        var config = TelemetryConfiguration.CreateDefault();
-        config.ConnectionString = $"InstrumentationKey={InstrumentationKey};IngestionEndpoint={TelemetryServiceEndpoint}";
+        // CreateDefault shares a configuration that becomes immutable after the first client is created.
+        TelemetryConfiguration config = new()
+        {
+            ConnectionString = $"InstrumentationKey={InstrumentationKey};IngestionEndpoint={TelemetryServiceEndpoint}",
+        };
         _telemetryClient = new TelemetryClient(config);
         _telemetryClient.Context.Session.Id = currentSessionId;
         _telemetryClient.Context.Device.OperatingSystem = osVersion;
