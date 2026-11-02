@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -12,8 +13,8 @@ internal sealed class HangDumpEnvironmentVariableProvider : global::Microsoft.Te
 
     private readonly ICommandLineOptions _commandLineOptions;
 
-    public HangDumpEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, string pipeName)
-        : base(pipeName, PipeNameEnvironmentVariableName)
+    public HangDumpEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, NamedPipeServerEndpoint endpoint)
+        : base(endpoint, PipeNameEnvironmentVariableName)
     {
         _commandLineOptions = commandLineOptions;
     }

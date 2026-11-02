@@ -1,0 +1,2383 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+extern alias serverclient;
+
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Reflection;
+
+using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.ServerMode.Client;
+
+using LogLevel = serverclient::Microsoft.Testing.Platform.Logging.LogLevel;
+
+namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
+
+/// <summary>
+/// End-to-end tests for <see cref="MtpServerClient"/> driven against <see cref="FakeMtpServer"/> over a real
+/// loopback TCP connection. The net8.0 leg exercises the System.Text.Json formatter and the net462 leg the
+/// Jsonite formatter, so every test runs against both shipping serialization paths.
+/// </summary>
+[TestClass]
+public sealed class MtpServerClientTests
+{
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+
+    // A representative server-initiated request method. The platform has no such constant yet; the client
+    // dispatches any server request generically, so a literal is sufficient to exercise the decline/handle path.
+    private const string ClientAttachDebuggerMethod = "client/attachDebugger";
+
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow("int-min", int.MinValue)]
+    [DataRow("int-max", int.MaxValue)]
+    [DataRow("byte", 7)]
+    [DataRow("short", -7)]
+    [DataRow("long", 7)]
+    [DataRow("uint", 7)]
+    [DataRow("ulong", 7)]
+    [DataRow("double", 7)]
+    [DataRow("below-min", null)]
+    [DataRow("above-max", null)]
+    [DataRow("uint-overflow", null)]
+    [DataRow("ulong-overflow", null)]
+    [DataRow("fraction", null)]
+    [DataRow("nan", null)]
+    [DataRow("infinity", null)]
+    [DataRow("string", null)]
+    [DataRow("null", null)]
+    public async Task InitializeAsync_ProcessIdRepresentations_PreserveOnlyExactInt32Values(string representation, int? expected)
+    {
+        object? value = representation switch
+        {
+            "int-min" => int.MinValue,
+            "int-max" => int.MaxValue,
+            "byte" => (byte)7,
+            "short" => (short)-7,
+            "long" => 7L,
+            "uint" => 7u,
+            "ulong" => 7ul,
+            "double" => 7d,
+            "below-min" => (long)int.MinValue - 1,
+            "above-max" => (long)int.MaxValue + 1,
+            "uint-overflow" => (uint)int.MaxValue + 1,
+            "ulong-overflow" => (ulong)int.MaxValue + 1,
+            "fraction" => 7.5d,
+            "nan" => double.NaN,
+            "infinity" => double.PositiveInfinity,
+            "string" => "7",
+            "null" => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(representation)),
+        };
+        var response = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        List<string> methods = [];
+        using ControlledMessageHandler handler = new()
+        {
+            ReadAsyncCallback = token => Interlocked.Increment(ref reads) == 1
+                ? response.Task
+                : Task.Delay(Timeout.Infinite, token).ContinueWith<RpcMessage?>(
+                    _ => null, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default),
+            WriteAsyncCallback = (message, _) =>
+            {
+                var request = (RequestMessage)message;
+                methods.Add(request.Method);
+                response.TrySetResult(new ResponseMessage(request.Id, new Dictionary<string, object?> { [JsonRpcStrings.ProcessId] = value }));
+                return Task.CompletedTask;
+            },
+        };
+        using MtpJsonRpcConnection connection = new(handler);
+        using MtpServerClient client = new(connection);
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(expected, capabilities.ServerProcessId);
+        Assert.AreSame(capabilities, client.Capabilities);
+        Assert.AreEqual(JsonRpcMethods.Initialize, Assert.ContainsSingle(methods));
+    }
+
+    [TestMethod]
+    [DataRow("int", 7, 7d)]
+    [DataRow("long", 7, 7d)]
+    [DataRow("short", 7, null)]
+    [DataRow("double", 7, 7.5d)]
+    [DataRow("float", 7, 7.5d)]
+    [DataRow("decimal", 7, 7.5d)]
+    [DataRow("byte", null, null)]
+    [DataRow("string", null, null)]
+    [DataRow("null", null, null)]
+    public void TestNodeUpdate_NumericProperties_PreserveSupportedRepresentations(string representation, int? expectedLine, double? expectedDuration)
+    {
+        object? value = representation switch
+        {
+            "int" => 7,
+            "long" => 7L,
+            "short" => (short)7,
+            "double" => 7.5d,
+            "float" => 7.5f,
+            "decimal" => 7.5m,
+            "byte" => (byte)7,
+            "string" => "7.5",
+            "null" => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(representation)),
+        };
+        MtpTestNodeUpdate update = new(
+            new Dictionary<string, object?>
+            {
+                ["time.duration-ms"] = value,
+                ["location.line-start"] = value,
+                ["location.line-end"] = value,
+            },
+            "parent");
+
+        Assert.AreEqual(expectedDuration, update.DurationInMilliseconds);
+        Assert.AreEqual(expectedLine, update.LineStart);
+        Assert.AreEqual(expectedLine, update.LineEnd);
+        MtpTestNodeUpdate absent = new(new Dictionary<string, object?>(), null);
+        Assert.IsNull(absent.DurationInMilliseconds);
+        Assert.IsNull(absent.LineStart);
+        Assert.IsNull(absent.LineEnd);
+    }
+
+    [TestMethod]
+    public void TestNodeUpdate_SourceSnapshot_PreservesAllKnownFieldsAndParent()
+    {
+        Dictionary<string, object?> source = new()
+        {
+            [JsonRpcStrings.Uid] = "test-7",
+            [JsonRpcStrings.DisplayName] = "source test",
+            ["node-type"] = "action",
+            ["execution-state"] = "failed",
+            ["error.message"] = "failure details",
+            ["error.stacktrace"] = "source trace",
+            ["standardOutput"] = "captured output",
+            ["standardError"] = "captured error",
+            ["location.file"] = "source.cs",
+            ["location.line-start"] = 7,
+            ["location.line-end"] = 9,
+            ["time.duration-ms"] = 12.5d,
+            ["custom"] = "preserved",
+        };
+        MtpTestNodeUpdate update = new(source, "group-42");
+        source.Clear();
+        source[JsonRpcStrings.DisplayName] = "changed";
+
+        Assert.AreEqual("test-7", update.Uid);
+        Assert.AreEqual("source test", update.DisplayName);
+        Assert.AreEqual("action", update.NodeType);
+        Assert.AreEqual("failed", update.ExecutionState);
+        Assert.AreEqual("failure details", update.ErrorMessage);
+        Assert.AreEqual("source trace", update.ErrorStackTrace);
+        Assert.AreEqual("captured output", update.StandardOutput);
+        Assert.AreEqual("captured error", update.StandardError);
+        Assert.AreEqual("source.cs", update.FilePath);
+        Assert.AreEqual(7, update.LineStart);
+        Assert.AreEqual(9, update.LineEnd);
+        Assert.AreEqual(12.5d, update.DurationInMilliseconds);
+        Assert.AreEqual("group-42", update.ParentUid);
+        Assert.AreEqual("preserved", update.Node["custom"]);
+    }
+
+    [TestMethod]
+    public async Task LoggerFailures_DoNotBreakServerRepliesOrLaterDiscovery()
+    {
+        int invocations = 0;
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            Logger = new DelegateMtpClientLogger((_, _) =>
+            {
+                Interlocked.Increment(ref invocations);
+                throw new InvalidOperationException("diagnostic sink failed");
+            }),
+        });
+
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        client.ServerRequestHandler = (_, _, _) => throw new InvalidOperationException("request handler failed");
+        ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+        await WithTimeoutAsync(client.DiscoverTestsAsync(cancellationToken: TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.IsNull(response.Result);
+        Assert.IsGreaterThan(0, Volatile.Read(ref invocations));
+        string[] expectedMethods = [JsonRpcMethods.Initialize, JsonRpcMethods.TestingDiscoverTests];
+        Assert.AreSequenceEqual(expectedMethods, server.ReceivedRequestMethods);
+    }
+
+    [TestMethod]
+    public void ClientExceptions_PreserveCallerMessagesAndInnerCause()
+    {
+        MtpServerClientException unspecified = new();
+        Assert.AreEqual($"Exception of type '{typeof(MtpServerClientException).FullName}' was thrown.", unspecified.Message);
+        InvalidOperationException cause = new("original cause");
+        MtpServerClientException clientFailure = new("client failure", cause);
+        MtpServerConnectionClosedException closed = new("closed by peer", cause);
+        MtpServerErrorException remote = new(-42, "remote failure");
+
+        Assert.AreEqual("client failure", clientFailure.Message);
+        Assert.AreSame(cause, clientFailure.InnerException);
+        Assert.AreEqual("closed by peer", closed.Message);
+        Assert.AreSame(cause, closed.InnerException);
+        Assert.AreEqual(-42, remote.ErrorCode);
+        Assert.AreEqual("remote failure", remote.Message);
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_NotificationSubscriberFailure_IsLoggedAndReadLoopContinues()
+    {
+        int reads = 0;
+        var nextRead = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        ConcurrentQueue<(MtpClientLogLevel Level, string Message)> log = new();
+        using ControlledMessageHandler handler = new()
+        {
+            ReadAsyncCallback = token =>
+            {
+                if (Interlocked.Increment(ref reads) == 1)
+                {
+                    return Task.FromResult<RpcMessage?>(new NotificationMessage(JsonRpcMethods.ClientLog, null));
+                }
+
+                nextRead.TrySetResult(true);
+                return Task.Delay(Timeout.Infinite, token).ContinueWith<RpcMessage?>(
+                    _ => null, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            },
+        };
+        using MtpJsonRpcConnection connection = new(handler, new DelegateMtpClientLogger((level, message) => log.Enqueue((level, message))));
+        connection.NotificationReceived += _ => throw new InvalidOperationException("subscriber failed");
+
+        connection.Start();
+        await WithTimeoutAsync(nextRead.Task).ConfigureAwait(false);
+
+        Assert.IsFalse(GetReadLoop(connection).IsCompleted);
+        (MtpClientLogLevel Level, string Message) warning = Assert.ContainsSingle(log);
+        Assert.AreEqual(MtpClientLogLevel.Warning, warning.Level);
+        Assert.StartsWith("A handler for notification 'client/log' threw: System.InvalidOperationException: subscriber failed", warning.Message);
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_ServerRequestHandlerFailure_SendsNullReplyAndLogsWarning()
+    {
+        int reads = 0;
+        var written = new TaskCompletionSource<RpcMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        ConcurrentQueue<(MtpClientLogLevel Level, string Message)> log = new();
+        using ControlledMessageHandler handler = new()
+        {
+            ReadAsyncCallback = token => Interlocked.Increment(ref reads) == 1
+                ? Task.FromResult<RpcMessage?>(new RequestMessage(7, "server/request", null))
+                : Task.Delay(Timeout.Infinite, token).ContinueWith<RpcMessage?>(
+                    _ => null, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default),
+            WriteAsyncCallback = (message, _) =>
+            {
+                written.TrySetResult(message);
+                return Task.CompletedTask;
+            },
+        };
+        using MtpJsonRpcConnection connection = new(handler, new DelegateMtpClientLogger((level, message) => log.Enqueue((level, message))));
+        connection.ServerRequestHandler = (_, _) => throw new InvalidOperationException("request handler failed");
+
+        connection.Start();
+        RpcMessage message = await WithTimeoutAsync(written.Task).ConfigureAwait(false);
+
+        var response = (ResponseMessage)message;
+        Assert.AreEqual(7, response.Id);
+        Assert.IsNull(response.StringId);
+        Assert.IsNull(response.Result);
+        Assert.IsFalse(GetReadLoop(connection).IsCompleted);
+        (MtpClientLogLevel Level, string Message) warning = Assert.ContainsSingle(log);
+        Assert.AreEqual(MtpClientLogLevel.Warning, warning.Level);
+        Assert.StartsWith("The handler for server request 'server/request' threw: System.InvalidOperationException: request handler failed", warning.Message);
+    }
+
+    [TestMethod]
+    public async Task Launch_OwnsTheConnectedChildAndSharesShutdown()
+    {
+        MtpServerClientOptions options = new()
+        {
+            ConnectionTimeout = DefaultTimeout,
+            EnvironmentVariables = { [MtpServerProcessTests.StandardOutputFloodEnvironmentVariable] = "1" },
+        };
+        using var client = MtpServerClient.Launch(typeof(MtpServerClientTests).Assembly.Location, options);
+
+        Assert.IsGreaterThan(0, client.ProcessId);
+        Assert.IsNull(client.ServerExitCode);
+        await WithTimeoutAsync(client.ShutdownAsync()).ConfigureAwait(false);
+        Assert.AreEqual(0, client.ProcessId);
+        Assert.IsNull(client.ServerExitCode);
+        client.Dispose();
+        Assert.AreEqual(0, client.ProcessId);
+    }
+
+    [TestMethod]
+    public async Task Launch_NullSource_RejectsBothEntryPoints()
+    {
+        ArgumentNullException synchronous = Assert.ThrowsExactly<ArgumentNullException>(() => MtpServerClient.Launch(null!));
+        ArgumentNullException asynchronous = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+            () => MtpServerClient.LaunchAsync(null!, cancellationToken: TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual("source", synchronous.ParamName);
+        Assert.AreEqual("source", asynchronous.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task InitializeAsync_ResultShape_DistinguishesAbsentFromInvalidPayload(bool invalid)
+    {
+        var response = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        using ControlledMessageHandler handler = new()
+        {
+            ReadAsyncCallback = token => Interlocked.Increment(ref reads) == 1
+                ? response.Task
+                : Task.Delay(Timeout.Infinite, token).ContinueWith<RpcMessage?>(
+                    _ => null, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default),
+            WriteAsyncCallback = (message, _) =>
+            {
+                var request = (RequestMessage)message;
+                response.TrySetResult(new ResponseMessage(request.Id, invalid ? "not a dictionary" : null));
+                return Task.CompletedTask;
+            },
+        };
+        using MtpJsonRpcConnection connection = new(handler);
+        using MtpServerClient client = new(connection);
+        Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>> callback = (_, _, _) => Task.FromResult<IDictionary<string, object?>?>(null);
+        client.ServerRequestHandler = callback;
+        Assert.AreSame(callback, client.ServerRequestHandler);
+        Assert.AreEqual(0, client.ProcessId);
+        Assert.IsNull(client.ServerExitCode);
+
+        if (invalid)
+        {
+            MtpServerClientException exception = await Assert.ThrowsExactlyAsync<MtpServerClientException>(
+                () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+            Assert.AreEqual(
+                "Expected the server response result to be an IDictionary<string, object?> but it was 'System.String'.",
+                exception.Message);
+            Assert.IsNull(client.Capabilities);
+        }
+        else
+        {
+            MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+            Assert.IsNull(capabilities.ServerProcessId);
+            Assert.IsNull(capabilities.ServerName);
+            Assert.IsNull(capabilities.ProtocolVersion);
+            Assert.IsFalse(capabilities.SupportsDiscovery);
+            Assert.IsFalse(capabilities.SupportsAttachments);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(null, null)]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    [DataRow(true, false)]
+    [DataRow(true, null)]
+    public async Task InitializeAsync_ShowMessage_PreservesRequestAndAcknowledgmentWithoutSubscriber(bool? requested, bool? applied)
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with
+        {
+            Capabilities = new ServerCapabilities(server.InitializeResponse.Capabilities.TestingCapabilities with { ShowMessage = applied }),
+        };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = requested });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(applied, capabilities.ShowMessage);
+        Assert.AreSame(capabilities, client.Capabilities);
+        InitializeRequestArgs request = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreEqual(requested, request.Capabilities.ShowMessage);
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(request.Capabilities);
+        var testing = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+        Assert.AreEqual(requested.HasValue, testing.ContainsKey(JsonRpcStrings.ShowMessage));
+        if (requested.HasValue)
+        {
+            Assert.AreEqual(requested.Value, testing[JsonRpcStrings.ShowMessage]);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task InitializeAsync_ShowMessageTopLevelFieldDoesNotAcknowledgeRouting(bool nestedFalse)
+    {
+        using FakeMtpServer server = new();
+        IDictionary<string, object?> response = SerializerUtilities.Serialize(server.InitializeResponse);
+        response[JsonRpcStrings.ShowMessage] = true;
+        if (nestedFalse)
+        {
+            var serializedCapabilities = (IDictionary<string, object?>)response[JsonRpcStrings.Capabilities]!;
+            var testing = (IDictionary<string, object?>)serializedCapabilities[JsonRpcStrings.Testing]!;
+            testing[JsonRpcStrings.ShowMessage] = false;
+        }
+
+        server.InitializeResponseOverride = response;
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = true });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        Assert.AreEqual(nestedFalse ? false : null, capabilities.ShowMessage);
+    }
+
+    [TestMethod]
+    [DataRow("true")]
+    [DataRow(1)]
+    public async Task InitializeAsync_InvalidShowMessageAcknowledgmentIsRejected(object value)
+    {
+        using FakeMtpServer server = new();
+        IDictionary<string, object?> response = SerializerUtilities.Serialize(server.InitializeResponse);
+        var capabilities = (IDictionary<string, object?>)response[JsonRpcStrings.Capabilities]!;
+        var testing = (IDictionary<string, object?>)capabilities[JsonRpcStrings.Testing]!;
+        testing[JsonRpcStrings.ShowMessage] = value;
+        server.InitializeResponseOverride = response;
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = true });
+
+        await Assert.ThrowsExactlyAsync<MtpServerClientException>(() => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public void Options_DefaultValues_AreStable()
+    {
+        var options = new MtpServerClientOptions();
+
+        Assert.AreEqual("Microsoft.Testing.Platform.ServerMode.Client", options.ClientName);
+        Assert.AreEqual("1.0.0", options.ClientVersion);
+    }
+
+    [TestMethod]
+    public void ConnectionClosedException_DefaultMessage_ExplainsFailure()
+    {
+        var exception = new MtpServerConnectionClosedException();
+
+        Assert.AreEqual("The connection to the test host process was closed unexpectedly.", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_DecodesServerCapabilities()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            IsStateful = true,
+        });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(4242, capabilities.ServerProcessId);
+        Assert.AreEqual("FakeMtpServer", capabilities.ServerName);
+        Assert.AreEqual("1.2.3", capabilities.ServerVersion);
+        Assert.AreEqual(JsonRpcProtocolVersions.Current, capabilities.ProtocolVersion);
+        Assert.IsTrue(capabilities.SupportsDiscovery);
+        Assert.IsTrue(capabilities.MultiRequestSupport);
+        Assert.IsFalse(capabilities.VSTestProviderSupport);
+        Assert.IsTrue(capabilities.SupportsAttachments);
+        Assert.IsFalse(capabilities.MultiConnectionProvider);
+        Assert.AreSame(capabilities, client.Capabilities);
+
+        InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreSequenceEqual(JsonRpcProtocolVersions.Supported, initializeArgs.ProtocolVersions);
+        Assert.IsTrue(initializeArgs.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_DefaultOptions_LeaveStatefulnessUndeclared()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.IsNull(initializeArgs.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void SerializeClientCapabilities_UndeclaredStatefulness_OmitsProperty()
+    {
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(
+            new ClientCapabilities(DebuggerProvider: false, IsStateful: null));
+        var testingCapabilities = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+
+        Assert.IsFalse(testingCapabilities.ContainsKey(JsonRpcStrings.IsStateful));
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void SerializeClientCapabilities_DeclaredStatefulness_IncludesProperty(bool isStateful)
+    {
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(
+            new ClientCapabilities(DebuggerProvider: false, IsStateful: isStateful));
+        var testingCapabilities = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+
+        Assert.AreEqual(isStateful, testingCapabilities[JsonRpcStrings.IsStateful]);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_RequestWithStringId_PreservesRawParamsAndStringId()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["processId"] = 42,
+        };
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "17",
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+            [JsonRpcStrings.Params] = parameters,
+        };
+
+        RpcMessage message = SerializerUtilities.Deserialize<RpcMessage>(properties);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        Assert.AreEqual(17, request.Id);
+        Assert.AreEqual("17", request.StringId);
+        Assert.AreEqual(ClientAttachDebuggerMethod, request.Method);
+        Assert.AreSame(parameters, request.Params);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_NotificationWithoutId_PreservesRawParams()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["message"] = "hello",
+        };
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Method] = JsonRpcMethods.ClientLog,
+            [JsonRpcStrings.Params] = parameters,
+        };
+
+        RpcMessage message = SerializerUtilities.Deserialize<RpcMessage>(properties);
+
+        NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(message);
+        Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+        Assert.AreSame(parameters, notification.Params);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_NullRequestId_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = null,
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains(JsonRpcStrings.Id, exception.Message);
+        Assert.Contains("cannot be null", exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidRequestId_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "not-a-number",
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains("string or an int", exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidHeader_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "1.0",
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains(JsonRpcStrings.JsonRpc, exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_ResponseWithStringId_PreservesResultAndStringId()
+    {
+        var result = new Dictionary<string, object?>
+        {
+            ["success"] = true,
+        };
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "23",
+            [JsonRpcStrings.Result] = result,
+        };
+
+        RpcMessage message = SerializerUtilities.Deserialize<RpcMessage>(properties);
+
+        ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(message);
+        Assert.AreEqual(23, response.Id);
+        Assert.AreEqual("23", response.StringId);
+        Assert.AreSame(result, response.Result);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_ResponseWithInvalidId_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "not-a-number",
+            [JsonRpcStrings.Result] = null,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains("string or an int", exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_UnknownShape_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+        };
+
+        Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+    }
+
+    [TestMethod]
+    public void DeserializeArtifact_MissingOptionalProperties_UsesDefaults()
+    {
+        Artifact artifact = SerializerUtilities.Deserialize<Artifact>(new Dictionary<string, object?>());
+
+        Assert.AreEqual(string.Empty, artifact.Uri);
+        Assert.AreEqual(string.Empty, artifact.Producer);
+        Assert.AreEqual(string.Empty, artifact.Type);
+        Assert.AreEqual(string.Empty, artifact.DisplayName);
+        Assert.IsNull(artifact.Description);
+    }
+
+    [TestMethod]
+    public void DeserializeRunResponse_MissingAttachments_ReturnsEmptyCollection()
+    {
+        RunResponseArgs response = SerializerUtilities.Deserialize<RunResponseArgs>(new Dictionary<string, object?>());
+
+        Assert.IsEmpty(response.Artifacts);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_LegacyServerWithoutProtocolVersion_Succeeds()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.IsNull(capabilities.ProtocolVersion);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_LegacyServerWithoutSupportedVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = ["2.0.0", "3.0.0"],
+        });
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcProtocolVersions.V1, exception.Message);
+
+        // Multiple supported versions must be rendered comma-and-space separated (not concatenated) so the
+        // exception message stays readable when the client advertises more than one protocol version.
+        Assert.Contains("Supported versions: 2.0.0, 3.0.0.", exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_UnsupportedNegotiatedProtocolVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = "2.0.0" };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = ["1.0", "1.1"],
+        });
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(
+            "The server negotiated unsupported protocol version '2.0.0'. Supported versions: 1.0, 1.1.",
+            exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_UnsupportedNegotiatedProtocolVersion_ListsDefaultVersion()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = "2.0.0" };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains("2.0.0", exception.Message);
+
+        // The default client only advertises the legacy version, so the trailing "Supported versions: ..."
+        // segment must render it verbatim rather than being silently dropped/emptied.
+        Assert.Contains($"Supported versions: {JsonRpcProtocolVersions.V1}.", exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerCapabilities capabilities = await AssertCompletesWithoutPumpingAsync(
+            () => client.InitializeAsync(TestContext.CancellationToken));
+
+        Assert.AreEqual("FakeMtpServer", capabilities.ServerName);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_EmptySupportedVersions_AcceptsLegacyVersion()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = [],
+        });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(
+            client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(JsonRpcProtocolVersions.V1, capabilities.ProtocolVersion);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_NonStringProtocolVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponseOverride = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.ProcessId] = 4242,
+            [JsonRpcStrings.ServerInfo] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Name] = "FakeMtpServer",
+                [JsonRpcStrings.Version] = "1.2.3",
+            },
+            [JsonRpcStrings.Capabilities] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = new Dictionary<string, object?>
+                {
+                    [JsonRpcStrings.SupportsDiscovery] = true,
+                    [JsonRpcStrings.MultiRequestSupport] = true,
+                    [JsonRpcStrings.VSTestProviderSupport] = false,
+                    [JsonRpcStrings.AttachmentsSupport] = true,
+                    [JsonRpcStrings.MultiConnectionProvider] = false,
+                },
+            },
+            [JsonRpcStrings.ProtocolVersion] = 1,
+        };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcStrings.ProtocolVersion, exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_ResponseWithoutTestingCapabilities_DefaultsAllCapabilityFlagsToFalse()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponseOverride = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.ProcessId] = 4242,
+            [JsonRpcStrings.ServerInfo] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Name] = "FakeMtpServer",
+                [JsonRpcStrings.Version] = "1.2.3",
+            },
+            [JsonRpcStrings.ProtocolVersion] = JsonRpcProtocolVersions.Current,
+        };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        // The server omitted the entire 'testing' capabilities object, so every capability flag must fall back
+        // to its false default rather than leaking an uninitialized `true`.
+        Assert.IsFalse(capabilities.SupportsDiscovery);
+        Assert.IsFalse(capabilities.MultiRequestSupport);
+        Assert.IsFalse(capabilities.VSTestProviderSupport);
+        Assert.IsFalse(capabilities.SupportsAttachments);
+        Assert.IsFalse(capabilities.MultiConnectionProvider);
+    }
+
+    [TestMethod]
+    public async Task DiscoverTestsAsync_All_SendsDiscoverRequest()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        await WithTimeoutAsync(client.DiscoverTestsAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(
+            JsonRpcMethods.TestingDiscoverTests,
+            server.ReceivedRequestMethods,
+            "Expected the client to have sent a testing/discoverTests request.");
+    }
+
+    [TestMethod]
+    public async Task DiscoverTestsAsync_BeforeInitialization_StartsTheConnectionAndDoesNotCaptureContext()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        await AssertCompletesWithoutPumpingAsync(
+            () => client.DiscoverTestsAsync(TestContext.CancellationToken));
+
+        Assert.Contains(JsonRpcMethods.TestingDiscoverTests, server.ReceivedRequestMethods);
+    }
+
+    [TestMethod]
+    public async Task DiscoverTestsAsync_WithUids_SendsDiscoverRequest()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        await WithTimeoutAsync(client.DiscoverTestsAsync(["uid-1", "uid-2"], TestContext.CancellationToken)).ConfigureAwait(false);
+
+        DiscoverRequestArgs args = GetSingleRequestParams<DiscoverRequestArgs>(server, JsonRpcMethods.TestingDiscoverTests);
+        Assert.IsNotNull(args.TestNodes, "Expected the discover request to carry the requested UID list.");
+        Assert.AreSequenceEqual(
+            ["uid-1", "uid-2"],
+            args.TestNodes.Select(node => node.Uid.Value),
+            "Expected the exact requested UIDs to reach the wire, in order.");
+        Assert.IsNull(args.GraphFilter, "A UID-based discover must not send a graph filter.");
+    }
+
+    [TestMethod]
+    public async Task DiscoverTestsWithFilterAsync_SendsDiscoverRequest()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        await WithTimeoutAsync(client.DiscoverTestsWithFilterAsync("/*/*/*/MyTestClass/*", TestContext.CancellationToken)).ConfigureAwait(false);
+
+        DiscoverRequestArgs args = GetSingleRequestParams<DiscoverRequestArgs>(server, JsonRpcMethods.TestingDiscoverTests);
+        Assert.AreEqual("/*/*/*/MyTestClass/*", args.GraphFilter, "Expected the graph filter to reach the wire.");
+        Assert.IsNull(args.TestNodes, "A filter-based discover must not send an explicit UID list.");
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_All_SendsRunRequest()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        MtpRunResult result = await WithTimeoutAsync(client.RunTestsAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcMethods.TestingRunTests, server.ReceivedRequestMethods);
+        Assert.IsEmpty(result.Artifacts);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_BeforeInitialization_StartsTheConnectionAndDoesNotCaptureContext()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpRunResult result = await AssertCompletesWithoutPumpingAsync(
+            () => client.RunTestsAsync(TestContext.CancellationToken));
+
+        Assert.IsEmpty(result.Artifacts);
+        Assert.Contains(JsonRpcMethods.TestingRunTests, server.ReceivedRequestMethods);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_WithUids_SendsRunRequest()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        await WithTimeoutAsync(client.RunTestsAsync(["uid-1"], TestContext.CancellationToken)).ConfigureAwait(false);
+
+        RunRequestArgs args = GetSingleRequestParams<RunRequestArgs>(server, JsonRpcMethods.TestingRunTests);
+        Assert.IsNotNull(args.TestNodes, "Expected the run request to carry the requested UID list.");
+        Assert.AreSequenceEqual(
+            ["uid-1"],
+            args.TestNodes.Select(node => node.Uid.Value),
+            "Expected the exact requested UID to reach the wire.");
+        Assert.IsNull(args.GraphFilter, "A UID-based run must not send a graph filter.");
+    }
+
+    [TestMethod]
+    public async Task RunTestsWithFilterAsync_SendsRunRequest()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        await WithTimeoutAsync(client.RunTestsWithFilterAsync("/*/*/*/MyTestClass/*", TestContext.CancellationToken)).ConfigureAwait(false);
+
+        RunRequestArgs args = GetSingleRequestParams<RunRequestArgs>(server, JsonRpcMethods.TestingRunTests);
+        Assert.AreEqual("/*/*/*/MyTestClass/*", args.GraphFilter, "Expected the graph filter to reach the wire.");
+        Assert.IsNull(args.TestNodes, "A filter-based run must not send an explicit UID list.");
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_MapsArtifactsToAttachments()
+    {
+        using FakeMtpServer server = new()
+        {
+            RunResponse = new RunResponseArgs([new Artifact(
+                Uri: "file:///c:/artifacts/report.trx",
+                Producer: "TRX",
+                Type: "trx",
+                DisplayName: "Test Report",
+                Description: "The run's TRX report.")]),
+        };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        MtpRunResult result = await WithTimeoutAsync(client.RunTestsAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.HasCount(1, result.Artifacts);
+        MtpAttachment attachment = result.Artifacts[0];
+        Assert.AreEqual("file:///c:/artifacts/report.trx", attachment.Uri);
+        Assert.AreEqual("TRX", attachment.Producer);
+        Assert.AreEqual("trx", attachment.Type);
+        Assert.AreEqual("Test Report", attachment.DisplayName);
+        Assert.AreEqual("The run's TRX report.", attachment.Description);
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_DiscoveredNode_DecodesNodeAndRunId()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        var runId = Guid.NewGuid();
+        await server.SendDiscoveredTestNodeAsync(runId, "Ns.Class.TestA", "Test A").ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        Assert.AreEqual(runId, args.RunId);
+        Assert.HasCount(1, args.Changes);
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual("Ns.Class.TestA", update.Uid);
+        Assert.AreEqual("Test A", update.DisplayName);
+        Assert.AreEqual("action", update.NodeType);
+        Assert.AreEqual("discovered", update.ExecutionState);
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_PassedNode_DecodesExecutionState()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        await server.SendPassedTestNodeAsync(Guid.NewGuid(), "Ns.Class.TestPass", "Test Pass").ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        Assert.AreEqual("passed", args.Changes[0].ExecutionState);
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_FailedNode_DecodesErrorMessage()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        await server.SendFailedTestNodeAsync(Guid.NewGuid(), "Ns.Class.TestFail", "Test Fail", "Expected 1 but got 2.").ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual("failed", update.ExecutionState);
+        Assert.AreEqual("Expected 1 but got 2.", update.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_PassedNodeWithDetails_DecodesOutputAndLocation()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        await server.SendPassedTestNodeWithDetailsAsync(
+            Guid.NewGuid(),
+            "Ns.Class.TestDetail",
+            "Test Detail",
+            standardOutput: "hello stdout",
+            standardError: "hello stderr",
+            filePath: "/repo/src/Class.cs",
+            lineStart: 41,
+            lineEnd: 47).ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        // Exercises the convenience accessors on both serialization paths (net8 System.Text.Json, net462
+        // Jsonite). The line numbers arrive as JSON numbers, so this also covers the numeric coercion.
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual("passed", update.ExecutionState);
+        Assert.AreEqual("hello stdout", update.StandardOutput);
+        Assert.AreEqual("hello stderr", update.StandardError);
+        Assert.AreEqual("/repo/src/Class.cs", update.FilePath);
+        Assert.AreEqual(41, update.LineStart);
+        Assert.AreEqual(47, update.LineEnd);
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_MultibyteDisplayName_SurvivesRoundTrip()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A UID and display name whose UTF-8 byte count exceeds their UTF-16 char count, including a
+        // surrogate-pair emoji. The transport declares Content-Length in UTF-8 *bytes*, so if either the
+        // server write or the client read miscounted using chars the framing would truncate or desynchronize
+        // and this exact round-trip would fail (or the read loop would hang and time out). ASCII-only payloads
+        // never exercise this, so this test guards the byte/char boundary the transport framing depends on.
+        // "Ns.Class.Tëst_日本語_✓_🧪_Метод" and "Tëst 日本語 ✓ 🧪 Метод".
+        const string uid = "Ns.Class.T\u00EBst_\u65E5\u672C\u8A9E_\u2713_\U0001F9EA_\u041C\u0435\u0442\u043E\u0434";
+        const string displayName = "T\u00EBst \u65E5\u672C\u8A9E \u2713 \U0001F9EA \u041C\u0435\u0442\u043E\u0434";
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        var runId = Guid.NewGuid();
+        await server.SendDiscoveredTestNodeAsync(runId, uid, displayName).ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        Assert.AreEqual(runId, args.RunId);
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual(uid, update.Uid, "The multibyte UID must survive the transport byte-exact.");
+        Assert.AreEqual(displayName, update.DisplayName, "The multibyte display name must survive the transport byte-exact.");
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_LargeMultibytePayload_SurvivesRoundTrip()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A multi-KB standardOutput built from a multibyte unit ("日本語-✓-🧪-"). It is far larger than a single
+        // socket read, so the client's read loop must accumulate the exact UTF-8 byte count across multiple
+        // reads. A char-vs-byte length mistake anywhere on the read path corrupts or truncates the tail, so
+        // asserting the full string round-trips exactly guards the large-frame and the multibyte paths at once.
+        string unit = "\u65E5\u672C\u8A9E-\u2713-\U0001F9EA-";
+        string largeOutput = string.Concat(Enumerable.Repeat(unit, 5000));
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        await server.SendPassedTestNodeWithDetailsAsync(
+            Guid.NewGuid(),
+            "Ns.Class.TestLarge",
+            "Test Large",
+            standardOutput: largeOutput,
+            standardError: "stderr",
+            filePath: "/repo/src/Class.cs",
+            lineStart: 1,
+            lineEnd: 2).ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual(largeOutput.Length, update.StandardOutput?.Length, "The large multibyte payload must not be truncated.");
+        Assert.AreEqual(largeOutput, update.StandardOutput, "The large multibyte payload must survive the transport byte-exact.");
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_CompletionSentinel_IsSkipped()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        var updates = new List<MtpTestNodeUpdateEventArgs>();
+        var realUpdateReceived = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TestNodesUpdated += (_, e) =>
+        {
+            lock (updates)
+            {
+                updates.Add(e);
+            }
+
+            realUpdateReceived.TrySetResult(true);
+        };
+
+        var runId = Guid.NewGuid();
+
+        // The completion sentinel (null Changes) is delivered first; ordered TCP delivery guarantees the client
+        // has processed and skipped it by the time the real update raises the event.
+        await server.SendTestNodesCompletionAsync(runId).ConfigureAwait(false);
+        await server.SendDiscoveredTestNodeAsync(runId, "Ns.Class.TestA", "Test A").ConfigureAwait(false);
+
+        await WithTimeoutAsync(realUpdateReceived.Task).ConfigureAwait(false);
+
+        lock (updates)
+        {
+            Assert.HasCount(1, updates);
+            Assert.AreEqual("Ns.Class.TestA", updates[0].Changes[0].Uid);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(JsonRpcMethods.ClientLog, "Information")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Trace")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Debug")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Information")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Warning")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Error")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Critical")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "None")]
+    public async Task LogReceived_DecodesLevelAndMessage(string method, string level)
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpLogEventArgs> logTask = WaitForEventAsync<MtpLogEventArgs>(h => client.LogReceived += h);
+        await server.SendLogAsync("hello from the server μ", method, (LogLevel)Enum.Parse(typeof(LogLevel), level)).ConfigureAwait(false);
+
+        MtpLogEventArgs args = await WithTimeoutAsync(logTask).ConfigureAwait(false);
+
+        Assert.AreEqual(level, args.Level);
+        Assert.AreEqual("hello from the server μ", args.Message);
+    }
+
+    [TestMethod]
+    public async Task TelemetryReceived_DecodesEventNameAndMetrics()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpTelemetryEventArgs> telemetryTask = WaitForEventAsync<MtpTelemetryEventArgs>(h => client.TelemetryReceived += h);
+        await server.SendTelemetryAsync("run/complete", new Dictionary<string, object> { ["testCount"] = 7 }).ConfigureAwait(false);
+
+        MtpTelemetryEventArgs args = await WithTimeoutAsync(telemetryTask).ConfigureAwait(false);
+
+        Assert.AreEqual("run/complete", args.EventName);
+        Assert.IsTrue(args.Metrics.TryGetValue("testCount", out object? value));
+        Assert.AreEqual(7L, Convert.ToInt64(value, CultureInfo.InvariantCulture));
+    }
+
+    [TestMethod]
+    public async Task AttachmentsReceived_DecodesAttachments()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpAttachmentsEventArgs> attachmentsTask = WaitForEventAsync<MtpAttachmentsEventArgs>(h => client.AttachmentsReceived += h);
+        await server.SendAttachmentAsync(
+            uri: "file:///c:/coverage/coverage.cobertura.xml",
+            producer: "CodeCoverage",
+            type: "coverage",
+            displayName: "Coverage",
+            description: "Cobertura coverage report.").ConfigureAwait(false);
+
+        MtpAttachmentsEventArgs args = await WithTimeoutAsync(attachmentsTask).ConfigureAwait(false);
+
+        Assert.HasCount(1, args.Attachments);
+        MtpAttachment attachment = args.Attachments[0];
+        Assert.AreEqual("file:///c:/coverage/coverage.cobertura.xml", attachment.Uri);
+        Assert.AreEqual("CodeCoverage", attachment.Producer);
+        Assert.AreEqual("coverage", attachment.Type);
+        Assert.AreEqual("Coverage", attachment.DisplayName);
+        Assert.AreEqual("Cobertura coverage report.", attachment.Description);
+    }
+
+    [TestMethod]
+    public async Task ExitAsync_SendsExitNotification()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        await WithTimeoutAsync(client.ExitAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        await server.WaitForNotificationAsync(JsonRpcMethods.Exit, DefaultTimeout).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task ExitAsync_BeforeInitialization_StartsTheReadLoop()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        await WithTimeoutAsync(client.ExitAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        await server.WaitForNotificationAsync(JsonRpcMethods.Exit, DefaultTimeout).ConfigureAwait(false);
+
+        Task<MtpLogEventArgs> logTask = WaitForEventAsync<MtpLogEventArgs>(handler => client.LogReceived += handler);
+        await server.SendLogAsync("read loop started").ConfigureAwait(false);
+
+        MtpLogEventArgs args = await WithTimeoutAsync(logTask).ConfigureAwait(false);
+        Assert.AreEqual("read loop started", args.Message);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_Cancellation_SendsCancelRequestAndThrows()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+        using var cts = new CancellationTokenSource();
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(cts.Token);
+
+        // Let the request go out and register as pending before cancelling, so the connection emits the
+        // $/cancelRequest notification instead of failing synchronously.
+        await Task.Delay(100, TestContext.CancellationToken).ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method - CancelAsync() is .NET 8+ only and this test also targets net462.
+        cts.Cancel();
+#pragma warning restore VSTHRD103
+
+        await AssertThrowsAsync<OperationCanceledException>(() => runTask).ConfigureAwait(false);
+        await server.WaitForNotificationAsync(JsonRpcMethods.CancelRequest, DefaultTimeout).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_ServerError_ThrowsServerErrorWithCodeAndMessage()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        RequestMessage request = await server.WaitForRequestAsync(
+            JsonRpcMethods.TestingRunTests,
+            DefaultTimeout).ConfigureAwait(false);
+        await server.SendErrorResponseAsync(request, ErrorCodes.InvalidRequest, "The run request is invalid.").ConfigureAwait(false);
+
+        MtpServerErrorException exception = await AssertThrowsAsync<MtpServerErrorException>(
+            () => runTask).ConfigureAwait(false);
+
+        Assert.AreEqual(ErrorCodes.InvalidRequest, exception.ErrorCode);
+        Assert.AreEqual("The run request is invalid.", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_DisposedWhilePending_ThrowsObjectDisposedException()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        _ = await server.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout).ConfigureAwait(false);
+
+        client.Dispose();
+
+        await AssertThrowsAsync<ObjectDisposedException>(() => runTask).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_NumericStringResponseId_DoesNotCompleteNumericRequest()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        RequestMessage request = await server.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout).ConfigureAwait(false);
+        Task<MtpLogEventArgs> responseProcessed = WaitForEventAsync<MtpLogEventArgs>(handler => client.LogReceived += handler);
+
+        await server.SendRunResponseAsync(request, useStringId: true).ConfigureAwait(false);
+        await server.SendLogAsync("response barrier").ConfigureAwait(false);
+        _ = await WithTimeoutAsync(responseProcessed).ConfigureAwait(false);
+        Assert.IsFalse(runTask.IsCompleted);
+
+        await server.SendRunResponseAsync(request, useStringId: false).ConfigureAwait(false);
+        _ = await WithTimeoutAsync(runTask).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task ReadLoop_MalformedFrame_FailsPendingRequestWithClientException()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        await Task.Delay(100, TestContext.CancellationToken).ConfigureAwait(false);
+
+        server.SendRawFrame("{ this is : not valid json ");
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(() => runTask).ConfigureAwait(false);
+
+        // A malformed frame fails the read loop with the base exception, not the connection-closed subtype.
+        Assert.AreEqual(typeof(MtpServerClientException), exception.GetType());
+    }
+
+    [TestMethod]
+    public async Task ReadLoop_ServerDisconnect_FailsPendingRequestWithClosedException()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        await Task.Delay(100, TestContext.CancellationToken).ConfigureAwait(false);
+
+        server.CloseConnection();
+
+        await AssertThrowsAsync<MtpServerConnectionClosedException>(() => runTask).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_NoHandler_RespondsWithNull()
+    {
+        List<(MtpClientLogLevel Level, string Message)> log = [];
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            Logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message))),
+        });
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        // ServerRequestHandler is null by default, so the client declines with a null result.
+        ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsNull(response.Result);
+        Assert.IsEmpty(log.Where(entry => entry.Level == MtpClientLogLevel.Warning));
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_NumericStringId_PreservesResponseIdRepresentation()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        ResponseMessage response = await WithTimeoutAsync(
+            server.SendServerRequestAsync(ClientAttachDebuggerMethod, useStringId: true)).ConfigureAwait(false);
+
+        Assert.AreEqual(response.Id.ToString(CultureInfo.InvariantCulture), response.StringId);
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_WithHandler_InvokesHandler()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        string? observedMethod = null;
+        client.ServerRequestHandler = (method, parameters, cancellationToken) =>
+        {
+            _ = parameters;
+            _ = cancellationToken;
+            observedMethod = method;
+            return Task.FromResult<IDictionary<string, object?>?>(null);
+        };
+
+        await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.AreEqual(ClientAttachDebuggerMethod, observedMethod);
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_HandlerThrows_RespondsWithNullAndLogsWarning()
+    {
+        List<(MtpClientLogLevel Level, string Message)> log = [];
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            Logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message))),
+        });
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        client.ServerRequestHandler = (_, _, _) => throw new InvalidOperationException("Debugger launch failed.");
+
+        ResponseMessage response = await WithTimeoutAsync(
+            server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsNull(response.Result);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Warning
+                && entry.Message.Contains(ClientAttachDebuggerMethod, StringComparison.Ordinal)
+                && entry.Message.Contains("Debugger launch failed.", StringComparison.Ordinal),
+            log);
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_WithNonNullDictionaryResult_RoundTripsResultOverTheWire()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // The protocol's attach-debugger response is a small object (e.g. { success: bool }). Returning a
+        // non-null Dictionary<string, object?> exercises the client-only response-dictionary pass-through
+        // serializer on BOTH formatter paths (Jsonite on net462, System.Text.Json on net8). Without it the
+        // response write throws and the server waits forever, so a regression surfaces here as a timeout.
+        client.ServerRequestHandler = (method, parameters, cancellationToken) =>
+        {
+            _ = method;
+            _ = parameters;
+            _ = cancellationToken;
+            return Task.FromResult<IDictionary<string, object?>?>(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["detail"] = "attached",
+            });
+        };
+
+        ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsInstanceOfType(response.Result, typeof(IDictionary<string, object?>));
+        var result = (IDictionary<string, object?>)response.Result!;
+        Assert.IsTrue((bool)result["success"]!, "Expected the boolean payload to survive the round trip.");
+        Assert.AreEqual("attached", result["detail"], "Expected the string payload to survive the round trip.");
+    }
+
+    [TestMethod]
+    public async Task ServerRequestHandler_DictionaryResult_IsReturnedWithoutCopying()
+    {
+        var expected = new Dictionary<string, object?> { ["success"] = true };
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var client = new MtpServerClient(connection)
+        {
+            ServerRequestHandler = (_, _, _) => Task.FromResult<IDictionary<string, object?>?>(expected),
+        };
+
+        MethodInfo method = typeof(MtpServerClient).GetMethod(
+            "OnServerRequestAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var invocation = (Task<object?>)method.Invoke(
+            client,
+            [new RequestMessage(1, ClientAttachDebuggerMethod, null), TestContext.CancellationToken])!;
+
+        object? actual = await invocation.ConfigureAwait(false);
+
+        Assert.AreSame(expected, actual);
+    }
+
+    [TestMethod]
+    public async Task ServerRequestHandler_Await_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        var handlerCompletion = new TaskCompletionSource<IDictionary<string, object?>?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        using var messageHandler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(messageHandler);
+        using var client = new MtpServerClient(connection)
+        {
+            ServerRequestHandler = (_, _, _) => handlerCompletion.Task,
+        };
+        MethodInfo method = typeof(MtpServerClient).GetMethod(
+            "OnServerRequestAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        Task<object?> invocation = InvokeWithSynchronizationContext(
+            () => (Task<object?>)method.Invoke(
+                client,
+                [new RequestMessage(1, ClientAttachDebuggerMethod, null), TestContext.CancellationToken])!,
+            out QueueingSynchronizationContext context);
+
+        handlerCompletion.TrySetResult(new Dictionary<string, object?> { ["success"] = true });
+        bool completedWithoutPumping = await CompletesQuicklyAsync(invocation).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, invocation);
+        _ = await invocation.ConfigureAwait(false);
+
+        Assert.IsTrue(completedWithoutPumping, "Awaiting the public server-request handler must not capture the calling synchronization context.");
+    }
+
+    [TestMethod]
+    public void NotificationDecoders_NullParameters_DoNotRaiseEvents()
+    {
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var client = new MtpServerClient(connection);
+        int raised = 0;
+        client.LogReceived += (_, _) => raised++;
+        client.TelemetryReceived += (_, _) => raised++;
+        client.AttachmentsReceived += (_, _) => raised++;
+
+        InvokeNotificationDecoder(client, "RaiseLog");
+        InvokeNotificationDecoder(client, "RaiseTelemetry");
+        InvokeNotificationDecoder(client, "RaiseAttachments");
+
+        Assert.AreEqual(0, raised);
+    }
+
+    [TestMethod]
+    public void TestNodesUpdated_MixedChanges_PreservesDuplicatesAndOrder()
+    {
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var client = new MtpServerClient(connection);
+        var updates = new List<MtpTestNodeUpdateEventArgs>();
+        client.TestNodesUpdated += (_, args) => updates.Add(args);
+        var node = new Dictionary<string, object?> { [JsonRpcStrings.Uid] = "duplicate" };
+        var change = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Node] = node,
+            [JsonRpcStrings.Parent] = "parent",
+        };
+        var parameters = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.RunId] = "not-a-guid",
+            [JsonRpcStrings.Changes] = new object[]
+            {
+                "not-a-change",
+                new Dictionary<string, object?>(),
+                new Dictionary<string, object?> { [JsonRpcStrings.Node] = "not-a-node" },
+                change,
+                new Dictionary<string, object?>
+                {
+                    [JsonRpcStrings.Node] = new Dictionary<string, object?> { [JsonRpcStrings.Uid] = "middle" },
+                    [JsonRpcStrings.Parent] = 42,
+                },
+                change,
+            },
+        };
+
+        InvokeNotificationDecoder(client, "RaiseTestNodesUpdated", parameters);
+
+        Assert.HasCount(1, updates);
+        Assert.AreEqual(Guid.Empty, updates[0].RunId);
+        Assert.AreSequenceEqual(new[] { "duplicate", "middle", "duplicate" }, updates[0].Changes.Select(update => update.Uid));
+        Assert.AreSequenceEqual(new string?[] { "parent", null, "parent" }, updates[0].Changes.Select(update => update.ParentUid));
+        Assert.AreNotSame(node, updates[0].Changes[0].Node);
+        Assert.AreNotSame(updates[0].Changes[0].Node, updates[0].Changes[2].Node);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void TestNodesUpdated_MalformedChanges_RaisesEmptyUpdate(bool wrongCollectionType)
+    {
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var client = new MtpServerClient(connection);
+        var updates = new List<MtpTestNodeUpdateEventArgs>();
+        client.TestNodesUpdated += (_, args) => updates.Add(args);
+        var parameters = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Changes] = wrongCollectionType
+                ? "not-a-collection"
+                : new object[] { "not-a-change", new Dictionary<string, object?> { [JsonRpcStrings.Node] = 42 } },
+        };
+
+        InvokeNotificationDecoder(client, "RaiseTestNodesUpdated", parameters);
+
+        Assert.HasCount(1, updates);
+        Assert.AreEqual(Guid.Empty, updates[0].RunId);
+        Assert.IsEmpty(updates[0].Changes);
+    }
+
+    [TestMethod]
+    public async Task Dispose_DetachesNotificationAndServerRequestHandlers()
+    {
+        var firstRead = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondRead = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int readCount = 0;
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = _ => Interlocked.Increment(ref readCount) == 1 ? firstRead.Task : secondRead.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        var client = new MtpServerClient(connection);
+        int notifications = 0;
+        client.LogReceived += (_, _) => notifications++;
+
+        connection.Start();
+        await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
+        var dispose = Task.Run(client.Dispose, TestContext.CancellationToken);
+        await WithTimeoutAsync(handler.Disposed).ConfigureAwait(false);
+
+        firstRead.TrySetResult(new NotificationMessage(
+            JsonRpcMethods.ClientLog,
+            new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Level] = "Information",
+                [JsonRpcStrings.Message] = "late notification",
+            }));
+        secondRead.TrySetResult(null);
+        await WithTimeoutAsync(dispose).ConfigureAwait(false);
+
+        Assert.AreEqual(0, notifications);
+        Assert.IsNull(connection.ServerRequestHandler);
+    }
+
+    [TestMethod]
+    public async Task ShutdownAsync_DetachesNotificationAndServerRequestHandlers()
+    {
+        var firstRead = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondRead = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int readCount = 0;
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = _ => Interlocked.Increment(ref readCount) == 1 ? firstRead.Task : secondRead.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        var client = new MtpServerClient(connection);
+        int notifications = 0;
+        client.LogReceived += (_, _) => notifications++;
+
+        connection.Start();
+        await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
+        Task shutdown = client.ShutdownAsync();
+        await WithTimeoutAsync(handler.Disposed).ConfigureAwait(false);
+
+        firstRead.TrySetResult(new NotificationMessage(
+            JsonRpcMethods.ClientLog,
+            new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Level] = "Information",
+                [JsonRpcStrings.Message] = "late notification",
+            }));
+        secondRead.TrySetResult(null);
+        await WithTimeoutAsync(shutdown).ConfigureAwait(false);
+
+        Assert.AreEqual(0, notifications);
+        Assert.IsNull(connection.ServerRequestHandler);
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_PreCanceledRequest_DoesNotWrite()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => connection.SendRequestAsync("pre-canceled", null, cancellation.Token));
+
+        Assert.AreEqual(0, handler.WriteCount);
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_CanceledRequest_RemovesPendingEntryAndSendsCancellation()
+    {
+        var cancelWritten = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ControlledMessageHandler
+        {
+            WriteAsyncCallback = (message, _) =>
+            {
+                if (message is NotificationMessage { Method: JsonRpcMethods.CancelRequest })
+                {
+                    cancelWritten.TrySetResult(true);
+                }
+
+                return Task.CompletedTask;
+            },
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var cancellation = new CancellationTokenSource();
+
+        Task<ResponseMessage> request = connection.SendRequestAsync("cancel-me", null, cancellation.Token);
+        await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+        cancellation.Cancel();
+
+        await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => request);
+        await WithTimeoutAsync(cancelWritten.Task).ConfigureAwait(false);
+        Assert.AreEqual(0, GetPendingRequestCount(connection));
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_RequestAwaits_DoNotCaptureTheCallingSynchronizationContext()
+    {
+        var writeCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var readCompletion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var laterRead = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        using var handler = new ControlledMessageHandler
+        {
+            WriteAsyncCallback = (_, _) => writeCompletion.Task,
+            ReadAsyncCallback = _ => Interlocked.Increment(ref reads) == 1 ? readCompletion.Task : laterRead.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        connection.Start();
+
+        Task<ResponseMessage> request = InvokeWithSynchronizationContext(
+            () => connection.SendRequestAsync("context-free", null, TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+        await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+        writeCompletion.TrySetResult(true);
+        readCompletion.TrySetResult(new ResponseMessage(1, new Dictionary<string, object?>()));
+
+        bool completedWithoutPumping = await CompletesQuicklyAsync(request).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, request);
+        _ = await request.ConfigureAwait(false);
+
+        Assert.IsTrue(completedWithoutPumping, "Request continuations must not be posted to the caller's synchronization context.");
+        laterRead.TrySetResult(null);
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_WriteLockAwait_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        var firstWriteCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int writes = 0;
+        using var handler = new ControlledMessageHandler
+        {
+            WriteAsyncCallback = (_, _) => Interlocked.Increment(ref writes) == 1
+                ? firstWriteCompletion.Task
+                : Task.CompletedTask,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+
+        Task first = connection.SendNotificationAsync("first", null, TestContext.CancellationToken);
+        await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+        Task second = InvokeWithSynchronizationContext(
+            () => connection.SendNotificationAsync("second", null, TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+        firstWriteCompletion.TrySetResult(true);
+
+        bool completedWithoutPumping = await CompletesQuicklyAsync(second).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, second);
+        await Task.WhenAll(first, second).ConfigureAwait(false);
+
+        Assert.IsTrue(completedWithoutPumping, "Waiting for the write lock must not post to the caller's synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_ReadLoop_DoesNotCaptureAHandlerSynchronizationContext()
+    {
+        var readCompletion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = _ => Interlocked.Increment(ref reads) == 1
+                ? readCompletion.Task
+                : Task.FromResult<RpcMessage?>(null),
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        var notificationReceived = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        connection.NotificationReceived += _ => notificationReceived.TrySetResult(true);
+        Task readLoop = InvokeWithSynchronizationContext(
+            () => InvokeConnectionTask(connection, "ReadLoopAsync", TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+        await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
+
+        readCompletion.TrySetResult(new NotificationMessage("notification", null));
+
+        bool completedWithoutPumping = await CompletesQuicklyAsync(notificationReceived.Task).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, readLoop);
+        await WithTimeoutAsync(readLoop).ConfigureAwait(false);
+        Assert.IsTrue(completedWithoutPumping, "The read loop must not post message dispatch to a handler-provided synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_ServerRequestHandlerAwait_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        var handlerCompletion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ControlledMessageHandler
+        {
+            WriteAsyncCallback = (_, _) => Task.CompletedTask,
+        };
+        using var connection = new MtpJsonRpcConnection(handler)
+        {
+            ServerRequestHandler = (_, _) => handlerCompletion.Task,
+        };
+        Task request = InvokeWithSynchronizationContext(
+            () => InvokeConnectionTask(
+                connection,
+                "HandleServerRequestAsync",
+                new RequestMessage(17, ClientAttachDebuggerMethod, null),
+                TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+
+        handlerCompletion.TrySetResult(new Dictionary<string, object?> { ["success"] = true });
+        bool completedWithoutPumping = await CompletesQuicklyAsync(request).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, request);
+        await request.ConfigureAwait(false);
+
+        Assert.IsTrue(completedWithoutPumping, "Awaiting the server-request handler must not capture the calling synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_ServerResponseWriteAwait_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        var writeCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ControlledMessageHandler
+        {
+            WriteAsyncCallback = (_, _) => writeCompletion.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler)
+        {
+            ServerRequestHandler = (_, _) => Task.FromResult<object?>(null),
+        };
+        Task request = InvokeWithSynchronizationContext(
+            () => InvokeConnectionTask(
+                connection,
+                "HandleServerRequestAsync",
+                new RequestMessage(17, ClientAttachDebuggerMethod, null),
+                TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+        await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+
+        writeCompletion.TrySetResult(true);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(request).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, request);
+        await request.ConfigureAwait(false);
+
+        Assert.IsTrue(completedWithoutPumping, "Awaiting the server response write must not capture the calling synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_CancelNotificationAwait_DoesNotCaptureTheHandlerSynchronizationContext()
+    {
+        var cancelWriteCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ControlledMessageHandler
+        {
+            WriteAsyncCallback = (_, _) => cancelWriteCompletion.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        Task cancel = InvokeWithSynchronizationContext(
+            () => InvokeConnectionTask(connection, "SendCancelNotificationAsync", 42),
+            out QueueingSynchronizationContext context);
+        await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+
+        cancelWriteCompletion.TrySetResult(true);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(cancel).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, cancel);
+        await cancel.ConfigureAwait(false);
+
+        Assert.IsTrue(completedWithoutPumping, "Awaiting the cancel notification write must not capture the calling synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_NullRead_CompletesTheReadLoop()
+    {
+        var neverCompletes = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = _ => Interlocked.Increment(ref reads) == 1
+                ? Task.FromResult<RpcMessage?>(null)
+                : neverCompletes.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        connection.Start();
+
+        await WithTimeoutAsync(GetReadLoop(connection)).ConfigureAwait(false);
+
+        Assert.AreEqual(1, Volatile.Read(ref reads));
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_ReadFailure_FailsPendingRequestAndLogsExactDiagnostic()
+    {
+        var allowReadFailure = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        List<(MtpClientLogLevel Level, string Message)> log = [];
+        var failure = new InvalidOperationException("broken frame");
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = async _ =>
+            {
+                await allowReadFailure.Task.ConfigureAwait(false);
+                throw failure;
+            },
+        };
+        using var connection = new MtpJsonRpcConnection(
+            handler,
+            new DelegateMtpClientLogger((level, message) => log.Add((level, message))));
+        connection.Start();
+        Task<ResponseMessage> request = connection.SendRequestAsync("read-failure", null, TestContext.CancellationToken);
+        await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+        allowReadFailure.TrySetResult(true);
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(() => request).ConfigureAwait(false);
+        await WithTimeoutAsync(GetReadLoop(connection)).ConfigureAwait(false);
+
+        Assert.AreEqual("The MTP client read loop failed.", exception.Message);
+        Assert.AreSame(failure, exception.InnerException);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Error
+                && entry.Message.Contains("MTP client read loop failed:", StringComparison.Ordinal)
+                && entry.Message.Contains("broken frame", StringComparison.Ordinal),
+            log);
+    }
+
+    [TestMethod]
+    public void JsonRpcConnection_RequestKeys_DistinguishNumericAndStringIds()
+    {
+        MethodInfo method = typeof(MtpJsonRpcConnection).GetMethod(
+            "GetRequestKey",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        var numeric = ((int Id, bool IsString))method.Invoke(null, [7, null])!;
+        var text = ((int Id, bool IsString))method.Invoke(null, [7, "7"])!;
+
+        Assert.AreEqual((7, false), numeric);
+        Assert.AreEqual((7, true), text);
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_Dispose_CancelsReadAndDisposesHandler()
+    {
+        var readCanceled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = cancellationToken =>
+            {
+                var completion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _ = cancellationToken.Register(() =>
+                {
+                    readCanceled.TrySetResult(true);
+                    completion.TrySetCanceled(cancellationToken);
+                });
+                return completion.Task;
+            },
+        };
+        var connection = new MtpJsonRpcConnection(handler);
+        connection.Start();
+        await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
+
+        connection.Dispose(waitForReadLoop: false);
+
+        await WithTimeoutAsync(readCanceled.Task).ConfigureAwait(false);
+        Assert.AreEqual(1, handler.DisposeCount);
+    }
+
+    [TestMethod]
+    public void JsonRpcConnection_Dispose_IsIdempotent()
+    {
+        using var handler = new ControlledMessageHandler();
+        var connection = new MtpJsonRpcConnection(handler);
+
+        connection.Dispose();
+        connection.Dispose();
+
+        Assert.AreEqual(1, handler.DisposeCount);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task JsonRpcConnection_Dispose_WaitsForReadLoopUnlessExplicitlyDisabled(bool waitForReadLoop)
+    {
+        var readCompletion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ControlledMessageHandler
+        {
+            ReadAsyncCallback = _ => readCompletion.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        connection.Start();
+        await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
+
+        var disposeCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var disposeThread = new Thread(() =>
+        {
+            try
+            {
+                if (waitForReadLoop)
+                {
+                    connection.Dispose();
+                }
+                else
+                {
+                    connection.Dispose(waitForReadLoop: false);
+                }
+
+                disposeCompletion.TrySetResult(true);
+            }
+            catch (Exception ex)
+            {
+                disposeCompletion.TrySetException(ex);
+            }
+        })
+        {
+            IsBackground = true,
+        };
+        disposeThread.Start();
+
+        try
+        {
+            Assert.IsTrue(handler.Disposed.Wait((int)DefaultTimeout.TotalMilliseconds, TestContext.CancellationToken));
+            // Observe the dedicated disposer, not a pool timer that can lose a race to the bounded shutdown wait.
+            Assert.IsTrue(SpinWait.SpinUntil(
+                () => disposeCompletion.Task.IsCompleted || (disposeThread.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
+                DefaultTimeout));
+
+            Assert.AreEqual(!waitForReadLoop, disposeCompletion.Task.IsCompleted);
+        }
+        finally
+        {
+            readCompletion.TrySetResult(null);
+            await WithTimeoutAsync(disposeCompletion.Task).ConfigureAwait(false);
+            await WithTimeoutAsync(GetReadLoop(connection)).ConfigureAwait(false);
+        }
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_WithNonDictionaryIDictionaryResult_RoundTripsResultOverTheWire()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A handler may return ANY IDictionary<string, object?>, not just the concrete Dictionary<string,
+        // object?> the response serializer is registered for. The client normalizes the result to that
+        // concrete type before writing, so a SortedDictionary must still round-trip. Before that
+        // normalization the serialize threw on the unregistered runtime type and the server waited forever,
+        // so a regression surfaces here as a timeout.
+        client.ServerRequestHandler = (method, parameters, cancellationToken) =>
+        {
+            _ = method;
+            _ = parameters;
+            _ = cancellationToken;
+            return Task.FromResult<IDictionary<string, object?>?>(new SortedDictionary<string, object?>
+            {
+                ["success"] = true,
+                ["detail"] = "attached",
+            });
+        };
+
+        ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsInstanceOfType(response.Result, typeof(IDictionary<string, object?>));
+        var result = (IDictionary<string, object?>)response.Result!;
+        Assert.IsTrue((bool)result["success"]!, "Expected the boolean payload to survive the round trip.");
+        Assert.AreEqual("attached", result["detail"], "Expected the string payload to survive the round trip.");
+    }
+
+    [TestMethod]
+    public async Task Dispose_CalledFromNotificationHandler_DoesNotSelfWaitOnTheReadLoop()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A consumer may dispose the client from inside a notification handler. That handler runs on the
+        // read loop's own execution flow, so the connection's Dispose must detect the re-entrancy and skip
+        // synchronously waiting on the read loop from within itself. If it does not, Dispose blocks for the
+        // full read-loop shutdown timeout (5s) because the loop cannot finish while it is parked in this
+        // handler. Asserting the handler-triggered Dispose returns well under that timeout guards the fix;
+        // before it, this elapsed jumps to ~5s.
+        var disposeElapsed = new TaskCompletionSource<TimeSpan>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TestNodesUpdated += (_, _) =>
+        {
+            var stopwatch = Stopwatch.StartNew();
+            client.Dispose();
+            stopwatch.Stop();
+            disposeElapsed.TrySetResult(stopwatch.Elapsed);
+        };
+
+        await server.SendDiscoveredTestNodeAsync(Guid.NewGuid(), "Ns.Class.Test", "Test").ConfigureAwait(false);
+
+        TimeSpan elapsed = await WithTimeoutAsync(disposeElapsed.Task).ConfigureAwait(false);
+
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(2),
+            elapsed,
+            $"Dispose from a notification handler took {elapsed.TotalMilliseconds:F0} ms; it must not self-wait on the read loop.");
+    }
+
+    [TestMethod]
+    public async Task ShutdownAsync_WithBlockedNotificationHandler_ReturnsWithoutBlockingTheCaller()
+    {
+        using FakeMtpServer server = new();
+        MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+        var handlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        client.TestNodesUpdated += (_, _) =>
+        {
+            handlerEntered.TrySetResult(true);
+            releaseHandler.Task.GetAwaiter().GetResult();
+        };
+
+        try
+        {
+            await server.SendDiscoveredTestNodeAsync(Guid.NewGuid(), "Ns.Class.Test", "Test").ConfigureAwait(false);
+            await WithTimeoutAsync(handlerEntered.Task).ConfigureAwait(false);
+
+            var stopwatch = Stopwatch.StartNew();
+            Task shutdown = client.ShutdownAsync();
+            stopwatch.Stop();
+
+            Assert.IsLessThan(
+                TimeSpan.FromSeconds(2),
+                stopwatch.Elapsed,
+                $"Calling ShutdownAsync took {stopwatch.Elapsed.TotalMilliseconds:F0} ms; connection teardown must be scheduled rather than blocking the caller.");
+
+            _ = releaseHandler.TrySetResult(true);
+            await WithTimeoutAsync(shutdown).ConfigureAwait(false);
+        }
+        finally
+        {
+            _ = releaseHandler.TrySetResult(true);
+            client.Dispose();
+        }
+    }
+
+    private static async Task<MtpServerClient> ConnectAndInitializeAsync(FakeMtpServer server)
+    {
+        MtpServerClient client = server.ConnectClient();
+        await WithTimeoutAsync(client.InitializeAsync()).ConfigureAwait(false);
+        return client;
+    }
+
+    private static Task<T> WaitForEventAsync<T>(Action<EventHandler<T>> subscribe)
+    {
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        subscribe((_, e) => tcs.TrySetResult(e));
+        return tcs.Task;
+    }
+
+    private static async Task<T> WithTimeoutAsync<T>(Task<T> task)
+    {
+        Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
+        return completed != task
+            ? throw new TimeoutException("Timed out waiting for the operation to complete.")
+            : await task.ConfigureAwait(false);
+    }
+
+    private static async Task WithTimeoutAsync(Task task)
+    {
+        Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
+        if (completed != task)
+        {
+            throw new TimeoutException("Timed out waiting for the operation to complete.");
+        }
+
+        await task.ConfigureAwait(false);
+    }
+
+    private static async Task<TException> AssertThrowsAsync<TException>(Func<Task> action)
+        where TException : Exception
+    {
+        try
+        {
+            await WithTimeoutAsync(action()).ConfigureAwait(false);
+        }
+        catch (TException exception)
+        {
+            return exception;
+        }
+
+        Assert.Fail($"Expected an exception of type {typeof(TException).Name}, but none was thrown.");
+        throw new InvalidOperationException("Unreachable.");
+    }
+
+    private static async Task<T> AssertCompletesWithoutPumpingAsync<T>(Func<Task<T>> action)
+    {
+        Task<T> task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(task).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, task);
+        T result = await task.ConfigureAwait(false);
+
+        Assert.IsTrue(
+            completedWithoutPumping,
+            $"The operation captured the calling synchronization context and posted {context.PostCount} continuation(s).");
+        return result;
+    }
+
+    private static async Task AssertCompletesWithoutPumpingAsync(Func<Task> action)
+    {
+        Task task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(task).ConfigureAwait(false);
+        DrainContextUntilCompleted(context, task);
+        await task.ConfigureAwait(false);
+
+        Assert.IsTrue(
+            completedWithoutPumping,
+            $"The operation captured the calling synchronization context and posted {context.PostCount} continuation(s).");
+    }
+
+    private static Task<T> InvokeWithSynchronizationContext<T>(
+        Func<Task<T>> action,
+        out QueueingSynchronizationContext context)
+    {
+        context = new QueueingSynchronizationContext();
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(context);
+        try
+        {
+            return action();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+    }
+
+    private static Task InvokeWithSynchronizationContext(
+        Func<Task> action,
+        out QueueingSynchronizationContext context)
+    {
+        context = new QueueingSynchronizationContext();
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(context);
+        try
+        {
+            return action();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+    }
+
+    private static async Task<bool> CompletesQuicklyAsync(Task task)
+        => await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false) == task;
+
+    private static void DrainContextUntilCompleted(QueueingSynchronizationContext context, Task task)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (!task.IsCompleted && stopwatch.Elapsed < DefaultTimeout)
+        {
+            if (!context.TryRunOne())
+            {
+                Thread.Sleep(10);
+            }
+        }
+    }
+
+    private static int GetPendingRequestCount(MtpJsonRpcConnection connection)
+    {
+        object pending = typeof(MtpJsonRpcConnection).GetField(
+            "_pendingRequests",
+            BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(connection)!;
+        return (int)pending.GetType().GetProperty("Count")!.GetValue(pending)!;
+    }
+
+    private static Task GetReadLoop(MtpJsonRpcConnection connection)
+        => (Task)typeof(MtpJsonRpcConnection).GetField(
+            "_readLoop",
+            BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(connection)!;
+
+    private static Task InvokeConnectionTask(
+        MtpJsonRpcConnection connection,
+        string methodName,
+        params object?[] arguments)
+        => (Task)typeof(MtpJsonRpcConnection).GetMethod(
+            methodName,
+            BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(connection, arguments)!;
+
+    private static void InvokeNotificationDecoder(MtpServerClient client, string methodName, IDictionary<string, object?>? parameters = null)
+        => typeof(MtpServerClient).GetMethod(
+            methodName,
+            BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(client, new object?[] { parameters });
+
+    private static T GetSingleRequestParams<T>(FakeMtpServer server, string method)
+        where T : class
+    {
+        RequestMessage request = server.ReceivedRequests.Single(received => received.Method == method);
+        Assert.IsNotNull(request.Params, $"Expected the '{method}' request to carry deserialized params.");
+
+        // The System.Text.Json decoder strong-types incoming request params, so Params is already T. The
+        // client package's Jsonite RpcMessage decoder instead keeps them as a raw property bag (the real
+        // client never receives discover/run requests, so it decodes per method itself). Normalize both
+        // formatter paths to the typed args via the registered deserializer so the wire-payload assertions
+        // hold identically on the net8 (STJ) and net462 (Jsonite) legs.
+        if (request.Params is T typed)
+        {
+            return typed;
+        }
+
+        Assert.IsInstanceOfType(
+            request.Params,
+            typeof(IDictionary<string, object?>),
+            $"Expected the '{method}' request params to be {typeof(T).Name} or a raw property bag.");
+        return SerializerUtilities.Deserialize<T>((IDictionary<string, object?>)request.Params);
+    }
+
+    private sealed class QueueingSynchronizationContext : SynchronizationContext
+    {
+        private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = new();
+#if NET9_0_OR_GREATER
+        private readonly Lock _lock = new();
+#else
+        private readonly object _lock = new();
+#endif
+        private int _postCount;
+
+        public int PostCount => Volatile.Read(ref _postCount);
+
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            _ = Interlocked.Increment(ref _postCount);
+            lock (_lock)
+            {
+                _callbacks.Enqueue((d, state));
+            }
+        }
+
+        public bool TryRunOne()
+        {
+            (SendOrPostCallback Callback, object? State) work;
+            lock (_lock)
+            {
+                if (_callbacks.Count == 0)
+                {
+                    return false;
+                }
+
+                work = _callbacks.Dequeue();
+            }
+
+            SynchronizationContext? previous = Current;
+            SetSynchronizationContext(this);
+            try
+            {
+                work.Callback(work.State);
+            }
+            finally
+            {
+                SetSynchronizationContext(previous);
+            }
+
+            return true;
+        }
+    }
+
+    private sealed class ControlledMessageHandler : IMessageHandler, IDisposable
+    {
+        private readonly TaskCompletionSource<bool> _disposed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> _readStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> _writeStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _disposeCount;
+        private int _writeCount;
+
+        public Func<CancellationToken, Task<RpcMessage?>>? ReadAsyncCallback { get; init; }
+
+        public Func<RpcMessage, CancellationToken, Task>? WriteAsyncCallback { get; init; }
+
+        public Task Disposed => _disposed.Task;
+
+        public Task ReadStarted => _readStarted.Task;
+
+        public Task WriteStarted => _writeStarted.Task;
+
+        public int DisposeCount => Volatile.Read(ref _disposeCount);
+
+        public int WriteCount => Volatile.Read(ref _writeCount);
+
+        public Task<RpcMessage?> ReadAsync(CancellationToken cancellationToken)
+        {
+            _readStarted.TrySetResult(true);
+            return ReadAsyncCallback?.Invoke(cancellationToken)
+                ?? Task.Delay(Timeout.Infinite, cancellationToken).ContinueWith<RpcMessage?>(
+                    _ => null,
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+        }
+
+        public Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
+        {
+            _ = Interlocked.Increment(ref _writeCount);
+            _writeStarted.TrySetResult(true);
+            return WriteAsyncCallback?.Invoke(message, cancellationToken) ?? Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            _ = Interlocked.Increment(ref _disposeCount);
+            _disposed.TrySetResult(true);
+        }
+    }
+}

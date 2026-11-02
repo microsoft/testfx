@@ -1,0 +1,26 @@
+# Windows-only prerequisites shared by the testfx Windows build/test pipelines.
+# Installs the Windows SDK, procdump, and the Access Database Engine.
+steps:
+- task: PowerShell@2
+  displayName: 'Install Windows SDK'
+  inputs:
+    targetType: filePath
+    filePath: ./eng/install-windows-sdk.ps1
+    failOnStderr: true
+    showWarnings: true
+
+- task: PowerShell@2
+  displayName: 'Install procdump'
+  inputs:
+    targetType: filePath
+    filePath: ./eng/install-procdump.ps1
+    failOnStderr: true
+    showWarnings: true
+
+- task: PowerShell@2
+  displayName: 'Install Access Database Engine'
+  inputs:
+    targetType: filePath
+    filePath: ./eng/install-access-database-engine.ps1
+    failOnStderr: true
+    showWarnings: true

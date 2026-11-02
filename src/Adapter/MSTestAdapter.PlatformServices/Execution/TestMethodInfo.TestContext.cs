@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -25,14 +25,24 @@ internal partial class TestMethodInfo
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private bool SetTestContext(object classInstance, TestResult result)
     {
-        DebugEx.Assert(classInstance != null, "classInstance != null");
-        DebugEx.Assert(result != null, "result != null");
+        DebugEx.Assert(classInstance is not null, "classInstance != null");
+        DebugEx.Assert(result is not null, "result != null");
 
         try
         {
-            if (Parent.TestContextProperty != null && Parent.TestContextProperty.CanWrite)
+            if (Parent.TestContextProperty is not null && Parent.TestContextProperty.CanWrite)
             {
-                Parent.TestContextProperty.SetValue(classInstance, TestContext);
+                // Reflection-free fast path: use the source-generated setter when available;
+                // otherwise fall back to PropertyInfo.SetValue (reflection mode).
+                Action<object?, object?>? sourceGeneratedSetter = PlatformServiceProvider.Instance.ReflectionOperations.GetPropertySetter(Parent.TestContextProperty);
+                if (sourceGeneratedSetter is not null)
+                {
+                    sourceGeneratedSetter(classInstance, TestContext);
+                }
+                else
+                {
+                    Parent.TestContextProperty.SetValue(classInstance, TestContext);
+                }
             }
 
             return true;
@@ -48,7 +58,7 @@ internal partial class TestMethodInfo
 
             result.Outcome = UnitTestOutcome.Failed;
             StackTraceInformation? stackTraceInfo = realException.GetStackTraceInformation();
-            result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo);
+            result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo, realException);
         }
 
         return false;

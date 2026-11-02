@@ -12,31 +12,42 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer*.cs" Link="IPC\Serializers\%(Filename)%(Extension)" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\NamedPipeSerializer.cs" Link="IPC\Serializers\NamedPipeSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\ObjectFieldIds.cs" Link="IPC\ObjectFieldIds.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
 
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RuntimeFeatureHelper.cs" Link="Helpers\RuntimeFeatureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\DisposeHelper.cs" Link="Helpers\DisposeHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameHelper.cs" Link="Helpers\ReportFileNameHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\MergeOutputFileHelper.cs" Link="Helpers\MergeOutputFileHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ArtifactPostProcessingHelper.cs" Link="Helpers\ArtifactPostProcessingHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileWriterHelper.cs" Link="Helpers\ReportFileWriterHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\NamedPipeServerFactory.cs" Link="Helpers\NamedPipeServerFactory.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\PipeNameEnvironmentVariableProviderBase.cs" Link="Helpers\PipeNameEnvironmentVariableProviderBase.cs" />
   </ItemGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to provide TRX test reports.
 
-This package extends Microsoft Testing Platform to provide TRX test reports.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->
@@ -58,6 +69,8 @@ This package extends Microsoft Testing Platform to provide TRX test reports.]]>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>

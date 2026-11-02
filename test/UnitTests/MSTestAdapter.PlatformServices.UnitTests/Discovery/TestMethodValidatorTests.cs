@@ -4,7 +4,9 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
 
@@ -90,6 +92,51 @@ public class TestMethodValidatorTests : TestContainer
         _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
     }
 
+    public void IsValidTestMethodShouldReturnFalseForInstanceMethodsOnFSharpModules()
+    {
+        SetupTestMethod();
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceMethod")!;
+        _mockReflectHelper
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns(default(AsyncStateMachineAttribute?));
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, moduleType, _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().Be(string.Format(
+            CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectFSharpTestMethodSignature, moduleType.FullName, methodInfo.Name));
+    }
+
+    public void IsValidTestMethodShouldReturnTrueForStaticMethodsOnFSharpModules()
+    {
+        SetupTestMethod();
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("StaticMethod")!;
+        _mockReflectHelper
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns(default(AsyncStateMachineAttribute?));
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, moduleType, _warnings).Should().BeTrue();
+        _warnings.Should().BeEmpty();
+    }
+
+    public void IsValidTestMethodShouldReportFSharpSignatureWarningForInstanceGenericValueTaskMethodsOnModules()
+    {
+        SetupTestMethod();
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceGenericValueTaskMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        // Changing only the return type cannot fix an instance method on an F# module.
+        _testMethodValidator.IsValidTestMethod(methodInfo, moduleType, _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().Be(string.Format(
+            CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectFSharpTestMethodSignature, moduleType.FullName, methodInfo.Name));
+        _warnings[0].Should().NotContain("ValueTask<T>");
+    }
+
     public void IsValidTestMethodShouldReturnFalseForGenericTestMethods()
     {
         SetupTestMethod();
@@ -138,6 +185,43 @@ public class TestMethodValidatorTests : TestContainer
             BindingFlags.Instance | BindingFlags.Public)!;
 
         _testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings).Should().BeTrue();
+    }
+
+    public void IsValidTestMethodShouldReturnTrueForMethodsWithValueTaskReturnType()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "MethodWithValueTaskReturnType",
+            BindingFlags.Instance | BindingFlags.Public)!;
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings).Should().BeTrue();
+        _warnings.Count.Should().Be(0);
+    }
+
+    public void IsValidTestMethodShouldReturnFalseAndReportTargetedWarningForGenericValueTaskReturnType()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "MethodWithGenericValueTaskReturnType",
+            BindingFlags.Instance | BindingFlags.Public)!;
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().Contain("ValueTask<T>");
+    }
+
+    public void IsValidTestMethodShouldReportGenericSignatureWarningWhenGenericValueTaskMethodIsAlsoInvalidForAnotherReason()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "StaticMethodWithGenericValueTaskReturnType",
+            BindingFlags.Static | BindingFlags.Public)!;
+
+        // The method is invalid because it is static; the targeted ValueTask<T> message must NOT be used here,
+        // otherwise the user could "fix" the return type and still have an invalid (static) method.
+        _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().NotContain("ValueTask<T>");
     }
 
     public void IsValidTestMethodShouldReturnTrueForMethodsWithVoidReturnType()
@@ -216,6 +300,12 @@ internal abstract class DummyTestClass
     public async Task AsyncMethodWithTaskReturnType() => await Task.Delay(TimeSpan.Zero);
 
     public Task MethodWithTaskReturnType() => Task.Delay(TimeSpan.Zero);
+
+    public ValueTask MethodWithValueTaskReturnType() => default;
+
+    public ValueTask<int> MethodWithGenericValueTaskReturnType() => default;
+
+    public static ValueTask<int> StaticMethodWithGenericValueTaskReturnType() => default;
 
     public int MethodWithIntReturnType() => 0;
 

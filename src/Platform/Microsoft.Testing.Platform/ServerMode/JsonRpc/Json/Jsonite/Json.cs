@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright(c) 2016, Alexandre Mutel
@@ -65,7 +65,7 @@ namespace Jsonite
         /// <exception cref="System.ArgumentNullException">if text is null</exception>
         public static object Deserialize(string text, JsonSettings settings = null)
         {
-            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text is null) throw new ArgumentNullException(nameof(text));
             return Deserialize(new StringReader(text), settings);
         }
 
@@ -78,10 +78,14 @@ namespace Jsonite
         /// <exception cref="System.ArgumentNullException">if reader is null</exception>
         public static object Deserialize(TextReader reader, JsonSettings settings = null)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader is null) throw new ArgumentNullException(nameof(reader));
 
             var parser = new JsonReader(reader, settings ?? DefaultSettings);
+#if MTP_MSBUILD_TASKS
+            return parser.ParseDocument(null, typeof(object), false);
+#else
             return parser.Parse(null, typeof(object), false);
+#endif
         }
 
         /// <summary>

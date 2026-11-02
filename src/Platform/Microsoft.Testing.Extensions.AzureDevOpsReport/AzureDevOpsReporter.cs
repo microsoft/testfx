@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -20,27 +19,9 @@ internal sealed class AzureDevOpsReporter :
     IOutputDeviceDataProducer
 {
     internal const double KnownFlakyFailureRateThreshold = 0.25;
-    private const string DeterministicBuildRoot = "/_/";
-    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MinSamplesForRegressionAnnotation = 5;
     private const string QuarantineBuildTagLine = "##vso[build.addbuildtag]has-quarantined-test-failure";
     private const string WarningSeverity = "warning";
-    private static readonly char[] NewlineCharacters = ['\r', '\n'];
-
-    // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose
-    // 'code' (i.e., the "Namespace.Type.Method(args)" portion) starts with any of these is treated
-    // as framework internals and skipped when looking for the user's call site to annotate.
-    // Matching on the type name (rather than the source file name) is robust to partial-class
-    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and extension-based assertion
-    // implementations such as Assert.That in Assert.That.cs, and it avoids false positives on user
-    // files innocently named *Assert.cs. See https://github.com/microsoft/testfx/issues/6925.
-    private static readonly string[] AssertionImplementationCodePrefixes =
-    [
-        "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
-    ];
 
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
@@ -70,7 +51,7 @@ internal sealed class AzureDevOpsReporter :
         _outputDisplay = outputDisplay;
         _historyService = historyService;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -91,32 +72,35 @@ internal sealed class AzureDevOpsReporter :
     public string Description { get; } = AzureDevOpsResources.Description;
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync()
+    public async Task<bool> IsEnabledAsync()
     {
         bool isEnabledByParameter = _commandLine.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName);
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{nameof(AzureDevOpsReport)} is {(isEnabledByParameter ? "enabled" : "disabled")}.");
+            await _logger.LogTraceAsync($"{nameof(AzureDevOpsReport)} is {(isEnabledByParameter ? "enabled" : "disabled")}.").ConfigureAwait(false);
         }
 
         if (!isEnabledByParameter)
         {
-            return Task.FromResult(false);
+            return false;
         }
 
-        bool isEnabledByEnvVariable = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
+        bool isEnabledByEnvVariable = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
         if (isEnabledByEnvVariable)
         {
             EnsureEnabledConfigurationLoaded();
         }
 
+        bool annotationsEnabled = AzureDevOpsConstants.IsFeatureKnobEnabled(_commandLine, AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations);
+
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"TF_BUILD environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}");
-            _logger.LogTrace($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.");
+            await _logger.LogTraceAsync($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName} environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}").ConfigureAwait(false);
+            await _logger.LogTraceAsync($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.").ConfigureAwait(false);
+            await _logger.LogTraceAsync($"Failure annotations are {(annotationsEnabled ? "enabled" : "disabled")}, you can toggle them by using --report-azdo-annotations parameter.").ConfigureAwait(false);
         }
 
-        return Task.FromResult(isEnabledByEnvVariable);
+        return isEnabledByEnvVariable && annotationsEnabled;
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -129,25 +113,35 @@ internal sealed class AzureDevOpsReporter :
         }
 
         EnsureEnabledConfigurationLoaded();
+
+        // A test framework that retries a test in-process reports every attempt under the same test node uid. An
+        // attempt that a later one supersedes is not a build failure, so it must not raise an Azure DevOps error
+        // annotation: only the final attempt is annotated.
+        if (nodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
+        {
+            return;
+        }
+
         TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
-        string testName = GetTestName(nodeUpdateMessage.TestNode);
 
+        // Defer GetTestName() to failure branches only: for passing/skipped/in-progress tests
+        // nodeState falls through the switch with no match and testName is never needed.
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(testDisplayName, testName, failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(testDisplayName, testName, error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelled:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                await WriteExceptionAsync(testDisplayName, testName, cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(testDisplayName, testName, timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
@@ -156,23 +150,23 @@ internal sealed class AzureDevOpsReporter :
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Failure received.");
+            await _logger.LogTraceAsync("Failure received.").ConfigureAwait(false);
         }
 
         bool isQuarantined = _quarantineFile?.Matches(testName) == true;
         if (isQuarantined && Interlocked.Exchange(ref _quarantineBuildTagEmitted, 1) == 0)
         {
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(QuarantineBuildTagLine), cancellationToken).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(QuarantineBuildTagLine), cancellationToken).ConfigureAwait(false);
         }
 
         string severity = GetSeverity(testName, isQuarantined);
         string annotationSuffix = BuildAnnotationSuffix(testName, isQuarantined);
-        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix, _userStackFrameFilters);
+        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix, _userStackFrameFilters, StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime);
         if (line is null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace("Failure message is null, returning.");
+                await _logger.LogTraceAsync("Failure message is null, returning.").ConfigureAwait(false);
             }
 
             return;
@@ -180,123 +174,55 @@ internal sealed class AzureDevOpsReporter :
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"Showing failure message '{line}'.");
+            await _logger.LogTraceAsync($"Showing failure message '{line}'.").ConfigureAwait(false);
         }
 
-        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
-        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null, userStackFrameFilters: null);
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null, userStackFrameFilters: null, skipAssertionFrames: true);
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix)
-        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix, userStackFrameFilters: null);
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix, userStackFrameFilters: null, skipAssertionFrames: true);
 
-    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix, Regex[]? userStackFrameFilters)
+    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix, Regex[]? userStackFrameFilters, bool skipAssertionFrames)
     {
         string message = explanation ?? exception?.Message ?? AzureDevOpsResources.NoFailureMessageFallback;
         string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
 
         if (exception?.StackTrace is { } stackTrace)
         {
-            string repoRoot = RootFinder.Find();
-            if (logger.IsEnabled(LogLevel.Trace))
+            // A missing repository root only means source locations cannot be made repo-relative, so it
+            // must degrade to the message-only annotation below rather than fault the data consumer.
+            // This happens whenever the test application runs outside a git checkout — including on
+            // browser-wasm, whose virtual filesystem has no '.git' anywhere. The GitHub Actions reporter
+            // makes the same allowance in GitHubActionsRepositoryRoot.FindGitRoot.
+            if (TryFindRepoRoot(logger) is { } repoRoot)
             {
-                logger.LogTrace($"Found repo root '{repoRoot}'");
-            }
+                (string RelativeNormalizedPath, int LineNumber)? location = StackTraceSourceLocationResolver.TryResolve(
+                    stackTrace,
+                    repoRoot,
+                    fileSystem,
+                    logger,
+                    skipAssertionFrames,
+                    code => IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger));
 
-            foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
-            {
-                (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
-                if (location is null)
+                if (location is not null)
                 {
+                    string line = $"##vso[task.logissue type={severity};sourcepath={location.Value.RelativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
                     if (logger.IsEnabled(LogLevel.Trace))
                     {
-                        logger.LogTrace("StackFrame location was null, continuing to next.");
+                        logger.LogTrace($"Reported full message '{line}'.");
                     }
 
-                    continue;
+                    return line;
                 }
 
-                string file = location.Value.File;
-                string code = location.Value.Code;
-
-                if (IsAssertionImplementationFrame(code) || IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
-                    }
-
-                    continue;
-                }
-
-                string relativePath;
-                if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{file}' is coming from deterministic build.");
-                    }
-
-                    relativePath = file.Substring(DeterministicBuildRoot.Length);
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Using relative path '{relativePath}'.");
-                    }
-                }
-                else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{file}' is in current repo '{repoRoot}'.");
-                    }
-
-                    relativePath = file.Substring(repoRoot.Length);
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Using relative path '{relativePath}'.");
-                    }
-                }
-                else
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{file}' does not belong to current repo '{repoRoot}'. Continue to next.");
-                    }
-
-                    continue;
-                }
-
-                string fullPath = Path.Combine(repoRoot, relativePath);
-                if (!fileSystem.ExistFile(fullPath))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{fullPath}' does not exist on disk. Continue to next.");
-                    }
-
-                    continue;
-                }
-
-                string relativeNormalizedPath = relativePath.Replace('\\', '/');
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
-                    logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
+                    logger.LogTrace("No stack trace line matched criteria, falling back to a message-only annotation.");
                 }
-
-                string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Reported full message '{line}'.");
-                }
-
-                return line;
-            }
-
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace("No stack trace line matched criteria, falling back to a message-only annotation.");
             }
         }
         else if (logger.IsEnabled(LogLevel.Trace))
@@ -318,6 +244,34 @@ internal sealed class AzureDevOpsReporter :
         }
 
         return fallbackLine;
+    }
+
+    /// <summary>
+    /// Resolves the repository root used to turn an absolute stack-frame path into a repo-relative
+    /// <c>sourcepath</c>, or <see langword="null"/> when the test application does not run inside a git
+    /// checkout (a published app, a container, or the browser-wasm virtual filesystem).
+    /// </summary>
+    private static string? TryFindRepoRoot(ILogger logger)
+    {
+        try
+        {
+            string repoRoot = RootFinder.Find();
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace($"Found repo root '{repoRoot}'");
+            }
+
+            return repoRoot;
+        }
+        catch (InvalidOperationException)
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace("No repository root was found, emitting a message-only annotation.");
+            }
+
+            return null;
+        }
     }
 
     private string GetConfiguredSeverity()
@@ -434,10 +388,7 @@ internal sealed class AzureDevOpsReporter :
     }
 
     private static string GetTestName(TestNode testNode)
-        => testNode.Properties
-            .OfType<SerializableKeyValuePairStringProperty>()
-            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
-            ?? testNode.DisplayName;
+        => TestNodeIdentity.GetTestName(testNode);
 
     /// <summary>
     /// Formats the reporter message so the test name lands on its own line.
@@ -462,19 +413,6 @@ internal sealed class AzureDevOpsReporter :
     private static bool DisplayNameContainsTfm(string displayName, string tfm)
         => displayName.EndsWith($"({tfm})", StringComparison.Ordinal)
             || displayName.EndsWith($"(\"{tfm}\")", StringComparison.Ordinal);
-
-    private static bool IsAssertionImplementationFrame(string code)
-    {
-        foreach (string prefix in AssertionImplementationCodePrefixes)
-        {
-            if (code.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     private static bool IsUserStackFrameFilterMatch(string code, Regex[]? userStackFrameFilters, ILogger logger)
     {
@@ -502,29 +440,5 @@ internal sealed class AzureDevOpsReporter :
         }
 
         return false;
-    }
-
-    private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
-    {
-        Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
-        if (!match.Success)
-        {
-            return null;
-        }
-
-        string code = match.Groups["code"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(code))
-        {
-            return null;
-        }
-
-        string file = match.Groups["file"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(file))
-        {
-            return null;
-        }
-
-        int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-        return (code, file, line);
     }
 }

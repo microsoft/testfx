@@ -19,12 +19,13 @@ public sealed class UseConditionBaseWithTestClassAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseConditionBaseWithTestClassTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseConditionBaseWithTestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.UseConditionBaseWithTestClassDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor UseConditionBaseWithTestClassRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseConditionBaseWithTestClassRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

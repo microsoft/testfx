@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
@@ -48,16 +49,20 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
         ILogger<RetryLifecycleCallbacks> logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryLifecycleCallbacks>();
 
         ArgumentGuard.Ensure(pipeName.Length == 1, nameof(pipeName), "Pipe name expected");
-        logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
+        // Stryker disable once Boolean: continuation scheduling does not change the connection diagnostic.
+        await logger.LogDebugAsync($"Connecting to pipe '{pipeName[0]}'").ConfigureAwait(false);
 
         Client = new(pipeName[0]);
         Client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         Client.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
         Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         Client.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        Client.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        Client.RegisterSerializer(new TestRunCountsRequestSerializer(), typeof(TestRunCountsRequest));
+        Client.RegisterSerializer(new ArtifactRequestSerializer(), typeof(ArtifactRequest));
+        // Stryker disable once Boolean: continuation scheduling does not change connection completion.
         await Client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
+        // Stryker disable once Boolean: continuation scheduling does not change the received retry set.
         GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken).ConfigureAwait(false);
         FailedTestsIDToRetry = result.FailedTestIds;
     }

@@ -1,0 +1,224 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Text.Json;
+
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
+
+namespace MSTest.Acceptance.IntegrationTests;
+
+[TestClass]
+public sealed class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixture>
+{
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CtrfReport_WhenTestsArePassingAndFailing_CtrfFileIsGeneratedWithBothOutcomes(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N") + ".ctrf.json";
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename {fileName}",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        string ctrfFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
+        string ctrfContent = File.ReadAllText(ctrfFile);
+
+        // Top-level CTRF document shape
+        Assert.Contains(@"""reportFormat"": ""CTRF""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""specVersion""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@", ctrfContent, ctrfContent);
+
+        // Summary counts include both outcomes
+        Assert.Contains(@"""tests"": 2", ctrfContent, ctrfContent);
+        Assert.Contains(@"""passed"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""failed"": 1", ctrfContent, ctrfContent);
+
+        // Both per-test entries are present
+        Assert.Contains(@"""name"": ""PassingTest""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""name"": ""FailingTest""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""status"": ""passed""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""status"": ""failed""", ctrfContent, ctrfContent);
+
+        // The failed test exposes the assertion message in CTRF's `message` field.
+        Assert.Contains(@"""message"":", ctrfContent, ctrfContent);
+        Assert.Contains("Assert.AreEqual", ctrfContent, ctrfContent);
+
+        using var document = JsonDocument.Parse(ctrfContent);
+        Assert.AreEqual("0.2.0", document.RootElement.GetProperty("specVersion").GetString());
+        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(2, tests);
+        Assert.IsTrue(tests.All(test => !string.IsNullOrEmpty(test.GetProperty("testId").GetString())));
+        string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
+        Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
+        Assert.HasCount(2, executionIds.Distinct());
+        string[] attemptIds = [.. tests.Select(test => test.GetProperty("attemptId").GetString()!)];
+        Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+        Assert.HasCount(2, attemptIds.Distinct());
+        Assert.IsEmpty(attemptIds.Intersect(executionIds, StringComparer.Ordinal));
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "MSTestCtrfReport";
+
+        public string TargetAssetPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+        private const string SourceCode = """
+#file MSTestCtrfReport.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestCtrfReport;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void PassingTest()
+    {
+    }
+
+    [TestMethod]
+    public void FailingTest()
+    {
+        Assert.AreEqual(1, 2);
+    }
+}
+""";
+    }
+
+    public TestContext TestContext { get; set; } = null!;
+}
+
+[TestClass]
+[DoNotParallelize]
+public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfReportRetryAttributeTests.TestAssetFixture>
+{
+    [TestMethod]
+    public async Task CtrfReport_WithMSTestRetryAttribute_MarksRetriedTestAsFlaky()
+    {
+        string fileName = Guid.NewGuid().ToString("N") + ".ctrf.json";
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename {fileName}",
+            cancellationToken: TestContext.CancellationToken);
+
+        // The retried test ends up passing, so the run succeeds.
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        string ctrfFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
+        string ctrfContent = File.ReadAllText(ctrfFile);
+
+        // One logical test, collapsed from its two explicitly tagged attempts, counted once and reported as flaky.
+        Assert.Contains(@"""tests"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""passed"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""failed"": 0", ctrfContent, ctrfContent);
+        Assert.Contains(@"""flaky"": 1", ctrfContent, ctrfContent);
+
+        // The per-test entry carries the earlier failed attempt.
+        Assert.Contains(@"""retries"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""retryAttempts""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""flaky"": true", ctrfContent, ctrfContent);
+        Assert.Contains("Failing on the first attempt", ctrfContent, ctrfContent);
+
+        using var document = JsonDocument.Parse(ctrfContent);
+        JsonElement test = Assert.ContainsSingle(
+            document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.IsFalse(string.IsNullOrEmpty(test.GetProperty("testId").GetString()));
+        string executionId = test.GetProperty("executionId").GetString()!;
+        string attemptId = test.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString()!;
+        string finalAttemptId = test.GetProperty("attemptId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(executionId, out _));
+        Assert.IsTrue(Guid.TryParse(attemptId, out _));
+        Assert.IsTrue(Guid.TryParse(finalAttemptId, out _));
+        Assert.AreNotEqual(executionId, attemptId);
+        Assert.AreNotEqual(executionId, finalAttemptId);
+        Assert.AreNotEqual(attemptId, finalAttemptId);
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "MSTestCtrfReportRetry";
+
+        public string TargetAssetPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+        private const string SourceCode = """
+#file MSTestCtrfReportRetry.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestCtrfReportRetry;
+
+[TestClass]
+public class UnitTest1
+{
+    private static int _attempts;
+
+    [TestMethod]
+    [Retry(3)]
+    public void FlakyTest()
+    {
+        _attempts++;
+        if (_attempts <= 1)
+        {
+            Assert.Fail("Failing on the first attempt");
+        }
+    }
+}
+""";
+    }
+
+    public TestContext TestContext { get; set; } = null!;
+}

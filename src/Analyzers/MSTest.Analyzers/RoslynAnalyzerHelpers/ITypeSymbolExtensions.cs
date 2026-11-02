@@ -12,11 +12,11 @@ internal static class ITypeSymbolExtensions
         [NotNullWhen(returnValue: true)] this ITypeSymbol? fromSymbol,
         [NotNullWhen(returnValue: true)] ITypeSymbol? toSymbol,
         Compilation compilation)
-        => fromSymbol != null && toSymbol != null && compilation.ClassifyCommonConversion(fromSymbol, toSymbol).IsImplicit;
+        => fromSymbol is not null && toSymbol is not null && compilation.ClassifyCommonConversion(fromSymbol, toSymbol).IsImplicit;
 
     public static bool Inherits([NotNullWhen(returnValue: true)] this ITypeSymbol? type, [NotNullWhen(returnValue: true)] ITypeSymbol? possibleBase)
     {
-        if (type == null || possibleBase == null)
+        if (type is null || possibleBase is null)
         {
             return false;
         }
@@ -41,23 +41,26 @@ internal static class ITypeSymbolExtensions
 
     public static bool DerivesFrom([NotNullWhen(returnValue: true)] this ITypeSymbol? symbol, [NotNullWhen(returnValue: true)] ITypeSymbol? candidateBaseType, bool baseTypesOnly = false, bool checkTypeParameterConstraints = true)
     {
-        if (candidateBaseType == null || symbol == null)
+        if (candidateBaseType is null || symbol is null)
         {
             return false;
         }
 
         if (!baseTypesOnly && candidateBaseType.TypeKind == TypeKind.Interface)
         {
-            IEnumerable<ITypeSymbol> allInterfaces = symbol.AllInterfaces.OfType<ITypeSymbol>();
-            if (SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType))
+            // Avoid OfType<ITypeSymbol>() + optional Select() + Contains() chain — each creates a heap-allocated
+            // LINQ iterator state machine. AllInterfaces is ImmutableArray<INamedTypeSymbol>; iterating it
+            // directly uses the struct enumerator (zero heap allocation).
+            bool useOriginalDefinition = SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType);
+            foreach (INamedTypeSymbol iface in symbol.AllInterfaces)
             {
-                // Candidate base type is not a constructed generic type, so use original definition for interfaces.
-                allInterfaces = allInterfaces.Select(i => i.OriginalDefinition);
-            }
-
-            if (allInterfaces.Contains(candidateBaseType, SymbolEqualityComparer.Default))
-            {
-                return true;
+                // When the candidate is not a constructed generic type, compare via OriginalDefinition
+                // (mirrors the original Select(i => i.OriginalDefinition) projection).
+                ITypeSymbol candidate = useOriginalDefinition ? iface.OriginalDefinition : iface;
+                if (SymbolEqualityComparer.Default.Equals(candidate, candidateBaseType))
+                {
+                    return true;
+                }
             }
         }
 
@@ -73,7 +76,7 @@ internal static class ITypeSymbolExtensions
             }
         }
 
-        while (symbol != null)
+        while (symbol is not null)
         {
             if (SymbolEqualityComparer.Default.Equals(symbol, candidateBaseType))
             {
@@ -87,7 +90,7 @@ internal static class ITypeSymbolExtensions
     }
 
     public static bool IsNullableValueType([NotNullWhen(returnValue: true)] this ITypeSymbol? typeSymbol)
-        => typeSymbol != null && typeSymbol.IsValueType && typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
+        => typeSymbol is not null && typeSymbol.IsValueType && typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
 
     public static bool IsNullableOfBoolean([NotNullWhen(returnValue: true)] this ITypeSymbol? typeSymbol)
         => typeSymbol.IsNullableValueType() && ((INamedTypeSymbol)typeSymbol).TypeArguments[0].SpecialType == SpecialType.System_Boolean;

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
-
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Testing.Platform.MSBuild;
@@ -32,10 +30,10 @@ internal static class MSBuildCompatibilityHelper
 
     private static Version GetMsBuildVersion()
     {
-        if (s_msBuildVersion == null)
+        if (s_msBuildVersion is null)
         {
             var fileVersionAttribute = (AssemblyFileVersionAttribute?)typeof(ILogger).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false).FirstOrDefault();
-            s_msBuildVersion = fileVersionAttribute?.Version != null ? new Version(fileVersionAttribute.Version) : new Version();
+            s_msBuildVersion = fileVersionAttribute?.Version is not null ? new Version(fileVersionAttribute.Version) : new Version();
         }
 
         return s_msBuildVersion;

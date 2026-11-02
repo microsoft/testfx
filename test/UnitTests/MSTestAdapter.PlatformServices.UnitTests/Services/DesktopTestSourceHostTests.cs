@@ -8,7 +8,6 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using Moq;
@@ -135,10 +134,7 @@ public class DesktopTestSourceHostTests : TestContainer
             """;
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-
-        TestSourceHost sourceHost = new(location, mockRunSettings.Object);
+        TestSourceHost sourceHost = new(location, runSettingsXml);
 
         try
         {
@@ -189,10 +185,7 @@ public class DesktopTestSourceHostTests : TestContainer
             </RunSettings>";
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, runSettingsXml) { CallBase = true };
 
         try
         {
@@ -220,10 +213,7 @@ public class DesktopTestSourceHostTests : TestContainer
             """;
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, runSettingsXml) { CallBase = true };
 
         try
         {
@@ -235,6 +225,27 @@ public class DesktopTestSourceHostTests : TestContainer
         {
             testSourceHost.Object.Dispose();
         }
+    }
+
+    public void DisposeShouldUnloadChildAppDomain()
+    {
+        using TestSourceHost sourceHost = new(typeof(DesktopTestSourceHostTests).Assembly.Location, null);
+        sourceHost.SetupHost();
+
+        sourceHost.AppDomain.Should().NotBeNull();
+        AppDomain childDomain = sourceHost.AppDomain!;
+        var proxy = (DummyClass)sourceHost.CreateInstanceForType(typeof(DummyClass), null)!;
+        childDomain.Id.Should().NotBe(AppDomain.CurrentDomain.Id);
+        proxy.AppDomainId.Should().Be(childDomain.Id);
+
+        sourceHost.Dispose();
+
+        sourceHost.AppDomain.Should().BeNull();
+        // A cleared property alone does not prove that the real domain was unloaded.
+        Action queryUnloadedDomain = () => childDomain.GetAssemblies();
+        queryUnloadedDomain.Should().Throw<AppDomainUnloadedException>();
+        Action useUnloadedProxy = () => _ = proxy.AppDomainId;
+        useUnloadedProxy.Should().Throw<AppDomainUnloadedException>();
     }
 }
 

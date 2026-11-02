@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -11,7 +9,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// <summary>
 /// This task generates the entry point for the Testing Platform.
 /// </summary>
-public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
+public sealed partial class TestingPlatformEntryPointTask : Build.Utilities.Task
 {
     private const string CSharpLanguageSymbol = "C#";
     private const string FSharpLanguageSymbol = "F#";
@@ -29,6 +27,7 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
 
     internal TestingPlatformEntryPointTask(IFileSystem fileSystem)
     {
+        // Stryker disable once String: The opt-in debugger hook cannot be exercised safely by an automated unit test.
         if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
         {
             Debugger.Launch();
@@ -41,13 +40,13 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     /// Gets or sets the path to the Testing Platform entry point source file.
     /// </summary>
     [Required]
-    public ITaskItem TestingPlatformEntryPointSourcePath { get; set; }
+    public required ITaskItem TestingPlatformEntryPointSourcePath { get; set; }
 
     /// <summary>
     /// Gets or sets the language of the project.
     /// </summary>
     [Required]
-    public ITaskItem Language { get; set; }
+    public required ITaskItem Language { get; set; }
 
     /// <summary>
     /// Gets or sets the root namespace of the project.
@@ -55,10 +54,22 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     public string? RootNamespace { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the generated Testing Platform entry point file.
+    /// Gets or sets a value indicating whether the generated source should include a process entry point.
+    /// The reusable testing-platform application helper is always generated.
+    /// </summary>
+    public bool GenerateEntryPoint { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the fully qualified parameterless static method that asynchronously creates the application-owned host.
+    /// </summary>
+    public string? HostFactory { get; set; }
+
+    /// <summary>
+    /// Gets or sets the path to the generated Testing Platform entry point file. It stays <see langword="null"/>
+    /// when the project language is not supported, in which case the task produces no output item.
     /// </summary>
     [Output]
-    public ITaskItem TestingPlatformEntryPointGeneratedFilePath { get; set; }
+    public ITaskItem? TestingPlatformEntryPointGeneratedFilePath { get; set; }
 
     /// <inheritdoc />
     public override bool Execute()
@@ -70,160 +81,81 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
             !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
             !Language.ItemSpec.Equals(FSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase))
         {
-            TestingPlatformEntryPointGeneratedFilePath = default!;
+            TestingPlatformEntryPointGeneratedFilePath = null;
             Log.LogError($"Language '{Language.ItemSpec}' is not supported.");
         }
         else
         {
-            GenerateEntryPoint(Language.ItemSpec, RootNamespace, TestingPlatformEntryPointSourcePath, _fileSystem, Log);
-            TestingPlatformEntryPointGeneratedFilePath = TestingPlatformEntryPointSourcePath;
+            string? hostFactory = RoslynString.IsNullOrEmpty(HostFactory) ? null : HostFactory.Trim();
+            if (hostFactory is not null && !IsValidHostFactory(hostFactory))
+            {
+                Log.LogError(
+                    "TestingPlatformHostFactory '{0}' is invalid. Specify a fully qualified static method path such as 'Contoso.Tests.TestHost.CreateHost'.",
+                    hostFactory);
+            }
+            else
+            {
+                GenerateSource(Language.ItemSpec, RootNamespace, GenerateEntryPoint, hostFactory, TestingPlatformEntryPointSourcePath, _fileSystem, Log);
+                TestingPlatformEntryPointGeneratedFilePath = TestingPlatformEntryPointSourcePath;
+            }
         }
 
         return !Log.HasLoggedErrors;
     }
 
-    private static void GenerateEntryPoint(string language, string? rootNamespace, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static bool IsValidHostFactory(string hostFactory)
     {
-        string entryPointSource = GetEntryPointSourceCode(language, rootNamespace);
+        string[] parts = hostFactory.Split('.');
+        if (parts.Length < 2)
+        {
+            return false;
+        }
+
+        foreach (string part in parts)
+        {
+            if (part.Length == 0 || (!char.IsLetter(part[0]) && part[0] != '_'))
+            {
+                return false;
+            }
+
+            for (int i = 1; i < part.Length; i++)
+            {
+                if (!char.IsLetterOrDigit(part[i]) && part[i] != '_')
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static void GenerateSource(string language, string? rootNamespace, bool generateEntryPoint, string? hostFactory, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    {
+        string entryPointSource = GetEntryPointSourceCode(language, rootNamespace, generateEntryPoint, hostFactory);
         taskLoggingHelper.LogMessage(MessageImportance.Normal, $"Entrypoint source:\n'{entryPointSource}'");
         fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
     }
 
-    private static string GetEntryPointSourceCode(string language, string? rootNamespace)
+    private static string GetEntryPointSourceCode(string language, string? rootNamespace, bool generateEntryPoint, string? hostFactory)
     {
         if (language != VBLanguageSymbol && !RoslynString.IsNullOrEmpty(rootNamespace))
         {
             rootNamespace = NamespaceHelpers.ToSafeNamespace(rootNamespace);
         }
 
-        if (language == CSharpLanguageSymbol)
+        return language switch
         {
-            return RoslynString.IsNullOrEmpty(rootNamespace)
-                ? $$"""
-//------------------------------------------------------------------------------
-// <auto-generated>
-//     This code was generated by Microsoft.Testing.Platform.MSBuild
-// </auto-generated>
-//------------------------------------------------------------------------------
-
-[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal sealed class MicrosoftTestingPlatformEntryPoint
-{
-    public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
-    {
-        global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
-        using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
-        {
-            return await app.RunAsync();
-        }
-    }
-}
-"""
-                : $$"""
-//------------------------------------------------------------------------------
-// <auto-generated>
-//     This code was generated by Microsoft.Testing.Platform.MSBuild
-// </auto-generated>
-//------------------------------------------------------------------------------
-
-namespace {{rootNamespace}}
-{
-    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class MicrosoftTestingPlatformEntryPoint
-    {
-        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
-        {
-            global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
-            using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
-            {
-                return await app.RunAsync();
-            }
-        }
-    }
-}
-""";
-        }
-        else if (language == VBLanguageSymbol)
-        {
-            // NOTE: We don't use the value of RootNamespace here.
-            // The compiler *already* wraps types in RootNamespace for Visual Basic
-            // This is not the case for C# or F#.
-            return $$"""
-'------------------------------------------------------------------------------
-' <auto-generated>
-'     This code was generated by Microsoft.Testing.Platform.MSBuild
-' </auto-generated>
-'------------------------------------------------------------------------------
-
-<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Module MicrosoftTestingPlatformEntryPoint
-
-    Function Main(args As String()) As Integer
-        Return MainAsync(args).GetAwaiter().GetResult()
-    End Function
-
-    Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
-        Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-        Using testApplication = Await builder.BuildAsync()
-            Return Await testApplication.RunAsync()
-        End Using
-    End Function
-
-End Module
-""";
-        }
-        else if (language == FSharpLanguageSymbol)
-        {
-            return RoslynString.IsNullOrEmpty(rootNamespace)
-                ? $$"""
-//------------------------------------------------------------------------------
-// <auto-generated>
-//     This code was generated by Microsoft.Testing.Platform.MSBuild
-// </auto-generated>
-//------------------------------------------------------------------------------
-
-module MicrosoftTestingPlatformEntryPoint =
-
-    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-    [<EntryPoint>]
-    let main args =
-        task {
-            let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-            Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-            use! app = builder.BuildAsync()
-            return! app.RunAsync()
-        }
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
-"""
-                : $$"""
-//------------------------------------------------------------------------------
-// <auto-generated>
-//     This code was generated by Microsoft.Testing.Platform.MSBuild
-// </auto-generated>
-//------------------------------------------------------------------------------
-
-namespace {{rootNamespace}}
-
-module MicrosoftTestingPlatformEntryPoint =
-
-    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-    [<EntryPoint>]
-    let main args =
-        task {
-            let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-            use! app = builder.BuildAsync()
-            return! app.RunAsync()
-        }
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
-""";
-        }
-
-        throw new InvalidOperationException($"Language not supported '{language}'");
+            CSharpLanguageSymbol => hostFactory is null
+                ? GetCSharpEntryPointSourceCode(rootNamespace, generateEntryPoint)
+                : GetHostedCSharpEntryPointSourceCode(rootNamespace, generateEntryPoint, hostFactory),
+            VBLanguageSymbol => hostFactory is null
+                ? GetVisualBasicEntryPointSourceCode(generateEntryPoint)
+                : GetHostedVisualBasicEntryPointSourceCode(generateEntryPoint, hostFactory),
+            FSharpLanguageSymbol => hostFactory is null
+                ? GetFSharpEntryPointSourceCode(rootNamespace, generateEntryPoint)
+                : GetHostedFSharpEntryPointSourceCode(rootNamespace, generateEntryPoint, hostFactory),
+            _ => throw new InvalidOperationException($"Language not supported '{language}'"),
+        };
     }
 }

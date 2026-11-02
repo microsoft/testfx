@@ -10,6 +10,10 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Exten
 dotnet add package Microsoft.Testing.Extensions.TrxReport.Abstractions
 ```
 
+## Usage
+
+Reference this package from a testing-platform extension that needs to contribute TRX-specific properties or inspect `ITrxReportCapability`. Test projects that only need to generate a TRX report should use `Microsoft.Testing.Extensions.TrxReport` instead.
+
 ## About
 
 This package provides:

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -15,7 +15,7 @@ namespace MSTest.Analyzers;
 
 public sealed partial class UseProperAssertMethodsAnalyzer
 {
-    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
+    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
     {
         // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
         if (isAreEqualInvocation &&
@@ -31,8 +31,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 out _);
 
             if (linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
-                linqCollectionExpr2 != null &&
-                predicateExpr2 != null &&
+                linqCollectionExpr2 is not null &&
+                predicateExpr2 is not null &&
                 expectedArgument.ConstantValue.HasValue &&
                 expectedArgument.ConstantValue.Value is int expectedCountValue &&
                 expectedCountValue == 1)
@@ -61,6 +61,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             CountCheckStatus countStatus = RecognizeCountCheck(
                 expectedArgument,
                 actualArgumentValue,
+                assertTypeSymbol,
                 objectTypeSymbol,
                 enumerableTypeSymbol,
                 out SyntaxNode? nodeToBeReplaced1,
@@ -119,6 +120,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             CountCheckStatus notEqualCountStatus = RecognizeCountCheck(
                 expectedArgument,
                 actualArgumentValueNotEqual,
+                assertTypeSymbol,
                 objectTypeSymbol,
                 enumerableTypeSymbol,
                 out SyntaxNode? nodeToBeReplacedNE1,

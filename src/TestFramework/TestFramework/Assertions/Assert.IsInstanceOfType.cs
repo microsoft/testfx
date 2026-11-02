@@ -14,16 +14,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.IsInstanceOfType</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public readonly struct AssertIsInstanceOfTypeInterpolatedStringHandler
+    [GenerateAssertInterpolatedStringAppendMethods]
+    public readonly partial struct AssertIsInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
         private readonly object? _value;
         private readonly Type? _expectedType;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsInstanceOfTypeInterpolatedStringHandler"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="value">The value being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="expectedType">The expected type for the value being asserted.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, Type? expectedType, out bool shouldAppend)
         {
             _value = value;
@@ -42,49 +57,32 @@ public sealed partial class Assert
                 ReportAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString(), valueExpression);
             }
         }
-
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.IsInstanceOfType</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <typeparam name="TArg">The type the value is expected to be related to.</typeparam>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
+    [GenerateAssertInterpolatedStringAppendMethods]
+    public readonly partial struct AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;
         private readonly object? _value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertGenericIsInstanceOfTypeInterpolatedStringHandler{TArg}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="value">The value being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertGenericIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
         {
             _value = value;
@@ -102,50 +100,33 @@ public sealed partial class Assert
                 ReportAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
-
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.IsNotInstanceOfType</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertIsNotInstanceOfTypeInterpolatedStringHandler
+    [GenerateAssertInterpolatedStringAppendMethods]
+    public readonly partial struct AssertIsNotInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
         private readonly object? _value;
         private readonly Type? _wrongType;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsNotInstanceOfTypeInterpolatedStringHandler"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="value">The value being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="wrongType">The type the value is not expected to be an instance of.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, Type? wrongType, out bool shouldAppend)
         {
             _value = value;
@@ -164,49 +145,32 @@ public sealed partial class Assert
                 ReportAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString(), valueExpression);
             }
         }
-
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.IsNotInstanceOfType</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <typeparam name="TArg">The type the value is expected to be related to.</typeparam>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
+    [GenerateAssertInterpolatedStringAppendMethods]
+    public readonly partial struct AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;
         private readonly object? _value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler{TArg}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="value">The value being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
         {
             _value = value;
@@ -224,41 +188,7 @@ public sealed partial class Assert
                 ReportAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
-
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
@@ -334,29 +264,11 @@ public sealed partial class Assert
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     private static bool IsInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
-        => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
+        => IsTypeMatchFailing(value, expectedType, exact: false);
 
     [DoesNotReturn]
     private static void ReportAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
-    {
-        StructuredAssertionMessage msg = expectedType is null
-            ? new("Cannot check type because the expected type argument is null.")
-            : new($"Expected value to be of type {expectedType.Name} (or derived).");
-        msg.WithUserMessage(userMessage);
-
-        if (expectedType is not null)
-        {
-            string actualTypeText = value?.GetType().ToString() ?? "null";
-            EvidenceBlock evidence = EvidenceBlock.Create()
-                .AddLine("expected type:", $"{expectedType} (or derived)")
-                .AddLine(value is null ? "actual:" : "actual type:", actualTypeText);
-            msg.WithEvidence(evidence)
-               .WithExpectedAndActual($"{expectedType} (or derived)", actualTypeText);
-        }
-
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsInstanceOfType", valueExpression, "<value>"));
-        ReportAssertFailed(msg);
-    }
+        => ReportAssertTypeMatchFailed(value, expectedType, userMessage, valueExpression, exact: false);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
@@ -423,29 +335,9 @@ public sealed partial class Assert
     }
 
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
-        => wrongType is null ||
-            // Null is not an instance of any type.
-            (value is not null && wrongType.IsInstanceOfType(value));
+        => IsTypeMismatchFailing(value, wrongType, exact: false);
 
     [DoesNotReturn]
     private static void ReportAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
-    {
-        StructuredAssertionMessage msg = wrongType is null
-            ? new("Cannot check type because the not-expected type argument is null.")
-            : new($"Expected value to not be of type {wrongType.Name} (or derived).");
-        msg.WithUserMessage(userMessage);
-
-        if (wrongType is not null)
-        {
-            string actualTypeText = value?.GetType().ToString() ?? "null";
-            EvidenceBlock evidence = EvidenceBlock.Create()
-                .AddLine("not expected type:", $"{wrongType} (or derived)")
-                .AddLine("actual type:", actualTypeText);
-            msg.WithEvidence(evidence)
-               .WithExpectedAndActual($"{wrongType} (or derived)", actualTypeText);
-        }
-
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotInstanceOfType", valueExpression, "<value>"));
-        ReportAssertFailed(msg);
-    }
+        => ReportAssertTypeMismatchFailed(value, wrongType, userMessage, valueExpression, exact: false);
 }

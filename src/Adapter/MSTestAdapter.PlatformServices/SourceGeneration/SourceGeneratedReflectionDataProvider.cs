@@ -1,0 +1,233 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
+
+/// <summary>
+/// Holds the pre-computed metadata that the MSTest source generator emits for a test assembly.
+/// This data backs the source-generated implementations of the platform reflection and file
+/// services so that test discovery and execution can avoid runtime reflection for registered,
+/// complete entries while retaining fallback for unsupported or unresolved metadata.
+/// </summary>
+/// <remarks>
+/// This type is intentionally internal: only the MSTest source generator constructs it (via
+/// the public <see cref="ReflectionMetadataHook"/> builder API). The shape may evolve from
+/// one MSTest version to the next without notice.
+/// </remarks>
+internal class SourceGeneratedReflectionDataProvider
+{
+    /// <summary>
+    /// Gets the test assembly described by this metadata snapshot, or <see langword="null"/> for a snapshot that
+    /// is not tied to a single assembly (for example the merged snapshot built by
+    /// <see cref="CompositeSourceGeneratedReflectionDataProvider"/>).
+    /// </summary>
+    public Assembly? Assembly { get; init; }
+
+    /// <summary>
+    /// Gets the file-name (without extension) of the test assembly.
+    /// </summary>
+    public string AssemblyName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets all defined types in the test assembly that participate in test discovery.
+    /// </summary>
+    public Type[] Types { get; init; } = [];
+
+    /// <summary>
+    /// Gets a lookup of types by full name.
+    /// </summary>
+    public IReadOnlyDictionary<string, Type> TypesByName { get; init; } = new Dictionary<string, Type>();
+
+    /// <summary>
+    /// Gets the complete runtime-compatible attribute set for each registered type. The array
+    /// contains attribute instances already inflated by the source generator, including applicable
+    /// inherited attributes. Dictionary presence is authoritative, including an empty array.
+    /// </summary>
+    public IReadOnlyDictionary<Type, Attribute[]> TypeAttributes { get; init; } = new Dictionary<Type, Attribute[]>();
+
+    /// <summary>
+    /// Gets attribute instances declared at the assembly level.
+    /// </summary>
+    public object[] AssemblyAttributes { get; init; } = [];
+
+    /// <summary>
+    /// Gets the complete declared-property enumeration. No shipping generator mode populates
+    /// this dictionary; reflection-free mode emits only applicable direct property setters, which
+    /// cannot satisfy the general <c>PropertyInfo</c> enumeration contract.
+    /// </summary>
+    public IReadOnlyDictionary<Type, PropertyInfo[]> TypeProperties { get; init; } = new Dictionary<Type, PropertyInfo[]>();
+
+    /// <summary>
+    /// Gets the methods declared on each type that the source generator was able to surface
+    /// (today: <c>[TestMethod]</c>-annotated methods only, including inherited ones).
+    /// </summary>
+    /// <remarks>
+    /// This dictionary is intentionally partial — it never carries non-test methods, generic
+    /// methods, or methods with by-ref parameters. Consumers must NOT use it as an authoritative
+    /// source for <c>BindingFlags.DeclaredOnly</c>-style enumerations; the reflection-backed
+    /// fallback is responsible for completeness.
+    /// </remarks>
+    public IReadOnlyDictionary<Type, MethodInfo[]> TypeMethods { get; init; } = new Dictionary<Type, MethodInfo[]>();
+
+    /// <summary>
+    /// Gets the source-location data. No shipping generator mode populates this dictionary;
+    /// its current type-name/method-name shape cannot represent overloads without loss and the
+    /// navigation consumer is not wired end to end.
+    /// </summary>
+    public IReadOnlyDictionary<string, TypeLocation> TypeMethodLocations { get; init; } = new Dictionary<string, TypeLocation>();
+
+    /// <summary>
+    /// Gets complete attribute sets for successfully resolved methods, keyed by the
+    /// <see cref="MethodInfo"/> instance that the source generator resolved at startup. These sets
+    /// contain source-generated user-declared attributes plus required compiler-synthesized metadata
+    /// merged during registration. Keying by
+    /// <see cref="MethodInfo"/> (rather than method name) distinguishes overloads. Dictionary
+    /// presence is authoritative, including an empty array; missing entries require reflection
+    /// fallback because resolution or complete materialization was unavailable.
+    /// </summary>
+    public IReadOnlyDictionary<MethodInfo, Attribute[]> TypeMethodAttributes { get; init; } = new Dictionary<MethodInfo, Attribute[]>();
+
+    /// <summary>
+    /// Gets the complete constructor enumeration returned by
+    /// <c>GetDeclaredConstructors</c>. No shipping generator mode populates this dictionary.
+    /// Reflection-free constructor invocation is represented separately by
+    /// <see cref="TypeConstructorsInvoker"/>.
+    /// </summary>
+    public IReadOnlyDictionary<Type, ConstructorInfo[]> TypeConstructors { get; init; } = new Dictionary<Type, ConstructorInfo[]>();
+
+    /// <summary>
+    /// Gets the general property lookup by name. No shipping generator mode populates this
+    /// dictionary; reflection-free property setters do not provide equivalent lookup semantics.
+    /// </summary>
+    public IReadOnlyDictionary<Type, Dictionary<string, PropertyInfo>> TypePropertiesByName { get; init; } = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
+
+    /// <summary>
+    /// Gets the constructor invokers emitted in reflection-free mode. Rooting mode leaves this
+    /// empty. These delegates support construction; they do not provide general
+    /// <see cref="ConstructorInfo"/> enumeration.
+    /// </summary>
+    public IReadOnlyDictionary<Type, ConstructorInvoker[]> TypeConstructorsInvoker { get; init; } = new Dictionary<Type, ConstructorInvoker[]>();
+
+    /// <summary>
+    /// Gets the delegate-based invokers for test methods and fixtures, keyed by the
+    /// <see cref="MethodInfo"/> the adapter holds. Each delegate calls the method directly
+    /// (no <c>MethodInfo.Invoke</c>) and returns a non-null <see cref="Task"/> representing the
+    /// method's completion. The source generator normalizes every shape to a <see cref="Task"/> at
+    /// generation time — <c>void</c> / synchronous methods return <see cref="Task.CompletedTask"/>,
+    /// a <see cref="System.Threading.Tasks.ValueTask"/> is converted with <c>AsTask()</c>, and any
+    /// return value is discarded — so callers can simply await the result.
+    /// </summary>
+    public IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> TypeMethodInvokers { get; init; } = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();
+
+    /// <summary>
+    /// Gets test methods whose generated metadata is complete enough for descriptor-native discovery.
+    /// The runtime still uses the existing <see cref="MethodInfo"/>-based lifecycle after discovery.
+    /// </summary>
+    public IReadOnlyDictionary<Type, MethodInfo[]> DescriptorTestMethods { get; init; } = new Dictionary<Type, MethodInfo[]>();
+
+    /// <summary>
+    /// Gets whether <see cref="DescriptorTestMethods"/> represents every test method for each
+    /// registered type. A <see langword="false"/> value requires a legacy scan for unsupported methods.
+    /// </summary>
+    public IReadOnlyDictionary<Type, bool> DescriptorCompleteTypes { get; init; } = new Dictionary<Type, bool>();
+
+    /// <summary>
+    /// Gets the delegate-based property setters, keyed by the <see cref="PropertyInfo"/> the
+    /// adapter holds (today: the <c>TestContext</c> property). Each delegate assigns the value
+    /// directly instead of calling <see cref="PropertyInfo.SetValue(object, object)"/>.
+    /// </summary>
+    public IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> TypePropertySetters { get; init; } = new Dictionary<PropertyInfo, Action<object?, object?>>();
+
+    /// <summary>
+    /// Returns the snapshot of merged metadata that callers should read. Single-assembly
+    /// providers return themselves; the composite returns its currently-published snapshot
+    /// (so readers always see a consistent point-in-time view even when another assembly is
+    /// being registered concurrently).
+    /// </summary>
+    internal virtual SourceGeneratedReflectionDataProvider GetSnapshot() => this;
+
+    internal virtual bool TryGetAssembly(string assemblyPath, [NotNullWhen(true)] out Assembly? assembly)
+    {
+        if (Assembly is not null
+            && string.Equals(Path.GetFileNameWithoutExtension(assemblyPath), AssemblyName, StringComparison.OrdinalIgnoreCase))
+        {
+            assembly = Assembly;
+            return true;
+        }
+
+        assembly = null;
+        return false;
+    }
+
+    internal virtual void GetNavigationData(string className, string methodName, out int minLineNumber, out string? fileName)
+    {
+        if (!TypeMethodLocations.TryGetValue(className, out TypeLocation? typeLocation) || typeLocation is null)
+        {
+            minLineNumber = 0;
+            fileName = null;
+            return;
+        }
+
+        if (!typeLocation.MethodLocations.TryGetValue(methodName, out int lineNumber))
+        {
+            minLineNumber = 0;
+            fileName = null;
+            return;
+        }
+
+        fileName = typeLocation.FileName;
+        minLineNumber = lineNumber;
+    }
+
+    /// <summary>
+    /// Returns the assembly-level attributes that belong to <paramref name="assembly"/>. Returns
+    /// the single-provider <see cref="AssemblyAttributes"/> when the assembly matches this provider's
+    /// <see cref="Assembly"/>; otherwise an empty array. The composite override fans out the lookup
+    /// to the owning provider.
+    /// </summary>
+    internal virtual object[] GetAssemblyAttributes(Assembly assembly)
+        => assembly.Equals(Assembly) ? AssemblyAttributes : [];
+
+    /// <summary>
+    /// Looks up a type by <see cref="Type.FullName"/> scoped to a specific <paramref name="assembly"/>.
+    /// The composite override routes the call to the per-assembly provider so that two assemblies
+    /// containing a type with the same full name do not shadow each other in a merged dictionary.
+    /// </summary>
+    /// <remarks>
+    /// Returning <see langword="false"/> instructs the caller to fall back to reflection. This is
+    /// the right behavior when <paramref name="assembly"/> did not opt into source generation, when
+    /// the type was skipped by the generator (open generic, file-local, inaccessible), or when the
+    /// composite has no entry for the assembly yet.
+    /// </remarks>
+    internal virtual bool TryGetTypeByName(Assembly assembly, string typeName, [NotNullWhen(true)] out Type? type)
+    {
+        if (assembly.Equals(Assembly) && TypesByName.TryGetValue(typeName, out type))
+        {
+            return true;
+        }
+
+        type = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Per-type source-location information used by IDE / explorer navigation.
+    /// </summary>
+    internal sealed class TypeLocation
+    {
+        public string FileName { get; init; } = string.Empty;
+
+        public Dictionary<string, int> MethodLocations { get; init; } = [];
+    }
+
+    /// <summary>
+    /// Describes one constructor and a delegate that invokes it. Source-generated code emits
+    /// these to allow <c>Activator.CreateInstance</c>-free instantiation.
+    /// </summary>
+    internal sealed class ConstructorInvoker
+    {
+        public Type[] Parameters { get; init; } = [];
+
+        public required Func<object?[]?, object> Invoker { get; init; }
+    }
+}

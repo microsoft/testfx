@@ -29,7 +29,7 @@ internal static class ISymbolExtensions
                 return SymbolVisibility.Private;
         }
 
-        while (symbol != null && symbol.Kind != SymbolKind.Namespace)
+        while (symbol is not null && symbol.Kind != SymbolKind.Namespace)
         {
             switch (symbol.DeclaredAccessibility)
             {

@@ -5,11 +5,76 @@ version: 1
 plugins:
     - id: dotnet-test
       source: dotnet/skills
-      ref: v1.0.0
+      ref: e468462d8a0900f5278331c1ae12f45e015bb656
+      include:
+        - agents/code-testing-builder.agent.md
+        - agents/code-testing-fixer.agent.md
+        - agents/code-testing-implementer.agent.md
+        - agents/code-testing-linter.agent.md
+        - agents/code-testing-planner.agent.md
+        - agents/code-testing-researcher.agent.md
+        - agents/code-testing-tester.agent.md
+        - agents/test-quality-auditor.agent.md
+        - agents/testability-migration.agent.md
+        - skills/assertion-quality
+        - skills/code-testing/unit-test-generation.prompt.md
+        - skills/code-testing-agent
+        - skills/code-testing-extensions/extensions/cpp.md
+        - skills/code-testing-extensions/extensions/dotnet-examples.md
+        - skills/code-testing-extensions/extensions/go-examples.md
+        - skills/code-testing-extensions/extensions/go.md
+        - skills/code-testing-extensions/extensions/java-examples.md
+        - skills/code-testing-extensions/extensions/java.md
+        - skills/code-testing-extensions/extensions/kotlin.md
+        - skills/code-testing-extensions/extensions/powershell.md
+        - skills/code-testing-extensions/extensions/python-examples.md
+        - skills/code-testing-extensions/extensions/rust.md
+        - skills/code-testing-extensions/extensions/swift.md
+        - skills/code-testing-extensions/extensions/typescript-examples.md
+        - skills/code-testing-extensions/extensions/typescript.md
+        - skills/coverage-analysis/SKILL.md
+        - skills/coverage-analysis/references/guidelines.md
+        - skills/coverage-analysis/references/output-format.md
+        - skills/coverage-analysis/references/report-generation.md
+        - skills/coverage-analysis/scripts
+        - skills/crap-score
+        - skills/detect-static-dependencies
+        - skills/find-untested-sources/SKILL.md
+        - skills/find-untested-sources/scripts/find_untested_sources.py
+        - skills/generate-testability-wrappers
+        - skills/grade-tests
+        - skills/test-analysis-extensions/extensions
+        - skills/test-gap-analysis
+        - skills/test-smell-detection
+        - skills/testability-obstacle
       install:
         mode: summary
     - id: dotnet-msbuild
       source: dotnet/skills
-      ref: v1.0.0
+      ref: main
+      include:
+        - agents
+        - skills/build-parallelism
+        - skills/check-bin-obj-clash
+        - skills/directory-build-organization
+        - skills/eliminate-redundant-restores
+        - skills/including-generated-files
+        - skills/item-management
+        - skills/msbuild-antipatterns/references
+        - skills/msbuild-modernization
+        - skills/property-patterns
+        - skills/resolve-project-references
+        - skills/target-authoring
+        - skills/troubleshoot-binlog-mcp
+      install:
+        mode: summary
+    - id: dotnet
+      source: dotnet/skills
+      ref: main
+      include:
+        - skills/csharp-expert
+        - skills/csharp-refactoring
+        - skills/msbuild
+        - skills/setup-local-sdk
       install:
         mode: summary

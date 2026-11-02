@@ -9,3 +9,4 @@ virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirector
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestTempDirectory.get -> string?

@@ -5,7 +5,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #endif
 
-using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -96,13 +95,13 @@ internal sealed class RunConfigurationSettings
                 {
                     case "EXECUTIONTHREADAPARTMENTSTATE":
                         {
-                            if (Enum.TryParse(reader.ReadInnerXml(), out PlatformApartmentState platformApartmentState))
+                            if (Enum.TryParse(reader.ReadInnerXml(), out ApartmentStateSetting apartmentStateSetting))
                             {
-                                settings.ExecutionApartmentState = platformApartmentState switch
+                                settings.ExecutionApartmentState = apartmentStateSetting switch
                                 {
-                                    PlatformApartmentState.STA => ApartmentState.STA,
-                                    PlatformApartmentState.MTA => ApartmentState.MTA,
-                                    _ => throw new NotSupportedException($"Platform apartment state '{platformApartmentState}' is not supported."),
+                                    ApartmentStateSetting.STA => ApartmentState.STA,
+                                    ApartmentStateSetting.MTA => ApartmentState.MTA,
+                                    _ => throw new NotSupportedException($"Platform apartment state '{apartmentStateSetting}' is not supported."),
                                 };
                             }
 
@@ -131,13 +130,13 @@ internal sealed class RunConfigurationSettings
         //  }
         // }
         string? apartmentStateValue = configuration["mstest:execution:executionApartmentState"];
-        if (Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
+        if (Enum.TryParse(apartmentStateValue, out ApartmentStateSetting apartmentStateSetting))
         {
-            settings.ExecutionApartmentState = platformApartmentState switch
+            settings.ExecutionApartmentState = apartmentStateSetting switch
             {
-                PlatformApartmentState.STA => ApartmentState.STA,
-                PlatformApartmentState.MTA => ApartmentState.MTA,
-                _ => throw new NotSupportedException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, platformApartmentState, "execution:executionApartmentState")),
+                ApartmentStateSetting.STA => ApartmentState.STA,
+                ApartmentStateSetting.MTA => ApartmentState.MTA,
+                _ => throw new NotSupportedException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, apartmentStateSetting, "execution:executionApartmentState")),
             };
         }
 

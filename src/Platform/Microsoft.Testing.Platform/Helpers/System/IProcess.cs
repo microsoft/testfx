@@ -26,9 +26,19 @@ internal interface IProcess : IDisposable
     DateTime StartTime { get; }
 
     /// <summary>
+    /// Instructs the Process component to wait indefinitely for the associated process to exit.
+    /// </summary>
+    /// <remarks>
+    /// This overload is kept for binary compatibility with previously shipped extensions (for example
+    /// the Retry extension) that were compiled against it; new in-box callers use the
+    /// <see cref="WaitForExitAsync(CancellationToken)"/> overload.
+    /// </remarks>
+    Task WaitForExitAsync();
+
+    /// <summary>
     /// Instructs the Process component to wait for the associated process to exit, or for the cancellationToken to be canceled.
     /// </summary>
-    Task WaitForExitAsync();
+    Task WaitForExitAsync(CancellationToken cancellationToken);
 
     /// <inheritdoc cref="Process.WaitForExit()" />
     void WaitForExit();

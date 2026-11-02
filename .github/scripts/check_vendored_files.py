@@ -12,7 +12,7 @@ Modes:
     check       - Full drift detection. Requires GH_TOKEN. Creates/edits issues.
 
 The check mode is idempotent: existing issues are matched by label
-`area-vendored-sync` plus a hidden HTML marker in the body of the form
+`area/vendored-sync` plus a hidden HTML marker in the body of the form
 `<!-- vendored-sync:id=<entry-id>:<source-index> -->`.
 
 See eng/vendored-files.md for the manifest schema and reconciliation workflow.
@@ -37,7 +37,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = REPO_ROOT / "eng" / "vendored-files.json"
-ISSUE_LABEL = "area-vendored-sync"
+ISSUE_LABEL = "area/vendored-sync"
 ISSUE_REPO = os.environ.get("VENDORED_SYNC_REPO", "microsoft/testfx")
 MAX_DIFF_LINES = 300
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")

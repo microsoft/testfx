@@ -210,7 +210,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             return;
         }
 
-        TestNodeUid testNodeUid = new(message.TestNode.Uid.Value);
+        TestNodeUid testNodeUid = message.TestNode.Uid;
 
         switch (state)
         {

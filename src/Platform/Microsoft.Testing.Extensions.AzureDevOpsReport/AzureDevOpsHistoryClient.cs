@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -261,7 +261,11 @@ internal sealed class AzureDevOpsHistoryClient : IAzureDevOpsHistoryClient
             : new AzureDevOpsTestResultsPage(
                 [.. payload.Value
                     .Where(static result => !RoslynString.IsNullOrWhiteSpace(result.AutomatedTestName) && !RoslynString.IsNullOrWhiteSpace(result.Outcome))
-                    .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!))],
+                    .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!, result.DurationInMs)
+                    {
+                        TestCaseTitle = result.TestCaseTitle,
+                        Comment = result.Comment,
+                    })],
                 continuationToken);
     }
 
@@ -355,8 +359,17 @@ internal sealed class AzureDevOpsResultResponse
     [JsonPropertyName("automatedTestName")]
     public string? AutomatedTestName { get; set; }
 
+    [JsonPropertyName("testCaseTitle")]
+    public string? TestCaseTitle { get; set; }
+
+    [JsonPropertyName("comment")]
+    public string? Comment { get; set; }
+
     [JsonPropertyName("outcome")]
     public string? Outcome { get; set; }
+
+    [JsonPropertyName("durationInMs")]
+    public double? DurationInMs { get; set; }
 }
 
 internal sealed class AzureDevOpsResultsResponse
@@ -367,15 +380,22 @@ internal sealed class AzureDevOpsResultsResponse
 
 internal sealed class AzureDevOpsTestResult
 {
-    public AzureDevOpsTestResult(string automatedTestName, string outcome)
+    public AzureDevOpsTestResult(string automatedTestName, string outcome, double? durationMilliseconds = null)
     {
         AutomatedTestName = automatedTestName;
         Outcome = outcome;
+        DurationMilliseconds = durationMilliseconds;
     }
 
     public string AutomatedTestName { get; }
 
+    public string? TestCaseTitle { get; set; }
+
+    public string? Comment { get; set; }
+
     public string Outcome { get; }
+
+    public double? DurationMilliseconds { get; }
 }
 
 internal sealed class AzureDevOpsTestResultsPage

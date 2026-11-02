@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
-using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
-using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -18,9 +16,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestApplicationBuilderExtensions
 {
-    // NOTE: We intentionally use this class and not VSTestBridgeExtensionBaseCapabilities because
-    // we don't want MSTest to use vstestProvider capability
-    private sealed class MSTestCapabilities : IInternalVSTestBridgeTrxReportCapability
+    private static readonly ConditionalWeakTable<ITestApplicationBuilder, MSTestTestApplicationBuilderOptions> Options = CreateOptions();
+
+    // NOTE: We intentionally do not use the bridge's VSTestBridgeExtensionBaseCapabilities because we don't want
+    // MSTest to use the vstestProvider capability. This implements MSTest's native TRX capability, read by
+    // MSTestTestFramework.
+    private sealed class MSTestCapabilities : IMSTestTrxReportCapability
     {
         public bool IsTrxEnabled { get; private set; }
 
@@ -37,18 +38,74 @@ public static class TestApplicationBuilderExtensions
     /// <param name="getTestAssemblies">The function to get the test assemblies.</param>
     public static void AddMSTest(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
     {
+        MSTestTestApplicationBuilderOptions options = Options.GetOrCreateValue(testApplicationBuilder);
         MSTestExtension extension = new();
-        testApplicationBuilder.AddRunSettingsService(extension);
-        testApplicationBuilder.AddTestCaseFilterService(extension);
-        testApplicationBuilder.AddTestRunParametersService(extension);
+        var discoveryCache = new MSTestDiscoveryCache();
+
+        // Register MSTest's own command-line options, runsettings configuration source and environment-variable
+        // provider natively (identical option names/descriptions to the VSTest bridge), so both the native and the
+        // bridged framework read them by name.
+        if (testApplicationBuilder is TestApplicationBuilder concreteBuilder)
+        {
+            concreteBuilder.Configuration.AddConfigurationSource(() => new MSTestRunSettingsConfigurationProvider(extension, new SystemFileSystem()));
+        }
+
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestRunSettingsCommandLineOptionsProvider(extension));
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestCaseFilterCommandLineOptionsProvider(extension));
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestRunParametersCommandLineOptionsProvider(extension));
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
-        testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
+
+        // The environment-variable provider is a test-host-controller extension: it applies runsettings
+        // <EnvironmentVariables> by relaunching the test host with those variables set. That requires a
+        // controller process + restart, which browser-wasm does not support (TestHostControllersManager
+        // throws PlatformNotSupportedException there). Skip the registration on browser. Silently dropping
+        // a requested <EnvironmentVariables> section would change test semantics, so
+        // RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync fails with a clear
+        // unsupported-platform diagnostic when the resolved runsettings (from --settings or either
+        // runsettings environment variable) actually declares that section on browser.
+        // See https://github.com/microsoft/testfx/issues/2196.
+        if (!OperatingSystem.IsBrowser())
+        {
+            testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
+                => new MSTestRunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem(), serviceProvider.GetEnvironment()));
+        }
+
+        // MSTest plugs into Microsoft.Testing.Platform directly (no VSTest bridge object model on the request path).
         testApplicationBuilder.RegisterTestFramework(
-            serviceProvider => new TestFrameworkCapabilities(
-                new MSTestCapabilities(),
-                new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
-                MSTestGracefulStopTestExecutionCapability.Instance),
-            (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
+            serviceProvider =>
+            {
+                // Root registration survives the server's cloned per-request service providers and is
+                // disposed only when the application closes.
+                ((Microsoft.Testing.Platform.Services.ServiceProvider)serviceProvider).TryAddService(discoveryCache);
+                return new TestFrameworkCapabilities(
+                    new MSTestCapabilities(),
+                    new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
+                    MSTestGracefulStopTestExecutionCapability.Create());
+            },
+            (capabilities, serviceProvider) => new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities)
+            {
+                TestClassInstanceFactory = options.TestClassInstanceFactory,
+                DiscoveryCache = discoveryCache,
+            });
     }
+
+    internal static void SetTestClassInstanceFactory(
+        ITestApplicationBuilder testApplicationBuilder,
+        ITestClassInstanceFactory testClassInstanceFactory)
+    {
+        _ = testApplicationBuilder ?? throw new ArgumentNullException(nameof(testApplicationBuilder));
+        _ = testClassInstanceFactory ?? throw new ArgumentNullException(nameof(testClassInstanceFactory));
+
+        Options.GetOrCreateValue(testApplicationBuilder).TestClassInstanceFactory = testClassInstanceFactory;
+    }
+
+    private sealed class MSTestTestApplicationBuilderOptions
+    {
+        public ITestClassInstanceFactory? TestClassInstanceFactory { get; set; }
+    }
+
+#pragma warning disable IDE0028 // Collection expressions cannot construct ConditionalWeakTable on .NET Framework.
+    private static ConditionalWeakTable<ITestApplicationBuilder, MSTestTestApplicationBuilderOptions> CreateOptions()
+        => new();
+#pragma warning restore IDE0028
 }
-#endif

@@ -73,4 +73,26 @@ internal static class DiagnosticIds
     public const string IgnoreShouldHaveJustificationRuleId = "MSTEST0066";
     public const string AvoidThreadSleepAndTaskWaitInTestsRuleId = "MSTEST0067";
     public const string CollectionAssertToAssertRuleId = "MSTEST0068";
+    // public const string InheritedTestClassAttributeWithSourceGeneratorRuleId = "MSTEST0069"; - // Reserved. Owned by MSTest.SourceGeneration analyzer; don't reuse this ID.
+    public const string MemberConditionShouldBeValidRuleId = "MSTEST0070";
+    public const string RedundantTestMethodDisplayNameRuleId = "MSTEST0071";
+    public const string AssemblyFixtureProviderNotSupportedWithNativeAotRuleId = "MSTEST0072";
+    public const string PreferConstantForResourceLockRuleId = "MSTEST0073";
+    public const string UndeclaredProcessGlobalStateMutationRuleId = "MSTEST0074";
+    public const string CurrentDirectoryMutationUnderParallelizationRuleId = "MSTEST0075";
+    public const string CultureMutationUnderParallelizationRuleId = "MSTEST0076";
+    public const string SharedFileSystemPathInTestRuleId = "MSTEST0077";
+    public const string DependsOnShouldBeValidRuleId = "MSTEST0078";
+    public const string UseArchitectureConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0079";
+    public const string UseCIConditionAttributeInsteadOfEnvironmentCheckRuleId = "MSTEST0080";
+    public const string TestFilterProviderShouldBeValidRuleId = "MSTEST0081";
+    public const string InheritedMemberFromDifferentMSTestVersionRuleId = "MSTEST0082";
+    public const string UseExecutableConditionAttributeInsteadOfProcessCheckRuleId = "MSTEST0083";
+    public const string OSPlatformAttributesShouldBeConsistentRuleId = "MSTEST0084";
+    public const string TestClassAttributeShouldNotBeAppliedToAbstractClassRuleId = "MSTEST0085";
+    public const string RedundantTestMethodAttributeRuleId = "MSTEST0086";
+    public const string DuplicateDataRowDisplayNameRuleId = "MSTEST0087";
+    public const string MSTestHostTestClassInjectionNotSupportedRuleId = "MSTEST0088";
+    public const string ConflictingDataRowDisplayNamesRuleId = "MSTEST0089";
+    public const string AvoidEnumerableAssertionsOnQueryableRuleId = "MSTEST0090";
 }

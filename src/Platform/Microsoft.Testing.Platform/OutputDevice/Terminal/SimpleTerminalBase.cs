@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal abstract class SimpleTerminal : ITerminal
 {
     private object? _batchingLock;
@@ -57,12 +58,12 @@ internal abstract class SimpleTerminal : ITerminal
         // nop
     }
 
-    public void RenderProgress(TestProgressState?[] progress)
+    public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
         int count = 0;
         foreach (TestProgressState? p in progress)
         {
-            if (p == null)
+            if (p is null)
             {
                 continue;
             }
@@ -117,16 +118,16 @@ internal abstract class SimpleTerminal : ITerminal
             Append(' ');
             Append(p.AssemblyName);
 
-            if (p.TargetFramework != null || p.Architecture != null)
+            if (p.TargetFramework is not null || p.Architecture is not null)
             {
                 Append(" (");
-                if (p.TargetFramework != null)
+                if (p.TargetFramework is not null)
                 {
                     Append(p.TargetFramework);
                     Append('|');
                 }
 
-                if (p.Architecture != null)
+                if (p.Architecture is not null)
                 {
                     Append(p.Architecture);
                 }
@@ -134,7 +135,7 @@ internal abstract class SimpleTerminal : ITerminal
                 Append(')');
             }
 
-            TestDetailState? activeTest = p.TestNodeResultsState?.GetRunningTasks(1).FirstOrDefault();
+            TestDetailState? activeTest = p.TestNodeResultsState?.GetSingleActiveOrSummaryTask();
             if (!RoslynString.IsNullOrWhiteSpace(activeTest?.Text))
             {
                 Append(" - ");
@@ -164,14 +165,14 @@ internal abstract class SimpleTerminal : ITerminal
         // nop
     }
 
-    // TODO: Refactor NonAnsiTerminal and AnsiTerminal such that we don't need StartUpdate/StopUpdate.
+    // NonAnsiTerminal and AnsiTerminal could be refactored such that we don't need StartUpdate/StopUpdate.
     // It's much better if we use lock C# keyword instead of manually calling Monitor.Enter/Exit
     // Using lock also ensures we don't accidentally have `await`s in between that could cause Exit to be on a different thread.
     public void StartUpdate()
     {
         if (_isBatching)
         {
-            throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
+            throw new InvalidOperationException(TerminalResources.ConsoleIsAlreadyInBatchingMode);
         }
 
         bool lockTaken = false;

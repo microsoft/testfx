@@ -63,7 +63,7 @@ internal sealed class MicrosoftExtensionsLoggingProvider : MtpILoggerProvider, I
         // Application Insights) can flush gracefully without blocking the synchronous Dispose() call.
         if (_loggerFactory is IAsyncDisposable asyncDisposable)
         {
-            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            await asyncDisposable.DisposeAsync().ConfigureAwait(continueOnCapturedContext: default);
         }
         else if (_loggerFactory is IDisposable disposable)
         {

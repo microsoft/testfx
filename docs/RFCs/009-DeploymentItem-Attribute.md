@@ -2,6 +2,15 @@
 <!-- markdownlint-disable-file MD024 -->
 <!-- markdownlint-disable-file MD033 -->
 
+> **Current implementation note (2026-10-09):** “NetCore tests run from build output”
+> is not an unconditional current rule. [TestDeployment](../../src/Adapter/MSTestAdapter.PlatformServices/Services/TestDeployment.cs)
+> creates deployment directories on modern .NET when deployment items exist; with no items
+> it avoids creating empty deployment folders. Dependency auto-deployment remains .NET Framework-specific
+> in [DeploymentUtility](../../src/Adapter/MSTestAdapter.PlatformServices/Utilities/DeploymentUtility.cs).
+> [LegacyDeploymentBehaviorTests](../../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/LegacyDeploymentBehaviorTests.cs)
+> maps copy/path behavior; these tests were not executed. See the [current architecture](../architecture/mstest.md).
+> Full destination/assembly-loading behavior is outside this baseline.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

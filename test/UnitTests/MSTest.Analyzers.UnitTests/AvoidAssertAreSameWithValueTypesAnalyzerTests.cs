@@ -256,4 +256,222 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenValueTypeIsEnum_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreSame(DayOfWeek.Monday, DayOfWeek.Tuesday)|];
+                    [|Assert.AreNotSame(DayOfWeek.Monday, DayOfWeek.Tuesday)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(DayOfWeek.Monday, DayOfWeek.Tuesday);
+                    Assert.AreNotEqual(DayOfWeek.Monday, DayOfWeek.Tuesday);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenValueTypeIsCustomStruct_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var a = new MyPoint(1, 2);
+                    var b = new MyPoint(3, 4);
+                    [|Assert.AreSame(a, b)|];
+                    [|Assert.AreNotSame(a, b)|];
+                }
+            }
+
+            public readonly struct MyPoint(int x, int y)
+            {
+                public int X { get; } = x;
+                public int Y { get; } = y;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var a = new MyPoint(1, 2);
+                    var b = new MyPoint(3, 4);
+                    Assert.AreEqual(a, b);
+                    Assert.AreNotEqual(a, b);
+                }
+            }
+
+            public readonly struct MyPoint(int x, int y)
+            {
+                public int X { get; } = x;
+                public int Y { get; } = y;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenValueTypeIsNullableInt_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int? a = 1;
+                    int? b = 2;
+                    [|Assert.AreSame(a, b)|];
+                    [|Assert.AreNotSame(a, b)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int? a = 1;
+                    int? b = 2;
+                    Assert.AreEqual(a, b);
+                    Assert.AreNotEqual(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenBothArgsAreNullLiterals_NoDiagnostic()
+    {
+        // WalkDownConversion() removes the object conversion, leaving an untyped null literal.
+        // The null-propagating IsValueType check therefore does not report a diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreSame((object)null, (object)null);
+                    Assert.AreNotSame((object)null, (object)null);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericTypeParameterConstrainedToStruct_Diagnostic()
+    {
+        // A generic type parameter constrained to 'struct' has IsValueType == true,
+        // so the analyzer should report a diagnostic and the fixer should replace the method name.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod<T>() where T : struct
+                {
+                    T a = default;
+                    T b = default;
+                    [|Assert.AreSame(a, b)|];
+                    [|Assert.AreNotSame(a, b)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod<T>() where T : struct
+                {
+                    T a = default;
+                    T b = default;
+                    Assert.AreEqual(a, b);
+                    Assert.AreNotEqual(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericTypeParameterWithNoConstraint_NoDiagnostic()
+    {
+        // An unconstrained generic type parameter is not known to be a value type at analysis time,
+        // so the analyzer should not report a diagnostic even though T can be instantiated with one.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod<T>(T a, T b)
+                {
+                    Assert.AreSame(a, b);
+                    Assert.AreNotSame(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

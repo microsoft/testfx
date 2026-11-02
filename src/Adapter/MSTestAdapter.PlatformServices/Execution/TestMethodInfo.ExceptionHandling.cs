@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -19,13 +19,19 @@ internal partial class TestMethodInfo
     /// <param name="realException">Real exception thrown by the test method.</param>
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
+    /// <param name="classInstanceCreated">Whether the test-class instance was created before the exception.</param>
     /// <returns>Test framework exception with details.</returns>
-    private TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
+    private TestFailedException HandleMethodException(
+        Exception ex,
+        Exception realException,
+        string className,
+        string methodName,
+        bool classInstanceCreated)
     {
-        DebugEx.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex is not null, "exception should not be null.");
 
         string errorMessage;
-        if (ex is TargetInvocationException && ex.InnerException == null)
+        if (ex is TargetInvocationException && ex.InnerException is null)
         {
             errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
             return new TestFailedException(UnitTestOutcome.Error, errorMessage);
@@ -57,7 +63,7 @@ internal partial class TestMethodInfo
             return new TestFailedException(outcome, exceptionMessage, exceptionStackTraceInfo, realException);
         }
 
-        errorMessage = _classInstance is null
+        errorMessage = !classInstanceCreated
             ? string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_InstanceCreationError,
@@ -88,5 +94,21 @@ internal partial class TestMethodInfo
         }
 
         return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
+    }
+
+    private static Exception GetRealException(Exception ex)
+    {
+        if (ex is TargetInvocationException)
+        {
+            DebugEx.Assert(ex.InnerException is not null, "Inner exception of TargetInvocationException is null. This should occur because we should have caught this case above.");
+
+            // Our reflected call will typically always get back a TargetInvocationException
+            // containing the real exception thrown by the test method as its inner exception
+            return ex.InnerException;
+        }
+        else
+        {
+            return ex;
+        }
     }
 }

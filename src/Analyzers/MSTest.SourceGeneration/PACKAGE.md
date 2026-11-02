@@ -1,9 +1,7 @@
-# Microsoft.Testing
+# MSTest.SourceGeneration
 
-Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+MSTest is Microsoft supported Test Framework.
 
-Documentation can be found at <https://aka.ms/testingplatform>.
+This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.
 
-## About
-
-This package works with MSTest.Engine package to provide source generators.
+For access to the testing framework, install the MSTest.TestFramework package.

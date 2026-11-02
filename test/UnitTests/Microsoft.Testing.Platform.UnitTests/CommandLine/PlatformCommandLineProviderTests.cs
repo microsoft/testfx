@@ -12,6 +12,69 @@ namespace Microsoft.Testing.Platform.UnitTests.CommandLine;
 public sealed class PlatformCommandLineProviderTests
 {
     [TestMethod]
+    [DataRow("0", true)]
+    [DataRow("80", true)]
+    [DataRow("79.995", true)]
+    [DataRow("100", true)]
+    [DataRow("-1", false)]
+    [DataRow("100.01", false)]
+    [DataRow("80,5", false)]
+    [DataRow("NaN", false)]
+    [DataRow("Infinity", false)]
+    [DataRow("1e2", false)]
+    [DataRow("", false)]
+    public async Task CoverageThreshold_ValidatesPercentageForBothMetrics(string argument, bool isValid)
+    {
+        PlatformCommandLineProvider provider = new();
+        foreach (string optionName in new[] { PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.CoverageThresholdBranchOptionKey })
+        {
+            CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+            Assert.AreEqual(isValid, result.IsValid);
+            if (!isValid)
+            {
+                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCoverageThresholdInvalid, optionName), result.ErrorMessage);
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey)]
+    public async Task CoverageThreshold_RequiresExactlyOneArgument(string optionName)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, [])).IsValid);
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, ["80", "90"])).IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, "retry-failed-tests")]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, "retry-failed-tests")]
+    public async Task CoverageThreshold_RejectsDiscoveryAndProcessRetries(string thresholdOption, string incompatibleOption)
+    {
+        TestCommandLineOptions options = new(new()
+        {
+            [thresholdOption] = ["80"],
+            [incompatibleOption] = [],
+        });
+
+        ValidationResult result = await new PlatformCommandLineProvider().ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            incompatibleOption == PlatformCommandLineProvider.DiscoverTestsOptionKey
+                ? PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests
+                : PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries,
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("Trace")]
     [DataRow("Debug")]
     [DataRow("Information")]
@@ -37,6 +100,32 @@ public sealed class PlatformCommandLineProviderTests
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("strict")]
+    [DataRow("allow-skipped")]
+    [DataRow("STRICT")]
+    [DataRow("Allow-Skipped")]
+    public async Task IsValid_If_ZeroTestsPolicy_Has_CorrectValue(string policy)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ZeroTestsPolicyOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [policy]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_ZeroTestsPolicy_Has_IncorrectValue()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ZeroTestsPolicyOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.Contains("invalid", validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -174,6 +263,21 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task IsInvalid_When_Both_FilterUid_And_TreenodeFilter_Provided()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.FilterUidOptionKey, ["uid0"] },
+            { TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, ["/A/B"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.OnlyOneFilterSupported, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("0")]
     [DataRow("-1")]
     public async Task IsInvalid_When_MinimumExpectedTests_Is_Not_Positive(string minimumExpectedTests)
@@ -290,6 +394,163 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task IsValid_When_Server_DotnetTestCli_With_HttpTransport()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"],
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
+            [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
+            [PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey] = ["valid-token-value"],
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("pipe")]
+    [DataRow("http")]
+    [DataRow("HTTP")]
+    public async Task IsValid_When_DotnetTestTransport_HasAcceptedArgument(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestTransportOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_DotnetTestTransport_HasUnknownArgument()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestTransportOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["websocket"]).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("websocket", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("https://gateway.example/dotnettest", true)]
+    [DataRow("http://localhost:1234/dotnettest", true)]
+    [DataRow("http://127.0.0.1:1234/dotnettest", true)]
+    [DataRow("http://gateway.example/dotnettest", false)]
+    [DataRow("https://user@gateway.example/dotnettest", false)]
+    [DataRow("https://gateway.example/dotnettest?token=secret", false)]
+    [DataRow("https://gateway.example/dotnettest#fragment", false)]
+    [DataRow("ws://localhost:1234/dotnettest", false)]
+    [DataRow("/dotnettest", false)]
+    public async Task DotnetTestHttpEndpoint_ValidatesSecurityRequirements(string endpoint, bool expectedValid)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [endpoint]).ConfigureAwait(false);
+        Assert.AreEqual(expectedValid, result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("valid-token", true)]
+    [DataRow("", false)]
+    [DataRow("   ", false)]
+    [DataRow("token with spaces", false)]
+    [DataRow("token\r\nheader", false)]
+    [DataRow("token,parameter", false)]
+    public async Task DotnetTestHttpToken_ValidatesBearerSyntax(string token, bool expectedValid)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [token]).ConfigureAwait(false);
+        Assert.AreEqual(expectedValid, result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task IsInvalid_When_HttpTransport_IsIncomplete(bool includeServer)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
+            [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
+        };
+        if (includeServer)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"];
+        }
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey, "https://localhost:1234/dotnettest")]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey, "valid-token")]
+    public async Task IsInvalid_When_HttpOptionHasNoHttpTransport(string optionName, string optionValue)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [optionName] = [optionValue],
+        };
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_HttpAndPipeTransportsAreCombined()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"],
+            [PlatformCommandLineProvider.DotNetTestPipeOptionKey] = ["pipe-name"],
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
+            [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
+            [PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey] = ["valid-token"],
+        };
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestTransportConflict, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("dotnettestcli")]
+    [DataRow("jsonrpc")]
+    public async Task IsInvalid_When_ExplicitPipeTransportHasNoPipeName(string? serverProtocol)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["pipe"],
+        };
+        if (serverProtocol is not null)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = [serverProtocol];
+        }
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
+                "dotnettestcli",
+                PlatformCommandLineProvider.DotNetTestPipeOptionKey),
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("dotnettestcli")]
     [DataRow("DotnetTestCli")]
     public async Task IsInvalid_When_Server_DotnetTestCli_Without_DotnetTestPipe(string protocol)
@@ -302,13 +563,7 @@ public sealed class PlatformCommandLineProviderTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(
-            string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
-                PlatformCommandLineProvider.DotnetTestCliProtocolName,
-                PlatformCommandLineProvider.DotNetTestPipeOptionKey),
-            validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -463,5 +718,106 @@ public sealed class PlatformCommandLineProviderTests
             // Restore original culture
             CultureInfo.CurrentCulture = originalCulture;
         }
+    }
+
+    [TestMethod]
+    [DataRow("pipe", true)]
+    [DataRow("PiPe", true)]
+    [DataRow("http", true)]
+    [DataRow("HTTP", true)]
+    [DataRow("udp", false)]
+    public async Task TransportValidation_KnownModesAndUnknownModeUseExactContract(string argument, bool valid)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-transport");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-transport' received unexpected value 'udp'. Supported values are: 'pipe', 'http'.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("https", true)]
+    [DataRow("http-loopback", true)]
+    [DataRow("http-localhost", true)]
+    [DataRow("http-nonlocal", false)]
+    [DataRow("relative", false)]
+    [DataRow("ftp", false)]
+    [DataRow("userinfo", false)]
+    [DataRow("query", false)]
+    [DataRow("fragment", false)]
+    [DataRow("missing-host", false)]
+    public async Task HttpEndpointValidation_IndependentUriPartitionsPreserveDiagnostics(string kind, bool valid)
+    {
+        string value = kind switch
+        {
+            "https" => "https://127.0.0.1/resource",
+            "http-loopback" => "http://127.0.0.1/resource",
+            "http-localhost" => "http://localhost/resource",
+            "http-nonlocal" => "http://192.0.2.1/resource",
+            "relative" => "relative/resource",
+            "ftp" => "ftp://localhost/resource",
+            "userinfo" => "https://user:fixture@localhost/resource",
+            "query" => "https://localhost/resource?query=value",
+            "fragment" => "https://localhost/resource#fragment",
+            "missing-host" => "https://",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-http-endpoint");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("ordinary", true)]
+    [DataRow("punctuation", true)]
+    [DataRow("empty", false)]
+    [DataRow("whitespace", false)]
+    [DataRow("embedded-space", false)]
+    [DataRow("nul", false)]
+    [DataRow("crlf", false)]
+    public async Task HttpTokenValidation_ControlWhitespaceAndCurrentPunctuationBehavior(string kind, bool valid)
+    {
+        string value = kind switch
+        {
+            "ordinary" => "ABcd12-._~+/=",
+            "punctuation" => ";",
+            "empty" => string.Empty,
+            "whitespace" => " \t",
+            "embedded-space" => "before after",
+            "nul" => "before\0after",
+            "crlf" => "before\r\nafter",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-http-token");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ZeroTestPolicy_UnexpectedLiteralProducesExactSupportedValues()
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "zero-tests-policy");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["sometimes"]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("Invalid value 'sometimes' for '--zero-tests-policy'. Valid values are 'strict', 'allow-skipped'.", result.ErrorMessage);
     }
 }

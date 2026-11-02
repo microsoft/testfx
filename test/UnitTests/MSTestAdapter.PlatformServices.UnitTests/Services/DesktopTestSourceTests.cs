@@ -29,5 +29,20 @@ public class DesktopTestSourceTests : TestContainer
     public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => _testSource.IsAssemblyReferenced(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location).Should().BeTrue();
 
     public void IsAssemblyReferencedShouldReturnFalseIfAnAssemblyIsNotReferencedInSource() => _testSource.IsAssemblyReferenced(new AssemblyName("foobar"), Assembly.GetExecutingAssembly().Location).Should().BeFalse();
+
+    // The source references the strong-named MSTest.TestFramework assembly. Passing an assembly name with the
+    // same simple name but no public key token (as an unsigned build would have) must not be considered a match:
+    // the public key tokens differ (signed vs. unsigned), so IsAssemblyReferenced returns false. This guards the
+    // signed-vs-unsigned branch of the public-key-token comparison.
+    public void IsAssemblyReferencedShouldReturnFalseIfPublicKeyTokenIsMissing() => _testSource.IsAssemblyReferenced(new AssemblyName("MSTest.TestFramework"), Assembly.GetExecutingAssembly().Location).Should().BeFalse();
+
+    // Same simple name but a different (non-null) public key token must also not match: the tokens are compared
+    // byte-by-byte and differ. This guards the differing-token branch of the public-key-token comparison.
+    public void IsAssemblyReferencedShouldReturnFalseIfPublicKeyTokenDiffers()
+    {
+        var assemblyName = new AssemblyName("MSTest.TestFramework");
+        assemblyName.SetPublicKeyToken([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]);
+        _testSource.IsAssemblyReferenced(assemblyName, Assembly.GetExecutingAssembly().Location).Should().BeFalse();
+    }
 }
 #endif

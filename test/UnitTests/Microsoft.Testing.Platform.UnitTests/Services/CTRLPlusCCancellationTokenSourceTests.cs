@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -9,10 +10,12 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class CTRLPlusCCancellationTokenSourceTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void Initial_State_NeitherTokenIsCancelled()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: Timeout.InfiniteTimeSpan,
@@ -21,12 +24,13 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         Assert.IsFalse(source.CancellationToken.IsCancellationRequested);
         Assert.IsFalse(source.DrainingToken.IsCancellationRequested);
         Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
     }
 
     [TestMethod]
     public void Cancel_OnlySignalsDrainingToken()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: Timeout.InfiniteTimeSpan,
@@ -37,12 +41,13 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested, "Legacy alias must follow DrainingToken.");
         Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
     }
 
     [TestMethod]
     public void Abort_SignalsBothTokens()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: Timeout.InfiniteTimeSpan,
@@ -57,7 +62,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     [TestMethod]
     public void Cancel_IsIdempotent()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: Timeout.InfiniteTimeSpan,
@@ -74,7 +79,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     [TestMethod]
     public async Task GracePeriodElapse_EscalatesToAborting()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: TimeSpan.FromMilliseconds(50),
@@ -82,19 +87,16 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         source.Cancel();
         Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
-        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
 
-        await WaitForCancellationAsync(source.AbortingToken).ConfigureAwait(false);
+        await WaitForCancellationAsync(source.AbortingToken);
 
         Assert.IsTrue(source.AbortingToken.IsCancellationRequested, "Aborting must trip after the grace period.");
     }
 
-    public TestContext TestContext { get; set; } = null!;
-
     [TestMethod]
     public async Task CancelAfter_EntersDrainingThenEscalatesToAborting()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: TimeSpan.FromMilliseconds(50),
@@ -102,8 +104,8 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         source.CancelAfter(TimeSpan.FromMilliseconds(10));
 
-        await WaitForCancellationAsync(source.DrainingToken).ConfigureAwait(false);
-        await WaitForCancellationAsync(source.AbortingToken).ConfigureAwait(false);
+        await WaitForCancellationAsync(source.DrainingToken);
+        await WaitForCancellationAsync(source.AbortingToken);
 
         Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
         Assert.IsTrue(source.AbortingToken.IsCancellationRequested);
@@ -112,7 +114,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     [TestMethod]
     public void ZeroGracePeriod_ImmediatelyEscalatesToAborting()
     {
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: TimeSpan.Zero,
@@ -129,7 +131,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     {
         var console = new TrackingConsole();
         {
-            using var source = new CTRLPlusCCancellationTokenSource(
+            using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
                 console,
                 logger: null,
                 gracePeriod: Timeout.InfiniteTimeSpan,
@@ -146,25 +148,23 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     public void CtrlC_Handler_TransitionsThroughExpectedPhasesAndCancelValues()
     {
         var console = new TrackingConsole();
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console,
             logger: null,
             gracePeriod: Timeout.InfiniteTimeSpan,
             abortTimeout: Timeout.InfiniteTimeSpan);
 
-        ConsoleCancelEventArgs first = CreateCancelKeyPressEventArgs();
-        console.RaiseCancelKeyPress(first);
+        ConsoleCancelEventArgs first = console.FireCancelKeyPress();
         Assert.IsTrue(first.Cancel);
         Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
         Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+        Assert.IsTrue(source.WasCancellationRequestedByConsole);
 
-        ConsoleCancelEventArgs second = CreateCancelKeyPressEventArgs();
-        console.RaiseCancelKeyPress(second);
+        ConsoleCancelEventArgs second = console.FireCancelKeyPress();
         Assert.IsTrue(second.Cancel);
         Assert.IsTrue(source.AbortingToken.IsCancellationRequested);
 
-        ConsoleCancelEventArgs third = CreateCancelKeyPressEventArgs();
-        console.RaiseCancelKeyPress(third);
+        ConsoleCancelEventArgs third = console.FireCancelKeyPress();
         Assert.IsFalse(third.Cancel);
     }
 
@@ -172,7 +172,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     public async Task AbortTimeout_FailFastMessageMentionsAbortTimeout()
     {
         var environment = new RecordingEnvironment(TestContext.CancellationToken);
-        using var source = new CTRLPlusCCancellationTokenSource(
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
             console: null,
             logger: null,
             gracePeriod: Timeout.InfiniteTimeSpan,
@@ -181,8 +181,235 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         source.Abort();
 
-        string? message = await environment.WaitForFailFastAsync().ConfigureAwait(false);
+        string? message = await environment.WaitForFailFastAsync();
         Assert.AreEqual("Test platform shutdown abort timeout exhausted.", message);
+    }
+
+    [TestMethod]
+    public async Task AbortTimeout_InvokesForceExitActionBeforeTerminatingHost()
+    {
+        var environment = new RecordingEnvironment(TestContext.CancellationToken);
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null,
+            logger: null,
+            gracePeriod: Timeout.InfiniteTimeSpan,
+            abortTimeout: TimeSpan.FromMilliseconds(10),
+            environment: environment);
+        bool forceExitActionInvoked = false;
+        using IDisposable registration = source.RegisterForceExitAction(() =>
+        {
+            Assert.IsFalse(environment.FailFastCalled, "The child must be terminated before the controller.");
+            forceExitActionInvoked = true;
+        });
+
+        source.Abort();
+        await environment.WaitForFailFastAsync();
+
+        Assert.IsTrue(forceExitActionInvoked);
+    }
+
+    [TestMethod]
+    public void SecondCtrlC_SignalsAbortingWithoutInvokingForceExitAction()
+    {
+        var console = new TrackingConsole();
+        var environment = new RecordingEnvironment(TestContext.CancellationToken);
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, environment);
+        bool forceExitActionInvoked = false;
+        using IDisposable registration = source.RegisterForceExitAction(() => forceExitActionInvoked = true);
+
+        console.FireCancelKeyPress();
+        ConsoleCancelEventArgs second = console.FireCancelKeyPress();
+
+        Assert.IsTrue(second.Cancel);
+        Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
+        Assert.IsTrue(source.AbortingToken.IsCancellationRequested);
+        Assert.IsFalse(forceExitActionInvoked);
+        Assert.IsFalse(environment.FailFastCalled);
+        Assert.AreEqual(0, environment.ExitCallCount);
+    }
+
+    [TestMethod]
+    public void DisposedForceExitRegistration_DoesNotInvokeAction()
+    {
+        var console = new TrackingConsole();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        bool forceExitActionInvoked = false;
+        source.RegisterForceExitAction(() => forceExitActionInvoked = true).Dispose();
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+        ConsoleCancelEventArgs third = console.FireCancelKeyPress();
+
+        Assert.IsFalse(forceExitActionInvoked);
+        Assert.IsFalse(third.Cancel);
+    }
+
+    [TestMethod]
+    public void CtrlC_AfterExternalCancel_StillRequiresTwoPressesToAbort()
+    {
+        var console = new TrackingConsole();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+
+        source.Cancel();
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
+
+        ConsoleCancelEventArgs first = console.FireCancelKeyPress();
+        Assert.IsTrue(first.Cancel);
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+
+        ConsoleCancelEventArgs second = console.FireCancelKeyPress();
+        Assert.IsTrue(second.Cancel);
+        Assert.IsTrue(source.AbortingToken.IsCancellationRequested);
+    }
+
+    [TestMethod]
+    public void RepeatedCtrlC_InvokesForceExitActionOnlyOnce()
+    {
+        var console = new TrackingConsole();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        int forceExitActionInvocations = 0;
+        using IDisposable registration = source.RegisterForceExitAction(() => forceExitActionInvocations++);
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+        ConsoleCancelEventArgs third = console.FireCancelKeyPress();
+        ConsoleCancelEventArgs fourth = console.FireCancelKeyPress();
+
+        Assert.AreEqual(1, forceExitActionInvocations);
+        Assert.IsFalse(third.Cancel);
+        Assert.IsFalse(fourth.Cancel);
+    }
+
+    [TestMethod]
+    public void FirstCtrlC_WhenCancelCallbackThrows_LogsWarningAndSuppressesException()
+    {
+        var console = new TrackingConsole();
+        var logger = new RecordingLogger();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        using CancellationTokenRegistration registration = source.DrainingToken.Register(() => throw new InvalidOperationException("boom"));
+
+        console.FireCancelKeyPress();
+
+        Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+        Assert.AreEqual(1, logger.WarningCount);
+        Assert.IsNotNull(logger.LastWarning);
+        Assert.Contains("Exception during shutdown (Draining)", logger.LastWarning);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ExternalCancellation_WhenCallbackThrows_LogsWarningAndSuppressesException(bool abort)
+    {
+        var logger = new RecordingLogger();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        CancellationToken token = abort ? source.AbortingToken : source.DrainingToken;
+        using CancellationTokenRegistration registration = token.Register(() => throw new InvalidOperationException("boom"));
+
+        if (abort)
+        {
+            source.Abort();
+        }
+        else
+        {
+            source.Cancel();
+        }
+
+        Assert.IsTrue(token.IsCancellationRequested);
+        Assert.AreEqual(1, logger.WarningCount);
+        Assert.IsNotNull(logger.LastWarning);
+        Assert.Contains(abort ? "Exception during shutdown (Aborting)" : "Exception during shutdown (Draining)", logger.LastWarning);
+    }
+
+    [TestMethod]
+    public void ConcurrentCtrlC_SignalsEachPhaseOnlyOnce()
+    {
+        var console = new TrackingConsole();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        int drainingCallbacks = 0;
+        int abortingCallbacks = 0;
+        int forceExitActions = 0;
+        using CancellationTokenRegistration drainingRegistration = source.DrainingToken.Register(() => Interlocked.Increment(ref drainingCallbacks));
+        using CancellationTokenRegistration abortingRegistration = source.AbortingToken.Register(() => Interlocked.Increment(ref abortingCallbacks));
+        using IDisposable forceExitRegistration = source.RegisterForceExitAction(() => Interlocked.Increment(ref forceExitActions));
+
+        Parallel.For(0, 16, _ => console.FireCancelKeyPress());
+
+        Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
+        Assert.IsTrue(source.AbortingToken.IsCancellationRequested);
+        Assert.AreEqual(1, drainingCallbacks);
+        Assert.AreEqual(1, abortingCallbacks);
+        Assert.AreEqual(1, forceExitActions);
+    }
+
+    [TestMethod]
+    public void Constructor_WithNullConsole_DoesNotCrash_AndCancelStillWorks()
+    {
+        var environment = new RecordingEnvironment(TestContext.CancellationToken);
+        using var source = new CTRLPlusCCancellationTokenSource(console: null, logger: null, environment);
+
+        source.Cancel();
+
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
+        Assert.IsFalse(environment.FailFastCalled);
+        Assert.AreEqual(0, environment.ExitCallCount);
+    }
+
+    [TestMethod]
+    public void ThirdCtrlC_ForceActionFailureWarnsAndStillLetsRuntimeTerminate()
+    {
+        var console = new TrackingConsole();
+        var logger = new RecordingLogger();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        int invoked = 0;
+        using IDisposable registration = source.RegisterForceExitAction(() =>
+        {
+            invoked++;
+            throw new InvalidOperationException("force action failed");
+        });
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+        ConsoleCancelEventArgs third = console.FireCancelKeyPress();
+        ConsoleCancelEventArgs fourth = console.FireCancelKeyPress();
+
+        Assert.AreEqual(1, invoked);
+        Assert.IsFalse(third.Cancel);
+        Assert.IsFalse(fourth.Cancel);
+        Assert.AreEqual(1, logger.WarningCount);
+        Assert.IsNotNull(logger.LastWarning);
+        Assert.StartsWith("Exception while force-terminating the active test host:\n", logger.LastWarning);
+        Assert.Contains("System.InvalidOperationException: force action failed", logger.LastWarning);
+    }
+
+    [TestMethod]
+    public void CancelAfter_DisabledTimerDoesNotCancelAndDisposeIsIdempotent()
+    {
+        var console = new TrackingConsole();
+        var environment = new RecordingEnvironment(TestContext.CancellationToken);
+        var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
+
+        source.CancelAfter(Timeout.InfiniteTimeSpan);
+        Assert.IsFalse(source.CancellationToken.IsCancellationRequested);
+        source.Cancel();
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        source.Dispose();
+        source.Dispose();
+
+        Assert.AreEqual(0, console.CancelKeyPressSubscriberCount);
+        console.FireCancelKeyPress();
+        Assert.AreEqual(0, environment.ExitCallCount);
+        Assert.IsFalse(environment.FailFastCalled);
     }
 
     private async Task WaitForCancellationAsync(CancellationToken cancellationToken)
@@ -196,20 +423,9 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         using CancellationTokenRegistration registration = cancellationToken.Register(() => tcs.TrySetResult(true));
 
         var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
-        Task completed = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+        Task completed = await Task.WhenAny(tcs.Task, timeoutTask);
 
         Assert.AreSame(tcs.Task, completed, "Token must trip before the timeout.");
-    }
-
-    private static ConsoleCancelEventArgs CreateCancelKeyPressEventArgs()
-    {
-        ConstructorInfo constructor = typeof(ConsoleCancelEventArgs).GetConstructor(
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            [typeof(ConsoleSpecialKey)],
-            modifiers: null)!;
-
-        return (ConsoleCancelEventArgs)constructor.Invoke([ConsoleSpecialKey.ControlC]);
     }
 
     private sealed class TrackingConsole : IConsole
@@ -224,7 +440,18 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         public int CancelKeyPressSubscriberCount => _cancelKeyPress?.GetInvocationList().Length ?? 0;
 
-        public void RaiseCancelKeyPress(ConsoleCancelEventArgs args) => _cancelKeyPress?.Invoke(this, args);
+        public ConsoleCancelEventArgs FireCancelKeyPress()
+        {
+            ConstructorInfo? constructor = typeof(ConsoleCancelEventArgs).GetConstructor(
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                binder: null,
+                types: [typeof(ConsoleSpecialKey)],
+                modifiers: null);
+            Assert.IsNotNull(constructor);
+            var args = (ConsoleCancelEventArgs)constructor.Invoke([ConsoleSpecialKey.ControlC]);
+            _cancelKeyPress?.Invoke(this, args);
+            return args;
+        }
 
         public int BufferHeight => throw new NotImplementedException();
 
@@ -246,6 +473,8 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         public void Write(string? value) => throw new NotImplementedException();
 
+        public void Write(StringBuilder value) => throw new NotImplementedException();
+
         public void Write(char value) => throw new NotImplementedException();
 
         public void Clear() => throw new NotImplementedException();
@@ -254,6 +483,10 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     private sealed class RecordingEnvironment(CancellationToken cancellationToken) : IEnvironment
     {
         private readonly TaskCompletionSource<string?> _failFastMessage = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public bool FailFastCalled => _failFastMessage.Task.IsCompleted;
+
+        public int ExitCallCount { get; private set; }
 
         public string CommandLine => throw new NotImplementedException();
 
@@ -272,11 +505,11 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         public async Task<string?> WaitForFailFastAsync()
         {
             var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-            Task completed = await Task.WhenAny(_failFastMessage.Task, timeoutTask).ConfigureAwait(false);
+            Task completed = await Task.WhenAny(_failFastMessage.Task, timeoutTask);
 
             Assert.AreSame(_failFastMessage.Task, completed, "FailFast must be called before the timeout.");
 
-            return await _failFastMessage.Task.ConfigureAwait(false);
+            return await _failFastMessage.Task;
         }
 
         public string[] GetCommandLineArgs() => throw new NotImplementedException();
@@ -293,6 +526,32 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         public void SetEnvironmentVariable(string variable, string? value) => throw new NotImplementedException();
 
-        public void Exit(int exitCode) => throw new NotImplementedException();
+        public void Exit(int exitCode) => ExitCallCount++;
+    }
+
+    private sealed class RecordingLogger : ILogger
+    {
+        private int _warningCount;
+
+        public int WarningCount => _warningCount;
+
+        public string? LastWarning { get; private set; }
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == LogLevel.Warning)
+            {
+                Interlocked.Increment(ref _warningCount);
+                LastWarning = formatter(state, exception);
+            }
+        }
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Log(logLevel, state, exception, formatter);
+            return Task.CompletedTask;
+        }
     }
 }

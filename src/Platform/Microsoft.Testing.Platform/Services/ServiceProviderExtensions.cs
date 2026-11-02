@@ -1,11 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -31,13 +35,29 @@ public static class ServiceProviderExtensions
     /// <exception cref="InvalidOperationException">Thrown when the required service is not found.</exception>
     public static TService GetRequiredService<TService>(this IServiceProvider provider)
         where TService : notnull
+        => provider.GetRequiredPlatformService<TService>();
+
+    /// <summary>
+    /// Gets the required Microsoft Testing Platform service of type <typeparamref name="TService"/>
+    /// from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the platform service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The required platform service of type <typeparamref name="TService"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the required service is not found.</exception>
+    /// <remarks>
+    /// Prefer this method when the project also references Microsoft.Extensions.DependencyInjection.
+    /// Its platform-specific name avoids ambiguity with that package's <c>GetRequiredService</c>
+    /// extension method.
+    /// </remarks>
+    public static TService GetRequiredPlatformService<TService>(this IServiceProvider provider)
+        where TService : notnull
     {
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
         object? service = provider.GetService(typeof(TService));
-        ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
-
-        return (TService)service;
+        return (TService)(service ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService))));
     }
 
     /// <summary>
@@ -48,6 +68,22 @@ public static class ServiceProviderExtensions
     /// <returns>The service of type <typeparamref name="TService"/> or null if not found.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
     public static TService? GetService<TService>(this IServiceProvider provider)
+        where TService : class
+        => provider.GetPlatformService<TService>();
+
+    /// <summary>
+    /// Gets the Microsoft Testing Platform service of type <typeparamref name="TService"/>
+    /// from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the platform service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The platform service of type <typeparamref name="TService"/> or null if not found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
+    /// <remarks>
+    /// Prefer this method when the project also references Microsoft.Extensions.DependencyInjection.
+    /// Its platform-specific name avoids ambiguity with that package's <c>GetService</c> extension method.
+    /// </remarks>
+    public static TService? GetPlatformService<TService>(this IServiceProvider provider)
         where TService : class
     {
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
@@ -61,7 +97,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The message bus.</returns>
     public static IMessageBus GetMessageBus(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<IMessageBus>();
+        => serviceProvider.GetRequiredPlatformService<IMessageBus>();
 
     /// <summary>
     /// Gets the configuration from the <see cref="IServiceProvider"/>.
@@ -69,7 +105,23 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The configuration.</returns>
     public static IConfiguration GetConfiguration(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<IConfiguration>();
+        => serviceProvider.GetRequiredPlatformService<IConfiguration>();
+
+    /// <summary>
+    /// Gets the hierarchical configuration root from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The hierarchical configuration root.</returns>
+    public static IConfigurationRoot GetConfigurationRoot(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredPlatformService<IConfigurationRoot>();
+
+    /// <summary>
+    /// Gets the artifact naming service from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The artifact naming service.</returns>
+    public static IArtifactNamingService GetArtifactNamingService(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredPlatformService<IArtifactNamingService>();
 
     /// <summary>
     /// Gets the command line options from the <see cref="IServiceProvider"/>.
@@ -77,7 +129,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The command line options.</returns>
     public static ICommandLineOptions GetCommandLineOptions(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<ICommandLineOptions>();
+        => serviceProvider.GetRequiredPlatformService<ICommandLineOptions>();
 
     /// <summary>
     /// Gets the logger factory from the <see cref="IServiceProvider"/>.
@@ -85,7 +137,28 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The logger factory.</returns>
     public static ILoggerFactory GetLoggerFactory(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<ILoggerFactory>();
+        => serviceProvider.GetRequiredPlatformService<ILoggerFactory>();
+
+    /// <summary>
+    /// Gets information about the built-in diagnostic file logger from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>
+    /// The diagnostic logging information, or <see langword="null"/> when diagnostic logging is disabled.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The returned service is live. Extensions created while the test application is still being built
+    /// should retain the service and read <see cref="IDiagnosticLoggingInformation.LogFile"/> when needed,
+    /// because the platform can relocate the log before the build completes.
+    /// </para>
+    /// <para>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </para>
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public static IDiagnosticLoggingInformation? GetDiagnosticLoggingInformation(this IServiceProvider serviceProvider)
+        => serviceProvider.GetPlatformService<IDiagnosticLoggingInformation>();
 
     /// <summary>
     /// Gets the output device from the <see cref="IServiceProvider"/>.
@@ -100,6 +173,9 @@ public static class ServiceProviderExtensions
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The IClientInfo object.</returns>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public static IClientInfo GetClientInfo(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClientInfo>();
@@ -111,9 +187,7 @@ public static class ServiceProviderExtensions
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
         object? service = ((ServiceProvider)provider).GetServiceInternal(typeof(TService));
-        ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
-
-        return (TService)service;
+        return (TService)(service ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService))));
     }
 
     internal static TService? GetServiceInternal<TService>(this IServiceProvider provider)
@@ -132,10 +206,71 @@ public static class ServiceProviderExtensions
         return ((ServiceProvider)provider).GetServicesInternal(typeof(TService)).Cast<TService>();
     }
 
+    internal static IReadOnlyList<string>? GetTestHostControllerAuthorizedSecurityIdentities(this IServiceProvider serviceProvider)
+        => ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities;
+
+    internal static async Task<IReadOnlyList<string>?> ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+        this IServiceProvider serviceProvider,
+        ITestHostLauncher? testHostLauncher,
+        string testHostFileName,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        if (testHostLauncher is not ITestHostControllerConnectionAuthorizer connectionAuthorizer)
+        {
+            ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = null;
+            return null;
+        }
+
+        IReadOnlyList<string> extensionResult = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(testHostFileName, cancellationToken).ConfigureAwait(false);
+        if (extensionResult is null || extensionResult.Count == 0)
+        {
+            ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = null;
+            return null;
+        }
+
+        // Snapshot immediately. Validation, logging, and every controller-side pipe must operate on
+        // the same fixed set of extension-supplied values.
+        string[] securityIdentities = [.. extensionResult];
+
+        if (!NamedPipeServerSecurity.IsSupported)
+        {
+            await logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentities.Length} connection authorization(s), ignored on this operating system.").ConfigureAwait(false);
+            ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = null;
+            return null;
+        }
+
+        foreach (string securityIdentity in securityIdentities.Where(static securityIdentity =>
+            !NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity)))
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage,
+                testHostLauncher.DisplayName,
+                testHostLauncher.Uid,
+                securityIdentity ?? "<null>",
+                NamedPipeServerSecurity.AllApplicationPackagesSid));
+        }
+
+        await logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested the following validated security identity/identities for controller-side connections: {string.Join(", ", securityIdentities)}").ConfigureAwait(false);
+        ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = securityIdentities;
+        return securityIdentities;
+    }
+
     internal static ITestSessionContext GetTestSessionContext(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestSessionContext>();
 
-    internal static IClock GetSystemClock(this IServiceProvider serviceProvider)
+    /// <summary>
+    /// <b>Infrastructure.</b> Gets the platform system clock. Not intended for direct use by application code.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The platform <see cref="IClock"/>.</returns>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Experimental("TPINTERNAL")]
+    public static IClock GetSystemClock(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClock>();
 
     internal static ITask GetTask(this IServiceProvider serviceProvider)

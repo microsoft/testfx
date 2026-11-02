@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <!-- Don't use net462 as analyzer testing library brings Newtonsoft.Json 9.0.1 via NuGet.Packaging -->
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">$(SupportedNetFrameworks)</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     
@@ -40,12 +40,22 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.Extensions.Hosting\MSTest.Extensions.Hosting.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
   </ItemGroup>
+
+  <Target Name="_AddAnalyzerTestReferencePackMetadata"
+          BeforeTargets="GetAssemblyAttributes"
+          Condition="'$(TargetFramework)' == 'net11.0'">
+    <ItemGroup>
+      <AssemblyMetadata Include="Net11RuntimeVersion" Value="$(Net11RuntimeVersion)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

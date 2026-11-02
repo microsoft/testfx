@@ -17,6 +17,12 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal static class ObjectModelConverters
 {
+    private const string MSTestDependenciesPropertyId = "MSTestDiscoverer.Dependencies";
+    private const string MSTestDependencyTestNodePropertyKey = "mstest.TestCase.Dependency";
+    private const int MaxMSTestDependenciesPerTest = 32;
+    private const int MaxMSTestDependencyCandidatesPerTest = 64;
+    private const int MaxMSTestDependencyLength = 1024;
+
     private static readonly TestProperty OriginalExecutorUriProperty = TestProperty.Register(
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
@@ -45,6 +51,7 @@ internal static class ObjectModelConverters
         };
 
         CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
+        CopyMSTestDependencies(testCase, testNode);
 
         if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
@@ -60,6 +67,36 @@ internal static class ObjectModelConverters
 
         addAdditionalProperties(testNode, testCase);
         return testNode;
+    }
+
+    private static void CopyMSTestDependencies(TestCase testCase, TestNode testNode)
+    {
+        foreach (KeyValuePair<TestProperty, object?> property in testCase.GetProperties())
+        {
+            if (property.Key.Id == MSTestDependenciesPropertyId
+                && property.Value is string[] dependencies)
+            {
+                int copiedDependencyCount = 0;
+                foreach (string dependency in dependencies.Take(MaxMSTestDependencyCandidatesPerTest))
+                {
+                    if (dependency.Length > MaxMSTestDependencyLength)
+                    {
+                        continue;
+                    }
+
+                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty(
+                        MSTestDependencyTestNodePropertyKey,
+                        dependency));
+                    copiedDependencyCount++;
+                    if (copiedDependencyCount == MaxMSTestDependenciesPerTest)
+                    {
+                        break;
+                    }
+                }
+
+                return;
+            }
+        }
     }
 
     private static void CopyCategoryAndTraits(TestObject testCaseOrResult, TestNode testNode, bool isTrxEnabled)
@@ -138,6 +175,10 @@ internal static class ObjectModelConverters
 
         testNode.AddOutcome(testResult);
 
+        // Validate TRX prerequisites (and add TRX-only properties that don't depend on the message
+        // loop) BEFORE iterating testResult.Messages, so that an InvalidOperationException from a
+        // malformed FullyQualifiedName still wins over the UnreachableException that the message
+        // loop can throw on an unexpected msg.Category. This preserves the pre-PR exception order.
         if (isTrxEnabled)
         {
             if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
@@ -150,7 +191,7 @@ internal static class ObjectModelConverters
             TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
             if (testMethodIdentifierProperty is not null)
             {
-                // TODO: Should TRX className have arity for generic classes?
+                // It is unclear whether the TRX className should have arity for generic classes.
                 if (RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
                 {
                     testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethodIdentifierProperty.TypeName));
@@ -170,37 +211,47 @@ internal static class ObjectModelConverters
             {
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
+        }
 
-            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
-                .Select(msg =>
-                    msg.Category switch
-                    {
-                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
-                        string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
-                        string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => throw new UnreachableException(),
-                    })]));
+        // Single pass over testResult.Messages: collect TRX messages, standard-error, and
+        // standard-output in one loop, avoiding a separate LINQ Select + spread + foreach.
+        // Pre-size trxMessages to the exact capacity to avoid List<T> growth reallocations
+        // (every entry in testResult.Messages produces one TRX message when TRX is enabled).
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+        List<TrxMessage>? trxMessages = isTrxEnabled ? new List<TrxMessage>(testResult.Messages.Count) : null;
+#pragma warning restore IDE0028
+        List<string>? standardErrorMessages = null;
+        List<string>? standardOutputMessages = null;
+        foreach (TestResultMessage msg in testResult.Messages)
+        {
+            if (trxMessages is not null)
+            {
+                TrxMessage trxMsg = msg.Category switch
+                {
+                    string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                    string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
+                    string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
+                    _ => throw new UnreachableException(),
+                };
+                trxMessages.Add(trxMsg);
+            }
+
+            if (msg.Category == TestResultMessage.StandardErrorCategory)
+            {
+                (standardErrorMessages ??= []).Add(msg.Text ?? string.Empty);
+            }
+            else if (msg.Category == TestResultMessage.StandardOutCategory)
+            {
+                (standardOutputMessages ??= []).Add(msg.Text ?? string.Empty);
+            }
+        }
+
+        if (isTrxEnabled)
+        {
+            testNode.Properties.Add(new TrxMessagesProperty([.. trxMessages!]));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
-
-        List<string>? standardErrorMessages = null;
-        List<string>? standardOutputMessages = null;
-        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
-        foreach (TestResultMessage testResultMessage in testResult.Messages)
-        {
-            if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
-            {
-                string message = testResultMessage.Text ?? string.Empty;
-                (standardErrorMessages ??= []).Add(message);
-            }
-
-            if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
-            {
-                string message = testResultMessage.Text ?? string.Empty;
-                (standardOutputMessages ??= []).Add(message);
-            }
-        }
 
         foreach (AttachmentSet attachmentSet in testResult.Attachments)
         {
@@ -210,12 +261,12 @@ internal static class ObjectModelConverters
             }
         }
 
-        if (standardErrorMessages is { Count: > 0 })
+        if (standardErrorMessages is not null)
         {
             testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
-        if (standardOutputMessages is { Count: > 0 })
+        if (standardOutputMessages is not null)
         {
             testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
@@ -256,7 +307,7 @@ internal static class ObjectModelConverters
     {
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
-        if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))
+        if (!testCase.GetProperties().Any(static property => property.Key.Id == OriginalExecutorUriProperty.Id))
         {
             testCase.SetPropertyValue(OriginalExecutorUriProperty, testCase.ExecutorUri);
         }

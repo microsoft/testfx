@@ -1,12 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
 
-internal abstract class PipeNameEnvironmentVariableProviderBase(string pipeName, string environmentVariableName) : ITestHostEnvironmentVariableProvider
+internal abstract class PipeNameEnvironmentVariableProviderBase(NamedPipeServerEndpoint endpoint, string environmentVariableName) : ITestHostEnvironmentVariableProvider
 {
     public string Version => ExtensionVersion.DefaultSemVer;
 
@@ -22,7 +23,7 @@ internal abstract class PipeNameEnvironmentVariableProviderBase(string pipeName,
     /// </summary>
     protected virtual bool ShouldValidatePipeNameValue => true;
 
-    protected string PipeName { get; } = pipeName;
+    protected string PipeName => endpoint.PipeName;
 
     protected string EnvironmentVariableName { get; } = environmentVariableName;
 

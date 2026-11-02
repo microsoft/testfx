@@ -53,21 +53,21 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     // Dispose() and prevent callbacks from firing after the host has shut down.
     private List<CancellationTokenSource>? _escalations;
 
+    private Action? _forceExitAction;
     private int _ctrlCCount;
     private int _disposed;
 
-    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null)
-        : this(console, logger, DefaultGracePeriod, DefaultAbortTimeout, environment: null)
+    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, IEnvironment? environment = null)
+        : this(console, logger, DefaultGracePeriod, DefaultAbortTimeout, environment)
     {
     }
 
-    // Test-friendly overload so we can exercise the phase machine without waiting 30s.
-    internal CTRLPlusCCancellationTokenSource(
+    private CTRLPlusCCancellationTokenSource(
         IConsole? console,
         ILogger? logger,
         TimeSpan gracePeriod,
         TimeSpan abortTimeout,
-        IEnvironment? environment = null)
+        IEnvironment? environment)
     {
         _gracePeriod = gracePeriod;
         _abortTimeout = abortTimeout;
@@ -80,6 +80,14 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             console.CancelKeyPress += OnConsoleCancelKeyPressed;
         }
     }
+
+    internal static CTRLPlusCCancellationTokenSource CreateWithTimeouts(
+        IConsole? console,
+        ILogger? logger,
+        TimeSpan gracePeriod,
+        TimeSpan abortTimeout,
+        IEnvironment? environment = null)
+        => new(console, logger, gracePeriod, abortTimeout, environment);
 
     [SupportedOSPlatformGuard("android")]
     [SupportedOSPlatformGuard("ios")]
@@ -103,6 +111,15 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     public CancellationToken AbortingToken => _abortingCts.Token;
 
     internal int CurrentPhase => Volatile.Read(ref _phase.Value);
+
+    public bool WasCancellationRequestedByConsole
+        => Volatile.Read(ref _ctrlCCount) != 0;
+
+    public IDisposable RegisterForceExitAction(Action forceExitAction)
+    {
+        Volatile.Write(ref _forceExitAction, forceExitAction);
+        return new ForceExitRegistration(this, forceExitAction);
+    }
 
     public void CancelAfter(TimeSpan timeout)
     {
@@ -195,6 +212,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
                 // 3rd+ Ctrl+C: stop intercepting and let the runtime terminate
                 // the process. This matches docker compose / kubectl / npm UX:
                 // the user has explicitly asked us to die.
+                InvokeForceExitAction();
                 e.Cancel = false;
                 break;
         }
@@ -283,6 +301,25 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     {
         _logger?.LogWarning(
             $"Shutdown abort timeout exhausted ({_abortTimeout}); terminating host.");
+        InvokeForceExitAction();
         _environment.FailFast("Test platform shutdown abort timeout exhausted.");
+    }
+
+    private void InvokeForceExitAction()
+    {
+        try
+        {
+            Interlocked.Exchange(ref _forceExitAction, null)?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning($"Exception while force-terminating the active test host:\n{ex}");
+        }
+    }
+
+    private sealed class ForceExitRegistration(CTRLPlusCCancellationTokenSource owner, Action forceExitAction) : IDisposable
+    {
+        public void Dispose()
+            => Interlocked.CompareExchange(ref owner._forceExitAction, null, forceExitAction);
     }
 }

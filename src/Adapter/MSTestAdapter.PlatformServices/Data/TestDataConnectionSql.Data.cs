@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -59,7 +59,7 @@ internal partial class TestDataConnectionSql
     private string GetColumnsSQL(IEnumerable? columns)
     {
         string? result = null;
-        if (columns != null)
+        if (columns is not null)
         {
             StringBuilder builder = new();
             foreach (string columnName in columns)

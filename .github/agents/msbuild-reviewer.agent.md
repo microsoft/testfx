@@ -44,7 +44,7 @@ The caller is the scheduled MSBuild quality review workflow. There is no PR; you
 2. Read every discovered file (prioritize NuGet `build/` and SDK files — they ship to customers).
 3. Evaluate every file against the [Rule Catalog](#rule-catalog).
 4. Group findings by severity (🔴 Error / 🟡 Warning / 🔵 Suggestion).
-5. Check for an existing open issue with labels `automation`, `msbuild`, `code-quality`. If one exists and the findings are unchanged, call `noop` with the message `MSBuild file quality review complete — no new findings since the last report.` and stop.
+5. Use `gh issue list --state open --label type/automation --label area/mtp-msbuild --label type/tech-debt` to check for an existing report. If one exists and the findings are unchanged, call `noop` with the message `MSBuild file quality review complete — no new findings since the last report.` and stop.
 6. Otherwise, **self-post** the report (the parent workflow `noop`s immediately and will not pick up your output if you don't post). Use:
    - `create_issue` for the findings report (preferred default).
    - `create_pull_request` for safe auto-fixes only when ALL of the following hold for every change in the PR: the fix is on the allow-list in [Safe Auto-Fixes](#safe-auto-fixes), `./build.sh` still succeeds after the change, and the change does not touch a file under `.github/`, `eng/common/`, or another protected path.
@@ -107,9 +107,10 @@ Each rule has a category letter and an index. Cite findings as `Rule A-3`, `Rule
 
 1. **Missing condition guards on defaults** — Properties intended as overridable defaults must have `Condition="'$(PropertyName)' == ''"`. Without it, consumer projects cannot override the value. **Severity: 🔴 Error.**
 2. **Unquoted condition expressions** — Both sides of `==` and `!=` must be single-quoted: `'$(Prop)' == 'value'`. Unquoted conditions fail when the property is empty. **Severity: 🔴 Error.**
-3. **Overwriting semicolon-delimited properties** — Properties like `DefineConstants`, `NoWarn`, `WarningsAsErrors` must preserve existing values: `<NoWarn>$(NoWarn);MYCODE</NoWarn>`. **Severity: 🔴 Error.**
-4. **Hardcoded absolute paths** — Paths like `C:\` or `/usr/` break portability. Use `$(MSBuildThisFileDirectory)`, `$([MSBuild]::NormalizePath(...))`, or similar. **Severity: 🟡 Warning.**
-5. **Missing trailing slash on directory properties** — Directory properties used in path concatenation should use `HasTrailingSlash()` or ensure a trailing separator. **Severity: 🔵 Suggestion.**
+3. **Bare-token property reference in conditions** — A condition like `'(Foo)' != ''` is **not** a property reference — it compares the literal string `(Foo)` to a value (or the empty string) and is therefore always evaluated against that literal, never the property. Depending on the operator and right-hand side this makes the condition always-true, always-false, or just wrong (e.g. `'(Foo)' != ''` is always true; `'(Foo)' == 'bar'` is always false; `'(Foo)' == '(Foo)'` is unconditionally true). Property references in conditions MUST use the `$(Name)` form: `'$(Foo)' != ''`. Same defect class for items (`@(Name)`) and metadata (`%(Name)`). Trigger this check whenever you see a quoted token starting with `(` immediately after the opening quote. **Severity: 🔴 Error.**
+4. **Overwriting semicolon-delimited properties** — Properties like `DefineConstants`, `NoWarn`, `WarningsAsErrors` must preserve existing values: `<NoWarn>$(NoWarn);MYCODE</NoWarn>`. **Severity: 🔴 Error.**
+5. **Hardcoded absolute paths** — Paths like `C:\` or `/usr/` break portability. Use `$(MSBuildThisFileDirectory)`, `$([MSBuild]::NormalizePath(...))`, or similar. **Severity: 🟡 Warning.**
+6. **Missing trailing slash on directory properties** — Directory properties used in path concatenation should use `HasTrailingSlash()` or ensure a trailing separator. **Severity: 🔵 Suggestion.**
 
 ### Category C: Item Management
 
@@ -135,7 +136,7 @@ Each rule has a category letter and an index. Cite findings as `Rule A-3`, `Rule
 
 ## Severity Definitions
 
-- 🔴 **Error** — Likely broken or will cause build failures (missing `Exists()` guard, `DependsOn` overwrite, unquoted conditions, wrong NuGet package file name).
+- 🔴 **Error** — Likely broken or will cause build failures (missing `Exists()` guard, `DependsOn` overwrite, unquoted conditions, bare-token property references like `'(Foo)' != ''`, wrong NuGet package file name).
 - 🟡 **Warning** — Anti-pattern that degrades maintainability or performance (missing `Inputs`/`Outputs`, missing `FileWrites`, hardcoded paths, batching pitfalls).
 - 🔵 **Suggestion** — Improvement opportunity (naming conventions, trailing slashes, organizational improvements).
 

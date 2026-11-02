@@ -1,45 +1,44 @@
 ---
 name: coverage-analysis
 description: >
-  Automated, project-wide code coverage and CRAP (Change Risk Anti-Patterns)
-  score analysis for .NET projects with existing unit tests. Auto-detects
-  solution structure, runs coverage collection via `dotnet test` (supports both
-  Microsoft.Testing.Extensions.CodeCoverage and Coverlet), generates reports via
-  ReportGenerator, calculates CRAP scores per method, and surfaces risk
-  hotspots — complex code with low test coverage that is dangerous to modify.
-  Use when the user wants project-wide coverage analysis with risk
-  prioritization, coverage gap identification, CRAP score computation
-  across an entire solution, or to diagnose why coverage is stuck or
-  plateaued and identify what methods are blocking improvement.
-  DO NOT USE FOR: targeted single-method CRAP analysis (use crap-score skill),
-  writing tests, running tests without coverage collection, applying test
-  filters, producing TRX reports, or troubleshooting test execution (use
-  run-tests for all of these).
+  Activation requires either supplied .NET coverage reports/percentages/line,
+  branch, or condition metrics, or an explicit request to collect .NET coverage
+  for analysis. USE FOR: interpreting that evidence, including Cobertura data,
+  partial conditions, plateaus, target arithmetic,
+  project-wide coverage-backed CRAP, and coverage-backed refactoring safety.
+  Analyze supplied reports directly without rerunning tests or installing
+  tools. DO NOT USE FOR: requests with neither coverage evidence nor explicit
+  coverage-collection intent, including hypothetical change-survival questions
+  (use test-gap-analysis); CRAP or refactoring safety for one named target (use
+  crap-score); or requests owned by test-tagging, find-untested-sources,
+  test-anti-patterns, run-tests, or code-testing.
+license: MIT
 ---
 
 # Coverage Analysis
 
 ## Purpose
 
-Raw coverage percentages answer "what code was executed?" — they don't answer what you actually need to know:
-
-- **What tests should I write next?** — ranked by risk and impact
-- **Which uncovered code is risky vs. trivial?** — CRAP scores separate the two
-- **Why has coverage plateaued?** — identify the files blocking further gains
-- **Is this code safe to refactor?** — complex + uncovered = dangerous to change
-
-This skill bridges that gap: from a bare .NET solution to a prioritized risk hotspot list, with no manual tool configuration required.
+Explain what .NET coverage evidence proves, reconcile target arithmetic, and
+identify the code blocking progress. Add complexity/CRAP ranking only when the
+user explicitly asks for risk hotspots, CRAP, priorities by risk, or refactoring
+safety.
 
 ## When to Use
 
-Use this skill when the user mentions test coverage, coverage gaps, code risk, CRAP scores, where to add tests, why coverage plateaued, or wants to know which code is safest to refactor — even if they don't explicitly say "coverage analysis".
+Use this skill for interpreting supplied .NET line/branch/condition evidence,
+coverage gaps and plateaus, target arithmetic, or explicit project-wide
+coverage-backed risk analysis.
 
 ## When Not to Use
 
-- **Targeted single-method CRAP analysis** — use the `crap-score` skill instead
+- **Named method, class, or file CRAP/refactoring-safety analysis** — use the `crap-score` skill instead
+- **Static source-to-test pairing or listing files with no tests** — use `find-untested-sources`
+- **Behavioral or pseudo-mutation gaps in existing tests** — use `test-gap-analysis`
+- **Test trait/category distributions or coverage shape by test type** — use `test-tagging`
 - **Writing or generating tests** — this skill identifies where tests are needed, not write them
 - **General test execution** unrelated to coverage or CRAP analysis
-- **Coverage reporting without CRAP context** — use `dotnet test` with coverage collection directly
+- **Only collecting .NET coverage or printing a raw percentage with no diagnosis** — use `run-tests`; use native tooling for non-.NET coverage collection or analysis. Interpreting .NET line/branch gaps remains in scope here
 
 ## Inputs
 
@@ -48,425 +47,153 @@ Use this skill when the user mentions test coverage, coverage gaps, code risk, C
 | Project/solution path | No | Current directory | Path to the .NET solution or project |
 | Line coverage threshold | No | 80% | Minimum acceptable line coverage |
 | Branch coverage threshold | No | 70% | Minimum acceptable branch coverage |
-| CRAP threshold | No | 30 | Maximum acceptable CRAP score before flagging |
-| Top N hotspots | No | 10 | Number of risk hotspots to surface |
-
-### Prerequisites
-
-- .NET SDK installed (`dotnet` on PATH)
-- At least one test project referencing the production code (xUnit, NUnit, or MSTest)
-- Internet access for `dotnet tool install` (ReportGenerator) on first run, or ReportGenerator already installed globally
-
-The skill auto-detects coverage provider state per test project and selects the least-invasive execution strategy:
-
-- unified Microsoft CodeCoverage when all projects use it,
-- unified Coverlet when no project uses Microsoft CodeCoverage,
-- per-project provider execution when the solution is truly mixed.
-
-No pre-existing runsettings files or manually installed tools required.
-
-## Workflow
-
-If the user provides a path to existing Cobertura XML (or coverage data is already present in `TestResults/`), skip Steps 3–4 (test execution and provider detection) but **still run Steps 5–6** (ReportGenerator and CRAP score computation). The Risk Hotspots table and CRAP scores are mandatory in every output — they are the skill's core value-add over raw coverage numbers.
-
-The workflow runs in four phases. Phases 2 and 3 each contain steps that can run in parallel to reduce total wall-clock time.
-
-### Phase 1 — Setup (sequential)
-
-#### Step 1: Locate the solution or project
-
-Given the user's path (default: current directory), find the entry point:
-
-```powershell
-$root = "<user-provided-path-or-current-directory>"
-
-# Prefer solution file; fall back to project file
-$sln = Get-ChildItem -Path $root -Filter "*.sln" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-    Select-Object -First 1
-if ($sln) {
-    Write-Host "ENTRY_TYPE:Solution"; Write-Host "ENTRY:$($sln.FullName)"
-} else {
-    $project = Get-ChildItem -Path $root -Filter "*.csproj" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    if ($project) {
-        Write-Host "ENTRY_TYPE:Project"; Write-Host "ENTRY:$($project.FullName)"
-    } else {
-        Write-Host "ENTRY_TYPE:NotFound"
-    }
-}
-
-# Test projects: search path first, then git root, then parent
-$searchRoots = @($root)
-$gitRoot = (git -C $root rev-parse --show-toplevel 2>$null)
-if ($gitRoot) { $gitRoot = [System.IO.Path]::GetFullPath($gitRoot) }
-if ($gitRoot -and $gitRoot -ne $root) { $searchRoots += $gitRoot }
-$parentPath = Split-Path $root -Parent
-if ($parentPath -and $parentPath -ne $root -and $parentPath -ne $gitRoot) { $searchRoots += $parentPath }
-
-$testProjects = @()
-foreach ($sr in $searchRoots) {
-    # Primary: match by .csproj content (test framework references)
-    $testProjects = @(Get-ChildItem -Path $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '([/\\]obj[/\\]|[/\\]bin[/\\])' } |
-        Where-Object { (Select-String -Path $_.FullName -Pattern 'Microsoft\.NET\.Test\.Sdk|xunit|nunit|MSTest\.TestAdapter|"MSTest"|MSTest\.TestFramework|TUnit' -Quiet) })
-    if ($testProjects.Count -gt 0) {
-        if ($sr -ne $root) { Write-Host "SEARCHED:$sr" }
-        break
-    }
-}
-
-# Fallback: match by file name convention
-if ($testProjects.Count -eq 0) {
-    foreach ($sr in $searchRoots) {
-        $testProjects = @(Get-ChildItem -Path $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -match '(?i)(test|spec)' })
-        if ($testProjects.Count -gt 0) {
-            if ($sr -ne $root) { Write-Host "SEARCHED:$sr" }
-            break
-        }
-    }
-}
-Write-Host "TEST_PROJECTS:$($testProjects.Count)"
-$testProjects | ForEach-Object { Write-Host "TEST_PROJECT:$($_.FullName)" }
-
-# Resolve the test output root (where coverage-analysis artifacts will be written)
-if ($testProjects.Count -eq 1) {
-    $testOutputRoot = $testProjects[0].DirectoryName
-} else {
-    # Multiple test projects — find their deepest common parent directory
-    $dirs = $testProjects | ForEach-Object { $_.DirectoryName }
-    $common = $dirs[0]
-    foreach ($d in $dirs[1..($dirs.Count-1)]) {
-        $sep = [System.IO.Path]::DirectorySeparatorChar
-        while (-not $d.StartsWith("$common$sep", [System.StringComparison]::OrdinalIgnoreCase) -and $d -ne $common) {
-            $prevCommon = $common
-            $common = Split-Path $common -Parent
-            # Terminate if we can no longer move up (at filesystem root or no parent)
-            if ([string]::IsNullOrEmpty($common) -or $common -eq $prevCommon) {
-                $common = $null
-                break
-            }
-        }
-    }
-    if ([string]::IsNullOrEmpty($common)) {
-        # Fallback when no common parent directory exists (e.g., projects on different drives)
-        if ($gitRoot) {
-            $testOutputRoot = $gitRoot
-        } else {
-            $testOutputRoot = $root
-        }
-    } else {
-        $testOutputRoot = $common
-    }
-}
-Write-Host "TEST_OUTPUT_ROOT:$testOutputRoot"
-```
-
-- If `ENTRY_TYPE:NotFound` and test projects were found → use the test projects directly as entry points (run `dotnet test` on each test `.csproj`).
-- If `ENTRY_TYPE:NotFound` and no test projects found → stop: `No .sln or test projects found under <path>. Provide the path to your .NET solution or project.`
-- If `TEST_PROJECTS:0` → stop: `No test projects found (expected projects with 'Test' or 'Spec' in the name). Ensure your solution has unit test projects before running coverage analysis.`
-
-#### Step 2: Create the output directory
-
-```powershell
-$coverageDir = Join-Path $testOutputRoot "TestResults" "coverage-analysis"
-if (Test-Path $coverageDir) { Remove-Item $coverageDir -Recurse -Force }
-New-Item -ItemType Directory -Path $coverageDir -Force | Out-Null
-Write-Host "COVERAGE_DIR:$coverageDir"
-```
-
-#### Step 2b: Recommend ignoring `TestResults/`
-
-```powershell
-$pattern = "**/TestResults/"
-$gitRoot = (git -C $testOutputRoot rev-parse --show-toplevel 2>$null)
-if ($gitRoot) { $gitRoot = [System.IO.Path]::GetFullPath($gitRoot) }
-if ($gitRoot) {
-    $gitignorePath = Join-Path $gitRoot ".gitignore"
-    $alreadyIgnored = $false
-    if (Test-Path $gitignorePath) {
-        $alreadyIgnored = (Select-String -Path $gitignorePath -Pattern '^\s*(\*\*/)?TestResults/?\s*$' -Quiet)
-    }
-    if ($alreadyIgnored) {
-        Write-Host "GITIGNORE_RECOMMENDATION:already-present"
-    } else {
-        Write-Host "GITIGNORE_RECOMMENDATION:$pattern"
-    }
-} else {
-    Write-Host "GITIGNORE_RECOMMENDATION:$pattern"
-}
-```
-
-### Phase 2 — Data collection (Steps 3 and 4 run in parallel)
-
-Steps 3 and 4 are independent — start both simultaneously. `dotnet test` is the slowest step, and ReportGenerator setup doesn't need coverage files, so running them concurrently cuts wall time significantly.
-
-#### Step 3: Detect coverage provider and run `dotnet test` with coverage collection
-
-Before running tests, detect which coverage provider the test projects use. Projects may reference
-`Microsoft.Testing.Extensions.CodeCoverage` (Microsoft's built-in provider, common on .NET 9+) or
-`coverlet.collector` (open-source, the default in xUnit templates). The provider determines which
-`dotnet test` arguments to use — both produce Cobertura XML.
-
-```powershell
-# Detect coverage provider per test project
-$coverageProvider = "unknown"  # will be set to "ms-codecoverage" or "coverlet"
-$msCodeCovProjects = @()
-$coverletProjects = @()
-$neitherProjects = @()
-
-foreach ($tp in $testProjects) {
-    $hasMsCodeCov = Select-String -Path $tp.FullName -Pattern 'Microsoft\.Testing\.Extensions\.CodeCoverage' -Quiet
-    $hasCoverlet = Select-String -Path $tp.FullName -Pattern 'coverlet\.collector' -Quiet
-    if ($hasMsCodeCov) { $msCodeCovProjects += $tp }
-    elseif ($hasCoverlet) { $coverletProjects += $tp }
-    else { $neitherProjects += $tp }
-}
-
-# Determine the provider strategy
-if ($msCodeCovProjects.Count -gt 0 -and $coverletProjects.Count -eq 0) {
-    $coverageProvider = "ms-codecoverage"
-    Write-Host "COVERAGE_PROVIDER:ms-codecoverage (ms:$($msCodeCovProjects.Count), none:$($neitherProjects.Count))"
-} elseif ($coverletProjects.Count -gt 0 -and $msCodeCovProjects.Count -eq 0) {
-    $coverageProvider = "coverlet"
-    Write-Host "COVERAGE_PROVIDER:coverlet (coverlet:$($coverletProjects.Count), none:$($neitherProjects.Count))"
-} elseif ($msCodeCovProjects.Count -gt 0 -and $coverletProjects.Count -gt 0) {
-    $coverageProvider = "mixed-project"
-    Write-Host "COVERAGE_PROVIDER:mixed-project (ms:$($msCodeCovProjects.Count), coverlet:$($coverletProjects.Count), none:$($neitherProjects.Count))"
-} else {
-    $coverageProvider = "coverlet"
-    Write-Host "COVERAGE_PROVIDER:none-detected — defaulting to coverlet"
-}
-```
-
-If any discovered test projects have no provider, add one based on the selected strategy:
-
-```powershell
-if ($coverageProvider -eq "ms-codecoverage" -and $neitherProjects.Count -gt 0) {
-    Write-Host "ADDING_MS_CODECOVERAGE:$($neitherProjects.Count) project(s)"
-    foreach ($tp in $neitherProjects) {
-        dotnet add $tp.FullName package Microsoft.Testing.Extensions.CodeCoverage --no-restore
-        Write-Host "  ADDED_MS_CODECOVERAGE:$($tp.FullName)"
-    }
-    foreach ($tp in $neitherProjects) {
-        dotnet restore $tp.FullName --quiet
-    }
-}
-
-if (($coverageProvider -eq "coverlet" -or $coverageProvider -eq "mixed-project") -and $neitherProjects.Count -gt 0) {
-    Write-Host "ADDING_COVERLET:$($neitherProjects.Count) project(s)"
-    foreach ($tp in $neitherProjects) {
-        dotnet add $tp.FullName package coverlet.collector --no-restore
-        Write-Host "  ADDED:$($tp.FullName)"
-    }
-    foreach ($tp in $neitherProjects) {
-        dotnet restore $tp.FullName --quiet
-    }
-}
-```
-
-Log each addition to the console so the developer sees what changed. Document the additions in the final report (see Output Format).
-
-Run one `dotnet test` per entry point for the selected strategy:
-
-- In `ms-codecoverage` or `coverlet` mode: run a single command for the solution entry (or one per test project if no `.sln` was found).
-- In `mixed-project` mode: run one command per test project, using that project's existing provider to avoid dual-provider conflicts.
-
-**Coverlet** (`coverlet.collector`):
-
-```powershell
-$rawDir = Join-Path "<COVERAGE_DIR>" "raw"
-dotnet test "<ENTRY>" `
-    --collect:"XPlat Code Coverage" `
-    --results-directory $rawDir `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[*]*" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*.Tests]*,[*.Test]*,[*Tests]*,[*Test]*,[*.Specs]*,[*.Testing]*" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SkipAutoProps=true
-```
-
-**Microsoft CodeCoverage** (`Microsoft.Testing.Extensions.CodeCoverage`):
-
-The command syntax depends on the .NET SDK version. In .NET 9, Microsoft.Testing.Platform arguments
-must be passed after the `--` separator. In .NET 10+, `--coverage` is a top-level `dotnet test` flag.
-
-```powershell
-$rawDir = Join-Path "<COVERAGE_DIR>" "raw"
-
-# Detect SDK version for correct argument placement
-$sdkVersion = (dotnet --version 2>$null)
-$major = if ($sdkVersion -match '^(\d+)\.') { [int]$Matches[1] } else { 9 }
-
-if ($major -ge 10) {
-    # .NET 10+: --coverage is a first-class dotnet test flag
-    dotnet test "<ENTRY>" `
-        --results-directory $rawDir `
-        --coverage `
-        --coverage-output-format cobertura `
-        --coverage-output $rawDir
-} else {
-    # .NET 9: pass Microsoft.Testing.Platform arguments after the -- separator
-    dotnet test "<ENTRY>" `
-        --results-directory $rawDir `
-        -- --coverage --coverage-output-format cobertura --coverage-output $rawDir
-}
-```
-
-**Mixed-project mode** (`Microsoft.Testing.Extensions.CodeCoverage` + `coverlet.collector` in the same solution):
-
-```powershell
-$rawDir = Join-Path "<COVERAGE_DIR>" "raw"
-$sdkVersion = (dotnet --version 2>$null)
-$major = if ($sdkVersion -match '^(\d+)\.') { [int]$Matches[1] } else { 9 }
-
-foreach ($tp in $testProjects) {
-    $hasMsCodeCov = Select-String -Path $tp.FullName -Pattern 'Microsoft\.Testing\.Extensions\.CodeCoverage' -Quiet
-    if ($hasMsCodeCov) {
-        if ($major -ge 10) {
-            dotnet test $tp.FullName --results-directory $rawDir --coverage --coverage-output-format cobertura --coverage-output $rawDir
-        } else {
-            dotnet test $tp.FullName --results-directory $rawDir -- --coverage --coverage-output-format cobertura --coverage-output $rawDir
-        }
-    } else {
-        dotnet test $tp.FullName `
-            --collect:"XPlat Code Coverage" `
-            --results-directory $rawDir `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[*]*" `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*.Tests]*,[*.Test]*,[*Tests]*,[*Test]*,[*.Specs]*,[*.Testing]*" `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SkipAutoProps=true
-    }
-}
-```
-
-Exit code handling:
-
-- **0** — all tests passed, coverage collected
-- **1** — some tests failed (coverage still collected — proceed with a warning)
-- **Other** — build failure; stop and report the error
-
-After the run, locate coverage files:
-
-```powershell
-$coberturaFiles = Get-ChildItem -Path (Join-Path "<COVERAGE_DIR>" "raw") -Filter "coverage.cobertura.xml" -Recurse
-Write-Host "COBERTURA_COUNT:$($coberturaFiles.Count)"
-$coberturaFiles | ForEach-Object { Write-Host "COBERTURA:$($_.FullName)" }
-$vsCovFiles = Get-ChildItem -Path (Join-Path "<COVERAGE_DIR>" "raw") -Filter "*.coverage" -Recurse -ErrorAction SilentlyContinue
-if ($vsCovFiles) { Write-Host "VS_BINARY_COVERAGE:$($vsCovFiles.Count)" }
-```
-
-If `COBERTURA_COUNT` is 0:
-
-- If `VS_BINARY_COVERAGE` > 0: warn the user — *"Found .coverage files (VS binary format) but no Cobertura XML. These were likely produced by Visual Studio's built-in collector, which outputs a binary format by default. This skill needs Cobertura XML. Re-running with the detected provider configured for Cobertura output."* Then re-run the appropriate `dotnet test` command above (Coverlet or Microsoft CodeCoverage) with Cobertura format.
-- If no `.coverage` files either: stop and report — *"Coverage files not generated. Ensure `dotnet test` completed successfully and check the build output for errors."*
-
-#### Step 4: Verify or install ReportGenerator (parallel with Step 3)
-
-```powershell
-$rgAvailable = $false
-$rgCommand = Get-Command reportgenerator -ErrorAction SilentlyContinue
-if ($rgCommand) {
-    $rgAvailable = $true
-    Write-Host "RG_INSTALLED:already-present"
-} else {
-    $rgToolPath = Join-Path "<COVERAGE_DIR>" ".tools"
-    dotnet tool install dotnet-reportgenerator-globaltool --tool-path $rgToolPath
-    if ($LASTEXITCODE -eq 0) {
-        $env:PATH = "$rgToolPath$([System.IO.Path]::PathSeparator)$env:PATH"
-        $rgCommand = Get-Command reportgenerator -ErrorAction SilentlyContinue
-        if ($rgCommand) {
-            $rgAvailable = $true
-            Write-Host "RG_INSTALLED:true (tool-path: $rgToolPath)"
-        } else {
-            Write-Host "RG_INSTALLED:false"
-            Write-Host "RG_INSTALL_ERROR:reportgenerator-not-available"
-        }
-    } else {
-        Write-Host "RG_INSTALLED:false"
-        Write-Host "RG_INSTALL_ERROR:reportgenerator-not-available"
-    }
-}
-Write-Host "RG_AVAILABLE:$rgAvailable"
-```
-
-If installation fails (no internet), keep `RG_AVAILABLE:false` and continue with raw Cobertura XML parsing + script-based analysis in Step 6. Skip HTML/Text/CSV report generation in Step 5 and note this in the output.
-
-### Phase 3 — Analysis (Steps 5 and 6 run in parallel)
-
-Once Phase 2 completes (coverage files available, ReportGenerator ready), start Steps 5 and 6 simultaneously — both read from the same Cobertura XML and produce independent outputs.
-
-#### Step 5: Generate reports with ReportGenerator (parallel with Step 6)
-
-```powershell
-$reportsDir = Join-Path "<COVERAGE_DIR>" "reports"
-if ($rgAvailable) {
-    reportgenerator `
-        -reports:"<semicolon-separated COBERTURA paths>" `
-        -targetdir:$reportsDir `
-        -reporttypes:"Html;TextSummary;MarkdownSummaryGithub;CsvSummary" `
-        -title:"Coverage Report" `
-        -tag:"coverage-analysis-skill"
-
-    Get-Content (Join-Path $reportsDir "Summary.txt") -ErrorAction SilentlyContinue
-} else {
-    Write-Host "REPORTGENERATOR_SKIPPED:true"
-}
-```
-
-#### Step 6: Calculate CRAP scores using the bundled script (parallel with Step 5)
-
-Run `scripts/Compute-CrapScores.ps1` (co-located with this SKILL.md). It reads all Cobertura XML files, applies `CRAP(m) = comp² × (1 − cov)³ + comp` per method, and returns the top-N hotspots as JSON.
-
-To locate the script: find the directory containing this skill's `SKILL.md` file (the skill loader provides this context), then resolve `scripts/Compute-CrapScores.ps1` relative to it. If the script path cannot be determined, calculate CRAP scores inline using the formula below.
-
-```powershell
-& "<skill-directory>/scripts/Compute-CrapScores.ps1" `
-    -CoberturaPath @(<all COBERTURA file paths as array>) `
-    -CrapThreshold <crap_threshold> `
-    -TopN <top_n>
-```
-
-Script outputs: `TOTAL_METHODS:<n>`, `FLAGGED_METHODS:<n>`, `HOTSPOTS:<json>` (top-N sorted by CrapScore descending).
-
-Also run `scripts/Extract-MethodCoverage.ps1` to get per-method coverage data for the Coverage Gaps table:
-
-```powershell
-& "<skill-directory>/scripts/Extract-MethodCoverage.ps1" `
-    -CoberturaPath @(<all COBERTURA file paths as array>) `
-    -CoverageThreshold <line_threshold> `
-    -BranchThreshold <branch_threshold> `
-    -Filter below-threshold
-```
-
-Script outputs: JSON array of methods below the coverage threshold, sorted by coverage ascending. Use this data to populate the Coverage Gaps by File table in the report.
-
-### Phase 4 — Output (sequential)
-
-#### Step 7: Build the output report
-
-Compose the analysis and save it to `TestResults/coverage-analysis/coverage-analysis.md` under the test project directory. Print the full report to the console.
-
-After saving the file, automatically open `TestResults/coverage-analysis/coverage-analysis.md` in the editor so the user can review it immediately.
-
-- In editor-hosted environments (VS Code, Visual Studio, or other IDE hosts): open the file in the current host session/editor context after writing it.
-- Do not launch a different app instance via hardcoded shell commands (for example `code`, `start`, or platform-specific open commands) unless the host has no native open-file mechanism.
-- In CLI or non-editor environments: print the absolute report path and clearly state that the file was generated.
-
-Do not ask for confirmation before opening the report file.
-
-Use `references/output-format.md` verbatim for all fixed headings, table structures, symbols, and emoji in the generated report. Use `references/guidelines.md` for execution constraints, prioritization rules, and style.
+| Existing Cobertura path | No | Discover only if not supplied | Preferred input; never rerun tests when usable |
+| CRAP threshold | No | 30 | Used only for explicit risk/CRAP requests |
+| Hotspot count | No | 3 | Explicit risk requests only; cap at 10 unless the user asks for more |
+
+Discover optional inputs from the workspace. Do not ask for a project path when
+the current directory or a supplied report is sufficient.
+
+## Choose the smallest matching path
+
+| User intent | Required work | Do not do |
+|-------------|---------------|-----------|
+| Explain a supplied excerpt, condition, or summary | Answer directly from the supplied evidence | Tools, CRAP, discovery, report files |
+| Interpret a supplied Cobertura path or diagnose a plateau | Read that report, reconcile totals, name all material gaps, answer directly | Rerun tests, install tools, compute CRAP, or generate files unless explicitly requested |
+| Rank risk hotspots, compute project-wide CRAP, or assess refactoring safety | Use the supplied/existing report, read `references/guidelines.md`, and compute CRAP before ranking | Coverage-only ranking or a full report template unless requested |
+| Analyze coverage when no report exists | Invoke `run-tests` to collect coverage with the repository-compatible runner, then analyze the generated report | Choose or execute a test command independently; CRAP unless risk was requested |
+| Produce a full markdown/HTML/CSV report | First deliver the direct answer; then read `references/output-format.md` or `references/report-generation.md` | Report generation before the answer |
+
+Words such as **analyze coverage**, **what is blocking coverage**, or **why is
+coverage stuck** do not by themselves request CRAP. Explicit signals include
+**risk hotspot**, **CRAP**, **complexity-weighted priority**, **safe to refactor**,
+or an equivalent request to combine complexity with coverage.
+
+## Existing-data fast path
+
+When the user supplies a coverage excerpt, summary, or valid Cobertura path:
+
+- Treat it as authoritative input and start there.
+- Do not discover the solution or test projects unless source mapping is necessary.
+- Do not run `dotnet test`, install ReportGenerator, add a coverage package, or
+  read `references/setup-discovery.md` or `references/report-generation.md`.
+- Do not write `coverage-analysis.md` or create a report directory unless the user
+  requested a saved/full report.
+- For interpretation and plateau questions, parse only the evidence needed to
+  answer. For explicit project-wide risk requests, use the bundled scripts as
+  described in `references/guidelines.md`.
+
+A failed read/view operation is not proof that a named path does not exist.
+Classify the failure, then make one targeted existence probe and use a normalized
+path or alternate reader only for confirmed tool availability, transport, or
+path-normalization failures and only after verifying the canonical path remains
+inside the workspace. Stop on content-exclusion, permission/policy,
+workspace-boundary, or unknown failures. Report a missing path only when the
+independent probe also fails; do not broaden the search or substitute another
+artifact.
+
+## Collection path
+
+Use this path only when no usable coverage evidence exists and the user asked for
+analysis that requires it.
+
+1. Read `references/setup-discovery.md`.
+2. Prefer existing Cobertura discovered under the requested root.
+3. If none exists, invoke `run-tests` for repository overlay, platform, runner,
+   and command selection, and have it collect Cobertura once per entry point.
+4. Analyze the resulting Cobertura. Compute CRAP only if risk analysis was
+   explicitly requested.
+
+When the workspace contains the project/test manifests needed by this path,
+perform discovery directly and delegate collection to `run-tests`. Do not ask
+the user to attach files or pre-run coverage that the current workspace lets
+you inspect and generate.
+
+Do not modify production code. Any incidental test-project change needed for
+collection is owned by `run-tests`; include that change and its revert command
+in the final analysis.
+
+The automatic collection path is for SDK-style projects. For classic non-SDK or
+`packages.config` projects, use only a repository-owned coverage command. If none
+exists, stop and request Cobertura XML. Never migrate the project, inject an
+SDK-style provider, create a wrapper project, or report substitute coverage from
+another assembly.
+
+## Interpretation and arithmetic invariants
+
+- A line hit proves execution, not both decision outcomes.
+- `condition-coverage="50% (1/2)"` proves one reported outcome ran, but not which
+  one. Recommend forcing the opposite outcome. Without source, never invent likely
+  predicates or claim whether true or false is missing. State that compound
+  predicates need independently exercised operands and short-circuit combinations
+  when applicable; do not infer the exact combinations without source or fuller XML.
+- Derive overall totals from Cobertura's covered/valid line counts. For target
+  `T`, required covered lines are `ceiling(valid lines × T)`.
+- Projected coverage is `(current covered lines + newly covered distinct lines) /
+  valid lines`. State assumptions such as fully covering a method.
+- When asked whether one member can reach a target, show its maximum projected
+  total and at least one concrete sufficient combination of supplied members or
+  line gains. If no supplied combination is sufficient, say so.
+- For a multi-member target, name the exact combination and resulting covered /
+  valid total; saying only "combine it with another member" is incomplete.
+- Reconcile member gaps against project totals. Method line ranges can overlap or
+  omit class-level lines, so do not sum method counts as project truth.
+- Never call one member the **sole**, **entire**, or **all** remaining gap unless
+  its distinct uncovered lines exactly reconcile with the project total and no
+  other below-threshold member remains.
+- Name every supplied or extracted below-threshold member, but keep detail
+  proportional: lead with the blockers, summarize the remainder in one sentence
+  or a compact table.
+
+## Response contract
+
+Answer the user's question in the first 2–4 sentences.
+
+- **Excerpt or arithmetic question:** one explanation plus the next test or member
+  priority. No dashboard.
+- **Existing-report interpretation or plateau:** overall line/branch coverage,
+  blocking members, reconciled target impact, and 1–3 recommendations. Use at
+  most one compact table.
+- **Explicit risk/CRAP request:** top 3 actual hotspots by default, supporting
+  complexity/coverage/CRAP values, remaining flagged count, and 1–3 priorities.
+  Exclude fully covered low-risk methods from the hotspot table. Never exceed 10
+  rows unless the user requests a larger count. For refactoring safety, rank risky
+  methods by CRAP rather than raw coverage alone, then name comparatively safe
+  well-covered methods separately.
+- **Explicit full report request:** read `references/output-format.md`. Save the
+  report only then.
+
+Report only artifacts that exist. Do not announce inaccessible output paths or
+failed optional file writes when no file was requested.
+
+## Optional reports
+
+HTML/CSV/markdown files are not part of normal analysis. Generate them only when
+the user explicitly requests report files or a CI artifact.
+
+1. Deliver the direct coverage/risk answer first.
+2. For a full markdown report, read `references/output-format.md` and save it.
+3. For HTML/CSV, then read `references/report-generation.md`. Do not install
+   ReportGenerator before the direct answer, and do not retry a failed install.
 
 ## Validation
 
-- Verify that at least one `coverage.cobertura.xml` file was generated after `dotnet test`
-- Confirm `TestResults/coverage-analysis/coverage-analysis.md` was written and contains data
-- Spot-check one method's CRAP score: `comp² × (1 − cov)³ + comp` — a method with 100% coverage should have CRAP = complexity
-- If ReportGenerator ran, verify `TestResults/coverage-analysis/reports/index.html` exists
+- Confirm a supplied report was used without test execution or tool installation.
+- Reconcile covered, valid, and uncovered line totals before projecting impact.
+- Confirm every stated blocker comes from supplied or extracted evidence.
+- If CRAP was requested, spot-check one score using `references/guidelines.md`.
+- If files were requested, verify they exist before reporting their paths.
 
 ## Common Pitfalls
 
-- **No Cobertura XML generated** — the test project may lack a coverage provider. The skill auto-adds one, but if `dotnet add package` fails (offline/proxy), coverage collection silently produces nothing. Check for `.coverage` binary files as a fallback indicator.
-- **Test failures (exit code 1)** — coverage is still collected from passing tests. Do not abort; proceed with partial data and note the failures in the summary.
-- **ReportGenerator install failure** — if `dotnet tool install` fails (no internet), skip HTML/CSV report generation and continue with raw Cobertura XML analysis + script-based CRAP scores. Note the skip in the report.
-- **Method name mismatches in Cobertura** — async methods, lambdas, and local functions may have compiler-generated names. The scripts use the Cobertura method name/signature directly; verify against source if results look unexpected.
-- **Mixed coverage providers** — when a solution contains both Coverlet and Microsoft CodeCoverage projects, the skill runs per-project to avoid dual-provider conflicts. This is slower but correct.
+- **Existing report triggers setup work** — stop. Analyze the named artifact first.
+- **Generic analysis triggers CRAP** — stop. CRAP requires explicit risk intent.
+- **One method is called the entire gap** — reconcile distinct uncovered lines and
+  the full below-threshold set first.
+- **A small request gets a dashboard** — scale down to a direct answer or one table.
+- **No Cobertura from collection** — report the collection failure; do not invent
+  substitute coverage.
+- **Compiler-generated method names** — verify suspicious async, lambda, or local
+  function names against source before presenting them as user-authored members.
+- **Test exit code 1** — coverage may still exist; proceed with a warning. Other
+  nonzero build failures stop the collection path.

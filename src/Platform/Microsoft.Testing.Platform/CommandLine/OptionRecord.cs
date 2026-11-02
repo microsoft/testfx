@@ -8,6 +8,9 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// </summary>
 /// <param name="name">The name of the option.</param>
 /// <param name="arguments">The arguments associated to this option.</param>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class CommandLineParseOption(string name, string[] arguments)
 {

@@ -5,7 +5,7 @@
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
         <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
         <target state="translated">Tutte le estensioni IA funzionano solo con i generatori di tipo 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
-        <note />
+        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>
   </file>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -24,6 +24,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
     private readonly IOutputDevice? _outputDevice;
     private readonly ILogger _logger;
     private readonly IClock _clock;
+    private readonly ITask _task;
     private readonly TimeSpan _quietWindow;
     private readonly TimeSpan _pollInterval;
     private readonly CancellationTokenRegistration _registration;
@@ -48,11 +49,24 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         IClock clock,
         TimeSpan quietWindow,
         TimeSpan pollInterval)
+        : this(testApplicationCancellationTokenSource, outputDevice, loggerFactory, clock, quietWindow, pollInterval, new SystemTask())
+    {
+    }
+
+    internal ShutdownProgressReporter(
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        IOutputDevice? outputDevice,
+        ILoggerFactory loggerFactory,
+        IClock clock,
+        TimeSpan quietWindow,
+        TimeSpan pollInterval,
+        ITask task)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _outputDevice = outputDevice;
         _logger = loggerFactory.CreateLogger<ShutdownProgressReporter>();
         _clock = clock;
+        _task = task;
         _quietWindow = quietWindow;
         _pollInterval = pollInterval;
         _registration = _testApplicationCancellationTokenSource.CancellationToken.Register(OnCancellationRequested);
@@ -115,8 +129,16 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         // _watchdogStopSource) cannot turn the Task.Run lambda into an ObjectDisposedException.
         CancellationToken stopToken = _watchdogStopSource.Token;
 
+        // The watchdog is a best-effort diagnostic that reports slow shutdown from a background
+        // thread. Single-threaded wasm runtimes have no thread pool, so Task.Run would never run the
+        // watchdog loop (and awaiting it later would hang); skip it entirely there.
+        if (!RuntimeFeatureHelper.IsMultiThreaded)
+        {
+            return;
+        }
+
         // Fire-and-forget watchdog. The process is shutting down, so we accept the unobserved task.
-        _ = Task.Run(() => RunWatchdogAsync(stopToken));
+        _ = _task.Run(() => RunWatchdogAsync(stopToken), CancellationToken.None);
     }
 
     private async Task RunWatchdogAsync(CancellationToken stopToken)
@@ -124,7 +146,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         try
         {
             // Quiet window: give extensions a chance to drain before reporting anything.
-            await Task.Delay(_quietWindow, stopToken).ConfigureAwait(false);
+            await _task.Delay(_quietWindow, stopToken).ConfigureAwait(false);
 
             while (!stopToken.IsCancellationRequested)
             {
@@ -134,7 +156,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
                     await ReportAsync(snapshot, stopToken).ConfigureAwait(false);
                 }
 
-                await Task.Delay(_pollInterval, stopToken).ConfigureAwait(false);
+                await _task.Delay(_pollInterval, stopToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)

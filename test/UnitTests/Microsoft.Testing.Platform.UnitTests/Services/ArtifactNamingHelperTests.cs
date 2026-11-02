@@ -205,10 +205,21 @@ public sealed class ArtifactNamingHelperTests
         Assert.AreEqual("42", replacements["pid"]);
         Assert.AreEqual("2025-09-22_13-49-34.0000000", replacements["time"]);
 
-        // asm and tfm are runtime-dependent, just verify they're present and non-empty.
+        // asm, tfm and arch are runtime-dependent, just verify they're present and non-empty.
         Assert.IsTrue(replacements.ContainsKey("asm"), "Expected 'asm' key in standard replacements");
         Assert.IsTrue(replacements.ContainsKey("tfm"), "Expected 'tfm' key in standard replacements");
+        Assert.IsTrue(replacements.ContainsKey("arch"), "Expected 'arch' key in standard replacements");
         Assert.AreNotEqual(string.Empty, replacements["asm"], "Expected 'asm' to have a non-empty value");
         Assert.AreNotEqual(string.Empty, replacements["tfm"], "Expected 'tfm' to have a non-empty value");
+        Assert.AreNotEqual(string.Empty, replacements["arch"], "Expected 'arch' to have a non-empty value");
+    }
+
+    [TestMethod]
+    public void GetStandardReplacements_ArchKey_MatchesProcessArchitecture()
+    {
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements("p", "1", DateTimeOffset.UtcNow);
+
+        string expected = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        Assert.AreEqual(expected, replacements["arch"]);
     }
 }

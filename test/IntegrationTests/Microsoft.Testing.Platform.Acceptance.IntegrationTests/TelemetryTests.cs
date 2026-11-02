@@ -15,7 +15,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
     public async Task Telemetry_ByDefault_TelemetryIsEnabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
@@ -37,7 +37,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
     public async Task Telemetry_WhenOptingOutTelemetry_WithEnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -66,7 +66,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
     public async Task Telemetry_WhenOptingOutTelemetry_With_DOTNET_CLI_EnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(

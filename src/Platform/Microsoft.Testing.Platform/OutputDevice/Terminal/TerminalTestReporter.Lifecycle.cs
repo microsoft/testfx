@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -8,59 +8,237 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter
 {
-    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
+    private bool _isHelp;
+    private bool _isRetry;
+
+    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery, bool isHelp, bool isRetry)
     {
         _isDiscovery = isDiscovery;
+        _isHelp = isHelp;
+        _isRetry = isRetry;
         _testExecutionStartTime = testStartTime;
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
-    public void AssemblyRunStarted()
-        => GetOrAddAssemblyRun();
-
-    private TestProgressState GetOrAddAssemblyRun()
+    internal void AssemblyRunNotSelected(string assembly, string? targetFramework, string? architecture)
     {
-        if (_testProgressState is not null)
+        if (_isHelp || _isDiscovery || WasCancelled)
         {
-            return _testProgressState;
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.SetColor(TerminalColor.Default);
+            if (_options.ShowAssembly)
+            {
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+                terminal.Append(' ');
+            }
+
+            terminal.AppendLine(TerminalResources.NoAffectedTestsSelected);
+            terminal.ResetColor();
+        });
+    }
+
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
+        => AssemblyRunStarted(assembly, targetFramework, architecture, executionId, instanceId, attemptNumber: null);
+
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId, int attemptNumber)
+        => AssemblyRunStarted(assembly, targetFramework, architecture, executionId, instanceId, (int?)attemptNumber);
+
+    private void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId, int? attemptNumber)
+    {
+        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        if (attemptNumber.HasValue)
+        {
+            assemblyRun.NotifyHandshake(instanceId, attemptNumber.Value);
+        }
+        else
+        {
+            assemblyRun.NotifyHandshake(instanceId);
+        }
+
+        int currentAttemptNumber = assemblyRun.GetAttemptNumber(instanceId);
+
+        // Legacy peers may not identify the retry orchestrator up front. Detect an explicit or inferred attempt
+        // greater than one so their retry annotations and summary remain correct.
+        _isRetry |= assemblyRun.TryCount > 1;
+
+        // Orchestrator-only: print the per-assembly "Running tests from <assembly>" banner (or "Discovering tests
+        // from" in discovery mode), prefixed with "(try N)" on a retry. Gated on ShowAssembly + ShowAssemblyStartAndComplete,
+        // which the in-process host leaves off, so its output is unchanged.
+        if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                if (_isRetry)
+                {
+                    terminal.SetColor(TerminalColor.DarkGray);
+                    terminal.Append($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, currentAttemptNumber)}) ");
+                    terminal.ResetColor();
+                }
+
+                terminal.Append(_isDiscovery ? TerminalResources.DiscoveringTestsFrom : TerminalResources.RunningTestsFrom);
+                terminal.Append(' ');
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+                terminal.AppendLine();
+            });
+        }
+    }
+
+    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string executionId)
+    {
+        // NOTE: we intentionally do not use ConcurrentDictionary.GetOrAdd with a value factory here. GetOrAdd may
+        // invoke the factory more than once under contention and discard all but one result; that would allocate a
+        // worker slot (and bump _counter) for every losing race, leaking a fixed-size progress slot that is never
+        // RemoveWorker'd. Double-checked locking around AddWorker guarantees exactly one worker per executionId.
+        if (_assemblies.TryGetValue(executionId, out TestProgressState? result))
+        {
+            return result;
         }
 
         lock (_lock)
         {
-            if (_testProgressState is not null)
+            if (_assemblies.TryGetValue(executionId, out result))
             {
-                return _testProgressState;
+                return result;
             }
 
             IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw, _isDiscovery);
-            int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
-            assemblyRun.SlotIndex = slotIndex;
-            _testProgressState = assemblyRun;
-            return assemblyRun;
+            result = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw, _isDiscovery);
+            int slotIndex = _terminalWithProgress.AddWorker(result);
+            result.SlotIndex = slotIndex;
+            _assemblies[executionId] = result;
+            return result;
         }
     }
 
-    internal void AssemblyRunCompleted()
+    internal void AssemblyRunCompleted(string executionId)
     {
-        TestProgressState assemblyRun = GetOrAddAssemblyRun();
-        assemblyRun.Stopwatch.Stop();
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? assemblyRun))
+        {
+            return;
+        }
 
+        assemblyRun.Stopwatch.Stop();
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
-    public void TestExecutionCompleted(DateTimeOffset endTime)
+    /// <summary>
+    /// Orchestrator overload: completes an assembly run with the child process exit code and captured output. When
+    /// the <paramref name="executionId"/> was never registered (the process exited before a usable handshake), the
+    /// completion is surfaced as a <see cref="HandshakeFailure(string, string?, int, string, string, bool)"/> rather
+    /// than throwing. On a non-zero exit code the executable summary (exit code + stdout/stderr) is printed.
+    /// </summary>
+    internal void AssemblyRunCompleted(string executionId, int exitCode, string? outputData, string? errorData)
+    {
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? assemblyRun))
+        {
+            HandshakeFailure(assemblyPath: string.Empty, targetFramework: null, exitCode, outputData ?? string.Empty, errorData ?? string.Empty);
+            return;
+        }
+
+        assemblyRun.Success = exitCode == 0 && assemblyRun.FailedTests == 0;
+        assemblyRun.Stopwatch.Stop();
+        _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
+
+        if (!_isHelp && !_isDiscovery && _options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
+        }
+
+        if (exitCode == 0)
+        {
+            // Report nothing on success; we don't want to report on test-discovery etc.
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal => AppendExecutableSummary(terminal, exitCode, outputData, errorData));
+
+        // A non-zero exit with no failed test is a process-level error (crash, FailFast, hang-dump kill, an option
+        // rejected after the handshake, ...) whose inline output above is easily lost in a large run. Record it so
+        // it is re-printed in the end-of-run recap (see AppendErroredAssemblyRecap). Assemblies that exit non-zero
+        // *because* tests failed are intentionally excluded: those failures are already reported per-test, and this
+        // set mirrors the "error: N" count in the summary (failedAssembliesWithoutFailedTests).
+        if (assemblyRun.FailedTests == 0)
+        {
+            RecordErroredAssembly(assemblyRun, exitCode, outputData, errorData);
+        }
+    }
+
+    public void TestExecutionCompleted(DateTimeOffset endTime, int? exitCode)
     {
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
 
-        _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
+        if (!_isHelp)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                if (_isDiscovery)
+                {
+                    AppendTestDiscoverySummary(terminal);
+                }
+                else
+                {
+                    AppendTestRunSummary(terminal);
+                }
 
-        // This is relevant for HotReload scenarios. We want the next test sessions to start
-        // on a new TestProgressState
-        _testProgressState = null;
+                AppendExitCodeDescription(terminal, exitCode, _isDiscovery);
+            });
+        }
+
+        // This is relevant for HotReload scenarios. We want the next test sessions to start fresh, so we reset all
+        // per-run state here (after the summary above has consumed it): the per-assembly runs, the collected
+        // artifacts, the handshake failures, the errored assemblies, and the cancellation flag. Otherwise a later
+        // session would re-print the previous session's artifacts/failures or stay stuck in the aborted state.
+        _assemblies.Clear();
+        _artifacts.Clear();
+        WasCancelled = false;
+        lock (_handshakeFailuresLock)
+        {
+            _handshakeFailures.Clear();
+        }
+
+        lock (_erroredAssembliesLock)
+        {
+            _erroredAssemblies.Clear();
+        }
 
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;
     }
+
+    private static void AppendExitCodeDescription(ITerminal terminal, int? exitCode, bool isDiscovery)
+    {
+        if (exitCode is null or (int)ExitCode.Success)
+        {
+            return;
+        }
+
+        string description = GetExitCodeDescription(exitCode.Value);
+        string message = isDiscovery ? TerminalResources.TestDiscoveryExitCode : TerminalResources.TestRunExitCode;
+        terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, message, exitCode.Value, description));
+    }
+
+    internal static string GetExitCodeDescription(int exitCode)
+        => exitCode switch
+        {
+            (int)ExitCode.GenericFailure => TerminalResources.ExitCodeGenericFailureDescription,
+            (int)ExitCode.AtLeastOneTestFailed => TerminalResources.ExitCodeAtLeastOneTestFailedDescription,
+            (int)ExitCode.TestSessionAborted => TerminalResources.ExitCodeTestSessionAbortedDescription,
+            (int)ExitCode.InvalidPlatformSetup => TerminalResources.ExitCodeInvalidPlatformSetupDescription,
+            (int)ExitCode.InvalidCommandLine => TerminalResources.ExitCodeInvalidCommandLineDescription,
+            (int)ExitCode.TestHostProcessExitedNonGracefully => TerminalResources.ExitCodeTestHostProcessExitedNonGracefullyDescription,
+            (int)ExitCode.ZeroTests => TerminalResources.ExitCodeZeroTestsDescription,
+            (int)ExitCode.MinimumExpectedTestsPolicyViolation => TerminalResources.ExitCodeMinimumExpectedTestsPolicyViolationDescription,
+            (int)ExitCode.TestAdapterTestSessionFailure => TerminalResources.ExitCodeTestAdapterTestSessionFailureDescription,
+            (int)ExitCode.DependentProcessExited => TerminalResources.ExitCodeDependentProcessExitedDescription,
+            (int)ExitCode.IncompatibleProtocolVersion => TerminalResources.ExitCodeIncompatibleProtocolVersionDescription,
+            (int)ExitCode.TestExecutionStoppedForMaxFailedTests => TerminalResources.ExitCodeTestExecutionStoppedForMaxFailedTestsDescription,
+            (int)ExitCode.CoverageThresholdFailed => TerminalResources.ExitCodeCoverageThresholdFailedDescription,
+            (int)ExitCode.TestExecutionStoppedAtDeadline => TerminalResources.ExitCodeTestExecutionStoppedAtDeadlineDescription,
+            _ => TerminalResources.ExitCodeUnknownDescription,
+        };
 }

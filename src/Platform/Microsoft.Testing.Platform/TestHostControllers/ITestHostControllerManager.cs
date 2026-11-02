@@ -38,4 +38,28 @@ public interface ITestHostControllersManager
     /// <param name="compositeServiceFactory">The factory method that creates the composite service.</param>
     void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostProcessLifetimeHandler;
+
+    /// <summary>
+    /// Adds a test host launcher to the test host controller manager, replacing the platform's
+    /// default <c>Process.Start</c> behavior. At most one launcher can be registered.
+    /// </summary>
+    /// <param name="testHostLauncherFactory">The factory method that creates the test host launcher.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    void AddTestHostLauncher(Func<IServiceProvider, ITestHostLauncher> testHostLauncherFactory);
+
+    /// <summary>
+    /// Adds a test host launcher to the test host controller manager, replacing the platform's
+    /// default <c>Process.Start</c> behavior. At most one launcher can be registered.
+    /// </summary>
+    /// <typeparam name="T">The type of the test host launcher.</typeparam>
+    /// <param name="compositeServiceFactory">The factory method that creates the composite service.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    void AddTestHostLauncher<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+        where T : class, ITestHostLauncher;
 }

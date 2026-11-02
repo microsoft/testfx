@@ -6,34 +6,59 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);IS_MTP_UNIT_TESTS</DefineConstants>
+    <!-- Embedded Platform implementations are compiled here as linked production sources.
+         Collect them as explicitly labeled source-linked evidence, never as shipping-module-only coverage. -->
+    <CodeCoverageIncludeSourceLinkedProductionCode>true</CodeCoverageIncludeSourceLinkedProductionCode>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
+    <!-- OSCondition cannot express browser, so it cannot mirror [UnsupportedOSPlatform("browser")]. -->
+    <NoWarn>$(NoWarn);MSTEST0084</NoWarn>
   </PropertyGroup>
 
   <!-- start netstandard2.0 polyfill -->
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="ServerMode/JsonTests.cs" />
+    <Compile Remove="IPC/DotnetTestHttpClientTests.cs" />
   </ItemGroup>
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
     <AdditionalFiles Include="BannedSymbols.txt" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer*.cs" Link="IPC\Serializers\%(Filename)%(Extension)" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\NamedPipeSerializer.cs" Link="IPC\Serializers\NamedPipeSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\Transport\DotnetTestHttpClient.cs"
+             Link="IPC\DotnetTestHttpClient.cs"
+             Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\TestHostCompletedRequest.cs" Link="IPC\Models\TestHostCompletedRequest.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\TestHostCompletedRequestSerializer.cs" Link="IPC\Serializers\TestHostCompletedRequestSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\TestHostProcessPIDRequest.cs" Link="IPC\Models\TestHostProcessPIDRequest.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\TestHostProcessPIDRequestSerializer.cs" Link="IPC\Serializers\TestHostProcessPIDRequestSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\ObjectFieldIds.cs" Link="IPC\ObjectFieldIds.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\Constants.cs" Link="IPC\Constants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
 
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\DeadlineHelper.cs" Link="Helpers\DeadlineHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\DisposeHelper.cs" Link="Helpers\DisposeHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs" Link="Helpers\PasteArguments.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\JsonRpc\RpcIdParser.cs" Link="ServerMode\RpcIdParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\SlowestTestsConsumer.cs" Link="TestInfrastructure\SlowestTestsConsumer.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\AcceptanceDiagnostics.cs" Link="TestInfrastructure\AcceptanceDiagnostics.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
+    <!-- The terminal reporter types are [Embedded] (hidden cross-assembly) so they can be shared as source.
+         Link the source here so the unit tests compile their own copy instead of relying on IVT. -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\*.cs" Link="OutputDevice\Terminal\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +66,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- This is the product under test, not only a transitive test-host dependency.
+         Keep it explicit so the owning project's coverage settings include the shipping assembly. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.AI\Microsoft.Testing.Platform.AI.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>

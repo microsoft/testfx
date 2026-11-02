@@ -4,6 +4,7 @@
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 using SystemTask = System.Threading.Tasks.Task;
 
@@ -15,8 +16,8 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSTestProject";
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async SystemTask EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
+    [CombinatorialData]
+    public async SystemTask EnableMSTestRunner_True_Will_Run_Standalone([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -32,7 +33,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = Serialization.Read(compilationResult.BinlogPath);
+        Build binLog = BinlogReader.Read(compilationResult.BinlogPath!);
         Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
             .Count(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
@@ -42,8 +43,8 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async SystemTask EnableMSTestRunner_True_WithCustomEntryPoint_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
+    [CombinatorialData]
+    public async SystemTask EnableMSTestRunner_True_WithCustomEntryPoint_Will_Run_Standalone([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -76,8 +77,8 @@ return await app.RunAsync();
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async SystemTask EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
+    [CombinatorialData]
+    public async SystemTask EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -106,8 +107,8 @@ return await app.RunAsync();
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async SystemTask EnableMSTestRunner_False_Wont_Flow_TestingPlatformServer_Capability(string tfm, BuildConfiguration buildConfiguration, Verb verb)
+    [CombinatorialData]
+    public async SystemTask EnableMSTestRunner_False_Wont_Flow_TestingPlatformServer_Capability([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -121,7 +122,7 @@ return await app.RunAsync();
 
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = Serialization.Read(result.BinlogPath);
+        Build binLog = BinlogReader.Read(result.BinlogPath!);
         Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());
     }
 

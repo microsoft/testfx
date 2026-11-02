@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <PropertyGroup>
+    <_TestingPlatformOpenTelemetryModeNormalized Condition=" '$(TestingPlatformOpenTelemetryMode)' != '' ">$(TestingPlatformOpenTelemetryMode.Trim().ToLowerInvariant())</_TestingPlatformOpenTelemetryModeNormalized>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(_TestingPlatformOpenTelemetryModeNormalized)' == 'hostowned' ">
+    <TestingPlatformBuilderHook Include="E554D9F1-D920-4E4E-AD38-C3D8A3F9FDD8">
+      <DisplayName>Microsoft.Testing.Extensions.OpenTelemetry</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+
+  <Target Name="_ValidateMicrosoftTestingExtensionsOpenTelemetryHostOwnedProtocol"
+          BeforeTargets="_GenerateTestingPlatformEntryPointFileInputCache"
+          Condition=" '$(_TestingPlatformOpenTelemetryModeNormalized)' == 'hostowned' ">
+    <Error Condition=" '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)' == '' "
+           Text="TestingPlatformOpenTelemetryMode=HostOwned requires a newer Microsoft.Testing.Platform.MSBuild package that supports hosted entry points." />
+  </Target>
+</Project>

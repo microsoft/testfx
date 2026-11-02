@@ -23,15 +23,15 @@ internal static class ExceptionHelper
     /// </returns>
     internal static StackTraceInformation? GetStackTraceInformation(this Exception ex)
     {
-        DebugEx.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex is not null, "exception should not be null.");
 
         Stack<string> stackTraces = new();
 
         for (Exception? curException = ex;
-            curException != null;
+            curException is not null;
             curException = curException.InnerException)
         {
-            // TODO:Fix the shadow stack-trace used in Private Object
+            // The shadow stack-trace used in Private Object could be improved.
             // (Look-in Assertion.cs in the UnitTestFramework assembly)
 
             // Sometimes the stack trace can be null, but the inner stack trace
@@ -39,7 +39,7 @@ internal static class ExceptionHelper
             // so we simply ignore this case
             try
             {
-                if (curException.StackTrace != null)
+                if (curException.StackTrace is not null)
                 {
                     stackTraces.Push(curException.StackTrace);
                 }
@@ -50,7 +50,7 @@ internal static class ExceptionHelper
                 try
                 {
                     // try to get stack trace
-                    if (e.StackTrace != null)
+                    if (e.StackTrace is not null)
                     {
                         stackTraces.Push(e.StackTrace);
                     }
@@ -96,12 +96,12 @@ internal static class ExceptionHelper
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     internal static string GetFormattedExceptionMessage(this Exception ex)
     {
-        DebugEx.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex is not null, "exception should not be null.");
 
         StringBuilder result = new();
         bool first = true;
         for (Exception? curException = ex;
-             curException != null;
+             curException is not null;
              curException = curException.InnerException)
         {
             // Get the exception message. Need to check for errors because the Message property

@@ -45,6 +45,81 @@ public sealed class AzureDevOpsArtifactUploaderTests
     }
 
     [TestMethod]
+    [DataRow("start", false)]
+    [DataRow("start", true)]
+    [DataRow("consume", false)]
+    [DataRow("consume", true)]
+    [DataRow("finish", false)]
+    [DataRow("finish", true)]
+    [DataRow("enumerate", false)]
+    [DataRow("enumerate", true)]
+    public async Task LifecycleFailuresDistinguishBestEffortWarningsFromOriginalCancellation(string phase, bool canceled)
+    {
+        using CancellationTokenSource cancellation = new();
+        Exception cause = canceled
+            ? new OperationCanceledException("uploader canceled", cancellation.Token)
+            : new IOException("uploader failed");
+        var logger = new Mock<ILogger>();
+        logger.Setup(value => value.IsEnabled(LogLevel.Warning)).Returns(true);
+        _loggerFactoryMock.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+        _environmentMock.Setup(value => value.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+        AzureDevOpsArtifactUploader uploader = CreateUploader(new()
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts] = [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeAll],
+        });
+        TestSessionContext session = new(cancellation.Token);
+        string callback;
+        Func<Task> operation;
+        if (phase == "start")
+        {
+            _configurationMock.SetupGet(value => value[PlatformConfigurationConstants.PlatformResultDirectory]).Throws(cause);
+            callback = nameof(uploader.OnTestSessionStartingAsync);
+            operation = () => uploader.OnTestSessionStartingAsync(session);
+        }
+        else
+        {
+            await uploader.OnTestSessionStartingAsync(session);
+            if (phase == "consume")
+            {
+                var producer = new Mock<IDataProducer>();
+                producer.SetupGet(value => value.Uid).Throws(cause);
+                callback = nameof(uploader.ConsumeAsync);
+                operation = () => uploader.ConsumeAsync(producer.Object, CreateFileArtifact(InResults("dump.dmp")), cancellation.Token);
+            }
+            else if (phase == "finish")
+            {
+                await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler"), CreateFileArtifact(InResults("dump.dmp")), cancellation.Token);
+                _outputDeviceMock.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), cancellation.Token))
+                    .ThrowsAsync(cause);
+                callback = nameof(uploader.OnTestSessionFinishingAsync);
+                operation = () => uploader.OnTestSessionFinishingAsync(session);
+            }
+            else
+            {
+                _fileSystemMock.Setup(value => value.ExistDirectory(ResultsDirectory)).Returns(true);
+                _fileSystemMock.Setup(value => value.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories)).Throws(cause);
+                callback = "EmitArtifactUploadCommandsAsync";
+                operation = () => uploader.OnTestSessionFinishingAsync(session);
+            }
+        }
+
+        if (canceled)
+        {
+            Assert.AreSame(cause, await Assert.ThrowsExactlyAsync<OperationCanceledException>(operation));
+            logger.Verify(value => value.Log(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<Func<string, Exception?, string>>()), Times.Never);
+        }
+        else
+        {
+            await operation();
+            logger.Verify(value => value.Log(LogLevel.Warning, $"Unexpected exception in {callback}: {cause}", null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+        }
+
+        Assert.IsEmpty(GetCommandLines());
+        Assert.IsEmpty(GetWarnings());
+        Assert.IsFalse(cancellation.IsCancellationRequested);
+    }
+
+    [TestMethod]
     public async Task OffMode_IsDisabledAndNoOps()
     {
         AzureDevOpsArtifactUploader uploader = CreateUploader([]);
@@ -61,7 +136,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
         Assert.IsEmpty(GetWarnings());
     }
 
@@ -82,15 +157,14 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-hangdump",
                 "##vso[build.addbuildtag]has-test-failures",
-            },
-            GetFormattedLines(),
+            ],
+            GetCommandLines(),
             SequenceOrder.InAnyOrder);
-        Assert.DoesNotContain(line => line.Contains("artifact.upload", StringComparison.Ordinal), GetFormattedLines());
+        Assert.DoesNotContain(line => line.Contains("artifact.upload", StringComparison.Ordinal), GetCommandLines());
         Assert.IsEmpty(GetWarnings());
     }
 
@@ -112,7 +186,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        string[] lines = GetFormattedLines();
+        string[] lines = GetCommandLines();
         Assert.HasCount(2, lines);
         Assert.IsTrue(lines.All(line => line.StartsWith("##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]", StringComparison.Ordinal)));
         Assert.DoesNotContain(line => line.Contains("build.addbuildtag", StringComparison.Ordinal), lines);
@@ -136,8 +210,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("inside.trx")}" },
-            GetFormattedLines());
+            [$"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("inside.trx")}"],
+            GetCommandLines());
     }
 
     [TestMethod]
@@ -160,13 +234,12 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-test-failures",
                 $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("test.trx")}",
-            },
-            GetFormattedLines());
+            ],
+            GetCommandLines());
     }
 
     [TestMethod]
@@ -189,8 +262,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("keep.trx")}" },
-            GetFormattedLines());
+            [$"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("keep.trx")}"],
+            GetCommandLines());
     }
 
     [TestMethod]
@@ -209,12 +282,11 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-hangdump",
-            },
-            GetFormattedLines(),
+            ],
+            GetCommandLines(),
             SequenceOrder.InAnyOrder);
     }
 
@@ -232,7 +304,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer("GenericProducer", "Generic"), CreateFileArtifact(InResults("hang", "dump.dmp")), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
     }
 
     [TestMethod]
@@ -249,7 +321,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer(), CreatePassedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.DoesNotContain("##vso[build.addbuildtag]has-test-failures", GetFormattedLines());
+        Assert.DoesNotContain("##vso[build.addbuildtag]has-test-failures", GetCommandLines());
     }
 
     [TestMethod]
@@ -271,9 +343,9 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { "Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags." },
+            ["Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags."],
             GetWarnings());
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
     }
 
     [TestMethod]
@@ -291,7 +363,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
         Assert.IsEmpty(GetWarnings());
     }
 
@@ -309,7 +381,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
         Assert.IsEmpty(GetWarnings());
     }
 
@@ -332,8 +404,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{escapedSpecialPath}" },
-            GetFormattedLines());
+            [$"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{escapedSpecialPath}"],
+            GetCommandLines());
     }
 
     [DataRow(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, @"C:\absolute\*.trx")]
@@ -427,8 +499,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
     private static string OutsideResults(params string[] segments)
         => segments.Aggregate(OutsideResultsDirectory, Path.Combine);
 
-    private string[] GetFormattedLines()
-        => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
+    private string[] GetCommandLines()
+        => [.. _outputData.OfType<AzureDevOpsCommandOutputDeviceData>().Select(data => data.Text)];
 
     private string[] GetWarnings()
         => [.. _outputData.OfType<WarningMessageOutputDeviceData>().Select(output => output.Message)];
@@ -448,10 +520,10 @@ public sealed class AzureDevOpsArtifactUploaderTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }
 
-    private sealed class TestSessionContext : ITestSessionContext
+    private sealed class TestSessionContext(CancellationToken token = default) : ITestSessionContext
     {
         public SessionUid SessionUid { get; } = new("session");
 
-        public CancellationToken CancellationToken { get; } = CancellationToken.None;
+        public CancellationToken CancellationToken { get; } = token;
     }
 }

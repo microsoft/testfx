@@ -35,10 +35,15 @@ public class Program
 #endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+            testApplicationBuilder.AddAffectedTestsProvider();
 
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
             testApplicationBuilder.AddCrashDumpProvider();
+
+            // Add the video recorder. Run with --capture-video to record the screen
+            // (one video per test by default; --capture-video-granularity session for one video).
+            testApplicationBuilder.AddVideoRecorderProvider();
 
             // Add Chat client provider
             // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
@@ -136,7 +141,7 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
         try
         {
             IChatClient? chatClient = await _serviceProvider.GetChatClientAsync(context.CancellationToken);
-            if (chatClient != null)
+            if (chatClient is not null)
             {
                 ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);
             }

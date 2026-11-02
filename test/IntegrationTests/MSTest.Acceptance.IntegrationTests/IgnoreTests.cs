@@ -26,13 +26,26 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     }
 
     [TestMethod]
-    public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
+    public async Task WhenAllTestsAreIgnored_WithStrictPolicy_AssemblyInitializeAndCleanupAreSkipped()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize --zero-tests-policy strict", cancellationToken: TestContext.CancellationToken);
+
+        // Assert: with strict policy, an all-skipped run is treated as zero tests.
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1, allSkippedIsZeroTests: true);
+        testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
+        testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
+    }
+
+    [TestMethod]
+    public async Task WhenAllTestsAreIgnored_ByDefault_ExitsSuccessfully()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
-        // Assert
-        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+        // Assert: the default policy is 'allow-skipped', so an all-skipped run is no longer treated as zero tests.
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");

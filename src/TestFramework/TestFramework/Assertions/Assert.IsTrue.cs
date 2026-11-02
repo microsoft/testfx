@@ -16,15 +16,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
+    // Keep the compiler-facing handler overloads in sync with the related handlers in Assert.IsNull.cs.
+
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.IsTrue</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public readonly struct AssertIsTrueInterpolatedStringHandler
+    [GenerateAssertInterpolatedStringAppendMethods]
+    public readonly partial struct AssertIsTrueInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
         private readonly bool? _condition;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsTrueInterpolatedStringHandler"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="condition">The condition value being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
             _condition = condition;
@@ -42,43 +58,31 @@ public sealed partial class Assert
                 ReportAssertIsTrueFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
-
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
     }
 
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.IsFalse</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertIsFalseInterpolatedStringHandler
+    [GenerateAssertInterpolatedStringAppendMethods]
+    public readonly partial struct AssertIsFalseInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
         private readonly bool? _condition;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsFalseInterpolatedStringHandler"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="condition">The condition value being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
             _condition = condition;
@@ -96,35 +100,7 @@ public sealed partial class Assert
                 ReportAssertIsFalseFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
-
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
     }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
     /// <inheritdoc cref="IsTrue(bool?, string, string)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578

@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities.Extensions;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -20,9 +18,9 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AssemblyCleanupShouldBeValidRuleId,
-        new LocalizableResourceString(nameof(Resources.AssemblyCleanupShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.AssemblyCleanupShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidTitle)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -35,44 +33,10 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute, out INamedTypeSymbol? assemblyCleanupAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
-            {
-                INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-                INamedTypeSymbol? testContextSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext);
-                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, assemblyCleanupAttributeSymbol, testClassAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, canDiscoverInternals),
-                    SymbolKind.Method);
-            }
-        });
-    }
-
-    private static void AnalyzeSymbol(
-        SymbolAnalysisContext context,
-        INamedTypeSymbol assemblyCleanupAttributeSymbol,
-        INamedTypeSymbol testClassAttributeSymbol,
-        INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol,
-        INamedTypeSymbol? testContextSymbol,
-        bool canDiscoverInternals)
-    {
-        var methodSymbol = (IMethodSymbol)context.Symbol;
-
-        if (!methodSymbol.HasAttribute(assemblyCleanupAttributeSymbol))
-        {
-            return;
-        }
-
-        if (!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true, allowGenericType: false, FixtureParameterMode.OptionalTestContext, testContextSymbol, testClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
-        {
-            context.ReportDiagnostic(isFixable
-                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
-                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
-        }
+        FixtureMethodAnalyzerHelper.RegisterAssemblyFixtureAnalyzer(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute,
+            Rule,
+            FixtureParameterMode.OptionalTestContext);
     }
 }

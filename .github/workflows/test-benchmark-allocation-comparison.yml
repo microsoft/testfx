@@ -1,0 +1,38 @@
+name: Test benchmark allocation comparison
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/compare_benchmark_allocations.py'
+      - '.github/scripts/test_compare_benchmark_allocations.py'
+      - '.github/workflows/test-benchmark-allocation-comparison.yml'
+  push:
+    branches:
+      - main
+      - 'rel/*'
+    paths:
+      - '.github/scripts/compare_benchmark_allocations.py'
+      - '.github/scripts/test_compare_benchmark_allocations.py'
+      - '.github/workflows/test-benchmark-allocation-comparison.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-benchmark-allocation-comparison-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test benchmark allocation comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - run: python .github/scripts/test_compare_benchmark_allocations.py

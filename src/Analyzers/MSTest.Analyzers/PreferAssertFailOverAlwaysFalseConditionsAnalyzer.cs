@@ -10,7 +10,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
-using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -20,28 +19,17 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : DiagnosticAnalyzer
 {
-    private enum EqualityStatus
-    {
-        Unknown,
-        Equal,
-        NotEqual,
-    }
-
-    private const string ExpectedParameterName = "expected";
-    private const string NotExpectedParameterName = "notExpected";
-    private const string ActualParameterName = "actual";
-    private const string ConditionParameterName = "condition";
-    private const string ValueParameterName = "value";
     private const string MessageParameterName = "message";
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PreferAssertFailOverAlwaysFalseConditionsRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Design,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -74,7 +62,11 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
             IsAlwaysFalse(operation))
         {
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties: null, operation.TargetMethod.Name));
+            // Assert.Fail returns void, so it cannot replace a result used by another expression.
+            ImmutableDictionary<string, string?>? properties = operation.TargetMethod.ReturnsVoid || operation.Parent is IExpressionStatementOperation
+                ? null
+                : DiagnosticDescriptorHelper.CannotFixProperties;
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties, operation.TargetMethod.Name));
         }
     }
 
@@ -89,43 +81,27 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
     private static bool IsAlwaysFalse(IInvocationOperation operation)
         => operation.TargetMethod.Name switch
         {
-            "IsTrue" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
-            "IsFalse" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
-            "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
-            "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
-            "IsNotNull" => GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
-            "IsNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation),
+            "IsTrue" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
+            "IsFalse" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
+            "AreEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
+                && AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.NotEqual,
+            "AreNotEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
+                && (AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal
+                    || AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActualWithBuiltInEquality(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName)),
+            "AreNotSame" => AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActual(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName),
+            "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
+            "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
+            "IsExactInstanceOfType" => operation.TargetMethod.TypeArguments is [{ IsAbstract: true }]
+                || IsAbstractTypeOf(operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == "expectedType")?.Value),
             _ => false,
         };
 
-    private static bool IsNotNullableType(IOperation valueArgumentOperation)
-    {
-        ITypeSymbol? valueArgType = valueArgumentOperation.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-        return valueArgType is not null
-            && valueArgType.IsValueType
-            && valueArgType.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T;
-    }
-
-    private static IOperation? GetArgumentWithName(IInvocationOperation operation, string name)
-        => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name)?.Value.WalkDownConversion();
-
-    private static IOperation? GetConditionArgument(IInvocationOperation operation)
-        => GetArgumentWithName(operation, ConditionParameterName);
-
-    private static IOperation? GetValueArgument(IInvocationOperation operation)
-        => GetArgumentWithName(operation, ValueParameterName);
-
-    private static EqualityStatus GetEqualityStatus(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
-    {
-        if (GetArgumentWithName(operation, expectedOrNotExpectedParameterName) is { } expectedOrNotExpectedArgument &&
-            GetArgumentWithName(operation, ActualParameterName) is { } actualArgument &&
-            expectedOrNotExpectedArgument.ConstantValue.HasValue &&
-            actualArgument.ConstantValue.HasValue)
+    private static bool IsAbstractTypeOf(IOperation? operation)
+        => operation switch
         {
-            return Equals(expectedOrNotExpectedArgument.ConstantValue.Value, actualArgument.ConstantValue.Value) ? EqualityStatus.Equal : EqualityStatus.NotEqual;
-        }
-
-        // We are not sure about the equality status
-        return EqualityStatus.Unknown;
-    }
+            ITypeOfOperation { TypeOperand.IsAbstract: true } => true,
+            IParenthesizedOperation parenthesized => IsAbstractTypeOf(parenthesized.Operand),
+            IConversionOperation { Conversion.IsUserDefined: false } conversion => IsAbstractTypeOf(conversion.Operand),
+            _ => false,
+        };
 }

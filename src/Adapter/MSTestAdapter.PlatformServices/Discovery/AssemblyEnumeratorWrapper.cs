@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -23,7 +23,17 @@ internal sealed class AssemblyEnumeratorWrapper
     /// Gets test elements from an assembly.
     /// </summary>
     /// <returns> A collection of test elements. </returns>
-    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, bool isMTP, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, string? settingsXml, ITestSourceHandler testSourceHandler, bool isMTP, out List<string> warnings)
+        => GetTests(assemblyFileName, settingsXml, testSourceHandler, isMTP, null, null, out warnings);
+
+    internal static ICollection<UnitTestElement>? GetTests(
+        string? assemblyFileName,
+        string? settingsXml,
+        ITestSourceHandler testSourceHandler,
+        bool isMTP,
+        Type[]? types,
+        Action<Type, IReadOnlyList<UnitTestElement>?>? typeObserver,
+        out List<string> warnings)
     {
         warnings = [];
 
@@ -48,13 +58,13 @@ internal sealed class AssemblyEnumeratorWrapper
         try
         {
             // Load the assembly in isolation if required.
-            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings, isMTP);
+            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, settingsXml, isMTP, types, typeObserver);
             warnings.AddRange(result.Warnings);
             return result.TestElements;
         }
         catch (ReflectionTypeLoadException ex)
         {
-            if (ex.LoaderExceptions != null)
+            if (ex.LoaderExceptions is not null)
             {
                 if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
                 {
@@ -86,9 +96,19 @@ internal sealed class AssemblyEnumeratorWrapper
         }
     }
 
-    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, bool isMTP)
+    private static AssemblyEnumerationResult GetTestsInIsolation(
+        string fullFilePath,
+        string? settingsXml,
+        bool isMTP,
+        Type[]? types,
+        Action<Type, IReadOnlyList<UnitTestElement>?>? typeObserver)
     {
-        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, settingsXml);
+        if (isolationHost is TestSourceHost { UsesAppDomain: true }
+            && TestClassInstanceFactoryProvider.Current is not null)
+        {
+            throw new InvalidOperationException(Resource.HostedTestClassInjectionRequiresNoAppDomain);
+        }
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;
@@ -98,7 +118,7 @@ internal sealed class AssemblyEnumeratorWrapper
         // of strings normally (by reference), and we were mutating that collection in the appdomain.
         // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
         bool mustSerialize = !isMTP || isolationHost is TestSourceHost { UsesAppDomain: true };
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize);
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize, useGeneratedDescriptors: isMTP, types, typeObserver);
     }
 
     private static bool IsManagedAssembly(string fileName)

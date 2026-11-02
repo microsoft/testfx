@@ -1,87 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
-    [StackTraceHidden]
-    [InterpolatedStringHandler]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public readonly struct AssertSingleInterpolatedStringHandler<TItem>
-    {
-        private readonly StringBuilder? _builder;
-        private readonly int _actualCount;
-        private readonly TItem? _item;
-
-        public AssertSingleInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
-        {
-            _actualCount = collection.Count();
-            shouldAppend = _actualCount != 1;
-            if (shouldAppend)
-            {
-                _builder = new StringBuilder(literalLength + formattedCount);
-            }
-            else
-            {
-                _item = collection.First();
-            }
-        }
-
-        internal TItem ComputeAssertion(string collectionExpression)
-        {
-            if (_builder is not null)
-            {
-                ReportAssertContainsSingleFailed(_actualCount, _builder.ToString(), collectionExpression);
-            }
-
-            return _item!;
-        }
-
-        public void AppendLiteral(string value)
-            => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value)
-            => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value)
-            => _builder!.Append(value);
-
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
-            => AppendFormatted(value.ToString(), alignment, format);
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format)
-            => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value)
-            => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-    }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 
     /// <summary>
@@ -265,6 +188,7 @@ public sealed partial class Assert
     }
 
     #endregion // ContainsSingle
+
     [DoesNotReturn]
     private static void ReportAssertContainsSingleFailed(int actualCount, string? userMessage, string collectionExpression)
     {

@@ -22,19 +22,20 @@ public static class CrashDumpExtensions
     {
         CrashDumpConfiguration crashDumpGeneratorConfiguration = new();
 
+#if !NETCOREAPP
         if (ignoreIfNotSupported)
         {
-#if !NETCOREAPP
             crashDumpGeneratorConfiguration.Enable = false;
-#endif
         }
+#endif
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
             => new CrashDumpEnvironmentVariableProvider(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
                 crashDumpGeneratorConfiguration,
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                serviceProvider.GetClock()));
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new CrashDumpProcessLifetimeHandler(
@@ -53,7 +54,8 @@ public static class CrashDumpExtensions
             => new CrashDumpSequenceLogger(
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetClock(),
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                serviceProvider.GetOutputDevice()));
 
         builder.TestHost.AddDataConsumer(sequenceLoggerComposite);
         builder.TestHost.AddTestSessionLifetimeHandler(sequenceLoggerComposite);

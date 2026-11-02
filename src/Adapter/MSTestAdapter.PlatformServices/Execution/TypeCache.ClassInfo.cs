@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -19,7 +19,7 @@ internal sealed partial class TypeCache
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo? GetClassInfo(TestMethod testMethod)
     {
-        DebugEx.Assert(testMethod != null, "test method is null");
+        DebugEx.Assert(testMethod is not null, "test method is null");
 
         string typeName = testMethod.FullClassName;
 
@@ -48,7 +48,7 @@ internal sealed partial class TypeCache
         // Load the class type
         Type? type = LoadType(typeName, testMethod.AssemblyName);
 
-        if (type == null)
+        if (type is null)
         {
             // This means the class containing the test method could not be found.
             // Return null so we return a not found result.
@@ -77,7 +77,7 @@ internal sealed partial class TypeCache
             // location in the Out directory.
             Type? t = PlatformServiceProvider.Instance.ReflectionOperations.GetType(typeName);
 
-            if (t == null)
+            if (t is null)
             {
                 Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName);
 
@@ -88,10 +88,28 @@ internal sealed partial class TypeCache
 
             return t;
         }
-        catch (TypeLoadException)
+        catch (TypeLoadException ex)
         {
             // This means the class containing the test method could not be found.
-            // Return null so we return a not found result.
+            // Return null so we return a not found result, but don't silently swallow the
+            // exception: trace a warning with the type/assembly context and the full exception
+            // so the underlying cause (e.g. a missing or mismatched assembly) is discoverable.
+            try
+            {
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                        "TypeCache.LoadType: Failed to load type '{0}' from assembly '{1}'. The corresponding test(s) will be reported as not found. {2}",
+                        typeName,
+                        assemblyName,
+                        ex);
+                }
+            }
+            catch (Exception)
+            {
+                // This diagnostic must not replace the established not-found result when a logging provider fails.
+            }
+
             return null;
         }
         catch (Exception ex)
@@ -108,8 +126,10 @@ internal sealed partial class TypeCache
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType)
     {
-        ConstructorInfo[] constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
+        bool isFSharpModule = classType.IsFSharpModule();
+        ConstructorInfo[] constructors = isFSharpModule ? [] : PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
         (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
+        ConstructorInfo? firstPublicConstructor = null;
 
         foreach (ConstructorInfo ctor in constructors)
         {
@@ -118,6 +138,7 @@ internal sealed partial class TypeCache
                 continue;
             }
 
+            firstPublicConstructor ??= ctor;
             ParameterInfo[] parameters = ctor.GetParameters();
 
             // There are just 2 ctor shapes that we know, so the code is quite simple,
@@ -138,17 +159,29 @@ internal sealed partial class TypeCache
             }
         }
 
-        if (selectedConstructor is null)
+        if (selectedConstructor is null
+            && TestClassInstanceFactoryProvider.Current is not null
+            && firstPublicConstructor is not null)
+        {
+            selectedConstructor = (firstPublicConstructor, IsParameterless: firstPublicConstructor.GetParameters().Length == 0);
+        }
+
+        if (selectedConstructor is null && !isFSharpModule)
         {
             throw new TypeInspectionException(string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoValidConstructor, classType.FullName));
         }
 
-        ConstructorInfo constructor = selectedConstructor.Value.CtorInfo;
-        bool isParameterLessConstructor = selectedConstructor.Value.IsParameterless;
+        ConstructorInfo? constructor = selectedConstructor?.CtorInfo;
+        bool isParameterLessConstructor = selectedConstructor?.IsParameterless ?? true;
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
         TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
+        if (testClassAttribute is null && isFSharpModule)
+        {
+            testClassAttribute = new TestClassAttribute();
+        }
+
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -171,7 +204,7 @@ internal sealed partial class TypeCache
 
         Type? baseType = classType.BaseType;
         // PERF: Don't inspect object, no test methods or setups can be defined on it.
-        while (baseType != null && baseType != typeof(object))
+        while (baseType is not null && baseType != typeof(object))
         {
             foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(baseType))
             {
@@ -197,7 +230,7 @@ internal sealed partial class TypeCache
     private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
     {
         TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo);
-        if (timeoutAttribute != null)
+        if (timeoutAttribute is not null)
         {
             if (!timeoutAttribute.HasCorrectTimeout)
             {
@@ -303,7 +336,10 @@ internal sealed partial class TypeCache
 
         if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature())
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+            string signatureMessage = classInfo.IsFSharpModule
+                ? Resource.UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature
+                : Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature;
+            string message = string.Format(CultureInfo.CurrentCulture, signatureMessage, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
         }
 
@@ -322,7 +358,7 @@ internal sealed partial class TypeCache
             {
                 if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
-                    classInfo.BaseTestInitializeMethodsQueue.Enqueue(methodInfo);
+                    classInfo.BaseTestInitializeMethodsQueue.Add(methodInfo);
                 }
             }
         }
@@ -342,7 +378,7 @@ internal sealed partial class TypeCache
             {
                 if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
-                    classInfo.BaseTestCleanupMethodsQueue.Enqueue(methodInfo);
+                    classInfo.BaseTestCleanupMethodsQueue.Add(methodInfo);
                 }
             }
         }

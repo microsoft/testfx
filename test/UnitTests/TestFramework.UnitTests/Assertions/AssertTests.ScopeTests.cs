@@ -71,6 +71,27 @@ public partial class AssertTests
             """);
     }
 
+    public void Scope_CollectionAssertAreEquivalent_ExpectedNull_CollectsFollowingFailure()
+    {
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                CollectionAssert.AreEquivalent<int>(null, [1], EqualityComparer<int>.Default, "collection mismatch");
+                Assert.AreEqual(1, 2);
+            }
+        };
+
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be("CollectionAssert.AreEquivalent failed. collection mismatch");
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
+    }
+
     public void Scope_AfterDispose_AssertionsThrowNormally()
     {
         // Completing a scope should restore normal behavior.

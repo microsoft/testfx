@@ -34,9 +34,9 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
         //
         // failed TestMethodParamsNotSupported (0ms)
         //   Dynamic data method 'TestClass1.GetDataParams' should be static, non-generic, and cannot have 'params' parameter.
-        testHostResult.AssertOutputMatchesRegex(@"failed TestMethodSingleParameterIntCountMismatchSmaller \(\d+ms\)[\r\n]+\s+Parameter count mismatch.");
-        testHostResult.AssertOutputMatchesRegex(@"failed TestMethodSingleParameterIntCountMismatchLarger \(\d+ms\)[\r\n]+\s+Parameter count mismatch.");
-        testHostResult.AssertOutputMatchesRegex(@"failed TestMethodParamsNotSupported \(\d+ms\)[\r\n]+\s+Dynamic data method 'TestClass1.GetDataParams' should be static, non-generic, and cannot have 'params' parameter.");
+        testHostResult.AssertOutputMatchesRegex($@"failed TestMethodSingleParameterIntCountMismatchSmaller {AcceptanceAssert.DurationPattern}[\r\n]+\s+Parameter count mismatch.");
+        testHostResult.AssertOutputMatchesRegex($@"failed TestMethodSingleParameterIntCountMismatchLarger {AcceptanceAssert.DurationPattern}[\r\n]+\s+Parameter count mismatch.");
+        testHostResult.AssertOutputMatchesRegex($@"failed TestMethodParamsNotSupported {AcceptanceAssert.DurationPattern}[\r\n]+\s+Dynamic data method 'TestClass1.GetDataParams' should be static, non-generic, and cannot have 'params' parameter.");
 
         testHostResult.AssertOutputContains("TestMethodSingleParameterInt called with: 4");
         testHostResult.AssertOutputContains("TestMethodSingleParameterInt called with: 5");

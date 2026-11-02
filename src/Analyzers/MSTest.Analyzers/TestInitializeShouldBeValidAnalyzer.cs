@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities.Extensions;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -21,9 +19,9 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// <inheritdoc cref="Resources.TestInitializeShouldBeValidTitle" />
     public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestInitializeShouldBeValidRuleId,
-        new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidTitle)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidMessageFormat)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -36,33 +34,9 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute, out INamedTypeSymbol? testInitializeAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
-            {
-                INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testClassAttributeSymbol, canDiscoverInternals),
-                    SymbolKind.Method);
-            }
-        });
-    }
-
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
-    {
-        var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (methodSymbol.HasAttribute(testInitializeAttributeSymbol)
-            && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
-                allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
-        {
-            context.ReportDiagnostic(isFixable
-                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
-                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
-        }
+        FixtureMethodAnalyzerHelper.RegisterInstanceFixtureAnalyzer(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute,
+            Rule);
     }
 }

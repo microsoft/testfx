@@ -3,11 +3,14 @@
 
 using Microsoft.Testing.Extensions;
 
-using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
-[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+[assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel, Workers = 4)]
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
+
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
 #if ENABLE_CODECOVERAGE
@@ -16,8 +19,18 @@ builder.AddCodeCoverageProvider();
 builder.AddHangDumpProvider();
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
+builder.AddJUnitReportProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
+
+// Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
+// and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter
+// is registered, so the recorded data is dropped by the SDK at the export stage — this keeps CI
+// logs clean while still flowing every test event through the OTel pipeline.
+builder.AddOpenTelemetryProvider(
+    tracing => tracing.AddTestingPlatformInstrumentation(),
+    metrics => metrics.AddTestingPlatformInstrumentation());
 
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

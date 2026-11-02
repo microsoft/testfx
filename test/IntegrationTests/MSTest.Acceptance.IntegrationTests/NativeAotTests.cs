@@ -10,8 +10,9 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     // Source code for a project that validates MSTest supporting Native AOT.
-    // Because MSTest is built on top of Microsoft.Testing.Platform, this also exercises
-    // additional MTP code paths beyond what the MTP-only NativeAOT test covers.
+    // Sets MSTestSourceGenMode=ReflectionFree explicitly (this is also the shipped default now) so
+    // MSTest.SourceGeneration emits reflection-free metadata (materialized attributes + delegate-based
+    // invokers) and the runtime does not fall back to reflection for user test discovery or invocation.
     private const string SourceCode = """
 #file MSTestNativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -22,45 +23,56 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <OutputType>Exe</OutputType>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
         <PublishAot>true</PublishAot>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <!-- Reflection-free is now the default, but pin it so the test stays meaningful even if the
+             product default ever changes again. -->
+        <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MSTestEngineVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
+        <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
 
-#file Program.cs
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using Microsoft.Testing.Framework;
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Capabilities;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-
-using MSTestNativeAotTests;
-
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
-
 #file TestClass1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
+#pragma warning disable MSTESTEXP
+
+[assembly: TestFilterProvider(typeof(MyTests.RunAllFilter))]
 
 namespace MyTests;
 
-[TestClass]
-public class UnitTest1
+public abstract class GenericBase<T>
 {
+    protected static IEnumerable<object[]> GenericData { get; }
+        = new[]
+        {
+            new object[] { 2, 3 }
+        };
+}
+
+public sealed class RunAllFilter : ITestFilter
+{
+    public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+}
+
+[TestClass]
+public class UnitTest1 : GenericBase<int>
+{
+    // These ordinary nested helper shapes used to be recursively rooted by
+    // DynamicDependency(All), surfacing IL2026 and IL3050 from their base types.
+    private sealed class NestedStream : MemoryStream { }
+    private sealed class NestedException : Exception { }
+    private enum ScenarioState { Ready }
+
     [TestMethod]
     public void TestMethod1()
     {
@@ -73,8 +85,28 @@ public class UnitTest1
     }
 
     [TestMethod]
+    [TestCategory("AsyncGenerated")]
+    [DataRow(1, "small", true)]
+    public async Task TestMethod3(int size, string category, bool enabled)
+    {
+        await Task.Yield();
+        Assert.AreEqual(1, size);
+        Assert.AreEqual("small", category);
+        Assert.IsTrue(enabled);
+    }
+
+    [TestMethod]
+    [TestCategory("AsyncGenerated")]
+    [DataRow((object)new object[] { 1, 2 })]
+    public async Task TestMethod4(object[] values)
+    {
+        await Task.Yield();
+        Assert.AreSequenceEqual(new object[] { 1, 2 }, values);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(Data))]
-    public void TestMethod3(int a, int b)
+    public void TestMethod5(int a, int b)
     {
     }
 
@@ -83,6 +115,70 @@ public class UnitTest1
         {
            new object[] { 1, 2 }
         };
+
+    // The protected source cannot be called by generated code, so this exercises the reflection
+    // fallback and requires the closed generic base's non-public properties to remain rooted.
+    [TestMethod]
+    [DynamicData(nameof(GenericData))]
+    public void TestMethodFromGenericBase(int a, int b)
+    {
+        Assert.AreEqual(2, a);
+        Assert.AreEqual(3, b);
+    }
+
+    [TestMethod]
+    [CombinatorialData]
+    public void TestMethod6(CustomValue? value)
+        => Assert.IsTrue(value is null or CustomValue.First or CustomValue.Second);
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullDataRow(string? value)
+    {
+        Assert.IsNull(value);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    public void SingleArgumentDataRow(int value)
+        => Assert.AreEqual(0, value);
+
+    [TestMethod]
+    [DataRow(typeof(int), "Int32", "kind")]
+    [DataRow(typeof(int[]), "Int32[]", "kind")]
+    [DataRow(typeof(int[][]), "Int32[][]", "kind")]
+    [DataRow(typeof(int[,]), "Int32[,]", "kind")]
+    public void ArrayTypeRows(Type type, string name, string kind)
+    {
+        Assert.AreEqual(name, type.Name);
+        Assert.AreEqual("kind", kind);
+    }
+}
+
+public enum CustomValue
+{
+    First,
+    Second,
+}
+""";
+
+    private const string AsyncVoidSourceCode = """
+
+#file AsyncVoidTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MyTests;
+
+[TestClass]
+public sealed class AsyncVoidTests
+{
+#pragma warning disable MSTEST0003 // Deliberately invalid to verify generated async metadata preserves async-void rejection.
+    [TestMethod]
+    public async void InvalidAsyncVoidTest()
+    {
+        await Task.Yield();
+    }
+#pragma warning restore MSTEST0003
 }
 """;
 
@@ -98,20 +194,194 @@ public class UnitTest1
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
             addPublicFeeds: true);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            warnAsError: true,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
+
+        // Source files in this repo (and the source-generator output filename) whose absence in
+        // publish output indicates MSTest itself is not surfacing trim/AOT warnings. Adding new MSTest
+        // code that produces ILxxxx warnings will cause its source file to show up here and fail this
+        // test. (The list mirrors TrimTests.Publish_WithTestAdapter_DoesNotSurfaceWarningsFromSuppressedSources.)
+        foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
+        {
+            compilationResult.AssertOutputDoesNotContain(fileName);
+        }
+
+        string registryPath = Directory.GetFiles(
+            generator.TargetAssetPath,
+            "MSTestReflectionMetadata.Registry.g.cs",
+            SearchOption.AllDirectories).Single();
+        string registry = File.ReadAllText(registryPath);
+        int synchronousMethodIndex = registry.IndexOf("Name = \"TestMethod1\"", StringComparison.Ordinal);
+        int synchronousNextMethodIndex = registry.IndexOf("Name = \"TestMethod2\"", synchronousMethodIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(-1, synchronousMethodIndex);
+        Assert.IsGreaterThan(synchronousMethodIndex, synchronousNextMethodIndex);
+        Assert.Contains(
+            "IsDescriptorSupported = true",
+            registry.Substring(synchronousMethodIndex, synchronousNextMethodIndex - synchronousMethodIndex));
+
+        int asyncMethodIndex = registry.IndexOf("Name = \"TestMethod3\"", StringComparison.Ordinal);
+        int nextMethodIndex = registry.IndexOf("Name = \"TestMethod4\"", asyncMethodIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(-1, asyncMethodIndex);
+        Assert.IsGreaterThan(asyncMethodIndex, nextMethodIndex);
+        Assert.Contains(
+            "AreAttributesComplete = true",
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex));
+        Assert.Contains(
+            "IsDescriptorSupported = false",
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex));
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
+        result.AssertOutputContainsSummary(failed: 0, passed: 15, skipped: 0);
         result.AssertExitCodeIs(0);
+
+        TestHostResult nullRowResult = await testHost.ExecuteAsync(
+            "--filter FullyQualifiedName~NullDataRow",
+            cancellationToken: TestContext.CancellationToken);
+        nullRowResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        nullRowResult.AssertExitCodeIs(0);
+
+        TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(
+            "--filter TestCategory=AsyncGenerated",
+            cancellationToken: TestContext.CancellationToken);
+        asyncGeneratedResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        asyncGeneratedResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [DataRow("net10.0")]
+    public async Task NativeAotTests_RejectsAsyncVoidTestMethods(string tfm)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"MSTestNativeAotAsyncVoidTests_{tfm}",
+            (SourceCode + AsyncVoidSourceCode)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            warnAsError: true,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
+
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
+        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        result.AssertStandardErrorContains("UTA007: Method InvalidAsyncVoidTest");
+        result.AssertExitCodeIsNot(0);
     }
 
     public TestContext TestContext { get; set; }
+
+    private const string MetadataSourceCode = """
+#file MSTestNativeAotMetadata.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+        <UseAppHost>true</UseAppHost>
+        <LangVersion>preview</LangVersion>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+        <PublishAot>true</PublishAot>
+        <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
+        <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    </ItemGroup>
+</Project>
+
+#file MetadataTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MyTests;
+
+[TestClass]
+public sealed class MethodMetadataTests
+{
+    [TestMethod]
+    [TestCategory("GeneratedMetadata")]
+    public void CategorizedTest()
+    {
+    }
+
+    [TestMethod]
+    [Ignore("generated method ignore")]
+    public void IgnoredMethod()
+        => Assert.Fail("The generated method-level IgnoreAttribute was not honored.");
+}
+
+[TestCategory("InheritedTypeMetadata")]
+public abstract class CategorizedBase
+{
+}
+
+[TestClass]
+public sealed class InheritedCategorizedTests : CategorizedBase
+{
+    [TestMethod]
+    public void CategorizedThroughBaseClass()
+    {
+    }
+}
+""";
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [DataRow("net10.0")]
+    public async Task NativeAotTests_HonorsGeneratedInheritedTypeAndMethodMetadata(string tfm)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"MSTestNativeAotMetadata_{tfm}",
+            MetadataSourceCode
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            warnAsError: true,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
+
+        foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
+        {
+            compilationResult.AssertOutputDoesNotContain(fileName);
+        }
+
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotMetadata", tfm, RID, Verb.publish);
+
+        TestHostResult fullRun = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        fullRun.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 1);
+        fullRun.AssertExitCodeIs(0);
+
+        TestHostResult categoryRun = await testHost.ExecuteAsync(
+            "--filter TestCategory=GeneratedMetadata",
+            cancellationToken: TestContext.CancellationToken);
+        categoryRun.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        categoryRun.AssertExitCodeIs(0);
+
+        TestHostResult inheritedCategoryRun = await testHost.ExecuteAsync(
+            "--filter TestCategory=InheritedTypeMetadata",
+            cancellationToken: TestContext.CancellationToken);
+        inheritedCategoryRun.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        inheritedCategoryRun.AssertExitCodeIs(0);
+    }
 }

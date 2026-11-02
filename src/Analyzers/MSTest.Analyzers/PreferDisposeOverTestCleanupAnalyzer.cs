@@ -20,12 +20,13 @@ public sealed class PreferDisposeOverTestCleanupAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferDisposeOverTestCleanupTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferDisposeOverTestCleanupMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferDisposeOverTestCleanupDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PreferDisposeOverTestCleanupRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Design,
         DiagnosticSeverity.Info,
         isEnabledByDefault: false,

@@ -161,8 +161,14 @@ dotnet_style_coalesce_expression = true:warning
 # IDE0031: Use null propagation
 dotnet_style_null_propagation = true:warning
 
-# IDE0041: Use 'is null' check
+# IDE0041: Use 'is null' instead of ReferenceEquals
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
+
+# CSIsNull001: Use 'is null' for null checks
+dotnet_diagnostic.CSIsNull001.severity = error
+
+# CSIsNull002: Use 'is not null' for non-null checks
+dotnet_diagnostic.CSIsNull002.severity = error
 
 # Avoid this. unless absolutely necessary (IDE0003 and IDE0009)
 dotnet_style_qualification_for_event = false:warning
@@ -477,6 +483,20 @@ dotnet_diagnostic.CA2248.severity = warning
 
 # RS0041: Do not use 'Obsolete' attribute
 dotnet_diagnostic.RS0041.severity = none
+
+# RS0051-RS0061: Internal APIs
+dotnet_diagnostic.RS0051.severity = warning
+dotnet_diagnostic.RS0052.severity = warning
+dotnet_diagnostic.RS0053.severity = warning
+dotnet_diagnostic.RS0054.severity = warning
+dotnet_diagnostic.RS0055.severity = warning
+dotnet_diagnostic.RS0056.severity = warning
+## Do not use oblivious types
+dotnet_diagnostic.RS0057.severity = none
+dotnet_diagnostic.RS0058.severity = warning
+dotnet_diagnostic.RS0059.severity = warning
+dotnet_diagnostic.RS0060.severity = warning
+dotnet_diagnostic.RS0061.severity = warning
 
 # Disabled due to bug https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
 # SA1010: Opening square brackets should be spaced correctly
@@ -844,3 +864,31 @@ resharper_replace_conditional_expression_with_null_coalescing_highlighting = war
 
 # Redundant cast
 resharper_redundant_cast_highlighting = warning
+
+# The internal API analyzers (RS0051-RS0061) must not track generated code.
+# Generated files - BuildInfo.cs (version-stamped constants that differ per build,
+# e.g. "1.0.0-ci" vs "2.4.0-dev"), RESX-generated resource accessors, and *.g.cs
+# content-file sources - are implementation details, not a stable API surface.
+[*.g.cs]
+dotnet_diagnostic.RS0051.severity = none
+dotnet_diagnostic.RS0052.severity = none
+dotnet_diagnostic.RS0053.severity = none
+dotnet_diagnostic.RS0054.severity = none
+dotnet_diagnostic.RS0055.severity = none
+dotnet_diagnostic.RS0056.severity = none
+dotnet_diagnostic.RS0058.severity = none
+dotnet_diagnostic.RS0059.severity = none
+dotnet_diagnostic.RS0060.severity = none
+dotnet_diagnostic.RS0061.severity = none
+
+[artifacts/obj/**/*.cs]
+dotnet_diagnostic.RS0051.severity = none
+dotnet_diagnostic.RS0052.severity = none
+dotnet_diagnostic.RS0053.severity = none
+dotnet_diagnostic.RS0054.severity = none
+dotnet_diagnostic.RS0055.severity = none
+dotnet_diagnostic.RS0056.severity = none
+dotnet_diagnostic.RS0058.severity = none
+dotnet_diagnostic.RS0059.severity = none
+dotnet_diagnostic.RS0060.severity = none
+dotnet_diagnostic.RS0061.severity = none

@@ -3,6 +3,7 @@
 
 #if NETFRAMEWORK
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -50,11 +51,13 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            warnings.Add(ex.Message);
+            // Retain the assembly path together with the exception type and full inner-exception
+            // chain, so the underlying reason the dependency graph could not be walked is not lost.
+            warnings.Add(string.Format(CultureInfo.CurrentCulture, Resource.DeploymentDependencyLoadFailed, assemblyPath, ex.GetFormattedExceptionMessage()));
             return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
 
-        DebugEx.Assert(assembly != null, "assembly");
+        DebugEx.Assert(assembly is not null, "assembly");
 
         List<string> result = [];
         HashSet<string> visitedAssemblies =
@@ -122,7 +125,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
             }
 
             Type declaringType = data.NamedArguments[0].MemberInfo.DeclaringType;
-            if (declaringType == null)
+            if (declaringType is null)
             {
                 continue;
             }
@@ -151,7 +154,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="warnings"> The warnings. </param>
     private void ProcessChildren(Assembly assembly, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
     {
-        DebugEx.Assert(assembly != null, "assembly");
+        DebugEx.Assert(assembly is not null, "assembly");
 
         foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
         {
@@ -240,7 +243,9 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            string warning = string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependency, assemblyString, ex.Message);
+            // Retain the assembly identity together with the exception type and full inner-exception
+            // chain, so the reason the dependency could not be resolved/loaded is not lost.
+            string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentDependencyLoadFailed, assemblyString, ex.GetFormattedExceptionMessage());
             warnings.Add(warning);
             return;
         }

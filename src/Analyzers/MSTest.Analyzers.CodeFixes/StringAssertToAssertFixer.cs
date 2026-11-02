@@ -4,10 +4,7 @@
 using System.Collections.Immutable;
 using System.Composition;
 
-using Analyzer.Utilities;
-
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -33,31 +30,21 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         => WellKnownFixAllProviders.BatchFixer;
 
     /// <inheritdoc />
-    public override async Task RegisterCodeFixesAsync(CodeFixContext context)
-    {
-        SyntaxNode? root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+    public override Task RegisterCodeFixesAsync(CodeFixContext context)
+        => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
+            context,
+            AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
+            CodeFixResources.StringAssertToAssertTitle,
+            fixKindPropertyKey: null,
+            FixAssertAsync);
 
-        Diagnostic diagnostic = context.Diagnostics[0];
-        if (!diagnostic.Properties.TryGetValue(AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey, out string? properAssertMethodName)
-            || properAssertMethodName == null)
-        {
-            return;
-        }
-
-        if (root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) is not InvocationExpressionSyntax invocationExpressionSyntax)
-        {
-            return;
-        }
-
-        // Register a code fix that will invoke the fix operation.
-        string title = string.Format(CultureInfo.InvariantCulture, CodeFixResources.StringAssertToAssertTitle, properAssertMethodName);
-        var action = CodeAction.Create(
-            title: title,
-            createChangedDocument: ct => FixStringAssertAsync(context.Document, invocationExpressionSyntax, properAssertMethodName, ct),
-            equivalenceKey: title);
-
-        context.RegisterCodeFix(action, diagnostic);
-    }
+    private static Task<Document> FixAssertAsync(
+        Document document,
+        InvocationExpressionSyntax invocationExpr,
+        string properAssertMethodName,
+        string? fixKind,
+        CancellationToken cancellationToken)
+        => FixStringAssertAsync(document, invocationExpr, properAssertMethodName, cancellationToken);
 
     private static async Task<Document> FixStringAssertAsync(
         Document document,
@@ -77,8 +64,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
-        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-
         // Create new argument list with swapped first two arguments
         // We keep the existing separators in case there is trivia attached to them.
         var newArguments = arguments.GetWithSeparators().ToList();
@@ -97,6 +82,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         // Preserve leading trivia (including empty lines) from the original invocation
         newInvocationExpr = newInvocationExpr.WithLeadingTrivia(invocationExpr.GetLeadingTrivia());
 
-        return document.WithSyntaxRoot(root.ReplaceNode(invocationExpr, newInvocationExpr));
+        return await AssertToAssertFixerHelpers.ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
     }
 }

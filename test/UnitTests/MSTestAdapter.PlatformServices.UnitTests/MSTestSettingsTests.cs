@@ -5,7 +5,9 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -15,6 +17,8 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+using FixtureKind = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind;
+using TimeoutInfo = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TimeoutInfo;
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
@@ -56,7 +60,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
     }
@@ -71,7 +75,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
     }
@@ -87,7 +91,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
     }
@@ -115,22 +119,40 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
 
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(13));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CooperativeCancellationTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestCleanupTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassCleanupTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyCleanupTimeout', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestCleanupTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassCleanupTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyCleanupTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CaptureTraceOutput', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'MapNotRunnableToFailed', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestInitializeTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassInitializeTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyInitializeTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestTimeout', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestInitializeTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassInitializeTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyInitializeTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'TreatDiscoveryWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'MapInconclusiveToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'ConsiderEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
+    }
+
+    public void RunSettings_WithZeroTimeout_GettingAWarningAndTimeoutIsNotSet()
+    {
+        // "0" parses as an integer but is rejected by the strictly-positive guard (issue #9403).
+        string runSettingsXml =
+            """
+            <RunSettings>
+                <MSTestV2>
+                    <TestTimeout>0</TestTimeout>
+               </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.TestTimeout.Should().Be(0);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '0' for runsettings entry 'TestTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
     }
 
     public void MapNotRunnableToFailedShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -144,7 +166,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
     }
@@ -159,9 +181,40 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void CaptureAssertionFailureDiagnosticsShouldBeFalseByDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.CaptureAssertionFailureDiagnostics.Should().BeFalse();
+    }
+
+    public void CaptureAssertionFailureDiagnosticsShouldBeConsumedFromRunSettingsWhenSpecified()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.CaptureAssertionFailureDiagnostics.Should().BeTrue();
     }
 
     public void CaptureDebugTracesShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -175,9 +228,94 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void OutputCaptureModeShouldDefaultToResult()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldMapLegacyBooleanTrueToResult()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>True</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldMapLegacyBooleanFalseToNone()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>False</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.None);
+        adapterSettings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void OutputCaptureModeShouldBeConsumedFromRunSettingsWhenSpecifiedAsEnum()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>Live</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Live);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldRejectNumericValueAndKeepDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>2</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        // Numeric input must not be treated as an enum ordinal (2 -> Live); it is rejected and the default is kept.
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '2' for runsettings entry 'CaptureTraceOutput', setting will be ignored."), Times.Once);
     }
 
     public void TestTimeoutShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -191,7 +329,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TestTimeout.Should().Be(4000);
     }
@@ -206,7 +344,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TestTimeout.Should().Be(0);
     }
@@ -221,7 +359,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
@@ -237,7 +375,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
@@ -252,7 +390,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationWorkers.HasValue.Should().BeFalse();
         adapterSettings.ParallelizationScope.HasValue.Should().BeFalse();
@@ -268,7 +406,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.RandomizeTestOrder.Should().BeFalse();
         adapterSettings.RandomTestOrderSeed.Should().BeNull();
@@ -286,7 +424,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.RandomizeTestOrder.Should().BeTrue();
         adapterSettings.RandomTestOrderSeed.Should().Be(42);
@@ -303,7 +441,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.RandomTestOrderSeed.Should().Be(-7);
     }
@@ -319,7 +457,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.RandomizeTestOrder.Should().BeFalse();
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'notabool' for runsettings entry 'RandomizeTestOrder', setting will be ignored."), Times.Once);
@@ -336,7 +474,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.RandomTestOrderSeed.Should().BeNull();
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'notanint' for runsettings entry 'RandomTestOrderSeed', setting will be ignored."), Times.Once);
@@ -356,7 +494,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
         MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeTrue();
@@ -380,7 +518,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
         MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeFalse();
@@ -400,7 +538,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         AdapterSettingsException exception = act.Should().Throw<AdapterSettingsException>().Which;
 
         exception.Message.Should().Contain("Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer.");
@@ -419,7 +557,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         AdapterSettingsException exception = act.Should().Throw<AdapterSettingsException>().Which;
         exception.Message.Should().Contain("Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer.");
     }
@@ -437,7 +575,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationWorkers.Should().Be(2);
     }
@@ -455,7 +593,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationWorkers.Should().Be(Environment.ProcessorCount);
     }
@@ -472,7 +610,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationWorkers.Should().Be(Environment.ProcessorCount);
         adapterSettings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
@@ -489,7 +627,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationWorkers.Should().Be(Environment.ProcessorCount);
         adapterSettings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
@@ -509,7 +647,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationWorkers.Should().Be(127);
         adapterSettings.ParallelizationScope.Should().Be(ExecutionScope.MethodLevel);
@@ -528,7 +666,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         AdapterSettingsException exception = act.Should().Throw<AdapterSettingsException>().Which;
         exception.Message.Should().Contain("Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel.");
     }
@@ -546,7 +684,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.ParallelizationScope.Should().Be(ExecutionScope.MethodLevel);
     }
@@ -564,7 +702,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        Action act = () => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         AdapterSettingsException exception = act.Should().Throw<AdapterSettingsException>().Which;
         exception.Message.Should().Contain("MSTestAdapter encountered an unexpected element 'Hola' in its settings 'Parallelize'. Remove this element and try again.");
     }
@@ -582,7 +720,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TestTimeout.Should().Be(12);
     }
@@ -602,7 +740,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TestTimeout.Should().Be(12);
         adapterSettings.ParallelizationWorkers.Should().Be(127);
@@ -621,7 +759,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.TestTimeout.Should().Be(12);
     }
@@ -636,7 +774,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.DisableParallelization.Should().BeFalse();
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
@@ -655,7 +793,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.DisableParallelization.Should().BeTrue();
     }
@@ -673,7 +811,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'DisableParallelization', setting will be ignored."), Times.Once);
     }
 
@@ -699,7 +837,7 @@ public class MSTestSettingsTests : TestContainer
                 actualReader.ReadInnerXml();
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger());
         _testablePlatformServiceProvider.MockSettingsProvider.Verify(sp => sp.Load(It.IsAny<XmlReader>()), Times.Once);
     }
 
@@ -725,7 +863,7 @@ public class MSTestSettingsTests : TestContainer
                 observedXml = actualReader.ReadOuterXml();
             });
 
-        MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger());
         (expectedRunSettingXml == observedXml).Should().BeTrue();
     }
 
@@ -772,7 +910,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         // Assert.
         dummyPlatformSpecificSetting.Should().BeTrue();
@@ -825,7 +963,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         // Assert.
         dummyPlatformSpecificSetting.Should().BeTrue();
@@ -874,7 +1012,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger());
 
         // Assert.
         outOfScopeCall.Should().BeFalse();
@@ -925,7 +1063,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         // Assert.
         dummyPlatformSpecificSetting.Should().BeTrue();
@@ -961,7 +1099,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         MSTestSettings adapterSettings2 = MSTestSettings.CurrentSettings;
@@ -990,7 +1128,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger());
         settings.Should().NotBeNull();
         MSTestSettings.PopulateSettings(settings);
 
@@ -1002,7 +1140,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultAdapterSettingsWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
@@ -1013,7 +1151,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
@@ -1025,7 +1163,7 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings!.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
@@ -1047,7 +1185,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1072,7 +1210,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1098,7 +1236,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1127,7 +1265,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1166,21 +1304,41 @@ public class MSTestSettingsTests : TestContainer
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
         var settings = new MSTestSettings();
-        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
 
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(12));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'timeout:useCooperativeCancellation', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyInitialize', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyCleanup', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classInitialize', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyInitialize'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyCleanup'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classInitialize'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapNotRunnableToFailed', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classCleanup', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testInitialize', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testCleanup', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:test', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classCleanup'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testInitialize'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testCleanup'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:test'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:treatDiscoveryWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapInconclusiveToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:considerEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
+    }
+
+    public void ConfigJson_WithZeroTimeout_GettingAWarningAndTimeoutIsNotSet()
+    {
+        // Arrange - "0" parses as an integer but is rejected by the strictly-positive guard.
+        // This is the exact scenario from issue #9403: a parseable value that silently has no effect.
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:timeout:test", "0" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        settings.TestTimeout.Should().Be(0);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '0' for runsettings entry 'timeout:test'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
     }
 
     public void ConfigJson_WithValidValues_ValuesAreSetCorrectly()
@@ -1194,6 +1352,8 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:timeout:classCleanup", "200" },
             { "mstest:timeout:testInitialize", "100" },
             { "mstest:timeout:testCleanup", "100" },
+            { "mstest:timeout:globalTestInitialize", "150" },
+            { "mstest:timeout:globalTestCleanup", "150" },
             { "mstest:timeout:test", "60" },
             { "mstest:timeout:useCooperativeCancellation", "true" },
             { "mstest:parallelism:enabled", "true" },
@@ -1203,9 +1363,10 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "true" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
-            { "mstest:orderTestsByNameInClass", "true" },
+            { "mstest:execution:orderTestsByNameInClass", "true" },
             { "mstest:execution:randomizeTestOrder", "true" },
             { "mstest:execution:randomTestOrderSeed", "-12345" },
+            { "mstest:execution:captureAssertionFailureDiagnostics", "true" },
             { "mstest:output:captureTrace", "true" },
         };
 
@@ -1216,12 +1377,13 @@ public class MSTestSettingsTests : TestContainer
         var settings = new MSTestSettings();
 
         // Act
-        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
 
         // Assert
         settings.OrderTestsByNameInClass.Should().BeTrue();
         settings.RandomizeTestOrder.Should().BeTrue();
         settings.RandomTestOrderSeed.Should().Be(-12345);
+        settings.CaptureAssertionFailureDiagnostics.Should().BeTrue();
         settings.CaptureDebugTraces.Should().BeTrue();
         settings.CooperativeCancellationTimeout.Should().BeTrue();
         settings.MapInconclusiveToFailed.Should().BeTrue();
@@ -1236,10 +1398,210 @@ public class MSTestSettingsTests : TestContainer
         settings.ClassCleanupTimeout.Should().Be(200);
         settings.TestInitializeTimeout.Should().Be(100);
         settings.TestCleanupTimeout.Should().Be(100);
+        settings.GlobalTestInitializeTimeout.Should().Be(150);
+        settings.GlobalTestCleanupTimeout.Should().Be(150);
 
         settings.DisableParallelization.Should().BeFalse();
         settings.ParallelizationWorkers.Should().Be(4);
         settings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
+    }
+
+    public void ConfigJson_OutputCaptureMode_AcceptsEnumValue()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "Live" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Live);
+        settings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void ConfigJson_OutputCaptureMode_MapsLegacyBooleanFalseToNone()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "false" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.None);
+        settings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void ConfigJson_OutputCaptureMode_RejectsNumericValue()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "2" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert - numeric input must not be treated as an enum ordinal (2 -> Live); it is rejected and the default is kept.
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '2' for runsettings entry 'output:captureTrace', setting will be ignored."), Times.Once);
+    }
+
+    public void RunSettings_WithGlobalFixtureTimeouts_ValuesAreSetCorrectly()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+                <MSTestV2>
+                    <GlobalTestInitializeTimeout>150</GlobalTestInitializeTimeout>
+                    <GlobalTestCleanupTimeout>250</GlobalTestCleanupTimeout>
+                </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.GlobalTestInitializeTimeout.Should().Be(150);
+        adapterSettings.GlobalTestCleanupTimeout.Should().Be(250);
+    }
+
+    public void GlobalFixtureTimeout_WhenDedicatedKeySet_IsUsedInsteadOfSharedTestKey()
+    {
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new()
+            {
+                { "mstest:timeout:testInitialize", "100" },
+                { "mstest:timeout:testCleanup", "200" },
+                { "mstest:timeout:globalTestInitialize", "1100" },
+                { "mstest:timeout:globalTestCleanup", "2200" },
+            }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+        MSTestSettings.PopulateSettings(settings);
+
+        // The dedicated global keys take precedence over the per-test initialize/cleanup keys.
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestInitialize).Timeout.Should().Be(1100);
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestCleanup).Timeout.Should().Be(2200);
+    }
+
+    public void GlobalFixtureTimeout_WhenDedicatedKeyNotSet_FallsBackToSharedTestKey()
+    {
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new()
+            {
+                { "mstest:timeout:testInitialize", "100" },
+                { "mstest:timeout:testCleanup", "200" },
+            }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+        MSTestSettings.PopulateSettings(settings);
+
+        // With no dedicated global key, global fixtures keep honoring the per-test initialize/cleanup keys.
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestInitialize).Timeout.Should().Be(100);
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestCleanup).Timeout.Should().Be(200);
+    }
+
+    private static IConfiguration BuildConfig(Dictionary<string, string> values)
+    {
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => values.TryGetValue(key, out string? value) ? value : null);
+        return mockConfig.Object;
+    }
+
+    public void ConfigJson_WithDeprecatedFlatOrderTestsByNameInClassKey_ValueIsSetAndWarningIsEmitted()
+    {
+        // Arrange - using the deprecated flat key
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Once);
+    }
+
+    public void ConfigJson_WithExecutionOrderTestsByNameInClassKey_ValueIsSetAndNoWarningIsEmitted()
+    {
+        // Arrange - using the new grouped key
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:execution:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Never);
+    }
+
+    public void ConfigJson_WithBothOrderTestsByNameInClassKeys_NewExecutionKeyTakesPrecedenceAndNoWarningIsEmitted()
+    {
+        // Arrange - both the new grouped key and the deprecated flat key are present with conflicting values.
+        // The new key must win and, since it is present, the deprecated key is ignored without a warning.
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:orderTestsByNameInClass", "false" },
+            { "mstest:execution:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Never);
     }
 
     public void ConfigJson_Parllelism_Enabled_True() => ConfigJson_Parllelism_Enabled_Core(true);
@@ -1263,7 +1625,7 @@ public class MSTestSettingsTests : TestContainer
         var settings = new MSTestSettings();
 
         // Act
-        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
 
         // Assert
         settings.DisableParallelization.Should().Be(!parallelismEnabled);
@@ -1283,11 +1645,136 @@ public class MSTestSettingsTests : TestContainer
         var settings = new MSTestSettings();
 
         // Act
-        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
 
         // Assert
         settings.ParallelizationScope.Should().Be(ExecutionScope.MethodLevel);
     }
+
+    #endregion
+
+    #region Dependency declaration configuration tests
+
+    /// <summary>
+    /// Parses a flattened key/value configuration - the shape the JSON provider produces - through the real
+    /// settings parser, so these tests exercise the same indexer-only surface it sees at run time.
+    /// </summary>
+    private MSTestSettings ParseDependencies(Dictionary<string, string> values)
+    {
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+            .Returns((string key) => values.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+        return settings;
+    }
+
+    public void DependencyConfig_ChainsProduceAnEdgePerAdjacentPair()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:chains:0:0", "Ns.C.First" },
+            { "mstest:execution:dependencies:chains:0:1", "Ns.C.Second" },
+            { "mstest:execution:dependencies:chains:0:2", "Ns.C.Third" },
+        });
+
+        settings.DeclaredDependencies.Should().NotBeNull();
+        settings.DeclaredDependencies!.Length.Should().Be(2);
+        settings.DeclaredDependencies[0].Dependent.Should().Be("Ns.C.Second");
+        settings.DeclaredDependencies[0].Prerequisite.Should().Be("Ns.C.First");
+        settings.DeclaredDependencies[1].Dependent.Should().Be("Ns.C.Third");
+        settings.DeclaredDependencies[1].Prerequisite.Should().Be("Ns.C.Second");
+    }
+
+    public void DependencyConfig_AChainOfOneDeclaresNoEdge()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:chains:0:0", "Ns.C.Only" },
+        });
+
+        settings.DeclaredDependencies.Should().BeNull();
+    }
+
+    public void DependencyConfig_AnEmptyChainIsWarnedAboutAndDoesNotTruncateTheRest()
+    {
+        // An empty element stores nothing under its index, which through the indexer is indistinguishable
+        // from the end of the array - so without the lookahead every later chain would silently vanish.
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:chains:1:0", "Ns.C.First" },
+            { "mstest:execution:dependencies:chains:1:1", "Ns.C.Second" },
+        });
+
+        settings.DeclaredDependencies.Should().ContainSingle();
+        settings.DeclaredDependencies![0].Dependent.Should().Be("Ns.C.Second");
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("chain at index 0"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_NodesCarryEveryPrerequisiteAndProceedOnFailure()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:0:test", "Ns.C.Audit" },
+            { "mstest:execution:dependencies:nodes:0:dependsOn:0", "Ns.C.One" },
+            { "mstest:execution:dependencies:nodes:0:dependsOn:1", "Ns.C.Two" },
+            { "mstest:execution:dependencies:nodes:0:proceedOnFailure", "true" },
+        });
+
+        settings.DeclaredDependencies!.Length.Should().Be(2);
+        settings.DeclaredDependencies.Should().OnlyContain(d => d.Dependent == "Ns.C.Audit" && d.ProceedOnFailure);
+    }
+
+    public void DependencyConfig_ProceedOnFailureDefaultsToFalseAndWarnsWhenNotABoolean()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:0:test", "Ns.C.Dependent" },
+            { "mstest:execution:dependencies:nodes:0:dependsOn:0", "Ns.C.Prereq" },
+            { "mstest:execution:dependencies:nodes:0:proceedOnFailure", "maybe" },
+        });
+
+        // Fails closed: an unparseable value must not become "run anyway".
+        settings.DeclaredDependencies!.Single().ProceedOnFailure.Should().BeFalse();
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("maybe"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_ANodeWithoutPrerequisitesIsWarnedAbout()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:0:test", "Ns.C.Lonely" },
+        });
+
+        settings.DeclaredDependencies.Should().BeNull();
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("Ns.C.Lonely"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_ANodeMissingItsTestIsWarnedAboutAndDoesNotTruncateTheRest()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:1:test", "Ns.C.Dependent" },
+            { "mstest:execution:dependencies:nodes:1:dependsOn:0", "Ns.C.Prereq" },
+        });
+
+        settings.DeclaredDependencies.Should().ContainSingle();
+        settings.DeclaredDependencies![0].Dependent.Should().Be("Ns.C.Dependent");
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("node at index 0"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_WhenNoDependenciesAreDeclaredNothingIsSet()
+        => ParseDependencies(new() { { "mstest:execution:randomizeTestOrder", "true" } })
+            .DeclaredDependencies.Should().BeNull();
 
     #endregion
 }

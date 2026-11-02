@@ -95,6 +95,17 @@ internal sealed class MSTestTelemetryDataCollector
         set => _configurationSource = value;
     }
 
+    internal Dictionary<string, long> GetDiscoveryAttributeCounts()
+        => _attributeCounts.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+
+    internal void AddDiscoveryAttributeCounts(IReadOnlyDictionary<string, long> counts)
+    {
+        foreach (KeyValuePair<string, long> count in counts)
+        {
+            _attributeCounts.AddOrUpdate(count.Key, count.Value, (_, existing) => existing + count.Value);
+        }
+    }
+
     /// <summary>
     /// Records the attributes found on a test method during discovery. Safe to call concurrently
     /// from multiple discovery threads — counters use a <see cref="ConcurrentDictionary{TKey,TValue}"/>
@@ -130,6 +141,8 @@ internal sealed class MSTestTelemetryDataCollector
                 TimeoutAttribute => nameof(TimeoutAttribute),
                 IgnoreAttribute => nameof(IgnoreAttribute),
                 DoNotParallelizeAttribute => nameof(DoNotParallelizeAttribute),
+                ResourceLockAttribute => nameof(ResourceLockAttribute),
+                DependsOnAttribute => nameof(DependsOnAttribute),
                 RetryBaseAttribute => nameof(RetryBaseAttribute),
                 ConditionBaseAttribute => nameof(ConditionBaseAttribute),
                 TestCategoryAttribute => nameof(TestCategoryAttribute),
@@ -169,6 +182,8 @@ internal sealed class MSTestTelemetryDataCollector
                 TestClassAttribute => nameof(TestClassAttribute),
                 ParallelizeAttribute => nameof(ParallelizeAttribute),
                 DoNotParallelizeAttribute => nameof(DoNotParallelizeAttribute),
+                ResourceLockAttribute => nameof(ResourceLockAttribute),
+                DependsOnAttribute => nameof(DependsOnAttribute),
                 _ => null,
             };
 
@@ -385,6 +400,8 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.class_cleanup_timeout"] = (double)settings.ClassCleanupTimeout;
         metrics["mstest.setting.test_initialize_timeout"] = (double)settings.TestInitializeTimeout;
         metrics["mstest.setting.test_cleanup_timeout"] = (double)settings.TestCleanupTimeout;
+        metrics["mstest.setting.global_test_initialize_timeout"] = (double)settings.GlobalTestInitializeTimeout;
+        metrics["mstest.setting.global_test_cleanup_timeout"] = (double)settings.GlobalTestCleanupTimeout;
         metrics["mstest.setting.cooperative_cancellation"] = AsTelemetryBool(settings.CooperativeCancellationTimeout);
 
         // Behavior
@@ -396,6 +413,7 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.randomize_test_order"] = AsTelemetryBool(settings.RandomizeTestOrder);
         metrics["mstest.setting.random_test_order_seed_provided"] = AsTelemetryBool(settings.RandomTestOrderSeed.HasValue);
         metrics["mstest.setting.capture_debug_traces"] = AsTelemetryBool(settings.CaptureDebugTraces);
+        metrics["mstest.setting.output_capture_mode"] = settings.OutputCaptureMode.ToString();
     }
 
     // MTP's telemetry providers (e.g. AppInsightsProvider) reject raw boolean values and assert

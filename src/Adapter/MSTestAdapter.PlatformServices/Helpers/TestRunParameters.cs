@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
@@ -40,18 +40,18 @@ internal static class TestRunParameters
                         }
                     }
 
-                    if (paramName != null && paramValue != null)
+                    if (paramName is not null && paramValue is not null)
                     {
                         testParameters[paramName] = paramValue;
                     }
 
                     break;
                 default:
-                    throw new SettingsException(
+                    throw new AdapterSettingsException(
                         string.Format(
                             CultureInfo.CurrentCulture,
                             Resource.InvalidSettingsXmlElement,
-                            Constants.TestRunParametersName,
+                            RunSettingsUtilities.TestRunParametersName,
                             reader.Name));
             }
 

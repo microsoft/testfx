@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Resources;
 
 // Most of the core logic is from:
@@ -8,42 +9,126 @@ using Microsoft.Testing.Platform.Resources;
 // - https://github.com/dotnet/command-line-api/blob/fa1991f84bc8c384aa636a251398a40e56ee1702/src/System.CommandLine/Parsing/StringExtensions.cs#L316
 internal static class ResponseFileHelper
 {
-    internal static bool TryReadResponseFile(string rspFilePath, ICollection<string> errors, [NotNullWhen(true)] out string[]? newArguments)
+    internal static bool TryReadResponseFile(
+        string rspFilePath,
+        ICollection<string> errors,
+        [NotNullWhen(true)] out string[]? newArguments)
+        => TryReadResponseFile(rspFilePath, rspFilePath, errors, out newArguments);
+
+    internal static bool TryReadResponseFile(
+        string rspFilePath,
+        string diagnosticPath,
+        ICollection<string> errors,
+        [NotNullWhen(true)] out string[]? newArguments)
     {
+        var readContext = new ResponseFileReadContext(rspFilePath, diagnosticPath);
         try
         {
-            newArguments = [.. ExpandResponseFile(rspFilePath)];
+            newArguments = [.. ExpandResponseFile(
+                rspFilePath,
+                diagnosticPath,
+                [with(
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                        ? StringComparer.OrdinalIgnoreCase
+                        : StringComparer.Ordinal)],
+                readContext)];
             return true;
         }
         catch (FileNotFoundException)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, rspFilePath));
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, readContext.DiagnosticPath));
         }
-        catch (IOException e)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
+            errors.Add(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.CommandLineParserFailedToReadResponseFile,
+                    readContext.DiagnosticPath,
+                    GetExceptionDetail(e, readContext.ActualPath, readContext.DiagnosticPath)));
         }
         catch (FormatException e)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.Message));
+            // Use the full exception detail (not just Message) for consistency with the IOException
+            // branch above; the response file content that triggered a parsing failure (e.g. an
+            // unclosed quote) is easier to diagnose with the complete exception information.
+            errors.Add(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.CommandLineParserFailedToReadResponseFile,
+                    readContext.DiagnosticPath,
+                    GetExceptionDetail(e, readContext.ActualPath, readContext.DiagnosticPath)));
         }
 
         newArguments = null;
         return false;
 
         // Local functions
-        static IEnumerable<string> ExpandResponseFile(string filePath)
+        static string GetExceptionDetail(Exception exception, string actualPath, string diagnosticPath)
+            => actualPath == diagnosticPath ? exception.ToString() : exception.GetType().Name;
+
+        static IEnumerable<string> ExpandResponseFile(
+            string filePath,
+            string diagnosticPath,
+            HashSet<string> activeResponseFiles,
+            ResponseFileReadContext readContext)
         {
-            string[] lines = File.ReadAllLines(filePath);
-
-            for (int i = 0; i < lines.Length; i++)
+            readContext.SetCurrentFile(filePath, diagnosticPath);
+            string fullPath = Path.GetFullPath(filePath);
+            if (!activeResponseFiles.Add(fullPath))
             {
-                string line = lines[i];
+                throw new FormatException(PlatformResources.CommandLineParserRecursiveResponseFile);
+            }
 
-                foreach (string p in SplitLine(line, i + 1))
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+                List<string> arguments = [];
+                for (int i = 0; i < lines.Length; i++)
                 {
-                    yield return p;
+                    arguments.AddRange(SplitLine(lines[i], i + 1));
                 }
+
+                for (int argumentIndex = 0; argumentIndex < arguments.Count; argumentIndex++)
+                {
+                    string argument = arguments[argumentIndex];
+                    if (argument.StartsWith("@", StringComparison.Ordinal))
+                    {
+                        string nestedDiagnosticPath;
+                        if (filePath != diagnosticPath)
+                        {
+                            nestedDiagnosticPath = diagnosticPath;
+                        }
+                        else
+                        {
+                            string redactedNestedArgument = CommandLineArgumentsRedactor.RedactArgument([.. arguments], argumentIndex);
+                            nestedDiagnosticPath = redactedNestedArgument.StartsWith("@", StringComparison.Ordinal)
+                                ? redactedNestedArgument[1..]
+                                : redactedNestedArgument;
+                        }
+
+                        // Nested response files intentionally use the process working directory, just like
+                        // top-level response files, rather than the containing response file's directory.
+                        foreach (string nestedArgument in ExpandResponseFile(
+                            argument[1..],
+                            nestedDiagnosticPath,
+                            activeResponseFiles,
+                            readContext))
+                        {
+                            yield return nestedArgument;
+                        }
+
+                        readContext.SetCurrentFile(filePath, diagnosticPath);
+                    }
+                    else
+                    {
+                        yield return argument;
+                    }
+                }
+            }
+            finally
+            {
+                activeResponseFiles.Remove(fullPath);
             }
         }
 
@@ -60,6 +145,19 @@ internal static class ResponseFileHelper
             {
                 yield return word;
             }
+        }
+    }
+
+    private sealed class ResponseFileReadContext(string actualPath, string diagnosticPath)
+    {
+        public string ActualPath { get; private set; } = actualPath;
+
+        public string DiagnosticPath { get; private set; } = diagnosticPath;
+
+        public void SetCurrentFile(string currentActualPath, string currentDiagnosticPath)
+        {
+            ActualPath = currentActualPath;
+            DiagnosticPath = currentDiagnosticPath;
         }
     }
 

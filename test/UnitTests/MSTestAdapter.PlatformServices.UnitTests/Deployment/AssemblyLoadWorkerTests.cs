@@ -39,6 +39,30 @@ public class AssemblyLoadWorkerTests : TestContainer
         dependentAssemblies.Should().Contain(utfAssembly);
     }
 
+    public void GetFullPathToDependentAssembliesShouldIncludeAssemblyPathAndExceptionDetailsInWarningWhenLoadFromThrows()
+    {
+        // Arrange.
+        var loadException = new BadImageFormatException("The module was expected to contain an assembly manifest.");
+        var mockAssemblyUtility = new Mock<IAssemblyUtility>();
+        mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Throws(loadException);
+
+        var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
+
+        // Act.
+        IReadOnlyCollection<string> dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out IList<string> warnings);
+
+        // Assert.
+        // The warning must retain the assembly path together with the exception type/message so the
+        // underlying reason the dependency graph could not be walked is discoverable, not silently lost.
+        dependentAssemblies.Should().BeEmpty();
+        warnings.Should().ContainSingle();
+        warnings[0].Should().Contain("Failed to load");
+        warnings[0].Should().NotContain("was not found");
+        warnings[0].Should().Contain("C:\\temp\\test3424.dll");
+        warnings[0].Should().Contain(nameof(BadImageFormatException));
+        warnings[0].Should().Contain(loadException.Message);
+    }
+
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkReferencedInADependency()
     {
         // Arrange.
@@ -98,6 +122,35 @@ public class AssemblyLoadWorkerTests : TestContainer
         dependentAssemblies.Should().Contain(utfAssembly);
     }
 
+    public void GetFullPathToDependentAssembliesShouldIncludeExceptionDetailsInWarningWhenDependentAssemblyLoadThrows()
+    {
+        // Arrange.
+        var dependentAssemblyName = new AssemblyName("Missing.Dependency");
+        var testableAssembly = new TestableAssembly
+        {
+            GetReferencedAssembliesSetter = () => [dependentAssemblyName],
+        };
+
+        var loadException = new FileNotFoundException("Could not load file or assembly 'Missing.Dependency'.");
+        var mockAssemblyUtility = new Mock<IAssemblyUtility>();
+        mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Returns(testableAssembly);
+        mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoad(It.IsAny<string>())).Throws(loadException);
+
+        var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
+
+        // Act.
+        IReadOnlyCollection<string> dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out IList<string> warnings);
+
+        // Assert.
+        // The warning must retain the dependent assembly identity together with the exception type/message
+        // so the reason the dependency could not be resolved/loaded is discoverable, not silently lost.
+        dependentAssemblies.Should().BeEmpty();
+        warnings.Should().ContainSingle();
+        warnings[0].Should().Contain(dependentAssemblyName.FullName);
+        warnings[0].Should().Contain(nameof(FileNotFoundException));
+        warnings[0].Should().Contain(loadException.Message);
+    }
+
     #region Testable Implementations
 
     private class TestableAssembly : Assembly
@@ -122,11 +175,11 @@ public class AssemblyLoadWorkerTests : TestContainer
         public Func<string> FullNameSetter { get; set; } = null!;
 
         public override AssemblyName[] GetReferencedAssemblies()
-            => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : [];
+            => GetReferencedAssembliesSetter is not null ? GetReferencedAssembliesSetter.Invoke() : [];
 
         public string? Name { get; set; }
 
-        public override string FullName => FullNameSetter != null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
+        public override string FullName => FullNameSetter is not null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
 
         public override bool GlobalAssemblyCache => false;
 

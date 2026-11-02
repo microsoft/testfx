@@ -25,6 +25,8 @@ internal static class Pipeline
         return stepInstance.ExecuteAsync(input, AsyncLocal.Value!).Result;
     }
 
+    public static void DisposeCurrentContext() => AsyncLocal.Value?.Dispose();
+
     private static void WriteConsole(string message)
     {
         ConsoleColor color = Console.ForegroundColor;

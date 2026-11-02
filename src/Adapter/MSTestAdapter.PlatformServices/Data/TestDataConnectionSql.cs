@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -23,15 +23,15 @@ internal partial class TestDataConnectionSql : TestDataConnection
         : base(dataFolders)
     {
         Factory = DbProviderFactories.GetFactory(invariantProviderName);
-        DebugEx.Assert(Factory != null, "factory should not be null.");
+        DebugEx.Assert(Factory is not null, "factory should not be null.");
         WriteDiagnostics("DbProviderFactory {0}", Factory);
 
         _connection = Factory.CreateConnection();
-        DebugEx.Assert(_connection != null, "connection");
+        DebugEx.Assert(_connection is not null, "connection");
         WriteDiagnostics("DbConnection {0}", _connection);
 
         CommandBuilder = Factory.CreateCommandBuilder();
-        DebugEx.Assert(CommandBuilder != null, "builder");
+        DebugEx.Assert(CommandBuilder is not null, "builder");
         WriteDiagnostics("DbCommandBuilder {0}", CommandBuilder);
 
         if (!StringEx.IsNullOrEmpty(connectionString))

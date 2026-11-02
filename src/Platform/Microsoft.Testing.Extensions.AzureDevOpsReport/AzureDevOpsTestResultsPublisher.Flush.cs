@@ -1,63 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
-using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
-    private async Task UploadPendingRunAttachmentsAsync(CancellationToken cancellationToken)
-    {
-        if (_publishConfiguration is null || CurrentRunId is null)
-        {
-            return;
-        }
-
-        while (_pendingRunAttachments.TryDequeue(out AzureDevOpsTestResultAttachment? attachment))
-        {
-            try
-            {
-                await _client.UploadTestRunAttachmentAsync(_publishConfiguration, CurrentRunId.Value, attachment, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // Cancellation aborts the drain; the attachment is lost. The only caller is session
-                // finishing, where cancellation means the test host is tearing down anyway.
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
-            }
-        }
-    }
-
-    private async Task UploadResultAttachmentsAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
-    {
-        if (_publishConfiguration is null || CurrentRunId is null || attachments.Count == 0)
-        {
-            return;
-        }
-
-        foreach (AzureDevOpsTestResultAttachment attachment in attachments)
-        {
-            try
-            {
-                await _client.UploadTestResultAttachmentAsync(_publishConfiguration, CurrentRunId.Value, testCaseResultId, attachment, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
-            }
-        }
-    }
-
     private async Task BackgroundFlushLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -81,7 +30,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             }
         }
     }
@@ -96,6 +45,29 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_pendingResultMetadata.Count > 0)
+            {
+                if (_coordinatedRun is not null && _runIdCoordinator is not null)
+                {
+                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                }
+
+                try
+                {
+                    await _client.UpdateTestResultMetadataAsync(
+                        _publishConfiguration,
+                        CurrentRunId.Value,
+                        _pendingResultMetadata,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed} {ex.Message}");
+                }
+
+                _pendingResultMetadata.Clear();
+            }
+
             // _publishConfiguration and CurrentRunId are validated once above; the batch loop exits
             // via ShouldFlushUnsafe or when there is no more work to publish.
             while (true)
@@ -121,76 +93,120 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     return;
                 }
 
-                IReadOnlyList<int>? resultIds;
-                try
+                // A test this build already published is a further attempt at it, not a new test, so it
+                // updates that result instead of adding a second one for the same test. Only an
+                // orchestrated run has a store, so an ordinary run takes the create path for everything.
+                List<AzureDevOpsTestCaseResultWithAttachments> creations = [];
+                List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updateCandidates = [];
+                List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments = [];
+                foreach (AzureDevOpsTestCaseResultWithAttachments item in batch)
                 {
-                    if (_coordinatedRun is not null && _runIdCoordinator is not null)
+                    if (_resultIdStore?.TryGet(item.Result) is { } published)
                     {
-                        await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                        updateCandidates.Add((published, item));
                     }
-
-                    var resultsOnly = new AzureDevOpsTestCaseResult[batch.Count];
-                    for (int i = 0; i < batch.Count; i++)
+                    else
                     {
-                        resultsOnly[i] = batch[i].Result;
+                        creations.Add(item);
                     }
-
-                    resultIds = await _client.PublishTestResultsAsync(_publishConfiguration, CurrentRunId.Value, resultsOnly, cancellationToken).ConfigureAwait(false);
-                    _lastFlushTime = _clock.UtcNow;
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException)
+
+                // The store is unchanged while classifying a batch, so two current rows can resolve to the
+                // same persisted parent (for example when a formerly unique folded data row is duplicated).
+                // Never PATCH a guessed parent twice; ambiguous rows degrade to independent creates.
+                Dictionary<int, int> candidateCountsByResultId = [];
+                foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updateCandidates)
                 {
-                    // Transport/HTTP failure — AzDO may not have accepted the batch, so it's safe to
-                    // requeue and retry. Push results in reverse so Pop retries them in batch order.
-                    for (int i = batch.Count - 1; i >= 0; i--)
+                    candidateCountsByResultId[published.Id] = candidateCountsByResultId.TryGetValue(published.Id, out int count) ? count + 1 : 1;
+                }
+
+                List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updates = [];
+                foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments attempt) in updateCandidates)
+                {
+                    if (candidateCountsByResultId[published.Id] == 1 && _claimedResultIds.Add(published.Id))
                     {
-                        _retryResults.Push(batch[i]);
+                        updates.Add((published, attempt));
+                    }
+                    else
+                    {
+                        _claimedResultIds.Add(published.Id);
+                        creations.Add(attempt);
+                    }
+                }
+
+                bool creationsAccepted = true;
+                if (creations.Count > 0)
+                {
+                    try
+                    {
+                        creationsAccepted = await TryCreateResultsAsync(creations, deferredAttachments, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (FirstAttemptSeedCanceledException)
+                    {
+                        // Creation already reached Azure DevOps, but its follow-up seed was canceled before
+                        // these updates were attempted. Release their claims and put them back so session
+                        // finalization can retry them or include them in the unpublished-result warning.
+                        foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
+                        {
+                            _claimedResultIds.Remove(published.Id);
+                        }
+
+                        RequeueUnsafe([.. updates.Select(update => update.Attempt)]);
+                        throw;
+                    }
+                }
+
+                if (!creationsAccepted)
+                {
+                    // Nothing in this batch reached Azure DevOps: the creations failed, and the updates were
+                    // not attempted. Release every parent claimed while classifying this untouched batch,
+                    // then requeue it as it was so the next flush can retry the intended update path.
+                    foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
+                    {
+                        _claimedResultIds.Remove(published.Id);
                     }
 
-                    // Reset the interval countdown so a transient failure does not cause a tight retry loop.
-                    _lastFlushTime = _clock.UtcNow;
-                    _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                    RequeueUnsafe(batch);
                     return;
                 }
 
-                // POST succeeded. If we couldn't parse the response we cannot upload result-level
-                // attachments for this batch, but we MUST NOT republish (that would create duplicate
-                // result rows in AzDO). Continue with the next batch.
-                if (resultIds is null)
+                if (updates.Count > 0 && !_resultIdStore!.TryInvalidatePersistedMap())
                 {
-                    if (BatchHasAttachments(batch))
+                    // The old map cannot be removed, so a successful PATCH followed by a crash could leave
+                    // stale history for the next attempt to replay. Create separate results instead: less
+                    // tidy, but every execution remains represented.
+                    List<AzureDevOpsTestCaseResultWithAttachments> updateFallbacks = [.. updates.Select(update => update.Attempt)];
+                    if (!await TryCreateResultsAsync(updateFallbacks, deferredAttachments, cancellationToken).ConfigureAwait(false))
                     {
-                        _logger.LogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
+                        RequeueUnsafe(updateFallbacks);
+                        await UploadDeferredAttachmentsAsync(deferredAttachments, cancellationToken).ConfigureAwait(false);
+                        if (!force)
+                        {
+                            return;
+                        }
+
+                        // The claim is retained because the persisted map could not be invalidated. On the
+                        // next forced iteration it makes this item ambiguous, so it is reclassified as a
+                        // plain creation. A subsequent create failure returns through the normal branch.
+                        continue;
+                    }
+                }
+                else if (updates.Count > 0 && !await TryUpdateResultsAsync(updates, deferredAttachments, cancellationToken).ConfigureAwait(false))
+                {
+                    RequeueUnsafe([.. updates.Select(update => update.Attempt)]);
+                    await UploadDeferredAttachmentsAsync(deferredAttachments, cancellationToken).ConfigureAwait(false);
+                    if (!force)
+                    {
+                        return;
                     }
 
+                    // TryUpdateResultsAsync forgot the ambiguous mappings before requeueing. A forced
+                    // session-end flush has no later opportunity, so immediately loop and reclassify these
+                    // attempts as safe creates. Background flushes return to preserve the retry backoff.
                     continue;
                 }
 
-                for (int i = 0; i < batch.Count; i++)
-                {
-                    if (batch[i].Attachments.Count == 0)
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        if (_coordinatedRun is not null && _runIdCoordinator is not null)
-                        {
-                            await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-                        }
-
-                        await UploadResultAttachmentsAsync(resultIds[i], batch[i].Attachments, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
-                    }
-                }
+                await UploadDeferredAttachmentsAsync(deferredAttachments, cancellationToken).ConfigureAwait(false);
             }
         }
         finally
@@ -199,17 +215,17 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
     }
 
-    private static bool BatchHasAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
+    /// <summary>
+    /// Returns results to the front of the queue so the next flush retries them in their original order.
+    /// </summary>
+    /// <remarks>Call only while holding <see cref="_flushSemaphore"/>.</remarks>
+    private void RequeueUnsafe(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
     {
-        for (int i = 0; i < batch.Count; i++)
+        // Pushed in reverse so Pop yields them in batch order.
+        for (int i = batch.Count - 1; i >= 0; i--)
         {
-            if (batch[i].Attachments.Count > 0)
-            {
-                return true;
-            }
+            _retryResults.Push(batch[i]);
         }
-
-        return false;
     }
 
     private bool ShouldFlushUnsafe(bool force)

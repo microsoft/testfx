@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 
@@ -37,14 +36,46 @@ internal static class TrxTestResultExtractor
         TestNodeStateProperty state = testNode.Properties.Single<TestNodeStateProperty>();
         TrxTestOutcome outcome = MapOutcome(state);
 
-        TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
+        // Single-pass collection of all non-state properties: replaces 7 × SingleOrDefault<T>()
+        // + 2 × OfType<T>() with one GetStructEnumerator() walk, saving 8 linked-list traversals
+        // and 2 array allocations per test result. Singleton-typed properties use the local
+        // GetSingleOrDefaultValue helper to preserve the throw-on-duplicate invariant that
+        // SingleOrDefault<T>() provided; TestMetadataProperty and FileArtifactProperty are
+        // intentionally multi-valued and accumulate into lists.
+        TimingProperty? timing = null;
+        TrxTestDefinitionName? trxDefName = null;
+        TrxFullyQualifiedTypeNameProperty? fqtn = null;
+        TestMethodIdentifierProperty? methodId = null;
+        TrxExceptionProperty? trxException = null;
+        TrxMessagesProperty? trxMessages = null;
+        TrxCategoriesProperty? trxCategories = null;
+        TrxWorkItemsProperty? trxWorkItems = null;
+        List<TrxTestMetadata>? metadata = null;
+        List<TrxTestFileArtifact>? artifacts = null;
 
-        TrxTestDefinitionName? trxDefName = testNode.Properties.SingleOrDefault<TrxTestDefinitionName>();
-        TrxFullyQualifiedTypeNameProperty? fqtn = testNode.Properties.SingleOrDefault<TrxFullyQualifiedTypeNameProperty>();
-        TestMethodIdentifierProperty? methodId = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-        TrxExceptionProperty? trxException = testNode.Properties.SingleOrDefault<TrxExceptionProperty>();
-        TrxMessagesProperty? trxMessages = testNode.Properties.SingleOrDefault<TrxMessagesProperty>();
-        TrxCategoriesProperty? trxCategories = testNode.Properties.SingleOrDefault<TrxCategoriesProperty>();
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
+                case TrxTestDefinitionName d: trxDefName = GetSingleOrDefaultValue(trxDefName, d); break;
+                case TrxFullyQualifiedTypeNameProperty f: fqtn = GetSingleOrDefaultValue(fqtn, f); break;
+                case TestMethodIdentifierProperty m: methodId = GetSingleOrDefaultValue(methodId, m); break;
+                case TrxExceptionProperty e: trxException = GetSingleOrDefaultValue(trxException, e); break;
+                case TrxMessagesProperty msg: trxMessages = GetSingleOrDefaultValue(trxMessages, msg); break;
+                case TrxCategoriesProperty c: trxCategories = GetSingleOrDefaultValue(trxCategories, c); break;
+                case TrxWorkItemsProperty w: trxWorkItems = GetSingleOrDefaultValue(trxWorkItems, w); break;
+                case TestMetadataProperty md: (metadata ??= []).Add(new TrxTestMetadata { Key = md.Key, Value = md.Value }); break;
+                case FileArtifactProperty fa: (artifacts ??= []).Add(new TrxTestFileArtifact { FullPath = fa.FileInfo.FullName }); break;
+            }
+        }
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
 
         bool wasTruncated = false;
 
@@ -65,20 +96,6 @@ internal static class TrxTestResultExtractor
                     Message = TruncateIfNeeded(src.Message, ref wasTruncated),
                 });
             }
-        }
-
-        List<TrxTestMetadata>? metadata = null;
-        foreach (TestMetadataProperty md in testNode.Properties.OfType<TestMetadataProperty>())
-        {
-            metadata ??= [];
-            metadata.Add(new TrxTestMetadata { Key = md.Key, Value = md.Value });
-        }
-
-        List<TrxTestFileArtifact>? artifacts = null;
-        foreach (FileArtifactProperty fa in testNode.Properties.OfType<FileArtifactProperty>())
-        {
-            artifacts ??= [];
-            artifacts.Add(new TrxTestFileArtifact { FullPath = fa.FileInfo.FullName });
         }
 
         var result = new TrxTestResult
@@ -104,6 +121,7 @@ internal static class TrxTestResultExtractor
             Messages = messages,
             // Copy the array so the producer's mutable array can't be observed (or mutated) downstream.
             Categories = trxCategories?.Categories is { Length: > 0 } cats ? [.. cats] : null,
+            WorkItemIds = trxWorkItems?.WorkItemIds is { Length: > 0 } workItemIds ? [.. workItemIds] : null,
             Metadata = metadata,
             FileArtifacts = artifacts,
         };
@@ -136,7 +154,9 @@ internal static class TrxTestResultExtractor
             SkippedTestNodeStateProperty => TrxTestOutcome.Skipped,
             PassedTestNodeStateProperty => TrxTestOutcome.Passed,
             TimeoutTestNodeStateProperty => TrxTestOutcome.Timeout,
-            _ when Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0 => TrxTestOutcome.Failed,
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            CancelledTestNodeStateProperty or ErrorTestNodeStateProperty or FailedTestNodeStateProperty => TrxTestOutcome.Failed,
+#pragma warning restore CS0618, MTP0001
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 }

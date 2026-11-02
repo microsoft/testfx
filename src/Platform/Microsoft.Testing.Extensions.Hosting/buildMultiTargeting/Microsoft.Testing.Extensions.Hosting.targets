@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <Target Name="_ValidateMicrosoftTestingExtensionsHostingEntryPointProtocol"
+          BeforeTargets="_GenerateTestingPlatformEntryPointFileInputCache"
+          Condition=" '$(TestingPlatformHostFactory)' != '' ">
+    <Error Condition=" '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)' == '' "
+           Text="TestingPlatformHostFactory requires a newer Microsoft.Testing.Platform.MSBuild package that supports hosted entry-point protocol version $(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)." />
+    <Error Condition=" '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)' != '' And '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)' != '$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)' "
+           Text="Microsoft.Testing.Extensions.Hosting hosted-entrypoint protocol version '$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)' is incompatible with Microsoft.Testing.Platform.MSBuild protocol version '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)'." />
+  </Target>
+</Project>

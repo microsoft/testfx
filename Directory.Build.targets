@@ -8,6 +8,13 @@
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Project="eng/Net11FrameworkReferences.targets" />
+
+  <!-- Stryker supports delay signing, not PublicSign; override Arcade while retaining the core's Microsoft identity. -->
+  <PropertyGroup Condition="'$(MutationTesting)' == 'true' and '$(MSBuildProjectName)' == 'Microsoft.Testing.Platform'">
+    <PublicSign>false</PublicSign>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
 
   <!-- Pack config -->
   <PropertyGroup>
@@ -15,14 +22,185 @@
     <PackageReadmeFile Condition=" '$(PackageReadmeFile)' == '' and Exists('PACKAGE.md') ">PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <!-- Add a package README file from. -->
+  <!--
+    NuGet's Pack.targets is imported after Microsoft.Common.targets, and therefore after this file. It fills an
+    unset $(PackageDescription) from $(Description) and, failing that, from its own "Package Description"
+    literal. Record here, while the value is still exactly what the repository authored, whether a description
+    was supplied at all, so that the guard below does not have to rely solely on recognizing that literal.
+    $(Description) counts as authored because NuGet promotes it to $(PackageDescription).
+  -->
+  <PropertyGroup>
+    <_HasAuthoredPackageDescription Condition=" '$(PackageDescription)' != '' or '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
+  </PropertyGroup>
+
+  <!-- Pack the package README (PACKAGE.md by default, see above) into the root of the .nupkg. -->
   <ItemGroup Condition=" '$(PackageReadmeFile)' != '' ">
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!--
+    Guard the nuget.org metadata that is easy to forget on a new package.
+
+    NuGet's Pack.targets defaults an unset $(PackageDescription) to the literal string
+    "Package Description" during evaluation, so Arcade's own "PackageDescription must be specified"
+    check (a target, and therefore evaluated later) can never fire and the placeholder ships. Three
+    packages reached nuget.org that way before this guard existed. $(_HasAuthoredPackageDescription),
+    captured above before NuGet's default is applied, is the primary signal; the placeholder text is
+    matched as well so the guard keeps working if that capture is ever defeated.
+
+    This runs only during pack, unlike the _ValidateBundledSdkFeatureVersions target below which also hooks
+    Build. Pack is where the metadata is consumed, the produced packages are checked again by
+    PackageMetadataCompletenessTests, and this way a plain build never breaks for someone mid-authoring a
+    package.
+
+    Note this deliberately also covers IsShipping=false packages: Microsoft.Testing.Extensions.AzureFoundry
+    is non-shipping and still reached nuget.org with the placeholder.
+  -->
+  <Target Name="_ValidatePackageMetadata"
+          BeforeTargets="GenerateNuspec"
+          Condition=" '$(IsPackable)' == 'true' ">
+    <PropertyGroup>
+      <!--
+        $(Description) is re-checked here rather than only at evaluation time because NuGet promotes it to
+        $(PackageDescription) in Pack.targets, which is imported after every Directory.Build.targets - so a
+        description supplied by a nested one still reaches nuget.org intact. $(PackageDescription) itself is
+        useless here: by now NuGet has always set it.
+      -->
+      <_HasAuthoredPackageDescription Condition=" '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
+    </PropertyGroup>
+
+    <Error Condition=" '$(_HasAuthoredPackageDescription)' != 'true' or '$(PackageDescription)' == 'Package Description' "
+           Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescription in the project; lead with what the package does and close with the shared CommonProductDescription property." />
+    <Error Condition=" '$(PackageReadmeFile)' == '' "
+           Text="$(MSBuildProjectName) is packable but has no package README, so its nuget.org page would show no rendered documentation. Add a PACKAGE.md next to the project file (it is picked up automatically) or set PackageReadmeFile." />
+  </Target>
+
+  <!--
+    Projects that opt into EnforceDependencyFreeProject are foundational assemblies whose consumer-facing
+    compile and runtime closure must remain limited to the target framework. Build-only dependencies injected
+    by repository infrastructure (analyzers, localization and source-generation tasks) remain allowed because
+    they neither originate in the project file nor contribute compile/runtime assets.
+  -->
+  <Target Name="_ValidateDependencyFreeProjectDeclarations"
+          BeforeTargets="CollectPackageReferences;ResolveReferences;GenerateNuspec"
+          Condition=" '$(EnforceDependencyFreeProject)' == 'true' ">
+    <ItemGroup>
+      <_DependencyFreeProjectDeclaredDependency Include="@(PackageReference)"
+                                                Condition=" '%(PackageReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>PackageReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(ProjectReference)"
+                                                Condition=" '%(ProjectReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>ProjectReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(Reference)"
+                                                Condition=" '%(Reference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>Reference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(FrameworkReference)"
+                                                Condition=" '%(FrameworkReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>FrameworkReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(COMReference)"
+                                                Condition=" '%(COMReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>COMReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(NativeReference)"
+                                                Condition=" '%(NativeReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>NativeReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+    </ItemGroup>
+
+    <Error Condition=" '@(_DependencyFreeProjectDeclaredDependency)' != '' "
+           Text="$(MSBuildProjectName) must remain dependency-free and cannot declare dependency-bearing items in its project file. Found: @(_DependencyFreeProjectDeclaredDependency->'%(DependencyKind) &quot;%(Identity)&quot;', ', ')." />
+  </Target>
+
+  <Target Name="_ValidateDependencyFreeProjectClosure"
+          AfterTargets="ResolveReferences"
+          Condition=" '$(EnforceDependencyFreeProject)' == 'true' and '$(TargetFramework)' != '' ">
+    <ItemGroup>
+      <_DependencyFreeProjectResolvedDependency Include="@(ResolvedCompileFileDefinitions)">
+        <DependencyKind>compile asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(ReferencePath)"
+                                                Condition=" '%(ReferencePath.FrameworkReferenceName)' == ''
+                                                  and '%(ReferencePath.NuGetPackageId)' != 'NETStandard.Library' ">
+        <DependencyKind>assembly reference</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(RuntimeCopyLocalItems)">
+        <DependencyKind>runtime asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(NativeCopyLocalItems)">
+        <DependencyKind>native asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(ResourceCopyLocalItems)">
+        <DependencyKind>resource asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(RuntimeTargetsCopyLocalItems)">
+        <DependencyKind>RID-specific runtime asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(ReferenceCopyLocalPaths)">
+        <DependencyKind>copy-local reference</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(FrameworkReference)"
+                                                Condition=" '%(FrameworkReference.IsImplicitlyDefined)' != 'true' ">
+        <DependencyKind>framework reference</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+    </ItemGroup>
+
+    <Error Condition=" '@(_DependencyFreeProjectResolvedDependency)' != '' "
+           Text="$(MSBuildProjectName) must remain dependency-free for $(TargetFramework), but dependency assets were resolved: @(_DependencyFreeProjectResolvedDependency->'%(DependencyKind) &quot;%(Identity)&quot;', ', ')." />
+  </Target>
+
   <ItemGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
+
+  <ItemGroup Condition=" '$(IsTestingPlatformApplication)' == 'true'
+    OR '$(EnableMSTestRunner)' == 'true'
+    OR '$(UseInternalTestFramework)' == 'true' ">
+    <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" />
+  </ItemGroup>
+
+  <!--
+    NuGet flattens native runtime assets into .NET Framework and RID-specific output directories, while the
+    affected-tests collector resolves its x64 profiler from the runtime-specific layout used by portable applications.
+    Restore that layout so the same collection command works for every test TFM.
+  -->
+  <Target Name="_CopyAffectedTestsRuntimeAssets"
+          AfterTargets="CopyFilesToOutputDirectory"
+          Condition=" ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+              or '$(RuntimeIdentifier)' == 'win-x64')
+            and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
+    <ItemGroup>
+      <_AffectedTestsRuntimeAsset Include="$(TargetDir)MicrosoftInstrumentationEngine_x64.dll" />
+      <_AffectedTestsRuntimeAsset Include="$(TargetDir)msdia140.dll" Condition=" '$(RuntimeIdentifier)' == 'win-x64' " />
+      <_AffectedTestsRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\ctsrun64.dll" />
+      <_AffectedTestsRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\Cts_x64.config" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(TargetDir)runtimes\win-x64\native" />
+    <Copy SourceFiles="@(_AffectedTestsRuntimeAsset)"
+          DestinationFolder="$(TargetDir)runtimes\win-x64\native"
+          SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="@(_AffectedTestsRuntimeAsset->'$(TargetDir)runtimes\win-x64\native\%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RegisterAffectedTestsRuntimeAssetsForClean"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition=" ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+              or '$(RuntimeIdentifier)' == 'win-x64')
+            and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
+    <ItemGroup>
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\MicrosoftInstrumentationEngine_x64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\msdia140.dll" Condition=" '$(RuntimeIdentifier)' == 'win-x64' " />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\ctsrun64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\Cts_x64.config" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_GenerateVersionSourceFileCache">
     <PropertyGroup>
@@ -63,5 +241,31 @@
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)BuildInfo.cs" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_RegisterVersionSourceFileForClean"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)BuildInfo.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Validates that the literal versions declared on the MSTest.Sdk-bundled feature PackageVersion items
+       in Directory.Packages.props stay in sync with the matching scalar *Version properties consumed by the
+       build. Authored here (rather than in Directory.Packages.props) because targets belong in .targets
+       files; the PackageVersion items it references are populated before this target executes regardless of
+       which file declares it. -->
+  <Target Name="_ValidateBundledSdkFeatureVersions"
+          BeforeTargets="CollectPackageReferences;GenerateNuspec;Build;Pack"
+          Condition=" '$(MSBuildProjectName)' == 'MSTest.Sdk' ">
+    <PropertyGroup>
+      <_AspireHostingTestingPackageVersion>@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Hosting.Testing')->'%(Version)')</_AspireHostingTestingPackageVersion>
+      <_MicrosoftPlaywrightPackageVersion>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Playwright.MSTest.v4')->'%(Version)')</_MicrosoftPlaywrightPackageVersion>
+    </PropertyGroup>
+    <Error Condition=" '$(AspireHostingTestingVersion)' != '$(_AspireHostingTestingPackageVersion)' "
+           Text="AspireHostingTestingVersion ('$(AspireHostingTestingVersion)') is out of sync with the 'Aspire.Hosting.Testing' PackageVersion ('$(_AspireHostingTestingPackageVersion)') in Directory.Packages.props. Update the AspireHostingTestingVersion property to match (Dependabot only updates the PackageVersion)." />
+    <Error Condition=" '$(MicrosoftPlaywrightVersion)' != '$(_MicrosoftPlaywrightPackageVersion)' "
+           Text="MicrosoftPlaywrightVersion ('$(MicrosoftPlaywrightVersion)') is out of sync with the 'Microsoft.Playwright.MSTest.v4' PackageVersion ('$(_MicrosoftPlaywrightPackageVersion)') in Directory.Packages.props. Update the MicrosoftPlaywrightVersion property to match (Dependabot only updates the PackageVersion)." />
   </Target>
 </Project>

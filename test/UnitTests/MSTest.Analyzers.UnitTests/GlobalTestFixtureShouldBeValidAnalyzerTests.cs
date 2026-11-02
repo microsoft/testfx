@@ -298,4 +298,49 @@ public sealed class GlobalTestFixtureShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenGlobalTestInitializeInGenericClass_Diagnostic()
+    {
+        // Generic containing type is rejected by `allowGenericType: false` in the analyzer.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [GlobalTestInitialize]
+                public static void [|GlobalTestInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalTestCleanupWithDerivedTestClassAttribute_NoDiagnostic()
+    {
+        // A class marked with a TestClassAttribute-derived attribute satisfies the TestClass check
+        // because the guard uses `Inherits(testClassAttributeSymbol)`.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClassAttribute : TestClassAttribute
+            {
+            }
+
+            [MyTestClass]
+            public class MyTestClass
+            {
+                [GlobalTestCleanup]
+                public static void GlobalTestCleanup(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

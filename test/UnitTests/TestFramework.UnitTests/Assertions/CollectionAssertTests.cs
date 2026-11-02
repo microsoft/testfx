@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 
 using AwesomeAssertions;
 
+using Moq;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
@@ -73,6 +75,51 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection = GetCollection();
         CollectionAssert.AllItemsAreUnique(collection, "message");
         _ = collection.Count; // no warning
+    }
+
+    public void CollectionAssertContainsPopulatesStructuredExpectedWithoutActual()
+    {
+        ICollection collection = new[] { "a", "b" };
+        Action action = () => CollectionAssert.Contains(collection, "c");
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected collection to contain the specified element.");
+        ex.ExpectedText.Should().Be("\"c\"");
+        ex.Data["assert.expected"].Should().Be("\"c\"");
+        ex.ActualText.Should().BeNull();
+        ex.Data.Contains("assert.actual").Should().BeFalse();
+    }
+
+    public void CollectionAssertDoesNotContainPopulatesStructuredExpectedWithoutActual()
+    {
+        ICollection collection = new[] { "a", "b" };
+        Action action = () => CollectionAssert.DoesNotContain(collection, "a");
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected collection to not contain the specified element.");
+        ex.ExpectedText.Should().Be("\"a\"");
+        ex.Data["assert.expected"].Should().Be("\"a\"");
+        ex.ActualText.Should().BeNull();
+        ex.Data.Contains("assert.actual").Should().BeFalse();
+    }
+
+    public void CollectionAssertAllItemsAreNotNullPopulatesStructuredActual()
+    {
+        ICollection collection = new[] { "a", null };
+        Action action = () => CollectionAssert.AllItemsAreNotNull(collection);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected all items in collection to be non-null.");
+        ex.ActualText.Should().NotBeNull();
+        ex.Data["assert.actual"].Should().NotBeNull();
+    }
+
+    public void CollectionAssertAllItemsAreUniquePopulatesStructuredActual()
+    {
+        ICollection collection = new[] { "a", "a" };
+        Action action = () => CollectionAssert.AllItemsAreUnique(collection);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected all items in collection to be distinct.");
+        ex.Message.Should().Contain("duplicate:");
+        ex.ActualText.Should().NotBeNull();
+        ex.Data["assert.actual"].Should().NotBeNull();
     }
 
     public void CollectionAssertIsSubsetOfNullabilityPostConditions()
@@ -153,6 +200,45 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.AllItemsAreInstancesOfType(collection, type, "message");
         _ = collection.Count; // no warning
         type.ToString(); // no warning
+    }
+
+    public void AllItemsAreInstancesOfType_IncompatibleElement_ReportsItsIndexAndTypes()
+    {
+        ICollection collection = new object?[] { 17, null, "wrong type" };
+        Action action = () => CollectionAssert.AllItemsAreInstancesOfType(collection, typeof(int), " Context.");
+
+        action.Should().ThrowExactly<AssertFailedException>()
+            .Which.Message.Should().Be(
+                "CollectionAssert.AllItemsAreInstancesOfType failed. Element at index 2 is not of expected type. Expected type:<System.Int32>. Actual type:<System.String>. Context.");
+    }
+
+    public void AllItemsAreInstancesOfType_AssignableImplementationsAndNulls_AreAccepted()
+    {
+        using var stream = new MemoryStream();
+        using var reader = new StringReader(string.Empty);
+        ICollection collection = new object?[] { stream, null, reader };
+
+        Action action = () => CollectionAssert.AllItemsAreInstancesOfType(collection, typeof(IDisposable));
+
+        action.Should().NotThrow();
+    }
+
+    public void AllItemsAreInstancesOfType_NullCollection_ReportsInvalidParameter()
+    {
+        Action action = () => CollectionAssert.AllItemsAreInstancesOfType(null, typeof(object));
+
+        action.Should().ThrowExactly<AssertFailedException>()
+            .Which.Message.Should().Be(
+                "CollectionAssert.AllItemsAreInstancesOfType failed. The parameter 'collection' is invalid. The value cannot be null.");
+    }
+
+    public void AllItemsAreInstancesOfType_NullExpectedType_ReportsInvalidParameterEvenWhenEmpty()
+    {
+        Action action = () => CollectionAssert.AllItemsAreInstancesOfType(Array.Empty<object>(), null);
+
+        action.Should().ThrowExactly<AssertFailedException>()
+            .Which.Message.Should().Be(
+                "CollectionAssert.AllItemsAreInstancesOfType failed. The parameter 'expectedType' is invalid. The value cannot be null.");
     }
 
     public void CollectionAssertAreEqualComparerNullabilityPostConditions()
@@ -322,6 +408,31 @@ public class CollectionAssertTests : TestContainer
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message");
         comparer.ToString(); // no warning
+    }
+
+    public void CollectionAssertAreEquivalent_BothNullEnumerables_DoesNotThrow()
+    {
+        Action action = () => CollectionAssert.AreEquivalent<int>(null, null, EqualityComparer<int>.Default);
+
+        action.Should().NotThrow();
+    }
+
+    public void CollectionAssertAreEquivalent_SameEnumerable_DoesNotEnumerate()
+    {
+        var collection = new Mock<IEnumerable<int>>(MockBehavior.Strict);
+        Action action = () => CollectionAssert.AreEquivalent(collection.Object, collection.Object, EqualityComparer<int>.Default);
+
+        action.Should().NotThrow();
+    }
+
+    public void CollectionAssertAreEquivalent_OneNullEnumerable_Throws()
+    {
+        IEnumerable<int> collection = [1];
+        Action expectedNull = () => CollectionAssert.AreEquivalent(null, collection, EqualityComparer<int>.Default);
+        Action actualNull = () => CollectionAssert.AreEquivalent(collection, null, EqualityComparer<int>.Default);
+
+        expectedNull.Should().Throw<AssertFailedException>();
+        actualNull.Should().Throw<AssertFailedException>();
     }
 
     public void CollectionAssertAreEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
@@ -544,4 +655,103 @@ public class CollectionAssertTests : TestContainer
     }
 #endif
     #endregion
+
+    public void ObsoleteObjectEqualityApis_RejectCallsWithActionableDiagnostic()
+    {
+        (string Name, string Reason)[] cases =
+        [
+            ("Equals", "CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual & overloads instead."),
+            ("ReferenceEquals", "CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame & overloads instead."),
+        ];
+        object shared = new();
+        object?[][] arguments = [[null, null], [shared, shared], [shared, new object()]];
+        foreach ((string name, string reason) in cases)
+        {
+            System.Reflection.MethodInfo method = typeof(CollectionAssert).GetMethod(
+                name,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly)!;
+            foreach (object?[] operands in arguments)
+            {
+                Action action = () => method.Invoke(null, operands);
+                Exception? failure = action.Should().ThrowExactly<System.Reflection.TargetInvocationException>().Which.InnerException;
+                failure.Should().BeOfType<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                    .Should().Be($"Assertion failed.\n{reason}");
+            }
+        }
+    }
+
+    public void CollectionEquivalence_NullAndValueMultiplicity_PreservesLegacyDiagnostics()
+    {
+        (object?[] Expected, object?[] Actual, string Element)[] cases =
+        [
+            ([null, null, "a"], [null, "a", "a"], string.Empty),
+            (["a", "a", "b"], ["a", "b", "b"], "a"),
+        ];
+        foreach ((object?[] expected, object?[] actual, string element) in cases)
+        {
+            object?[] permutation = [expected[2], expected[0], expected[1]];
+            Action accepted = () => CollectionAssert.AreEquivalent(expected, permutation, EqualityComparer<object>.Default);
+            accepted.Should().NotThrow();
+
+            Action rejected = () => CollectionAssert.AreEquivalent(expected, actual, EqualityComparer<object>.Default, "quota context");
+            rejected.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                $"CollectionAssert.AreEquivalent failed. The expected collection contains 2 occurrence(s) of <{element}>. The actual collection contains 1 occurrence(s). quota context");
+
+            Action distinct = () => CollectionAssert.AreNotEquivalent(expected, actual, EqualityComparer<object>.Default);
+            distinct.Should().NotThrow();
+            Action equivalent = () => CollectionAssert.AreNotEquivalent(expected, permutation, EqualityComparer<object>.Default, "inverse context");
+            equivalent.Should().ThrowExactly<AssertFailedException>()
+                .WithMessage("CollectionAssert.AreNotEquivalent failed. Both collections contain the same elements. inverse context");
+        }
+    }
+
+    public void CollectionEquivalence_EmptyAndOneNullCollections_KeepInverseContract()
+    {
+        IEnumerable<int> empty = new List<int>();
+        IEnumerable<int> otherEmpty = new List<int>();
+        Action accepted = () => CollectionAssert.AreEquivalent(empty, otherEmpty, EqualityComparer<int>.Default);
+        accepted.Should().NotThrow();
+        int continued = 0;
+        Action rejected = () =>
+        {
+            using (Assert.Scope())
+            {
+                CollectionAssert.AreNotEquivalent(empty, otherEmpty, EqualityComparer<int>.Default, "empty context");
+                continued++;
+            }
+        };
+        AggregateException failures = rejected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>().Which;
+        failures.InnerExceptions.Select(error => error.Message).Should().Equal(
+            "CollectionAssert.AreNotEquivalent failed. Both collections are empty. empty context",
+            "CollectionAssert.AreNotEquivalent failed. Both collections contain the same elements. empty context");
+        continued.Should().Be(1);
+
+        Action nullExpected = () => CollectionAssert.AreNotEquivalent<int>(null, empty, EqualityComparer<int>.Default);
+        Action nullActual = () => CollectionAssert.AreNotEquivalent<int>(empty, null, EqualityComparer<int>.Default);
+        nullExpected.Should().NotThrow();
+        nullActual.Should().NotThrow();
+    }
+
+    public void CollectionSubset_ExcessNullsRetainMultiplicityInFailureEvidence()
+    {
+        ICollection subset = new object?[] { null, null, null, "a" };
+        ICollection superset = new object?[] { null, "a" };
+        Tuple<bool, ICollection<object?>> result = CollectionAssert.IsSubsetOfHelper(subset, superset);
+        result.Item1.Should().BeFalse();
+        result.Item2.Should().Equal(new object?[] { null, null });
+        Action rejected = () => CollectionAssert.IsSubsetOf(subset, superset, "subset context");
+        rejected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <, > is/are not present in the collection. subset context");
+        Action inverse = () => CollectionAssert.IsNotSubsetOf(subset, superset);
+        inverse.Should().NotThrow();
+
+        subset = new object?[] { null, "a" };
+        Action accepted = () => CollectionAssert.IsSubsetOf(subset, superset);
+        accepted.Should().NotThrow();
+        Action rejectedInverse = () => CollectionAssert.IsNotSubsetOf(subset, superset, "inverse subset");
+        rejectedInverse.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("CollectionAssert.IsNotSubsetOf failed. inverse subset");
+    }
 }

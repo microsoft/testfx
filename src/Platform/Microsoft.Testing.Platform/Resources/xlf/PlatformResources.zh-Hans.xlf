@@ -2,30 +2,125 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
+        <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
+        <target state="translated">已设置环境变量“{0}”，但测试框架不支持“{1}”。平台无法在最后期限之前停止测试运行。</target>
+        <note>{0} is the environment variable name. {1} is the capability interface name.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineDescription">
+        <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
+        <target state="translated">CI 实施的最后期限之前不久正常停止测试运行，以便可以完成报告的扩展。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
+        <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
+        <target state="translated">环境变量“{0}”已设置为“{1}”，但不是有效的绝对 ISO 8601 瞬时值。已禁用最后期限感知取消。</target>
+        <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
+        <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
+        <target state="translated">最后期限转储预留时长({0})大于或等于停止预留时长({1})。挂起转储可能会在正常停止之前启动。</target>
+        <note>{0} is the dump margin. {1} is the stop margin.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineMessage">
+        <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
+        <target state="translated">最后期限临近: 正常停止测试运行，以便在 CI 硬取消之前完成报告。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
         <target state="translated">当前测试框架未实现 “--maximum-failed-tests” 功能所需的 “IGracefulStopTestExecutionCapability”。</target>
-        <note />
+        <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
         <target state="translated">用于支持 “--maximum-failed-tests” 的扩展。达到给定失败阈值时，将中止测试运行。</target>
-        <note />
+        <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">已中止</target>
         <note />
       </trans-unit>
-      <trans-unit id="Actual">
-        <source>Actual</source>
-        <target state="translated">实际</target>
+      <trans-unit id="ArtifactPostProcessingDispatcherCommandLineDescription">
+        <source>Internal command line for artifact post-processing.</source>
+        <target state="translated">用于工件后处理的内部命令行。</target>
         <note />
       </trans-unit>
-      <trans-unit id="CancelledLowercase">
-        <source>canceled</source>
-        <target state="translated">已取消</target>
+      <trans-unit id="ArtifactPostProcessingDispatcherDescription">
+        <source>Dispatches artifact post-processing jobs selected by dotnet test.</source>
+        <target state="translated">调度由 dotnet test 选择的工件后处理作业。</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDisplayName">
+        <source>Artifact post-processing dispatcher</source>
+        <target state="translated">工件后处理调度程序</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
+        <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
+        <target state="translated">处理后的工件必须是输出目录下的现有文件，且不能覆盖输入项目。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
+        <source>The artifact post-processing manifest does not exist.</source>
+        <target state="translated">工件后处理清单不存在。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestOptionDescription">
+        <source>Path to the artifact post-processing manifest.</source>
+        <target state="translated">工件后处理清单的路径。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorConflict">
+        <source>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</source>
+        <target state="translated">多个工件后处理器与“{0}”匹配。将使用第一个注册的处理器“{1}”。</target>
+        <note>{0} is an artifact kind or file extension. {1} is an extension UID.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorFailed">
+        <source>Artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">工件后处理器“{0}”失败: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherRequiresPipe">
+        <source>The artifact post-processing dispatcher requires a dotnet test pipe.</source>
+        <target state="translated">工件后处理调度程序需要 dotnet test 管道。</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputMissingPath">
+        <source>Artifact post-processing manifest input {0} does not have a path.</source>
+        <target state="translated">工件后处理清单输入 {0} 没有路径。</target>
+        <note>{0} is the zero-based input index.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
+        <source>The artifact post-processing manifest inputs property must be an array.</source>
+        <target state="translated">工件后处理清单的 inputs 属性必须为数组。</target>
+        <note>Do not localize property name {Locked="inputs"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInvalid">
+        <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
+        <target state="translated">工件后处理清单必须具有 schemaVersion 1 和 outputDirectory。</target>
+        <note>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestReadError">
+        <source>Cannot read the artifact post-processing manifest: {0}</source>
+        <target state="translated">无法读取工件后处理清单: {0}</target>
+        <note>{0} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="translated">工件后处理清单 runSummary 必须包含有效的 totalTests、passedTests、failedTests、skippedTests、durationTicks、exitCode 和 testModuleCount 值。</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
+        <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
+        <target state="translated">工件后处理器“{0}”声明了功能“{1}”，该功能不能包含分号分隔符。</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
+        <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
+        <target state="translated">工件后处理器“{0}”声明了无效的功能“{1}”。种类不能为空，回退扩展名必须小写并以点开头。</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
@@ -35,7 +130,7 @@
       <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
         <source>Browser platform is only supported on .NET 7.0 or greater.</source>
         <target state="translated">仅 .NET 7.0 或更高版本支持浏览器平台。</target>
-        <note />
+        <note>{Locked=".NET 7.0"}</note>
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
@@ -43,9 +138,9 @@
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="translated">3 秒钟后无法创建唯一的日志文件。最后尝试的文件名为“{0}”。</target>
-        <note />
+        <source>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</source>
+        <target state="translated">未能在 {1} 次尝试后创建诊断日志文件“{0}”。上次错误: {2}</target>
+        <note>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
@@ -55,7 +150,7 @@
       <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
         <target state="translated">扩展 '{0}' 尝试删除环境变量 '{1}'，但已由扩展 '{2}' 锁定</target>
-        <note />
+        <note>{0} is the extension display name. {1} is the environment variable name. {2} is the display name of the extension that locked the environment variable.</note>
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot set environment variables at this stage</source>
@@ -65,17 +160,17 @@
       <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
         <target state="translated">扩展 '{0}' 尝试设置环境变量 '{1}'，但已由扩展 '{2}' 锁定</target>
-        <note />
+        <note>{0} is the extension display name. {1} is the environment variable name. {2} is the display name of the extension that locked the environment variable.</note>
       </trans-unit>
       <trans-unit id="CannotStartProcessErrorMessage">
         <source>Cannot start process '{0}'</source>
         <target state="translated">无法启动流程 '{0}'</target>
-        <note />
+        <note>{0} is the process file name.</note>
       </trans-unit>
       <trans-unit id="CommandLineInvalidArgumentsForOption">
         <source>Option '--{0}' has invalid arguments: {1}</source>
         <target state="translated">选项“--{0}”具有无效参数: {1}</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the invalid argument value or validation error.</note>
       </trans-unit>
       <trans-unit id="CommandLineInvalidArityErrorMessage">
         <source>Invalid arity, maximum must be greater than minimum</source>
@@ -85,32 +180,32 @@
       <trans-unit id="CommandLineInvalidConfiguration">
         <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
         <target state="translated">提供程序“{0}”的配置无效 (UID: {1})。错误: {2}</target>
-        <note />
+        <note>{0} is the provider display name. {1} is the provider UID. {2} is the configuration error message.</note>
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="translated">选项名称 '{0}' 无效，必须仅包含字母和“-” (例如我的-选项)</target>
-        <note />
+        <target state="translated">选项名称 '{0}' 无效，必须仅包含字母和“-” (例如 my-option)</target>
+        <note>{0} is the invalid option name. {Locked="-"}{Locked="my-option"}</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
         <target state="translated">提供程序“{1}” (UID: {2}) 中的选项“--{0}”应需要至少 {3} 个参数</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {3} is the minimum number of expected arguments.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
         <target state="translated">提供程序“{1}” (UID: {2}) 中的选项“--{0}”应最多需要 {3} 个参数</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {3} is the maximum number of expected arguments.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
         <target state="translated">提供程序“{1}”(UID: {2}) 中的选项“--{0}”不需要任何参数</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
         <target state="translated">选项“--{0}”已由多个提供程序声明:“{1}”</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the list of provider display names.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
         <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
@@ -120,27 +215,42 @@
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
         <target state="translated">选项“--{0}”是保留的，提供程序不能使用:“{1}”</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the list of provider display names.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">来自提供程序“{1}” (UID: {2}) 的选项“--{0}”正在使用保留前缀“--internal”</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="translated">选项 '--{0}' 由 '{1}' 扩展提供。添加包引用以使用它。</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="translated">你是否指的是 '--{0}'?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
         <target state="translated">ICommandLineOptions 尚未生成。</target>
-        <note />
+        <note>{Locked="ICommandLineOptions"}</note>
       </trans-unit>
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">无法读取响应文件“{0}”。{1}</target>
-        <note>{1} is the exception</note>
+        <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserRecursiveResponseFile">
+        <source>A recursive response file reference was detected.</source>
+        <target state="translated">检测到递归响应文件引用。</target>
+        <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
         <target state="translated">找不到响应文件“{0}”</target>
-        <note />
+        <note>{0} is the response file path.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
@@ -150,42 +260,102 @@
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
         <target state="translated">响应文件的第 {0} 行存在未闭合的引号</target>
-        <note>{0} is the line number</note>
+        <note>{0} is the line number in the response file.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">意外的参数 {0}</target>
-        <note />
+        <note>{0} is the unexpected command-line argument.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">参数中出现意外的单引号: {0}</target>
-        <note />
+        <note>{0} is the command-line argument containing the unexpected single quote.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
         <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
         <target state="translated">选项“--{1}”的参数 {0} 中出现意外的单引号</target>
-        <note />
+        <note>{0} is the command-line argument containing the unexpected single quote. {1} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineUnknownOption">
         <source>Unknown option '--{0}'</source>
         <target state="translated">未知选项:“--{0}”</target>
-        <note />
+        <note>{0} is the unknown option name without the leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineUnknownOptionsHint">
+        <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
+        <target state="translated">运行 '--help' 以查看此测试应用程序注册的选项。如果该选项属于扩展，请确保引用其包并注册扩展。</target>
+        <note>{Locked="--help"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestBlameReplacement">
+        <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
+        <target state="translated">请改用 '--crashdump' 和/或 '--hangdump'。MTP 分离了崩溃和挂起诊断，因此 VSTest 故障收集器不存在一对一替代项。</target>
+        <note>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestCollectorGuidance">
+        <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
+        <target state="translated">MTP 使用特定于收集器的选项。有关其 MTP 选项，请查阅扩展的文档。</target>
+        <note>{Locked="MTP"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
+        <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
+        <target state="translated">要实现同等的控制台详细程度，请使用 '--output {0}'。MTP 控制台输出的配置方式不同，因此这不是完全替换。</target>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestLoggerGuidance">
+        <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
+        <target state="translated">MTP 使用特定于报告器的选项，例如 '--report-trx'、'--report-html' 和 '--report-junit'。有关其 MTP 选项，请查阅报告器扩展的文档。</target>
+        <note>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestOptionUnsupported">
+        <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
+        <target state="translated">选项“--{0}”使用 VSTest 语法，这是 Microsoft.Testing.Platform 不支持的。</target>
+        <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestReplacementSuggestion">
+        <source>Use {0} instead.</source>
+        <target state="translated">请改用 {0}。</target>
+        <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
+        <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
+        <target state="translated">对于 MTP 代码覆盖率，请使用 '--coverage'。这不是 Coverlet 的 'XPlat Code Coverage' 收集器的透明替代。</target>
+        <note>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
         <target state="translated">命令行: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
+        <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
+        <target state="translated">未能创建复合扩展 "{0}" 的实例。请参见内部异常了解详细信息。</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
+        <source>The factory for composite extension '{0}' returned a null instance.</source>
+        <target state="translated">复合扩展 "{0}" 的工厂返回了一个 null 实例。</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">"CompositeExtensionFactory" 的同一实例已注册</target>
+        <note>{Locked="CompositeExtensionFactory"}</note>
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
+        <source>A composite test execution filter cannot contain a null child filter.</source>
+        <target state="translated">复合测试执行筛选器不能包含 null 子筛选器。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
+        <source>A composite test execution filter requires at least two child filters.</source>
+        <target state="translated">复合测试执行筛选器至少需要两个子筛选器。</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
         <target state="translated">找不到使用 ‘--config-file’ 指定的配置文件“{0}”。</target>
-        <note />
+        <note>{0} is the configuration file path. {Locked="--config-file"}</note>
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
@@ -195,12 +365,7 @@
       <trans-unit id="ConnectingToClientHost">
         <source>Connecting to client host '{0}' port '{1}'</source>
         <target state="translated">正在连接到客户端主机“{0}”的端口“{1}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
-        <source>Console is already in batching mode.</source>
-        <target state="translated">控制台已处于批处理模式。</target>
-        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+        <note>{0} is the client host name. {1} is the client port.</note>
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
@@ -215,69 +380,207 @@
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">找不到目录“{0}”</target>
-        <note />
+        <note>{0} is the directory path.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdAmbiguous">
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
+        <target state="translated">无法评估“--{0}”，因为多个覆盖率生成器或会话报告了所请求指标的整体测量值。确保所请求的指标恰好有一个整体测量值。</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdEmptyMeasurement">
+        <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
+        <target state="translated">“--{0}”需要所请求指标的非空整体覆盖率数据。</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdMissingMeasurement">
+        <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
+        <target state="translated">“--{0}”需要所请求指标的整体覆盖率测量值。启用兼容的覆盖率收集器。</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNotMet">
+        <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
+        <target state="translated">“--{0}”的覆盖率阈值未达到: {1}% &lt; {2}%。</target>
+        <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
         <target state="translated">警告: 环境变量“{0}”已弃用，将在未来的主要版本中移除。请改用“{1}”。</target>
-        <note>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</note>
+        <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}</target>
-        <note>0 level such as verbose,
-1 path to file</note>
+        <note>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">诊断文件(具有同步刷新的级别“{0}”): {1}</target>
-        <note>0 level such as verbose,
-1 path to file</note>
+        <note>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
         <target state="translated">在程序集中发现了 {0} 个测试</target>
-        <note>0 is count, the sentence is followed by the path of the assebly</note>
+        <note>{0} is the number of discovered tests. The sentence is followed by the assembly path.</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
         <target state="translated">正在发现以下位置中的测试</target>
         <note />
       </trans-unit>
-      <trans-unit id="DurationLowercase">
-        <source>duration</source>
-        <target state="translated">持续时间</target>
-        <note />
+      <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
+        <target state="translated">无法加载扩展清单“{2}”中声明的扩展“{1}”的程序集“{0}”。</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
+        <target state="translated">找不到扩展清单“{2}”中声明的扩展“{1}”的程序集“{0}”。</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
+        <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
+        <target state="translated">扩展清单“{1}”中声明的扩展“{0}”已尝试注册测试框架。动态加载的扩展不得替换测试框架，因为这会以无提示方式更改运行的测试及其报告的结果。</target>
+        <note>{0} is the extension display name. {1} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
+        <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
+        <target state="translated">扩展 ID“{0}”被声明了两次，但其内容不同: 在扩展清单“{2}”中为“{1}”，在扩展清单“{4}”中则为“{3}”。ID 必须标识同一扩展名，否则一个声明会以无提示方式替换另一个扩展。</target>
+        <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookFailedErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
+        <target state="translated">扩展清单“{3}”声明的程序集“{2}”中的“{0}.{1}”扩展挂钩失败。</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
+        <target state="translated">来自扩展清单“{3}”中声明的程序集“{2}”的“{0}.{1}”扩展挂钩声明为“async void”。平台会同步调用挂钩，因此它将在遇到第一个等待时返回: 它在此时间点之后注册的任何内容都将与测试应用程序自己的设置发生争用，并且任何失败都将丢失。将挂钩设置为同步。</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
+        <target state="translated">扩展清单“{3}”中声明的程序集“{2}”中的“{0}.{1}”扩展挂钩返回“{4}”，但必须返回“void”。平台会同步调用挂钩，因此永远不会观察到返回值；特别是，永远不会等待返回的任务，并且其注册和失败将会丢失。</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
+        <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
+        <target state="translated">扩展清单“{2}”中声明的程序集“{1}”中的类型“{0}”不公开采用“ITestApplicationBuilder”和“string[]”且名为“{3}”的“public static void”方法。</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
+        <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
+        <target state="translated">无法在目录“{0}”中搜索扩展清单，因此平台无法判断是否必须加载任何扩展。从命令行中移除“{1}”以跳过扩展清单发现。</target>
+        <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">扩展清单“{0}”无效: “{1}”属性被多次声明，因此将放弃其中一个。</target>
+        <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">扩展清单“{0}”无效: 索引 {1} 处的扩展多次声明“{2}”属性，因此将放弃其中一个声明。</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
+        <target state="translated">扩展清单“{0}”无效: 索引 {1} 处的扩展的程序集路径“{2}”不是有效的路径。</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
+        <target state="translated">扩展清单“{0}”无效: 索引 {1} 处的扩展缺少所需的“{2}”属性，或者其值为空。</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
+        <target state="translated">扩展清单“{0}”无效:位于“{2}”的索引 {1} 处的元素必须是 JSON 对象。</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
+        <target state="translated">扩展清单“{0}”无效: 索引 {1} 处扩展的“{2}”属性必须是 JSON 布尔。</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
+        <target state="translated">扩展清单“{0}”无效: 索引 {1} 处扩展的“{2}”属性必须是 JSON 字符串。</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
+        <target state="translated">扩展清单“{0}”无效:“{1}”属性必须是 JSON 数组。</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
+        <source>The extension manifest '{0}' is not valid JSON. {1}</source>
+        <target state="translated">扩展清单“{0}”不是有效的 JSON。{1}</target>
+        <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
+        <target state="translated">扩展清单“{0}”无效: 缺少所需的“{1}”属性。</target>
+        <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
+        <source>The extension manifest '{0}' could not be read.</source>
+        <target state="translated">无法读取扩展清单“{0}”。</target>
+        <note>{0} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
+        <target state="translated">扩展清单“{0}”无效: 顶级 JSON 元素必须为对象，但找到了“{1}”。</target>
+        <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
+        <source>Unexpected content after the top-level JSON object.</source>
+        <target state="translated">顶级 JSON 对象之后出现意外内容。</target>
+        <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
+        <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
+        <target state="translated">在扩展清单“{2}”声明的程序集“{1}”中找不到类型“{0}”。</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedEntry">
+        <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
+        <target state="translated">  {0} -&gt; {1} ({2})，在 {3} 中声明</target>
+        <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedHeader">
+        <source>Dynamically loaded test platform extensions ({0}):</source>
+        <target state="translated">动态加载的测试平台扩展({0} 个):</target>
+        <note>{0} is the number of extensions that were loaded.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
+        <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
+        <target state="translated">扩展清单“{0}”声明了要加载的扩展，但当前运行时不支持动态加载程序集(例如，使用本机 AOT 发布时)。将每个扩展的“{1}”属性设置为“false”，移除清单，或从命令行中移除“{2}”。</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">提供程序 '{0}' (UID: {1}) 失败，出现错误: {2}</target>
-        <note />
+        <note>{0} is the provider display name. {1} is the provider UID. {2} is the error message.</note>
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
         <target state="translated">取消请求 ID 期间出现异常 '{0}'</target>
-        <note>{0} is the request id</note>
+        <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">退出代码</target>
         <note />
       </trans-unit>
-      <trans-unit id="Expected">
-        <source>Expected</source>
-        <target state="translated">预期</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
         <target state="translated">类型“{0}”的扩展未实现所需的“{1}”接口</target>
-        <note />
+        <note>{0} is the extension type name. {1} is the required interface type name.</note>
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
         <target state="translated">已注册具有相同 UID“{0}”的扩展。已注册的扩展类型如下: {1}</target>
-        <note />
+        <note>{0} is the duplicate extension UID. {1} is the list of registered extension type names.</note>
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
@@ -294,32 +597,27 @@
 {0}</source>
         <target state="translated">无法将日志写入通道。遗漏的日志内容: 
 {0}</target>
-        <note />
+        <note>{0} is the log content that could not be written.</note>
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
         <target state="translated">失败并出现 {0} 个错误</target>
-        <note />
+        <note>{0} is the number of errors.</note>
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
         <source>failed with {0} error(s) and {1} warning(s)</source>
         <target state="translated">失败，出现 {0} 错误和 {1} 警告</target>
-        <note />
+        <note>{0} is the number of errors. {1} is the number of warnings.</note>
       </trans-unit>
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">失败，出现 {0} 警告</target>
-        <note />
+        <note>{0} is the number of warnings.</note>
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
         <target state="translated">已完成测试会话。</target>
         <note />
-      </trans-unit>
-      <trans-unit id="ForTest">
-        <source>For test</source>
-        <target state="translated">用于测试</target>
-        <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="FromFile">
         <source>from</source>
@@ -329,17 +627,17 @@
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
         <target state="translated">以下 'ITestHostEnvironmentVariableProvider' 提供程序拒绝了最终的环境变量设置:</target>
-        <note />
+        <note>{Locked="ITestHostEnvironmentVariableProvider"}</note>
       </trans-unit>
       <trans-unit id="HelpApplicationUsage">
         <source>Usage {0} [option providers] [extension option providers]</source>
         <target state="translated">使用情况 {0} [选项提供程序] [扩展选项提供程序]</target>
-        <note />
+        <note>{0} is the application name used in the usage line.</note>
       </trans-unit>
       <trans-unit id="HelpExecuteTestApplication">
         <source>Execute a .NET Test Application.</source>
         <target state="translated">执行 .NET 测试应用。</target>
-        <note />
+        <note>{Locked=".NET"}</note>
       </trans-unit>
       <trans-unit id="HelpExtensionOptions">
         <source>Extension options:</source>
@@ -359,102 +657,122 @@
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
         <target state="translated">&lt;test application runner&gt;</target>
-        <note />
+        <note>{Locked="&lt;test application runner&gt;"}</note>
       </trans-unit>
-      <trans-unit id="InProcessArtifactsProduced">
-        <source>In process file artifacts produced:</source>
-        <target state="translated">生成的进程内文件项目:</target>
+      <trans-unit id="IncompleteInformationalResponse">
+        <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
+        <target state="translated">测试主机在未完成预期的帮助或发现协议之前退出。未收到完整的信息结果。</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
         <target state="translated">方法“{0}”未成功退出</target>
-        <note />
+        <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
         <source>Invalid command line arguments:</source>
         <target state="translated">无效的命令行参数:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
+        <target state="translated">testconfig.json 文件(“{2}”)中“{1}”节下的条目“{0}”必须提供非空标量值或非空标量值数组。</target>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
+        <target state="translated">在 testconfig.json 的 "commandLineOptionDefaults" 下: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
+        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under '{1}' in testconfig.json.</source>
+        <target state="translated">系统会在平台启动时(在加载 testconfig.json 文件前)读取选项“--{0}”，因此必须通过命令行传递，而不能在 testconfig.json 的“{1}”下声明。</target>
+        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {1} is the JSON section name. {Locked="--"}{Locked="testconfig.json"}</note>
+      </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
         <target state="translated">testconfig.json 文件(“{2}”)中节“{1}”下的条目“{0}”必须为标量值(字符串、数字、布尔)或标量值数组。不支持嵌套对象。</target>
-        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
         <target state="translated">在 testconfig.json 的 'commandLineOptions' 下: {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
         <target state="translated">发现重复的键“{0}”</target>
-        <note />
+        <note>{0} is the duplicate JSON key.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
         <target state="translated">顶级 JSON 元素必须是对象。但是找到了“{0}”</target>
-        <note />
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">找到不受支持的 JSON 令牌“{0}”</target>
-        <note />
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
         <target state="translated">testconfig.json 文件(“{2}”)中节“{1}”下的条目“{0}”必须是标量字符串值。不支持嵌套对象和数组。</target>
-        <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</note>
+        <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
         <target state="translated">testconfig.json 文件(“{1}”)中的“{0}”节必须是 JSON 对象。</target>
-        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</note>
+        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
         <target state="translated">基于测试平台协议规范的 JsonRpc 服务器实现。</target>
-        <note />
+        <note>{Locked="JsonRpc"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
         <target state="translated">基于测试平台协议规范的 JsonRpc 服务器到客户端握手实现。</target>
-        <note />
+        <note>{Locked="JsonRpc"}</note>
       </trans-unit>
       <trans-unit id="LoggerFactoryNotReady">
         <source>The ILoggerFactory has not been built yet.</source>
         <target state="translated">尚未生成 ILoggerFactory。</target>
-        <note />
+        <note>{Locked="ILoggerFactory"}</note>
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
         <target state="translated">选项 “--maximum-failed-tests” 必须是正整数。值 '{0}' 无效。</target>
-        <note />
+        <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">消息总线尚未生成或在此阶段不再可用。</target>
         <note />
       </trans-unit>
-      <trans-unit id="MinimumExpectedTestsPolicyViolation">
-        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="translated">最低预期测试策略冲突，测试已运行 {0} 次，最低预期 {1} 次</target>
-        <note>{0}, {1} number of tests</note>
-      </trans-unit>
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">使用 jsonRpc 协议时应为 --client-port。</target>
-        <note />
+        <note>{Locked="--client-port"}{Locked="jsonRpc"}</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
         <target state="translated">和其他 {0} 项</target>
-        <note />
+        <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">正在运行 {0} 测试</target>
-        <note />
+        <note>{0} is the number of currently running tests.</note>
+      </trans-unit>
+      <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
+        <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</source>
+        <target state="translated">命名管道目录“{0}”不存在或不可写入: {1}。将“{2}”环境变量设置为现有可写入目录，或取消设置它以回退到默认临时目录。</target>
+        <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NamedPipePathTooLongErrorMessage">
+        <source>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Use a shorter directory by setting the '{3}' environment variable, or by setting 'TMPDIR' when '{3}' is not set.</source>
+        <target state="translated">命名管道路径“{0}”的长度为 {1} 字节，这超过了 Unix 域套接字允许的最大字节数 {2}。通过设置“{3}”环境变量，或在未设置“{3}”时设置 'TMPDIR' 来使用较短的目录。</target>
+        <note>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
       </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
@@ -469,11 +787,11 @@
       <trans-unit id="OnlyOneFilterSupported">
         <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
         <target state="translated">不支持同时传递“--treenode-filter”和“--filter-uid”。</target>
-        <note />
+        <note>{Locked="--treenode-filter"}{Locked="--filter-uid"}</note>
       </trans-unit>
-      <trans-unit id="OutOfProcessArtifactsProduced">
-        <source>Out of process file artifacts produced:</source>
-        <target state="translated">生成的进程外文件项目:</target>
+      <trans-unit id="OnlyOneTestHostLauncherSupported">
+        <source>Only one test host launcher can be registered.</source>
+        <target state="translated">只能注册一个测试主机启动器。</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -481,9 +799,9 @@
         <target state="translated">已通过</target>
         <note />
       </trans-unit>
-      <trans-unit id="PassedLowercase">
-        <source>passed</source>
-        <target state="translated">已通过</target>
+      <trans-unit id="PlatformCommandLineAppModelActivationPayloadOptionDescription">
+        <source>Specifies the app-model activation payload.</source>
+        <target state="translated">指定应用模型激活有效负载。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
@@ -499,6 +817,31 @@
       <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
         <target state="translated">指定 testconfig.json 文件。</target>
+        <note>{Locked="testconfig.json"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
+        <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="translated">指定整体分支覆盖率的最低百分比，范围为 0 到 100。需要兼容收集器提供非空的覆盖率数据。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
+        <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
+        <target state="translated">覆盖率阈值不能与 "--list-tests" 结合使用。</target>
+        <note>{Locked="--list-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
+        <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
+        <target state="translated">覆盖率阈值不能与 "--retry-failed-tests" 结合使用。在评估整体阈值之前，必须合并不同进程尝试所产生的覆盖率。</target>
+        <note>{Locked="--retry-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
+        <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
+        <target state="translated">“--{0}”需要指定 0 到 100 之间的百分比，并使用点作为小数分隔符。</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
+        <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="translated">指定整体行覆盖率的最低百分比，范围为 0 到 100。需要兼容收集器提供非空的覆盖率数据。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
@@ -517,73 +860,133 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
         <target state="translated">启用诊断日志记录。默认日志级别为 "Trace"。
-文件将写入输出目录，名称为 log_[yyMMddHHmmssfff].diag</target>
-        <note />
+文件将写入输出目录，名称为 log_[yyMMddHHmmssfff].diag。</target>
+        <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
         <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
         <target state="translated">'--diagnostic-verbosity' 应有单一级别参数 ('Trace', 'Debug', 'Information', 'Warning', 'Error', 或 'Critical')</target>
-        <note />
+        <note>{Locked="--diagnostic-verbosity"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
         <source>'--{0}' requires '--diagnostic' to be provided</source>
         <target state="translated">“--{0}”需要提供“--diagnostic”</target>
-        <note />
+        <note>{0} is the option name without the leading dashes. {Locked="--diagnostic"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
         <target state="translated">诊断日志记录的输出目录。
 如果未指定，则会在默认的 "TestResults" 目录中生成该文件。</target>
-        <note />
+        <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">将替换“[log]_”的日志文件名的前缀</target>
-        <note />
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="translated">将 "[log]_." 替换为指定的日志文件名前缀。</target>
+        <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
         <target state="translated">定义 --diagnostic 的详细程度。
 可用值为 "Trace"、"Debug"、"Information"、"Warning"、"Error" 和 "Critical"。</target>
-        <note />
+        <note>{Locked="--diagnostic"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">"--list-tests" 收到意外值 "{0}"。支持的值为: {1}。</target>
-        <note />
+        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
         <target state="translated">列出可用的测试。
 (可选)接受 "text"(默认的人类可读输出)或 "json"，以便将发现的测试作为 JSON 文档打印到标准输出。</target>
-        <note />
+        <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
         <target state="translated">“--server {0}”需要指定“--{1}”。</target>
-        <note />
+        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
+        <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
+        <target state="translated">"--server dotnettestcli" 需要 "--dotnet-test-pipe" 或 "--dotnet-test-transport http"。</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
+        <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
+        <target state="translated">"--dotnet-test-http-endpoint" 需要一个绝对 HTTPS URL，或一个 HTTP 回环 URL，且不能包含用户信息、查询或片段。</target>
+        <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
+        <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
+        <target state="translated">为 dotnet test 协议指定经过身份验证的 HTTP 终结点。</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
+        <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
+        <target state="translated">dotnet test HTTP 终结点和令牌选项需要使用 "--dotnet-test-transport http"。</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
+        <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
+        <target state="translated">"--dotnet-test-transport http" 需要同时指定 "--dotnet-test-http-endpoint" 和 "--dotnet-test-http-token"。</target>
+        <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
+        <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
+        <target state="translated">"--dotnet-test-http-token" 需要一个非空的有效持有者令牌，且不能包含空白字符或控制字符。</target>
+        <note>{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
+        <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
+        <target state="translated">指定 dotnet test 协议每次运行的 HTTP 持有者令牌。</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
-        <target state="translated">dotnet 测试管道。</target>
-        <note />
+        <target state="translated">dotnet test 管道。</target>
+        <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
+        <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
+        <target state="translated">不能同时选择 dotnet test 命名管道和 HTTP 传输。</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
+        <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">"--dotnet-test-transport" 收到意外值“{0}”。支持的值为: {1}。</target>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
+        <source>Selects the pre-launch transport for the dotnet test protocol.</source>
+        <target state="translated">为 dotnet test 协议选择预启动传输。</target>
+        <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
+        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
+        <target state="translated">启用加载由测试应用程序旁边的“*.testingplatformextensions.json”清单声明的测试平台扩展。默认情况下禁用。</target>
+        <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
         <target state="translated">无效的 PID“{0}”
 {1}</target>
-        <note />
+        <note>{0} is the invalid process ID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
         <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
         <target state="translated">浏览器环境不支持‘--exit-on-process-exit’选项。</target>
-        <note />
+        <note>{Locked="--exit-on-process-exit"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
+        <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
+        <target state="translated">WASI 环境不支持 "--exit-on-process-exit" 选项。</target>
+        <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
@@ -593,7 +996,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
         <target state="translated">“--{0}”需要单个 int PID 参数</target>
-        <note />
+        <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
         <source>Provides a list of test node UIDs to filter by.</source>
@@ -606,16 +1009,18 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">请勿报告特定退出代码的非成功退出值
-(例如 "--ignore-exit-code 8;9" 忽略退出代码 8 和 9，在这种情况下将返回 0)</target>
-        <note />
+        <source>Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
+        <target state="translated">不报告指定退出代码的非成功退出值。
+例如，使用“--ignore-exit-code 8;9”会在这些情况下忽略退出代码 8 和 9 并返回 0。
+有关退出代码的详细信息，请参阅 https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes。</target>
+        <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">显示 .NET 测试应用程序信息。</target>
-        <note />
+        <note>{Locked=".NET"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
@@ -625,7 +1030,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">“--list-tests”和“--minimum-expected-tests”是不兼容的选项</target>
-        <note />
+        <note>{Locked="--list-tests"}{Locked="--minimum-expected-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
         <source>Specifies the minimum number of tests that are expected to run.</source>
@@ -637,12 +1042,22 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 (e.g. '--minimum-expected-tests 10')</source>
         <target state="translated">"--minimum-expected-tests" 应有单个非零正整数值
 (例如 "--minimum-expected-tests 10")</target>
-        <note />
+        <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">请勿显示启动横幅、版权信息或遥测横幅。</target>
         <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
+        <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">browser-wasm 上不支持 dotnet test 命名管道传输。请使用 "--dotnet-test-transport http"。</target>
+        <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
+        <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">wasi-wasm 上不支持 dotnet test 命名管道传输。请使用 "--dotnet-test-transport http"。</target>
+        <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
@@ -652,11 +1067,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
         <source>'--{0}' expects a single valid port as argument</source>
         <target state="translated">“--{0}”应有单一有效端口作为参数</target>
-        <note />
+        <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Microsoft 测试平台命令行提供程序</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="translated">Microsoft Testing Platform 命令行提供程序。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -671,12 +1086,12 @@ The default is TestResults in the directory that contains the test application.<
         <target state="translated">将要放置测试结果的目录。
 如果指定的目录不存在，则创建该目录。
 默认值是包含测试应用程序的目录中的 TestResults。</target>
-        <note />
+        <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">"--server" 收到意外值“{0}”。支持的值为: {1}。</target>
-        <note />
+        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
@@ -684,8 +1099,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">用于测试目的</target>
+        <source>For testing purposes.</source>
+        <target state="translated">用于测试目的。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -695,20 +1110,32 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="translated">"timeout" 选项应具有一个参数，该参数为带明确单位后缀的时间值，且为支持范围内的正数值(最长约 49.7 天)。支持的后缀为: "ms"/"mil(s)"/"millisecond(s)"、"s"/"sec(s)"/"second(s)", "m"/"min(s)"/"minute(s)"、"h"/"hour(s)" 和 "d"/"day(s)"，例如 "500ms"、"5400s"、"90m"、"1.5h"、"1d"。</target>
-        <note />
+        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="translated">全局测试执行超时。
-接收一个参数，该参数为带明确单位后缀的时间值。支持的后缀为: "ms"/"mil(s)"/"millisecond(s)"、"s"/"sec(s)"/"second(s)", "m"/"min(s)"/"minute(s)"、"h"/"hour(s)" 和 "d"/"day(s)"，例如 "500ms"、"5400s"、"90m"、"1.5h"、"1d"。</target>
-        <note />
+        <target state="new">A global test execution timeout.
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
+        <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
+        <target state="translated">"--zero-tests-policy" 的值“{0}”无效。有效值为 {1}。</target>
+        <note>{Locked="--zero-tests-policy"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
+        <source>Specifies how a run that executed no tests is treated.
+Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
+        <target state="translated">指定如何处理未执行任何测试的运行。
+有效值为 "allow-skipped" (默认值) 和 "strict"。前者将跳过的测试计为已运行，因此只有完全找不到任何测试的运行才会以退出代码 8 失败；后者将跳过的测试视为未运行，因此如果每个测试都被跳过(或找不到任何测试)，运行将以退出代码 8 失败。</target>
+        <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
-        <source>Press Ctrl+C again to force exit.</source>
-        <target state="translated">再次按 Ctrl+C 强制退出。</target>
-        <note />
+        <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
+        <target state="needs-review-translation">再次按 Ctrl+C 强制退出。</target>
+        <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
@@ -718,12 +1145,12 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
         <target state="translated">由于达到“--maximum-failed-tests”选项指定的失败 ('{0}')，测试会话正在中止。</target>
-        <note>{0} is the number of max failed tests.</note>
+        <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">{0} 次之后重试失败</target>
-        <note />
+        <note>{0} is the retry count.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
@@ -753,7 +1180,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
         <target state="translated">运行服务器模式时使用的 “ITestHost” 实现。</target>
-        <note />
+        <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
@@ -763,17 +1190,17 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">找不到“{0}”类型的服务</target>
-        <note />
+        <note>{0} is the requested service type name.</note>
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
         <target state="translated">已注册类型“{0}”的实例</target>
-        <note />
+        <note>{0} is the already registered service type name.</note>
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">不应通过服务提供商注册类型为“ITestFramework”的实例，而应通过“ITestApplicationBuilder.RegisterTestFramework”进行注册</target>
-        <note />
+        <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
@@ -790,29 +1217,9 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <target state="translated">已跳过</target>
         <note />
       </trans-unit>
-      <trans-unit id="StackFrameAt">
-        <source>at</source>
-        <target state="translated">在</target>
-        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
-      </trans-unit>
-      <trans-unit id="StackFrameIn">
-        <source>in</source>
-        <target state="translated">位于</target>
-        <note>in that is used in stack frame it is followed by file name</note>
-      </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">堆栈跟踪</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">错误输出</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">标准输出</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSession">
@@ -823,7 +1230,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
         <target state="translated">正在启动测试会话。日志文件路径 '{0}'。</target>
-        <note />
+        <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
@@ -838,7 +1245,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">已设置“ITestExecutionFilterFactory”工厂</target>
-        <note />
+        <note>{Locked="ITestExecutionFilterFactory"}</note>
       </trans-unit>
       <trans-unit id="TelemetryNotice">
         <source>Telemetry
@@ -853,84 +1260,22 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
 可通过使用喜欢的 shell 将 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 环境变量设置为 '1' 或 'true' 来选择退出遥测。
 
 阅读有关 Microsoft 测试平台遥测功能的详细信息: https://aka.ms/testingplatform/telemetry</target>
-        <note />
+        <note>{Locked="TESTINGPLATFORM_TELEMETRY_OPTOUT"}{Locked="DOTNET_CLI_TELEMETRY_OPTOUT"}{Locked="1"}{Locked="true"}{Locked="https://aka.ms/testingplatform/telemetry"}</note>
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
         <source>Telemetry provider is already set</source>
         <target state="translated">已设置遥测提供程序</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalAnsiOptionDescription">
-        <source>Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="translated">控制是否发出 ANSI 转义字符。
-有效值为“自动”(默认值)、“开”(还接受 'true'、“启用”、'1')或“关”(还接受 'true'、“禁用”、'0')。
-“开”会强制执行 ANSI 转义代码(包括光标移动)，即使系统已重定向 stdout 也是如此；如果只需要颜色，则将其与 --no-progress 配对。
-同时提供 --ansi 和 --no-ansi 时，--ansi 将生效。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalAnsiOptionInvalidArgument">
-        <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="translated">--ansi 需要值为“自动”、“开”(或 'true'、“启用”、'1')或“关”(或 'falese'、“禁用”、'0')的单个参数。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalNoAnsiOptionDescription">
-        <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="translated">禁用将 ANSI 转义字符输出到屏幕。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalNoProgressOptionDescription">
-        <source>Disable reporting progress to screen.</source>
-        <target state="translated">禁用向屏幕报告进度。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">报告测试时的输出详细程度。
-有效值为 "Normal"、"Detailed"。默认值为 "Normal"。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">-- 输出应为值为“常规”或“详细”的单个参数。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
-        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="translated">--show-stdout and --show-stderr 需要值为“全部”、“失败”或“无”的单个参数。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalShowStderrOptionDescription">
-        <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">确定何时显示测试捕获的错误输出。
-有效值为“全部”、“失败”、“无”。默认值为“全部”(如果检测到 LLM/AI 智能体环境，则为“失败”)。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalShowStdoutOptionDescription">
-        <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">确定何时显示测试的捕获标准输出。
-有效值为“全部”、“失败”、“无”。默认值为“全部”(如果检测到 LLM/AI 智能体环境，则为“失败”)。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalTestReporterDescription">
-        <source>Writes test results to terminal.</source>
-        <target state="translated">将测试结果写入终端。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalTestReporterDisplayName">
-        <source>Terminal test reporter</source>
-        <target state="translated">终端测试报告器</target>
-        <note />
+      <trans-unit id="TerminalNoProgressDeprecatedWarning">
+        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
+        <target state="translated">警告: --no-progress 已弃用；请改用 --progress off。</target>
+        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">已设置“ITestFrameworkInvoker”工厂</target>
-        <note />
+        <note>{Locked="ITestFrameworkInvoker"}</note>
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
@@ -950,7 +1295,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
         <target state="translated">尚未注册测试框架适配器。使用“ITestApplicationBuilder.RegisterTestFramework”注册它</target>
-        <note />
+        <note>{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
         <source>Determine the result of the test application execution</source>
@@ -965,72 +1310,107 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">VSTest 模式仅支持每个进程一个 TestApplicationBuilder</target>
-        <note />
+        <note>{Locked="VSTest"}{Locked="TestApplicationBuilder"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
         <target state="translated">在 testconfig.json 文件的 'environmentVariables' 节中声明的环境变量名称“{0}”无效。名称不得包含 '=' 或 null 字符。</target>
-        <note>{0} is the invalid environment variable name.</note>
+        <note>{0} is the invalid environment variable name. {Locked="environmentVariables"}{Locked="testconfig.json"}{Locked="="}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
         <target state="translated">在 testconfig.json 文件的 'environmentVariables' 节中声明的环境变量名称不得为空。</target>
-        <note />
+        <note>{Locked="environmentVariables"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
         <target state="translated">将 testconfig.json 文件 'environmentVariables' 节中声明的环境变量应用于测试主机子进程。</target>
-        <note />
+        <note>{Locked="environmentVariables"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
         <target state="translated">testconfig.json 环境变量提供程序</target>
-        <note />
+        <note>{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
         <target state="translated">测试发现摘要: 在 {1} 个程序集中找到 {0} 个测试。</target>
-        <note>0 is number of tests, 1 is count of assemblies</note>
+        <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
-      <trans-unit id="TestDiscoverySummarySingular">
-        <source>Test discovery summary: found {0} test(s)</source>
-        <target state="translated">测试发现摘要: 找到 {0} 个测试</target>
-        <note>0 is number of tests</note>
+      <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
+        <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
+        <target state="translated">测试执行筛选器提供程序“{0}”为 JSON-RPC 服务器请求返回了筛选器类型“{1}”。提供程序约束不适用于服务器请求；当 TestExecutionFilterContext.Origin 为 Server 时返回 null。</target>
+        <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
         <target state="translated">不应对此代理对象调用方法 '{0}'</target>
-        <note />
+        <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
         <source>Test adapter test session failure</source>
         <target state="translated">测试适配器测试会话失败</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
+        <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
+        <target state="translated">测试主机启动器“{0}”(UID: {1})请求在测试主机控制器连接上授权安全标识符“{2}”，但只能授权单个沙盒应用的标识符(在 Windows 上，格式为“S-1-15-2-...”的安全标识符)。从不向用户、组以及通用“{3}”安全标识符授予访问权限。</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
+      </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
         <target state="translated">浏览器/WebAssembly 平台不支持需要重启进程的测试主机控制器扩展。</target>
+        <note>{Locked="WebAssembly"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
+        <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
+        <target state="translated">中间件“{0}”触发了测试主机执行业务流程协调程序管道(它未调用 "next")的短路，但返回了成功退出代码。触发短路的中间件必须返回显式的非成功退出代码，因此跳过的执行不能报告为测试实际运行并通过。</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
+        <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
+        <target state="translated">传递给 "ITestHostExecutionOrchestratorMiddleware" 的 "next" 委托最多只能调用一次。它在已被调用之后、与另一调用并发时，或中间件自身调用已返回或引发之后再次被调用。</target>
+        <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
+        <source>The test host execution orchestrator middleware continuation returned a null task.</source>
+        <target state="translated">测试主机执行业务流程协调程序中间件延续返回了 null 任务。</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
+        <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
+        <target state="translated">已注册一个或多个 'ITestHostExecutionOrchestratorMiddleware' 实例，但也必须注册一个 'ITestHostExecutionOrchestrator' 才能包装中间件。改为找到 {0} 业务流程协调程序()。</target>
+        <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
+        <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
+        <target state="translated">中间件“{0}”将下游退出代码从 {1} 更改为 {2}。此版本的测试主机执行业务流程协调程序管道不允许中间件重写下游结果。</target>
+        <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
+        <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
+        <target state="translated">中间件“{0}”在其使用 "next" 启动的下游执行实际出错后成功返回。该失败未被中间件观察到或传播，因此不能将其视为成功。</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
+        <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
+        <target state="translated">类型“{0}”的测试主机业务流程协调程序管理器不支持 "ITestHostExecutionOrchestratorMiddleware" 注册。若要支持此注册，请在管理器类型上实现 "ITestHostExecutionOrchestratorMiddlewareManager"。</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">测试应用程序流程未正常退出，退出代码为“{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestRunSummary">
-        <source>Test run summary:</source>
-        <target state="translated">测试运行摘要:</target>
-        <note />
+        <note>{0} is the process exit code.</note>
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
         <target state="translated">在“{0}”秒超时之前获取信号灯失败</target>
-        <note />
+        <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="translated">未能在“{0}”秒超时之前刷新日志</target>
-        <note />
+        <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
+        <target state="translated">未能在 {1} 秒(超时)内为日志文件 "{0}" 刷新日志。日志文件可能不完整。</target>
+        <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
@@ -1040,7 +1420,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">筛选“{0}”不应包含“/”字符</target>
-        <note />
+        <note>{0} is the filter expression string. {Locked="/"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterDescription">
         <source>Use a tree filter to filter down the tests to execute</source>
@@ -1050,37 +1430,37 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">转义字符不应终止筛选字符串“{0}”</target>
-        <note />
+        <note>{0} is the filter expression string.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
         <source>Only the final filter path can contain '**' wildcard</source>
         <target state="translated">只有最终筛选路径可以包含“**”通配符</target>
-        <note />
+        <note>{Locked="**"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
         <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
         <target state="translated">筛选表达式“{0}”中出现意外的运算符“&amp;”或“|”</target>
-        <note />
+        <note>{0} is the filter expression string. {Locked="&amp;"}{Locked="|"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
         <source>Invalid node path, expected root as first character '{0}'</source>
         <target state="translated">无效节点路径，应将根作为第一个字符“{0}”</target>
-        <note />
+        <note>{0} is the first character found in the invalid node path.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
         <target state="translated">筛选表达式“{0}”包含数量不平衡的“{1}”“{2}”运算符</target>
-        <note>{1} and {2} are () or []</note>
+        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
         <target state="translated">筛选在带圆括号的表达式中包含意外“/”运算符</target>
-        <note />
+        <note>{Locked="/"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
         <target state="translated">筛选器在括号表达式中包含意外的 "/" 运算符。筛选器:“{0}”。要将某个路径段的替代项组合在一起，请使用类似 "/A/B/C/(X|Y)" 的语法。</target>
-        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
@@ -1088,36 +1468,46 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
-{0}</source>
-        <target state="translated">"FileLogger.WriteLogToFileAsync" 出现意外异常。
-{0}</target>
-        <note>{0} exception ToString</note>
-      </trans-unit>
-      <trans-unit id="UnexpectedStateErrorMessage">
-        <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="translated">文件“{0}”中第“{1}”行出现意外状态</target>
-        <note />
+        <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+{1}</source>
+        <target state="translated">日志文件 "{0}" 的 "FileLogger" 写入循环中出现意外异常。日志文件可能不完整。
+{1}</target>
+        <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 未经处理的异常： {0}</target>
-        <note>{0} is the exception that was unhandled/unobserved</note>
+        <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
-      <trans-unit id="UnreachableLocationErrorMessage">
-        <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="translated">此程序位置被视为无法访问。文件='{0}'，行={1}</target>
-        <note />
+      <trans-unit id="UnsupportedProviderTestExecutionFilter">
+        <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
+        <target state="translated">测试执行筛选器提供程序“{0}”返回了不受支持的筛选器类型“{1}”。提供程序只能返回 NopFilter、TestNodeUidListFilter、TreeNodeFilter 或 And CompositeTestExecutionFilter。</target>
+        <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTestExecutionFilter">
+        <source>The request contains unsupported test execution filter type '{0}'.</source>
+        <target state="translated">请求包含不受支持的测试执行筛选器类型“{0}”。</target>
+        <note>{0} is the unsupported filter type.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperator">
+        <source>Only the And test execution filter operator is supported.</source>
+        <target state="translated">仅支持 And 测试执行筛选器运算符。</target>
+        <note>{Locked="And"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
+        <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
+        <target state="translated">不支持测试执行筛选器运算符“{0}”。仅支持 And。</target>
+        <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
         <target state="translated">浏览器环境不支持等待调试器附加(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)。</target>
-        <note />
+        <note>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
         <target state="translated">wasi 不支持等待调试程序附加(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)。</target>
-        <note />
+        <note>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>

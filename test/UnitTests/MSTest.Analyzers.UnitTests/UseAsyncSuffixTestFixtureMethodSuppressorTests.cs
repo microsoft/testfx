@@ -189,6 +189,43 @@ public static class SomeClass
         }.RunAsync();
     }
 
+    [TestMethod]
+    public async Task AsyncMethodWithoutFixtureAttribute_DiagnosticIsNotSuppressed()
+    {
+        string code = """
+            using System.Threading.Tasks;
+
+            public class SomeClass
+            {
+                public async Task {|#0:SomeMethod|}() { }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+
+        // Verify issue is still reported with suppressor (no fixture attribute → not suppressed)
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+    }
+
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1038:Compiler extensions should be implemented in assemblies with compiler-provided references", Justification = "For suppression test only.")]
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1036:Specify analyzer banned API enforcement setting", Justification = "For suppression test only.")]

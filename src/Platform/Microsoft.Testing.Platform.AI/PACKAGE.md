@@ -10,6 +10,16 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platf
 dotnet add package Microsoft.Testing.Platform.AI
 ```
 
+## Usage
+
+Implement `IChatClientProvider`, then register the provider while building the test application:
+
+```csharp
+builder.AddChatClientProvider(_ => new CustomChatClientProvider());
+```
+
+Extensions can call `GetChatClientAsync` on their service provider to obtain the configured `IChatClient`. Use a provider package such as `Microsoft.Testing.Extensions.AzureFoundry` if you do not need a custom implementation.
+
 ## About
 
 This package provides:

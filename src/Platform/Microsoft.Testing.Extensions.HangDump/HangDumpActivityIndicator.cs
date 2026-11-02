@@ -88,7 +88,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
             // Setup the server channel with the testhost controller
             _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-            _logger.LogTrace($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
+            await _logger.LogTraceAsync($"Hang dump pipe name: '{_pipeNameDescription.Name}'").ConfigureAwait(false);
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
@@ -130,22 +130,31 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         }
 
         TestNodeStateProperty? state = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        bool executionCompleted = nodeChangedMessage.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>();
         if (state is InProgressTestNodeStateProperty)
         {
             if (_traceLevelEnabled)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
                 await _logger.LogTraceAsync($"New in-progress test '{nodeChangedMessage.TestNode.DisplayName}'").ConfigureAwait(false);
             }
 
             _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.Uid, (nodeChangedMessage.TestNode.DisplayName, typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
         }
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        else if (state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
+        else if ((executionCompleted
+            || state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-            or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty
+            or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty)
+            // A test framework that retries in-process reports a terminal update per attempt but only one
+            // in-progress update for the test. Dropping it from the in-progress set on a superseded attempt would
+            // leave the test untracked while its next attempt is still running, so a hang during that attempt
+            // would not be attributed to it in the hang dump's in-progress list.
+            && !nodeChangedMessage.TestNode.IsSupersededRetryAttempt()
             && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
             await _logger.LogTraceAsync($"Test removed from in-progress list '{record.Name}' after '{_clock.UtcNow.Subtract(record.StartTime)}', total in-progress '{_testsCurrentExecutionState.Count}'").ConfigureAwait(false);
         }
 
@@ -154,6 +163,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             if (_traceLevelEnabled)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
                 await _logger.LogTraceAsync($"Signal for action node {nodeChangedMessage.TestNode.DisplayName} - '{state}'. _exitSignalActivityIndicatorAsync: {_exitSignalActivityIndicatorAsync}").ConfigureAwait(false);
             }
 
@@ -165,7 +175,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
                 if (_traceLevelEnabled)
                 {
-                    _logger.LogTrace($"Activity signal sent.");
+                    await _logger.LogTraceAsync($"Activity signal sent.").ConfigureAwait(false);
                 }
             }
         }

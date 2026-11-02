@@ -11,6 +11,81 @@ namespace MSTest.Analyzers.UnitTests;
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
 {
     [TestMethod]
+    public async Task CodeFix_ExpressionBodiedSetterAddsGuardAndPreservesAssertion()
+    {
+        const string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                private string? text = "abc";
+
+                public int Length
+                {
+                    set => [|Assert.AreEqual(3, text?.Length)|];
+                }
+            }
+            """;
+        const string fixedCode = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                private string? text = "abc";
+
+                public int Length
+                {
+                    set
+                    {
+                        Assert.IsNotNull(text);
+                        Assert.AreEqual(3, text.Length);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test { TestCode = code, FixedCode = fixedCode }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task CodeFix_ExpressionBodiedLocalFunctionAddsGuardInsideFunction()
+    {
+        const string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                public void Check()
+                {
+                    string? text = "abc";
+                    void CheckLength() => [|Assert.AreEqual(3, text?.Length)|];
+                    CheckLength();
+                }
+            }
+            """;
+        const string fixedCode = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                public void Check()
+                {
+                    string? text = "abc";
+                    void CheckLength() { Assert.IsNotNull(text); Assert.AreEqual(3, text.Length); }
+
+                    CheckLength();
+                }
+            }
+            """;
+
+        await new VerifyCS.Test { TestCode = code, FixedCode = fixedCode }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_Assert_Equal()
     {
         string code = """
@@ -817,6 +892,58 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
             NumberOfFixAllIterations = 2,
             NumberOfFixAllInDocumentIterations = 2,
             NumberOfFixAllInProjectIterations = 2,
+            NumberOfIncrementalIterations = 2,
+        }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenConditionalAccessIsRightOperandOfBinaryExpression_Diagnostic()
+    {
+        // Covers the binaryOperation.RightOperand path in HasAnyConditionalAccessOperationChild:
+        // when the conditional access appears on the right side of a comparison (e.g. 32 < s?.Length),
+        // the analyzer must still fire and the fixer must insert Assert.IsNotNull before the statement.
+        string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    string? s = "";
+                    [|Assert.IsTrue(32 < s?.Length)|];
+                    [|Assert.IsFalse(0 == s?.Length)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    string? s = "";
+                    Assert.IsNotNull(s);
+                    Assert.IsTrue(32 < s.Length);
+                    Assert.IsFalse(0 == s.Length);
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            NumberOfFixAllIterations = 1,
+            NumberOfFixAllInDocumentIterations = 1,
+            NumberOfFixAllInProjectIterations = 1,
             NumberOfIncrementalIterations = 2,
         }.RunAsync();
     }

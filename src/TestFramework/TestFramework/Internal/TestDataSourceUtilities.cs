@@ -5,6 +5,37 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 internal static class TestDataSourceUtilities
 {
+    private const int MaxCachedBuilderCapacity = 360;
+
+    public static int GetDataParameterCount(ParameterInfo[] parameters)
+        => parameters.Length > 0 && parameters[parameters.Length - 1].ParameterType == typeof(CancellationToken)
+            ? parameters.Length - 1
+            : parameters.Length;
+
+    public static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => HasExplicitCancellationTokenData(data, parameters);
+
+    // Only a two-argument row with a valid trailing token supplies explicit token data.
+    private static bool HasExplicitCancellationTokenData(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2
+            && parameters[1].ParameterType == typeof(CancellationToken)
+            && data.Length == 2
+            && (data[0] is null || parameters[0].ParameterType.IsInstanceOfType(data[0]))
+            && (data[1] is null or CancellationToken || data[1] == Type.Missing);
+
+#pragma warning disable IDE0028 // ConditionalWeakTable is not collection-expression-constructible on .NET Framework (CS9174).
+    private static readonly ConditionalWeakTable<MethodInfo, MethodData> MethodDataCache = new();
+#pragma warning restore IDE0028
+
+    [ThreadStatic]
+    private static StringBuilder? s_cachedBuilder;
+
+    [ThreadStatic]
+    private static CultureInfo? s_cachedResourceCulture;
+
+    [ThreadStatic]
+    private static string? s_cachedDisplayNameFormat;
+
     public static string? ComputeDefaultDisplayName(MethodInfo methodInfo, object?[]? data)
     {
         if (data is null)
@@ -12,51 +43,169 @@ internal static class TestDataSourceUtilities
             return null;
         }
 
-        ParameterInfo[] parameters = methodInfo.GetParameters();
+        MethodData methodData = MethodDataCache.GetValue(methodInfo, static method => new(method));
+        string methodDisplayName = GetMethodDisplayName(methodInfo);
+        CultureInfo currentCulture = CultureInfo.CurrentCulture;
+        string displayNameFormat = GetDisplayNameFormat();
 
-        // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
-        // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
-        // you will get empty string while with the call you will get "null,a".
-        IEnumerable<object?> displayData = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[])
-            ? [data.AsEnumerable()]
-            : data.AsEnumerable();
+        StringBuilder argumentsBuilder = AcquireBuilder();
+        if (methodData.HasSingleObjectArrayParameter
+            && !HasExplicitCancellationTokenData(data, methodData.Parameters))
+        {
+            AppendHumanizedArgument(argumentsBuilder, data);
+        }
+        else
+        {
+            AppendHumanizedArguments(argumentsBuilder, data);
+        }
 
-        string methodDisplayName = methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
+        string arguments = GetStringAndReleaseBuilder(argumentsBuilder);
+        return ComputeDisplayName(methodDisplayName, arguments, currentCulture, displayNameFormat);
+    }
+
+    public static string ComputeDisplayName(MethodInfo methodInfo, string argumentsDisplayName)
+        => ComputeDisplayName(GetMethodDisplayName(methodInfo), argumentsDisplayName, CultureInfo.CurrentCulture, GetDisplayNameFormat());
+
+    private static string GetMethodDisplayName(MethodInfo methodInfo)
+        => methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
             ? reflectionTestMethodInfo.DisplayName
             : methodInfo.Name;
 
-        return string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DataDrivenResultDisplayName,
-            methodDisplayName,
-            string.Join(",", displayData.Select(GetHumanizedArguments)));
+    private static string ComputeDisplayName(string methodDisplayName, string argumentsDisplayName, CultureInfo culture, string displayNameFormat)
+        => string.Format(culture, displayNameFormat, methodDisplayName, argumentsDisplayName);
+
+    private static string GetDisplayNameFormat()
+    {
+        CultureInfo resourceCulture = FrameworkMessages.Culture ?? CultureInfo.CurrentUICulture;
+        if (!resourceCulture.Equals(s_cachedResourceCulture))
+        {
+            s_cachedResourceCulture = resourceCulture;
+            s_cachedDisplayNameFormat = FrameworkMessages.DataDrivenResultDisplayName;
+        }
+
+        return s_cachedDisplayNameFormat!;
+    }
+
+    private static StringBuilder AcquireBuilder()
+    {
+        StringBuilder? builder = s_cachedBuilder;
+        if (builder is null)
+        {
+            return new StringBuilder();
+        }
+
+        s_cachedBuilder = null;
+        builder.Clear();
+        return builder;
+    }
+
+    private static string GetStringAndReleaseBuilder(StringBuilder builder)
+    {
+        string result = builder.ToString();
+        if (builder.Capacity <= MaxCachedBuilderCapacity)
+        {
+            s_cachedBuilder = builder;
+        }
+
+        return result;
     }
 
     /// <summary>
-    /// Recursively resolve collections of objects to a proper string representation.
+    /// Appends a collection of objects using their display-name representation.
     /// </summary>
-    /// <param name="data">The method arguments.</param>
-    /// <returns>The humanized representation of the data.</returns>
-    private static string? GetHumanizedArguments(object? data)
+    private static void AppendHumanizedArguments(StringBuilder builder, object?[] data)
     {
-        if (data is null)
+        for (int i = 0; i < data.Length; i++)
         {
-            return "null";
-        }
-
-        if (!data.GetType().IsArray)
-        {
-            return data switch
+            if (i > 0)
             {
-                string s => $"\"{s}\"",
-                char c => $"'{c}'",
-                _ => data.ToString(),
-            };
+                builder.Append(',');
+            }
+
+            AppendHumanizedArgument(builder, data[i]);
+        }
+    }
+
+    /// <summary>
+    /// Appends a collection of objects using their display-name representation.
+    /// </summary>
+    private static void AppendHumanizedArguments(StringBuilder builder, IEnumerable data)
+    {
+        bool appendSeparator = false;
+        foreach (object? item in data)
+        {
+            if (appendSeparator)
+            {
+                builder.Append(',');
+            }
+
+            AppendHumanizedArgument(builder, item);
+            appendSeparator = true;
+        }
+    }
+
+    /// <summary>
+    /// Recursively appends collections of objects using their display-name representation.
+    /// </summary>
+    private static void AppendHumanizedArgument(StringBuilder builder, object? data)
+    {
+        switch (data)
+        {
+            case null:
+                builder.Append("null");
+                break;
+
+            case string value:
+                AppendEscapedString(builder, value);
+                break;
+
+            case char value:
+                AppendEscapedChar(builder, value);
+                break;
+
+            case object?[] values:
+                builder.Append('[');
+                AppendHumanizedArguments(builder, values);
+                builder.Append(']');
+                break;
+
+            case Array:
+                builder.Append('[');
+                AppendHumanizedArguments(builder, (IEnumerable)data);
+                builder.Append(']');
+                break;
+
+            default:
+                builder.Append(data.ToString());
+                break;
+        }
+    }
+
+    private static void AppendEscapedString(StringBuilder builder, string value)
+    {
+        builder.Append('"');
+        StringEscapeHelper.AppendEscapedString(builder, value, 0, value.Length, escapeUnpairedSurrogates: true, useExtendedEscapes: true);
+        builder.Append('"');
+    }
+
+    private static void AppendEscapedChar(StringBuilder builder, char value)
+    {
+        builder.Append('\'');
+        StringEscapeHelper.AppendEscapedChar(builder, value, useExtendedEscapes: true);
+        builder.Append('\'');
+    }
+
+    private sealed class MethodData
+    {
+        public MethodData(MethodInfo method)
+        {
+            Parameters = method.GetParameters();
+            int dataParameterCount = GetDataParameterCount(Parameters);
+            HasSingleObjectArrayParameter = dataParameterCount == 1 && Parameters[0].ParameterType == typeof(object[]);
         }
 
-        // We need to box the object here so that we can support value types
-        IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)data).Cast<object>();
-        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetHumanizedArguments);
-        return $"[{string.Join(",", elementStrings)}]";
+        public ParameterInfo[] Parameters { get; }
+
+        public bool HasSingleObjectArrayParameter { get; }
     }
 }

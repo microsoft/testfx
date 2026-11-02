@@ -29,6 +29,14 @@ public sealed class TreeNodeFilterTests
     public void MatchAllFilter_Invalid() => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/A(&B)"));
 
     [TestMethod]
+    public void EmptyFilter_DoesNotMatchAnyPath_AndDoesNotThrow()
+    {
+        TreeNodeFilter filter = new(string.Empty);
+        Assert.IsFalse(filter.MatchesFilter("/Any/Path", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/A", new PropertyBag()));
+    }
+
+    [TestMethod]
     public void MatchAllFilter_DoNotAllowInMiddleOfFilter() => Assert.ThrowsExactly<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path"));
 
     [TestMethod]

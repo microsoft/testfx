@@ -1,3 +1,0 @@
-#nullable enable
-Microsoft.Testing.Framework.InternalUnsafeParameterizedTestNodeBase<TData>
-Microsoft.Testing.Framework.InternalUnsafeParameterizedTestNodeBase<TData>.InternalUnsafeParameterizedTestNodeBase() -> void

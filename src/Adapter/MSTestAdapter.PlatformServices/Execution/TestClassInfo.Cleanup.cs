@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -86,7 +87,7 @@ internal sealed partial class TestClassInfo
         }
 
         // If ClassCleanup was successful, then don't do anything
-        if (ClassCleanupException == null)
+        if (ClassCleanupException is null)
         {
             return null;
         }
@@ -130,48 +131,36 @@ internal sealed partial class TestClassInfo
             return null;
         }
 
-        bool isSTATestClass = ClassAttribute is STATestClassAttribute;
-        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTATestClass
-            && isWindowsOS
-            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-        {
-            TestResult? result = null;
-            var entryPointThread = new Thread(() => result = DoRunAsync().GetAwaiter().GetResult())
-            {
-                Name = "MSTest STATestClass ClassCleanup",
-            };
-
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-
-            try
+        ApartmentState? requestedApartmentState = ClassAttribute is STATestClassAttribute
+            ? ApartmentState.STA
+            : null;
+        return await StaThreadHelper.RunOnApartmentThreadIfNeededAsync<TestResult?>(
+            requestedApartmentState,
+            "MSTest STATestClass ClassCleanup",
+            DoRunAsync,
+            () => null,
+            entryPointThread =>
             {
                 entryPointThread.Join();
-            }
-            catch (Exception ex)
+                return Task.CompletedTask;
+            },
+            (thread, ex) =>
             {
                 if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                        $"Failed to join STA thread '{thread.Name}': {ex}");
                 }
-            }
 
-            return result;
-        }
-        else
-        {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTATestClass)
+                return null;
+            },
+            () =>
             {
                 if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
                 }
-            }
-
-            return await DoRunAsync().ConfigureAwait(false);
-        }
+            }).ConfigureAwait(false);
 
         // Local functions
         async Task<TestResult?> DoRunAsync()
@@ -180,25 +169,20 @@ internal sealed partial class TestClassInfo
             var testContextImpl = testContext as TestContextImplementation;
             if (ex is not null)
             {
-                return new TestResult()
+                var failedResult = new TestResult()
                 {
                     Outcome = UnitTestOutcome.Failed,
                     DisplayName = $"[{ClassType.FullName} ClassCleanup]",
                     TestFailureException = ex,
-                    LogOutput = testContextImpl?.GetAndClearOutput(),
-                    LogError = testContextImpl?.GetAndClearError(),
-                    DebugTrace = testContextImpl?.GetAndClearTrace(),
-                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
+                failedResult.SetOutputAndTraces(testContextImpl, testContext);
+                return failedResult;
             }
 
             if (results.Length > 0)
             {
                 TestResult lastResult = results[results.Length - 1];
-                lastResult.LogOutput += testContextImpl?.GetAndClearOutput();
-                lastResult.LogError += testContextImpl?.GetAndClearError();
-                lastResult.DebugTrace += testContextImpl?.GetAndClearTrace();
-                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                lastResult.AppendOutputAndTraces(testContextImpl, testContext);
             }
 
             return null;
@@ -213,34 +197,29 @@ internal sealed partial class TestClassInfo
             timeout = localTimeout;
         }
 
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.ClassCleanup,
+                "class_cleanup",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
+
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext))
-                {
-                    Task? task = methodInfo.GetParameters().Length == 0
-                        ? methodInfo.GetInvokeResultAsync(null)
-                        : methodInfo.GetInvokeResultAsync(null, testContext);
-
-                    if (task is not null)
-                    {
-                        await task.ConfigureAwait(false);
-                    }
-                }
-
-                // **After** we have executed the class cleanup, we save the current context.
-                // This context will contain async locals set by the current class cleanup method.
-                // This is essential to propagate async locals between multiple class cleanup methods.
-                ExecutionContext = ExecutionContext.Capture();
-            },
+            () => methodInfo.InvokeAsFixtureMethodAsync(
+                testContext,
+                ec => ExecutionContext = ec),
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
             ExecutionContext ?? Parent.ExecutionContext,
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
 
         return result;
     }

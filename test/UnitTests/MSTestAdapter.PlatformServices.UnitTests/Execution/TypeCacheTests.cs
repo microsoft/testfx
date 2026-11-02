@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -66,10 +67,22 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldReturnNullIfLoadingTypeThrowsTypeLoadException()
     {
+        _testablePlatformServiceProvider.MockTraceLogger.Setup(l => l.IsWarningEnabled).Returns(true);
+
         TestMethod testMethod = CreateTestMethod("M", "System.TypedReference[]", "A", displayName: null);
 
         _typeCache.GetTestMethodInfo(testMethod)
             .Should().BeNull();
+
+        // The TypeLoadException must not be silently swallowed: a warning containing the type name,
+        // the assembly name, and the exception itself must be traced so the failure is discoverable.
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            l => l.Warning(
+                It.IsAny<string>(),
+                "System.TypedReference[]",
+                "A",
+                It.IsAny<TypeLoadException>()),
+            Times.Once);
     }
 
     public void GetTestMethodInfoShouldThrowIfLoadingTypeThrowsException()
@@ -661,7 +674,7 @@ public class TypeCacheTests : TestContainer
         _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
-        baseType.GetMethod("TestInit").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestInitializeMethodsQueue.Peek());
+        baseType.GetMethod("TestInit").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestInitializeMethodsQueue[0]);
     }
 
     public void GetTestMethodInfoShouldCacheTestCleanupAttributeDefinedInBaseClass()
@@ -679,7 +692,7 @@ public class TypeCacheTests : TestContainer
         _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
-        baseType.GetMethod("TestCleanup").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestCleanupMethodsQueue.Peek());
+        baseType.GetMethod("TestCleanup").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestCleanupMethodsQueue[0]);
     }
 
     public void GetTestMethodInfoShouldCacheClassInfoInstanceAndReuseFromCache()
@@ -817,7 +830,7 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         settings.Should().NotBeNull();
         MSTestSettings.PopulateSettings(settings);
 
@@ -841,7 +854,7 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         settings.Should().NotBeNull();
         MSTestSettings.PopulateSettings(settings);
 
@@ -870,7 +883,7 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger());
         settings.Should().NotBeNull();
         MSTestSettings.PopulateSettings(settings);
 

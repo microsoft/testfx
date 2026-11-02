@@ -15,30 +15,27 @@
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
         <target state="translated">Próg maksymalnej liczby testów zakończonych niepowodzeniem to {0} i liczba testów zakończonych niepowodzeniem wyniosła {1}</target>
-        <note />
+        <note>{0} is the maximum failed tests threshold. {1} is the failed tests count.</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
         <target state="translated">Wartość procentowa progu niepowodzenia wynosi {0}% i {1}% testów nie powiodło się ({2}/{3})</target>
-        <note />
+        <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
-      <trans-unit id="MoveFiles">
-        <source>
-=====================
-Moving last attempt asset files to the default result directory
-=====================
-</source>
-        <target state="translated">
-=====================
-Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
-=====================
-</target>
-        <note />
+      <trans-unit id="RetryArtifactPostProcessorFailed">
+        <source>Retry artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">Ponawianie próby artefaktu po procesorze „{0}” nie powiodło się: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
       </trans-unit>
-      <trans-unit id="MovingFileToLocation">
-        <source>Moving file '{0}' to '{1}'</source>
-        <target state="translated">Przenoszenie pliku „{0}” do {1}</target>
-        <note />
+      <trans-unit id="RetryArtifactsPublished">
+        <source>Retry: published {0} result file(s) to '{1}'</source>
+        <target state="translated">Ponowienie próby: opublikowano pliki wynikowe ({0}) w folderze „{1}”</target>
+        <note>{0} is the number of files published. {1} is the destination result directory.</note>
+      </trans-unit>
+      <trans-unit id="RetryAttemptFailedWillRetry">
+        <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>
+        <target state="translated">Ponawianie próby: próba {0}/{1} nieudana — testy zakończone niepowodzeniem: {2}, ponawianie próby</target>
+        <note>{0} is the current attempt number. {1} is the total number of attempts. {2} is the number of failing tests in this attempt.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
@@ -48,17 +45,17 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Nie można uruchomić procesu „{0}”</target>
-        <note />
+        <note>{0} is the process file path.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="translated">Opóźnienie między ponownymi próbami. Opóźnienie jest wyrażane jako wartość czasu, np. 200, 500 ms, 1s, 2,5 m, 1h, 1d. Jednostka domyślna to milisekundy.</target>
-        <note />
+        <target state="translated">5Opóźnienie między ponownymi próbami. Opóźnienie jest wyrażane jako wartość czasu, np. 200, 500ms, 1s, 2.5m, 1h, 1d. Jednostka domyślna to milisekundy.</target>
+        <note>Do not localize time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="translated">Opcja „--retry-failed-tests-delay” wymaga prawidłowej wartości przedziału czasu nieujemnej i nie większej niż 2147483647 ms (~24.20:31:23.647) (np. 200, 500 ms, 1s, 2,5 m, 1h, 1d)</target>
-        <note />
+        <target state="translated">Opcja „--retry-failed-tests-delay” wymaga prawidłowej wartości przedziału czasu nieujemnej i nie większej niż 2147483647ms (~24.20:31:23.647) (np. 200, 500ms, 1s, 2.5m, 1h, 1d)</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
@@ -71,18 +68,18 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
-        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli procent testów zakończonych niepowodzeniem jest większy niż określona wartość</target>
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
+        <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli procent testów zakończonych niepowodzeniem jest większy niż określona wartość.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
         <target state="translated">Opcja „{0}” oczekuje argumentu liczby całkowitej z zakresu od 0 do 100</target>
-        <note />
+        <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
-        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli liczba testów zakończonych niepowodzeniem jest większa niż określona wartość</target>
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
+        <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli liczba testów zakończonych niepowodzeniem jest większa niż określona wartość.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -96,69 +93,104 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Retry failed tests the given number of times</source>
-        <target state="translated">Ponów testy zakończone niepowodzeniem określoną liczbę razy</target>
+        <source>Retry failed tests the given number of times.</source>
+        <target state="translated">Ponów testy zakończone niepowodzeniem określoną liczbę razy.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
         <target state="translated">Opcja „{0}” wymaga określenia opcji „{1}”</target>
-        <note />
+        <note>{0} is the option name that was specified. {1} is the required option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
         <target state="translated">Opcja „{0}” oczekuje nieujemnego argumentu całkowitego</target>
-        <note />
+        <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
         <target state="translated">Opcji „{0}” i „{1}” nie można używać razem</target>
-        <note />
+        <note>{0} is the first option name. {1} is the second option name.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryDurationLine">
+        <source>  duration: {0}</source>
+        <target state="translated">  czas trwania: {0}</target>
+        <note>{0} is the total retry orchestration duration. Two leading spaces and the lowercase 'duration:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFailed">
+        <source>Retry summary: Failed! after {0}/{1} attempts</source>
+        <target state="translated">Podsumowanie ponawiania próby: niepowodzenie! po {0}/{1} próbach</target>
+        <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFailedLine">
+        <source>  failed: {0}</source>
+        <target state="translated">  niepowodzenie: {0}</target>
+        <note>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFailedStoppedEarly">
+        <source>Retry summary: Failed! after {0} attempt(s) (retrying stopped early)</source>
+        <target state="translated">Podsumowanie ponawiania próby: niepowodzenie! po {0} próbach (ponowna próba została zatrzymana wcześniej)</target>
+        <note>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyLine">
+        <source>  flaky: {0} (passed after retry)</source>
+        <target state="translated">  niestabilne: {0} (przekazano po ponowieniu próby)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces mirror the platform run summary. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestLine">
+        <source>  {0} (failed -&gt; passed)</source>
+        <target state="translated">  {0} (zakończone niepowodzeniem — &gt; zakończone powodzeniem)</target>
+        <note>{0} is the display name of a flaky test. The arrow reads left (first outcome) to right (final outcome). Two leading spaces indent the entry under the 'Flaky tests:' header.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestsHeader">
+        <source>Flaky tests:</source>
+        <target state="translated">Niestabilne testy:</target>
+        <note>Header of the section that lists, by name, the tests which failed at least once but eventually passed.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryPassed">
+        <source>Retry summary: Passed! after {0}/{1} attempts</source>
+        <target state="translated">Podsumowanie ponawiania próby: zakończone powodzeniem! po {0}/{1} próbach</target>
+        <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryPassedNoRetry">
+        <source>Retry summary: Passed! on the first attempt (no retries needed)</source>
+        <target state="translated">Podsumowanie ponawiania próby: zakończone powodzeniem! przy pierwszej próbie (nie są wymagane ponowne próby)</target>
+        <note>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryRetriedLine">
+        <source>  retried: {0} test(s), {1} extra run(s)</source>
+        <target state="translated">  ponowione próby: liczba testów; {0}, liczba dodatkowych przebiegów: {1}</target>
+        <note>{0} is the number of distinct tests that were re-run. {1} is the number of extra executions those retries cost. Two leading spaces and the lowercase 'retried:' label mirror the platform run summary. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummarySkippedLine">
+        <source>  skipped: {0}</source>
+        <target state="translated">  pominięte: {0}</target>
+        <note>{0} is the number of skipped tests. Two leading spaces and the lowercase 'skipped:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummarySucceededLine">
+        <source>  succeeded: {0}</source>
+        <target state="translated">  zakończone powodzeniem: {0}</target>
+        <note>{0} is the number of tests that ended up passing, counting those rescued by a retry. Two leading spaces and the lowercase 'succeeded:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryTotalLine">
+        <source>  total: {0}</source>
+        <target state="translated">  łącznie: {0}</target>
+        <note>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetryWaitingBeforeNextAttempt">
+        <source>Retry: waiting {0} before attempt {1}/{2}</source>
+        <target state="translated">Ponawianie próby: oczekiwanie {0} przed próbą {1}/{2}</target>
+        <note>{0} is the delay (e.g. '1s'). {1} is the next attempt number. {2} is the total number of attempts.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
         <target state="translated">Proces hosta testowego zakończył się, zanim usługa ponawiania próby mogła nawiązać z nim połączenie. Kod zakończenia: {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestSuiteCompletedSuccessfully">
-        <source>
-=====================
-Tests suite completed successfully in {0} attempts
-=====================</source>
-        <target state="translated">
-=====================
-Pomyślnie ukończono pakiet testów w {0} próbach
-=====================</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestSuiteFailed">
-        <source>
-=====================
-Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
-=====================
-</source>
-        <target state="translated">
-=====================
-Pakiet testów nie powiódł się, łączna liczba testów zakończonych niepowodzeniem: {0}, kod zakończenia: {1}, próba: {2}/{3}
-=====================
-</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestSuiteFailedInAllAttempts">
-        <source>
-=====================
-Tests suite failed in all {0} attempts
-=====================</source>
-        <target state="translated">
-=====================
-Pakiet testów nie powiódł się we wszystkich {0} próbach
-=====================</target>
-        <note />
+        <note>{0} is the test host process exit code.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
         <target state="translated">Zestaw testów nie powiódł się. Kod zakończenia jest inny niż 2 (testy zakończone niepowodzeniem). Błąd związany z nieoczekiwanym warunkiem. Kod zakończenia „{0}”</target>
-        <note />
+        <note>{0} is the exit code.</note>
       </trans-unit>
     </body>
   </file>

@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Services;
 /// <summary>
 /// Represents the client information.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IClientInfo
 {
@@ -18,4 +21,9 @@ public interface IClientInfo
     /// Gets the client version.
     /// </summary>
     string Version { get; }
+
+    /// <summary>
+    /// Gets the capabilities declared by the client.
+    /// </summary>
+    IClientCapabilities Capabilities { get; }
 }

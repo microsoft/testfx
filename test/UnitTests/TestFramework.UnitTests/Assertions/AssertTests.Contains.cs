@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -404,6 +404,48 @@ public partial class AssertTests : TestContainer
 
     #region Contains Tests
 
+    public void Contains_NullableList_NonNullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+
+        Assert.Contains("Name", collection);
+    }
+
+    public void Contains_NullableList_NullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+        string? expected = null;
+
+        Assert.Contains(expected, collection);
+    }
+
+    public void Contains_NullableList_WithComparerAndPredicate_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+        string? expected = null;
+        Func<string?, bool> predicate = value => value is null;
+
+        Assert.Contains("NAME", collection, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains(expected, collection, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains(predicate, collection);
+    }
+
+    public void Contains_NullableList_ItemMissing_PreservesMessageAndExpressions()
+    {
+        List<string?> collection = ["Name", null];
+
+        Action action = () => Assert.Contains("Missing", collection, "custom message");
+
+        action.Should().Throw<AssertFailedException>().WithMessage("*custom message*Assert.Contains(\"Missing\", collection)*");
+    }
+
+    public void Contains_NullableHashSet_UsesCollectionComparer()
+    {
+        var collection = new HashSet<string?>(StringComparer.OrdinalIgnoreCase) { "Name", null };
+
+        Assert.Contains("NAME", collection);
+    }
+
     /// <summary>
     /// Tests the Contains method (value overload) when the expected item is present.
     /// </summary>
@@ -639,6 +681,22 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to contain the specified substring.*Missing substring*expected substring: \"lazy\"*actual:*\"The quick brown fox\"*Assert.Contains(substring, value)*");
+    }
+
+    /// <summary>
+    /// Tests the string Contains overload with StringComparison and message when substring is present.
+    /// </summary>
+    public void Contains_StringWithComparisonAndMessage_SubstringPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "BROWN";
+
+        // Act
+        Action action = () => Assert.Contains(substring, value, StringComparison.OrdinalIgnoreCase, "Substring found");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
     }
 
     public void Contains_HashSetWithCustomComparer_ItemExists_DoesNotThrow()
@@ -923,6 +981,50 @@ public partial class AssertTests : TestContainer
     #endregion
 
     #region DoesNotContain Tests
+
+    public void DoesNotContain_NullableList_NonNullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+
+        Assert.DoesNotContain("Missing", collection);
+    }
+
+    public void DoesNotContain_NullableList_NullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name"];
+        string? notExpected = null;
+
+        Assert.DoesNotContain(notExpected, collection);
+    }
+
+    public void DoesNotContain_NullableList_WithComparerAndPredicate_DoesNotThrow()
+    {
+        List<string?> collection = ["Name"];
+        string? notExpected = null;
+        Func<string?, bool> predicate = value => value is null;
+
+        Assert.DoesNotContain("Missing", collection, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain(notExpected, collection, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain(predicate, collection);
+    }
+
+    public void DoesNotContain_NullableList_ItemPresent_PreservesMessageAndExpressions()
+    {
+        List<string?> collection = ["Name", null];
+
+        Action action = () => Assert.DoesNotContain("Name", collection, "custom message");
+
+        action.Should().Throw<AssertFailedException>().WithMessage("*custom message*Assert.DoesNotContain(\"Name\", collection)*");
+    }
+
+    public void DoesNotContain_NullableHashSet_UsesCollectionComparer()
+    {
+        var collection = new HashSet<string?>(StringComparer.OrdinalIgnoreCase) { "Name", null };
+
+        Action action = () => Assert.DoesNotContain("NAME", collection);
+
+        action.Should().Throw<AssertFailedException>();
+    }
 
     /// <summary>
     /// Tests the DoesNotContain method (value overload) when the expected item is not present.
@@ -1697,7 +1799,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<string?> { "apple", null, "banana" };
 
         // Act
-        string? result = Assert.ContainsSingle(x => x == null, collection);
+        string? result = Assert.ContainsSingle(x => x is null, collection);
 
         // Assert
         result.Should().BeNull();
@@ -1712,7 +1814,7 @@ public partial class AssertTests : TestContainer
         var collection = new ArrayList { "apple", null, "banana" };
 
         // Act
-        object? result = Assert.ContainsSingle(x => x == null, collection);
+        object? result = Assert.ContainsSingle(x => x is null, collection);
 
         // Assert
         result.Should().BeNull();
@@ -1841,4 +1943,108 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void Containment_ScopedFailuresPreserveEveryCollectionKindAndContinue()
+    {
+        IEnumerable<string> sequence = new[] { "alpha", "beta" };
+        IEnumerable objects = new ArrayList { "alpha", "beta" };
+        var comparer = new ScopedContainmentComparer();
+        Func<string, bool> matches = value => value == "alpha";
+        Func<string, bool> misses = value => value == "gamma";
+        Func<object?, bool> objectMatches = value => value is string text && text == "alpha";
+        Func<object?, bool> objectMisses = value => value is string text && text == "gamma";
+        (Action Accepted, Action Rejected, bool Comparer, bool Predicate)[] cases =
+        [
+            (() => Assert.Contains("alpha", sequence), () => Assert.Contains("gamma", sequence, "scope context", "item", "collection"), false, false),
+            (() => Assert.Contains("ALPHA", sequence, comparer), () => Assert.Contains("gamma", sequence, comparer, "scope context", "item", "collection"), true, false),
+            (() => Assert.Contains("alpha", objects), () => Assert.Contains("gamma", objects, "scope context", "item", "collection"), false, false),
+            (() => Assert.Contains("ALPHA", objects, comparer), () => Assert.Contains("gamma", objects, comparer, "scope context", "item", "collection"), true, false),
+            (() => Assert.Contains(matches, sequence), () => Assert.Contains(misses, sequence, "scope context", "predicate", "collection"), false, true),
+            (() => Assert.Contains(objectMatches, objects), () => Assert.Contains(objectMisses, objects, "scope context", "predicate", "collection"), false, true),
+        ];
+        foreach ((Action accepted, Action rejected, bool withComparer, bool predicate) in cases)
+        {
+            accepted.Should().NotThrow();
+            AssertFailedException failure = CaptureContainmentScopeFailure(rejected);
+            string expected = predicate
+                ? """
+                    Assertion failed. Expected collection to contain an element matching the predicate.
+                    scope context
+
+                    Assert.Contains(predicate, collection)
+                    """
+                : withComparer
+                    ? """
+                        Assertion failed. Expected collection to contain the specified element.
+                        scope context
+
+                        expected: "gamma"
+                        comparer: ScopedContainmentComparer
+
+                        Assert.Contains(item, collection)
+                        """
+                    : """
+                        Assertion failed. Expected collection to contain the specified element.
+                        scope context
+
+                        expected: "gamma"
+
+                        Assert.Contains(item, collection)
+                        """;
+            failure.Message.Replace("\r\n", "\n").Should().Be(expected.Replace("\r\n", "\n"));
+            failure.ExpectedText.Should().Be(predicate ? null : "\"gamma\"");
+        }
+
+        Assert.DoesNotContain("gamma", sequence);
+        CaptureContainmentScopeFailure(() => Assert.DoesNotContain("alpha", sequence, "scope context", "item", "collection"))
+            .Message.Should().Be(
+                """
+                Assertion failed. Expected collection to not contain the specified element.
+                scope context
+
+                unexpected: "alpha"
+
+                Assert.DoesNotContain(item, collection)
+                """);
+        Assert.Contains("alpha", "alphabet");
+        CaptureContainmentScopeFailure(() => Assert.Contains("zzz", "alphabet", "scope context", "item", "collection"))
+            .Message.Should().Be(
+                """
+                Assertion failed. Expected string to contain the specified substring.
+                scope context
+
+                expected substring: "zzz"
+                actual:             "alphabet"
+                comparison:         Ordinal
+
+                Assert.Contains(item, collection)
+                """);
+    }
+
+    private static AssertFailedException CaptureContainmentScopeFailure(Action assertion)
+    {
+        int continued = 0;
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                assertion();
+                continued++;
+            }
+        };
+        AssertFailedException failure = action.Should().ThrowExactly<AssertFailedException>().Which;
+        continued.Should().Be(1);
+        return failure;
+    }
+
+    private sealed class ScopedContainmentComparer : IEqualityComparer<string>, IEqualityComparer
+    {
+        public bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+
+        public int GetHashCode(string obj) => StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
+
+        bool IEqualityComparer.Equals(object? x, object? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+
+        int IEqualityComparer.GetHashCode(object obj) => StringComparer.OrdinalIgnoreCase.GetHashCode((string)obj);
+    }
 }

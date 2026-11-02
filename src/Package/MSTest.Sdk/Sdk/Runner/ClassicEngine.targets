@@ -38,9 +38,24 @@
     <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
+    <!-- GitHub Actions -->
+    <EnableMicrosoftTestingExtensionsGitHubActionsReport Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
+    <MicrosoftTestingExtensionsGitHubActionsReportVersion Condition=" '$(MicrosoftTestingExtensionsGitHubActionsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsGitHubActionsReportVersion>
+
+    <!-- HTML report -->
+    <EnableMicrosoftTestingExtensionsHtmlReport Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHtmlReport>
+    <MicrosoftTestingExtensionsHtmlReportVersion Condition=" '$(MicrosoftTestingExtensionsHtmlReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHtmlReportVersion>
+
+    <!-- CTRF report is opt-in only, not auto-enabled by any profile. -->
+    <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsCtrfReportVersion>
+
+    <!-- OpenTelemetry is API-only and opt-in. The Enable property adds the package; users activate
+         it from Program.cs via builder.AddOpenTelemetryProvider(...). -->
+    <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsOpenTelemetryVersion>
+
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>
-    <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >$(MicrosoftTestingExtensionsFakesVersion)</MicrosoftTestingExtensionsFakesVersion>
+    <!-- MicrosoftTestingExtensionsFakesVersion is always injected by the generated Sdk.props (from Sdk.props.template). -->
   </PropertyGroup>
 
   <!-- Core -->
@@ -131,9 +146,45 @@
     </PackageReference>
     <PackageVersion Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsGitHubActionsReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$(MicrosoftTestingExtensionsGitHubActionsReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCtrfReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.CtrfReport" Version="$(MicrosoftTestingExtensionsCtrfReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsHtmlReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.HtmlReport" Version="$(MicrosoftTestingExtensionsHtmlReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsJUnitReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.JUnitReport" Version="$(MicrosoftTestingExtensionsJUnitReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsOpenTelemetryVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(MicrosoftTestingExtensionsOpenTelemetryVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)../Features/WindowsUIAutomation.targets" Condition=" '$(EnableWindowsUIAutomation)' == 'true' " />
   <Import Project="$(MSBuildThisFileDirectory)../Features/Playwright.targets" Condition=" '$(EnablePlaywright)' == 'true' " />
 
 </Project>

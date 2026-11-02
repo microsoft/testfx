@@ -7,8 +7,10 @@ public static class TargetFrameworks
 {
     public static string[] Net { get; } =
     [
-        "net10.0",
+        "net11.0",
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+        "net10.0",
+        "net9.0",
         "net8.0",
 #endif
     ];

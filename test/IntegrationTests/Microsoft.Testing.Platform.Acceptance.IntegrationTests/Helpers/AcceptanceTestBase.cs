@@ -1,7 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+
+internal sealed record BoundedCommandLineResult(int ExitCode, string StandardOutput, string ErrorOutput);
 
 public abstract class AcceptanceTestBase
 {
@@ -11,11 +17,32 @@ public abstract class AcceptanceTestBase
     {
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
+        MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
+        MicrosoftExtensionsHostingVersion = GetPackageVersion(cpmPropFileDoc, "Microsoft.Extensions.Logging");
+        OpenTelemetryVersion = GetPackageVersion(cpmPropFileDoc, "OpenTelemetry");
+
+        using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
+        MSBuildSdkExtrasVersion = globalJson.RootElement
+            .GetProperty("msbuild-sdks")
+            .GetProperty("MSBuild.Sdk.Extras")
+            .GetString()
+            ?? throw new InvalidOperationException("The repository global.json does not define a non-empty MSBuild.Sdk.Extras version.");
 
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
+        MSTestExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Extensions.Hosting.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine.");
+        MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
+        MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
+        MicrosoftTestingExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Hosting.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
+        MicrosoftTestingExtensionsOpenTelemetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.OpenTelemetry.");
+        MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
+        MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
+        MicrosoftTestingExtensionsGitHubActionsReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
+        MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
+        MicrosoftTestingExtensionsRetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Retry.");
+        MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
+        MicrosoftTestingExtensionsAzureFoundryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesNonShipping, "Microsoft.Testing.Extensions.AzureFoundry.");
     }
 
     internal static string RID { get; }
@@ -27,15 +54,91 @@ public abstract class AcceptanceTestBase
                     ? "osx-x64"
                     : throw new NotSupportedException("Current OS is not supported");
 
+    protected static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string assetName, string tfm)
+    {
+        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        const string FileNamePlaceholder = "__DIAG_FILENAME__";
+        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
+        return combinedPath.Replace(FileNamePlaceholder, $@"{assetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}(?:_\d+_\d+)?\.diag");
+    }
+
+    protected static string GetTestExecutablePath(Microsoft.Testing.TestInfrastructure.TestHost testHost)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? testHost.FullName
+            : testHost.FullName + ".dll";
+
+    protected static async Task<Microsoft.Testing.TestInfrastructure.TestHost> CloneTestHostAsync(
+        Microsoft.Testing.TestInfrastructure.TestHost testHost,
+        TempDirectory clone,
+        string assetName)
+    {
+        await clone.CopyDirectoryAsync(
+            testHost.DirectoryName,
+            clone.Path,
+            retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+        return Microsoft.Testing.TestInfrastructure.TestHost.LocateFrom(clone.Path, assetName);
+    }
+
     public static string MSTestVersion { get; private set; }
 
-    public static string MSTestEngineVersion { get; private set; }
+    public static string MSTestExtensionsHostingVersion { get; private set; }
+
+    public static string MSTestSourceGenerationVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
+    public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
+
+    public static string MicrosoftExtensionsHostingVersion { get; private set; }
+
+    public static string OpenTelemetryVersion { get; private set; }
+
+    public static string MSBuildSdkExtrasVersion { get; private set; }
+
+    // Keep this known-working Windows App SDK/BuildTools pair together. Generated WinUI assets use
+    // these shared values rather than adding independent package-version literals.
+    public const string WindowsAppSdkPackageVersion = "1.8.251106002";
+
+    public const string WindowsSdkBuildToolsPackageVersion = "10.0.26100.7175";
+
+    public static TimeSpan WindowsApplicationModelExecutionTimeout { get; } = TimeSpan.FromMinutes(5);
+
+    public static bool IsWindowsApplicationModelTestEnvironment
+        => string.Equals(
+            Environment.GetEnvironmentVariable("TESTFX_RUN_WINDOWS_APP_MODEL_TESTS"),
+            "1",
+            StringComparison.Ordinal);
+
+    public static bool IsWinAppCliInteropTestEnvironment
+        => string.Equals(
+            Environment.GetEnvironmentVariable("TESTFX_RUN_WINAPP_CLI_INTEROP_TESTS"),
+            "1",
+            StringComparison.Ordinal);
+
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
+    public static string MicrosoftTestingExtensionsConfigurationVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsHostingVersion { get; private set; }
+
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsOpenTelemetryVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsCtrfReportVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsJUnitReportVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsGitHubActionsReportVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsRetryVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsAzureFoundryVersion { get; private set; }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
@@ -66,19 +169,12 @@ public abstract class AcceptanceTestBase
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
-    internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)> GetBuildMatrixTfmBuildVerbConfiguration()
-    {
-        foreach (string tfm in TargetFrameworks.All)
-        {
-            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
-            {
-                foreach (Verb verb in Enum.GetValues<Verb>())
-                {
-                    yield return new(tfm, compilationMode, verb);
-                }
-            }
-        }
-    }
+    private static string GetPackageVersion(XDocument centralPackageManagementDocument, string packageName)
+        => centralPackageManagementDocument
+            .Descendants("PackageVersion")
+            .Single(element => string.Equals(element.Attribute("Include")?.Value, packageName, StringComparison.Ordinal))
+            .Attribute("Version")?.Value
+            ?? throw new InvalidOperationException($"Directory.Packages.props does not define a version for '{packageName}'.");
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {
@@ -120,35 +216,162 @@ public abstract class AcceptanceTestBase
         }
     }
 
+    /// <summary>
+    /// Gets the metadata modes each acceptance assertion should run against. By default the runtime
+    /// reflection path and both source-generated paths (the <c>MSTest.SourceGeneration</c> package's
+    /// <c>Rooting</c> and <c>ReflectionFree</c> modes) are exercised; the source-gen modes are dropped
+    /// when globally disabled via the kill-switch.
+    /// </summary>
+    internal static MetadataMode[] MetadataModesToRun { get; }
+        = AcceptanceSourceGen.IsGloballyDisabled
+            ? [MetadataMode.Reflection]
+            : [MetadataMode.Reflection, MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
+
+    /// <summary>
+    /// DynamicData source: every <see cref="TargetFrameworks.All"/> TFM combined with every applicable
+    /// <see cref="MetadataModesToRun"/> mode. Source generation is .NET-only, so .NET Framework TFMs
+    /// (net4x) are paired with <see cref="MetadataMode.Reflection"/> only.
+    /// <para>
+    /// This cross-parameter filter (net4x → reflection only) cannot be expressed with independent
+    /// <c>[CombinatorialData]</c> parameter providers, so it stays a bespoke data source. Matrices
+    /// without such a dependency should instead use <c>[CombinatorialData]</c> with
+    /// <see cref="MetadataModeValuesAttribute"/> (and <see cref="AllTargetFrameworksAttribute"/> when
+    /// a TFM axis is needed).
+    /// </para>
+    /// </summary>
+    public static IEnumerable<object[]> AllTfmsAndMetadataModes()
+    {
+        foreach (string tfm in TargetFrameworks.All)
+        {
+            // Source generation is .NET-only, so .NET Framework TFMs are paired with reflection only.
+            foreach (MetadataMode mode in MetadataModesToRun.Where(mode => mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm)))
+            {
+                yield return [tfm, mode];
+            }
+        }
+    }
+
     // https://github.com/NuGet/NuGet.Client/blob/c5934bdcbc578eec1e2921f49e6a5d53481c5099/test/NuGet.Core.FuncTests/Msbuild.Integration.Test/MsbuildIntegrationTestFixture.cs#L65-L94
     private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
     {
         string vswherePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
-        string path = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken);
+        string path = await RunAndGetSingleLineStandardOutputAsync(
+            vswherePath,
+            "-latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe",
+            "Visual Studio with Microsoft.Component.MSBuild",
+            cancellationToken);
         return path;
     }
 
-    private static async Task<string> RunAndGetSingleLineStandardOutputAsync(string vswherePath, string arg, CancellationToken cancellationToken)
+    internal static async Task<string> FindVisualStudioWithUwpToolsAsync(CancellationToken cancellationToken)
     {
-        var commandLine = new TestInfrastructure.CommandLine();
-        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild {arg}", cancellationToken: cancellationToken);
+        string vswherePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio",
+            "Installer",
+            "vswhere.exe");
+        return await RunAndGetSingleLineStandardOutputAsync(
+            vswherePath,
+            "-latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -property installationPath",
+            "a prerelease-capable Visual Studio installation with Microsoft.Component.MSBuild, Microsoft.VisualStudio.Workload.Universal, and Microsoft.VisualStudio.ComponentGroup.UWP.Support",
+            cancellationToken);
+    }
+
+    internal static void ConfigureDotnetSdkEnvironment(
+        IDictionary<string, string?> environment, string dotnetPath, string sdkVersion)
+    {
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new ArgumentException("The dotnet executable must include its installation directory.", nameof(dotnetPath));
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk", sdkVersion);
+
+        // dotnet test exports its own SDK paths to the test host. A nested CLI's global.json
+        // does not override those paths, so its targets and tasks must match the selected SDK.
+        environment["MSBuildSDKsPath"] = Path.Combine(sdkDirectory, "Sdks");
+        environment["MSBuildExtensionsPath"] = sdkDirectory;
+        environment["DOTNET_ROOT"] = dotnetRoot;
+        environment["DOTNET_ROOT_X64"] = dotnetRoot;
+        environment["DOTNET_INSTALL_DIR"] = dotnetRoot;
+        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        environment["MSBUILDUSESERVER"] = "0";
+    }
+
+    internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
+        string command,
+        string? workingDirectory,
+        CancellationToken cancellationToken,
+        IDictionary<string, string?>? environmentVariables = null,
+        bool cleanEnvironment = false)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(WindowsApplicationModelExecutionTimeout);
+        using var commandLine = new TestInfrastructure.CommandLine();
+
+        try
+        {
+            int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+                command,
+                environmentVariables,
+                workingDirectory: workingDirectory,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: cleanEnvironment,
+                cancellationToken: timeout.Token);
+            return new(exitCode, commandLine.StandardOutput, commandLine.ErrorOutput);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"Command did not exit within {WindowsApplicationModelExecutionTimeout}: {command}{Environment.NewLine}" +
+                $"Standard output:{Environment.NewLine}{commandLine.StandardOutput}{Environment.NewLine}" +
+                $"Standard error:{Environment.NewLine}{commandLine.ErrorOutput}");
+        }
+    }
+
+    private static async Task<string> RunAndGetSingleLineStandardOutputAsync(
+        string vswherePath,
+        string arguments,
+        string requiredCapability,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(vswherePath))
+        {
+            throw new FileNotFoundException(
+                $"Visual Studio discovery requires vswhere.exe at '{vswherePath}'. Install Visual Studio Installer and {requiredCapability}.",
+                vswherePath);
+        }
+
+        using var commandLine = new TestInfrastructure.CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{vswherePath}\" {arguments}",
+            cancellationToken: cancellationToken);
+        if (exitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"vswhere.exe failed while locating {requiredCapability} (exit code {exitCode}).{Environment.NewLine}" +
+                $"Standard output:{Environment.NewLine}{commandLine.StandardOutput}{Environment.NewLine}" +
+                $"Standard error:{Environment.NewLine}{commandLine.ErrorOutput}");
+        }
 
         string? path = null;
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) is not null)
             {
-                if (path != null)
+                if (path is not null)
                 {
-                    throw new Exception("vswhere returned more than 1 line");
+                    throw new InvalidOperationException(
+                        $"vswhere.exe returned more than one path while locating {requiredCapability}:{Environment.NewLine}{commandLine.StandardOutput}");
                 }
 
-                path = line;
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    path = line.Trim();
+                }
             }
         }
 
-        return path!;
+        return path
+            ?? throw new InvalidOperationException(
+                $"vswhere.exe did not find {requiredCapability}. Install the required Visual Studio workload/components and retry.");
     }
 }
 
@@ -212,4 +435,35 @@ public class UnitTest1
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
     public static void ClassCleanup()
         => AssetFixture.Dispose();
+}
+
+/// <summary>
+/// A <see cref="ICombinatorialValuesProvider"/> that yields every target framework in
+/// <see cref="TargetFrameworks.All"/> (the OS-dependent set, which includes .NET Framework on Windows).
+/// Apply it to a <see langword="string"/> parameter of a <c>[CombinatorialData]</c> test method to combine
+/// over all target frameworks without hand-writing a bespoke build-matrix data source.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialValuesProvider
+{
+    // TargetFrameworks.All is never mutated, so it's safe to hand the same array back on every call.
+    public object?[] GetValues(ParameterInfo _) => TargetFrameworks.All;
+}
+
+/// <summary>
+/// A <see cref="ICombinatorialValuesProvider"/> that yields every metadata mode under test
+/// (<see cref="AcceptanceTestBase.MetadataModesToRun"/>): the runtime reflection path and, unless
+/// disabled via the source-gen kill-switch, both source-generated paths. Apply it to a
+/// <see cref="MetadataMode"/> parameter of a <c>[CombinatorialData]</c> test method so the same
+/// assertions run against every metadata path. Prefer it over auto-expanding the enum, which would
+/// ignore the kill-switch and always emit all three values.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class MetadataModeValuesAttribute : Attribute, ICombinatorialValuesProvider
+{
+    // MetadataModesToRun never changes during a run, so box it into an object?[] once and hand the
+    // same array back on every call to avoid repeated allocations during combinatorial expansion.
+    private static readonly object?[] BoxedValues = [.. AcceptanceTestBase.MetadataModesToRun.Cast<object?>()];
+
+    public object?[] GetValues(ParameterInfo _) => BoxedValues;
 }

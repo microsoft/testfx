@@ -106,7 +106,7 @@ internal class FileUtility
         }
         catch (Exception e)
         {
-            warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToCopyWithOverwrite, source, destination, e.GetType(), e.GetExceptionMessage());
+            warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToCopyWithOverwrite, source, destination, e.GetType(), e.GetExceptionMessage(), e.HResult);
             return string.Empty;
         }
     }
@@ -126,7 +126,7 @@ internal class FileUtility
         DebugEx.Assert(!StringEx.IsNullOrEmpty(destinationFile), "destination should not be null or empty.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(relativeDestination), "relative destination path should not be null or empty.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(sourceFile), "sourceFile should not be null or empty.");
-        DebugEx.Assert(destToSource != null, "destToSource should not be null.");
+        DebugEx.Assert(destToSource is not null, "destToSource should not be null.");
 
         if (!_assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
         {
@@ -199,7 +199,7 @@ internal class FileUtility
 
         foreach (string subDirectoryPath in GetDirectoriesInADirectory(directoryPath))
         {
-            if (ignoreDirectory != null && ignoreDirectory(subDirectoryPath))
+            if (ignoreDirectory is not null && ignoreDirectory(subDirectoryPath))
             {
                 continue;
             }

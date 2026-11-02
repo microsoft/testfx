@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,7 +15,7 @@ internal sealed class MSTestExtension : IExtension
 
     public string Version => MSTestVersion.SemanticVersion;
 
-    public string Description => "MSTest Framework for Microsoft Testing Platform";
+    public string Description => PlatformAdapterResources.MSTestExtensionDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -25,4 +25,3 @@ internal sealed class MSTestExtension : IExtension
         return assemblyMetadataAttributes?.FirstOrDefault(x => x.Key == "MSTest.Extension.Uid")?.Value ?? nameof(MSTestExtension);
     }
 }
-#endif

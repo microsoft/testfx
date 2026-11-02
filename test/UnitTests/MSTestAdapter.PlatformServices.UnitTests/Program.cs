@@ -3,18 +3,72 @@
 
 using Microsoft.Testing.Extensions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
 using TestFramework.ForTestingMSTest;
 
+if (Environment.GetEnvironmentVariable(DebugAssertionChildProbe.ModeVariable) is string probeMode)
+{
+    DebugAssertionChildProbe.ConfigureCrashReporting();
+    try
+    {
+        switch (probeMode)
+        {
+            case DebugAssertionChildProbe.MalformedReflectionMode:
+                await Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.RunMalformedReflectionProbeAsync();
+                break;
+            case DebugAssertionChildProbe.NullPdbSourceMode:
+                MSTestAdapter.PlatformServices.UnitTests.Utilities.FileUtilityContinuationTests.RunNullPdbSourceProbe();
+                break;
+#if NETFRAMEWORK
+            case DebugAssertionChildProbe.ClosedOleSchemaMode:
+                MSTestAdapter.PlatformServices.UnitTests.Data.TestDataConnectionSqlContinuationTests.RunClosedOleSchemaProbe();
+                break;
+            case DebugAssertionChildProbe.UnsupportedSqlMockMode:
+                MSTestAdapter.PlatformServices.UnitTests.Data.TestDataConnectionSqlContinuationTests.RunUnsupportedSqlMockProbe();
+                break;
+            case DebugAssertionChildProbe.ClosedDefaultSchemaMode:
+                MSTestAdapter.PlatformServices.UnitTests.Data.TestDataConnectionSqlContinuationTests.RunClosedDefaultSchemaProbe();
+                break;
+#endif
+            default:
+                throw new InvalidOperationException("Unknown owned Debug assertion probe.");
+        }
+
+        Console.WriteLine(DebugAssertionChildProbe.ReturnedMarker);
+    }
+    finally
+    {
+        Console.WriteLine(DebugAssertionChildProbe.FinallyMarker);
+    }
+
+    return 0;
+}
+
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif
 builder.AddTrxReportProvider();
+builder.AddJUnitReportProvider();
 builder.AddHangDumpProvider();
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddRetryProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
+
+// Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
+// and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter
+// is registered, so the recorded data is dropped by the SDK at the export stage — this keeps CI
+// logs clean while still flowing every test event through the OTel pipeline.
+builder.AddOpenTelemetryProvider(
+    tracing => tracing.AddTestingPlatformInstrumentation(),
+    metrics => metrics.AddTestingPlatformInstrumentation());
 
 builder.AddInternalTestFramework();
 

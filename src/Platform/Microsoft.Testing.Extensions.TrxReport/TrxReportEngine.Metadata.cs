@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -9,7 +9,7 @@ internal sealed partial class TrxReportEngine
 {
     private void AddResultSummary(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, List<string> attachmentWarnings, bool isTestHostCrashed = false)
     {
-        // TODO: VSTest adds Output/StdOut element to ResultSummary which we don't add.
+        // Unlike VSTest, we do not add an Output/StdOut element to ResultSummary.
         // VSTest adds mainly two things in that element:
         // 1. Skipped test messages (see AddRunLevelInformationalMessage call in HandleSkippedTest in VSTest's TrxLogger implementation)
         // 2. Messages published with TestMessageLevel.Informational.
@@ -43,7 +43,7 @@ internal sealed partial class TrxReportEngine
             new XAttribute("pending", 0));
         resultSummary.Add(counters);
 
-        // TODO: VSTest adds two additional things to RunInfos
+        // VSTest adds two additional things to RunInfos.
         // 1. Messages published with TestMessageLevel.Warning or TestMessageLevel.Error
         // 2. Errors when constructing result files.
         // In addition, in these cases, it turns TRX outcome to error.
@@ -59,8 +59,8 @@ internal sealed partial class TrxReportEngine
 
         if (_artifactsByExtension.Count != 0)
         {
-            // TODO: VSTest seems to also add ResultFiles element, and not only CollectorDataEntries.
-            // TODO: Revise VSTest implementation for Converter.ToCollectionEntries and Converter.ToResultFiles
+            // VSTest seems to also add a ResultFiles element, and not only CollectorDataEntries.
+            // Whether this reporter should also emit ResultFiles here could be revisited by referencing VSTest's Converter.ToCollectionEntries and Converter.ToResultFiles.
             var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
             resultSummary.Add(collectorDataEntries);
 
@@ -114,7 +114,7 @@ internal sealed partial class TrxReportEngine
             "TestSettings",
             new XAttribute("name", "default"),
             new XAttribute("id", Guid.NewGuid()));
-        string runDeploymentRoot = ReplaceInvalidFileNameChars(testRunName);
+        string runDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(testRunName);
         testSettings.Add(new XElement("Deployment", new XAttribute("runDeploymentRoot", runDeploymentRoot)));
         testRun.Add(testSettings);
         return runDeploymentRoot;

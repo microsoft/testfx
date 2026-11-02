@@ -5,11 +5,14 @@
 // https://github.com/spectreconsole/spectre.console/blob/main/src/Spectre.Console/Internal/Backends/Ansi/AnsiDetector.cs
 // and from the supports-ansi project by Qingrong Ke
 // https://github.com/keqingrong/supports-ansi/blob/master/index.js
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Works together with the <see cref="NativeMethods"/> to figure out if the current console is capable of using ANSI output codes.
 /// </summary>
+[Embedded]
 internal static class AnsiDetector
 {
     public static bool IsAnsiSupported(string? termType)

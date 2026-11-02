@@ -1,0 +1,81 @@
+# Standalone, non-required A/B pipeline for replacing the full Windows Debug graph with the unit-test graph.
+# Register this YAML as a separate Azure Pipelines definition; do not add its status to branch protection.
+trigger: none
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - main
+
+parameters:
+- name: SkipTests
+  displayName: Skip tests
+  type: boolean
+  default: false
+
+variables:
+- template: /eng/pipelines/variables/test-env-vars.yml
+- name: _BuildConfig
+  value: Debug
+- name: _DebugUnitTestReportArgs
+  value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-severity warning --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
+
+jobs:
+- job: WindowsDebugSlim
+  displayName: Windows Debug slim experiment
+  timeoutInMinutes: 45
+  pool:
+    name: NetCore-Public
+    demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+  steps:
+  - checkout: self
+    clean: true
+
+  - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+  - pwsh: |
+      & .\eng\common\CIBuild.cmd `
+        -configuration $(_BuildConfig) `
+        -prepareMachine `
+        -projects WindowsDebugUnitTests.slnf `
+        -binaryLogName WindowsDebugSlim.binlog `
+        /p:Test=false `
+        /p:Pack=false `
+        /p:Sign=false `
+        /p:Publish=false `
+        /p:PublishWindowsPdb=false `
+        /p:FastAcceptanceTest=true
+      exit $LASTEXITCODE
+    displayName: Build unit-test graph
+
+  - ${{ if eq(parameters.SkipTests, false) }}:
+    - pwsh: |
+        New-Item "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)" -ItemType Directory -Force | Out-Null
+
+        dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace --show-test-results failed
+        exit $LASTEXITCODE
+      displayName: Test unit-test graph
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+    - task: PublishTestResults@2
+      displayName: Publish slim TRX Test Results
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: '*.trx'
+        searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+        testRunTitle: '$(System.JobName)-trx'
+      continueOnError: true
+      condition: always()
+
+  - pwsh: New-Item '$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)' -ItemType Directory -Force | Out-Null
+    displayName: Ensure slim logs directory exists
+    condition: always()
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish slim build logs
+    inputs:
+      targetPath: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+      artifactName: 'WindowsDebugSlimLogs_Attempt$(System.JobAttempt)'
+    condition: always()

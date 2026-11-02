@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -28,7 +28,7 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzer : DiagnosticAnaly
         Title,
         MessageFormat,
         Description,
-        Category.Usage,
+        Category.Performance,
         DiagnosticSeverity.Info,
         isEnabledByDefault: false);
 

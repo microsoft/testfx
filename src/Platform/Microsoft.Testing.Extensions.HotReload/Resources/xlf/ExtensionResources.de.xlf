@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="HotReloadHandlerUnsupportedFrameworkErrorMessage">
         <source>Hot reload is only supported on .NET 6.0 or greater</source>
-        <target state="translated">Hot Reload wird nur unter .NET 6.0 oder höher unterstützt.</target>
-        <note />
+        <target state="translated">Hot Reload wird nur unter .NET 6.0 oder höher unterstützt.</target>
+        <note>Do not localize {Locked=".NET 6.0"}.</note>
       </trans-unit>
       <trans-unit id="HotReloadSessionCompleted">
         <source>Hot reload test session completed</source>

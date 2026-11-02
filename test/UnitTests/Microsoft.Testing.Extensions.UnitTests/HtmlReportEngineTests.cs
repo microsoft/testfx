@@ -1,5 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Reflection;
+using System.Text.Json.Nodes;
 
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Platform.CommandLine;
@@ -16,6 +19,19 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class HtmlReportEngineTests
 {
+    private static readonly Type CaptureHelperType = typeof(HtmlReportEngine).Assembly
+        .GetType("Microsoft.Testing.Extensions.TestResultCaptureHelper", throwOnError: true)!;
+
+    // Bound to the production constants (resolved via reflection from the HtmlReport assembly, since the
+    // linked TestResultCaptureHelper type is ambiguous across extension assemblies) so the tests stay
+    // aligned if the shared truncation limits change.
+    private static readonly int MaxStandardStreamLength = GetCaptureHelperConstant(nameof(MaxStandardStreamLength));
+    private static readonly int MaxIdentityFieldLength = GetCaptureHelperConstant(nameof(MaxIdentityFieldLength));
+    private static readonly int MaxTraitFieldLength = GetCaptureHelperConstant(nameof(MaxTraitFieldLength));
+
+    private static int GetCaptureHelperConstant(string name)
+        => (int)CaptureHelperType.GetField(name, BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -23,6 +39,106 @@ public class HtmlReportEngineTests
     private readonly Mock<ITestFramework> _testFrameworkMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IFileSystem> _fileSystem = new();
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ProjectsOptionalDiagnosticsTimingTraitsAndHtmlSafeControlText()
+    {
+        using var stream = new MemoryFileStream();
+        DateTimeOffset start = new(2026, 1, 2, 3, 4, 5, TimeSpan.Zero);
+        HtmlReportEngine engine = CreateEngine(stream, testStartTime: start);
+        _clockMock.SetupGet(value => value.UtcNow).Returns(start.AddSeconds(3));
+        const string diagnostics = "quote\" slash\\ back\b form\f newline\n return\r tab\t control\u0001 <>&'\u2028\u2029";
+        CapturedTestResult result = new()
+        {
+            Uid = "diagnostic",
+            DisplayName = "diagnostic test",
+            Outcome = "errored",
+            Duration = TimeSpan.FromTicks(123_456),
+            StartTime = start,
+            EndTime = start.AddSeconds(2),
+            ClassName = "Fixture.Class",
+            MethodName = "Method",
+            ErrorMessage = diagnostics,
+            ExceptionType = "Fixture.Exception",
+            StackTrace = "frame\\one\nframe two",
+            StandardOutput = "out\r\ntext",
+            StandardError = "err\ttext",
+            Traits = [new("first", "one"), new("second", "two")],
+        };
+
+        await engine.GenerateReportAsync([result]);
+
+        string json = HtmlReportEngine.ExtractReportJson(stream.GetUtf8Content());
+        JsonObject report = JsonNode.Parse(json)!.AsObject();
+        JsonObject actual = Assert.ContainsSingle(report["tests"]!.AsArray())!.AsObject();
+        Assert.AreEqual(0, (int)actual["rowKey"]!);
+        Assert.AreEqual(12.346d, (double)actual["durationMs"]!);
+        Assert.AreEqual(start.ToString("O", CultureInfo.InvariantCulture), (string?)actual["startTime"]);
+        Assert.AreEqual(start.AddSeconds(2).ToString("O", CultureInfo.InvariantCulture), (string?)actual["endTime"]);
+        Assert.AreEqual("Fixture.Class", (string?)actual["className"]);
+        Assert.AreEqual("Method", (string?)actual["methodName"]);
+        Assert.AreEqual("Fixture.Exception", (string?)actual["exceptionType"]);
+        Assert.AreEqual(diagnostics, (string?)actual["errorMessage"]);
+        Assert.AreEqual("frame\\one\nframe two", (string?)actual["stackTrace"]);
+        Assert.AreEqual("out\r\ntext", (string?)actual["standardOutput"]);
+        Assert.AreEqual("err\ttext", (string?)actual["standardError"]);
+        Assert.AreSequenceEqual(["first", "second"], actual["traits"]!.AsArray().Select(value => (string?)value!["key"]));
+        Assert.AreSequenceEqual(["one", "two"], actual["traits"]!.AsArray().Select(value => (string?)value!["value"]));
+        Assert.Contains("back\\b form\\f newline\\n return\\r tab\\t control\\u0001 \\u003C\\u003E\\u0026\\u0027\\u2028\\u2029", json);
+        Assert.AreEqual(1, (int)report["summary"]!["errored"]!);
+        Assert.AreEqual(1, (int)report["summary"]!["total"]!);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_PreservesEveryOutcomeAttemptAndActualWallClockDifference()
+    {
+        using var stream = new MemoryFileStream();
+        DateTimeOffset future = new(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        HtmlReportEngine engine = CreateEngine(stream, testStartTime: future);
+        _clockMock.SetupGet(value => value.UtcNow).Returns(future.AddSeconds(-5));
+        CapturedTestResult[] results =
+        [
+            Captured("same", "pass", "passed"),
+            Captured("same", "fail", "failed"),
+            Captured("skip", "skip", "skipped"),
+            Captured("timeout", "timeout", "timedOut"),
+            Captured("error", "error", "errored"),
+        ];
+
+        await engine.GenerateReportAsync(results);
+
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(stream.GetUtf8Content()))!.AsObject();
+        JsonArray rows = report["tests"]!.AsArray();
+        Assert.HasCount(5, rows);
+        Assert.AreSequenceEqual([0, 1, 2, 3, 4], rows.Select(value => (int)value!["rowKey"]!));
+        Assert.AreSequenceEqual(["passed", "failed", "skipped", "timedOut", "errored"], rows.Select(value => (string?)value!["outcome"]));
+        Assert.AreEqual(1, (int)rows[0]!["attemptIndex"]!);
+        Assert.AreEqual(2, (int)rows[1]!["attemptIndex"]!);
+        Assert.AreEqual(2, (int)rows[0]!["attemptOf"]!);
+        Assert.AreEqual(2, (int)rows[1]!["attemptOf"]!);
+        Assert.IsFalse(rows[2]!.AsObject().ContainsKey("attemptIndex"));
+        Assert.IsFalse(rows[2]!.AsObject().ContainsKey("attemptOf"));
+        Assert.IsFalse(rows[0]!.AsObject().ContainsKey("startTime"));
+        Assert.IsFalse(rows[0]!.AsObject().ContainsKey("traits"));
+        JsonObject summary = report["summary"]!.AsObject();
+        Assert.AreEqual(5, (int)summary["total"]!);
+        foreach (string outcome in new[] { "passed", "failed", "skipped", "timedOut", "errored" })
+        {
+            Assert.AreEqual(1, (int)summary[outcome]!);
+        }
+
+        Assert.AreEqual(-5_000d, (double)summary["totalDurationMs"]!);
+    }
+
+    [TestMethod]
+    [DataRow("<html>no data</html>")]
+    [DataRow("<script id=\"mtp-data\" type=\"application/json\">{}")]
+    public void ExtractReportJson_RejectsMissingOpeningOrClosingDataMarker(string html)
+    {
+        ArgumentException error = Assert.ThrowsExactly<ArgumentException>(() => HtmlReportEngine.ExtractReportJson(html));
+        Assert.AreEqual(nameof(html), error.ParamName);
+        Assert.Contains("valid", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
 
     [TestMethod]
     public async Task GenerateReportAsync_WritesValidHtml_WithEmbeddedJson()
@@ -46,6 +162,85 @@ public class HtmlReportEngineTests
         Assert.Contains("\"passed\":1", html);
         Assert.Contains("\"failed\":1", html);
         Assert.Contains("\"skipped\":1", html);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_UsesWallClockDurationForSummary()
+    {
+        DateTimeOffset startTime = new(2026, 8, 31, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset endTime = startTime.AddSeconds(5);
+        _ = _clockMock.SetupGet(clock => clock.UtcNow).Returns(endTime);
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream, testStartTime: startTime);
+        CapturedTestResult[] tests =
+        [
+            Captured("a", "A", "passed", TimeSpan.FromSeconds(4)),
+            Captured("b", "B", "passed", TimeSpan.FromSeconds(4)),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(memoryStream.GetUtf8Content()))!.AsObject();
+        Assert.AreEqual(5_000d, (double)report["summary"]!["totalDurationMs"]!);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_WhenRecoveredAfterCrash_MarksReportIncomplete()
+    {
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream, isIncomplete: true);
+
+        await engine.GenerateReportAsync([Captured("p1", "Recovered test", "passed")]);
+
+        string html = memoryStream.GetUtf8Content();
+        Assert.Contains("\"incomplete\":true", html);
+        Assert.Contains("\"runStatus\":\"aborted\"", html);
+        Assert.Contains("\"displayName\":\"Recovered test\"", html);
+        Assert.Contains("Tests absent from this report did not necessarily pass.", html);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_WhenAnyInputIsIncomplete_PropagatesRecoveryMetadata(bool collapseRetryAttempts)
+    {
+        string complete = BuildMergeInput("complete", incomplete: false);
+        string incomplete = BuildMergeInput("incomplete", incomplete: true);
+
+        string merged = HtmlReportMerger.Merge(
+            [incomplete, complete],
+            collapseRetryAttempts ? HtmlMergeMode.CollapseRetryAttempts : HtmlMergeMode.Concatenate);
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(merged))!.AsObject();
+
+        Assert.IsTrue((bool)report["incomplete"]!);
+        Assert.AreEqual("aborted", (string?)report["runStatus"]);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_UsesOverallWallClockDurationForSummary(bool collapseRetryAttempts)
+    {
+        DateTimeOffset startTime = new(2026, 8, 31, 12, 0, 0, TimeSpan.Zero);
+        string first = BuildMergeInput(
+            "shared",
+            incomplete: false,
+            startTime,
+            startTime.AddSeconds(5),
+            TimeSpan.FromSeconds(30));
+        string second = BuildMergeInput(
+            "shared",
+            incomplete: false,
+            startTime.AddSeconds(2),
+            startTime.AddSeconds(9),
+            TimeSpan.FromSeconds(40));
+
+        string merged = HtmlReportMerger.Merge(
+            [first, second],
+            collapseRetryAttempts ? HtmlMergeMode.CollapseRetryAttempts : HtmlMergeMode.Concatenate);
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(merged))!.AsObject();
+
+        Assert.AreEqual(9_000d, (double)report["summary"]!["totalDurationMs"]!);
     }
 
     [TestMethod]
@@ -110,7 +305,7 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxStandardStreamLength + 7);
+        string huge = new('a', MaxStandardStreamLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(huge));
@@ -120,15 +315,15 @@ public class HtmlReportEngineTests
 
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.StandardOutput);
-        Assert.StartsWith(new string('a', TestResultCapture.MaxStandardStreamLength), result.StandardOutput!);
+        Assert.StartsWith(new string('a', MaxStandardStreamLength), result.StandardOutput!);
         Assert.Contains("[truncated, original length:", result.StandardOutput);
-        Assert.Contains((TestResultCapture.MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
+        Assert.Contains((MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
     }
 
     [TestMethod]
     public void TestResultCapture_Does_Not_Truncate_When_Exactly_At_MaxLength()
     {
-        string atMax = new('a', TestResultCapture.MaxStandardStreamLength);
+        string atMax = new('a', MaxStandardStreamLength);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(atMax));
@@ -137,6 +332,88 @@ public class HtmlReportEngineTests
         CapturedTestResult result = TestResultCapture.TryCapture(node)!;
 
         Assert.AreEqual(atMax, result.StandardOutput);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_CapturesRetryMetadata()
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.AreEqual(2, result.RetryAttemptNumber);
+        Assert.IsFalse(result.IsSupersededRetryAttempt);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_EmitsRetryMetadata()
+    {
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new()
+            {
+                Uid = "shared",
+                DisplayName = "Shared title",
+                Outcome = "failed",
+                RetryAttemptNumber = 1,
+                IsSupersededRetryAttempt = true,
+            },
+            new()
+            {
+                Uid = "shared",
+                DisplayName = "Shared title",
+                Outcome = "passed",
+                RetryAttemptNumber = 2,
+                IsSupersededRetryAttempt = false,
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        string html = memoryStream.GetUtf8Content();
+        Assert.Contains(@"""retryAttemptNumber"":1", html);
+        Assert.Contains(@"""isSupersededRetryAttempt"":true", html);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_DoesNotSplitSurrogatePair_AtTruncationBoundary()
+    {
+        // Build a string whose (maxLength-1)-th char is the high surrogate of a pair.
+        // After truncation the high surrogate must be dropped so the result is valid UTF-16.
+        string prefix = new('a', MaxStandardStreamLength - 1);
+        const string surrogatePair = "\uD83D\uDE00"; // 😀 — high surrogate at index maxLength-1
+        string input = prefix + surrogatePair + new string('z', 10);
+
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new StandardOutputProperty(input));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.StandardOutput);
+
+        // Verify truncation happened (also establishes that '\n' is present in the output).
+        Assert.Contains("[truncated, original length:", result.StandardOutput);
+
+        // Now safely index back from the truncation marker '\n'.
+        int newlineIdx = result.StandardOutput!.IndexOf('\n');
+        Assert.IsGreaterThan(0, newlineIdx, "Newline marker must not be at position 0 or absent.");
+
+        // The truncated prefix must not end with a lone high surrogate.
+        Assert.IsFalse(
+            char.IsHighSurrogate(result.StandardOutput[newlineIdx - 1]),
+            "Truncate must not leave a lone high surrogate at the cut boundary.");
+
+        // Confirm we backed off exactly one char over the high surrogate.
+        Assert.AreEqual(
+            MaxStandardStreamLength - 1,
+            newlineIdx,
+            "Prefix should be maxLength-1 chars (backed off over the high surrogate).");
     }
 
     [TestMethod]
@@ -293,11 +570,11 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_DefaultFileName_IncludesModuleNameAndTargetFramework()
+    public async Task GenerateReportAsync_DefaultFileName_IsAsmTfmArchShape()
     {
         string? pathSeen = null;
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 pathSeen = path;
@@ -313,7 +590,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 2, 3, 4, 5, 6, TimeSpan.Zero));
 
-        var engine = new HtmlReportEngine(
+        var engine = new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -323,13 +600,19 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        const string ExpectedFileNamePattern = "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$";
+        // <asm>_<tfm>_<arch>.html — deterministic, discoverable across reruns and matrices.
+        // The arch token is derived from RuntimeInformation.ProcessArchitecture so the regex stays in
+        // sync with new Architecture enum values without manual maintenance.
+        string archToken = Regex.Escape(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+        string expectedFileNamePattern = $"^My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_{archToken}\\.html$";
         Assert.AreEqual(pathSeen, finalPath);
-        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), ExpectedFileNamePattern));
+        Assert.IsTrue(
+            Regex.IsMatch(Path.GetFileName(finalPath), expectedFileNamePattern),
+            $"File name '{Path.GetFileName(finalPath)}' does not match expected default pattern '{expectedFileNamePattern}'.");
     }
 
     [TestMethod]
@@ -444,24 +727,19 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
+    public async Task GenerateReportAsync_OverwritesAndWarns_When_DefaultFileExists()
     {
-        // Set up file system: pretend the default file already exists, then succeed on
-        // the second name. The engine must retry rather than throwing IOException.
-        var bytesSeen = new List<string>();
-        int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        // Default-name path uses the same overwrite-and-warn semantics as the explicit-name
+        // path: a single, predictable rule. When the file already exists, the engine
+        // overwrites it (FileMode.Create) and surfaces the HtmlReportFileExistsAndWillBeOverwritten
+        // warning.
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
-                callCount++;
-                bytesSeen.Add(path);
-                return callCount == 1
-                    ? throw new IOException("file exists")
-                    : new MemoryFileStream();
+                pathSeen = path;
+                return new MemoryFileStream();
             });
-
-        // The retry only kicks in when the candidate path actually exists, so the file
-        // system must report the first candidate as already on disk.
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
@@ -473,7 +751,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-        var engine = new HtmlReportEngine(
+        var engine = new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -483,30 +761,30 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
-        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+        (string finalPath, string? warning) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        Assert.AreEqual(2, callCount);
-        Assert.AreEqual(bytesSeen[1], finalPath);
-        Assert.Contains("_1.html", finalPath);
+        Assert.AreEqual(pathSeen, finalPath);
+        Assert.DoesNotContain("_1.html", finalPath);
+        Assert.IsNotNull(warning);
+        Assert.Contains(finalPath, warning!);
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_PropagatesIOException_When_FileDoesNotExist()
+    public async Task GenerateReportAsync_PropagatesIOException_When_WriteFails()
     {
-        // Simulate an IOException that is not caused by the candidate already existing
-        // (e.g. disk full, permission denied). The engine must propagate the failure
-        // immediately rather than spinning up disambiguating suffixes for 5 seconds.
+        // An IOException during the write (e.g. disk full, permission denied, path too
+        // long) must propagate to the caller — there is no longer any disambiguation
+        // loop that could mask such failures behind a 5-second retry budget.
         int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 callCount++;
                 throw new IOException("disk full");
             });
 
-        // ExistFile reports false so the IOException is not interpreted as a collision.
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
@@ -518,7 +796,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-        var engine = new HtmlReportEngine(
+        var engine = new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -528,7 +806,7 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         await Assert.ThrowsExactlyAsync<IOException>(() => engine.GenerateReportAsync([Captured("a", "A", "passed")]));
         Assert.AreEqual(1, callCount);
@@ -537,7 +815,7 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_TruncatesIdentityFields_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxIdentityFieldLength + 7);
+        string huge = new('a', MaxIdentityFieldLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new TestMethodIdentifierProperty("asm", "n", "t", huge, 0, [], "void"));
@@ -555,8 +833,8 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_TruncatesTraitKeysAndValues_AtBoundary()
     {
-        string hugeKey = new('k', TestResultCapture.MaxTraitFieldLength + 3);
-        string hugeValue = new('v', TestResultCapture.MaxTraitFieldLength + 5);
+        string hugeKey = new('k', MaxTraitFieldLength + 3);
+        string hugeValue = new('v', MaxTraitFieldLength + 5);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new TestMetadataProperty(hugeKey, hugeValue));
@@ -582,15 +860,59 @@ public class HtmlReportEngineTests
             ErrorMessage = errorMessage,
         };
 
-    private HtmlReportEngine CreateEngine(MemoryFileStream stream)
+    private static string BuildMergeInput(
+        string uid,
+        bool incomplete,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        TimeSpan? testDuration = null)
+    {
+        startTime ??= new DateTimeOffset(2026, 8, 31, 12, 0, 0, TimeSpan.Zero);
+        endTime ??= startTime.Value.AddSeconds(1);
+        var report = new JsonObject
+        {
+            ["schemaVersion"] = "1",
+            ["generator"] = "Microsoft.Testing.Extensions.HtmlReport",
+            ["generatorVersion"] = "1.0.0",
+            ["testApplication"] = "app",
+            ["machineName"] = "machine",
+            ["userName"] = "user",
+            ["framework"] = "framework",
+            ["frameworkUid"] = "framework",
+            ["frameworkVersion"] = "1.0.0",
+            ["startTime"] = startTime.Value.ToString("O", CultureInfo.InvariantCulture),
+            ["endTime"] = endTime.Value.ToString("O", CultureInfo.InvariantCulture),
+            ["exitCode"] = incomplete ? 1 : 0,
+            ["tests"] = new JsonArray(new JsonObject
+            {
+                ["uid"] = uid,
+                ["displayName"] = uid,
+                ["outcome"] = "passed",
+                ["durationMs"] = (testDuration ?? TimeSpan.FromMilliseconds(1)).TotalMilliseconds,
+            }),
+            ["summary"] = new JsonObject(),
+        };
+        if (incomplete)
+        {
+            report["incomplete"] = true;
+            report["runStatus"] = "aborted";
+        }
+
+        return HtmlReportEngine.RenderReport(report.ToJsonString());
+    }
+
+    private HtmlReportEngine CreateEngine(
+        MemoryFileStream stream,
+        bool isIncomplete = false,
+        DateTimeOffset? testStartTime = null)
     {
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>())).Returns(stream);
 
-        return CreateEngine();
+        return CreateEngine(isIncomplete, testStartTime);
     }
 
-    private HtmlReportEngine CreateEngine()
+    private HtmlReportEngine CreateEngine(bool isIncomplete = false, DateTimeOffset? testStartTime = null)
     {
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
@@ -600,7 +922,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.Version).Returns("0.0.0");
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("Fake");
 
-        return new HtmlReportEngine(
+        return new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -608,9 +930,10 @@ public class HtmlReportEngineTests
             _configurationMock.Object,
             _clockMock.Object,
             _testFrameworkMock.Object,
-            DateTimeOffset.UtcNow,
+            testStartTime ?? DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None,
+            IsIncomplete: isIncomplete));
     }
 
     internal sealed class MemoryFileStream : IFileStream

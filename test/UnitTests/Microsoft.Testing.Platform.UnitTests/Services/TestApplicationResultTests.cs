@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
 
@@ -20,7 +21,435 @@ public sealed class TestApplicationResultTests : IDisposable
     public void Dispose() => _testApplicationResult.Dispose();
 
     [TestMethod]
-    public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
+    public async Task ConsumeAsync_ExecutionCompleted_ClosesOnlyOldestActivityWithoutOutcome()
+    {
+        var firstActivity = new Mock<IPlatformActivity>();
+        var secondActivity = new Mock<IPlatformActivity>();
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .SetupSequence(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(firstActivity.Object)
+            .Returns(secondActivity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(IProperty property) => new()
+        {
+            Uid = "shared-uid",
+            DisplayName = "Test",
+            Properties = new PropertyBag(property),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(TestNodeExecutionCompletedProperty.CachedInstance)),
+            CancellationToken.None);
+
+        firstActivity.Verify(activity => activity.Dispose(), Times.Once);
+        firstActivity.Verify(activity => activity.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        secondActivity.Verify(activity => activity.Dispose(), Times.Never);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        secondActivity.Verify(activity => activity.SetTag("test.result", "passed"), Times.Once);
+        secondActivity.Verify(activity => activity.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_CompletesAttemptSpanWithoutChangingRunStatistics()
+    {
+        var activity = new Mock<IPlatformActivity>();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(TestNodeStateProperty state) => new()
+        {
+            Uid = "retry-test",
+            DisplayName = "Retry test",
+            Properties = new PropertyBag(
+                state,
+                new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true)),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty())),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Statistics statistics = testApplicationResult.GetStatistics();
+        Assert.AreEqual(0, statistics.TotalRanTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_PreservesUnnumberedSpanForFinalResult()
+    {
+        var activity = new Mock<IPlatformActivity>();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(TestNodeStateProperty state, RetryAttemptProperty? retryAttempt = null) => new()
+        {
+            Uid = "retry-test",
+            DisplayName = "Retry test",
+            Properties = retryAttempt is null
+                ? new PropertyBag(state)
+                : new PropertyBag(state, retryAttempt),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                CreateNode(
+                    new FailedTestNodeStateProperty(),
+                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Never);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                CreateNode(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Statistics statistics = testApplicationResult.GetStatistics();
+        Assert.AreEqual(1, statistics.TotalRanTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCode_WithCoverageThresholdFailure_ReturnsCoverageThresholdFailed()
+    {
+        Mock<ITestCoverageResult> coverageResult = new();
+        coverageResult.SetupGet(result => result.HasThresholdFailure).Returns(true);
+        using TestApplicationResult testApplicationResult = new(
+            new Mock<IOutputDevice>().Object,
+            new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
+            new Mock<IEnvironment>().Object,
+            new Mock<IStopPoliciesService>().Object,
+            null,
+            coverageResult.Object);
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.CoverageThresholdFailed, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithNoTestsAndCoverageThresholdFailure_ReturnsZeroTests()
+    {
+        Mock<ITestCoverageResult> coverageResult = new();
+        coverageResult.SetupGet(result => result.HasThresholdFailure).Returns(true);
+        using TestApplicationResult testApplicationResult = new(
+            new Mock<IOutputDevice>().Object,
+            new Mock<ICommandLineOptions>().Object,
+            new Mock<IEnvironment>().Object,
+            new Mock<IStopPoliciesService>().Object,
+            null,
+            coverageResult.Object);
+
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCode_WithFailedTestAndDeadline_ReturnsTestFailure()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                new TestNode
+                {
+                    Uid = "failed-test",
+                    DisplayName = "FailedTest",
+                    Properties = new PropertyBag(new FailedTestNodeStateProperty("failure")),
+                }),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithAbortAndDeadline_ReturnsAbort()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsAbortTriggered).Returns(true);
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object);
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithNoTestsAndDeadline_ReturnsDeadline()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object);
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCode_WithOverlappingRequestDeadline_IsolatedPerRequest()
+    {
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        StopPoliciesService firstRequestPolicies = new(cancellationTokenSource.Object);
+        StopPoliciesService secondRequestPolicies = new(cancellationTokenSource.Object);
+        using TestApplicationResult firstRequestResult = CreateTestApplicationResult(firstRequestPolicies);
+        using TestApplicationResult secondRequestResult = CreateTestApplicationResult(secondRequestPolicies);
+
+        await firstRequestPolicies.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, firstRequestResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, secondRequestResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithMinimumExpectedTestsViolationAndDeadline_ReturnsDeadline()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(
+            policiesService.Object,
+            new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["1"]));
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCode_WithCoverageThresholdFailureAndDeadline_ReturnsDeadline()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        Mock<ITestCoverageResult> coverageResult = new();
+        coverageResult.SetupGet(result => result.HasThresholdFailure).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object, coverageResult: coverageResult.Object);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                new TestNode
+                {
+                    Uid = "passed-test",
+                    DisplayName = "PassedTest",
+                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+                }),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_DoesNotCloseTheTestActivity()
+    {
+        // A test framework that retries in-process reports one in-progress update (which opens the OpenTelemetry
+        // activity) followed by one result per attempt. Only the final attempt is the test's outcome, so only it
+        // may close the activity - otherwise the first superseded result would close it and the real outcome would
+        // find nothing in flight, reporting the retried test as failed in traces even though it passed.
+        var activity = new Mock<IPlatformActivity>();
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+
+        static TestNode CreateNode(params IProperty[] properties) => new()
+        {
+            Uid = "flaky-uid",
+            DisplayName = "FlakyTest",
+            Properties = new PropertyBag(properties),
+        };
+
+        // The in-progress update is reported once per test (not once per attempt) and opens the activity.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        // Attempt 1 failed but was superseded: it must neither close the activity nor mark it failed.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.Dispose(), Times.Never);
+
+        // Attempt 2 passed and is the final outcome: it closes the activity exactly once.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_IsNotCountedAsFailure()
+    {
+        static TestNode CreateNode(IProperty state, IProperty retryAttempt) => new()
+        {
+            Uid = new TestNodeUid("flaky-test"),
+            DisplayName = "FlakyTest",
+            Properties = new PropertyBag(state, retryAttempt),
+        };
+
+        // Attempt 1 failed but was retried, attempt 2 passed: the test's outcome is "passed".
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.Success, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual(0, _testApplicationResult.GetStatistics().TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_FinalRetryAttemptFailed_IsCountedAsFailure()
+    {
+        static TestNode CreateNode(IProperty state, IProperty retryAttempt) => new()
+        {
+            Uid = new TestNodeUid("always-failing-test"),
+            DisplayName = "AlwaysFailingTest",
+            Properties = new PropertyBag(state, retryAttempt),
+        };
+
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual(1, _testApplicationResult.GetStatistics().TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_ByDefault_Returns_Success()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -31,7 +460,31 @@ public sealed class TestApplicationResultTests : IDisposable
                 Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual((int)ExitCode.ZeroTests, _testApplicationResult.GetProcessExitCode());
+        // Default policy is 'allow-skipped', so an all-skipped run is treated as successful.
+        Assert.AreEqual((int)ExitCode.Success, _testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_With_StrictPolicy_Returns_ZeroTestsRan()
+    {
+        using TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyStrictArgument]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -47,6 +500,52 @@ public sealed class TestApplicationResultTests : IDisposable
             }), CancellationToken.None);
 
         Assert.AreEqual((int)ExitCode.ZeroTests, _testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_With_AllowSkippedPolicy_Returns_Success()
+    {
+        using TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_No_Tests_With_AllowSkippedPolicy_Returns_ZeroTestsRan()
+    {
+        using TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -143,6 +642,23 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public void GetProcessExitCodeAsync_If_MinimumExpectedTests_Set_And_No_Tests_Ran_Returns_MinimumExpectedTestsPolicyViolation()
+    {
+        // When an explicit minimum is set, a zero-test run is reported as a minimum-expected violation (9)
+        // rather than ZeroTests (8), so an orchestrator can tell a stricter-local-minimum violation apart
+        // from a plain "ran nothing" module. See issue #7457.
+        TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["2"]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        Assert.AreEqual((int)ExitCode.MinimumExpectedTestsPolicyViolation, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_OnDiscovery_No_Tests_Discovered_Returns_ZeroTests()
     {
         TestApplicationResult testApplicationResult
@@ -187,6 +703,9 @@ public sealed class TestApplicationResultTests : IDisposable
     [DataRow("8;2", (int)ExitCode.Success)]
     [DataRow("8;", (int)ExitCode.Success)]
     [DataRow("8;2;", (int)ExitCode.Success)]
+    [DataRow(" 8 ", (int)ExitCode.Success)]
+    [DataRow("+8", (int)ExitCode.Success)]
+    [DataRow("2;8", (int)ExitCode.Success)]
     [DataRow("5", (int)ExitCode.ZeroTests)]
     [DataRow("5;7", (int)ExitCode.ZeroTests)]
     [DataRow("5;", (int)ExitCode.ZeroTests)]
@@ -194,6 +713,10 @@ public sealed class TestApplicationResultTests : IDisposable
     [DataRow(";", (int)ExitCode.ZeroTests)]
     [DataRow(null, (int)ExitCode.ZeroTests)]
     [DataRow("", (int)ExitCode.ZeroTests)]
+    [DataRow("8abc", (int)ExitCode.ZeroTests)]
+    [DataRow("-8", (int)ExitCode.ZeroTests)]
+    [DataRow("2147483648", (int)ExitCode.ZeroTests)]
+    [DataRow("18446744073709551624", (int)ExitCode.ZeroTests)]
     [TestMethod]
     public void GetProcessExitCodeAsync_IgnoreExitCodes(string? argument, int expectedExitCode)
     {
@@ -216,6 +739,48 @@ public sealed class TestApplicationResultTests : IDisposable
             Assert.AreEqual(expectedExitCode, testApplicationResult.GetProcessExitCode());
         }
     }
+
+    [TestMethod]
+    [DataRow(null, 0, DisplayName = "Absent environment falls back to CLI")]
+    [DataRow("", 0, DisplayName = "Empty environment falls back to CLI")]
+    [DataRow("8", 0, DisplayName = "Matching environment ignore list")]
+    [DataRow("16", 8, DisplayName = "Nonmatching environment overrides CLI")]
+    [DataRow("invalid", 8, DisplayName = "Invalid environment does not fall back")]
+    [DataRow(" ", 8, DisplayName = "Whitespace environment is not absent")]
+    public void ExitCodeIgnorePolicy_EnvironmentPrecedenceIsPreservedEvenWhenValueDoesNotMatch(string? environmentValue, int expectedExitCode)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE)).Returns(environmentValue);
+        ICommandLineOptions options = new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, ["8"]);
+
+        Assert.AreEqual(expectedExitCode, ExitCodeIgnorePolicy.Apply(8, options, environment.Object));
+    }
+
+    [TestMethod]
+    [DataRow(int.MinValue, "-2147483648", 0, DisplayName = "Exact minimum integer")]
+    [DataRow(int.MinValue, "-2147483649", int.MinValue, DisplayName = "Immediately below minimum")]
+    [DataRow(int.MaxValue, "2147483647", 0, DisplayName = "Exact maximum integer")]
+    [DataRow(int.MaxValue, "2147483648", int.MaxValue, DisplayName = "Immediately above maximum")]
+    [DataRow(8, ";not-a-number;+8;", 0, DisplayName = "Valid interior signed segment")]
+    [DataRow(8, "-+8;8x;999999999999999999999999", 8, DisplayName = "Invalid signs characters and overflow")]
+    public void ExitCodeIgnorePolicy_ExactIntegerLimitsAndInvalidAdjacentValuesDoNotWrap(int inputExitCode, string ignoreList, int expectedExitCode)
+    {
+        ICommandLineOptions options = new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, [ignoreList]);
+
+        Assert.AreEqual(expectedExitCode, ExitCodeIgnorePolicy.Apply(inputExitCode, options, Mock.Of<IEnvironment>()));
+    }
+
+    private static TestApplicationResult CreateTestApplicationResult(
+        IStopPoliciesService policiesService,
+        ICommandLineOptions? commandLineOptions = null,
+        ITestCoverageResult? coverageResult = null)
+        => new(
+            Mock.Of<IOutputDevice>(),
+            commandLineOptions ?? Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            policiesService,
+            null,
+            coverageResult);
 
     internal static IEnumerable<object[]> FailedState()
     {

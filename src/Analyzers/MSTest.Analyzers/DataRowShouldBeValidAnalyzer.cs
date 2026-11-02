@@ -131,56 +131,77 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // No constructor arguments and no method parameters -> nothing to check.
-        if (attribute.ConstructorArguments.Length == 0 && methodSymbol.Parameters.Length == 0)
+        int constructorArgumentCount = attribute.ConstructorArguments.Length;
+        ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
+        if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams is true)
         {
+            constructorArguments = constructorArguments[0].Values;
+        }
+
+        ImmutableArray<IParameterSymbol> methodParameters = methodSymbol.Parameters;
+        if (methodParameters.Length > 0
+            && methodParameters[^1].RefKind == RefKind.None
+            && SymbolEqualityComparer.Default.Equals(
+                methodParameters[^1].Type,
+                context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingCancellationToken))
+            && !(constructorArguments.Length == methodParameters.Length && constructorArguments[^1].IsNull
+                && (methodParameters is not [{ Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } }, _]
+                    || constructorArguments[0].IsNull
+                    || constructorArguments[0].Type.IsAssignableTo(methodParameters[0].Type, context.Compilation))))
+        {
+            methodParameters = methodParameters.RemoveAt(methodParameters.Length - 1);
+            constructorArgumentCount = constructorArguments.Length;
+        }
+
+        bool isCancellationTokenOmitted = methodParameters.Length < methodSymbol.Parameters.Length;
+        bool canExpandSingleArray = methodParameters is [{ Type: IArrayTypeSymbol arrayType }]
+            && (!isCancellationTokenOmitted || arrayType.ElementType.SpecialType == SpecialType.System_Object);
+
+        // An omitted token does not prevent optional data parameters from using their defaults.
+        if (constructorArgumentCount == 0
+            && (methodParameters.Length == 0
+                || (isCancellationTokenOmitted && methodParameters.All(parameter => parameter.IsOptional))))
+        {
+            AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, methodParameters, constructorArguments);
             return;
         }
 
         // Count mismatch since there's zero method parameters but there's at least one DataRow
         // constructor argument.
-        if (methodSymbol.Parameters.Length == 0)
+        if (methodParameters.Length == 0)
         {
             context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
-                attribute.ConstructorArguments.Length,
-                methodSymbol.Parameters.Length));
+                constructorArgumentCount,
+                methodParameters.Length));
             return;
         }
 
         // Possible count mismatch depending on whether last method parameter is an array or not.
-        if (attribute.ConstructorArguments.Length == 0)
+        if (constructorArgumentCount == 0)
         {
-            if (methodSymbol.Parameters[^1].Type.Kind != SymbolKind.ArrayType)
+            if (methodParameters[^1].Type.Kind != SymbolKind.ArrayType
+                || (isCancellationTokenOmitted && !canExpandSingleArray))
             {
                 context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                     ArgumentCountMismatchRule,
-                    attribute.ConstructorArguments.Length,
-                    methodSymbol.Parameters.Length));
+                    constructorArgumentCount,
+                    methodParameters.Length));
             }
 
             return;
         }
 
-        // DataRow constructors have either zero or one argument(s). If we get here, we are
-        // on the one argument case. Check if we match either of the array argument constructors
-        // and expand the array argument if we do.
-        ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
-        if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams == true)
-        {
-            constructorArguments = constructorArguments[0].Values;
-        }
-
-        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters))
+        if (IsArgumentCountMismatch(constructorArguments.Length, methodParameters, canExpandSingleArray))
         {
             context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
                 constructorArguments.Length,
-                methodSymbol.Parameters.Length));
+                methodParameters.Length));
             return;
         }
 
-        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
+        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, methodParameters, constructorArguments);
 
         // Check constructor argument types match method parameter types.
         List<(string ParameterName, string ExpectedType, string ActualType)> typeMismatches = [];
@@ -193,7 +214,10 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
-            ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length);
+            ITypeSymbol paramType = GetParameterType(
+                methodParameters,
+                currentArgumentIndex,
+                canExpandSingleArray && (isCancellationTokenOmitted || constructorArguments.Length > 1));
             if (paramType.TypeKind == TypeKind.TypeParameter ||
                 paramType is IArrayTypeSymbol { ElementType.TypeKind: TypeKind.TypeParameter })
             {
@@ -204,8 +228,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                int parameterIndex = Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1);
-                string parameterName = methodSymbol.Parameters[parameterIndex].Name;
+                int parameterIndex = Math.Min(currentArgumentIndex, methodParameters.Length - 1);
+                string parameterName = methodParameters[parameterIndex].Name;
                 string expectedType = paramType.ToDisplayString();
                 string actualType = argumentType.ToDisplayString();
                 typeMismatches.Add((parameterName, expectedType, actualType));
@@ -237,6 +261,17 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     private static Type GetSystemType(ITypeSymbol type)
     {
+        if (type is INamedTypeSymbol
+            {
+                Name: nameof(Type),
+                Arity: 0,
+                ContainingType: null,
+                ContainingNamespace: { Name: WellKnownTypeNames.System, ContainingNamespace.IsGlobalNamespace: true },
+            })
+        {
+            return typeof(Type);
+        }
+
         if (type.TypeKind == TypeKind.Enum)
         {
             if (((INamedTypeSymbol)type).EnumUnderlyingType is { } underlyingType)
@@ -261,6 +296,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             SpecialType.System_Int32 => typeof(int),
             SpecialType.System_Int64 => typeof(long),
             SpecialType.System_IntPtr => typeof(IntPtr),
+            SpecialType.System_Object => typeof(object),
             SpecialType.System_SByte => typeof(sbyte),
             SpecialType.System_Single => typeof(float),
             SpecialType.System_String => typeof(string),
@@ -277,6 +313,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         SymbolAnalysisContext context,
         SyntaxNode dataRowSyntax,
         IMethodSymbol methodSymbol,
+        ImmutableArray<IParameterSymbol> methodParameters,
         ImmutableArray<TypedConstant> constructorArguments)
     {
         if (!methodSymbol.IsGenericMethod)
@@ -285,8 +322,13 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
-        foreach (IParameterSymbol parameter in methodSymbol.Parameters)
+        foreach (IParameterSymbol parameter in methodParameters)
         {
+            if (parameter.Ordinal >= constructorArguments.Length)
+            {
+                break;
+            }
+
             TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
 
             // This happens for [DataRow(null)] which ends up being resolved
@@ -305,24 +347,35 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            Type? argumentType = constructorArgument.Kind == TypedConstantKind.Array
-                ? GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType)
-                : constructorArgument.Value?.GetType();
+            bool inferArrayElement = constructorArgument.Kind == TypedConstantKind.Array && parameter.Type is IArrayTypeSymbol;
+            ITypeSymbol parameterType = inferArrayElement
+                ? ((IArrayTypeSymbol)parameter.Type).ElementType
+                : parameter.Type;
+            if (parameterType.Kind != SymbolKind.TypeParameter)
+            {
+                continue;
+            }
+
+            Type? argumentType = constructorArgument.Kind switch
+            {
+                TypedConstantKind.Array => GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType),
+                TypedConstantKind.Type => GetSystemType(constructorArgument.Type),
+                _ => constructorArgument.Value?.GetType(),
+            };
 
             if (argumentType is null)
             {
                 continue;
             }
 
-            ITypeSymbol parameterType = constructorArgument.Kind == TypedConstantKind.Array
-                ? ((IArrayTypeSymbol)parameter.Type).ElementType
-                : parameter.Type;
-
-            if (parameterType.Kind != SymbolKind.TypeParameter)
+            if (constructorArgument.Kind == TypedConstantKind.Array && !inferArrayElement)
             {
-                continue;
+                argumentType = argumentType.MakeArrayType();
             }
 
+            ITypeSymbol argumentSymbol = inferArrayElement
+                ? ((IArrayTypeSymbol)constructorArgument.Type).ElementType
+                : constructorArgument.Type;
             if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
             {
                 if (existingType.SystemType.IsAssignableFrom(argumentType))
@@ -331,16 +384,18 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 }
                 else if (argumentType.IsAssignableFrom(existingType.SystemType))
                 {
-                    parameterTypesSubstitutions[parameterType] = (parameterType, argumentType);
+                    parameterTypesSubstitutions[parameterType] = (argumentSymbol, argumentType);
                 }
                 else
                 {
-                    context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingType.Symbol.Name, constructorArgument.Type.Name));
+                    string existingTypeName = existingType.Symbol is IArrayTypeSymbol ? existingType.Symbol.ToDisplayString() : existingType.Symbol.Name;
+                    string argumentTypeName = argumentSymbol is IArrayTypeSymbol ? argumentSymbol.ToDisplayString() : argumentSymbol.Name;
+                    context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingTypeName, argumentTypeName));
                 }
             }
             else
             {
-                parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentType));
+                parameterTypesSubstitutions.Add(parameterType, (argumentSymbol, argumentType));
             }
         }
 
@@ -353,7 +408,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, int argumentsCount)
+    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, bool expandSingleArray)
     {
         if (currentArgumentIndex >= parameters.Length - 1)
         {
@@ -365,8 +420,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
             }
 
-            // When only parameter is array and we have more than one argument, we want to check the array type
-            if (argumentsCount > 1 && parameters.Length == 1 && lastParameter.Type.Kind == SymbolKind.ArrayType)
+            if (expandSingleArray)
             {
                 return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
             }
@@ -375,13 +429,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         return parameters[currentArgumentIndex].Type;
     }
 
-    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters)
+    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters, bool canExpandSingleArray)
     {
         int optionalParametersCount = methodParameters.Count(x => x.HasExplicitDefaultValue);
         bool isLastParameterParams = methodParameters[^1].IsParams;
-        bool isOnlyParameterAndIsArray = methodParameters is [{ Type.Kind: SymbolKind.ArrayType }];
-
-        if (isOnlyParameterAndIsArray)
+        if (canExpandSingleArray)
         {
             return false;
         }

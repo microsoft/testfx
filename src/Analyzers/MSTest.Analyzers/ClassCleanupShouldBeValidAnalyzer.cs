@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities.Extensions;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -20,9 +18,9 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.ClassCleanupShouldBeValidRuleId,
-        new LocalizableResourceString(nameof(Resources.ClassCleanupShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.ClassCleanupShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.ClassCleanupShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.ClassCleanupShouldBeValidTitle)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.ClassCleanupShouldBeValidMessageFormat)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.ClassCleanupShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -35,46 +33,10 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute, out INamedTypeSymbol? classCleanupAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
-            {
-                INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-                INamedTypeSymbol? inheritanceBehaviorSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior);
-                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-                INamedTypeSymbol? testContextSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext);
-                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, inheritanceBehaviorSymbol, testClassAttributeSymbol, testContextSymbol, canDiscoverInternals),
-                    SymbolKind.Method);
-            }
-        });
-    }
-
-    private static void AnalyzeSymbol(
-        SymbolAnalysisContext context,
-        INamedTypeSymbol classCleanupAttributeSymbol,
-        INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol,
-        INamedTypeSymbol? inheritanceBehaviorSymbol,
-        INamedTypeSymbol testClassAttributeSymbol,
-        INamedTypeSymbol? testContextSymbol,
-        bool canDiscoverInternals)
-    {
-        var methodSymbol = (IMethodSymbol)context.Symbol;
-        bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classCleanupAttributeSymbol);
-        if (methodSymbol.HasAttribute(classCleanupAttributeSymbol)
-            && (!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
-                allowGenericType: isInheritanceModeSet, FixtureParameterMode.OptionalTestContext, testContextSymbol,
-                testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable)
-                || (!isInheritanceModeSet && methodSymbol.ContainingType.IsAbstract)
-                || (isInheritanceModeSet && methodSymbol.ContainingType.IsSealed)))
-        {
-            context.ReportDiagnostic(isFixable
-                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
-                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
-        }
+        FixtureMethodAnalyzerHelper.RegisterClassFixtureAnalyzer(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute,
+            Rule,
+            FixtureParameterMode.OptionalTestContext);
     }
 }

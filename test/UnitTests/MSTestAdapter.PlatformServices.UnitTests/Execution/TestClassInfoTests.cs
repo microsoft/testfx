@@ -448,6 +448,21 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.PostClassInitProperties.Should().NotContainKey(TestContext.FullyQualifiedTestClassNameLabel);
     }
 
+    public async Task GetResultOrRunClassInitializeAsyncShouldLeavePostClassInitPropertiesNullWhenClassInitSetsNoProperties()
+    {
+        // ClassInitialize exists and succeeds but sets no TestContext.Properties.
+        DummyTestClass.ClassInitializeMethodBody = _ => { };
+        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassInitializeMethod));
+
+        TestContextImplementation realTestContext = new(null, _testClassType.FullName, new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testClassInfo.GetResultOrRunClassInitializeAsync(realTestContext, string.Empty, string.Empty, string.Empty, string.Empty);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+
+        // CaptureLifecycleProperties returns null when no non-label properties were set.
+        _testClassInfo.PostClassInitProperties.Should().BeNull();
+    }
+
     public async Task GetResultOrRunClassInitializeAsyncShouldLeavePostClassInitPropertiesNullWhenClassInitMethodIsNull()
     {
         _testClassInfo.ClassInitializeMethod = null;

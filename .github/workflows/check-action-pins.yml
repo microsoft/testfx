@@ -1,0 +1,93 @@
+name: Check action pins
+
+# Guards against corrupted GitHub Actions pins in the generated agentic-workflow
+# files. A locally installed `gh aw` build can silently rewrite pins in every
+# `.lock.yml` it touches -- downgrading an action or replacing an immutable SHA
+# with a mutable tag -- and the damage rides along unnoticed in unrelated PRs
+# because reviewers rarely read generated files line by line.
+# See https://github.com/microsoft/testfx/issues/10258.
+#
+# The check is fully offline and deterministic: it compares every `uses:`
+# reference against `.github/aw/actions-lock.json` and against the other
+# workflows in the repository.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - '.github/aw/actions-lock.json'
+      - '.github/scripts/check_action_pins.py'
+      - '.github/scripts/check-action-pins-requirements.txt'
+      - '.github/scripts/issue-labeler.mjs'
+      - '.github/scripts/issue-labeler.test.mjs'
+      - '.github/scripts/test_gh_aw_firewall_footer.py'
+      - '.github/scripts/test_build_failure_analysis_checkout.py'
+      - '.github/scripts/check_unused_package_versions.py'
+      - '.github/scripts/test_check_unused_package_versions.py'
+      - '**/*.csproj'
+      - '**/*.fsproj'
+      - '**/*.vbproj'
+      - '**/*.props'
+      - '**/*.targets'
+  push:
+    branches:
+      - main
+      - 'rel/*'
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - '.github/aw/actions-lock.json'
+      - '.github/scripts/check_action_pins.py'
+      - '.github/scripts/check-action-pins-requirements.txt'
+      - '.github/scripts/issue-labeler.mjs'
+      - '.github/scripts/issue-labeler.test.mjs'
+      - '.github/scripts/test_gh_aw_firewall_footer.py'
+      - '.github/scripts/test_build_failure_analysis_checkout.py'
+      - '.github/scripts/check_unused_package_versions.py'
+      - '.github/scripts/test_check_unused_package_versions.py'
+      - '**/*.csproj'
+      - '**/*.fsproj'
+      - '**/*.vbproj'
+      - '**/*.props'
+      - '**/*.targets'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-action-pins-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Audit action pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Install PyYAML
+        run: python -m pip install --disable-pip-version-check --require-hashes -r .github/scripts/check-action-pins-requirements.txt
+      - name: Audit action pins
+        run: python .github/scripts/check_action_pins.py
+      - name: Test build-analysis checkout identity
+        run: python .github/scripts/test_build_failure_analysis_checkout.py
+      - name: Test and audit central package versions
+        run: |
+          python .github/scripts/test_check_unused_package_versions.py
+          python .github/scripts/check_unused_package_versions.py
+      - name: Test issue labeler helper
+        run: node --test .github/scripts/issue-labeler.test.mjs
+      - name: Setup pinned gh-aw scripts
+        uses: github/gh-aw-actions/setup@924af5fdc64061cfbf66fb584c8b07e2ac230c60 # v0.89.21
+        with:
+          destination: ${{ runner.temp }}/gh-aw/actions
+      - name: Test firewall footer correction
+        run: python .github/scripts/test_gh_aw_firewall_footer.py --module-path "$RUNNER_TEMP/gh-aw/actions/firewall_blocked_domains.cjs"

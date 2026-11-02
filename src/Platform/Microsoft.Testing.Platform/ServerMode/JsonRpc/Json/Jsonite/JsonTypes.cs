@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright(c) 2016, Alexandre Mutel
@@ -114,7 +114,7 @@ namespace Jsonite
         /// <returns>A string representation of this object</returns>
         public override string ToString()
         {
-            var innerMessage = InnerException != null ? " Check inner exception for more details" : string.Empty;
+            var innerMessage = InnerException is not null ? " Check inner exception for more details" : string.Empty;
             return $"({Line + 1},{Column + 1}) : error : {Message}{innerMessage}";
         }
     }
@@ -165,6 +165,11 @@ namespace Jsonite
         /// Gets or sets a value indicating whether all values should be deserialized to strings instead of numbers.
         /// </summary>
         public bool ParseValuesAsStrings { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to allow comments.
+        /// </summary>
+        public bool AllowComments { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether to allow trailing commas in object and array declaration.

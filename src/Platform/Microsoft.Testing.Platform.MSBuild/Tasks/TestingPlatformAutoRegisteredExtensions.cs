@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Testing.Platform.Helpers;
@@ -20,6 +18,15 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
+    private const string EmbeddedAttributeDefinition = """
+        namespace Microsoft.CodeAnalysis
+        {
+            internal sealed partial class EmbeddedAttribute : global::System.Attribute
+            {
+            }
+        }
+        """;
+
     private readonly IFileSystem _fileSystem;
 
     /// <summary>
@@ -32,6 +39,7 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
 
     internal TestingPlatformSelfRegisteredExtensions(IFileSystem fileSystem)
     {
+        // Stryker disable once String: The opt-in debugger hook cannot be exercised safely by an automated unit test.
         if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
         {
             Debugger.Launch();
@@ -44,19 +52,19 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     /// Gets or sets the path to the source file.
     /// </summary>
     [Required]
-    public ITaskItem SelfRegisteredExtensionsSourcePath { get; set; }
+    public required ITaskItem SelfRegisteredExtensionsSourcePath { get; set; }
 
     /// <summary>
     /// Gets or sets the language of the source file.
     /// </summary>
     [Required]
-    public ITaskItem Language { get; set; }
+    public required ITaskItem Language { get; set; }
 
     /// <summary>
     /// Gets or sets the builder hooks.
     /// </summary>
     [Required]
-    public ITaskItem[] SelfRegisteredExtensionsBuilderHook { get; set; }
+    public required ITaskItem[] SelfRegisteredExtensionsBuilderHook { get; set; }
 
     /// <summary>
     /// Gets or sets the root namespace.
@@ -64,10 +72,11 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     public string? RootNamespace { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the generated file.
+    /// Gets or sets the path to the generated file. It stays <see langword="null"/> when the project language is
+    /// not supported, in which case the task produces no output item.
     /// </summary>
     [Output]
-    public ITaskItem SelfRegisteredExtensionsGeneratedFilePath { get; set; }
+    public ITaskItem? SelfRegisteredExtensionsGeneratedFilePath { get; set; }
 
     private readonly string _expectedItemSpec = """
 Expected item spec:
@@ -121,7 +130,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
                 !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(FSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase))
             {
-                SelfRegisteredExtensionsGeneratedFilePath = default!;
+                SelfRegisteredExtensionsGeneratedFilePath = null;
                 Log.LogError($"Language '{Language.ItemSpec}' is not supported.");
             }
             else
@@ -140,6 +149,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
         foreach (IGrouping<string, ITaskItem> group in SelfRegisteredExtensionsBuilderHook.GroupBy(x => x.ItemSpec))
         {
+            // Stryker disable once Linq: GroupBy never produces an empty grouping, so First and FirstOrDefault are equivalent here.
             ITaskItem firstItem = group.First();
             foreach (ITaskItem duplicateItem in group.Skip(1))
             {
@@ -211,6 +221,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 //------------------------------------------------------------------------------
 
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+[global::Microsoft.CodeAnalysis.Embedded]
 internal static class SelfRegisteredExtensions
 {
     public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
@@ -218,6 +229,8 @@ internal static class SelfRegisteredExtensions
         {{extensionsFragments}}
     }
 }
+
+{{EmbeddedAttributeDefinition}}
 """
                 : $$"""
 //------------------------------------------------------------------------------
@@ -229,6 +242,7 @@ internal static class SelfRegisteredExtensions
 namespace {{rootNamespace}}
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    [global::Microsoft.CodeAnalysis.Embedded]
     internal static class SelfRegisteredExtensions
     {
         public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
@@ -237,6 +251,8 @@ namespace {{rootNamespace}}
         }
     }
 }
+
+{{EmbeddedAttributeDefinition}}
 """;
         }
         else if (language == VBLanguageSymbol)

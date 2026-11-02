@@ -1,9 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Globalization;
 
 using AwesomeAssertions;
+
+using Moq;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
@@ -13,6 +16,89 @@ public partial class AssertTests
     {
         var collection = new List<int> { 1, 2, 3 };
         Assert.HasCount(3, collection);
+    }
+
+    public void Count_GenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(3);
+
+        Assert.HasCount(3, collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_GenericICollection_InterpolatedString_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(3);
+        DummyClassTrackingToStringCalls o = new();
+
+        Assert.HasCount(3, collection, $"User-provided message: {o}");
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void Count_NonGenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(3);
+
+        Assert.HasCount(3, collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_NonGenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingEnumerable collection = new(3);
+
+        Assert.HasCount(3, collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
+    public void Count_NonGenericICollection_WhenCountDiffers_ShouldPreserveFailureMessage()
+    {
+        CountTrackingCollection collection = new(1);
+
+        Action action = () => Assert.HasCount(3, collection, "custom message", "collection");
+
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                custom message
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, collection)
+                """);
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_NonGenericICollection_WhenCountThrows_ShouldPropagateWithoutEnumerating()
+    {
+        ThrowingCountCollection collection = new();
+
+        Action action = () => Assert.HasCount(0, collection);
+
+        action.Should().Throw<InvalidOperationException>().WithMessage("count boom");
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_NonGenericNullCollection_ShouldPreserveException()
+    {
+        IEnumerable collection = null!;
+
+        Action hasCountAction = () => Assert.HasCount(0, collection);
+        Action isEmptyAction = () => Assert.IsEmpty(collection);
+        hasCountAction.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("source");
+        isEmptyAction.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("source");
     }
 
     public void Count_InterpolatedString_WhenCountIsSame_ShouldPass()
@@ -42,7 +128,10 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.HasCount(1, Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        // Use a List<int> (not an array) so this exercises the IEnumerable<T> overload: arrays now
+        // bind to the ReadOnlySpan<T> overload, and a span cannot be preserved across an await.
+        var collection = new List<int>();
+        Func<Task> action = async () => Assert.HasCount(1, collection, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage(
                 $$"""
@@ -52,7 +141,7 @@ public partial class AssertTests
                 expected count: 1
                 actual count:   0
 
-                Assert.HasCount(1, Array.Empty<int>())
+                Assert.HasCount(1, collection)
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -86,8 +175,446 @@ public partial class AssertTests
         }
     }
 
+#if NETCOREAPP3_1_OR_GREATER
+    public void Count_ReadOnlySpan_WhenCountIsSame_ShouldPass()
+    {
+        int[] array = [1, 2, 3];
+        ReadOnlySpan<int> span = array;
+        Assert.HasCount(3, span);
+    }
+
+    public void Count_Span_WhenCountIsSame_ShouldPass()
+    {
+        int[] array = [1, 2, 3];
+        Span<int> span = array;
+        Assert.HasCount(3, span);
+    }
+
+    public void Count_Memory_WhenCountIsSame_ShouldPass()
+    {
+        int[] array = [1, 2, 3];
+        Memory<int> memory = array;
+        Assert.HasCount(3, memory);
+    }
+
+    public void Count_ReadOnlyMemory_WhenCountIsSame_ShouldPass()
+    {
+        int[] array = [1, 2, 3];
+        ReadOnlyMemory<int> memory = array;
+        Assert.HasCount(3, memory);
+    }
+
+    public void Count_ReadOnlySpan_WhenCountIsNotSame_ShouldFail()
+    {
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        // ReadOnlySpan cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.HasCount(3, span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to contain a specific number of elements.
+
+            expected count: 3
+            actual count:   1
+
+            Assert.HasCount(3, span)
+            """);
+    }
+
+    public void Count_Memory_WhenCountIsNotSame_ShouldFail()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        Action action = () => Assert.HasCount(3, memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, memory)
+                """);
+    }
+
+    public void Count_ReadOnlySpan_InterpolatedString_WhenCountIsSame_ShouldNotEvaluateMessage()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1, 2, 3];
+        ReadOnlySpan<int> span = array;
+        Assert.HasCount(3, span, $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void Count_Memory_InterpolatedString_WhenCountIsNotSame_ShouldEvaluateMessageAndFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        Memory<int> memory = array;
+        Action action = () => Assert.HasCount(3, memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void Count_Span_WhenCountIsNotSame_ShouldFail()
+    {
+        int[] array = [1];
+        Span<int> span = array;
+        // Span cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.HasCount(3, span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to contain a specific number of elements.
+
+            expected count: 3
+            actual count:   1
+
+            Assert.HasCount(3, span)
+            """);
+    }
+
+    public void Count_ReadOnlyMemory_WhenCountIsNotSame_ShouldFail()
+    {
+        int[] array = [1];
+        ReadOnlyMemory<int> memory = array;
+        Action action = () => Assert.HasCount(3, memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, memory)
+                """);
+    }
+
+    public void Count_Span_InterpolatedString_WhenCountIsNotSame_ShouldEvaluateMessageAndFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        Span<int> span = array;
+        // Span cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.HasCount(3, span, $"User-provided message: {o}");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to contain a specific number of elements.
+            User-provided message: DummyClassTrackingToStringCalls
+
+            expected count: 3
+            actual count:   1
+
+            Assert.HasCount(3, span)
+            """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void Count_ReadOnlyMemory_InterpolatedString_WhenCountIsNotSame_ShouldEvaluateMessageAndFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        ReadOnlyMemory<int> memory = array;
+        Action action = () => Assert.HasCount(3, memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void Count_Array_InterpolatedString_WhenCountIsSame_ShouldNotEvaluateMessage()
+    {
+        // Arrays bind to the ReadOnlySpan<T> overload now that it exists; the interpolated
+        // message must still be evaluated lazily (i.e. only when the assertion fails).
+        DummyClassTrackingToStringCalls o = new();
+        Assert.HasCount(0, Array.Empty<string>(), $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsEmpty_ReadOnlySpan_WhenEmpty_ShouldPass()
+    {
+        ReadOnlySpan<int> span = [];
+        Assert.IsEmpty(span);
+    }
+
+    public void IsEmpty_Span_WhenEmpty_ShouldPass()
+    {
+        Span<int> span = [];
+        Assert.IsEmpty(span);
+    }
+
+    public void IsEmpty_Memory_WhenEmpty_ShouldPass()
+    {
+        Memory<int> memory = Array.Empty<int>();
+        Assert.IsEmpty(memory);
+    }
+
+    public void IsEmpty_ReadOnlyMemory_WhenEmpty_ShouldPass()
+    {
+        ReadOnlyMemory<int> memory = Array.Empty<int>();
+        Assert.IsEmpty(memory);
+    }
+
+    public void IsEmpty_ReadOnlySpan_InterpolatedString_WhenEmpty_ShouldNotEvaluateMessage()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        ReadOnlySpan<int> span = [];
+        Assert.IsEmpty(span, $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsEmpty_ReadOnlySpan_WhenNotEmpty_ShouldFail()
+    {
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        // ReadOnlySpan cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.IsEmpty(span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to be empty.
+
+            expected count: 0
+            actual count:   1
+
+            Assert.IsEmpty(span)
+            """);
+    }
+
+    public void IsEmpty_Memory_WhenNotEmpty_ShouldFail()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        Action action = () => Assert.IsEmpty(memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be empty.
+
+                expected count: 0
+                actual count:   1
+
+                Assert.IsEmpty(memory)
+                """);
+    }
+
+    public void IsEmpty_Memory_InterpolatedString_WhenNotEmpty_ShouldEvaluateMessageAndFail()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        DummyClassTrackingToStringCalls o = new();
+        Action action = () => Assert.IsEmpty(memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be empty.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                expected count: 0
+                actual count:   1
+
+                Assert.IsEmpty(memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotEmpty_ReadOnlySpan_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        Assert.IsNotEmpty(span);
+    }
+
+    public void IsNotEmpty_Span_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        Span<int> span = array;
+        Assert.IsNotEmpty(span);
+    }
+
+    public void IsNotEmpty_Memory_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        Assert.IsNotEmpty(memory);
+    }
+
+    public void IsNotEmpty_ReadOnlyMemory_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        ReadOnlyMemory<int> memory = array;
+        Assert.IsNotEmpty(memory);
+    }
+
+    public void IsNotEmpty_ReadOnlySpan_InterpolatedString_WhenNotEmpty_ShouldNotEvaluateMessage()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        Assert.IsNotEmpty(span, $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsNotEmpty_ReadOnlySpan_WhenEmpty_ShouldFail()
+    {
+        ReadOnlySpan<int> span = [];
+        // ReadOnlySpan cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.IsNotEmpty(span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to not be empty.
+
+            actual count: 0
+
+            Assert.IsNotEmpty(span)
+            """);
+    }
+
+    public void IsNotEmpty_Memory_WhenEmpty_ShouldFail()
+    {
+        Memory<int> memory = Array.Empty<int>();
+        Action action = () => Assert.IsNotEmpty(memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+
+                actual count: 0
+
+                Assert.IsNotEmpty(memory)
+                """);
+    }
+
+    public void IsNotEmpty_Memory_InterpolatedString_WhenEmpty_ShouldEvaluateMessageAndFail()
+    {
+        Memory<int> memory = Array.Empty<int>();
+        DummyClassTrackingToStringCalls o = new();
+        Action action = () => Assert.IsNotEmpty(memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                actual count: 0
+
+                Assert.IsNotEmpty(memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+#endif
+
     public void NotAny_WhenEmpty_ShouldPass()
         => Assert.IsEmpty(Array.Empty<int>());
+
+    public void IsEmpty_GenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(0);
+
+        Assert.IsEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_GenericICollection_InterpolatedString_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(0);
+        DummyClassTrackingToStringCalls o = new();
+
+        Assert.IsEmpty(collection, $"User-provided message: {o}");
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsEmpty_NonGenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(0);
+
+        Assert.IsEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_NonGenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingEnumerable collection = new(0);
+
+        Assert.IsEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
 
     public void NotAny_InterpolatedString_WhenEmpty_ShouldPass()
     {
@@ -147,6 +674,37 @@ public partial class AssertTests
         o.WasToStringCalled.Should().BeFalse();
     }
 
+    public void Single_InterpolatedString_GenericIList_ShouldUseCountAndIndexerWithoutEnumerating()
+    {
+        Mock<IList<int>> collection = new(MockBehavior.Strict);
+        collection.SetupGet(static list => list.Count).Returns(1);
+        collection.SetupGet(static list => list[0]).Returns(42);
+        DummyClassTrackingToStringCalls o = new();
+
+        int item = Assert.ContainsSingle(collection.Object, $"User-provided message: {o}");
+
+        item.Should().Be(42);
+        collection.VerifyGet(static list => list.Count, Times.Once);
+        collection.VerifyGet(static list => list[0], Times.Once);
+        collection.VerifyNoOtherCalls();
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void Single_InterpolatedString_EnumerableWithoutIndexer_ReturnsItemWithoutFormatting()
+    {
+        static IEnumerable<int> EnumerateOne()
+        {
+            yield return 37;
+        }
+
+        DummyClassTrackingToStringCalls formatter = new();
+
+        int item = Assert.ContainsSingle(EnumerateOne(), $"User-provided message: {formatter}");
+
+        item.Should().Be(37);
+        formatter.WasToStringCalled.Should().BeFalse();
+    }
+
     public void Single_WhenNoItems_ShouldFail()
     {
         Action action = () => Assert.ContainsSingle(Array.Empty<int>());
@@ -165,9 +723,9 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        Func<Task> action = async () => Assert.ContainsSingle(new List<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(Array.Empty<int>())*");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(new List<int>())*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -175,9 +733,9 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        Func<Task> action = async () => Assert.ContainsSingle(new List<int> { 1, 2, 3 }, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle([1, 2, 3])*");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle(new List<int>*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -241,6 +799,67 @@ public partial class AssertTests
         Assert.IsNotEmpty(collection);
     }
 
+    public void IsNotEmpty_GenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_GenericICollection_InterpolatedString_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(1);
+        DummyClassTrackingToStringCalls o = new();
+
+        Assert.IsNotEmpty(collection, $"User-provided message: {o}");
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsNotEmpty_GenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingGenericEnumerable collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
+    public void IsNotEmpty_NonGenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_NonGenericICollection_WhenEmpty_ShouldFailWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(0);
+
+        Action action = () => Assert.IsNotEmpty(collection);
+
+        action.Should().Throw<Exception>();
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_NonGenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingEnumerable collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
     public void Any_InterpolatedString_WhenAnyOneItem_ShouldPass()
     {
         DummyClassTrackingToStringCalls o = new();
@@ -273,7 +892,10 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.IsNotEmpty(Array.Empty<string>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        // Use a List<string> (not an array) so this exercises the IEnumerable<T> overload: arrays now
+        // bind to the ReadOnlySpan<T> overload, and a span cannot be preserved across an await.
+        var collection = new List<string>();
+        Func<Task> action = async () => Assert.IsNotEmpty(collection, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage(
                 $$"""
@@ -282,8 +904,294 @@ public partial class AssertTests
 
                 actual count: 0
 
-                Assert.IsNotEmpty(Array.Empty<string>())
+                Assert.IsNotEmpty(collection)
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
+
+    private sealed class CountTrackingGenericCollection(int count) : ICollection<int>
+    {
+        public int Count
+        {
+            get
+            {
+                CountAccessCount++;
+                return count;
+            }
+        }
+
+        public int CountAccessCount { get; private set; }
+
+        public int EnumerationCount { get; private set; }
+
+        public bool IsReadOnly => true;
+
+        public void Add(int item)
+            => throw new NotSupportedException();
+
+        public void Clear()
+            => throw new NotSupportedException();
+
+        public bool Contains(int item)
+            => throw new NotSupportedException();
+
+        public void CopyTo(int[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        public bool Remove(int item)
+            => throw new NotSupportedException();
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            EnumerationCount++;
+            throw new InvalidOperationException("The ICollection<T> fast path should not enumerate.");
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private sealed class CountTrackingGenericEnumerable(int count) : IEnumerable<int>
+    {
+        public int EnumerationCount { get; private set; }
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            EnumerationCount++;
+            return Enumerable.Range(0, count).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private sealed class CountTrackingCollection(int count) : ICollection
+    {
+        public int Count
+        {
+            get
+            {
+                CountAccessCount++;
+                return count;
+            }
+        }
+
+        public int CountAccessCount { get; private set; }
+
+        public int EnumerationCount { get; private set; }
+
+        public bool IsSynchronized => false;
+
+        public object SyncRoot { get; } = new();
+
+        public void CopyTo(Array array, int index)
+            => throw new NotSupportedException();
+
+        public IEnumerator GetEnumerator()
+        {
+            EnumerationCount++;
+            throw new InvalidOperationException("The ICollection fast path should not enumerate.");
+        }
+    }
+
+    private sealed class CountTrackingEnumerable(int count) : IEnumerable
+    {
+        public int EnumerationCount { get; private set; }
+
+        public IEnumerator GetEnumerator()
+        {
+            EnumerationCount++;
+            return Enumerable.Range(0, count).GetEnumerator();
+        }
+    }
+
+    private sealed class ThrowingCountCollection : ICollection
+    {
+        public int Count
+        {
+            get
+            {
+                CountAccessCount++;
+                throw new InvalidOperationException("count boom");
+            }
+        }
+
+        public int CountAccessCount { get; private set; }
+
+        public int EnumerationCount { get; private set; }
+
+        public bool IsSynchronized => false;
+
+        public object SyncRoot { get; } = new();
+
+        public void CopyTo(Array array, int index)
+            => throw new NotSupportedException();
+
+        public IEnumerator GetEnumerator()
+        {
+            EnumerationCount++;
+            throw new InvalidOperationException("The ICollection fast path should not enumerate.");
+        }
+    }
+
+#if NETCOREAPP3_1_OR_GREATER
+    public void EmptyAssertions_InterpolatedSpanMemoryOverloads_AreLazyAndReportExactCounts()
+    {
+        foreach (int shape in new[] { 0, 1, 2 })
+        {
+            foreach (bool shouldBeEmpty in new[] { true, false })
+            {
+                int formatCalls = 0;
+                int[] values = shouldBeEmpty ? [] : [17, 23];
+                Action accepted = Invoke;
+                accepted.Should().NotThrow();
+                formatCalls.Should().Be(0);
+
+                values = shouldBeEmpty ? [17, 23] : [];
+                Action rejected = Invoke;
+                AssertFailedException exception = rejected.Should().ThrowExactly<AssertFailedException>().Which;
+                string expected = shouldBeEmpty
+                    ? """
+                        Assertion failed. Expected collection to be empty.
+                        empty context
+
+                        expected count: 0
+                        actual count:   2
+
+                        Assert.IsEmpty(collection)
+                        """
+                    : """
+                        Assertion failed. Expected collection to not be empty.
+                        empty context
+
+                        actual count: 0
+
+                        Assert.IsNotEmpty(collection)
+                        """;
+                exception.Message.Replace("\r\n", "\n").Should().Be(expected.Replace("\r\n", "\n"));
+                exception.ExpectedText.Should().Be(shouldBeEmpty ? "0" : "> 0");
+                exception.ActualText.Should().Be(shouldBeEmpty ? "2" : "0");
+                formatCalls.Should().Be(1);
+
+                string Format()
+                {
+                    formatCalls++;
+                    return "empty context";
+                }
+
+                void Invoke()
+                {
+                    if (shape == 0)
+                    {
+                        int[] collection = values;
+                        if (shouldBeEmpty)
+                        {
+                            Assert.IsEmpty(collection, $"{Format()}");
+                        }
+                        else
+                        {
+                            Assert.IsNotEmpty(collection, $"{Format()}");
+                        }
+                    }
+                    else if (shape == 1)
+                    {
+                        Span<int> collection = values;
+                        if (shouldBeEmpty)
+                        {
+                            Assert.IsEmpty(collection, $"{Format()}");
+                        }
+                        else
+                        {
+                            Assert.IsNotEmpty(collection, $"{Format()}");
+                        }
+                    }
+                    else
+                    {
+                        ReadOnlyMemory<int> collection = values;
+                        if (shouldBeEmpty)
+                        {
+                            Assert.IsEmpty(collection, $"{Format()}");
+                        }
+                        else
+                        {
+                            Assert.IsNotEmpty(collection, $"{Format()}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void IsNotEmpty_SpanAndReadOnlyMemory_EmptyInputReportsFailure()
+    {
+        int[] values = [17];
+        Action span = () => Assert.IsNotEmpty(values.AsSpan(), collectionExpression: "collection");
+        Action memory = () => Assert.IsNotEmpty((ReadOnlyMemory<int>)values, collectionExpression: "collection");
+        span.Should().NotThrow();
+        memory.Should().NotThrow();
+        values = [];
+        foreach (Action action in new[] { span, memory })
+        {
+            action.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+
+                actual count: 0
+
+                Assert.IsNotEmpty(collection)
+                """);
+        }
+    }
+
+    public void Count_ScopedFailureContinuesAcrossEnumerableAndSpanMemoryOverloads()
+    {
+        int[] values = [17, 23];
+        int formatCalls = 0;
+        string Format()
+        {
+            formatCalls++;
+            return "count scope";
+        }
+
+        (Action<int> AssertCount, bool Interpolated)[] cases =
+        [
+            (expected => Assert.HasCount(expected, values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, (IEnumerable<int>)values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, (IEnumerable)values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, (ReadOnlySpan<int>)values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, values.AsSpan(), $"{Format()}", "collection"), true),
+            (expected => Assert.HasCount(expected, (ReadOnlyMemory<int>)values, $"{Format()}", "collection"), true),
+            (expected => Assert.HasCount(expected, values.AsMemory(), $"{Format()}", "collection"), true),
+        ];
+        foreach ((Action<int> assertCount, bool interpolated) in cases)
+        {
+            formatCalls = 0;
+            Action accepted = () => assertCount(2);
+            accepted.Should().NotThrow();
+            formatCalls.Should().Be(0);
+            int continued = 0;
+            Action rejected = () =>
+            {
+                using (Assert.Scope())
+                {
+                    assertCount(3);
+                    continued++;
+                }
+            };
+            AssertFailedException failure = rejected.Should().ThrowExactly<AssertFailedException>().Which;
+            failure.Message.Replace("\r\n", "\n").Should().Be(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                count scope
+
+                expected count: 3
+                actual count:   2
+
+                Assert.HasCount(3, collection)
+                """.Replace("\r\n", "\n"));
+            failure.ExpectedText.Should().Be("3");
+            failure.ActualText.Should().Be("2");
+            continued.Should().Be(1);
+            formatCalls.Should().Be(interpolated ? 1 : 0);
+        }
+    }
+#endif
 }

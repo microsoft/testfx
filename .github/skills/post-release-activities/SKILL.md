@@ -56,5 +56,6 @@ Open a PR to the main branch to update the product versions of public samples to
 
 1. Run `eng/mark-shipped.ps1` (requires PowerShell 7.0).
 2. Move the contents of `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md` (except the first two lines that start with `;`) to `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Shipped.md`.
+3. In `src/Analyzers/MSTest.Analyzers/SuppressionReleases.md`, move the rows for suppressors shipped in the release branch from `## Unshipped` to `## Release {version}` (using the full MSTest version found in Step 1). Create the release section with the existing table format if it does not exist, preserving each suppression ID, suppressed diagnostic ID, and notes. Leave suppressors not included in this release under `## Unshipped`, and remove that section if it becomes empty. If no suppressors were shipped from `## Unshipped`, leave the catalog unchanged.
 
 Create a PR to main with these changes.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT.
+    -->
+    <TestingPlatformBuilderHook Include="9F3CD35A-4E62-43EF-B7F1-426D30E850ED" >
+      <DisplayName>Microsoft.Testing.Extensions.JUnitReport</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.JUnitReport.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>

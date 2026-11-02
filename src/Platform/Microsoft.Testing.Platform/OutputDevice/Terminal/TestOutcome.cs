@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Outcome of a test.
 /// </summary>
+[Embedded]
 internal enum TestOutcome
 {
     /// <summary>

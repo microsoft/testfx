@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -39,7 +38,7 @@ internal sealed class TestRunInfo : ITestRunInfo
 
     private static PlannedTest ToPlannedTest(UnitTestElement element)
     {
-        Trait[]? traits = element.Traits;
+        TestTrait[]? traits = element.Traits;
         KeyValuePair<string, string>[] testProperties;
         if (traits is { Length: > 0 })
         {

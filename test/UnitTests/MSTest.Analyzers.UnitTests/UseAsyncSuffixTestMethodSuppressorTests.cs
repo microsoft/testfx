@@ -102,6 +102,71 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         }.RunAsync();
     }
 
+    [TestMethod]
+    public async Task AsyncMethodWithCustomDerivedTestMethodAttribute_DiagnosticIsSuppressed()
+    {
+        string code =
+            """
+
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class SomeClass
+            {
+                [CustomTestMethod]
+                public async Task {|#0:TestMethod|}() { }
+            }
+
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
+        }.RunAsync();
+
+        // Verify issue is suppressed — custom attributes deriving from TestMethodAttribute are also covered
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(true) },
+        }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task AsyncMethodWithoutAnyTestAttribute_DiagnosticIsNotSuppressed()
+    {
+        string code =
+            """
+
+            using System.Threading.Tasks;
+
+            public class SomeClass
+            {
+                public async Task {|#0:MyMethod|}() { }
+            }
+
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
+        }.RunAsync();
+
+        // Verify issue is still reported with suppressor (no TestMethod attribute → not suppressed)
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
+        }.RunAsync();
+    }
+
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1038:Compiler extensions should be implemented in assemblies with compiler-provided references", Justification = "For suppression test only.")]
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1036:Specify analyzer banned API enforcement setting", Justification = "For suppression test only.")]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]

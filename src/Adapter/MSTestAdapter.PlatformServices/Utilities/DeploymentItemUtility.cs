@@ -3,9 +3,9 @@
 
 #if !WINDOWS_UWP && !WIN_UI
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -80,7 +80,7 @@ internal sealed class DeploymentItemUtility
             return false;
         }
 
-        if (relativeOutputDirectory == null)
+        if (relativeOutputDirectory is null)
         {
             warning = Resource.DeploymentItemOutputDirectoryCannotBeNull;
             return false;
@@ -105,29 +105,25 @@ internal sealed class DeploymentItemUtility
     /// <summary>
     /// Returns whether there are any deployment items defined on the test.
     /// </summary>
-    /// <param name="testCase"> The test Case. </param>
+    /// <param name="testElement"> The test. </param>
     /// <returns> True if has deployment items.</returns>
-    internal static bool HasDeploymentItems(TestCase testCase)
-    {
-        KeyValuePair<string, string>[]? deploymentItems = GetDeploymentItems(testCase);
+    internal static bool HasDeploymentItems(UnitTestElement testElement)
+        => testElement.DeploymentItems is { Length: > 0 };
 
-        return deploymentItems is { Length: > 0 };
-    }
-
-    internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)
+    internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<UnitTestElement> tests)
     {
         List<DeploymentItem> allDeploymentItems = [];
-        foreach (TestCase test in tests)
+        foreach (UnitTestElement test in tests)
         {
-            KeyValuePair<string, string>[]? items = GetDeploymentItems(test);
-            if (items == null || items.Length == 0)
+            KeyValuePair<string, string>[]? items = test.DeploymentItems;
+            if (items is null || items.Length == 0)
             {
                 continue;
             }
 
             IList<DeploymentItem>? deploymentItemsToBeAdded = FromKeyValuePairs(items);
 
-            // TODO: Check if we can avoid potential NRE here.
+            // deploymentItemsToBeAdded is never null here: items is non-empty (filtered above) and FromKeyValuePairs only returns null for an empty array.
             foreach (DeploymentItem deploymentItemToBeAdded in deploymentItemsToBeAdded!)
             {
                 AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);
@@ -139,8 +135,8 @@ internal sealed class DeploymentItemUtility
 
     internal static void AddDeploymentItem(IList<DeploymentItem> deploymentItemList, DeploymentItem deploymentItem)
     {
-        DebugEx.Assert(deploymentItemList != null, "DeploymentItem list cannot be null");
-        DebugEx.Assert(deploymentItem != null, "DeploymentItem  cannot be null");
+        DebugEx.Assert(deploymentItemList is not null, "DeploymentItem list cannot be null");
+        DebugEx.Assert(deploymentItem is not null, "DeploymentItem  cannot be null");
 
         if (!deploymentItemList.Contains(deploymentItem))
         {
@@ -148,9 +144,15 @@ internal sealed class DeploymentItemUtility
         }
     }
 
+    // Path.GetInvalidPathChars()/GetInvalidFileNameChars() allocate a new array on every call.
+    // These characters are static for the lifetime of the process, so cache them once instead of
+    // re-allocating on every [DeploymentItem]-attributed method encountered during test discovery.
+    private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
+    private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+
     private static bool IsInvalidPath(string path)
     {
-        if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+        if (path.IndexOfAny(InvalidPathChars) != -1)
         {
             return true;
         }
@@ -159,7 +161,7 @@ internal sealed class DeploymentItemUtility
         {
             string fileName = Path.GetFileName(path);
 
-            if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            if (fileName.IndexOfAny(InvalidFileNameChars) != -1)
             {
                 return true;
             }
@@ -195,17 +197,17 @@ internal sealed class DeploymentItemUtility
     [return: NotNullIfNotNull(nameof(deploymentItemList2))]
     private static IEnumerable<DeploymentItem>? Concat(IEnumerable<DeploymentItem>? deploymentItemList1, IEnumerable<DeploymentItem>? deploymentItemList2)
     {
-        if (deploymentItemList1 == null && deploymentItemList2 == null)
+        if (deploymentItemList1 is null && deploymentItemList2 is null)
         {
             return null;
         }
 
-        if (deploymentItemList1 == null)
+        if (deploymentItemList1 is null)
         {
             return deploymentItemList2;
         }
 
-        if (deploymentItemList2 == null)
+        if (deploymentItemList2 is null)
         {
             return deploymentItemList1;
         }
@@ -220,14 +222,6 @@ internal sealed class DeploymentItemUtility
         return result;
     }
 
-    /// <summary>
-    /// Returns the deployment items defined on the test.
-    /// </summary>
-    /// <param name="testCase"> The test Case. </param>
-    /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) as
-            KeyValuePair<string, string>[];
-
     private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
     {
         if (!deploymentItemList.Any())
@@ -239,7 +233,7 @@ internal sealed class DeploymentItemUtility
 
         foreach (DeploymentItem deploymentItem in deploymentItemList)
         {
-            if (deploymentItem != null)
+            if (deploymentItem is not null)
             {
                 result.Add(new KeyValuePair<string, string>(deploymentItem.SourcePath, deploymentItem.RelativeOutputDirectory));
             }

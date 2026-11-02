@@ -25,14 +25,22 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string DiscoverTestsJsonArgument = "json";
     public const string DiscoverTestsTextArgument = "text";
 
+    private const string AppModelActivationPayloadOptionKey = "internal-appmodel-activation-payload";
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
     private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
+    private static readonly string SupportedDotNetTestTransportValues = $"'{DotNetTestTransportPipeArgument}', '{DotNetTestTransportHttpArgument}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
+    public const string CoverageThresholdLineOptionKey = "coverage-threshold-line";
+    public const string CoverageThresholdBranchOptionKey = "coverage-threshold-branch";
+    public const string ZeroTestsPolicyOptionKey = "zero-tests-policy";
+    public const string ZeroTestsPolicyStrictArgument = "strict";
+    public const string ZeroTestsPolicyAllowSkippedArgument = "allow-skipped";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
+    public const string EnableDynamicExtensionsOptionKey = "enable-dynamic-extensions";
     public const string FilterUidOptionKey = "filter-uid";
     public const string DebugAttachOptionKey = "debug";
 
@@ -42,8 +50,15 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string JsonRpcProtocolName = "jsonrpc";
     public const string DotNetTestPipeOptionKey = "dotnet-test-pipe";
     public const string DotnetTestCliProtocolName = "dotnettestcli";
+    public const string DotNetTestTransportOptionKey = "dotnet-test-transport";
+    public const string DotNetTestTransportPipeArgument = "pipe";
+    public const string DotNetTestTransportHttpArgument = "http";
+    public const string DotNetTestHttpEndpointOptionKey = "dotnet-test-http-endpoint";
+    public const string DotNetTestHttpTokenOptionKey = "dotnet-test-http-token";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
+
+    private static readonly string SupportedZeroTestsPolicyValues = $"'{ZeroTestsPolicyStrictArgument}', '{ZeroTestsPolicyAllowSkippedArgument}'";
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
@@ -60,6 +75,9 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         MinimumExpectedTests,
+        new(CoverageThresholdLineOptionKey, PlatformResources.PlatformCommandLineCoverageThresholdLineDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(CoverageThresholdBranchOptionKey, PlatformResources.PlatformCommandLineCoverageThresholdBranchDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(ZeroTestsPolicyOptionKey, PlatformResources.PlatformCommandLineZeroTestsPolicyOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -74,13 +92,19 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+        new(AppModelActivationPayloadOptionKey, PlatformResources.PlatformCommandLineAppModelActivationPayloadOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
+        new(DotNetTestHttpEndpointOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpEndpointOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestHttpTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestTransportOptionKey, PlatformResources.PlatformCommandLineDotnetTestTransportOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(EnableDynamicExtensionsOptionKey, PlatformResources.PlatformCommandLineEnableDynamicExtensionsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true)
     ];
 
     public PlatformCommandLineProvider()
         : base(
-            nameof(PlatformCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "PlatformCommandLineProvider",
             PlatformVersion.Version,
             PlatformResources.PlatformCommandLineProviderDisplayName,
             PlatformResources.PlatformCommandLineProviderDescription,
@@ -90,6 +114,14 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
+        if (commandOption.Name is CoverageThresholdLineOptionKey or CoverageThresholdBranchOptionKey
+            && (arguments is not [string percentageArgument]
+                || !decimal.TryParse(percentageArgument, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal percentage)
+                || percentage is < 0 or > 100))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCoverageThresholdInvalid, commandOption.Name));
+        }
+
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
             if (!VerbosityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
@@ -112,6 +144,32 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && !DotnetTestCliProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineServerInvalidArgument, arguments[0], SupportedServerProtocolValues));
+        }
+
+        if (commandOption.Name == DotNetTestTransportOptionKey
+            && !DotNetTestTransportPipeArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            && !DotNetTestTransportHttpArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDotnetTestTransportInvalid,
+                arguments[0],
+                SupportedDotNetTestTransportValues));
+        }
+
+        if (commandOption.Name == DotNetTestHttpEndpointOptionKey
+            && !IsValidHttpEndpoint(arguments[0]))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpEndpointInvalid);
+        }
+
+        if (commandOption.Name == DotNetTestHttpTokenOptionKey
+            && (RoslynString.IsNullOrWhiteSpace(arguments[0])
+                || arguments[0].Any(char.IsWhiteSpace)
+                || arguments[0].Any(char.IsControl)
+                || !System.Net.Http.Headers.AuthenticationHeaderValue.TryParse($"Bearer {arguments[0]}", out _)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpTokenInvalid);
         }
 
         if (commandOption.Name == ClientPortOptionKey
@@ -158,6 +216,14 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             }
         }
 
+        if (commandOption.Name == ZeroTestsPolicyOptionKey
+            && arguments is [string zeroTestsPolicyArgument]
+            && !ZeroTestsPolicyStrictArgument.Equals(zeroTestsPolicyArgument, StringComparison.OrdinalIgnoreCase)
+            && !ZeroTestsPolicyAllowSkippedArgument.Equals(zeroTestsPolicyArgument, StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineZeroTestsPolicyInvalidArgument, zeroTestsPolicyArgument, SupportedZeroTestsPolicyValues));
+        }
+
         // Now validate the minimum expected tests option
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
@@ -174,6 +240,13 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
 
+    public static ZeroTestsPolicy GetZeroTestsPolicy(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(ZeroTestsPolicyOptionKey, out string[]? arguments)
+            && arguments is { Length: 1 }
+            && ZeroTestsPolicyStrictArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+                ? ZeroTestsPolicy.Strict
+                : ZeroTestsPolicy.AllowSkipped;
+
     public static bool IsListTestsJsonOutput(ICommandLineOptions commandLineOptions)
         => commandLineOptions.TryGetOptionArgumentList(DiscoverTestsOptionKey, out string[]? arguments)
             && arguments is { Length: 1 }
@@ -184,6 +257,16 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value <= 0)
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
+
+    private static bool IsValidHttpEndpoint(string value)
+        => Uri.TryCreate(value, UriKind.Absolute, out Uri? endpoint)
+            && endpoint is not null
+            && endpoint.Scheme is "http" or "https"
+            && endpoint.Host.Length > 0
+            && endpoint.UserInfo.Length == 0
+            && endpoint.Query.Length == 0
+            && endpoint.Fragment.Length == 0
+            && (endpoint.Scheme == Uri.UriSchemeHttps || endpoint.IsLoopback);
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
@@ -206,16 +289,81 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
-        // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the
-        // dotnet test pipe. Without it, the dotnet test connection silently never activates and the
-        // application falls back to console mode, leading to confusing behavior. Both options are
-        // internal and are expected to be passed together by 'dotnet test'.
+        if (commandLineOptions.IsOptionSet(DiscoverTestsOptionKey)
+            && (commandLineOptions.IsOptionSet(CoverageThresholdLineOptionKey)
+                || commandLineOptions.IsOptionSet(CoverageThresholdBranchOptionKey)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests);
+        }
+
+        if (commandLineOptions.IsOptionSet("retry-failed-tests")
+            && (commandLineOptions.IsOptionSet(CoverageThresholdLineOptionKey)
+                || commandLineOptions.IsOptionSet(CoverageThresholdBranchOptionKey)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries);
+        }
+
+        if (commandLineOptions.IsOptionSet(FilterUidOptionKey)
+            && commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.OnlyOneFilterSupported);
+        }
+
+        bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
+        bool hasTransport = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArguments)
+            && transportArguments is { Length: 1 };
+        bool isPipeTransport = hasTransport
+            && DotNetTestTransportPipeArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
+        bool isHttpTransport = hasTransport
+            && DotNetTestTransportHttpArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
+        bool hasHttpEndpoint = commandLineOptions.IsOptionSet(DotNetTestHttpEndpointOptionKey);
+        bool hasHttpToken = commandLineOptions.IsOptionSet(DotNetTestHttpTokenOptionKey);
+
+        if (hasPipe && (isHttpTransport || hasHttpEndpoint || hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestTransportConflict);
+        }
+
+        if (!isHttpTransport && (hasHttpEndpoint || hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport);
+        }
+
+        if (isHttpTransport && (!hasHttpEndpoint || !hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken);
+        }
+
+        if (isPipeTransport && !hasPipe)
+        {
+            return ValidationResult.InvalidTask(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
+                    DotnetTestCliProtocolName,
+                    DotNetTestPipeOptionKey));
+        }
+
+        // The '--server dotnettestcli' protocol path requires exactly one pre-launch transport: either the
+        // legacy named pipe (implied by '--dotnet-test-pipe') or authenticated HTTP.
         if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
             && serverProtocolArgs is { Length: 1 }
-            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase)
-            && !commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey))
+            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey));
+            if (!hasPipe && !isHttpTransport)
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
+            }
+
+            if (hasPipe && OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLinePipeTransportNotSupportedOnBrowser);
+            }
+
+            if (hasPipe && OperatingSystem.IsWasi())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLinePipeTransportNotSupportedOnWasi);
+            }
         }
 
         if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))
@@ -231,6 +379,11 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             if (OperatingSystem.IsBrowser())
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
+            }
+
+            if (OperatingSystem.IsWasi())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInWasi);
             }
 
             _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);

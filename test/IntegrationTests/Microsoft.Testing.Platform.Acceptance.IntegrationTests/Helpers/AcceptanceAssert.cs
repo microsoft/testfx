@@ -7,6 +7,20 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 internal static class AcceptanceAssert
 {
+    /// <summary>
+    /// Regex fragment (including the surrounding parentheses) that matches a test duration as rendered in the
+    /// platform output, e.g. <c>(040ms)</c>, <c>(1s 040ms)</c>, <c>(2m 03s 040ms)</c> or <c>(1h 02m 03s 040ms)</c>.
+    /// </summary>
+    /// <remarks>
+    /// The duration format (see <c>HumanReadableDurationFormatter</c> in Microsoft.Testing.Platform) grows additional
+    /// leading parts (seconds, minutes, hours, days) as the elapsed time increases. A naive <c>\(\d+ms\)</c> pattern
+    /// only matches sub-second durations and is a frequent source of timing flakiness on slower machines (often macOS,
+    /// sometimes Windows) where a test that usually runs in a few hundred milliseconds occasionally takes over a second
+    /// and is rendered as <c>(1s 040ms)</c>. Always use this constant when asserting on output that contains a duration
+    /// instead of hard-coding <c>\(\d+ms\)</c>.
+    /// </remarks>
+    public const string DurationPattern = @"\((?:\d+d )?(?:\d+h )?(?:\d+m )?(?:\d+s )?\d+ms\)";
+
     public static void AssertExitCodeIs(this TestHostResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.AreEqual(exitCode, testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
@@ -116,22 +130,34 @@ internal static class AcceptanceAssert
     public static void AssertOutputMatchesRegex(this DotnetMuxerResult dotnetMuxerResult, [StringSyntax("Regex")] string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsTrue(Regex.IsMatch(dotnetMuxerResult.StandardOutput, pattern), GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
+    /// <summary>
+    /// Ensure the output contains exactly <paramref name="expectedMatchCount"/> matches of <paramref name="pattern"/>.
+    /// </summary>
+    /// <remarks>
+    /// Use this when several test hosts write to the same output concurrently. Their writes interleave, so a given
+    /// occurrence cannot be tied to the host that produced it, and a regex spanning two of a host's writes matches
+    /// whatever happened to be written in between. Counting occurrences still verifies that every host reported the
+    /// expected result, without depending on where the line breaks fall.
+    /// </remarks>
+    public static void AssertOutputMatchesRegexTimes(this DotnetMuxerResult dotnetMuxerResult, [StringSyntax("Regex")] string pattern, int expectedMatchCount, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => Assert.HasCount(expectedMatchCount, Regex.Matches(dotnetMuxerResult.StandardOutput, pattern), GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
+
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsFalse(testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
     public static void AssertStandardErrorContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
        => Assert.Contains(value, testHostResult.StandardError, StringComparison.Ordinal, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
-    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, bool allSkippedIsZeroTests = false, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
     {
         int totalTests = failed + passed + skipped;
-        string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
+        string result = minimumNumberOfTests is not null && totalTests < minimumNumberOfTests
             ? $"Minimum expected tests policy violation, tests ran {totalTests}, minimum expected {minimumNumberOfTests}"
             : aborted is true
                 ? "Aborted"
                 : failed > 0
                     ? "Failed!"
-                    : totalTests == 0 || totalTests == skipped
+                    : totalTests == 0 || (allSkippedIsZeroTests && totalTests == skipped)
                         ? "Zero tests ran"
                         : "Passed!";
 

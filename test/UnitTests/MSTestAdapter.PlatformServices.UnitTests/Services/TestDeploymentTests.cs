@@ -4,12 +4,11 @@
 #if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using Moq;
@@ -111,15 +110,12 @@ public class TestDeploymentTests : TestContainer
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
 
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
+        UnitTestElement testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         testDeployment.Cleanup();
 
@@ -128,15 +124,12 @@ public class TestDeploymentTests : TestContainer
 
     public void CleanupShouldDeleteRootDeploymentDirectory()
     {
-        TestCase testCase = GetTestCase(typeof(DeploymentUtilityTests).Assembly.Location);
+        UnitTestElement testCase = GetTestCase(typeof(DeploymentUtilityTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         // Act.
         testDeployment.Cleanup();
@@ -152,15 +145,12 @@ public class TestDeploymentTests : TestContainer
 
     public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()
     {
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
+        UnitTestElement testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         // Act.
         testDeployment.GetDeploymentDirectory().Should().Be(testRunDirectories.OutDirectory);
@@ -172,14 +162,14 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
+        UnitTestElement testCase = CreateTestElement("path/to/asm.dll");
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
                 DefaultDeploymentItemOutputDirectory)
         ];
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
+        testCase.DeploymentItems = kvpArray;
 
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionOperations.Object),
@@ -194,7 +184,7 @@ public class TestDeploymentTests : TestContainer
         mstestSettingsProvider.Load(reader);
 
         // Deployment should not happen
-        testDeployment.Deploy(new List<TestCase> { testCase }, null, null!).Should().BeFalse();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(null, null), new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
 
         // Deployment directories should not be created
         testDeployment.GetDeploymentDirectory().Should().BeNull();
@@ -202,8 +192,8 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseAndHasNoDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
+        UnitTestElement testCase = CreateTestElement("path/to/asm.dll");
+        testCase.DeploymentItems = null;
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
@@ -217,7 +207,7 @@ public class TestDeploymentTests : TestContainer
         mstestSettingsProvider.Load(reader);
 
         // Deployment should not happen
-        testDeployment.Deploy(new List<TestCase> { testCase }, null, null!).Should().BeFalse();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(null, null), new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
 
         // Deployment directories should get created on .NET Framework for compat, but not on .NET Core
 #if NETFRAMEWORK
@@ -229,8 +219,8 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToTrueButHasNoDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
+        UnitTestElement testCase = CreateTestElement("path/to/asm.dll");
+        testCase.DeploymentItems = null;
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
@@ -244,7 +234,7 @@ public class TestDeploymentTests : TestContainer
         mstestSettingsProvider.Load(reader);
 
         // Deployment should not happen
-        testDeployment.Deploy(new List<TestCase> { testCase }, null, null!).Should().BeFalse();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(null, null), new Mock<IAdapterMessageLogger>().Object).Should().BeFalse();
 
         // Deployment directories should get created on .NET Framework for compat, but not on .NET Core
 #if NETFRAMEWORK
@@ -257,14 +247,14 @@ public class TestDeploymentTests : TestContainer
     // TODO: This test has to have mocks (tracked by https://github.com/microsoft/testfx/issues/8086). It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
     internal void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
+        UnitTestElement testCase = CreateTestElement(typeof(TestDeploymentTests).Assembly.Location);
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
                         DefaultDeploymentItemOutputDirectory)
         ];
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
+        testCase.DeploymentItems = kvpArray;
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
@@ -278,7 +268,7 @@ public class TestDeploymentTests : TestContainer
         mstestSettingsProvider.Load(reader);
 
         // Deployment should happen
-        testDeployment.Deploy(new List<TestCase> { testCase }, null, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(null, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         // Deployment directories should get created
         testDeployment.GetDeploymentDirectory().Should().NotBeNull();
@@ -309,15 +299,12 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNull()
     {
         // Arrange.
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
+        UnitTestElement testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         // Act.
         IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(null);
@@ -339,15 +326,12 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNotNull()
     {
         // Arrange.
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
+        UnitTestElement testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         // Act.
         IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).Assembly.Location);
@@ -383,19 +367,22 @@ public class TestDeploymentTests : TestContainer
             ru => ru.GetAttributes<DeploymentItemAttribute>(attributeProvider)).Returns(deploymentItemAttributes);
     }
 
-    private static TestCase GetTestCase(string source)
+    private static UnitTestElement GetTestCase(string source)
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), source);
+        UnitTestElement testCase = CreateTestElement(source);
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
                 DefaultDeploymentItemOutputDirectory)
         ];
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
+        testCase.DeploymentItems = kvpArray;
 
         return testCase;
     }
+
+    private static UnitTestElement CreateTestElement(string source)
+        => new(new TestMethod("M", "C", source, displayName: null));
 
     private TestDeployment CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories)
     {

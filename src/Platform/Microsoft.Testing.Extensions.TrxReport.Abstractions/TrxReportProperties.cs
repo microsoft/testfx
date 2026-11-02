@@ -255,6 +255,46 @@ public sealed class TrxCategoriesProperty : IProperty
 }
 
 /// <summary>
+/// A property that represents the work item IDs to be reported in the TRX file.
+/// </summary>
+public sealed class TrxWorkItemsProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TrxWorkItemsProperty"/> class.
+    /// </summary>
+    /// <param name="workItemIds">The work item IDs.</param>
+    public TrxWorkItemsProperty(string[] workItemIds)
+        => WorkItemIds = workItemIds;
+
+    /// <summary>
+    /// Gets the work item IDs.
+    /// </summary>
+    public string[] WorkItemIds { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TrxWorkItemsProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(WorkItemIds)} = [");
+
+        for (int i = 0; i < WorkItemIds.Length; i++)
+        {
+            builder.Append(WorkItemIds[i]);
+            if (i < WorkItemIds.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
+        builder.Append(']');
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
+
+/// <summary>
 /// A property that represents the value of <c>name</c> attribute on <c>UnitTest</c> XML elements under <c>TestDefinitions</c> XML element.
 /// When the property is missing, TestNode.DisplayName is used instead.
 /// This can cause issues when multiple test results are reported where different test results have different display names.

@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// <summary>
 /// Represents the result of parsing a command line.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
 {
@@ -31,11 +34,22 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     }
 
     internal CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors, IReadOnlyList<string> arguments)
+        : this(toolName, options, errors, arguments, arguments)
+    {
+    }
+
+    internal CommandLineParseResult(
+        string? toolName,
+        IReadOnlyList<CommandLineParseOption> options,
+        IReadOnlyList<string> errors,
+        IReadOnlyList<string> arguments,
+        IReadOnlyList<string> expandedArguments)
     {
         ToolName = toolName;
         Options = options;
         Errors = errors;
-        CommandLine = string.Join(" ", arguments);
+        CommandLine = CommandLineArgumentsRedactor.Redact([.. arguments]);
+        ExpandedArguments = [.. expandedArguments];
     }
 
     /// <summary>
@@ -54,6 +68,8 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     public IReadOnlyList<string> Errors { get; }
 
     internal string CommandLine { get; }
+
+    internal IReadOnlyList<string> ExpandedArguments { get; }
 
     /// <summary>
     /// Gets a value indicating whether the parsing has errors.
@@ -133,7 +149,19 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     /// <param name="optionName">The name of the option.</param>
     /// <returns>Returns <c>true</c> if the option is set; <c>false</c> otherwise.</returns>
     public bool IsOptionSet(string optionName)
-        => Options.Any(o => o.Name.Equals(optionName.Trim(OptionPrefix), StringComparison.OrdinalIgnoreCase));
+    {
+        // Hoist Trim() outside the loop to avoid re-allocating the trimmed string for every element.
+        string trimmedName = optionName.Trim(OptionPrefix);
+        foreach (CommandLineParseOption option in Options)
+        {
+            if (option.Name.Equals(trimmedName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Gets the argument list for the specified option.
@@ -144,10 +172,21 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
         optionName = optionName.Trim(OptionPrefix);
-        IEnumerable<CommandLineParseOption> result = Options.Where(x => x.Name == optionName);
-        if (result.Any())
+
+        // Single pass over Options: collect arguments from all matching entries without
+        // double-enumerating the lazy Where/SelectMany chain (which would re-scan Options twice).
+        List<string>? args = null;
+        foreach (CommandLineParseOption option in Options)
         {
-            arguments = [.. result.SelectMany(x => x.Arguments)];
+            if (option.Name == optionName)
+            {
+                (args ??= []).AddRange(option.Arguments);
+            }
+        }
+
+        if (args is not null)
+        {
+            arguments = [.. args];
             return true;
         }
 

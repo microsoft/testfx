@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Enumerates the text colors supported by VT100 terminal.
 /// </summary>
+[Embedded]
 internal enum TerminalColor
 {
     /// <summary>

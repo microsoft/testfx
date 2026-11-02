@@ -9,23 +9,22 @@
 
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <RepoRoot>$(MSBuildThisFileDirectory)..\..\..\</RepoRoot>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(MTPVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" VersionOverride="1.13.1" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.13.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectCapability Include="TestingPlatformServer" />
     <ProjectCapability Include="TestContainer" />
   </ItemGroup>
-
-  <!-- Import the capabilities for the Microsoft.Testing.Platform -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
 </Project>

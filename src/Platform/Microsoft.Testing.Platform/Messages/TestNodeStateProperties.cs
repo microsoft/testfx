@@ -26,11 +26,14 @@ public abstract class TestNodeStateProperty : IProperty, IEquatable<TestNodeStat
         builder.Append(Explanation);
     }
 
+    // Note: the derived types keep an explicit ToString() override that simply forwards here. They are
+    // redundant behavior-wise but are part of the shipped public API, so they cannot be removed.
+
     /// <inheritdoc />
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append(nameof(TestNodeStateProperty));
+        builder.Append(GetType().Name);
         builder.Append(" { ");
         PrintMembers(builder);
         builder.Append(" }");
@@ -71,14 +74,7 @@ public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty, IEq
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(DiscoveredTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -114,14 +110,7 @@ public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty, IEq
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(InProgressTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -157,14 +146,7 @@ public sealed class PassedTestNodeStateProperty : TestNodeStateProperty, IEquata
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(PassedTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -200,14 +182,7 @@ public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty, IEquat
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(SkippedTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -259,14 +234,7 @@ public sealed class FailedTestNodeStateProperty : TestNodeStateProperty, IEquata
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(FailedTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     private protected override void PrintMembers(StringBuilder builder)
     {
@@ -326,14 +294,7 @@ public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty, IEquatab
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(ErrorTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     private protected override void PrintMembers(StringBuilder builder)
     {
@@ -398,14 +359,7 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquat
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(TimeoutTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     private protected override void PrintMembers(StringBuilder builder)
     {
@@ -471,14 +425,7 @@ public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEqu
 
     /// <inheritdoc />
     public override string ToString()
-    {
-        var builder = new StringBuilder();
-        builder.Append(nameof(CancelledTestNodeStateProperty));
-        builder.Append(" { ");
-        PrintMembers(builder);
-        builder.Append(" }");
-        return builder.ToString();
-    }
+        => base.ToString();
 
     private protected override void PrintMembers(StringBuilder builder)
     {

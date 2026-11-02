@@ -1,27 +1,33 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.IPC;
 
 // WARNING: Please note this file needs to be kept aligned with the one in the dotnet sdk.
 // The protocol follows the concept of optional properties.
 // The id is used to identify the property in the stream and it will be skipped if it's not recognized.
 // We can add new properties with new ids, but we CANNOT change the existing ids (to support backwards compatibility).
+[Embedded]
 internal static class VoidResponseFieldsId
 {
     public const int MessagesSerializerId = 0;
 }
 
+[Embedded]
 internal static class TestHostCompletedRequestFieldsId
 {
     public const int MessagesSerializerId = 1;
 }
 
+[Embedded]
 internal static class TestHostProcessPIDRequestFieldsId
 {
     public const int MessagesSerializerId = 2;
 }
 
+[Embedded]
 internal static class CommandLineOptionMessagesFieldsId
 {
     public const int MessagesSerializerId = 3;
@@ -30,6 +36,7 @@ internal static class CommandLineOptionMessagesFieldsId
     public const ushort CommandLineOptionMessageList = 2;
 }
 
+[Embedded]
 internal static class CommandLineOptionMessageFieldsId
 {
     public const ushort Name = 1;
@@ -37,8 +44,12 @@ internal static class CommandLineOptionMessageFieldsId
     public const ushort IsHidden = 3;
     public const ushort IsBuiltIn = 4;
     // Reserved: field ID 5 was ObsolescenceMessage, removed as unused.
+    public const ushort ProviderUid = 6;
+    public const ushort MinimumArity = 7;
+    public const ushort MaximumArity = 8;
 }
 
+[Embedded]
 internal static class DiscoveredTestMessagesFieldsId
 {
     public const int MessagesSerializerId = 5;
@@ -48,6 +59,7 @@ internal static class DiscoveredTestMessagesFieldsId
     public const ushort DiscoveredTestMessageList = 3;
 }
 
+[Embedded]
 internal static class DiscoveredTestMessageFieldsId
 {
     public const ushort Uid = 1;
@@ -61,12 +73,14 @@ internal static class DiscoveredTestMessageFieldsId
     public const ushort ParameterTypeFullNames = 9;
 }
 
+[Embedded]
 internal static class TraitMessageFieldsId
 {
     public const ushort Key = 1;
     public const ushort Value = 2;
 }
 
+[Embedded]
 internal static class TestResultMessagesFieldsId
 {
     public const int MessagesSerializerId = 6;
@@ -77,6 +91,7 @@ internal static class TestResultMessagesFieldsId
     public const ushort FailedTestMessageList = 4;
 }
 
+[Embedded]
 internal static class SuccessfulTestResultMessageFieldsId
 {
     public const ushort Uid = 1;
@@ -87,8 +102,14 @@ internal static class SuccessfulTestResultMessageFieldsId
     public const ushort StandardOutput = 6;
     public const ushort ErrorOutput = 7;
     public const ushort SessionUid = 8;
+
+    // Optional in-process retry metadata (see RetryAttemptProperty). Added after SessionUid; older
+    // readers skip unrecognized field ids, so this stays backwards compatible.
+    public const ushort RetryAttemptNumber = 9;
+    public const ushort IsSuperseded = 10;
 }
 
+[Embedded]
 internal static class FailedTestResultMessageFieldsId
 {
     public const ushort Uid = 1;
@@ -100,8 +121,22 @@ internal static class FailedTestResultMessageFieldsId
     public const ushort StandardOutput = 7;
     public const ushort ErrorOutput = 8;
     public const ushort SessionUid = 9;
+
+    // Optional assertion diff fields. They carry the structured expected/actual values captured by
+    // assertion libraries (e.g. MSTest's Assert stores them on Exception.Data["assert.expected"] /
+    // ["assert.actual"]) so the SDK's TerminalTestReporter can render the same expected-vs-actual diff
+    // for multi-assembly `dotnet test` runs that it already renders for single-assembly runs. Added
+    // after SessionUid; older readers skip unrecognized field ids, so this stays backwards compatible.
+    public const ushort Expected = 10;
+    public const ushort Actual = 11;
+
+    // Optional in-process retry metadata (see RetryAttemptProperty). Added after Expected/Actual;
+    // older readers skip unrecognized field ids, so this stays backwards compatible.
+    public const ushort RetryAttemptNumber = 12;
+    public const ushort IsSuperseded = 13;
 }
 
+[Embedded]
 internal static class ExceptionMessageFieldsId
 {
     public const ushort ErrorMessage = 1;
@@ -109,6 +144,7 @@ internal static class ExceptionMessageFieldsId
     public const ushort StackTrace = 3;
 }
 
+[Embedded]
 internal static class FileArtifactMessagesFieldsId
 {
     public const int MessagesSerializerId = 7;
@@ -118,6 +154,7 @@ internal static class FileArtifactMessagesFieldsId
     public const ushort FileArtifactMessageList = 3;
 }
 
+[Embedded]
 internal static class FileArtifactMessageFieldsId
 {
     public const ushort FullPath = 1;
@@ -126,8 +163,12 @@ internal static class FileArtifactMessageFieldsId
     public const ushort TestUid = 4;
     public const ushort TestDisplayName = 5;
     public const ushort SessionUid = 6;
+    public const ushort Kind = 7;
+    public const ushort InputArtifactPaths = 8;
+    public const ushort CoverageSummary = 9;
 }
 
+[Embedded]
 internal static class TestSessionEventFieldsId
 {
     public const int MessagesSerializerId = 8;
@@ -137,11 +178,13 @@ internal static class TestSessionEventFieldsId
     public const ushort ExecutionId = 3;
 }
 
+[Embedded]
 internal static class HandshakeMessageFieldsId
 {
     public const int MessagesSerializerId = 9;
 }
 
+[Embedded]
 internal static class TestInProgressMessagesFieldsId
 {
     public const int MessagesSerializerId = 10;
@@ -151,8 +194,67 @@ internal static class TestInProgressMessagesFieldsId
     public const ushort TestInProgressMessageList = 3;
 }
 
+[Embedded]
 internal static class TestInProgressMessageFieldsId
 {
     public const ushort Uid = 1;
     public const ushort DisplayName = 2;
+}
+
+[Embedded]
+internal static class AzureDevOpsLogMessageFieldsId
+{
+    public const int MessagesSerializerId = 11;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort LogText = 3;
+}
+
+[Embedded]
+internal static class DisplayMessageFieldsId
+{
+    public const int MessagesSerializerId = 12;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort Level = 3;
+    public const ushort Text = 4;
+}
+
+[Embedded]
+internal static class WaitForServerControlRequestFieldsId
+{
+    public const int MessagesSerializerId = 13;
+}
+
+[Embedded]
+internal static class ServerControlMessageFieldsId
+{
+    public const int MessagesSerializerId = 14;
+
+    public const ushort Kind = 1;
+}
+
+[Embedded]
+internal static class CoverageSummaryMessagesFieldsId
+{
+    public const int MessagesSerializerId = 15;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort Summaries = 3;
+}
+
+[Embedded]
+internal static class CoverageSummaryMessageFieldsId
+{
+    public const ushort SessionUid = 1;
+    public const ushort ProducerId = 2;
+    public const ushort ScopeLevel = 3;
+    public const ushort ScopeName = 4;
+    public const ushort Metric = 5;
+    public const ushort CustomMetricName = 6;
+    public const ushort CoveredCount = 7;
+    public const ushort CoverableCount = 8;
 }

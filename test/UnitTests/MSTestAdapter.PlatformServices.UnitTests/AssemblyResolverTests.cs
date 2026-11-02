@@ -2,9 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
+using System.Runtime.Remoting;
+
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -185,6 +191,31 @@ public class AssemblyResolverTests : TestContainer
         isAssemblyLoaded.Should().BeFalse();
         isAssemblyReflectionOnlyLoaded.Should().BeTrue();
     }
+
+    public void OnResolveShouldIgnoreTraceLoggerFailures()
+    {
+        var platformServiceProvider = new TestablePlatformServiceProvider();
+        platformServiceProvider.MockTraceLogger
+            .Setup(logger => logger.IsInfoEnabled)
+            .Throws(new RemotingException());
+        PlatformServiceProvider.Instance = platformServiceProvider;
+
+        try
+        {
+            using var assemblyResolver = new TestableAssemblyResolver([@"c:\dummy"]);
+            Assembly expectedAssembly = typeof(AssemblyResolverTests).Assembly;
+            assemblyResolver.SearchAssemblySetter = (_, _, _) => expectedAssembly;
+            Assembly? resolvedAssembly = null;
+            Action act = () => resolvedAssembly = assemblyResolver.OnResolve(null, new ResolveEventArgs("DummyTestDllForTest"));
+
+            act.Should().NotThrow();
+            resolvedAssembly.Should().BeSameAs(expectedAssembly);
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = null;
+        }
+    }
 }
 
 internal class TestableAssemblyResolver : AssemblyResolver
@@ -210,10 +241,10 @@ internal class TestableAssemblyResolver : AssemblyResolver
         => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
     protected override string[] GetDirectories(string path)
-        => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
+        => GetDirectoriesSetter is null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
     protected override Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
-        => SearchAssemblySetter == null
+        => SearchAssemblySetter is null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 
@@ -221,10 +252,10 @@ internal class TestableAssemblyResolver : AssemblyResolver
         => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
 
     protected override Assembly LoadAssemblyFrom(string path)
-        => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
+        => LoadAssemblyFromSetter is null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 
     protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
-        => ReflectionOnlyLoadAssemblyFromSetter == null
+        => ReflectionOnlyLoadAssemblyFromSetter is null
             ? base.ReflectionOnlyLoadAssemblyFrom(path)
             : ReflectionOnlyLoadAssemblyFromSetter(path);
 }

@@ -5,6 +5,9 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Json;
 
+using JsonDocument = System.Text.Json.JsonDocument;
+using JsonElement = System.Text.Json.JsonElement;
+
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -117,6 +120,56 @@ public sealed class JsonTests
     }
 
     [TestMethod]
+    public async Task Serialize_ErrorMessage_EmitsJsonRpc20CompliantShape()
+    {
+        // Arrange
+        ErrorMessage errorMessage = new(
+            Id: 42,
+            ErrorCode: -32601,
+            Message: "Method not found",
+            Data: null);
+
+        // Act
+        string actual = await _json.SerializeAsync(errorMessage);
+
+        // Assert
+        // Per JSON-RPC 2.0 §5.1, "code" MUST live inside the "error" object and MUST NOT
+        // appear at the top level of the response envelope.
+        using var document = JsonDocument.Parse(actual);
+        JsonElement root = document.RootElement;
+
+        Assert.AreEqual("2.0", root.GetProperty("jsonrpc").GetString());
+        Assert.AreEqual(42, root.GetProperty("id").GetInt32());
+        Assert.IsFalse(
+            root.TryGetProperty("code", out _),
+            "Top-level 'code' must not be present; it belongs inside the 'error' object per JSON-RPC 2.0 §5.1.");
+
+        JsonElement error = root.GetProperty("error");
+        Assert.AreEqual(-32601, error.GetProperty("code").GetInt32());
+        Assert.AreEqual("Method not found", error.GetProperty("message").GetString());
+    }
+
+    [TestMethod]
+    public async Task Serialize_ErrorMessage_RoundTripsViaDeserializer()
+    {
+        // Arrange
+        ErrorMessage original = new(
+            Id: 7,
+            ErrorCode: -32000,
+            Message: "Server error",
+            Data: null);
+
+        // Act
+        string serialized = await _json.SerializeAsync(original);
+        ErrorMessage roundTripped = _json.Deserialize<ErrorMessage>(Encoding.UTF8.GetBytes(serialized).AsMemory());
+
+        // Assert
+        Assert.AreEqual(original.Id, roundTripped.Id);
+        Assert.AreEqual(original.ErrorCode, roundTripped.ErrorCode);
+        Assert.AreEqual(original.Message, roundTripped.Message);
+    }
+
+    [TestMethod]
     public void DeserializePerson()
     {
         // Arrange
@@ -129,7 +182,7 @@ public sealed class JsonTests
         });
 
         // Act
-        Person actual = json.Deserialize<Person>(new("""{"name":"Thomas"}""".ToCharArray()));
+        Person actual = json.Deserialize<Person>(Encoding.UTF8.GetBytes("""{"name":"Thomas"}""").AsMemory());
 
         // Assert
         Assert.AreEqual("Thomas", actual.Name);
@@ -149,6 +202,277 @@ public sealed class JsonTests
         Assert.Contains(nameof(TestJsonObjectSerializer), exception.Message);
     }
 
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithIsStatefulTrue_StjPath_SurfacesStatefulClient()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": true } }
+            }
+            """;
+
+        // Act
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
+
+        // Assert
+        Assert.IsTrue(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithIsStatefulFalse_StjPath_SurfacesStatelessClient()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": false } }
+            }
+            """;
+
+        // Act
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
+
+        // Assert
+        Assert.IsFalse(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithoutIsStateful_StjPath_LeavesCapabilityUndeclared()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true } }
+            }
+            """;
+
+        // Act
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
+
+        // Assert
+        Assert.IsNull(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithInvalidIsStateful_StjPath_Throws()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": "false" } }
+            }
+            """;
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory()));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithNullIsStateful_StjPath_Throws()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": null } }
+            }
+            """;
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory()));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithIsStatefulTrue_JsonitePath_SurfacesStatefulClient()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = true,
+                },
+            },
+        };
+
+        // Act
+        ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
+
+        // Assert
+        Assert.IsTrue(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithIsStatefulFalse_JsonitePath_SurfacesStatelessClient()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = false,
+                },
+            },
+        };
+
+        // Act
+        ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
+
+        // Assert
+        Assert.IsFalse(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithoutIsStateful_JsonitePath_LeavesCapabilityUndeclared()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                },
+            },
+        };
+
+        // Act
+        ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
+
+        // Assert
+        Assert.IsNull(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithInvalidIsStateful_JsonitePath_Throws()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = "false",
+                },
+            },
+        };
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<ClientCapabilities>(properties));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithNullIsStateful_JsonitePath_Throws()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = null,
+                },
+            },
+        };
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<ClientCapabilities>(properties));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_UntypedDictionary_WithNonInt32Numbers_StjPath_PreservesNumericType()
+    {
+        // Arrange
+        // Real MTP notifications carry numbers that are NOT Int32: durations as doubles, timestamps and
+        // counts as longs. The untyped IDictionary<string, object?> deserializer used to call GetInt32() on
+        // every JSON number, which throws FormatException on those values and faulted the whole read loop
+        // on the net8 / System.Text.Json path (the net462 / Jsonite path decodes generically and was fine).
+        Json json = new();
+        const string payload = """
+            { "small": 42, "big": 9999999999, "huge": 79228162514264337593543950335, "duration": 40.5 }
+            """;
+
+        // Act
+        IDictionary<string, object?> actual = json.Deserialize<IDictionary<string, object?>>(Encoding.UTF8.GetBytes(payload).AsMemory());
+
+        // Assert
+        // Mirror the Jsonite reader exactly: a value that fits Int32 stays int, a larger integer widens to
+        // long, and a value with a fractional part becomes double.
+        Assert.IsInstanceOfType<int>(actual["small"]);
+        Assert.AreEqual(42, actual["small"]);
+        Assert.IsInstanceOfType<long>(actual["big"]);
+        Assert.AreEqual(9999999999L, actual["big"]);
+        Assert.IsInstanceOfType<decimal>(actual["huge"]);
+        Assert.AreEqual(decimal.MaxValue, actual["huge"]);
+        Assert.IsInstanceOfType<double>(actual["duration"]);
+        Assert.AreEqual(40.5d, actual["duration"]);
+    }
+
+    [TestMethod]
+    public void Deserialize_UntypedArray_WithNonInt32Numbers_StjPath_PreservesNumericType()
+    {
+        // Arrange
+        // Same fix, applied to the generic object[] array deserializer (server-to-client responses and
+        // notifications carry arrays, e.g. run attachments and test-node changes).
+        Json json = new();
+        const string payload = "[ 42, 9999999999, 79228162514264337593543950335, 40.5 ]";
+
+        // Act
+        object[] actual = json.Deserialize<object[]>(Encoding.UTF8.GetBytes(payload).AsMemory());
+
+        // Assert
+        Assert.HasCount(4, actual);
+        Assert.IsInstanceOfType<int>(actual[0]);
+        Assert.AreEqual(42, actual[0]);
+        Assert.IsInstanceOfType<long>(actual[1]);
+        Assert.AreEqual(9999999999L, actual[1]);
+        Assert.IsInstanceOfType<decimal>(actual[2]);
+        Assert.AreEqual(decimal.MaxValue, actual[2]);
+        Assert.IsInstanceOfType<double>(actual[3]);
+        Assert.AreEqual(40.5d, actual[3]);
+    }
+
     private sealed class TestJsonObjectSerializer : JsonObjectSerializer;
 
     private sealed class Person
@@ -157,4 +481,105 @@ public sealed class JsonTests
 
         public List<Person>? Children { get; set; }
     }
+
+    [TestMethod]
+    public void Deserialize_TypedAndBaseCollectionStrategiesPreserveLiteralElements()
+    {
+        Json json = new(deserializers: new()
+        {
+            [typeof(List<int>)] = new TypedNumbersDeserializer(),
+            [typeof(Person[])] = new BasePeopleDeserializer(),
+            [typeof(Version)] = new UnsupportedDeserializer(),
+        });
+
+        Assert.AreSequenceEqual(new[] { 3, 5, -8 }, json.Deserialize<List<int>>(Encoding.UTF8.GetBytes("[3,5,-8]")));
+        Person[] people = json.Deserialize<Person[]>(Encoding.UTF8.GetBytes("""[{"name":"Ada"},{"name":"Grace"}]"""));
+        Assert.AreSequenceEqual(new[] { "Ada", "Grace" }, people.Select(p => p.Name));
+        InvalidOperationException error = Assert.ThrowsExactly<InvalidOperationException>(
+            () => json.Deserialize<Version>(Encoding.UTF8.GetBytes("true")));
+        Assert.AreEqual("Cannot find deserializer for System.Version.", error.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_BaseElementStrategyPreservesPayload()
+    {
+        Json json = new(deserializers: new()
+        {
+            [typeof(Person)] = new JsonElementDeserializer<object>((engine, element) => new Person
+            {
+                Name = engine.Bind<string>(element, "name"),
+            }),
+        });
+
+        Person person = json.Deserialize<Person>(Encoding.UTF8.GetBytes("""{"name":"base element"}"""));
+        Assert.AreEqual("base element", person.Name);
+        Assert.IsNull(person.Children);
+    }
+
+    [TestMethod]
+    public async Task Serialize_EmptyObjectsNullSlotsAndFailureReleasePreserveNextDocument()
+    {
+        Json json = new(serializers: new()
+        {
+            [typeof(Person)] = new JsonObjectSerializer<Person>(_ => null),
+        });
+
+        Assert.AreEqual("{}", await json.SerializeAsync(new Person { Name = "not a wire property" }));
+        Assert.AreEqual("[null,{},9]", await json.SerializeAsync(new object?[] { null, new Person(), 9 }));
+        InvalidOperationException error = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => json.SerializeAsync(new Version(1, 2)));
+        Assert.AreEqual("Flattener missing System.Version.", error.Message);
+        Assert.AreEqual("[4]", await json.SerializeAsync(new[] { 4 }), "A failed pooled serialization must not retain an earlier document's suffix.");
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeSkippedExplanationAndIndexedAttachmentsPreserveWireValues()
+    {
+        string firstPath = Path.Combine(Path.GetTempPath(), "serializer-first.log");
+        string secondPath = Path.Combine(Path.GetTempPath(), "serializer-second.log");
+        TestNode node = new()
+        {
+            Uid = new("skipped-with-artifacts"),
+            DisplayName = "wire display",
+            Properties = new(
+                new SkippedTestNodeStateProperty("unsupported fixture"),
+                new FileArtifactProperty(new(firstPath), "first artifact", "first description"),
+                new FileArtifactProperty(new(secondPath), "second artifact", "second description")),
+        };
+
+        using var document = JsonDocument.Parse(await _json.SerializeAsync(node));
+        JsonElement root = document.RootElement;
+        Assert.AreEqual("skipped-with-artifacts", root.GetProperty("uid").GetString());
+        Assert.AreEqual("wire display", root.GetProperty("display-name").GetString());
+        Assert.AreEqual("action", root.GetProperty("node-type").GetString());
+        Assert.AreEqual("skipped", root.GetProperty("execution-state").GetString());
+        Assert.AreEqual("unsupported fixture", root.GetProperty("error.message").GetString());
+        Dictionary<string, (string? Path, string? Description)> attachments = [];
+        for (int index = 0; index < 2; index++)
+        {
+            string prefix = "attachments." + index.ToString(CultureInfo.InvariantCulture);
+            attachments.Add(
+                root.GetProperty(prefix + ".display-name").GetString()!,
+                (root.GetProperty(prefix + ".uri").GetString(), root.GetProperty(prefix + ".description").GetString()));
+        }
+
+        Assert.HasCount(2, attachments);
+        Assert.AreEqual((firstPath, "first description"), attachments["first artifact"]);
+        Assert.AreEqual((secondPath, "second description"), attachments["second artifact"]);
+        Assert.IsFalse(root.TryGetProperty("attachments.2.uri", out _));
+    }
+
+    private sealed class TypedNumbersDeserializer : JsonCollectionDeserializer<List<int>>
+    {
+        internal override List<int> CreateObject(Json json, JsonElement element)
+            => [.. element.EnumerateArray().Select(value => json.Bind<int>(value))];
+    }
+
+    private sealed class BasePeopleDeserializer : JsonCollectionDeserializer<object>
+    {
+        internal override object CreateObject(Json json, JsonElement element)
+            => element.EnumerateArray().Select(value => new Person { Name = json.Bind<string>(value, "name") }).ToArray();
+    }
+
+    private sealed class UnsupportedDeserializer : JsonDeserializer;
 }

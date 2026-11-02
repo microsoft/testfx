@@ -1,0 +1,113 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using MSTest.Analyzers.Shared;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
+
+/// <summary>
+/// A reified attribute application: the attribute class plus its ctor / named args, captured
+/// from <see cref="Microsoft.CodeAnalysis.AttributeData"/> so the generator can emit the
+/// equivalent <c>new TAttr(arg1, ...) { Name = ... }</c> at the call site.
+/// </summary>
+internal sealed record AttributeApplicationModel(
+    string FullyQualifiedAttributeType,
+    EquatableArray<TypedConstantModel> ConstructorArguments,
+    EquatableArray<NamedArgumentModel> NamedArguments);
+
+internal sealed record NamedArgumentModel(string Name, TypedConstantModel Value);
+
+/// <summary>
+/// Minimal projection of <see cref="Microsoft.CodeAnalysis.TypedConstant"/> that survives
+/// across incremental generator runs (the real type isn't equatable).
+/// </summary>
+internal sealed record TypedConstantModel(
+    ConstantValueKind Kind,
+    string? FullyQualifiedType,
+    object? PrimitiveValue,
+    EquatableArray<TypedConstantModel> ArrayElements);
+
+internal enum ConstantValueKind
+{
+    Primitive,
+    Enum,
+    Type,
+    Array,
+    Null,
+}
+
+internal sealed record TestParameterModel(string FullyQualifiedType, string Name, string? EnumFullyQualifiedType);
+
+/// <summary>
+/// The kind of member a <c>[DynamicData]</c> source resolves to at compile time, so the generator can
+/// emit the right accessor (property/field read vs. method call).
+/// </summary>
+internal enum DynamicDataMemberKind
+{
+    Property,
+    Method,
+    Field,
+}
+
+/// <summary>
+/// A <c>[DynamicData]</c> source resolved at compile time so the generator can register a reflection-free
+/// accessor with <c>DynamicDataSourceResolver</c>. The source member (and optional custom display-name
+/// method) are resolved to concrete symbols so the emitted delegate reads them directly instead of the
+/// runtime reflecting over the declaring type.
+/// </summary>
+internal sealed record DynamicDataSourceModel(
+    string DeclaringTypeFullyQualifiedName,
+    string SourceName,
+    DynamicDataMemberKind MemberKind,
+    string RequestedSourceType,
+    string? DisplayNameDeclaringTypeFullyQualifiedName,
+    string? DisplayNameMethodName);
+
+internal sealed record TestMethodModel(
+    string Name,
+    string DeclaringTypeFullyQualifiedName,
+    bool IsStatic,
+    bool IsAsync,
+    bool ReturnsTask,
+    bool ReturnsValueTask,
+    bool ReturnsVoid,
+    bool IsTestMethod,
+    bool IsDescriptorSupported,
+    EquatableArray<TestParameterModel> Parameters,
+    EquatableArray<AttributeApplicationModel> Attributes,
+    bool AreAttributesComplete,
+    EquatableArray<DynamicDataSourceModel> DynamicDataSources);
+
+internal sealed record TestPropertyModel(
+    string Name,
+    string FullyQualifiedType,
+    bool IsStatic,
+    bool HasGettableValue,
+    bool HasPublicSetter,
+    EquatableArray<AttributeApplicationModel> Attributes);
+
+internal sealed record TestConstructorModel(
+    EquatableArray<TestParameterModel> Parameters);
+
+/// <summary>
+/// Assembly-scoped metadata captured at compile time so the consumer never has to call
+/// <see cref="System.Reflection.Assembly.GetCustomAttributes(System.Type, bool)"/> for
+/// attributes declared with <c>[assembly: ...]</c> in the same compilation.
+/// </summary>
+internal sealed record AssemblyMetadataModel(
+    EquatableArray<AttributeApplicationModel> Attributes);
+
+internal sealed record TestClassModel(
+    string FullyQualifiedTypeName,
+    string ContainingNamespace,
+    string TypeName,
+    bool IsAbstract,
+    bool IsStatic,
+    EquatableArray<TestConstructorModel> Constructors,
+    EquatableArray<TestMethodModel> Methods,
+    EquatableArray<TestPropertyModel> Properties,
+    EquatableArray<AttributeApplicationModel> Attributes,
+    bool AreAttributesComplete,
+    bool SupportsGeneratedDescriptors,
+    bool AreGeneratedDescriptorsComplete,
+    EquatableArray<string> BaseTypeFullyQualifiedNames);

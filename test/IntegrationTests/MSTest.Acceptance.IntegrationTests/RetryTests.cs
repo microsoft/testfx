@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -17,18 +17,38 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("""
-            TestMethod1 executed 1 time.
-            TestMethod2 executed 2 times.
-            TestMethod3 executed 3 times.
-            TestMethod4 executed 4 times.
-            TestMethod5 executed 4 times.
-            """);
 
-        testHostResult.AssertOutputContains("failed TestMethod5");
+        // The "executed N times." lines are written directly to stdout by ClassCleanup (CaptureTraceOutput
+        // is false in my.runsettings), so the live terminal reporter can interleave its own "failed ..."
+        // lines between them. Assert each line individually instead of as a single contiguous block to avoid
+        // depending on the ordering of two concurrent stdout writers.
+        testHostResult.AssertOutputContains("TestMethod1 executed 1 time.");
+        testHostResult.AssertOutputContains("TestMethod2 executed 2 times.");
+        testHostResult.AssertOutputContains("TestMethod3 executed 3 times.");
+        testHostResult.AssertOutputContains("TestMethod4 executed 4 times.");
+        testHostResult.AssertOutputContains("TestMethod5 executed 4 times.");
+
         testHostResult.AssertOutputMatchesRegex(
             """Assertion failed\.[\r\n]+\s+Failing TestMethod4\. Attempts: 4 \(from TestContext: 4\)""");
+
+        // Every [Retry] attempt is now reported, annotated with the attempt it belongs to, so a test that
+        // failed and then passed is no longer indistinguishable from one that passed on the first try.
+        testHostResult.AssertOutputContains("failed (try 1) TestMethod2");
+        testHostResult.AssertOutputContains("failed (try 2) TestMethod3");
+        testHostResult.AssertOutputContains("failed (try 4) TestMethod5");
+
+        // A test that passed on its first attempt carries no attempt annotation at all.
+        testHostResult.AssertOutputDoesNotContain("(try 1) TestMethod1");
+
+        // 9 superseded failed attempts: 1 for TestMethod2, 2 for TestMethod3, 3 for TestMethod4 and 3 for
+        // TestMethod5 (whose 4th and final attempt is the one counted as failed). Rendered by the shared retry
+        // summary added in #10329, which in-process attempts now feed into as well.
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContains("retried:");
+
+        // TestMethod2/3/4 failed at least once and eventually passed, so they are flaky. TestMethod5 never
+        // passed, so it is a plain failure rather than flaky.
+        testHostResult.AssertOutputContains("flaky: 3");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -148,37 +168,236 @@ public class UnitTest1
 }
 
 [TestClass]
-public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTests.TestAssetFixture>
+public sealed class CustomRetryTests : AcceptanceTestBase<CustomRetryTests.TestAssetFixture>
 {
     [TestMethod]
-    public async Task ClassLevelRetry_AppliesToAllTestMethods_AndMethodLevelOverrides()
+    public async Task CustomRetryBaseAttribute_ControlsRetriesAndReportsEveryAttempt()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
+        string markerDirectory = Path.Combine(Path.GetTempPath(), "mstest-custom-retry-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(markerDirectory);
 
-        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        try
+        {
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                environmentVariables: new() { [TestAssetFixture.MarkerDirectoryEnvVar] = markerDirectory },
+                cancellationToken: TestContext.CancellationToken);
 
-        // ClassLevelOnly is decorated only by class-level [Retry(3)] => 4 total runs.
-        // MethodLevelOverride overrides the class-level [Retry(3)] with method-level [Retry(1)] => 2 total runs.
-        // PassingMethod also has class-level retry but passes on first attempt => 1 total run.
-        testHostResult.AssertOutputContains("""
-            ClassLevelOnly executed 4 times.
-            MethodLevelOverride executed 2 times.
-            PassingMethod executed 1 time.
-            """);
-        testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+            testHostResult.AssertOutputContains("failed (try 1) FailsTwiceThenPasses");
+            testHostResult.AssertOutputContains("failed (try 2) FailsTwiceThenPasses");
+            testHostResult.AssertOutputContains("retried:");
+            testHostResult.AssertOutputContains("flaky: 1");
+
+            string markerFile = Path.Combine(markerDirectory, TestAssetFixture.MarkerFileName);
+            Assert.IsTrue(
+                File.Exists(markerFile),
+                $"Custom retry marker file not found. StandardOutput:\n{testHostResult.StandardOutput}");
+
+            string[] observations = File.ReadAllLines(markerFile);
+            Assert.Contains("TestExecutions=3", observations);
+            Assert.Contains("ExecuteAsyncCalls=1", observations);
+            Assert.Contains("ExecuteTaskGetterCalls=2", observations);
+            Assert.Contains("FirstRunResultCount=1", observations);
+            Assert.Contains("FirstRunOutcome=Failed", observations);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(markerDirectory, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Best-effort cleanup of the temporary marker directory.
+            }
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        public const string ProjectName = "ClassLevelRetryTests";
+        public const string ProjectName = "CustomRetryTests";
+
+        public const string MarkerDirectoryEnvVar = "CUSTOMRETRY_MARKER_DIR";
+
+        public const string MarkerFileName = "custom-retry.marker";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MarkerDirectoryEnvVar$", MarkerDirectoryEnvVar)
+                .PatchCodeWithReplace("$MarkerFileName$", MarkerFileName));
+
+        private const string SourceCode = """
+#file CustomRetryTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+#pragma warning disable MSTESTEXP
+
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public sealed class RetryTwiceAttribute : RetryBaseAttribute
+{
+    public static int ExecuteAsyncCalls { get; private set; }
+
+    public static int ExecuteTaskGetterCalls { get; private set; }
+
+    public static int FirstRunResultCount { get; private set; }
+
+    public static UnitTestOutcome FirstRunOutcome { get; private set; }
+
+    protected override async Task<RetryResult> ExecuteAsync(RetryContext retryContext)
+    {
+        ExecuteAsyncCalls++;
+        FirstRunResultCount = retryContext.FirstRunResults.Length;
+        FirstRunOutcome = retryContext.FirstRunResults[0].Outcome;
+
+        var retryResult = new RetryResult();
+        for (int i = 0; i < 2; i++)
+        {
+            ExecuteTaskGetterCalls++;
+            retryResult.AddResult(await retryContext.ExecuteTaskGetter());
+        }
+
+        return retryResult;
+    }
+}
+
+[TestClass]
+public class CustomRetryTestClass
+{
+    private static int _testExecutions;
+
+    [TestMethod]
+    [RetryTwice]
+    public void FailsTwiceThenPasses()
+    {
+        _testExecutions++;
+        if (_testExecutions < 3)
+        {
+            Assert.Fail($"Custom failure from execution {_testExecutions}");
+        }
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        string markerDirectory = Environment.GetEnvironmentVariable("$MarkerDirectoryEnvVar$");
+        if (string.IsNullOrEmpty(markerDirectory))
+        {
+            return;
+        }
+
+        File.WriteAllLines(
+            Path.Combine(markerDirectory, "$MarkerFileName$"),
+            new[]
+            {
+                $"TestExecutions={_testExecutions}",
+                $"ExecuteAsyncCalls={RetryTwiceAttribute.ExecuteAsyncCalls}",
+                $"ExecuteTaskGetterCalls={RetryTwiceAttribute.ExecuteTaskGetterCalls}",
+                $"FirstRunResultCount={RetryTwiceAttribute.FirstRunResultCount}",
+                $"FirstRunOutcome={RetryTwiceAttribute.FirstRunOutcome}",
+            });
+    }
+}
+""";
+    }
+
+    public TestContext TestContext { get; set; }
+}
+
+[TestClass]
+public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTests.TestAssetFixture>
+{
+    [TestMethod]
+    public async Task ClassLevelRetry_AppliesToAllTestMethods_AndMethodLevelOverrides()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+
+        // The retry counts are recorded by ClassCleanup. They must NOT be asserted against the test host's
+        // stdout: ClassCleanup writes them concurrently with the live terminal reporter (which emits its own
+        // "failed ..." lines), so the two writers can interleave - even within a single line - making any
+        // stdout-based assertion flaky. Instead, ClassCleanup writes the counts to a marker file in a
+        // directory we pass via an environment variable, and we read that file back here.
+        string markerDirectory = Path.Combine(Path.GetTempPath(), "mstest-class-level-retry-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(markerDirectory);
+        try
+        {
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                environmentVariables: new() { [TestAssetFixture.MarkerDirectoryEnvVar] = markerDirectory },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+            // ClassLevelOnly and MethodLevelOverride always fail, so nothing is flaky here - but both were
+            // retried, so the retry summary still reports the extra executions.
+            testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+            testHostResult.AssertOutputContains("retried:");
+
+            string markerFile = Path.Combine(markerDirectory, TestAssetFixture.MarkerFileName);
+            Assert.IsTrue(
+                File.Exists(markerFile),
+                $"Retry-count marker file not found. StandardOutput:\n{testHostResult.StandardOutput}");
+
+            string[] counts = File.ReadAllLines(markerFile);
+
+            // ClassLevelOnly is decorated only by class-level [Retry(3)] => 4 total runs.
+            // MethodLevelOverride overrides the class-level [Retry(3)] with method-level [Retry(1)] => 2 total runs.
+            // PassingMethod also has class-level retry but passes on first attempt => 1 total run.
+            Assert.Contains("ClassLevelOnly=4", counts);
+            Assert.Contains("MethodLevelOverride=2", counts);
+            Assert.Contains("PassingMethod=1", counts);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(markerDirectory, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Best-effort cleanup of the temporary marker directory.
+            }
+        }
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "ClassLevelRetryTests";
+
+        public const string MarkerDirectoryEnvVar = "CLASSLEVELRETRY_MARKER_DIR";
+
+        public const string MarkerFileName = "retry-counts.marker";
+
+        public string ProjectPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MarkerDirectoryEnvVar$", MarkerDirectoryEnvVar)
+                .PatchCodeWithReplace("$MarkerFileName$", MarkerFileName));
 
         private const string SourceCode = """
 #file ClassLevelRetryTests.csproj
@@ -194,16 +413,11 @@ public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTes
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="*.runsettings">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 </Project>
 
 #file UnitTest1.cs
 using System;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -238,18 +452,25 @@ public class UnitTest1
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        Console.WriteLine($"ClassLevelOnly executed {_classLevelOnly} times.");
-        Console.WriteLine($"MethodLevelOverride executed {_methodOverride} times.");
-        Console.WriteLine($"PassingMethod executed {_passing} time{(_passing == 1 ? string.Empty : "s")}.");
+        // Write the retry counts to a marker file rather than stdout. Asserting against stdout is flaky
+        // because the live terminal reporter writes concurrently with these lines and can interleave with
+        // (or split) them. A file write is observed atomically by the acceptance test.
+        string markerDirectory = Environment.GetEnvironmentVariable("$MarkerDirectoryEnvVar$");
+        if (string.IsNullOrEmpty(markerDirectory))
+        {
+            return;
+        }
+
+        File.WriteAllLines(
+            Path.Combine(markerDirectory, "$MarkerFileName$"),
+            new[]
+            {
+                $"ClassLevelOnly={_classLevelOnly}",
+                $"MethodLevelOverride={_methodOverride}",
+                $"PassingMethod={_passing}",
+            });
     }
 }
-
-#file my.runsettings
-<RunSettings>
-  <MSTest>
-    <CaptureTraceOutput>false</CaptureTraceOutput>
-  </MSTest>
-</RunSettings>
 """;
     }
 

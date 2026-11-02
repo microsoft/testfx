@@ -4,9 +4,9 @@
 #if !WINDOWS_UWP
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -206,7 +206,7 @@ internal class MSTestAdapterSettings
         if (!StringEx.IsNullOrEmpty(settingsXml))
         {
             StringReader stringReader = new(settingsXml);
-            var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
             var xmlDoc = new XmlDocument() { XmlResolver = null };
             xmlDoc.Load(reader);
 
@@ -384,7 +384,7 @@ internal class MSTestAdapterSettings
                 else
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.InvalidSettingsXmlElement, reader.Name, "AssemblyResolution");
-                    throw new SettingsException(message);
+                    throw new AdapterSettingsException(message);
                 }
 
                 // Move to the next element under tag AssemblyResolution

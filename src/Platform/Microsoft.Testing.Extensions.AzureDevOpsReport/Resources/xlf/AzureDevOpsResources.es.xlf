@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../AzureDevOpsResources.resx">
     <body>
+      <trans-unit id="AnnotationsOptionDescription">
+        <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
+        <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</note>
+      </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
         <target state="translated">"--report-azdo-upload-artifact-include", "--report-azdo-upload-artifact-exclude" y "--report-azdo-upload-artifact-name" requieren que "--report-azdo-upload-artifacts" esté establecido en un valor distinto de "off".</target>
@@ -12,25 +17,65 @@
         <target state="translated">Se solicitó la carga de artefactos de Azure DevOps, pero TF_BUILD no está establecido en "true"; se omite la carga de artefactos y las etiquetas de compilación de Azure DevOps.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsAnnotationsRequiresAzureDevOps">
+        <source>'--report-azdo-annotations' requires '--report-azdo' to be enabled</source>
+        <target state="translated">"--report-azdo-annotations" requiere que se habilite "--report-azdo"</target>
+        <note>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-demote-known-flaky" requiere que se habilite "--report-azdo"</target>
-        <note />
+        <note>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</source>
         <target state="translated">"--report-azdo-demote-known-flaky" requiere que "--report-azdo-flaky-history" esté habilitado</target>
-        <note />
+        <note>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsFlakyHistoryRequiresAzureDevOps">
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
-        <target state="translated">"--report-azdo-severity" requiere que se habilite "--report-azdo"</target>
+        <target state="translated">"--report-azdo-flaky-history" requiere que se habilite "--report-azdo"</target>
+        <note>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
+        <source>'--report-azdo-groups' requires '--report-azdo' to be enabled</source>
+        <target state="translated">"--report-azdo-groups" requiere que se habilite "--report-azdo"</target>
+        <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
+        <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
+        <target state="translated">Azure publicación en directo de DevOps no pudo leer los datos adjuntos '{0}': {1}</target>
+        <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
+        <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
+        <target state="translated">Azure publicación en vivo de DevOps no pudo cargar los datos adjuntos '{0}' porque su tamaño de {1} bytes supera el límite de {2} bytes.</target>
+        <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
+        <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo cargar {0} los datos adjuntos; faltarán en la serie de pruebas Azure DevOps.</target>
+        <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="translated">La autenticación de Azure DevOps REST API falló o se redirigió a la página de inicio de sesión (estado: {0}), lo que indica que SYSTEM_ACCESSTOKEN no es válido o no está disponible. Para las compilaciones de validación de solicitudes de extracción en bifurcaciones, no exponga secretos al código de bifurcación que no es de confianza; publique los resultados desde un contexto independiente de canalización de confianza o desactive la publicación en vivo de Azure DevOps.</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">La publicación en directo de Azure DevOps no pudo completar la ejecución de pruebas.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
+        <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps agotó el tiempo de espera después de {1} esperar el bloqueo de coordinación "{0}".</target>
+        <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
         <source>Azure DevOps live publishing failed to create the test run.</source>
@@ -42,25 +87,35 @@
         <target state="translated">La publicación en directo de Azure DevOps no pudo eliminar el archivo de coordinación</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo leer el archivo de coordinación</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
+        <source>Azure DevOps live publishing failed to write coordination file</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo escribir el archivo de coordinación</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
         <source>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</source>
         <target state="translated">La publicación en directo de Azure DevOps agotó el tiempo de espera después de {0} esperar {1} archivo(s) de participante; finalizando la ejecución de todos modos.</target>
-        <note />
+        <note>{0} is the finalize wait timeout. {1} is the number of participant files still pending.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingHttpError">
         <source>Azure DevOps REST API request failed with status code {0}. Response: {1}</source>
-        <target state="translated">La solicitud a la API de REST de Azure DevOps falló con el código de estado {0}. Respuesta: {1}</target>
-        <note />
+        <target state="translated">La solicitud a la REST API de Azure DevOps falló con el código de estado {0}. Respuesta: {1}</target>
+        <note>{0} is the HTTP status code. {1} is the response body. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingInvalidResponse">
         <source>Azure DevOps REST API returned an unexpected response payload.</source>
-        <target state="translated">La API de REST de Azure DevOps devolvió una carga útil de respuesta inesperada.</target>
-        <note />
+        <target state="translated">La REST API de Azure DevOps devolvió una carga útil de respuesta inesperada.</target>
+        <note>{Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
         <target state="translated">Se estableció '--publish-azdo-test-results', pero la publicación en directo de Azure DevOps está deshabilitada porque faltan las siguientes variables de entorno o no son válidas: {0}.</target>
-        <note>{Locked='--publish-azdo-test-results'}</note>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -74,8 +129,8 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRequestFailed">
         <source>Azure DevOps REST API request failed after all retries.</source>
-        <target state="translated">La solicitud a la API de REST de Azure DevOps falló después de todos los reintentos.</target>
-        <note />
+        <target state="translated">La solicitud a la REST API de Azure DevOps falló después de todos los reintentos.</target>
+        <note>{Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test result attachment.</source>
@@ -87,15 +142,40 @@
         <target state="translated">La publicación en tiempo real de Azure DevOps aceptó un lote de resultados de pruebas, pero no pudo analizar los identificadores de resultado asignados; se omitirán los datos adjuntos de nivel de resultado para este lote.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo actualizar la entrega del mapa de resultados.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
+        <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo publicar {0} resultado(s) de prueba; faltarán en la serie de pruebas de Azure DevOps.</target>
+        <note>{0} is the number of test results that could not be published.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
         <target state="translated">La publicación en tiempo real de Azure DevOps no pudo cargar un dato adjunto de una ejecución de prueba.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunCreated">
+        <source>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps está transmitiendo los resultados a la serie de pruebas {0}, que puede seguir mientras las pruebas siguen ejecutándose en {1}. La pestaña Pruebas de la compilación muestra la ejecución una vez que se completa.</target>
+        <note>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">La publicación en directo de Azure DevOps encontró un archivo azdo-runid.&lt;buildId&gt;.json para otro proyecto de Azure DevOps.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo actualizar la entrega del identificador de ejecución de pruebas.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
+        <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
+        <target state="translated">La serie de pruebas de Azure DevOps no se marcó como completada y es posible que no aparezca en la pestaña Pruebas de la compilación.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>
@@ -105,32 +185,52 @@
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason">
         <source>Timeout: {0}</source>
         <target state="translated">Tiempo de espera: {0}</target>
-        <note />
+        <note>{0} is the timeout reason.</note>
       </trans-unit>
-      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
-        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="translated">"--report-azdo-progress" requiere que se habilite "--report-azdo"</target>
-        <note>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</note>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="translated">Azure DevOps REST API devolvió una respuesta correcta inesperada con código de estado {0} y tipo de contenido '{1}'.</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
+        <source>Azure DevOps live publishing could not display a warning on the output device.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo mostrar una advertencia en el dispositivo de salida.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-quarantine-file" requiere que se habilite "--report-azdo"</target>
-        <note />
+        <note>{Locked="--report-azdo-quarantine-file"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-severity" requiere que se habilite "--report-azdo"</target>
-        <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
+        <note>{Locked="--report-azdo-severity"}{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
+        <source>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</source>
+        <target state="translated">"--report-azdo-slow-test-history-min-sample" requiere que se habilite "--report-azdo-slow-test-history"</target>
+        <note>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory">
+        <source>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</source>
+        <target state="translated">"--report-azdo-slow-test-history-multiplier" requiere que se habilite "--report-azdo-slow-test-history"</target>
+        <note>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsSlowTestHistoryRequiresAzureDevOps">
+        <source>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</source>
+        <target state="translated">"--report-azdo-slow-test-history" requiere que se habilite "--report-azdo"</target>
+        <note>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
         <source>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-stackframe-filter" requiere que se habilite "--report-azdo"</target>
-        <note>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</note>
+        <note>{Locked="--report-azdo-stackframe-filter"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSummaryRequiresAzureDevOps">
         <source>'--report-azdo-summary' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-summary" requiere que se habilite "--report-azdo"</target>
-        <note>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</note>
+        <note>{Locked="--report-azdo-summary"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
@@ -147,25 +247,105 @@
         <target state="translated">Generador de informes de Azure DevOps</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Error al menos en una prueba.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">No se cumplieron uno o más umbrales de cobertura de código.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Un proceso dependiente se cerró inesperadamente.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">Error en la serie de pruebas.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Se negoció una versión de protocolo incompatible.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Los argumentos de la línea de comandos no son válidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">La configuración de la plataforma de prueba no es válida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Se ejecutaron menos pruebas de las que requería --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">La serie de pruebas se realizó correctamente.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">El adaptador de prueba notificó un error de sesión de prueba.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">La ejecución de pruebas se detuvo antes de tiempo porque se acercaba una fecha límite impuesta por CI.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">La ejecución de pruebas se detuvo al alcanzar el límite establecido por --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">El proceso de host de prueba se cerró de forma no correcta.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">Se anuló la sesión de prueba.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">La ejecución de pruebas informó de un código de salida incorrecto.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">No se encontraron pruebas para ejecutar. Esto suele significar que un filtro de prueba no coincide con nada.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
         <source>[flaky: failed {0}/{1} in last {2}d]</source>
         <target state="translated">[flaky: failed {0}/{1} in last {2}d]</target>
-        <note>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
+        <note>{0} is the failure count. {1} is the total run count. {2} is the history window in days. {Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
         <target state="translated">No se puede cargar el historial de inestabilidad de Azure DevOps. Continuar sin anotaciones de historial. {0}</target>
-        <note>{Locked='--report-azdo-flaky-history'}</note>
+        <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
         <target state="translated">El historial de inestabilidad de Azure DevOps no terminó de cargarse en {0} segundos. Continuar sin anotaciones de historial.</target>
-        <note />
+        <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
         <target state="translated">Se solicitó el historial no confiable de Azure DevOps, pero faltan las variables de entorno de Azure DevOps necesarias. Continuar sin anotaciones de historial.</target>
-        <note>{Locked='--report-azdo-flaky-history'}</note>
+        <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -180,37 +360,67 @@
       <trans-unit id="FlakyHistoryResultsPagingStoppedWarning">
         <source>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</source>
         <target state="translated">Azure DevOps historial no confiable para la ejecución "{0}" superó {1} las páginas o devolvió un token de continuación sin cambios. Se omitirán los resultados restantes.</target>
-        <note />
+        <note>{0} is the Azure DevOps run URL. {1} is the maximum number of pages.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryRunsCappedInfo">
         <source>Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</source>
         <target state="translated">Azure DevOps devolvió {0} ejecuciones del historial de inestabilidad. Solo se inspeccionarán las primeras {1} ejecuciones.</target>
-        <note />
+        <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
+      </trans-unit>
+      <trans-unit id="GroupsOptionDescription">
+        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
+        <target state="translated">Habilite o deshabilite los grupos de registros de Azure DevOps por ensamblado ("on" u "off"). El valor predeterminado es "off". Requiere "--report-azdo".</target>
+        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
         <source>Invalid glob pattern {0}.</source>
         <target state="translated">Patrón global no válido {0}.</target>
-        <note />
+        <note>{0} is the invalid glob pattern.</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadMode">
         <source>Invalid artifact upload mode {0}.</source>
         <target state="translated">Modo de carga de artefactos no válido {0}.</target>
-        <note />
+        <note>{0} is the invalid artifact upload mode.</note>
       </trans-unit>
       <trans-unit id="InvalidFlakyHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</source>
         <target state="translated">Valor no válido "{0}" para "--report-azdo-flaky-history". Proporcione un entero entre 1 y 90.</target>
-        <note />
+        <note>{0} is the invalid value. {Locked="--report-azdo-flaky-history"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidOnOffValue">
+        <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
+        <target state="translated">Valor no válido "{0}". Los valores válidos son "on" y "off".</target>
+        <note>{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">
         <source>Invalid option {0}.</source>
         <target state="translated">Opción no válida {0}.</target>
-        <note />
+        <note>{0} is the invalid option value.</note>
+      </trans-unit>
+      <trans-unit id="InvalidSlowTestHistoryDays">
+        <source>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</source>
+        <target state="translated">Valor no válido "{0}" para "--report-azdo-slow-test-history". Proporcione un entero entre 1 y 90.</target>
+        <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSlowTestHistoryMinSample">
+        <source>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</source>
+        <target state="translated">Valor "{0}" no válido para "--report-azdo-slow-test-history-min-sample". Proporcione un entero mayor o igual que 1.</target>
+        <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSlowTestHistoryMultiplier">
+        <source>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</source>
+        <target state="translated">Valor "{0}" no válido para "--report-azdo-slow-test-history-multiplier". Proporcione un número mayor que 0 y como máximo 10 000.</target>
+        <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</note>
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
         <source>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</source>
         <target state="translated">Expresión regular no válida de "--report-azdo-stackframe-filter" "{0}": {1}</target>
-        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+        <note>{0} is the regex pattern. {1} is the validation error message. {Locked="--report-azdo-stackframe-filter"}</note>
+      </trans-unit>
+      <trans-unit id="LogGroupHeader">
+        <source>Tests: {0}</source>
+        <target state="translated">Pruebas: {0}</target>
+        <note>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>Test failed without an additional message.</source>
@@ -222,16 +432,6 @@
         <target state="translated">Habilite el generador de informes de Azure DevOps para que escriba errores en la salida de una forma que Azure DevOps entienda.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ProgressOptionDescription">
-        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
-        <target state="translated">Emita registros de progreso de la línea de tiempo de Azure DevOps durante la ejecución de la prueba para que las sesiones de larga duración muestren una barra de progreso en directo en la línea de tiempo de la compilación. Requiere "--report-azdo".</target>
-        <note>{Locked="--report-azdo"}</note>
-      </trans-unit>
-      <trans-unit id="ProgressRequiresTfBuildWarning">
-        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
-        <target state="translated">Se solicitó la generación de informes de progreso de Azure DevOps, pero TF_BUILD no está establecido en "true"; se omite el envío de información de progreso de Azure DevOps.</target>
-        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
-      </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>
         <target state="translated">Nombre personalizado de la ejecución de pruebas de Azure DevOps para la publicación en directo de resultados de pruebas.</target>
@@ -240,22 +440,22 @@
       <trans-unit id="PublishAzdoRunNameRequiresPublishAzdoTestResults">
         <source>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</source>
         <target state="translated">'--publish-azdo-run-name' requiere que '--publish-azdo-test-results' esté habilitado</target>
-        <note>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</note>
+        <note>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
-        <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="translated">Publique los resultados de las pruebas en directo en la pestaña pruebas de Azure DevOps.</target>
+        <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
+        <target state="translated">Publique los resultados de las pruebas en una serie de pruebas de Azure DevOps a medida que se completan. La ejecución aparece en la pestaña Pruebas de la compilación una vez que finaliza la sesión de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
         <target state="translated">No se puede cargar el archivo de cuarentena de Azure DevOps "{0}". Continuar sin reconocimiento de cuarentena. {1}</target>
-        <note>{Locked='--report-azdo-quarantine-file'}</note>
+        <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
         <target state="translated">El archivo de cuarentena de Azure DevOps '{0}' no existe. Continuar sin reconocimiento de cuarentena.</target>
-        <note />
+        <note>{0} is the quarantine file path.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileOptionDescription">
         <source>Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</source>
@@ -265,12 +465,12 @@
       <trans-unit id="QuarantinePatternTooLongWarning">
         <source>Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</source>
         <target state="translated">El patrón de cuarentena de Azure DevOps supera el límite de {0} caracteres y se omitirá.</target>
-        <note />
+        <note>{0} is the maximum character limit.</note>
       </trans-unit>
       <trans-unit id="QuarantinePatternsCappedWarning">
         <source>Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</source>
         <target state="translated">El archivo de cuarentena de Azure DevOps contiene más de {0} patrones. Se omitirán los patrones restantes.</target>
-        <note />
+        <note>{0} is the maximum pattern count.</note>
       </trans-unit>
       <trans-unit id="QuarantinedAnnotation">
         <source>[quarantined]</source>
@@ -282,20 +482,50 @@
         <target state="translated">Gravedad que se va a usar para el evento notificado. Las opciones son: error (valor predeterminado) y warning.</target>
         <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
+      <trans-unit id="SlowTestHistoryDecoration">
+        <source>(historical p95 = {0}, p99 = {1}, samples = {2})</source>
+        <target state="translated">(historial p95 = {0}, p99 = {1}, muestras = {2})</target>
+        <note>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</note>
+      </trans-unit>
+      <trans-unit id="SlowTestHistoryMinSampleOptionDescription">
+        <source>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
+        <target state="translated">Número mínimo de muestras históricas necesarias antes de que se use el historial de una prueba para ajustar su umbral de prueba lenta o decorar líneas emitidas. Tiene como valor predeterminado {0}. Requiere "--report-azdo-slow-test-history".</target>
+        <note>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</note>
+      </trans-unit>
+      <trans-unit id="SlowTestHistoryMultiplierOptionDescription">
+        <source>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
+        <target state="translated">Multiplicador aplicado a la duración p99 histórica de una prueba para derivar su umbral de prueba lenta (umbral = min(valor predeterminado estático, p99 * multiplicador)). Tiene como valor predeterminado {0}. Requiere "--report-azdo-slow-test-history".</target>
+        <note>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</note>
+      </trans-unit>
+      <trans-unit id="SlowTestHistoryOptionDescription">
+        <source>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</source>
+        <target state="translated">Consulte el historial de resultados de pruebas de Azure DevOps de los últimos N días (1-90) y reduzca el umbral por prueba de "siga en ejecución" para las pruebas con una duración histórica conocida y breve. Requiere "--report-azdo".</target>
+        <note>{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="SlowTestHistoryRequiresTfBuildWarning">
+        <source>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</source>
+        <target state="translated">Se solicitó el historial de pruebas lentas de Azure DevOps, pero TF_BUILD no está establecido en "true"; se omite la presentación de pruebas lentas.</target>
+        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
+      </trans-unit>
+      <trans-unit id="SlowTestStillRunning">
+        <source>[slow] still running after {0}: {1}</source>
+        <target state="translated">[slow] ejecutándose después de {0}: {1}</target>
+        <note>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</note>
+      </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
         <source>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</source>
         <target state="translated">Patrones de expresiones regulares adicionales (que coinciden con el prefijo del tipo completamente calificado de cada marco de pila) que se deben omitir al buscar el punto de llamada del usuario que se va a anotar. Repetible; hasta {0} patrones. Compilado con un {1}tiempo de espera de coincidencia ms. Adición a los prefijos de implementación de aserción de MSTest integrados de la extensión.</target>
-        <note>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</note>
+        <note>{0} is the maximum allowed pattern count. {1} is the per-match timeout in milliseconds. {Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterTooManyRegexes">
         <source>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</source>
         <target state="translated">"--report-azdo-stackframe-filter" acepta como máximo {0} patrones.</target>
-        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+        <note>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
-        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</source>
-        <target state="translated">Escriba un resumen del trabajo de Markdown al final de la serie de pruebas y cárguelo a través de "##vso[task.uploadsummary]". Un argumento de ruta de acceso de archivo opcional invalida la ubicación predeterminada ("{testResultsDir}/azdo-summary-{tfm}.md"). Requiere "--report-azdo".</target>
-        <note>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</note>
+        <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">Escriba un resumen del trabajo de Markdown al final de la serie de pruebas y cárguelo en la pestaña extensiones de Azure DevOps. Un argumento de ruta de acceso de archivo opcional invalida la ubicación predeterminada ("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"). Requiere "--report-azdo".</target>
+        <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>
@@ -305,7 +535,7 @@
       <trans-unit id="SummaryWriteFailedWarning">
         <source>Failed to write Azure DevOps summary file '{0}': {1}</source>
         <target state="translated">No se pudo escribir el archivo de resumen de Azure DevOps "{0}": {1}</target>
-        <note />
+        <note>{0} is the summary file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">
         <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>

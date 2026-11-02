@@ -1,7 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
+    MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
     MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
@@ -10,6 +17,182 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 {
+    private const string ProtocolSource = """
+        public enum ContractOption { None = 0 }
+
+        public static class Protocol
+        {
+            public const int HeaderSize = 16;
+            public const int OtherSize = 16;
+            public const int Negative = -16;
+            public const string Version = "v1";
+            public const char Marker = 'a';
+            public const bool Enabled = true;
+            public const double Ratio = 1.5;
+            public const float SingleRatio = 1.5F;
+            public const decimal Price = 1.5M;
+            public const string Empty = null;
+        }
+        """;
+
+    [TestMethod]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual(Protocol.HeaderSize, 16)", true)]
+    [DataRow("Assert.AreEqual(actual: Protocol.HeaderSize, expected: 16)", true)]
+    [DataRow("Assert.AreEqual((16), (Protocol.HeaderSize))", true)]
+    [DataRow("Assert.AreEqual(+16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual(-16, Protocol.Negative)", true)]
+    [DataRow("Assert.AreEqual(\"v1\", Protocol.Version)", true)]
+    [DataRow("Assert.AreEqual('a', Protocol.Marker)", true)]
+    [DataRow("Assert.AreEqual(true, Protocol.Enabled)", true)]
+    [DataRow("Assert.AreEqual(1.5, Protocol.Ratio)", true)]
+    [DataRow("Assert.AreEqual(1.5F, Protocol.SingleRatio)", true)]
+    [DataRow("Assert.AreEqual(1.5M, Protocol.Price)", true)]
+    [DataRow("Assert.AreEqual<string>(null, Protocol.Empty)", true)]
+    [DataRow("Assert.AreEqual<object>(16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual<byte>(16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize, \"contract\")", true)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize, (System.Collections.Generic.IEqualityComparer<int>)null)", true)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize, System.Collections.Generic.EqualityComparer<int>.Default)", true)]
+    [DataRow("Assert.AreEqual(16, 16)", false)]
+    [DataRow("Assert.AreEqual(16, local)", false)]
+    [DataRow("Assert.AreEqual(16, alias)", false)]
+    [DataRow("Assert.AreEqual(16, 8 + 8)", false)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize + 0)", false)]
+    [DataRow("Assert.AreEqual(16, +Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual(-(8 + 8), Protocol.Negative)", false)]
+    [DataRow("Assert.AreEqual(Protocol.HeaderSize, Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual(Protocol.HeaderSize, Protocol.OtherSize)", false)]
+    [DataRow("Assert.AreEqual(16, (int)Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual((int)16, Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual<Converted>(16, Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual<ContractOption>(0, ContractOption.None)", false)]
+    [DataRow("Assert.AreEqual(nameof(Protocol), nameof(Protocol))", false)]
+    [DataRow("Assert.AreEqual(nameof(Protocol), LocalName)", false)]
+    [DataRow("Assert.IsTrue(Protocol.HeaderSize == 16)", false)]
+    [DataRow("Assert.IsFalse(Protocol.HeaderSize != 16)", false)]
+    [DataRow("Assert.AreNotEqual(17, Protocol.HeaderSize)", false)]
+    public async Task WhenAssertAreEqualPinsConstant_OnlyReferencedAssemblyIsExempt(string assertion, bool isContractPin)
+    {
+        foreach (string declaration in new[] { "source", "project", "metadata" })
+        {
+            bool reportsDiagnostic = declaration == "source" || !isContractPin;
+            var test = new VerifyCS.Test
+            {
+                TestCode = $$"""
+                    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                    public class ContractTests
+                    {
+                        private const string LocalName = "Protocol";
+
+                        public void PinsConstant()
+                        {
+                            const int local = 16;
+                            const int alias = Protocol.HeaderSize;
+                            {{(reportsDiagnostic ? $"[|{assertion}|]" : assertion)}};
+                        }
+                    }
+
+                    public sealed class Converted
+                    {
+                        public static implicit operator Converted(int value) => new Converted();
+                    }
+                    """,
+            };
+
+            switch (declaration)
+            {
+                case "source":
+                    test.TestState.Sources.Add(("Protocol.cs", ProtocolSource));
+                    break;
+                case "project":
+                    var libraryProject = new ProjectState("ProtocolLibrary", LanguageNames.CSharp, "/ProtocolLibrary/", "cs");
+                    libraryProject.Sources.Add(("Protocol.cs", ProtocolSource));
+                    test.TestState.AdditionalProjects.Add("ProtocolLibrary", libraryProject);
+                    test.TestState.AdditionalProjectReferences.Add("ProtocolLibrary");
+                    break;
+                case "metadata":
+                    test.TestState.AdditionalReferences.Add(await CreateProtocolReferenceAsync());
+                    break;
+            }
+
+            await test.RunAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsReferencedConstantInVisualBasic_NoDiagnostic()
+    {
+        var test = new VerifyVB.Test
+        {
+            TestCode = """
+                Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+                Public Class ContractTests
+                    Private Const LocalSize As Integer = 16
+
+                    Public Sub PinsConstant()
+                        Assert.AreEqual(16, Protocol.HeaderSize)
+                        Assert.AreEqual(Protocol.HeaderSize, 16)
+                        Assert.AreEqual(actual:=Protocol.HeaderSize, expected:=16)
+                        Assert.AreEqual((16), (Protocol.HeaderSize))
+                        Assert.AreEqual(-16, Protocol.Negative)
+                        Assert.AreEqual("v1", Protocol.Version)
+                        [|Assert.AreEqual(16, LocalSize)|]
+                        [|Assert.AreEqual(16, 16)|]
+                        [|Assert.AreEqual(16, Protocol.HeaderSize + 0)|]
+                        [|Assert.AreEqual(Protocol.HeaderSize, Protocol.HeaderSize)|]
+                        [|Assert.AreEqual(16, CInt(Protocol.HeaderSize))|]
+                    End Sub
+                End Class
+                """,
+        };
+        test.TestState.AdditionalReferences.Add(await CreateProtocolReferenceAsync());
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsConstantInCurrentVisualBasicAssembly_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Class Protocol
+                Public Const HeaderSize As Integer = 16
+                Public Const Version As String = "v1"
+            End Class
+
+            Public Class ContractTests
+                Public Sub PinsConstant()
+                    [|Assert.AreEqual(16, Protocol.HeaderSize)|]
+                    [|Assert.AreEqual(Protocol.HeaderSize, 16)|]
+                    [|Assert.AreEqual(actual:=Protocol.HeaderSize, expected:=16)|]
+                    [|Assert.AreEqual((16), (Protocol.HeaderSize))|]
+                    [|Assert.AreEqual("v1", Protocol.Version)|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    private static async Task<MetadataReference> CreateProtocolReferenceAsync()
+    {
+        var compilation = CSharpCompilation.Create(
+            "ProtocolLibrary",
+            [CSharpSyntaxTree.ParseText(ProtocolSource)],
+            await AnalyzerTestReferenceAssemblies.Default.ResolveAsync(LanguageNames.CSharp, CancellationToken.None),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        using var stream = new MemoryStream();
+        Microsoft.CodeAnalysis.Emit.EmitResult result = compilation.Emit(stream);
+        Assert.IsTrue(result.Success, string.Join(Environment.NewLine, result.Diagnostics));
+
+        return MetadataReference.CreateFromImage(stream.ToArray());
+    }
+
     [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterIsNotNullable_NoDiagnostic()
     {
@@ -941,6 +1124,150 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertAreEqualPinsEnumUnderlyingValue_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public enum ReportDumpType
+            {
+                Micro = 1,
+                Mini = 2,
+                Heap = 3,
+                All = -1,
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(1, (int)ReportDumpType.Micro);
+                    Assert.AreEqual((int)ReportDumpType.Mini, 2);
+                    Assert.AreEqual(actual: (int)ReportDumpType.Heap, expected: 3);
+                    Assert.AreEqual(-1, (int)ReportDumpType.All);
+                    Assert.AreEqual(+1, (int)ReportDumpType.Micro);
+                    Assert.AreEqual((1), ((int)ReportDumpType.Micro));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsEnumsWithAllUnderlyingTypes_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public enum SByteEnum : sbyte { Value = 1 }
+            public enum ByteEnum : byte { Value = 1 }
+            public enum ShortEnum : short { Value = 1 }
+            public enum UShortEnum : ushort { Value = 1 }
+            public enum IntEnum : int { Value = 1 }
+            public enum UIntEnum : uint { Value = 1 }
+            public enum LongEnum : long { Value = 1 }
+            public enum ULongEnum : ulong { Value = 1 }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual<sbyte>(1, (sbyte)SByteEnum.Value);
+                    Assert.AreEqual<byte>(1, (byte)ByteEnum.Value);
+                    Assert.AreEqual<short>(1, (short)ShortEnum.Value);
+                    Assert.AreEqual<ushort>(1, (ushort)UShortEnum.Value);
+                    Assert.AreEqual(1, (int)IntEnum.Value);
+                    Assert.AreEqual(1U, (uint)UIntEnum.Value);
+                    Assert.AreEqual(1L, (long)LongEnum.Value);
+                    Assert.AreEqual(1UL, (ulong)ULongEnum.Value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualUsesOtherConstantExpressions_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const int Field = 1;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    const int local = 1;
+
+                    [|Assert.AreEqual(1, 1)|];
+                    [|Assert.AreEqual(-1, -1)|];
+                    [|Assert.AreEqual(+1, +1)|];
+                    [|Assert.AreEqual((byte)1, (byte)1)|];
+                    [|Assert.AreEqual(1, (int)1)|];
+                    [|Assert.AreEqual<object>((int)1, (int)1)|];
+                    [|Assert.AreEqual(local, 1)|];
+                    [|Assert.AreEqual(Field, 1)|];
+                    [|Assert.AreEqual(1 + 1, 2)|];
+                    [|Assert.AreEqual('a', 'a')|];
+                    [|Assert.AreEqual(1.0, 1.0)|];
+                    [|Assert.AreEqual(1m, 1m)|];
+                    [|Assert.AreEqual("value", "value")|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualUsesOtherEnumConstantExpressions_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [Flags]
+            public enum Options
+            {
+                None = 0,
+                First = 1,
+                Second = 2,
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const Options Field = Options.First;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    const Options local = Options.First;
+
+                    [|Assert.AreEqual(Options.First, Options.First)|];
+                    [|Assert.AreEqual((int)Options.First, (int)Options.First)|];
+                    [|Assert.AreEqual(1, (int)local)|];
+                    [|Assert.AreEqual(1, (int)Field)|];
+                    [|Assert.AreEqual(3, (int)(Options.First | Options.Second))|];
+                    [|Assert.AreEqual<long>(1, (long)Options.First)|];
+                    [|Assert.AreEqual<object>((int)1, (int)Options.First)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessage_Diagnostic()
     {
         string code = """
@@ -1162,6 +1489,871 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                 }
 
                 private static bool GetBoolean() => true;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocal_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameParameter_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod(int x)
+                {
+                    [|Assert.AreEqual(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameField_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _value;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreEqual(_value, _value)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameProperty_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int Value { get; set; }
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreEqual(Value, Value)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSamePropertyChain_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private SomeType _value = new SomeType();
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreEqual(_value.Inner, _value.Inner)|];
+                }
+
+                private sealed class SomeType
+                {
+                    public int Inner { get; set; }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedDifferentInstances_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var a = new SomeType();
+                    var b = new SomeType();
+                    Assert.AreEqual(a.Inner, b.Inner);
+                }
+
+                private sealed class SomeType
+                {
+                    public int Inner { get; set; }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedDifferentLocals_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    int y = 1;
+                    Assert.AreEqual(x, y);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameMethodCall_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(GetValue(), GetValue());
+                }
+
+                private int GetValue() => 1;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreSameIsPassedSameLocal_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new object();
+                    [|Assert.AreSame(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreSameIsPassedSameLocalWithNamedArgs_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new object();
+                    [|Assert.AreSame(actual: x, expected: x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreSameIsPassedSameLocalParenthesized_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new object();
+                    [|Assert.AreSame((x), x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreSameIsPassedDifferentLocals_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new object();
+                    var y = new object();
+                    Assert.AreSame(x, y);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithUserDefinedConversion_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Wrapper();
+                    Assert.AreEqual((int)x, (int)x);
+                }
+
+                private sealed class Wrapper
+                {
+                    private static int _counter;
+                    public static explicit operator int(Wrapper value) => ++_counter;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithBuiltInConversion_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual((long)x, (long)x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedIndexerAccess_NoDiagnostic()
+    {
+        // list[0] and list[1] are IPropertyReferenceOperation on the same Item indexer + same
+        // receiver, but the index arguments differ -- and the analyzer doesn't compare those.
+        // We must NOT flag this as always-equal.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var list = new List<string> { "a", "b" };
+                    Assert.AreEqual(list[0], list[1]);
+                    Assert.AreEqual(list[0], list[0]);
+                    Assert.AreSame(list[0], list[1]);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithOverriddenEquals_NoDiagnostic()
+    {
+        // The type overrides object.Equals, so Assert.AreEqual routes through user code and the
+        // self-comparison is a legitimate way to exercise the equality contract (see issue #9972).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreEqual(x, x);
+                }
+
+                private sealed class MyType
+                {
+                    public override bool Equals(object obj) => obj is MyType;
+                    public override int GetHashCode() => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithEquatable_NoDiagnostic()
+    {
+        // A sealed type implementing IEquatable<self> (without overriding object.Equals) routes equality
+        // through user code, so it must not be flagged. This exercises the IEquatable<T> detection branch.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreEqual(x, x);
+                }
+
+                private sealed class MyType : IEquatable<MyType>
+                {
+                    public bool Equals(MyType other) => true;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithOnlyEqualityOperator_Diagnostic()
+    {
+        // EqualityComparer<T>.Default (used by Assert.AreEqual) never calls operator ==; it uses
+        // IEquatable<T>.Equals or the virtual object.Equals. A type that only overloads == (without
+        // overriding Equals or implementing IEquatable<T>) still compares by reference, so the
+        // self-comparison is genuinely always true and must be flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreEqual(x, x)|];
+                }
+
+            #pragma warning disable CS0660, CS0661
+                private sealed class MyType
+                {
+                    public static bool operator ==(MyType left, MyType right) => true;
+                    public static bool operator !=(MyType left, MyType right) => false;
+                }
+            #pragma warning restore CS0660, CS0661
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithEquatableOfOtherType_Diagnostic()
+    {
+        // The type implements IEquatable<string>, not IEquatable<MyType>, so EqualityComparer<MyType>.Default
+        // falls back to reference equality and the self-comparison is genuinely always true.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreEqual(x, x)|];
+                }
+
+                private sealed class MyType : IEquatable<string>
+                {
+                    public bool Equals(string other) => true;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameGenericTypeParameter_NoDiagnostic()
+    {
+        // T can be substituted with a type whose equality is not reflexive, so we cannot prove the
+        // comparison is always true.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Helper(1);
+                }
+
+                private static void Helper<T>(T value)
+                {
+                    Assert.AreEqual(value, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithoutCustomEquality_Diagnostic()
+    {
+        // A reference type that does not customize equality falls back to reference equality,
+        // so a self-comparison is genuinely always true and should still be flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreEqual(x, x)|];
+                }
+
+                private sealed class MyType
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameArray_Diagnostic()
+    {
+        // Arrays use reference equality, so a self-comparison is genuinely always true.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new int[0];
+                    [|Assert.AreEqual(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalOfPolymorphicType_NoDiagnostic()
+    {
+        // A non-sealed reference type can hold a derived instance whose overridden Equals is not
+        // reflexive, so equality cannot be proven from the static type.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object x = new object();
+                    Assert.AreEqual(x, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalOfNonSealedType_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreEqual(x, x);
+                }
+
+                private class MyType
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedEqualConstantsWithCustomComparer_NoDiagnostic()
+    {
+        // A caller-supplied comparer can return any result, so the comparison is not provably always true.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(1, 1, new NeverEqualComparer());
+                }
+
+                private sealed class NeverEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => false;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithCustomComparer_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.AreEqual(x, x, new NeverEqualComparer());
+                }
+
+                private sealed class NeverEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => false;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameDateTime_Diagnostic()
+    {
+        // DateTime is a primitive-like value type with reflexive built-in equality, so a self-comparison
+        // is genuinely always true and should still be flagged.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    DateTime x = DateTime.Now;
+                    [|Assert.AreEqual(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameValueWithPolymorphicComparerType_NoDiagnostic()
+    {
+        // The comparison uses EqualityComparer<Base>.Default (the method type argument), which invokes the
+        // non-reflexive IEquatable<Base>, even though the operand's static type is the sealed Derived.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Derived();
+                    Assert.AreEqual<Base>(x, x);
+                }
+
+                private class Base : IEquatable<Base>
+                {
+                    public bool Equals(Base other) => false;
+                }
+
+                private sealed class Derived : Base
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameStructWithNonReflexiveField_NoDiagnostic()
+    {
+        // A struct using the default field-based ValueType.Equals compares its fields via their equality,
+        // so a field whose Equals is not reflexive makes the self-comparison return false.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Wrapper();
+                    Assert.AreEqual(x, x);
+                }
+
+                private struct Wrapper
+                {
+                    public NeverEqual Field;
+                }
+
+                private sealed class NeverEqual
+                {
+                    public override bool Equals(object obj) => false;
+                    public override int GetHashCode() => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameNullable_NoDiagnostic()
+    {
+        // Nullable<T> delegates equality to the underlying T, which may not be reflexive, so it is treated
+        // conservatively.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int? x = 1;
+                    Assert.AreEqual(x, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithNullComparer_Diagnostic()
+    {
+        // MSTest treats a null comparer as EqualityComparer<T>.Default, so the self-comparison is still
+        // provably always true and must be flagged.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual(x, x, (IEqualityComparer<int>)null)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithDefaultComparer_Diagnostic()
+    {
+        // default(IEqualityComparer<int>) is null, which MSTest treats as EqualityComparer<T>.Default, so the
+        // self-comparison is still provably always true. Only built-in conversions are stripped when inspecting
+        // the comparer argument.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual(x, x, default(IEqualityComparer<int>))|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithDefaultEqualityComparer_Diagnostic()
+    {
+        // EqualityComparer<T>.Default passed explicitly is the default comparer, so the self-comparison is
+        // still provably always true and must be flagged.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual(x, x, EqualityComparer<int>.Default)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedContravariantDefaultComparer_NoDiagnostic()
+    {
+        // IEqualityComparer<T> is contravariant, so EqualityComparer<Base>.Default can be passed where an
+        // IEqualityComparer<Derived> is expected. That is NOT EqualityComparer<Derived>.Default and can return a
+        // different (non-reflexive) result, so it must not be treated as the default comparer.
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Derived();
+                    Assert.AreEqual<Derived>(x, x, EqualityComparer<Base>.Default);
+                }
+
+                private class Base : IEquatable<Base>
+                {
+                    public bool Equals(Base other) => false;
+                }
+
+                private sealed class Derived : Base
+                {
+                }
             }
             """;
 

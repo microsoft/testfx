@@ -3,10 +3,75 @@
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
+// InvokeTestingPlatformTask does not yet preserve its terminal summary and artifacts in -mt's
+// out-of-process TaskHost, so tests that exercise the MSBuild Test target must opt out.
 [TestClass]
 public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
+
+    [TestMethod]
+    public async Task DotnetCli_BinlogsHaveGloballyUniqueNames()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(DotnetCli_BinlogsHaveGloballyUniqueNames),
+            """
+            #file Binlog.proj
+            <Project>
+              <Target Name="Build" />
+            </Project>
+            """);
+        const string BinlogBaseName = "SharedAcrossProcesses";
+        string command = $"msbuild \"{Path.Combine(testAsset.TargetAssetPath, "Binlog.proj")}\"";
+        DotnetMuxerResult[] results = await Task.WhenAll(
+            DotnetCli.RunAsync(command, callerMemberName: BinlogBaseName, cancellationToken: TestContext.CancellationToken),
+            DotnetCli.RunAsync(command, callerMemberName: BinlogBaseName, cancellationToken: TestContext.CancellationToken));
+
+        foreach (DotnetMuxerResult result in results)
+        {
+            result.AssertExitCodeIs(0);
+            Assert.IsNotNull(result.BinlogPath);
+            Assert.IsTrue(File.Exists(result.BinlogPath));
+            string fileName = Path.GetFileNameWithoutExtension(result.BinlogPath);
+            Assert.StartsWith(BinlogBaseName + "-", fileName);
+            Assert.IsTrue(
+                Guid.TryParseExact(fileName[(BinlogBaseName.Length + 1)..], "N", out _),
+                "A process-local counter cannot distinguish concurrent collection batches.");
+        }
+
+        Assert.AreNotEqual(results[0].BinlogPath, results[1].BinlogPath);
+    }
+
+    [TestMethod]
+    [DataRow(null, "0")]
+    [DataRow("false", "false")]
+    public async Task DotnetCli_MSBuildServer_DefaultsToDisabledAndPreservesExplicitSettings(string? serverSetting, string expectedSetting)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(DotnetCli_MSBuildServer_DefaultsToDisabledAndPreservesExplicitSettings),
+            """
+            #file MSBuildServer.proj
+            <Project>
+              <Target Name="CheckServerSetting">
+                <Error Condition="'$(MSBUILDUSESERVER)' != '$(ExpectedServerSetting)'" Text="Unexpected MSBuild server setting: '$(MSBUILDUSESERVER)'." />
+                <Message Importance="high" Text="MSBuild server setting: $(MSBUILDUSESERVER)" />
+              </Target>
+            </Project>
+            """);
+        Dictionary<string, string?> environmentVariables = [];
+        if (serverSetting is not null)
+        {
+            environmentVariables["MSBUILDUSESERVER"] = serverSetting;
+        }
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{Path.Combine(testAsset.TargetAssetPath, "MSBuildServer.proj")}\" -t:CheckServerSetting -p:ExpectedServerSetting={expectedSetting}",
+            environmentVariables: environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains($"MSBuild server setting: {expectedSetting}");
+    }
 
     [DynamicData(nameof(GetBuildMatrixSingleAndMultiTfmBuildConfiguration))]
     [TestMethod]
@@ -47,7 +112,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         // Build the solution
         DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore {solution.SolutionFile} --configfile {nugetFile}", cancellationToken: TestContext.CancellationToken);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore -t:Test -p:UseMSBuildTestInfrastructure=true {solution.SolutionFile}", workingDirectory: solution.FolderPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore -t:Test -p:UseMSBuildTestInfrastructure=true {solution.SolutionFile}", workingDirectory: solution.FolderPath, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         if (isMultiTfm)
         {

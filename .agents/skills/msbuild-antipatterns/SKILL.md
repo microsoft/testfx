@@ -1,9 +1,14 @@
 ---
 name: msbuild-antipatterns
-description: "Catalog of MSBuild anti-patterns with detection rules and fix recipes. Only activate in MSBuild/.NET build context. USE FOR: reviewing, auditing, or cleaning up .csproj, .vbproj, .fsproj, .props, .targets, or .proj files. Each anti-pattern has a symptom, explanation, and concrete BAD→GOOD transformation. Covers Exec-instead-of-built-in-task, unquoted conditions, hardcoded paths, restating SDK defaults, scattered package versions, and more. DO NOT USE FOR: non-MSBuild build systems (npm, Maven, CMake, etc.), project migration to SDK-style (use msbuild-modernization)."
+description: "Review/audit MSBuild XML correctness and maintainability, including F# order and Import safety; not SDK-style migration. Do not edit unless fixes are requested."
+license: MIT
 ---
 
 # MSBuild Anti-Pattern Catalog
+
+## Scope and routing
+
+DO NOT INVOKE when the primary request explicitly asks to convert, migrate, modernize, or rewrite a legacy/old-style project to SDK style; use msbuild-modernization. Migration prompts often mention ToolsVersion, explicit Compile/Reference entries, packages.config, or Microsoft.CSharp.targets, but merely reviewing or auditing a file that contains those patterns remains in scope here. USE FOR broad review, audit, lint, or maintainability/correctness checks of project/build files, including custom targets; prioritized cross-cutting findings; discrete anti-patterns; F# ordering/FS0039; cross-platform paths; and focused Import safety verdicts. Review/audit is analysis-only unless fixes are requested. For concrete property/item defects use property-patterns/item-management; use target-authoring for implementation and extension-points for NuGet auto-import/layout discovery. Exclude non-MSBuild systems.
 
 A numbered catalog of common MSBuild anti-patterns. Each entry follows the format:
 
@@ -12,6 +17,15 @@ A numbered catalog of common MSBuild anti-patterns. Each entry follows the forma
 - **Fix**: Concrete transformation
 
 Use this catalog when scanning project files for improvements.
+
+## Review output contract
+
+For review, audit, maintainability, or correctness-risk requests:
+
+1. Do not edit files unless the user explicitly asks for fixes.
+2. Return prioritized findings grounded in the supplied file, with impact and a targeted recommendation.
+3. Separate confirmed defects from conditional risks and already-correct patterns.
+4. Keep the final answer as the review; do not replace it with a terse summary of changes.
 
 ---
 
@@ -152,6 +166,8 @@ Use this catalog when scanning project files for improvements.
 
 **Exception**: Non-SDK-style (legacy) projects require explicit file includes. If migrating, see `msbuild-modernization` skill.
 
+**Exception (F# / `.fsproj`)**: F# compilation is order-dependent — the compiler processes `<Compile Include>` items sequentially and a file can only reference types/modules declared in files listed above it. `.fsproj` files must therefore list every source file explicitly, in dependency order (utility/leaf modules at the top, the entry point such as `Program.fs` at the bottom). If a `.fsi` signature file is used, it must appear **immediately before** its companion `.fs` implementation file.
+
 ---
 
 ## AP-06: Using `<Reference>` with HintPath for NuGet Packages
@@ -198,7 +214,6 @@ See [`references/private-assets.md`](references/private-assets.md) for BAD/GOOD 
 <!-- BAD: Repeated in every .csproj -->
 <!-- ProjectA.csproj, ProjectB.csproj, ProjectC.csproj all have: -->
 <PropertyGroup>
-  <LangVersion>latest</LangVersion>
   <Nullable>enable</Nullable>
   <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   <ImplicitUsings>enable</ImplicitUsings>
@@ -208,7 +223,6 @@ See [`references/private-assets.md`](references/private-assets.md) for BAD/GOOD 
 <!-- Directory.Build.props -->
 <Project>
   <PropertyGroup>
-    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -333,25 +347,46 @@ See `incremental-build` skill for deep guidance on Inputs/Outputs, FileWrites, a
 <Project Sdk="Microsoft.NET.Sdk">
 ```
 
-**Exception**: Imports that are *required* for the build to work correctly should fail fast — don't guard those. Guard imports that are optional or environment-specific (e.g., local developer overrides, CI-specific settings).
+**Exception — required imports**: Imports that are *required* for the build to work correctly should fail fast — don't guard those. Guard imports that are optional or environment-specific (e.g., local developer overrides, CI-specific settings).
+
+**Exception — NuGet package forwarders**: `.props`/`.targets` files inside a NuGet package's per-TFM `build/` or `buildTransitive/` folder routinely import a sibling file under `buildTransitive/<tfm>/…` without an `Exists()` guard. These are a **package contract**: the target file is guaranteed to be present in the restored package, even if it doesn't appear in the source tree at that relative path. The package layout is typically produced by:
+
+- A custom `.nuspec` with per-TFM `<file>` entries — e.g. `<file src="buildTransitive\common\MyAdapter.props" target="buildTransitive\net8.0\MyAdapter.props" />` — that copy files from a single source folder (such as `buildTransitive/common/`) into per-TFM subfolders at pack time, or
+- `<None Update="...">` / `<Content Include="...">` items in the `.csproj` with a per-TFM `<PackagePath>` (e.g. `<PackagePath>buildTransitive/net8.0/</PackagePath>`), declared once per target TFM, or
+- SDK conventions (e.g. `IncludeBuildOutput`, `BuildOutputTargetFolder`) that place built outputs under `build/<tfm>/`.
+
+Before flagging an unguarded `<Import>` inside a `build/` or `buildTransitive/` folder, **resolve it against the packed layout** — read every `*.nuspec` in the project directory **and its immediate parent directory** (shared nuspecs are common in mono-repos; do not walk further up), and any `<PackagePath>` metadata on `<None>`/`<Content>` items in the `.csproj`. Only flag if the target path is missing from **both** the source tree *and* the projected package layout. The `dotnet-msbuild/extension-points` skill — *Source tree vs packed layout* — documents the full cross-check procedure.
+
+**Forwarding `buildTransitive/` → `build/`:** forward through the sibling `build/*.props` / `build/*.targets` file (not directly to `buildMultiTargeting/`); when `build/` is per-TFM (`build/<tfm>/`), include the TFM segment derived from the file's own folder (not `$(TargetFramework)`), or transitive consumers hit `MSB4019`. See the `extension-points` skill — *Forwarding chain* — for the rule and derivation expression.
 
 ---
 
-## AP-14: Using Backslashes in Paths (Cross-Platform Issue)
+## AP-14: Backslashes in Paths — Where It Matters
 
-**Smell**: `<Import Project="$(RepoRoot)\eng\common.props" />` with backslash separators in `.props`/`.targets` files meant to be cross-platform.
+**Smell**: Backslash path separators in `.props`/`.targets` files meant to run cross-platform.
 
-**Why it's bad**: Backslashes work on Windows but fail on Linux/macOS. MSBuild normalizes forward slashes on all platforms.
+**Where this is a real bug (🔴 Error)** — paths that MSBuild does **not** route through its path normalizer:
+
+- Raw shell strings inside `<Exec Command="...\tools\foo.exe ..." />` — passed verbatim to `bash`/`sh` on Unix, which treats `\` as an escape.
+- Backslash-delimited paths inside CDATA blocks, embedded in source files written by `<WriteLinesToFile>`, or constructed for non-MSBuild consumers (custom scripts, response files, environment variables).
+- Paths handed to custom tasks that call OS file APIs directly without going through MSBuild path utilities.
+
+**Where this is only a style preference (🔵 Style)** — paths that go through MSBuild's evaluator (`<Import Project="...">`, file-path properties consumed by built-in tasks like `<Copy>`/`<MakeDir>`/`<Delete>`, item `Include=`/`Exclude=` globs):
+
+MSBuild's evaluator normalizes `\` → `/` on Unix-like systems before resolving the path. See `FileUtilities.MaybeAdjustFilePath` and `ConvertToUnixSlashes` in [`microsoft/msbuild` `src/Framework/FileUtilities.cs`](https://github.com/dotnet/msbuild/blob/main/src/Framework/FileUtilities.cs). So `<Import Project="$(MSBuildThisFileDirectory)..\..\build\common.props" />` resolves correctly on Linux/macOS today. Forward slashes are still **preferred for consistency**, but the import will not break and existing backslash-style imports should not be flagged as 🔴 **Error**.
 
 ```xml
-<!-- BAD: Breaks on Linux/macOS -->
-<Import Project="$(RepoRoot)\eng\common.props" />
-<Content Include="assets\images\**" />
+<!-- 🔴 Error: \ in raw shell string breaks on Linux/macOS -->
+<Exec Command="$(MSBuildThisFileDirectory)tools\release\sign.exe $(OutputPath)" />
 
-<!-- GOOD: Forward slashes work everywhere -->
-<Import Project="$(RepoRoot)/eng/common.props" />
-<Content Include="assets/images/**" />
+<!-- 🔵 Style: \ in Import is normalized on Unix, but / is nicer -->
+<Import Project="$(MSBuildThisFileDirectory)..\..\build\common.props" />
+
+<!-- ✅ Recommended in new code -->
+<Import Project="$(MSBuildThisFileDirectory)../../build/common.props" />
 ```
+
+**Verification rule**: Before flagging a backslash path as 🔴 **Error**, ask *"does this string flow through MSBuild's evaluator, or is it handed verbatim to a non-MSBuild consumer?"* Only the second case is a correctness defect.
 
 **Note**: `$(MSBuildThisFileDirectory)` already ends with a platform-appropriate separator, so `$(MSBuildThisFileDirectory)tools/mytool` works on both platforms.
 
@@ -384,4 +419,4 @@ See `incremental-build` skill for deep guidance on Inputs/Outputs, FileWrites, a
 
 ---
 
-For additional anti-patterns (AP-16 through AP-21) and a quick-reference checklist, see [additional-antipatterns.md](references/additional-antipatterns.md).
+For additional anti-patterns (AP-16 through AP-23) and a quick-reference checklist, see [additional-antipatterns.md](references/additional-antipatterns.md).

@@ -9,6 +9,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// <summary>
 /// When PublishAOT=true is set on a project, it will set IsDynamicCodeSupported to false, but the code will still run as managed
 /// and VSTest is still able to find tests in the dll.
+/// InvokeTestingPlatformTask does not yet preserve its terminal summary and artifacts in -mt's out-of-process
+/// TaskHost, so tests that exercise the MSBuild Test target must opt out.
 /// </summary>
 [TestClass]
 public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixture>
@@ -24,7 +26,7 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
             .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -t:Test -c Debug {generator.TargetAssetPath}", workingDirectory: generator.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -t:Test -c Debug {generator.TargetAssetPath}", workingDirectory: generator.TargetAssetPath, failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         // In the real-world issue, access to path C:\Program Files\dotnet\ is denied, but we run this from a local .dotnet folder, where we have write access.
         // So instead of relying on the test run failing because of AccessDenied, we check the output, and see where TestResults were placed.

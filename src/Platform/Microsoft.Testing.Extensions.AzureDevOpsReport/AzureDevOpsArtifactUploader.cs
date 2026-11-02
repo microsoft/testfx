@@ -22,7 +22,6 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
 {
     private const string AzureDevOpsArtifactUploadCommandFormat = "##vso[artifact.upload containerfolder={0};artifactname={0}]{1}";
     private const string AzureDevOpsBuildAddTagCommandPrefix = "##vso[build.addbuildtag]";
-    private const string AzureDevOpsTfBuildVariableName = "TF_BUILD";
     private const string CrashDumpProducerUid = "CrashDumpProcessLifetimeHandler";
     private const string CrashDumpTag = "has-crashdump";
     private const string HangDumpProducerUid = "HangDumpProcessLifetimeHandler";
@@ -70,7 +69,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
             && artifactNameArguments is [string artifactName]
                 ? artifactName
                 : null;
-        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker);
+        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
     }
 
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage), typeof(FileArtifact)];
@@ -105,7 +104,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
                 return;
             }
 
-            _emitAzureDevOpsCommands = string.Equals(_environment.GetEnvironmentVariable(AzureDevOpsTfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase);
+            _emitAzureDevOpsCommands = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
             if (_emitAzureDevOpsCommands)
             {
                 return;
@@ -113,7 +112,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
 
             if (_logger.IsEnabled(LogLevel.Warning))
             {
-                _logger.LogWarning(AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning);
+                await _logger.LogWarningAsync(AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning).ConfigureAwait(false);
             }
 
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
@@ -124,7 +123,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
         }
     }
 
@@ -136,7 +135,8 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
 
             switch (value)
             {
-                case TestNodeUpdateMessage nodeUpdateMessage when IsFailureState(nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>()):
+                case TestNodeUpdateMessage nodeUpdateMessage when !nodeUpdateMessage.TestNode.IsSupersededRetryAttempt()
+                    && IsFailureState(nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>()):
                     Interlocked.Exchange(ref _hasTestFailures, 1);
                     break;
 
@@ -151,7 +151,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -197,7 +197,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
 
@@ -242,7 +242,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(EmitArtifactUploadCommandsAsync), ex);
+            _logger.LogUnexpectedException(nameof(EmitArtifactUploadCommandsAsync), ex);
         }
     }
 
@@ -253,7 +253,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         => await EmitLineAsync($"{AzureDevOpsBuildAddTagCommandPrefix}{tag}", cancellationToken).ConfigureAwait(false);
 
     private async Task EmitLineAsync(string line, CancellationToken cancellationToken)
-        => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
+        => await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
 
     private string GetArtifactName()
         => _artifactNameOverride is { } artifactName && !RoslynString.IsNullOrWhiteSpace(artifactName)
@@ -274,14 +274,6 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
 
         return matcher;
-    }
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
     }
 
     private bool ShouldUploadAllFiles()

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Security;
@@ -16,6 +16,57 @@ internal sealed partial class TypeCache
 {
     private static void DiscoverFixturesFromProviders(Assembly currentAssembly, TestAssemblyInfo assemblyInfo, TypeCache @this)
     {
+#if NET && !WINDOWS_UWP
+        // [AssemblyFixtureProvider] discovery walks the runtime assembly reference graph
+        // (Assembly.GetReferencedAssemblies + assembly loading by name), which is not supported when
+        // the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WASM AOT).
+        // Skipping the feature there keeps behavior predictable and lets the trimmer statically remove
+        // the reflection path (so no IL2026/IL3050 is produced).
+        if (!RuntimeFeature.IsDynamicCodeSupported)
+        {
+            // The compile-time MSTEST0072 analyzer covers the referenced-provider case at build time
+            // (it can read referenced assemblies' metadata). At run time under AOT we cannot walk the
+            // reference graph (Assembly.GetReferencedAssemblies + load-by-name is the very dynamic-code
+            // path this guard avoids), so a referenced provider that has not been loaded yet is not
+            // detectable here. What we can reliably and AOT-safely surface is a marker on an
+            // already-loaded assembly — in particular the test assembly itself when it self-applies the
+            // attribute (a documented usage). Emit a best-effort warning for every loaded assembly that
+            // carries the marker so those cases are not silent.
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                foreach (Assembly loaded in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (loaded.IsDynamic)
+                    {
+                        continue;
+                    }
+
+                    bool hasMarker;
+                    try
+                    {
+                        // Metadata-only probe. Isolate per-assembly failures (unresolvable custom-attribute
+                        // metadata on an unrelated assembly must not abort discovery), matching the normal
+                        // discovery path's handling.
+                        hasMarker = HasAssemblyFixtureProviderMarker(loaded);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
+                    if (hasMarker)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                            "TypeCache: [AssemblyFixtureProvider] is not supported when the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WebAssembly AOT). The AssemblyInitialize/AssemblyCleanup methods it exposes from assembly {0} will not run.",
+                            SafeGetAssemblyName(loaded));
+                    }
+                }
+            }
+
+            return;
+        }
+#endif
+
         // Snapshot which slots were filled by the in-assembly pass. Local declarations are
         // authoritative — never let a provider overwrite or even consider those slots, so the
         // provider pass stays silent when the test assembly already declared a fixture method.

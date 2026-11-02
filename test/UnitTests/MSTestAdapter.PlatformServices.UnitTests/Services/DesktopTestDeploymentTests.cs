@@ -4,12 +4,11 @@
 #if NETFRAMEWORK
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 using Moq;
 
@@ -45,15 +44,12 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldDeployFilesInASourceAndReturnTrue()
     {
-        TestCase testCase = GetTestCase(Assembly.GetExecutingAssembly().Location);
+        UnitTestElement testCase = GetTestCase(Assembly.GetExecutingAssembly().Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         string? warning;
         string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
@@ -68,17 +64,14 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldDeployFilesInMultipleSourcesAndReturnTrue()
     {
-        TestCase testCase1 = GetTestCase(Assembly.GetExecutingAssembly().Location);
+        UnitTestElement testCase1 = GetTestCase(Assembly.GetExecutingAssembly().Location);
         string sourceFile2 = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "a.dll");
-        TestCase testCase2 = GetTestCase(sourceFile2);
+        UnitTestElement testCase2 = GetTestCase(sourceFile2);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase1, testCase2 }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         string? warning;
         string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
@@ -100,15 +93,12 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldCreateDeploymentDirectories()
     {
-        TestCase testCase = GetTestCase(typeof(DesktopTestDeploymentTests).Assembly.Location);
+        UnitTestElement testCase = GetTestCase(typeof(DesktopTestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
-        mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
-
-        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
+        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
         // matched twice because root deployment and out directory are same in net core
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(testRunDirectories.RootDeploymentDirectory), Times.Once);
@@ -118,16 +108,16 @@ public class DesktopTestDeploymentTests : TestContainer
 
     #region private methods
 
-    private TestCase GetTestCase(string source)
+    private static UnitTestElement GetTestCase(string source)
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), source);
+        var testCase = new UnitTestElement(new TestMethod("M", "C", source, displayName: null));
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
                         DefaultDeploymentItemOutputDirectory)
         ];
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
+        testCase.DeploymentItems = kvpArray;
 
         return testCase;
     }

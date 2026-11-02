@@ -3,15 +3,21 @@
 
 using Microsoft.Testing.Extensions;
 
+#if !NATIVE_AOT
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+#endif
+
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 #if NETCOREAPP
-Console.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
+Console.Error.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
 #endif
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
@@ -21,14 +27,24 @@ builder.AddCodeCoverageProvider();
 #endif
 builder.AddAppInsightsTelemetryProvider();
 builder.AddHangDumpProvider();
-Console.WriteLine("NATIVE_AOT disabled");
+// Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
+// and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter
+// is registered, so the recorded data is dropped by the SDK at the export stage — this keeps CI
+// logs clean while still flowing every test event through the OTel pipeline. Gated on !NATIVE_AOT
+// because the OpenTelemetry SDK relies on reflection-heavy patterns that may not work under AOT.
+builder.AddOpenTelemetryProvider(
+    tracing => tracing.AddTestingPlatformInstrumentation(),
+    metrics => metrics.AddTestingPlatformInstrumentation());
+Console.Error.WriteLine("NATIVE_AOT disabled");
 #else
-Console.WriteLine("NATIVE_AOT enabled");
+Console.Error.WriteLine("NATIVE_AOT enabled");
 #endif
 
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
+builder.AddJUnitReportProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

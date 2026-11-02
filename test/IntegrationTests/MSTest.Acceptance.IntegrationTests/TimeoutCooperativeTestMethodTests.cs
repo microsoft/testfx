@@ -10,7 +10,11 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<TimeoutCooperativeTestMethodTests.TestAssetFixture>
 {
+    // Bound a broken child timeout while allowing ample startup time on loaded agents.
+    private const int TestHostTimeoutMilliseconds = 120_000;
+
     [TestMethod]
+    [Timeout(TestHostTimeoutMilliseconds, CooperativeCancellation = true)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInCtor_TestGetsCanceled(string tfm)
     {
@@ -27,6 +31,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
     }
 
     [TestMethod]
+    [Timeout(TestHostTimeoutMilliseconds, CooperativeCancellation = true)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInTestInit_TestGetsCanceled(string tfm)
     {
@@ -43,6 +48,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
     }
 
     [TestMethod]
+    [Timeout(TestHostTimeoutMilliseconds, CooperativeCancellation = true)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInTestCleanup_TestGetsCanceled(string tfm)
     {
@@ -59,6 +65,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
     }
 
     [TestMethod]
+    [Timeout(TestHostTimeoutMilliseconds, CooperativeCancellation = true)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInTestMethod_TestGetsCanceled(string tfm)
     {
@@ -72,6 +79,24 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CooperativeTimeout_WhenTestMethodThrowsUnrelatedOperationCanceledException_TestFailsAndIsNotReportedAsTimeout(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["THROW_UNRELATED_OCE"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        // An OperationCanceledException that is not tied to the test's cancellation token must be surfaced as a
+        // regular user failure, not swallowed and reported as a timeout/cancellation by the cooperative timeout path.
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputDoesNotContain("timed out after");
     }
 
     public sealed class TestAssetFixture : TestAssetFixtureBase
@@ -125,7 +150,8 @@ public class UnitTest1
         _testContext = testContext;
         if (Environment.GetEnvironmentVariable("LONG_WAIT_CTOR") == "1")
         {
-            Task.Delay(10_000, _testContext.CancellationTokenSource.Token).Wait();
+            // Finite delays can finish before delayed timeout callbacks run on a loaded agent.
+            Task.Delay(Timeout.Infinite, _testContext.CancellationTokenSource.Token).Wait();
         }
     }
 
@@ -134,7 +160,7 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTINIT") == "1")
         {
-            await Task.Delay(10_000, _testContext.CancellationTokenSource.Token);
+            await Task.Delay(Timeout.Infinite, _testContext.CancellationTokenSource.Token);
         }
     }
 
@@ -143,7 +169,7 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTCLEANUP") == "1")
         {
-            await Task.Delay(10_000, _testContext.CancellationTokenSource.Token);
+            await Task.Delay(Timeout.Infinite, _testContext.CancellationTokenSource.Token);
         }
     }
 
@@ -151,9 +177,14 @@ public class UnitTest1
     [Timeout(1000$TimeoutExtraArgs$)]
     public async Task TestMethod()
     {
+        if (Environment.GetEnvironmentVariable("THROW_UNRELATED_OCE") == "1")
+        {
+            throw new OperationCanceledException(new CancellationToken(canceled: true));
+        }
+
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TEST") == "1")
         {
-            await Task.Delay(10_000, _testContext.CancellationTokenSource.Token);
+            await Task.Delay(Timeout.Infinite, _testContext.CancellationTokenSource.Token);
         }
     }
 }

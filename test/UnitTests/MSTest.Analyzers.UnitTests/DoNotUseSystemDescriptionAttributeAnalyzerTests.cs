@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -164,5 +164,146 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodHasSystemDescriptionAttribute_Diagnostic()
+    {
+        // DataTestMethodAttribute inherits from TestMethodAttribute, so the Inherits() check should
+        // catch it and report the same diagnostic as for [TestMethod].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                [System.ComponentModel.Description("Description")]
+                public void [|MyTestMethod|](int x)
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                [Description("Description")]
+                public void MyTestMethod(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasMSTestDescriptionAttribute_NoDiagnostic()
+    {
+        // When only the MSTest namespace is in scope, the short-form [Description] resolves to
+        // Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute, not
+        // System.ComponentModel.DescriptionAttribute. The analyzer must not fire.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenSTATestMethodHasSystemDescriptionAttribute_Diagnostic()
+    {
+        // STATestMethodAttribute inherits from TestMethodAttribute, so the Inherits() check should
+        // catch it and report the same diagnostic as for [TestMethod].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [STATestMethod]
+                [System.ComponentModel.Description("Description")]
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [STATestMethod]
+                [Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCustomDerivedTestMethodAttributeHasSystemDescriptionAttribute_Diagnostic()
+    {
+        // A user-defined attribute that derives from TestMethodAttribute is matched by the
+        // Inherits() check, so it should report the same diagnostic as for [TestMethod].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyTestMethodAttribute : TestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                [System.ComponentModel.Description("Description")]
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyTestMethodAttribute : TestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                [Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

@@ -1,5 +1,9 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
@@ -13,6 +17,8 @@
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
+    <!-- MSTest.TestAdapter bundles this assembly into its buildTransitive folder, so this project is never packed on its own. -->
+    <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);EXCLUDE_OS_POLYFILL</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -36,8 +42,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <!-- Span/MemoryMarshal used by the linked XxHash code below, and Span<T>.Fill used by
+         Execution\TestDependencyGraph.*, live in System.Memory on these TFMs.
+         Referenced explicitly so the compiled assembly binds the System.Memory assembly version 4.0.5.0
+         (see SystemMemoryVersion in Directory.Packages.props) instead of the transitive 4.5.5 (4.0.1.2). -->
+    <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+  </ItemGroup>
+
+  <!-- System.Configuration (ConfigurationManager / ConfigurationElementCollection used by TestDataSource on .NET
+       Framework) was previously pulled in transitively via Microsoft.TestPlatform.ObjectModel. It is a framework
+       assembly, so it is referenced directly now that the object-model package reference is removed. -->
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <Reference Include="System.Configuration" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,14 +66,16 @@
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="PlatformServices.Desktop.IntegrationTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Performance.Benchmarks" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>
