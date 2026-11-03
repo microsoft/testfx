@@ -439,6 +439,81 @@ public sealed class GitHubActionsAttachmentCollectorTests : IDisposable
     }
 
     [TestMethod]
+    [DataRow(false, DisplayName = "Destination disposal fails")]
+    [DataRow(true, DisplayName = "Cancellation after destination disposal")]
+    public async Task CaptureAsync_DestinationDisposalCannotCommitStagedBytes(bool cancelAfterDisposal)
+    {
+        byte[] expected = [71, 0, 255];
+        string source = WriteSource("dispose.log", expected);
+        Mock<IFileSystem> fileSystem = CreateVirtualFileSystem(source, expected.Length, expected.Length, physicalOutput: true);
+        var real = new SystemFileSystem();
+        using var cancellation = new CancellationTokenSource();
+        fileSystem.Setup(value => value.NewFileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read))
+            .Returns(() => real.NewFileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read));
+        fileSystem.Setup(value => value.NewFileStream(
+            It.Is<string>(path => Path.GetFileName(path).EndsWith("-dispose.log", StringComparison.Ordinal)),
+            FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            .Returns((string path, FileMode mode, FileAccess access, FileShare share) =>
+            {
+                IFileStream target = real.NewFileStream(path, mode, access, share);
+                var wrapper = new Mock<IFileStream>();
+                wrapper.SetupGet(value => value.Stream).Returns(target.Stream);
+                wrapper.Setup(value => value.Dispose()).Callback(() =>
+                {
+                    target.Dispose();
+                    if (cancelAfterDisposal)
+                    {
+                        cancellation.Cancel();
+                    }
+                    else
+                    {
+                        throw new IOException("controlled destination disposal failure");
+                    }
+                });
+                return wrapper.Object;
+            });
+        GitHubActionsAttachmentCollector collector = CreateCollector(fileSystem.Object);
+        TestNode node = CreateNode("destination-disposal", "Destination disposal", source);
+        GitHubCiRunSummaryAttachment[]? captured = null;
+
+        if (cancelAfterDisposal)
+        {
+            OperationCanceledException error = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+                () => collector.CaptureAsync(node, cancellation.Token));
+            Assert.AreEqual(cancellation.Token, error.CancellationToken);
+        }
+        else
+        {
+            captured = await collector.CaptureAsync(node, cancellation.Token);
+        }
+
+        fileSystem.Verify(value => value.DeleteFile(It.IsAny<string>()), Times.Once);
+        Assert.IsEmpty(Directory.GetFiles(StagingDirectory, "*", SearchOption.AllDirectories));
+        Assert.AreSequenceEqual(expected, File.ReadAllBytes(source));
+        Assert.HasCount(cancelAfterDisposal ? 0 : 1, _warnings);
+        await collector.WriteManifestAsync(CreateModule(), TestContext.CancellationToken);
+
+        using JsonDocument manifest = ReadSingleManifest();
+        JsonElement row = Assert.ContainsSingle(manifest.RootElement.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("destination-disposal", row.GetProperty("uid").GetString());
+        JsonElement attachment = Assert.ContainsSingle(row.GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual(0L, attachment.GetProperty("sizeBytes").GetInt64());
+        Assert.AreEqual("unavailable", attachment.GetProperty("status").GetString());
+        Assert.AreEqual(JsonValueKind.Null, attachment.GetProperty("relativePath").ValueKind);
+        Assert.ContainsSingle(Directory.GetFiles(StagingDirectory, "*", SearchOption.AllDirectories));
+        if (!cancelAfterDisposal)
+        {
+            Assert.IsNotNull(captured);
+            GitHubCiRunSummaryAttachment result = Assert.ContainsSingle(captured);
+            Assert.AreEqual(0L, result.SizeBytes);
+            Assert.AreEqual("unavailable", result.Status);
+            Assert.IsNull(result.RelativePath);
+            Assert.Contains("dispose.log", _warnings[0]);
+            Assert.Contains("unavailable", _warnings[0]);
+        }
+    }
+
+    [TestMethod]
     public async Task CaptureAsync_WarningCallbackFails_ManifestStillIndexesEarlierStagedFile()
     {
         string first = WriteSource("first.log", []);

@@ -97,11 +97,11 @@ internal sealed class GitHubActionsAttachmentCollector(
                 }
 
                 fileSystem.CreateDirectory(Path.GetDirectoryName(destination)!);
+                long copied = 0;
                 using (IFileStream target = fileSystem.NewFileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
                     destinationCreated = true;
                     byte[] buffer = new byte[81920];
-                    long copied = 0;
                     int count;
                     while ((count = await source.Stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) > 0)
                     {
@@ -114,12 +114,11 @@ internal sealed class GitHubActionsAttachmentCollector(
 
                         await target.Stream.WriteAsync(buffer, 0, count, cancellationToken).ConfigureAwait(false);
                     }
-
-                    attachment.SizeBytes = copied;
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
-                _totalBytes += attachment.SizeBytes;
+                _totalBytes += copied;
+                attachment.SizeBytes = copied;
                 attachment.RelativePath = relativePath;
                 attachment.Status = "staged";
                 destinationCreated = false;
