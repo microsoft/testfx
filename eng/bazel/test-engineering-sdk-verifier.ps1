@@ -134,3 +134,5 @@ Assert-EnvironmentRestored 'EnvironmentRestoredAfterSuccess' 'VerifiedEngineerin
 Assert-EnvironmentRestored 'EnvironmentRestoredAfterFailure' 'MissingFrameworks' $true
 $results | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $directory 'fixture-results.json') -Encoding utf8
 Write-Host "Verifier fixtures passed: $($results.Count). These do not establish native-build or composed-product parity. Evidence: $directory"
+
+exit 0

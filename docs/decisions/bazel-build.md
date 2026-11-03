@@ -1633,7 +1633,7 @@ engineering-SDK path has trustworthy inputs and composed-product validation.
   rollout. No shipping-leg replacement, package publication, servicing, or
   backport is enabled by this experiment.
 
-### Research in progress
+### Archive and compiler research
 
 The pinned rules' `dotnet/extensions.bzl` resolves one user SDK and one
 independent bootstrap SDK. `dotnet/private/sdk/releases.bzl` currently obtains
@@ -1880,3 +1880,146 @@ omitting it still requires all four. That scoped audit passed against the
 real bounded query above (34 source actions, SDK 12, net10 reference 10.0.14).
 The extra fixture cases cover both the explicit subset and native expanded
 argument shape.
+
+### Independent consumer SDK correction
+
+The first SDK 12 package build passed, but the existing package validator
+looked for SDK 11 under `execution_root/external`. A distinct consumer SDK is
+not necessarily a producer action input: the actual SDK 11 repository existed
+under `output_base/external`, while its execution-root counterpart was absent.
+This was a validator-location defect, not a missing SDK or package feed.
+
+The shared correction is commit
+`6d851a91cf44d479ebf549996b337c26849f4578`. `Get-ConsumerSdk` explicitly
+queries the declared/default toolchain, locates its materialized repository,
+retains the unique-match check, verifies the selected executable and archive
+`.version`, and records consumer provenance. It never substitutes SDK 12 or a
+machine SDK. Actual production-function checks passed with both SDK 11 and
+SDK 12 producer selections, returning SDK 11 in both cases.
+
+An isolated targeted counterfactual retained the function and changed only
+`info output_base` back to `info execution_root`. With SDK 11 materialized
+but not staged, it reproduced
+`Expected one materialized consumer SDK for the execution host.`
+Restoring the correct function passed. Counterfactual function SHA-256:
+`7541D195B89080037DF3A7E358BB2D35DC7FC73EFF23B69B92FE932696524DC2`.
+The local `locator-checks/f49dc4c2edbe413b9801baa38f46acec` evidence retains
+the actual functions, command results, default/engineering contexts, and
+restored outcome.
+
+### Completed bounded package and runtime gate
+
+Executed code revision:
+`6d851a91cf44d479ebf549996b337c26849f4578`. A task-owned ignored
+`.bazelrc.local` selected the engineering toolchain for Bazel producers and
+the two-processor/2 GiB JVM cap; the delivered `MODULE.bazel` default stayed
+unchanged. All output, SDK, download, and primary package-cache writes used
+owned C: directories. The consumer process's MSBuild-path and roll-forward
+overrides were removed before execution.
+
+```powershell
+.\eng\bazel\validate-packages.ps1 -Jobs 2 -EvidenceRoot C:\tfb\9d855da170b9-sdk12\package-validation
+```
+
+Exit **0**; all **22** recorded steps matched their expected exits. The run
+`20261103-151148-505d36d4` retains `validation.json`, exact command arrays,
+four consumer binlogs/assets files, package inventories/hashes, five passing
+TRX reports, and failure/empty-selection logs:
+
+| Boundary | Executed result |
+| --- | --- |
+| Native MTP/TRX producer | Three `2.6.0-preview.bazel` NuGets built with SDK 12 for all four portable TFMs. |
+| Independent package consumer | SDK `11.0.100-rc.3.26522.148`, source commit `5254d8bcf59917edc1e1abc33bdf2442b77b1c70`; builds for net8/net9/net10/net11 all exited 0. |
+| Loaded package provenance | All three loaded net11 DLL hashes matched the native feed and carried the native build metadata. Pass/failure/empty-selection exits were 0/2/9. |
+| Isolated net8 publisher | Actual `.NET 8.0.33`, CoreLib in its copied layout, one passing test plus expected exits 2/9. |
+| Isolated net9 publisher | Actual `.NET 9.0.22`, CoreLib in its copied layout, one passing test plus expected exits 2/9. |
+| Isolated net10 publisher | Actual `.NET 10.0.14`, CoreLib in its copied layout, one passing test plus expected exits 2/9. |
+| Isolated net11 publisher | Actual `.NET 11.0.0-rc.3.26522.148`, CoreLib in its copied layout, one passing test plus expected exits 2/9. |
+
+Each passing report contains exactly one executed `TestMethod1`, with no
+failures or skips. The deliberate `TestMethod2` failure and zero-result
+selection are separate child-product outcomes, not failing outer validation.
+Publishers ran outside the Bazel tree with `DOTNET_ROOT` pointing at a
+nonexistent directory.
+
+Native package SHA-256 values:
+
+| Package | SHA-256 |
+| --- | --- |
+| `Microsoft.Testing.Platform` | `31EFFC2BDF11A0B8FD9761F076B59FFCF29CFD5F151B7F4EFB1E8BC899F63262` |
+| `Microsoft.Testing.Extensions.TrxReport.Abstractions` | `36CD8D67B72866ED8C243E0C2C52C11245B26DB52B4856AB7E75A9CFC303BCE7` |
+| `Microsoft.Testing.Extensions.TrxReport` | `53395F8FC6042CFB175DA5713192D3F56647ED6721D98AF2A5F82C02FE029431` |
+
+The complete package/publisher action query has SHA-256
+`4FF508318AAD842906780A57EC746BDD4375F7A55565FAB178507FF166FA8BE1`.
+The audit passed **129** declared source C# actions using SDK 12, all four
+preserved reference-pack versions, and **four** SDK 10.0.401 bootstrap
+declarations. The materialized `nuget_pack` and `apphost_shimmer` launchers
+in their actual **exec configurations** select the SDK 12 runtime. Native
+packing and apphost generation executed successfully with that separation;
+unbuilt top-level configurations are not substituted as evidence.
+The inspected producer graph contains 465 declared actions and zero MSBuild
+invocations; MSBuild is used only by the external package consumers.
+
+The net8 consumer binlog independently records SDK 11's `NETCoreSdkVersion`,
+`MSBuildSDKsPath`, `MSBuildToolsPath`, and compiler task/executable, including
+Roslyn `5.12.0-1.26522.148`. This differs deliberately from the producer's
+Roslyn 5.13. RAR records the native MTP compile/runtime reference in the run's
+primary cache. All **12** MTP/TRX DLL payloads across the four TFMs were checked
+against the native `.nupkg` entries, with exact compile/runtime asset selection.
+Visual Studio's read-only fallback folder remained configured in NuGet;
+it was not erased or falsely reported absent. The checked first-party payloads
+reside in the owned primary cache, and no global cache was modified.
+
+### Test-value evidence for engineering selection
+
+The same native `//eng/bazel:build_tools` source and verifier were retained on
+revision `6d851a91cf44d479ebf549996b337c26849f4578`. Separate owned output
+roots selected the engineering SDK or the existing published SDK. Each state
+successfully **built** before querying its real compiler action and executing
+the unchanged verifier with `-TargetFrameworks net10.0`.
+
+| State | Native build | Action query | Identity audit |
+| --- | --- | --- | --- |
+| SDK 12, before | 0 | 0 | 0 |
+| Published SDK 11 selected instead | 0 | 0 | 1: exact expected-SDK assertion |
+| SDK 12 restored | 0 | 0 | 0 |
+
+This is an **executed configuration-removal counterfactual**, not a
+pristine-baseline or missing-symbol compilation failure. One source compiler
+action was audited in each state. The wrong state executed the actual SDK 11
+compiler and failed with:
+
+```text
+Expected global.json compiler SDK 12.0.100-alpha.1.26509.101,
+selected 11.0.100-rc.3.26522.148
+(5.12.0-1.26522.148 (5254d8bcf59917edc1e1abc33bdf2442b77b1c70)).
+```
+
+Verifier SHA-256:
+`1BF79DFD84DCE5E161D9EF5D1307B6B76A5DEE87A8EDFEEB547CA02F4F69308A`.
+Correct action-query SHA-256 before and after:
+`8347FDB549845482D87348585AAC77F0E2B00B258B677AF353BC46B711FD9865`.
+Wrong-selection query SHA-256:
+`94ED142B360FC09E5BB08D355D6C6AA4E65C3C544EB2C8884D1C6971B4462835`.
+The local `native-counterfactual/c4920a4c48c9436fbefd5c94308de06c` evidence
+contains all commands, build/query logs, compiler identities, and audit results.
+
+### Delivery boundary
+
+The opt-in engineering compiler path and bounded MTP/TRX package/runtime
+contract are established on Windows x64. The default remains the working
+SDK 11 toolchain. Full SDK 12 bundled-pack parity, net12 source targets, the
+combined source/test matrix from the other migration lanes, Linux/macOS
+execution, additional host architectures, workloads/AOT, and shipping
+signing/release/servicing parity are **not** claimed. The coordinating
+migration session owns their integration and any later default/rollout decision.
+No shipping pipeline, `global.json`, machine policy, or global setting changed.
+
+The temporary `.bazelrc.local` was removed after verification. A final query
+without an engineering override returned SDK `11.0.100-rc.3.26522.148` and
+runtime `11.0.0-rc.3.26522.148`. Both owned Bazel servers were shut down.
+Only the obsolete interrupted Q: cache and failed partial cache move were
+cleaned; verified downloads, active task-owned C: caches, and reproducible
+evidence remain available. Delivery is local/committed, not pushed, published,
+or CI-verified.
