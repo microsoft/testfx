@@ -138,6 +138,16 @@ unnecessary requests instead of broadening the firewall.
 
 #### Provisional CONNECT records and test-review footers
 
+The `history_link` footer value is an optional, already-rendered fragment,
+including its separator and link. Append `{history_link}` directly; do not
+nest it inside another Markdown link's URL. That nesting produces empty or
+malformed links in the string renderer and fails with `Report nodes cannot
+appear in scalar fields` in the structured renderer. Both reviewer variants
+and their shared configuration use the same fragment contract.
+`test_gh_aw_review_footer.py` exercises all three templates with the pinned
+runtime, with and without a history URL; the action-pin workflow runs it
+alongside the existing firewall-footer checks.
+
 The warning on [PR #11892](https://github.com/microsoft/testfx/pull/11892#pullrequestreview-5490606840)
 is a reporting defect, not missing GitHub access. In
 [run 38246632006](https://github.com/microsoft/testfx/actions/runs/38246632006),

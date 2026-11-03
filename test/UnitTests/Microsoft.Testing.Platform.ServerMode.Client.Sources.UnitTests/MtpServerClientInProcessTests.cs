@@ -1773,8 +1773,8 @@ public sealed class MtpServerClientInProcessTests
             ServerToken = cancellationToken;
             FakeMtpServer server = ConnectBack(serverArguments);
             _server = server;
-            _connected.TrySetResult(server);
             _ = Interlocked.Increment(ref _connectionCount);
+            _connected.TrySetResult(server);
 
             try
             {
