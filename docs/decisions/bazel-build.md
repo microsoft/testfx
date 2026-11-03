@@ -2873,11 +2873,43 @@ large scale reports remain at their recorded native test-output paths.
 **Test-value evidence:** these are existing tests and examples, not a new-test
 generation campaign. Actual test counts, intentional negative exits, native
 browser execution and real in-process benchmark execution are distinguished
-from wrapper success and compilation. NativeAOT requires a supported Linux/macOS
-host: Debian WSL failed to start with code 6 / step 2 / E_FAIL. An independent
-read-only probe confirmed a local Docker Linux engine, but its existing SDK
-image has no C/C++ toolchain. Native AOT validation remains a subsequent step;
-no shared WSL/service reset or machine-level tool installation was attempted.
+from wrapper success and compilation.
+
+#### Bounded NativeAOT attempt and final preservation checks
+
+Debian WSL failed to start with code 6 / step 2 / E_FAIL. A read-only Docker
+context check instead confirmed the local named-pipe Linux engine. The exact
+tracked source at `2938ff167a204dc414069c46a71e3e211786285a` was archived with
+SHA-256 `C7BA7CB683317C935EA07C9044C62C1B572D4A2C1B52629533A18115EE50D858`.
+A disposable container used the already installed public SDK image
+`sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317`,
+two CPUs, a 4-GiB memory bound, a 900-second timeout, a read-only source mount,
+and a task-owned results mount. The producer used checksum-verified Bazel 9.1.1
+and the repository's native rules/toolchain, not that image's MSBuild.
+
+The first actual build failed because no gcc/CC was installed. Installing
+build-essential, clang and zlib development inputs only inside that disposable
+container resolved that prerequisite. The unchanged command then failed during
+upstream analysis with **`NativeAOT is not available for net8.0 on linux-x64`**.
+No native executable or AOT pass is claimed, and the sample was not retargeted
+to a higher TFM. Both failures and the container-only installation log are
+retained in `C:\tfb\tests-05e68c\aot-linux\results`. The container was automatically
+removed and its absence was checked. No shared WSL/service reset or machine-
+level tool installation was performed.
+
+The optional C# worker path was separately exercised:
+`.\eng\bazel.ps1 build //:alias_first //:alias_second --jobs=2 --noshow_progress --@rules_dotnet//dotnet/settings:use_compiler_worker=true`
+returned 0 with two worker actions. Reading the actual portable PDB confirmed
+`/_/test/UnitTests/Bazel.ReferenceAliases.UnitTests/First.cs`; evidence is in
+`pathmap-worker-build.log` and `worker-source-paths.json`. F# worker execution
+is not claimed.
+
+Finally,
+`.\eng\bazel.ps1 test //:portable_tests --jobs=2 --nocache_test_results --noshow_progress`
+returned 0 for the unchanged ten-target aggregate. Its 3,443 existing cases
+remain separate from the new suite/sample inventories. This protects the
+original aggregate after the shared signing/pathmap changes and the opt-in
+sample toolchain helper.
 
 ### Native source-root parity
 
@@ -2918,8 +2950,8 @@ checkpoint; they are not an isolated same-signing counterfactual. Evidence is
 retained in `extension_tests-initial.trx`,
 `stage4-reference-source-fixtures.log`, `signed-pathmap-suites.log`,
 `signed-test-inventory.json`, and five `*-signed-net10.trx` files. Wrapper-based
-Windows execution is verified; optional worker execution and POSIX/F# execution
-remain separately scoped checks.
+Windows execution is verified; the C# worker was subsequently exercised as
+recorded above, while POSIX/F# compilation execution remains unverified.
 
 ## SDK 12 public-signing refresh (2026-11-03)
 

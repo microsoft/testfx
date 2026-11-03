@@ -335,10 +335,12 @@ now retain their incoming configuration. Reassess these changes on an upgrade.
 | `benchmark_runner` | Native self-contained net10 layout; build with `-c opt`. Twelve existing benchmarks are discoverable and an in-process Dry execution runs without an MSBuild-generated host. |
 | `aot_sample` | Existing SDK AOT sample compiles with source-generated reflection metadata and passes its one managed case. This alone is not NativeAOT execution. |
 
-The manual `aot_publish` uses upstream's native AOT publisher, which supports
-Linux/macOS rather than Windows. Native execution requires a working supported
-host and is reported separately from the managed sample. None of these targets
-enlarges the previously verified `portable_tests` aggregate.
+The manual `aot_publish` invokes upstream's native AOT publisher, but the pinned
+upstream does not supply NativeAOT for this existing sample's net8.0 target:
+an isolated Linux attempt also rejects `net8.0 on linux-x64`. Windows native
+linking is separately unsupported. The sample was not retargeted to hide this
+boundary, and its managed pass is not AOT coverage. None of these targets enlarges
+the previously verified `portable_tests` aggregate.
 
 Packages carry an explicit `-preview.bazel` prerelease version derived from
 `eng/Versions.props`; they are not official shipping packages. They include the
