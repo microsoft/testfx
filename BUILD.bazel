@@ -4,6 +4,7 @@ load("//eng/bazel:analyzers.bzl", "analyzer_libraries")
 load("//eng/bazel:compatibility.bzl", "compatibility_libraries")
 load("//eng/bazel:defs.bzl", "testfx_binary", "testfx_matrix", "testfx_test")
 load("//eng/bazel:extensions.bzl", "extension_libraries")
+load("//eng/bazel:mstest-packages.bzl", "native_mstest_packages")
 load("//eng/bazel:mstest.bzl", "mstest_libraries")
 load("//eng/bazel:packages.bzl", "native_packages")
 load("//eng/bazel:platform.bzl", "platform_libraries")
@@ -35,6 +36,8 @@ unit_tests()
 native_packages()
 
 reference_alias_tests()
+
+native_mstest_packages()
 
 sdk_packages()
 

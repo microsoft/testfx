@@ -44,3 +44,12 @@ dotnet_tool(
     target_frameworks = ["net10.0"],
     deps = "@paket_cli//:tools",
 )
+
+csharp_binary(
+    name = "mstest_package_version",
+    srcs = ["MSTestPackageVersion.cs"],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)

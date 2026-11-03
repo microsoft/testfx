@@ -36,6 +36,9 @@ def _build_assets(name, project):
                 files[":" + alias] = directory + "/" + (framework + "/" if framework else "") + relative_path
     return files
 
+package_version = _package_version
+package_build_assets = _build_assets
+
 def native_packages():
     _package_version(
         name = "platform_package_version",

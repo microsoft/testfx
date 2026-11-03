@@ -1044,3 +1044,120 @@ outputs. Retained evidence is `modern-input-fixed.log` and
 `modern-input-fixed.events.json`. The earlier missing-input report and a
 corrected Starlark syntax attempt are build failures, not behavioral red-phase
 evidence.
+
+## 2026-11-03: MSTest framework and adapter package lane
+
+### Contract and research
+
+This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d` and owns
+`//:framework_package`, `//:adapter_package`, and their genuine portable support
+packages. Existing `//:packages` and its MTP-only validator remain unchanged.
+The initial consumer matrix is net8.0/net9.0/net10.0/net11.0; these are unsigned
+experimental packages, not a claim of Windows, .NET Framework, strong-name, or
+release-pipeline parity. MSTest and MTP retain their separate version families
+from `eng/Versions.props`, each with the explicit `-preview.bazel` suffix.
+
+The authoritative layouts are `TestFramework.Extensions.csproj`,
+`MSTest.TestAdapter.csproj`, `Microsoft.Testing.Platform.MSBuild.csproj`, and their
+existing consumer targets:
+
+- `MSTest.TestFramework` owns the core assembly under `lib/<tfm>` and the
+  Extensions assembly under `buildTransitive/<tfm>`. The core's localized
+  resources accompany the core assembly. Its dependency on `MSTest.Analyzers`
+  must retain build/analyzer assets; no `NotPublishable` package may appear.
+- `MSTest.TestAdapter` owns both adapter and PlatformServices binaries under
+  `buildTransitive/<tfm>`, with shared adapter/PlatformServices satellites under
+  `buildTransitive/_localization/<culture>`. The existing common hooks select
+  binaries, copy requested cultures, generate parallelization attributes, and
+  register MSTest's builder hook. PlatformServices is not a package.
+- The portable adapter closure needs the existing TRX abstractions package,
+  native Telemetry, and native Platform.MSBuild. Extensions.MSBuild is private
+  payload of Platform.MSBuild, not a separately published package. The adapter's
+  direct Retry/TRX-report references are for classic UWP source only; portable
+  packaging must not invent dependencies from the unfiltered compiler graph.
+- Platform.MSBuild's unmodified hooks load
+  `_MSBuildTasks/netstandard2.0/Microsoft.Testing.Platform.MSBuild.dll` and the
+  platform beside it. They require real netstandard2.0 native outputs, not net8
+  binaries relabeled as netstandard. That source declaration is coordinated
+  with the framework-parity lane.
+
+The package rule must expose one nupkg in `DefaultInfo` and the pinned rules'
+`NuGetPackInfo` so SDK/meta-package work can depend on the same native artifacts.
+The analyzer package is owned by a separate lane; integration waits for its
+actual ready commit, with no placeholder or released first-party substitution.
+
+### Alternatives and implementation decision
+
+The existing `nuget_pack` always puts ordinary assemblies under `lib`, which
+does not express these shipping contracts. A fake library anchor or fabricated
+NuGet dependencies would make restore succeed without proving the real layout.
+Use explicit native output projections and the pinned rules' native
+`nuget_pack` executable/request format instead. Preserve the repository's
+consumer assets rather than rewriting them to fit an easier layout. Share a
+small explicit-layout helper with the SDK lane if its contract is ready.
+
+### Validation plan and isolation
+
+Use `eng/bazel.ps1` with `--jobs=2`; the experimental producer toolchain remains
+SDK 11 RC3. No TestFx producer is built or packed by MSBuild. External consumers
+may use that SDK's MSBuild to test the packaged hooks and generated entrypoint.
+Each validation run owns its feed, package cache, output, and report paths under
+this worktree's `artifacts` directory. Child-only environment changes are
+restored; existing test-worker settings and shared caches remain untouched.
+
+Inspect complete archive entries and dependency groups, then restore a real
+MSTest consumer with first-party source mapping to that feed. Assert native
+package/cache hashes, loaded assembly paths and hashes, generated registration,
+discovery identities, report contents, and pass/fail/empty-selection exits
+0/2/9. Compare a relevant deliberately incomplete package with the correct
+package while retaining the same consumer assertions. Missing compilation,
+restore, or launch is a setup failure, not behavioral red-phase evidence.
+The coordinator owns combined documentation/CI and later rollout decisions;
+no shipping leg, servicing branch, or package publication is enabled here.
+
+### Preparation results and current boundaries
+
+- The existing platform-only baseline build was attempted with
+  `.\eng\bazel.ps1 build //:platform_package --jobs=2 --noshow_progress --show_result=0`.
+  It reached native C# compilation, then failed with CS2012/ENOSPC when the
+  shared Q: drive filled. This was an infrastructure failure, not behavioral
+  evidence. The interrupted patch was inspected; it had not changed the package
+  helper. The complete intended patch was subsequently applied and its C# BOMs
+  and PowerShell syntax were checked.
+- The coordinator approved process-local
+  `TESTFX_BAZEL_OUTPUT_ROOT=C:\tfb\d7ce736ef101` and run-owned C: consumer/cache
+  directories. The owned Q: Bazel server was stopped. Copying the extracted
+  repository cache was abandoned: Robocopy could not preserve 18 upstream
+  fixture symlinks (Win32 1314). No security policy or privileges were changed,
+  and the guarded command did not start a build from that incomplete copy.
+  The native tool must recreate incomplete extracted entries. Shared caches
+  and other lanes' outputs are not cleanup targets.
+- The package rule exposes `DefaultInfo`, `NuGetPackInfo`, and `nuspec` /
+  `package_request` output groups. Framework and adapter preserve private
+  assembly placement instead of inferring package ownership from compilation
+  dependencies. The adapter retains the shipping Windows-only framework
+  dependency conditional. Development PDB/XML payloads are additional evidence,
+  not a claim of official symbol/signing parity.
+- The new support packages preserve the platform's
+  `[current-bazel-version, next-major)` dependency bound. Telemetry deliberately
+  uses the native graph's locked DiagnosticSource version (currently 10.0.13),
+  rather than claiming equivalence with the Arcade graph's 6.0.0 minimum while
+  compiling against newer assemblies.
+- The coordinator's common version decision supersedes the initial `-bazel`
+  spelling: all lane-local expectations now require `-preview.bazel`
+  (4.6.0-preview.bazel for MSTest; 2.6.0-preview.bazel for MTP). The SDK lane's
+  production CodeCoverage pin requires `>= 2.6.0-preview.26526.14`; the original
+  `2.6.0-bazel` sorts below that minimum. This lane awaits the coordinator's
+  shared version-generator commit rather than substituting released components
+  or downgrading the dependency. Runtime compatibility still requires the real
+  composed checks.
+- The focused fixture is a separate generated consumer assembly, configured by
+  the packaged `Parallelize.targets` for method-level execution with two workers.
+  Its tests read immutable run-owned expectation files and explicit Korean
+  resources; only the provenance test writes its own evidence file. They do not
+  mutate process culture or environment. Existing repository test scheduling
+  is unchanged.
+- Final package builds and consumer execution are still pending the analyzer
+  and real netstandard task-library ready commits and the coordinator's next
+  validation wave. Draft sources and a syntax check do not establish package
+  or integration parity.
