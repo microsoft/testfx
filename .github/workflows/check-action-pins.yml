@@ -23,6 +23,7 @@ on:
       - '.github/scripts/issue-labeler.test.mjs'
       - '.github/scripts/test_gh_aw_firewall_footer.py'
       - '.github/scripts/test_build_failure_analysis_checkout.py'
+      - '.github/scripts/test_agentic_workflow_warning_contracts.py'
       - '.github/scripts/check_unused_package_versions.py'
       - '.github/scripts/test_check_unused_package_versions.py'
       - '**/*.csproj'
@@ -44,6 +45,7 @@ on:
       - '.github/scripts/issue-labeler.test.mjs'
       - '.github/scripts/test_gh_aw_firewall_footer.py'
       - '.github/scripts/test_build_failure_analysis_checkout.py'
+      - '.github/scripts/test_agentic_workflow_warning_contracts.py'
       - '.github/scripts/check_unused_package_versions.py'
       - '.github/scripts/test_check_unused_package_versions.py'
       - '**/*.csproj'
@@ -79,6 +81,8 @@ jobs:
         run: python .github/scripts/check_action_pins.py
       - name: Test build-analysis checkout identity
         run: python .github/scripts/test_build_failure_analysis_checkout.py
+      - name: Test agentic workflow runtime contracts
+        run: python .github/scripts/test_agentic_workflow_warning_contracts.py
       - name: Test and audit central package versions
         run: |
           python .github/scripts/test_check_unused_package_versions.py

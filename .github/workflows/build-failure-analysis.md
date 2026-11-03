@@ -356,6 +356,8 @@ tools:
     - "git commit:*"
 
 safe-outputs:
+  # Publisher checkouts consume the exact source identity from this job.
+  needs: [fetch-binlog]
   # Threat detection inherits the workflow model; retain its prompt safeguards.
   threat-detection:
     # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).

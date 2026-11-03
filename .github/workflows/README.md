@@ -36,6 +36,31 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.md`](../agents/agentic-workflows.md), which routes to the canonical `gh-aw` prompts.
 
+### Authoring-warning runtime contracts
+
+Fix authoring warnings at their execution boundary, without suppressing lint or
+weakening permissions, detection, network policy, or safe-output bounds.
+
+| Workflow | Required contract |
+| --- | --- |
+| Build failure analysis | `safe-outputs.needs` directly includes `fetch-binlog`, so publisher checkouts resolve the same validated head SHA and base ref as the analysis. Keep the binlog/source identity and publication gates intact. |
+| Dependabot PR bundler | gh-aw v1.0.1 excludes `dependabot` from the `all` alias. Opt into that toolset explicitly to expose both alert-read tools, without replacing the existing repository/PR tools or expanding permissions. |
+| `/parallel-audit` | Trusted extraction writes `/tmp/gh-aw/parallel-audit/audit-inputs.json` and its four input files inside the agent-visible tree. The prompt reads the resolved PR/revisions, counts, paths, scope, and HEAD-side regions at runtime, never from activation-time custom-step expressions. Missing required inputs mean incomplete analysis, not an empty scope. |
+| Unskip closed tests | The fresh publisher checkout does not persist credentials. Initial pushes and every branch-cleanup push use a command-scoped `gh auth git-credential` helper, leaving no credential/helper in checkout configuration. Verification, duplicate/race checks, and publication remain separate from the read-only agent. |
+
+The deterministic regression suite checks the compiled job/tool contracts and
+executes the trusted extraction and publisher scripts with isolated local
+fixtures. Run it alongside the checkout-identity tests and pin audit:
+
+```bash
+python .github/scripts/test_agentic_workflow_warning_contracts.py
+python .github/scripts/test_build_failure_analysis_checkout.py
+python .github/scripts/check_action_pins.py
+```
+
+These are local contract checks, not evidence of live GitHub alert access,
+model analysis, or review/PR publication. Live runs require separate authorization.
+
 ### Test-quality skill contract
 
 The [automatic test reviewer](./test-reviewer-on-pr.agent.md) and

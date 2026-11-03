@@ -251,7 +251,8 @@ safe-outputs:
     apply-verified-unskips:
       description: >-
         Publish the exact read-only verified Ignore-removal package in a fresh
-        authenticated checkout and open at most one draft pull request.
+        checkout with command-scoped credentials and open at most one draft
+        pull request.
       needs: safe_outputs
       if: >-
         needs.agent.result == 'success' &&
@@ -285,12 +286,12 @@ safe-outputs:
             name: unskip-closed-tests-verification-${{ github.run_id }}-${{ github.run_attempt }}
             path: ${{ runner.temp }}/unskip-closed-tests-verification
 
-        - name: Checkout exact analyzed revision with publisher credentials
+        - name: Checkout exact analyzed revision without persisted credentials
           uses: actions/checkout@v7.0.1
           with:
             ref: ${{ github.sha }}
             fetch-depth: 0
-            persist-credentials: true
+            persist-credentials: false
 
         - name: Publish one verified draft pull request
           shell: bash
@@ -438,11 +439,16 @@ safe-outputs:
             git commit -m "Re-enable tests with resolved tracking items"
 
             BRANCH="automation/unskip-closed-tests-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-            git push origin "HEAD:refs/heads/$BRANCH"
+            # Authenticate only these pushes; never save the token or a helper
+            # in checkout configuration that later steps or artifacts can read.
+            push_branch() {
+              git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin "$@"
+            }
+            push_branch "HEAD:refs/heads/$BRANCH"
 
             CURRENT_HEAD=$(gh api "repos/${EXPECTED_REPOSITORY}/commits/${DEFAULT_BRANCH}" --jq '.sha')
             if [ "$CURRENT_HEAD" != "$EXPECTED_COMMIT" ]; then
-              git push origin --delete "$BRANCH"
+              push_branch --delete "$BRANCH"
               echo "::notice::Default branch advanced before PR creation; removed the unpublished branch."
               exit 0
             fi
@@ -453,7 +459,7 @@ safe-outputs:
               --json number \
               --jq 'length')
             if [ "$EXISTING" -ne 0 ]; then
-              git push origin --delete "$BRANCH"
+              push_branch --delete "$BRANCH"
               echo "::notice::Another unskip pull request opened; removed the duplicate branch."
               exit 0
             fi
@@ -477,7 +483,7 @@ safe-outputs:
               PR_NUMBER=$(printf '%s' "$LIVE" | jq -r '.number')
               gh pr close "$PR_NUMBER" --repo "$EXPECTED_REPOSITORY"
               test "$(gh pr view "$PR_NUMBER" --repo "$EXPECTED_REPOSITORY" --json state --jq '.state')" = "CLOSED"
-              git push origin --delete "$BRANCH"
+              push_branch --delete "$BRANCH"
               echo "::notice::Default branch advanced during PR creation; closed the draft and removed its branch."
               exit 0
             fi
