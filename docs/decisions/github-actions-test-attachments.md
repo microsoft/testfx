@@ -13,14 +13,17 @@ GitHub Actions artifact uploader, followed by a workflow-owned summary step.
 No new core MTP API, transport protocol, GitHub token in the test process,
 companion action, or service dependency is required.
 
-The opt-in contract is `--report-gh --report-gh-attachments <directory>`.
+The opt-in contract is `--report-gh --report-gh-attachments <absolute-directory>`.
 Without the attachment option, existing report behavior remains unchanged.
 Only terminal failed tests are collected, including error and timeout outcomes;
 superseded retry results and session-level artifacts such as dumps are excluded.
 Each process/session owns a unique subdirectory and a versioned manifest mapping
 test UID, names, module, target framework, architecture, and retry attempt to
-staged files. Attachments are copied when the result arrives, before framework
-cleanup can remove the originals. Files and retained metadata are bounded.
+staged files. Attachments are copied as the failed result is consumed, rather
+than waiting for session-end rendering. The producer must keep the original
+available until consumption; a file removed earlier is reported unavailable.
+Once copied, later cleanup cannot remove the staged copy. Files and retained
+metadata are bounded.
 
 The extension stages only explicitly declared regular files using generated,
 artifact-safe destination names. Missing, unreadable, or over-budget attachments
@@ -31,7 +34,9 @@ and removal of its staging directory.
 
 The ordinary test summary remains available even when upload is skipped or
 fails. Failure details list archive-relative paths, not fabricated download URLs.
-The workflow publishes a real artifact URL only after a successful upload. One
+The workflow publishes a real artifact URL in supplementary per-test details
+only after a successful upload. The documented post-upload script is exercised
+verbatim by the hosted smoke workflow; no separately shipped action is needed. One
 archive contains all modules' attachments and their manifests. GitHub does not
 provide supported links to individual files inside that archive.
 
@@ -64,6 +69,18 @@ provide supported links to individual files inside that archive.
 - Initial baseline attempts exposed a local missing `powershell` launcher in
   `PATH`, before product compilation. These are tooling failures, not red-phase
   evidence for the feature.
+- Independent code-review round 1 found a failure-isolation bug: unexpected
+  collector errors could discard a result before it reached the summary. Capture
+  now has its own logged failure boundary, retaining the underlying result.
+- Required absolute staging paths so separate test-host working directories
+  cannot scatter an invocation's attachments. Expanded the smoke workflow's
+  triggers to its producer and build inputs, and removed unnecessary Actions
+  permission.
+- Confirmed consumer serialization in `AsyncConsumerDataProcessor.net.cs` and
+  `BlockingConsumerDataProcessor.cs`; `CommonTestHost.SessionNotifications.cs`
+  drains consumption before consumer session-finish callbacks. No additional
+  collector lock is required. This is source-backed ordering evidence, not a
+  concurrency stress-test result.
 
 ## Alternatives and decision
 

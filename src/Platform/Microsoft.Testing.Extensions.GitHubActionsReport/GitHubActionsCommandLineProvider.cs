@@ -94,7 +94,11 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
 
         try
         {
-            return !File.Exists(Path.GetFullPath(path));
+            string fullPath = Path.GetFullPath(path);
+            // Windows drive-relative and current-drive-rooted paths still depend on the host's working directory.
+            return Path.IsPathRooted(path)
+                && Path.GetPathRoot(path)!.Length == Path.GetPathRoot(fullPath)!.Length
+                && !File.Exists(fullPath);
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {

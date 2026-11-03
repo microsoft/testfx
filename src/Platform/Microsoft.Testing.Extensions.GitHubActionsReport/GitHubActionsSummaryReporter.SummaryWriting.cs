@@ -31,7 +31,18 @@ internal sealed partial class GitHubActionsSummaryReporter
             CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
             if (_attachments is not null)
             {
-                await _attachments.WriteManifestAsync(module, testSessionContext.CancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await _attachments.WriteManifestAsync(module, testSessionContext.CancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogUnexpectedException(nameof(GitHubActionsAttachmentCollector.WriteManifestAsync), ex);
+                }
             }
 
             if ((_isSummaryEnabled || _historyService.IsEnabled)

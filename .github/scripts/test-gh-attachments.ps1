@@ -35,8 +35,26 @@ if ($Mode -eq 'Verify') {
         throw "Expected $($expected.files.Count) archive files, found $($actual.Count)."
     }
 
+    $summary = [IO.File]::ReadAllText((Join-Path $work 'linked.summary.md'))
+    $blocks = [regex]::Matches($summary, '(?s)<details>\s*<summary><code>(?<name>.*?)</code></summary>(?<body>.*?)</details>')
+    $manifests = @(Get-ChildItem -LiteralPath $DownloadDirectory -Filter attachments.json -File -Recurse)
+    if ($blocks.Count -ne 4 -or -not $env:ATTACHMENT_URL) {
+        throw 'Expected four post-upload test-details blocks and a real artifact URL.'
+    }
+
+    foreach ($manifestFile in $manifests) {
+        $module = Get-Content -LiteralPath $manifestFile.FullName -Raw | ConvertFrom-Json
+        $test = $module.tests[0]
+        $name = "$($module.assemblyName) ($($module.targetFramework)/$($module.architecture), attempt $($module.attemptNumber)): $($test.fullyQualifiedName) - $($test.displayName)"
+        $path = $test.attachments[0].relativePath
+        $matches = @($blocks | Where-Object { $_.Groups['body'].Value.Contains($path) })
+        if ($matches.Count -ne 1 -or [Net.WebUtility]::HtmlDecode($matches[0].Groups['name'].Value) -cne $name -or -not $matches[0].Groups['body'].Value.Contains("[Download attachments]($env:ATTACHMENT_URL)")) {
+            throw 'The post-upload details lost the test, file, or actual download-link association.'
+        }
+    }
+
     Write-Output "Verified downloaded artifact: $($actual.Count) files, including both module manifests."
-    return
+    exit 0
 }
 
 if (Test-Path -LiteralPath $work) {
@@ -48,7 +66,7 @@ $shipping = [IO.Path]::Combine($repo, 'artifacts', 'packages', 'Release', 'Shipp
 $dotnet = Join-Path (Join-Path $repo '.dotnet') $(if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' })
 $packages = @{}
 $provenance = @()
-foreach ($id in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.GitHubActionsReport')) {
+foreach ($id in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.GitHubActionsReport')) {
     $candidates = @(Get-ChildItem -LiteralPath $shipping -Filter "$id.*.nupkg" -File)
     if ($candidates.Count -ne 1) {
         throw "Expected one freshly packed $id package, found $($candidates.Count)."
@@ -188,7 +206,7 @@ $references
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath $project -Encoding utf8
-        Invoke-Dotnet @('build', $project, '-c', 'Release', "-bl:$(Join-Path $directory 'build.binlog')") (Join-Path $directory 'build.log')
+        Invoke-Dotnet @('build', $project, '-c', 'Release', "-p:RestoreConfigFile=$(Join-Path $work 'NuGet.config')", "-bl:$(Join-Path $directory 'build.binlog')") (Join-Path $directory 'build.log')
         $assets = Get-Content -LiteralPath (Join-Path $directory 'obj/project.assets.json') -Raw | ConvertFrom-Json
         if (@($assets.packageFolders.PSObject.Properties.Name).Count -ne 1 -or [IO.Path]::GetFullPath(@($assets.packageFolders.PSObject.Properties.Name)[0]).TrimEnd('\', '/') -cne [IO.Path]::GetFullPath($env:NUGET_PACKAGES).TrimEnd('\', '/')) {
             throw 'The smoke consumer did not use its isolated package cache.'
@@ -199,6 +217,20 @@ $references
             $expectedHash = @($provenance | Where-Object id -CEQ $id)[0].sha256
             if ((Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -cne $expectedHash) {
                 throw "The smoke consumer did not resolve the freshly packed $id bits."
+            }
+        }
+
+        foreach ($id in @('Microsoft.Testing.Platform', 'Microsoft.Testing.Extensions.GitHubActionsReport')) {
+            $resolved = $assets.targets.'net8.0'.PSObject.Properties["$id/$($packages[$id])"].Value
+            $runtimeAsset = @($resolved.runtime.PSObject.Properties.Name | Where-Object { $_.EndsWith("/$id.dll", [StringComparison]::Ordinal) })
+            if ($runtimeAsset.Count -ne 1) {
+                throw "Expected one resolved runtime assembly for $id."
+            }
+
+            $cached = Join-Path $env:NUGET_PACKAGES "$($id.ToLowerInvariant())/$($packages[$id])/$($runtimeAsset[0])"
+            $executableLayout = Join-Path $directory "bin/Release/net8.0/$id.dll"
+            if ((Get-FileHash -LiteralPath $cached -Algorithm SHA256).Hash -cne (Get-FileHash -LiteralPath $executableLayout -Algorithm SHA256).Hash) {
+                throw "The executable layout contains stale $id bits."
             }
         }
 
@@ -217,6 +249,10 @@ $references
             Assert-Trx $trx $(if ($case -eq 'passing') { 0 } else { 1 })
             if ($case -eq 'disabled' -and (Test-Path -LiteralPath $staging)) {
                 throw 'Staging occurred without the attachment option.'
+            }
+
+            if ($case -eq 'disabled' -and ([IO.File]::ReadAllText($env:GITHUB_STEP_SUMMARY)).Contains('Attachments (paths inside the workflow artifact):')) {
+                throw 'The attachment section was rendered without the attachment option.'
             }
 
             if ($case -eq 'passing' -and (Test-Path -LiteralPath (Join-Path $work 'passing-attachments'))) {
@@ -281,9 +317,28 @@ foreach ($manifestFile in $manifests) {
         throw 'Staged attachment contents/size do not match the producing test.'
     }
 
-    $summary = (@($summaries | ForEach-Object { [IO.File]::ReadAllText($_) }) -join "`n")
-    if (-not $summary.Contains($attachment[0].relativePath)) {
-        throw 'The rendered failed-test details omitted the exact archive path.'
+    $matchedBlocks = 0
+    foreach ($summaryFile in $summaries) {
+        $summary = [IO.File]::ReadAllText($summaryFile)
+        foreach ($block in [regex]::Matches($summary, '(?s)<details>\s*<summary><code>(?<name>.*?)</code>.*?</summary>(?<body>.*?)</details>')) {
+            if (-not $block.Groups['body'].Value.Contains($attachment[0].relativePath)) {
+                continue
+            }
+
+            $matchedBlocks++
+            if ([Net.WebUtility]::HtmlDecode($block.Groups['name'].Value) -cne $manifest.tests[0].fullyQualifiedName) {
+                throw 'The archive path was associated with the wrong rendered test.'
+            }
+
+            $headings = [regex]::Matches($summary.Substring(0, $block.Index), '(?m)^#{2,6} .*Attachments[AB].*$')
+            if ($headings.Count -eq 0 -or -not $headings[$headings.Count - 1].Value.Contains($manifest.assemblyName)) {
+                throw 'The archive path was associated with the wrong rendered module.'
+            }
+        }
+    }
+
+    if ($matchedBlocks -ne 1) {
+        throw "Expected one rendered failed-test attachment association, found $matchedBlocks."
     }
 }
 
@@ -302,3 +357,4 @@ if ($previous['GITHUB_STEP_SUMMARY']) {
 }
 
 Write-Output 'Verified packed-package composition: four direct host runs plus native multi-module dotnet test, twelve executed tests, five intentional failed results, and four correctly associated staged files.'
+exit 0

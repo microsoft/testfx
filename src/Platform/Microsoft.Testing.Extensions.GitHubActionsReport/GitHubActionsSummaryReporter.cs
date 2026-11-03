@@ -192,11 +192,22 @@ internal sealed partial class GitHubActionsSummaryReporter :
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
             RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
-            CiRunSummaryAttachment[]? attachments = kind == TerminalKind.Failed
-                && retryAttempt is not { IsSuperseded: true }
-                && _attachments is not null
-                    ? await _attachments.CaptureAsync(update.TestNode, cancellationToken).ConfigureAwait(false)
-                    : null;
+            CiRunSummaryAttachment[]? attachments = null;
+            if (kind == TerminalKind.Failed && retryAttempt is not { IsSuperseded: true } && _attachments is not null)
+            {
+                try
+                {
+                    attachments = await _attachments.CaptureAsync(update.TestNode, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogUnexpectedException(nameof(GitHubActionsAttachmentCollector.CaptureAsync), ex);
+                }
+            }
 
             // Keep the stable identity for history and aggregation; add distinguishing display names only when rendering.
             string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);

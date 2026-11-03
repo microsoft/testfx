@@ -99,6 +99,7 @@ internal sealed class GitHubActionsAttachmentCollector(
                         copied += count;
                         if (copied > MaxFileBytes || copied > MaxTotalBytes - _totalBytes)
                         {
+                            attachment.Status = "size-limit";
                             throw new IOException(GitHubActionsResources.AttachmentSizeChanged);
                         }
 
@@ -114,7 +115,7 @@ internal sealed class GitHubActionsAttachmentCollector(
                 attachment.Status = "staged";
                 destinationCreated = false;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or System.Security.SecurityException)
             {
                 await WarnAsync(attachment).ConfigureAwait(false);
             }
@@ -126,7 +127,7 @@ internal sealed class GitHubActionsAttachmentCollector(
                     {
                         fileSystem.DeleteFile(destination);
                     }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or System.Security.SecurityException)
                     {
                         await warn(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.AttachmentCleanupWarning, attachment.FileName, ex.Message)).ConfigureAwait(false);
                     }

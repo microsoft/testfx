@@ -5,6 +5,14 @@ on:
     paths:
       - 'src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/**'
       - 'src/Platform/SharedExtensionHelpers/**'
+      - 'src/Platform/Microsoft.Testing.Platform/**'
+      - 'src/Adapter/**'
+      - 'src/TestFramework/**'
+      - 'Directory.Build.*'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'NuGet.config'
+      - 'eng/**'
       - '.github/scripts/test-gh-attachments.ps1'
       - '.github/workflows/test-gh-attachments.yml'
   push:
@@ -12,13 +20,20 @@ on:
     paths:
       - 'src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/**'
       - 'src/Platform/SharedExtensionHelpers/**'
+      - 'src/Platform/Microsoft.Testing.Platform/**'
+      - 'src/Adapter/**'
+      - 'src/TestFramework/**'
+      - 'Directory.Build.*'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'NuGet.config'
+      - 'eng/**'
       - '.github/scripts/test-gh-attachments.ps1'
       - '.github/workflows/test-gh-attachments.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
-  actions: read
 
 concurrency:
   group: test-gh-attachments-${{ github.ref }}
@@ -51,9 +66,17 @@ jobs:
         shell: pwsh
         env:
           ATTACHMENT_URL: ${{ steps.attachments.outputs.artifact-url }}
+          ATTACHMENT_ROOT: ${{ runner.temp }}/mtp-attachment-smoke/attachments
         run: |
-          "## Failed-test attachments" >> $env:GITHUB_STEP_SUMMARY
-          "[Download attachments and test association manifests]($env:ATTACHMENT_URL)" >> $env:GITHUB_STEP_SUMMARY
+          # Execute the user-facing sample verbatim so documentation and hosted behavior cannot drift.
+          $readme = [IO.File]::ReadAllText((Join-Path $env:GITHUB_WORKSPACE 'src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/PACKAGE.md'))
+          $sample = [regex]::Match($readme, '(?ms)^  - name: Link failed-test attachments\r?\n.*?^    run: \|\r?\n(?<script>.*?)^```')
+          if (-not $sample.Success) { throw 'The documented attachment summary sample was not found.' }
+          $script = ($sample.Groups['script'].Value -split '\r?\n' | ForEach-Object {
+            if ($_.Length -eq 0) { '' } elseif ($_.StartsWith('      ')) { $_.Substring(6) } else { throw 'Unexpected sample indentation.' }
+          }) -join "`n"
+          & ([scriptblock]::Create($script))
+          Copy-Item -LiteralPath $env:GITHUB_STEP_SUMMARY -Destination "${{ runner.temp }}/mtp-attachment-smoke/linked.summary.md"
       - name: Download the real uploaded archive
         if: success() && steps.attachments.outputs.artifact-id != ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -63,6 +86,8 @@ jobs:
           merge-multiple: true
       - name: Verify the downloaded bytes and associations
         shell: pwsh
+        env:
+          ATTACHMENT_URL: ${{ steps.attachments.outputs.artifact-url }}
         run: ./.github/scripts/test-gh-attachments.ps1 -Mode Verify -WorkDirectory "${{ runner.temp }}/mtp-attachment-smoke" -DownloadDirectory "${{ runner.temp }}/mtp-attachment-download"
       - name: Preserve reproducible evidence
         if: always()
@@ -74,6 +99,8 @@ jobs:
             ${{ runner.temp }}/mtp-attachment-smoke/**/*.binlog
             ${{ runner.temp }}/mtp-attachment-smoke/**/*.trx
             ${{ runner.temp }}/mtp-attachment-smoke/**/*.summary.md
+            ${{ runner.temp }}/mtp-attachment-smoke/**/obj/project.assets.json
+            ${{ runner.temp }}/mtp-attachment-smoke/**/bin/Release/net8.0/*.deps.json
             ${{ runner.temp }}/mtp-attachment-smoke/packages.json
             ${{ runner.temp }}/mtp-attachment-smoke/expected.json
             artifacts/log/Release

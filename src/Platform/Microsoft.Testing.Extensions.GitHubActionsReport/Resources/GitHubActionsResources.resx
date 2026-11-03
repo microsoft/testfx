@@ -132,11 +132,11 @@
     <comment>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="AttachmentsOptionDescription" xml:space="preserve">
-    <value>Stage failed-test attachments and a manifest in the specified directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</value>
+    <value>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</value>
     <comment>{Locked="--report-gh"}</comment>
   </data>
   <data name="InvalidAttachmentsPath" xml:space="preserve">
-    <value>The GitHub Actions attachment directory must be a valid, non-empty directory path.</value>
+    <value>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</value>
   </data>
   <data name="AttachmentCountLimitWarning" xml:space="preserve">
     <value>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</value>

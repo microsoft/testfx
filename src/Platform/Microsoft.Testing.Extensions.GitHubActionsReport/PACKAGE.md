@@ -62,17 +62,23 @@ The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=
 
 ### Publish failed-test attachments
 
-Pass `--report-gh-attachments <directory>` to copy attachments declared by failed
+Pass `--report-gh-attachments <directory>` with an **absolute directory path** to copy attachments declared by failed
 tests into a staging directory. This works with MSTest's `TestContext.AddResultFile`
 and frameworks using the VSTest bridge when they supply attachments. Passing,
 skipped, discovered, and superseded in-process retry results are not collected.
 Session-level artifacts, including crash and hang dumps, are outside this option.
 
 The extension does not authenticate to GitHub or upload files. Use the official
-artifact action, followed by a summary step linking its actual `artifact-url`.
+artifact action, followed by a summary step rendering per-test details with its
+actual `artifact-url`.
 The original test summary remains available if either step is skipped or fails.
 Failure details list paths inside the archive; GitHub does not provide supported
 links to individual archive members.
+
+The post-upload example below adds a separate attachment-details section with
+download links for up to 20 failed-test groups and a bounded summary size. Each
+link downloads the archive; the adjacent paths identify that test's files. The
+full manifests retain associations beyond the displayed groups.
 
 > [!WARNING]
 > Attachments can contain sensitive data. Opt in only after reviewing what your
@@ -99,9 +105,36 @@ steps:
     shell: pwsh
     env:
       ATTACHMENT_URL: ${{ steps.attachments.outputs.artifact-url }}
+      ATTACHMENT_ROOT: ${{ runner.temp }}/mtp-attachments
     run: |
-      "## Failed-test attachments" >> $env:GITHUB_STEP_SUMMARY
-      "[Download attachments and test association manifests]($env:ATTACHMENT_URL)" >> $env:GITHUB_STEP_SUMMARY
+      $summary = [Text.StringBuilder]::new()
+      [void] $summary.Append("## Failed-test attachments`n`n[Download archive and full manifests]($env:ATTACHMENT_URL)`n`n")
+      $shown = 0
+      $omitted = 0
+      foreach ($file in Get-ChildItem -LiteralPath $env:ATTACHMENT_ROOT -Filter attachments.json -Recurse -File | Sort-Object FullName) {
+        $module = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+        foreach ($test in $module.tests) {
+          $attachments = @($test.attachments | Where-Object status -CEQ staged)
+          if ($attachments.Count -eq 0) { continue }
+          $name = "$($module.assemblyName) ($($module.targetFramework)/$($module.architecture), attempt $($module.attemptNumber)): $($test.fullyQualifiedName) - $($test.displayName)"
+          if ($name.Length -gt 512) { $name = $name.Substring(0, 509) + '...' }
+          $name = [Net.WebUtility]::HtmlEncode($name)
+          $entry = "<details>`n<summary><code>$name</code></summary>`n`n[Download attachments]($env:ATTACHMENT_URL)`n`n"
+          foreach ($attachment in $attachments) {
+            $path = [Net.WebUtility]::HtmlEncode($attachment.relativePath)
+            $entry += "- <code>$path</code> ($($attachment.sizeBytes) bytes)`n"
+          }
+          $entry += "`n</details>`n`n"
+          if ($shown -ge 20 -or [Text.Encoding]::UTF8.GetByteCount($summary.ToString() + $entry) -gt 400KB) {
+            $omitted++
+            continue
+          }
+          [void] $summary.Append($entry)
+          $shown++
+        }
+      }
+      if ($omitted -gt 0) { [void] $summary.Append("$omitted additional attachment groups are indexed in the manifests.`n") }
+      [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary.ToString())
 ```
 
 For .NET SDK 8 or 9, add `--` before the platform options. The summary step above
@@ -120,9 +153,15 @@ as warnings without changing the test verdict. Successful copies survive cleanup
 of the original files.
 
 Staging is limited to 25 MiB per file, 250 MiB and 1,000 attachment entries per
-module/session, and 10 files per failed test. Files are staged independently of
+module/session, and 10 files per failed test. Unavailable entries and per-test
+overflow markers also consume the entry budget, bounding retained diagnostics
+even when no source files are readable. After that budget is exhausted, later
+tests are omitted from the manifest and its `truncated` flag is set.
+Files are staged independently of
 the summary's 20-failure display limit; consult the manifests for failures not
-expanded in the summary. Earlier process-retry attempts can leave their own
+expanded in the summary. The manifest is the authoritative index: archive paths
+appear only for expanded failures whose details fit the summary byte budget.
+Earlier process-retry attempts can leave their own
 files and manifests in the archive; final failure details only reference the
 final attempt. Disabling failure details hides archive paths in the summary but
 does not disable staging.

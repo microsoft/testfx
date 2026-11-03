@@ -48,8 +48,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
-        <source>Stage failed-test attachments and a manifest in the specified directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
+        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -243,8 +243,8 @@
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
-        <source>The GitHub Actions attachment directory must be a valid, non-empty directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty directory path.</target>
+        <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
+        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
