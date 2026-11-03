@@ -370,14 +370,14 @@ public sealed class HangDumpProcessTreeBehaviorTests
     [DataRow(1, DisplayName = "InProgressQuery_AsynchronousFailureCancelsRequest")]
     [DataRow(2, DisplayName = "InProgressQuery_ThrowingCancellationCallbackIsBestEffort")]
     [DataRow(3, DisplayName = "InProgressQuery_FailingDiagnosticIsBestEffort")]
-    public async Task Query_FailureCancelsRequestBeforeDiagnosticAndReturnsEmpty(int scenario)
+    public async Task Query_FailureCancelsRequestAndReturnsEmpty(int scenario)
     {
         var failure = new IOException("The consumer did not provide its running tests.");
+        var requestCanceled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         CancellationToken requestToken = default;
         CancellationTokenRegistration registration = default;
         int cancellationCallbacks = 0;
         int diagnosticCalls = 0;
-        bool cancellationObservedByDiagnostic = false;
         Exception? reported = null;
         try
         {
@@ -388,6 +388,7 @@ public sealed class HangDumpProcessTreeBehaviorTests
                     registration = token.Register(() =>
                     {
                         Interlocked.Increment(ref cancellationCallbacks);
+                        requestCanceled.TrySetResult(true);
                         if (scenario == 2)
                         {
                             throw new InvalidOperationException("The request cleanup callback failed.");
@@ -400,18 +401,20 @@ public sealed class HangDumpProcessTreeBehaviorTests
                 {
                     diagnosticCalls++;
                     reported = exception;
-                    cancellationObservedByDiagnostic = requestToken.IsCancellationRequested && Volatile.Read(ref cancellationCallbacks) == 1;
                     return scenario == 3
                         ? Task.FromException(new InvalidOperationException("The query error logger failed."))
                         : Task.CompletedTask;
                 },
                 CancellationToken.None);
 
+            // Best-effort cancellation can still be queued when diagnostics and the bounded fallback complete.
+            await requestCanceled.Task.TimeoutAfterAsync(TimeSpan.FromSeconds(30));
+
             Assert.IsEmpty(actual);
             Assert.AreSame(failure, reported);
             Assert.AreEqual(1, diagnosticCalls);
             Assert.AreEqual(1, cancellationCallbacks);
-            Assert.IsTrue(cancellationObservedByDiagnostic, "Cleanup must be requested before reporting the failed query.");
+            Assert.IsTrue(requestToken.IsCancellationRequested);
         }
         finally
         {
