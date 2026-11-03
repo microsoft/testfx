@@ -155,10 +155,6 @@
       <_CodeCoverageExcludedSource Include="TestInfrastructure">
         <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_CodeCoverageTestInfrastructureRoot)').Insert(0, '^')).*</Pattern>
       </_CodeCoverageExcludedSource>
-      <!-- Keep repository-owned validation and process-lifetime logic measurable while excluding BCL compatibility shims. -->
-      <_CodeCoverageExcludedSource Include="Polyfills">
-        <Pattern>(^|[\\/])Polyfills[\\/](?!Ensure\.cs$|ProcessExtensions\.cs$).*\.cs$</Pattern>
-      </_CodeCoverageExcludedSource>
       <_CodeCoverageExcludedSource Update="@(_CodeCoverageExcludedSource)">
         <XmlPattern>$([System.String]::Copy('%(_CodeCoverageExcludedSource.Pattern)').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
       </_CodeCoverageExcludedSource>
@@ -168,10 +164,16 @@
     <ItemGroup>
       <_CodeCoverageSettingsLine Include="Declaration" Value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
       <_CodeCoverageSettingsLine Include="ConfigurationStart" Value="&lt;Configuration&gt;" />
+      <_CodeCoverageSettingsLine Include="DoesNotReturnAttribute" Value="  &lt;DoesNotReturnAttribute&gt;None&lt;/DoesNotReturnAttribute&gt;" />
       <_CodeCoverageSettingsLine Include="IncludeSourceLinkedTestAssembly"
                                  Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
                                  Value="  &lt;IncludeTestAssembly&gt;True&lt;/IncludeTestAssembly&gt;" />
       <_CodeCoverageSettingsLine Include="CodeCoverageStart" Value="  &lt;CodeCoverage&gt;" />
+      <!-- Measure all production bodies, including compatibility helpers and opt-out-marked code.
+           Module/source filters still keep test infrastructure, packages and generated artifacts out. -->
+      <_CodeCoverageSettingsLine Include="AttributesStart" Value="    &lt;Attributes mergeDefaults=&quot;False&quot;&gt;" />
+      <_CodeCoverageSettingsLine Include="AttributesExclude" Value="      &lt;Exclude /&gt;" />
+      <_CodeCoverageSettingsLine Include="AttributesEnd" Value="    &lt;/Attributes&gt;" />
       <_CodeCoverageSettingsLine Include="ModulePathsStart" Value="    &lt;ModulePaths mergeDefaults=&quot;False&quot;&gt;" />
       <_CodeCoverageSettingsLine Include="ModuleIncludeStart" Value="      &lt;Include&gt;" />
       <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference)">

@@ -4494,4 +4494,167 @@ public sealed class TerminalTestReporterTests
 
         public void WriteLine(string? value) => _output.AppendLine(value);
     }
+
+    [TestMethod]
+    [DataRow((int)CoverageMetric.Statement, "Statement")]
+    [DataRow((int)CoverageMetric.Function, "Function")]
+    [DataRow((int)CoverageMetric.Block, "Block")]
+    [DataRow((int)CoverageMetric.Instruction, "Instruction")]
+    [DataRow((int)CoverageMetric.Region, "Region")]
+    [DataRow((int)CoverageMetric.Class, "Class")]
+    [DataRow((int)CoverageMetric.Condition, "Condition")]
+    [DataRow((int)CoverageMetric.Complexity, "Complexity")]
+    public void CoverageSummary_EachMetricRendersOwnLabelAndLiteralRate(int metric, string label)
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        CoverageScopeSummary summary = new(
+            new("labels"), CoverageScope.Overall,
+            [new CoverageMetricResult((CoverageMetric)metric, 3, 8, "collector")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.AreEqual(
+            $$"""
+
+              Code Coverage Summary:
+                Total - {{label}}: 37.5%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    [DataRow((int)CoverageScopeLevel.Assembly, "Assembly")]
+    [DataRow((int)CoverageScopeLevel.Namespace, "Namespace")]
+    public void CoverageThreshold_MaximumAndPopulationLabelsRemainDistinct(int population, string label)
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Maximum, 81, 80, (CoverageScopeLevel)population);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.AreEqual(
+            $$"""
+
+              Coverage Threshold Results:
+                Total - Line (Maximum over {{label}}): 81.0% >= 80.0% threshold
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void PrintOutOfProcessArtifacts_EmptyThenCollectedArtifactsUseIndentedLinks()
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        reporter.PrintOutOfProcessArtifacts();
+        Assert.AreEqual(string.Empty, console.Output);
+        reporter.ArtifactAdded(true, null, null, null, null, null, "first.log");
+        reporter.ArtifactAdded(false, "assembly.dll", "net8.0", "x64", "execution", "test", "second.log");
+
+        reporter.PrintOutOfProcessArtifacts();
+
+        Assert.AreEqual(
+            """
+              Out of process file artifacts produced:
+                - first.log
+                - second.log
+
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void FlakyTests_MultipleAssembliesGroupOnlyRecoveredTestsUnderOneHeader()
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = new(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 3, false, false, true);
+        foreach (string name in new[] { "Recovered.One", "Recovered.Two" })
+        {
+            reporter.AssemblyRunStarted(name + ".dll", "net8.0", "x64", name, name + "-first", 1);
+            ReportOrchestratorTest(reporter, name + ".dll", name, name + "-first", name + ".Case", TestOutcome.Fail);
+            reporter.AssemblyRunStarted(name + ".dll", "net8.0", "x64", name, name + "-second", 2);
+            ReportOrchestratorTest(reporter, name + ".dll", name, name + "-second", name + ".Case", TestOutcome.Passed);
+            reporter.AssemblyRunCompleted(name, 0, null, null);
+        }
+
+        reporter.AssemblyRunStarted("Clean.dll", "net8.0", "x64", "clean", "clean-first", 1);
+        ReportOrchestratorTest(reporter, "Clean.dll", "clean", "clean-first", "ordinary", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("clean", 0, null, null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 0);
+
+        string output = console.Output.Replace("\r\n", "\n");
+        int section = output.IndexOf("Flaky tests:", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, section);
+        Assert.AreEqual(
+            """
+            Flaky tests:
+              Recovered.One.dll (net8.0|x64)
+                Recovered.One.Case failed -> passed (2 attempts)
+              Recovered.Two.dll (net8.0|x64)
+                Recovered.Two.Case failed -> passed (2 attempts)
+
+            """.Replace("\r\n", "\n"),
+            output[section..]);
+        Assert.AreEqual(0, reporter.TotalTests, "Completion resets per-run state after rendering.");
+        Assert.Contains("  total: 3\n  failed: 0\n  succeeded: 3\n  skipped: 0", output);
+    }
+
+    [TestMethod]
+    [DataRow(ConsoleColor.Black, 30)]
+    [DataRow(ConsoleColor.DarkBlue, 34)]
+    [DataRow(ConsoleColor.DarkGreen, 32)]
+    [DataRow(ConsoleColor.DarkCyan, 36)]
+    [DataRow(ConsoleColor.DarkRed, 31)]
+    [DataRow(ConsoleColor.DarkMagenta, 35)]
+    [DataRow(ConsoleColor.DarkYellow, 33)]
+    [DataRow(ConsoleColor.Gray, 37)]
+    [DataRow(ConsoleColor.DarkGray, 90)]
+    [DataRow(ConsoleColor.Blue, 94)]
+    [DataRow(ConsoleColor.Green, 92)]
+    [DataRow(ConsoleColor.Cyan, 96)]
+    [DataRow(ConsoleColor.Red, 91)]
+    [DataRow(ConsoleColor.Magenta, 95)]
+    [DataRow(ConsoleColor.Yellow, 93)]
+    [DataRow(ConsoleColor.White, 97)]
+    [DataRow((ConsoleColor)999, 39)]
+    public void WriteMessage_ConsoleColorsMapToExactAnsiSequences(ConsoleColor color, int code)
+    {
+        StringBuilderConsole console = new();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console, AnsiMode.ForceAnsi);
+
+        reporter.WriteMessage("accent", new Microsoft.Testing.Platform.OutputDevice.SystemConsoleColor { ConsoleColor = color });
+
+        Assert.AreEqual("\u001b[" + code.ToString(CultureInfo.InvariantCulture) + "maccent" + Environment.NewLine + "\u001b[m", console.Output);
+    }
+
+    [TestMethod]
+    public void Reporter_InvalidModesAndUnknownExecutionFailBeforeWriting()
+    {
+        StringBuilderConsole console = new();
+        Assert.ThrowsExactly<UnreachableException>(() => new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = (AnsiMode)999,
+            ShowProgress = () => false,
+        }));
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        Assert.ThrowsExactly<UnreachableException>(() => reporter.TestInProgress("missing-execution", "uid", "display"));
+        Assert.AreEqual(string.Empty, console.Output);
+    }
 }

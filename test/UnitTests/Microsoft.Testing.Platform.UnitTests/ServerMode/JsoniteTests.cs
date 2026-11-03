@@ -269,6 +269,135 @@ public sealed class JsoniteTests
             throw new Exception(string.Join(Environment.NewLine, errors));
         }
     }
+
+    [TestMethod]
+    [DataRow(0, "\\0", true)]
+    [DataRow(7, "\\a", false)]
+    [DataRow(8, "\\b", false)]
+    [DataRow(12, "\\f", false)]
+    [DataRow(10, "\\n", false)]
+    [DataRow(13, "\\r", false)]
+    [DataRow(9, "\\t", false)]
+    [DataRow(11, "\\v", false)]
+    public void Deserialize_InvalidStringControlsPreserveEscapedDiagnostic(int codePoint, string escaped, bool nul)
+    {
+        string input = "\"" + (char)codePoint + "\"";
+        Jsonite.JsonException error = Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Deserialize(input));
+        string suffix = nul ? "while parsing a string" : "while parsing a string. Use escape \\ instead";
+        Assert.AreEqual($"Unexpected character '{escaped}' {suffix}", error.Message);
+        Assert.AreEqual(1, error.Offset);
+        Assert.AreEqual(0, error.Line);
+        Assert.AreEqual(1, error.Column);
+    }
+
+    [TestMethod]
+    [DataRow(39, "\\'")]
+    [DataRow(34, "\\\"")]
+    [DataRow(92, "\\\\")]
+    public void Deserialize_UnexpectedMemberSeparatorsEscapeTheirActualCharacter(int codePoint, string escaped)
+    {
+        string input = "{\"key\"" + (char)codePoint + "}";
+        Jsonite.JsonException error = Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Deserialize(input));
+        Assert.AreEqual($"Unexpected character '{escaped}' while parsing an object. Expecting a colon ':' after a member", error.Message);
+        Assert.AreEqual(6, error.Offset);
+        Assert.AreEqual(0, error.Line);
+        Assert.AreEqual(6, error.Column);
+    }
+
+    [TestMethod]
+    public void Deserialize_UnicodeHexCasesPreserveCodeUnits()
+        => Assert.AreEqual("\u00af\uABCD", Jsonite.Json.Deserialize("\"\\u00af\\uABCD\""));
+
+    [TestMethod]
+    [DataRow("hex")]
+    [DataRow("escape")]
+    [DataRow("eof")]
+    public void Deserialize_ReturningErrorCallbackPreservesPartialStringAndLocation(string kind)
+    {
+        (string input, int offset, string message) = kind switch
+        {
+            "hex" => ("\"prefix\\u12x4\"", 11, "Unexpected character 'x' while parsing a string. Expecting only hexadecimals [0-9a-fA-F] after escape \\u"),
+            "escape" => ("\"prefix\\q\"", 8, "Unexpected character 'q' while parsing a string. Only \\ \" b f n r t v u0000-uFFFF are allowed"),
+            "eof" => ("\"prefix", 7, "Unexpected EOF while parsing a string"),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        List<(int Offset, int Line, int Column, string Message, Exception? Inner)> errors = [];
+        Moq.Mock<Jsonite.IJsonReflector> reflector = new();
+        reflector.Setup(r => r.OnDeserializeRaiseParsingError(
+                Moq.It.IsAny<int>(), Moq.It.IsAny<int>(), Moq.It.IsAny<int>(), Moq.It.IsAny<string>(), Moq.It.IsAny<Exception>()))
+            .Callback<int, int, int, string, Exception>((position, line, column, diagnostic, inner) =>
+                errors.Add((position, line, column, diagnostic, inner)));
+        Jsonite.JsonSettings settings = new() { Reflector = reflector.Object };
+
+        Assert.AreEqual("prefix", Jsonite.Json.Deserialize(input, settings));
+        (int Offset, int Line, int Column, string Message, Exception? Inner) expected = (offset, 0, offset, message, null);
+        Assert.AreEqual(expected, Assert.ContainsSingle(errors));
+        reflector.Verify(r => r.Initialize(settings), Moq.Times.Once);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(ScalarWriterCases), DynamicDataDisplayName = nameof(ScalarWriterCaseName))]
+    public void Serialize_ScalarWritersPreserveInvariantLiteralDocuments(object value, string expected)
+        => Assert.AreEqual(expected, Jsonite.Json.Serialize(value));
+
+    public static string ScalarWriterCaseName(System.Reflection.MethodInfo method, object[] data)
+        => method.Name + "_" + data[0].GetType().Name;
+
+    public static IEnumerable<object[]> ScalarWriterCases() =>
+    [
+        ['q', "q"],
+        [(byte)251, "251"],
+        [(sbyte)-123, "-123"],
+        [(short)-32001, "-32001"],
+        [(ushort)65001, "65001"],
+        [4000000001U, "4000000001"],
+        [18446744073709551614UL, "18446744073709551614"],
+        [0.1F, "0.10000000149011612"],
+        [12.50M, "12.50"],
+        [new StringBuilder("alpha \"quoted\""), "\"alpha \\\"quoted\\\"\""],
+        [new DateTime(2024, 2, 3, 4, 5, 6, DateTimeKind.Utc), "\"2024-02-03T04:05:06.0000000Z\""],
+        [new Version(1, 2, 3), "\"1.2.3\""],
+    ];
+
+    [TestMethod]
+    public void Reflector_InvalidTargetsAndOwnedContainersPreserveCallbackContract()
+    {
+        Jsonite.IJsonReflector reflector = Jsonite.JsonReflectorDefault.Instance;
+        ArgumentException objectError = Assert.ThrowsExactly<ArgumentException>(
+            () => reflector.OnDeserializeEnterObject(null!, typeof(int), out _));
+        Assert.AreEqual("The default reflector only supports deserializing to a Dictionary<string, object> or a JsonObject instead of [System.Int32]", objectError.Message);
+        ArgumentException arrayError = Assert.ThrowsExactly<ArgumentException>(
+            () => reflector.OnDeserializeEnterArray(null!, typeof(int), out _, out _));
+        Assert.AreEqual("The default reflector only supports deserializing to a IList or a JsonArray instead of [System.Int32]", arrayError.Message);
+
+        Dictionary<string, object> target = Assert.IsInstanceOfType<Dictionary<string, object>>(
+            reflector.OnDeserializeEnterObject(null!, typeof(Dictionary<string, object>), out object objectContext));
+        reflector.OnDeserializePrepareMemberForObject(objectContext, target, "answer", out Type memberType, out object memberContext, out object previous);
+        Assert.AreEqual(typeof(object), memberType);
+        Assert.IsNull(previous);
+        reflector.OnDeserializeSetObjectMember(objectContext, target, memberContext, 42);
+        Assert.AreSame(target, reflector.OnDeserializeExitObject(objectContext, target));
+        Assert.AreEqual(42, target["answer"]);
+
+        System.Collections.ArrayList array = Assert.IsInstanceOfType<System.Collections.ArrayList>(
+            reflector.OnDeserializeEnterArray(null!, typeof(System.Collections.ArrayList), out Type itemType, out object arrayContext));
+        Assert.AreEqual(typeof(object), itemType);
+        reflector.OnDeserializeAddArrayItem(arrayContext, array, 0, "literal item");
+        Assert.AreSame(array, reflector.OnDeserializeExitArray(arrayContext, array));
+        Assert.AreSequenceEqual(new object[] { "literal item" }, array);
+        Assert.AreEqual(Jsonite.JsonObjectType.Unknown, reflector.OnSerializeGetObjectType(new Version(1, 2), typeof(Version), out _));
+    }
+
+    [TestMethod]
+    public void Validate_SettingsRemainValidationOnlyForSerializationCallbacks()
+    {
+        Jsonite.JsonSettings settings = new();
+        Jsonite.Json.Validate("""{"answer":[42]}""", settings);
+
+        Assert.ThrowsExactly<NotImplementedException>(() => Jsonite.Json.Serialize(new Jsonite.JsonObject(), settings));
+        Assert.ThrowsExactly<NotImplementedException>(() => settings.Reflector.OnSerializeGetObjectMembers(null!, new Jsonite.JsonObject()));
+        Assert.ThrowsExactly<NotImplementedException>(() => settings.Reflector.OnSerializeGetArrayItems(null!, new Jsonite.JsonArray()));
+    }
 }
 
 #endif

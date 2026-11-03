@@ -64,7 +64,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
         <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
-        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <target state="translated">O Azure DevOps aceitou os resultados do teste, mas seus metadados de identidade de teste canônicos não puderam ser salvos. O histórico de resultados controlados por dados pode não estar disponível.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">

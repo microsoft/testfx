@@ -264,6 +264,157 @@ public sealed class DotnetMuxerLocatorTests
         Assert.Contains($"DotnetHostHelper.IsValidArchitectureMuxer: Incompatible architecture muxer, target architecture 'X86', actual '{actualArchitecture}'", logs);
     }
 
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow("DOTNET_ROOT_X64")]
+    [DataRow("DOTNET_ROOT")]
+    public void TryGetDotnetPathByArchitecture_ConfiguredRoot_ResolvesCompatibleMuxer(string variable)
+    {
+        using LocatorEnvironment environment = new();
+        string expected = environment.CreateMuxer("configured", 0x8664);
+        Environment.SetEnvironmentVariable(variable, Path.GetDirectoryName(expected));
+        List<string> logs = [];
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator(logs);
+
+        bool found = locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X64, out string? path);
+
+        Assert.IsTrue(found);
+        Assert.AreEqual(expected, path);
+        Assert.Contains(
+            $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with 'X64' resolved from env variable '{variable}' in '{expected}'",
+            logs);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void TryGetDotnetPathByArchitecture_ArchitectureSpecificRoot_TakesPrecedenceOverDefaultAndPath()
+    {
+        using LocatorEnvironment environment = new();
+        string expected = environment.CreateMuxer("architecture", 0x8664);
+        string fallback = environment.CreateMuxer("default", 0x8664);
+        string pathMuxer = environment.CreateMuxer("path", 0x8664);
+        Environment.SetEnvironmentVariable("DOTNET_ROOT_X64", Path.GetDirectoryName(expected));
+        Environment.SetEnvironmentVariable("DOTNET_ROOT", Path.GetDirectoryName(fallback));
+        Environment.SetEnvironmentVariable("PATH", Path.GetDirectoryName(pathMuxer));
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator([]);
+
+        Assert.IsTrue(locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X64, out string? path));
+        Assert.AreEqual(expected, path);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void TryGetDotnetPathByArchitecture_NonexistentSpecificRoot_UsesDefaultRoot()
+    {
+        using LocatorEnvironment environment = new();
+        string expected = environment.CreateMuxer("default", 0x8664);
+        Environment.SetEnvironmentVariable("DOTNET_ROOT_X64", Path.Combine(environment.Root, "not-installed"));
+        Environment.SetEnvironmentVariable("DOTNET_ROOT", Path.GetDirectoryName(expected));
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator([]);
+
+        Assert.IsTrue(locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X64, out string? path));
+        Assert.AreEqual(expected, path);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void TryGetDotnetPathByArchitecture_X86VirtualizedRoot_PrecedesDefaultRoot()
+    {
+        using LocatorEnvironment environment = new();
+        string expected = environment.CreateMuxer("x86", 0x014c);
+        string fallback = environment.CreateMuxer("default", 0x014c);
+        Environment.SetEnvironmentVariable("DOTNET_ROOT_X86", Path.Combine(environment.Root, "not-installed"));
+        Environment.SetEnvironmentVariable("DOTNET_ROOT(x86)", Path.GetDirectoryName(expected));
+        Environment.SetEnvironmentVariable("DOTNET_ROOT", Path.GetDirectoryName(fallback));
+        List<string> logs = [];
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator(logs);
+
+        Assert.IsTrue(locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X86, out string? path));
+        Assert.AreEqual(expected, path);
+        Assert.Contains(
+            $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with 'X86' resolved from env variable 'DOTNET_ROOT(x86)' in '{expected}'",
+            logs);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void TryGetDotnetPathByArchitecture_InvalidConfiguredMuxer_DoesNotFallBack(bool incompatibleArchitecture)
+    {
+        using LocatorEnvironment environment = new();
+        string configured = Path.Combine(environment.Root, "configured");
+        Directory.CreateDirectory(configured);
+        if (incompatibleArchitecture)
+        {
+            environment.CreateMuxer("configured", 0x014c);
+        }
+
+        string fallback = environment.CreateMuxer("default", 0x8664);
+        Environment.SetEnvironmentVariable("DOTNET_ROOT_X64", configured);
+        Environment.SetEnvironmentVariable("DOTNET_ROOT", Path.GetDirectoryName(fallback));
+        Environment.SetEnvironmentVariable("PATH", Path.GetDirectoryName(fallback));
+        List<string> logs = [];
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator(logs);
+
+        Assert.IsFalse(locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X64, out string? path));
+        Assert.IsNull(path);
+        Assert.Contains(
+            incompatibleArchitecture
+                ? $"DotnetHostHelper: Invalid muxer resolved using env var key 'DOTNET_ROOT_X64' in '{configured}'"
+                : $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Folder specified by env variable does not contain any muxer: '{configured}=DOTNET_ROOT_X64'",
+            logs);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void TryGetDotnetPathByArchitecture_PathFallback_UsesFirstExistingCompatibleMuxer(bool nonexistentDefaultRoot)
+    {
+        using LocatorEnvironment environment = new();
+        string expected = environment.CreateMuxer("first", 0x8664);
+        string second = environment.CreateMuxer("second", 0x8664);
+        if (nonexistentDefaultRoot)
+        {
+            Environment.SetEnvironmentVariable("DOTNET_ROOT", Path.Combine(environment.Root, "missing-root"));
+        }
+
+        Environment.SetEnvironmentVariable(
+            "PATH",
+            string.Join(Path.PathSeparator.ToString(), Path.Combine(environment.Root, "missing-path-entry"), Path.GetDirectoryName(expected), Path.GetDirectoryName(second)));
+        List<string> logs = [];
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator(logs);
+
+        Assert.IsTrue(locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X64, out string? path));
+        Assert.AreEqual(expected, path);
+        Assert.Contains(
+            $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with 'X64' resolved from PATH: '{expected}'",
+            logs);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void TryGetDotnetPathByArchitecture_UnsupportedArchitecture_ReturnsNoMuxer()
+    {
+        using LocatorEnvironment environment = new();
+        Environment.SetEnvironmentVariable("ProgramFiles", environment.Root);
+        Environment.SetEnvironmentVariable("ProgramFiles(x86)", environment.Root);
+        List<string> logs = [];
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator(logs);
+
+        Assert.IsFalse(locator.TryGetDotnetPathByArchitecture((DotnetMuxerLocator.PlatformArchitecture)int.MaxValue, out string? path));
+        Assert.IsNull(path);
+        Assert.Contains("DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.", logs);
+    }
+
     private static void AssertMachoArchitecture(
         uint magic,
         DotnetMuxerLocator.MacOsCpuType cpuType,
@@ -375,6 +526,59 @@ public sealed class DotnetMuxerLocatorTests
         }
     }
 
+    private sealed class LocatorEnvironment : IDisposable
+    {
+        private readonly Dictionary<string, string?> _originalValues = [];
+
+        public LocatorEnvironment()
+        {
+            Root = Path.Combine(Path.GetTempPath(), nameof(DotnetMuxerLocatorTests), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Root);
+            string[] keys =
+            [
+                "DOTNET_ROOT_X86", "DOTNET_ROOT_X64", "DOTNET_ROOT_ARM", "DOTNET_ROOT_ARM64",
+                "DOTNET_ROOT(x86)", "DOTNET_ROOT", "DOTNET_ROOT_2147483647",
+                "PATH", "ProgramFiles", "ProgramFiles(x86)",
+            ];
+            foreach (string key in keys)
+            {
+                _originalValues[key] = Environment.GetEnvironmentVariable(key);
+                Environment.SetEnvironmentVariable(key, null);
+            }
+
+            Environment.SetEnvironmentVariable("PATH", Root);
+        }
+
+        public string Root { get; }
+
+        public string CreateMuxer(string directory, ushort machine)
+        {
+            string path = Path.Combine(Root, directory);
+            Directory.CreateDirectory(path);
+            string muxer = Path.Combine(path, "dotnet.exe");
+            File.WriteAllBytes(muxer, CreatePEHeader(machine));
+            return muxer;
+        }
+
+        public DotnetMuxerLocator CreateAppHostLocator(List<string> logs)
+        {
+            DotnetMuxerLocator locator = new(logs.Add);
+            typeof(DotnetMuxerLocator).GetField("_currentProcessFileName", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(locator, Path.Combine(Root, "application.exe"));
+            return locator;
+        }
+
+        public void Dispose()
+        {
+            foreach (KeyValuePair<string, string?> entry in _originalValues)
+            {
+                Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            }
+
+            Directory.Delete(Root, recursive: true);
+        }
+    }
+
     private sealed class TemporaryFile : IDisposable
     {
         public TemporaryFile(byte[] content)
@@ -386,5 +590,132 @@ public sealed class DotnetMuxerLocatorTests
         public string Path { get; }
 
         public void Dispose() => File.Delete(Path);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void TryGetDotnetPathByArchitecture_CorruptFirstCandidate_PropagatesWithoutTryingFallbacks(bool configuredRoot)
+    {
+        using LocatorEnvironment environment = new();
+        DotnetMuxerLocator.PlatformArchitecture architecture = RuntimeInformation.ProcessArchitecture == Architecture.X86
+            ? DotnetMuxerLocator.PlatformArchitecture.X64
+            : DotnetMuxerLocator.PlatformArchitecture.X86;
+        ushort machine = architecture == DotnetMuxerLocator.PlatformArchitecture.X86 ? (ushort)0x014c : (ushort)0x8664;
+        string corrupt = environment.CreateMuxer("corrupt", machine);
+        byte[] invalidHeader = new byte[64];
+        BitConverter.GetBytes(128u).CopyTo(invalidHeader, 0x3C);
+        File.WriteAllBytes(corrupt, invalidHeader);
+        string fallback = environment.CreateMuxer("fallback", machine);
+        Environment.SetEnvironmentVariable(
+            "PATH",
+            configuredRoot
+                ? Path.GetDirectoryName(fallback)
+                : string.Join(Path.PathSeparator.ToString(), Path.GetDirectoryName(corrupt), Path.GetDirectoryName(fallback)));
+        if (configuredRoot)
+        {
+            Environment.SetEnvironmentVariable($"DOTNET_ROOT_{architecture.ToString().ToUpperInvariant()}", Path.GetDirectoryName(corrupt));
+        }
+
+        List<string> logs = [];
+        DotnetMuxerLocator locator = new(logs.Add);
+        string? path = "before-resolution";
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => locator.TryGetDotnetPathByArchitecture(architecture, out path));
+
+        Assert.AreEqual(
+            $"Could not determine the CPU architecture from the PE (Portable Executable) file at '{corrupt}'. The file may be corrupt or contain an unrecognized machine type.",
+            exception.Message);
+        Assert.AreEqual(corrupt, path, "The selected candidate is assigned before its header is read; the exception must not clear or replace it.");
+        string[] expectedLogs = configuredRoot
+            ? [
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named 'dotnet.exe'",
+                "[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset",
+            ]
+            : [
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named 'dotnet.exe'",
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.",
+                $"DotnetMuxerLocator.GetMuxerFromPath: Found dotnet.exe using PATH environment variable: '{corrupt}'",
+                "[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset",
+            ];
+        Assert.AreSequenceEqual(expectedLogs, logs);
+    }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void TryGetDotnetPathByArchitecture_NullPath_PreservesFailureBeforeGlobalRegistration()
+    {
+        using LocatorEnvironment environment = new();
+        Environment.SetEnvironmentVariable("PATH", null);
+        List<string> logs = [];
+        DotnetMuxerLocator locator = new(logs.Add);
+        string? path = "before-resolution";
+
+        Assert.ThrowsExactly<NullReferenceException>(
+            () => locator.TryGetDotnetPathByArchitecture((DotnetMuxerLocator.PlatformArchitecture)int.MaxValue, out path));
+
+        Assert.IsNull(path);
+        string muxerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
+        Assert.AreSequenceEqual(
+            [
+                $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named '{muxerName}'",
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.",
+            ],
+            logs);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Linux)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow("DOTNET_ROOT_X64")]
+    [DataRow("DOTNET_ROOT")]
+    public void TryGetDotnetPathByArchitecture_LinuxConfiguredElfMuxer_IsRejectedWithoutFallback(string variable)
+    {
+        using LocatorEnvironment environment = new();
+        byte[] elfHeader = new byte[64];
+        elfHeader[0] = 0x7F;
+        elfHeader[1] = (byte)'E';
+        elfHeader[2] = (byte)'L';
+        elfHeader[3] = (byte)'F';
+        elfHeader[4] = 2; // ELFCLASS64
+        elfHeader[5] = 1; // ELFDATA2LSB
+        elfHeader[6] = 1; // EV_CURRENT
+        BinaryPrimitives.WriteUInt16LittleEndian(elfHeader.AsSpan(16, 2), 2); // ET_EXEC
+        BinaryPrimitives.WriteUInt16LittleEndian(elfHeader.AsSpan(18, 2), 62); // EM_X86_64
+        BinaryPrimitives.WriteUInt32LittleEndian(elfHeader.AsSpan(20, 4), 1); // EV_CURRENT
+        BinaryPrimitives.WriteUInt16LittleEndian(elfHeader.AsSpan(52, 2), 64); // e_ehsize
+        string configuredRoot = Path.Combine(environment.Root, "configured");
+        string fallbackRoot = Path.Combine(environment.Root, "fallback");
+        Directory.CreateDirectory(configuredRoot);
+        Directory.CreateDirectory(fallbackRoot);
+        File.WriteAllBytes(Path.Combine(configuredRoot, "dotnet"), elfHeader);
+        File.WriteAllBytes(Path.Combine(fallbackRoot, "dotnet"), elfHeader);
+        Environment.SetEnvironmentVariable("DOTNET_ROOT", fallbackRoot);
+        Environment.SetEnvironmentVariable(variable, configuredRoot);
+        Environment.SetEnvironmentVariable("PATH", fallbackRoot);
+        List<string> logs = [];
+        DotnetMuxerLocator locator = environment.CreateAppHostLocator(logs);
+
+        bool found = locator.TryGetDotnetPathByArchitecture(DotnetMuxerLocator.PlatformArchitecture.X64, out string? path);
+
+        Assert.IsFalse(found, "Linux currently does not assign a muxer architecture, even for an x86_64 ELF candidate.");
+        Assert.IsNull(path);
+        List<string> expectedLogs = [];
+        if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+        {
+            expectedLogs.Add(
+                $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture 'X64', but the current process is not a muxer: '{Path.Combine(environment.Root, "application.exe")}'");
+        }
+
+        expectedLogs.AddRange(
+            [
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named 'dotnet'",
+                "DotnetHostHelper.IsValidArchitectureMuxer: Incompatible architecture muxer, target architecture 'X64', actual ''",
+                $"DotnetHostHelper: Invalid muxer resolved using env var key '{variable}' in '{configuredRoot}'",
+            ]);
+        Assert.AreSequenceEqual(expectedLogs, logs);
     }
 }

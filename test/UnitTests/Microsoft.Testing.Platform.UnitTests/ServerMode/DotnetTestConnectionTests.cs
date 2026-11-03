@@ -1,15 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
 
@@ -734,6 +738,116 @@ public sealed class DotnetTestConnectionTests
                 _disposed = true;
                 Connection.Dispose();
             }
+        }
+    }
+
+    [TestMethod]
+    [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+    [UnsupportedOSPlatform("wasi")]
+#endif
+    public async Task Connection_RealSetupNegotiatesIdentityAndReverseCancellation()
+    {
+        SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("connection-wire");
+        Assert.AreEqual(0, child.ExitCode, child.Error);
+        string[] records = child.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.TrimStart('\uFEFF'))
+            .Where(line => line.StartsWith("PROBE|", StringComparison.Ordinal))
+            .Select(line => Encoding.UTF8.GetString(Convert.FromBase64String(line["PROBE|".Length..])))
+            .ToArray();
+        Assert.AreSequenceEqual(
+            ["primary-handshakes:1", "execution-id:generated", "instance-id:negotiated", "reverse-cancels:1", "primary-disconnected:True"],
+            records);
+    }
+
+    [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+    [UnsupportedOSPlatform("wasi")]
+#endif
+    internal static async Task RunConnectionWireChildAsync(Action<string> record)
+    {
+        Environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, null);
+        SystemEnvironment environment = new();
+        using CTRLPlusCCancellationTokenSource application = new();
+        Mock<ILoggerFactory> factory = new();
+        factory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        using TestHostControllerCancellationServer control = new(null, environment, factory.Object, new SystemTask());
+        control.Start();
+        int handshakes = 0;
+        string? wireInstance = null;
+        string? executionId = null;
+        OwnedProtocolServerPeer primary = new(
+            (id, payload) =>
+            {
+                Assert.AreEqual(9, id);
+                HandshakeMessage handshake = OwnedProtocolServerPeer.Deserialize<HandshakeMessage>(new HandshakeMessageSerializer(), payload);
+                Assert.AreEqual("TestHost", handshake.Properties![HandshakeMessagePropertyNames.HostType]);
+                Assert.AreEqual("run", handshake.Properties[HandshakeMessagePropertyNames.ExecutionMode]);
+                Assert.AreEqual("wire-fixture.dll", handshake.Properties[HandshakeMessagePropertyNames.ModulePath]);
+                Assert.AreEqual(environment.ProcessId.ToString(CultureInfo.InvariantCulture), handshake.Properties[HandshakeMessagePropertyNames.PID]);
+                wireInstance = handshake.Properties[HandshakeMessagePropertyNames.InstanceId];
+                executionId = handshake.Properties[HandshakeMessagePropertyNames.ExecutionId];
+                Interlocked.Increment(ref handshakes);
+                return (9, OwnedProtocolServerPeer.Serialize(new HandshakeMessageSerializer(), new HandshakeMessage(new()
+                {
+                    [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.4.0",
+                    [HandshakeMessagePropertyNames.ServerControlPipeName] = control.PipeName,
+                })));
+            });
+        Mock<ITestApplicationModuleInfo> module = new();
+        module.Setup(m => m.GetCurrentTestApplicationFullPath()).Returns("wire-fixture.dll");
+        CommandLineHandler handler = new(
+            CommandLineParser.Parse(["--server", "dotnettestcli", "--dotnet-test-pipe", primary.PipeName], environment),
+            [], [new PlatformCommandLineProvider()], module.Object, Mock.Of<IRuntimeFeature>());
+        ConcurrentQueue<string> logs = new();
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, text, _, _) => logs.Enqueue(text))
+            .Returns(Task.CompletedTask);
+        DotnetTestConnection connection = new(handler, environment, module.Object, application, logger.Object);
+        try
+        {
+            await connection.AfterCommonServiceSetupAsync();
+            Assert.IsTrue(connection.IsServerMode);
+            Assert.IsTrue(await connection.IsCompatibleProtocolAsync("TestHost"));
+            Assert.IsTrue(connection.IsServerControlChannelSupported);
+            Assert.AreEqual(1, handshakes);
+            Assert.IsTrue(Guid.TryParseExact(executionId, "N", out Guid execution));
+            Assert.AreNotEqual(Guid.Empty, execution);
+            IPushOnlyProtocol protocol = connection;
+            Assert.AreEqual(protocol.InstanceId, wireInstance);
+            Assert.IsTrue(Guid.TryParseExact(wireInstance, "N", out Guid instance));
+            Assert.AreNotEqual(Guid.Empty, instance);
+            Assert.AreNotEqual(execution, instance);
+            Assert.AreEqual(executionId, environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID));
+            int cancellations = 0;
+            TaskCompletionSource<CancellationToken> canceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            await protocol.StartServerControlChannelAsync(token =>
+            {
+                Interlocked.Increment(ref cancellations);
+                canceled.TrySetResult(token);
+                return Task.CompletedTask;
+            });
+            await control.WaitForRequestAsync().TimeoutAfterAsync(TimeSpan.FromSeconds(30));
+            control.RequestCancellation();
+            await canceled.Task.TimeoutAfterAsync(TimeSpan.FromSeconds(30));
+            Assert.AreEqual(application.CancellationToken, await canceled.Task);
+            Assert.IsFalse(application.CancellationToken.IsCancellationRequested);
+            await protocol.StartServerControlChannelAsync(_ => throw new AssertFailedException("Control channel was started twice."));
+            await protocol.OnExitAsync();
+            Assert.AreEqual(1, cancellations);
+            Assert.Contains($"Connected to the server control pipe '{control.PipeName}'.", logs);
+            record("primary-handshakes:" + handshakes.ToString(CultureInfo.InvariantCulture));
+            record("execution-id:generated");
+            record("instance-id:negotiated");
+            record("reverse-cancels:" + cancellations.ToString(CultureInfo.InvariantCulture));
+        }
+        finally
+        {
+            connection.Dispose();
+            await primary.WaitForDisconnectAsync();
+            record("primary-disconnected:True");
+            await primary.DisposeAsync();
         }
     }
 }

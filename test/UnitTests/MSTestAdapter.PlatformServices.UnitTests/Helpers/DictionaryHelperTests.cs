@@ -90,4 +90,38 @@ public class DictionaryHelperTests : TestContainer
         IOrderedEnumerable<KeyValuePair<string, string>> sortedExpected = from entry in expected orderby entry.Key select entry;
         sortedActual.SequenceEqual(sortedExpected).Should().BeTrue();
     }
+
+    public void MergeCopiesEveryInputPartitionAndPreservesNullValuesWithTracingEnabled()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        services.MockTraceLogger.SetupGet(logger => logger.IsInfoEnabled).Returns(true);
+
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+            Dictionary<string, string?> source = new() { ["retained"] = "source", ["collision"] = "old" };
+            Dictionary<string, string?> overwrite = new() { ["collision"] = null, ["added"] = "new" };
+
+            IDictionary<string, string?> merged = source.ConcatWithOverwrites(overwrite);
+            merged.Should().BeEquivalentTo(new Dictionary<string, string?> { ["retained"] = "source", ["collision"] = null, ["added"] = "new" });
+            merged["retained"] = "changed";
+            source["retained"].Should().Be("source");
+            source["collision"].Should().Be("old");
+            overwrite["collision"].Should().BeNull();
+
+            IDictionary<string, string?> fromSource = source.ConcatWithOverwrites(null);
+            fromSource["retained"] = "copy";
+            source["retained"].Should().Be("source");
+            IDictionary<string, string?> fromOverwrite = ((Dictionary<string, string?>?)null).ConcatWithOverwrites(overwrite);
+            fromOverwrite["added"] = "copy";
+            overwrite["added"].Should().Be("new");
+            ((Dictionary<string, string?>?)null).ConcatWithOverwrites(null).Should().BeEmpty();
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
 }

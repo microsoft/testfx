@@ -35,6 +35,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class CrashDumpEnvironmentVariableProviderMutationTests
 {
     private static readonly DateTimeOffset FixedTime = new(2026, 6, 11, 7, 8, 9, TimeSpan.Zero);
+    private static readonly string ValidationResultsDirectory = Path.Combine(AppContext.BaseDirectory, "crashdump-validation");
 
     [TestMethod]
     [DataRow(false, false, true, false)]
@@ -248,6 +249,234 @@ public sealed class CrashDumpEnvironmentVariableProviderMutationTests
             Assert.IsEmpty(loggedMessages);
         }
     }
+
+    [TestMethod]
+    [DataRow("  MiNi  ", "1")]
+    [DataRow("Heap", "2")]
+    [DataRow("Triage", "3")]
+    [DataRow("Full", "4")]
+    [DataRow("7", "7")]
+    public async Task UpdateAsync_DumpTypeMapping_SetsBothLockedRuntimeCodes(string dumpType, string expectedCode)
+    {
+        var options = new TestCommandLineOptions(new()
+        {
+            [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
+            [CrashDumpCommandLineOptions.CrashDumpTypeOptionName] = [dumpType],
+            [CrashDumpCommandLineOptions.CrashSequenceOptionName] = ["off"],
+        });
+        CrashDumpEnvironmentVariableProvider provider = CreateProvider(options, new CrashDumpConfiguration(), ValidationResultsDirectory);
+        List<EnvironmentVariable> variables = [];
+        var environment = new Mock<IEnvironmentVariables>();
+        environment.Setup(x => x.SetVariable(It.IsAny<EnvironmentVariable>()))
+            .Callback<EnvironmentVariable>(variables.Add);
+
+        await provider.UpdateAsync(environment.Object);
+
+        Assert.HasCount(6, variables);
+        AssertVariable(variables, "DOTNET_DbgMiniDumpType", expectedCode);
+        AssertVariable(variables, "COMPlus_DbgMiniDumpType", expectedCode);
+        Assert.DoesNotContain(
+            static variable => variable.Variable == CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName,
+            variables);
+    }
+
+#if NETCOREAPP
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("2")]
+    [DataRow("3")]
+    [DataRow("4")]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_ValidDumpType_AcceptsEachRuntimeCode(string dumpType)
+    {
+        (CrashDumpEnvironmentVariableProvider provider, Dictionary<string, string?> variables) = await CreateValidationProviderAsync();
+        variables["DOTNET_DbgMiniDumpType"] = dumpType;
+        variables["COMPlus_DbgMiniDumpType"] = dumpType;
+
+        ValidationResult result = await provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables));
+
+        Assert.IsTrue(result.IsValid);
+        Assert.IsNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("DOTNET_DbgEnableMiniDump")]
+    [DataRow("COMPlus_DbgEnableMiniDump")]
+    [DataRow("DOTNET_DbgMiniDumpType")]
+    [DataRow("COMPlus_DbgMiniDumpType")]
+    [DataRow("DOTNET_DbgMiniDumpName")]
+    [DataRow("COMPlus_DbgMiniDumpName")]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_MissingVariable_ReportsExactDiagnostic(string variableName)
+    {
+        (CrashDumpEnvironmentVariableProvider provider, Dictionary<string, string?> variables) = await CreateValidationProviderAsync();
+        Assert.IsTrue(variables.Remove(variableName));
+
+        ValidationResult result = await provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables));
+
+        AssertValidationDiagnostic(result, FormatEnvironmentError(variableName, ExpectedEnvironmentValue(variableName), null));
+    }
+
+    [TestMethod]
+    [DataRow("DOTNET_DbgEnableMiniDump", "0")]
+    [DataRow("COMPlus_DbgEnableMiniDump", "0")]
+    [DataRow("DOTNET_DbgMiniDumpType", "5")]
+    [DataRow("COMPlus_DbgMiniDumpType", "5")]
+    [DataRow("DOTNET_DbgMiniDumpName", "foreign.dmp")]
+    [DataRow("COMPlus_DbgMiniDumpName", "foreign.dmp")]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_InvalidVariable_ReportsExactDiagnostic(string variableName, string invalidValue)
+    {
+        (CrashDumpEnvironmentVariableProvider provider, Dictionary<string, string?> variables) = await CreateValidationProviderAsync();
+        variables[variableName] = invalidValue;
+
+        ValidationResult result = await provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables));
+
+        AssertValidationDiagnostic(result, FormatEnvironmentError(variableName, ExpectedEnvironmentValue(variableName), invalidValue));
+    }
+
+    [TestMethod]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_MultipleInvalidVariables_ReportsAllErrorsInValidationOrder()
+    {
+        (CrashDumpEnvironmentVariableProvider provider, Dictionary<string, string?> variables) = await CreateValidationProviderAsync();
+        variables.Remove("COMPlus_DbgEnableMiniDump");
+        variables["DOTNET_DbgMiniDumpType"] = "0";
+        variables["COMPlus_DbgMiniDumpName"] = "foreign.dmp";
+        string expected = $"""
+            {FormatEnvironmentError("COMPlus_DbgEnableMiniDump", "1", null)}
+            {FormatEnvironmentError("DOTNET_DbgMiniDumpType", "Valid values are 1, 2, 3, 4", "0")}
+            {FormatEnvironmentError("COMPlus_DbgMiniDumpName", Path.Combine(ValidationResultsDirectory, "fixed.dmp"), "foreign.dmp")}
+
+            """;
+
+        ValidationResult result = await provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables));
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), result.ErrorMessage.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    [DataRow(false, "EnableCrashReportOnly")]
+    [DataRow(true, "EnableCrashReport")]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_CrashReportMode_ValidatesTheSelectedReportVariable(
+        bool includeCrashDump,
+        string reportVariable)
+    {
+        (CrashDumpEnvironmentVariableProvider provider, Dictionary<string, string?> variables) = await CreateValidationProviderAsync(includeCrashDump, crashReport: true);
+
+        ValidationResult valid = await provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables));
+        Assert.IsTrue(valid.IsValid);
+        Assert.IsNull(valid.ErrorMessage);
+
+        string name = $"DOTNET_{reportVariable}";
+        variables[name] = "0";
+        ValidationResult invalid = await provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables));
+
+        AssertValidationDiagnostic(invalid, FormatEnvironmentError(name, "1", "0"));
+    }
+
+    [TestMethod]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_NullDumpType_RejectsInconsistentEnvironment()
+    {
+        (CrashDumpEnvironmentVariableProvider provider, Dictionary<string, string?> variables) = await CreateValidationProviderAsync();
+        variables["DOTNET_DbgMiniDumpType"] = null;
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => provider.ValidateTestHostEnvironmentVariablesAsync(CreateReadOnlyEnvironment(variables)));
+
+        Assert.AreEqual("Unexpected missing MiniDumpTypeVariable variable", exception.Message);
+    }
+
+    private static async Task<(CrashDumpEnvironmentVariableProvider Provider, Dictionary<string, string?> Variables)> CreateValidationProviderAsync(
+        bool includeCrashDump = true,
+        bool crashReport = false)
+    {
+        Dictionary<string, string[]> options = new()
+        {
+            [CrashDumpCommandLineOptions.CrashDumpFileNameOptionName] = ["fixed.dmp"],
+            [CrashDumpCommandLineOptions.CrashSequenceOptionName] = ["off"],
+        };
+        if (includeCrashDump)
+        {
+            options[CrashDumpCommandLineOptions.CrashDumpOptionName] = [];
+        }
+
+        if (crashReport)
+        {
+            options[CrashDumpCommandLineOptions.CrashReportOptionName] = [];
+        }
+
+        CrashDumpEnvironmentVariableProvider provider = CreateProvider(
+            new TestCommandLineOptions(options), new CrashDumpConfiguration(), ValidationResultsDirectory);
+        await provider.UpdateAsync(Mock.Of<IEnvironmentVariables>());
+
+        // Build the expected runtime contract independently; do not copy UpdateAsync's
+        // output back into its validator and call that round trip validation.
+        Dictionary<string, string?> variables = new(StringComparer.Ordinal)
+        {
+            ["DOTNET_DbgEnableMiniDump"] = "1",
+            ["COMPlus_DbgEnableMiniDump"] = "1",
+            ["DOTNET_DbgMiniDumpType"] = "4",
+            ["COMPlus_DbgMiniDumpType"] = "4",
+            ["DOTNET_DbgMiniDumpName"] = Path.Combine(ValidationResultsDirectory, "fixed.dmp"),
+            ["COMPlus_DbgMiniDumpName"] = Path.Combine(ValidationResultsDirectory, "fixed.dmp"),
+        };
+        if (crashReport)
+        {
+            string reportVariable = includeCrashDump ? "EnableCrashReport" : "EnableCrashReportOnly";
+            variables[$"DOTNET_{reportVariable}"] = "1";
+            variables[$"COMPlus_{reportVariable}"] = "1";
+        }
+
+        return (provider, variables);
+    }
+
+    private static IReadOnlyEnvironmentVariables CreateReadOnlyEnvironment(Dictionary<string, string?> variables)
+    {
+        var environment = new Mock<IReadOnlyEnvironmentVariables>();
+        OwnedEnvironmentVariable? missing = null;
+        environment.Setup(x => x.TryGetVariable(It.IsAny<string>(), out missing)).Returns(false);
+        foreach (KeyValuePair<string, string?> pair in variables)
+        {
+            OwnedEnvironmentVariable? variable = new(new TestExtension(), pair.Key, pair.Value, isSecret: false, isLocked: true);
+            environment.Setup(x => x.TryGetVariable(pair.Key, out variable)).Returns(true);
+        }
+
+        return environment.Object;
+    }
+
+    private static string ExpectedEnvironmentValue(string variableName)
+        => variableName.EndsWith("DbgMiniDumpType", StringComparison.Ordinal)
+            ? "Valid values are 1, 2, 3, 4"
+            : variableName.EndsWith("DbgMiniDumpName", StringComparison.Ordinal)
+                ? Path.Combine(ValidationResultsDirectory, "fixed.dmp")
+                : "1";
+
+    private static string FormatEnvironmentError(string variableName, string expected, string? actual)
+        => string.Format(
+            CultureInfo.InvariantCulture,
+            CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage,
+            variableName, expected, actual ?? "<null>");
+
+    private static void AssertValidationDiagnostic(ValidationResult result, string diagnostic)
+    {
+        string expected = $"""
+            {diagnostic}
+
+            """;
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), result.ErrorMessage.Replace("\r\n", "\n"));
+    }
+#else
+    [TestMethod]
+    public async Task ValidateTestHostEnvironmentVariablesAsync_NonCoreRuntime_ReportsUnsupported()
+    {
+        CrashDumpEnvironmentVariableProvider provider = CreateProvider(
+            new TestCommandLineOptions([]), new CrashDumpConfiguration(), ValidationResultsDirectory);
+
+        ValidationResult result = await provider.ValidateTestHostEnvironmentVariablesAsync(Mock.Of<IReadOnlyEnvironmentVariables>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage, result.ErrorMessage);
+    }
+#endif
 
     private static CrashDumpEnvironmentVariableProvider CreateProvider(
         TestCommandLineOptions options,

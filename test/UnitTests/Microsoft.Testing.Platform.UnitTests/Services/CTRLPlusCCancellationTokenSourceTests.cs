@@ -347,4 +347,49 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
             return Task.CompletedTask;
         }
     }
+
+    [TestMethod]
+    public void SecondCtrlC_ForceActionFailureWarnsAndStillExitsExactlyOnce()
+    {
+        CancelableConsole console = new();
+        RecordingEnvironment environment = new();
+        RecordingLogger logger = new();
+        using CTRLPlusCCancellationTokenSource source = new(console, logger, environment);
+        int invoked = 0;
+        using IDisposable registration = source.RegisterForceExitAction(() =>
+        {
+            invoked++;
+            throw new InvalidOperationException("force action failed");
+        });
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+
+        Assert.AreEqual(1, invoked);
+        Assert.AreEqual(3, environment.ExitCode);
+        Assert.AreEqual(1, environment.ExitCallCount);
+        Assert.AreEqual(1, logger.WarningCount);
+        Assert.IsNotNull(logger.LastWarning);
+        Assert.StartsWith("Exception while force-terminating the active test host:\n", logger.LastWarning);
+        Assert.Contains("System.InvalidOperationException: force action failed", logger.LastWarning);
+    }
+
+    [TestMethod]
+    public void CancelAfter_DisabledTimerDoesNotCancelAndDisposeIsIdempotent()
+    {
+        CancelableConsole console = new();
+        RecordingEnvironment environment = new();
+        CTRLPlusCCancellationTokenSource source = new(console, null, environment);
+        source.CancelAfter(Timeout.InfiniteTimeSpan);
+        Assert.IsFalse(source.CancellationToken.IsCancellationRequested);
+        source.Cancel();
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        source.Dispose();
+        source.Dispose();
+
+        Assert.IsFalse(console.HasCancelKeyPressSubscribers);
+        console.FireCancelKeyPress();
+        Assert.AreEqual(0, environment.ExitCallCount);
+    }
 }

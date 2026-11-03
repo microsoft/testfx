@@ -274,4 +274,84 @@ public sealed class TestCoverageMessagesTests
             hasCoverableData: true,
             producerId: "producer",
             aggregatedOver: aggregatedOver);
+
+    [TestMethod]
+    public void Scope_IdentityUsesLevelAndOrdinalNameButIgnoresDisplayHint()
+    {
+        CoverageScope scope = new(CoverageScopeLevel.Module, "Module.dll", "first hint");
+        CoverageScope sameIdentity = new(CoverageScopeLevel.Module, "Module.dll", "different hint");
+        Assert.IsTrue(scope.Equals(sameIdentity));
+        Assert.IsTrue(scope.Equals((object)sameIdentity));
+        Assert.IsFalse(scope.Equals(new CoverageScope(CoverageScopeLevel.Module, "module.dll")));
+        Assert.IsFalse(scope.Equals(new CoverageScope(CoverageScopeLevel.File, "Module.dll")));
+        Assert.IsFalse(scope.Equals(null));
+        Assert.IsFalse(scope.Equals("Module.dll"));
+        Assert.AreSequenceEqual(
+            [true, false, true],
+            new[] { scope == sameIdentity, scope != sameIdentity, scope != new CoverageScope(CoverageScopeLevel.Module, "Other.dll") });
+        Assert.AreEqual("first hint", scope.ContainerHint);
+        Dictionary<CoverageScope, string> identities = new() { [scope] = "same module" };
+        Assert.AreEqual("same module", identities[sameIdentity]);
+    }
+
+    [TestMethod]
+    [DataRow(CoverageScopeLevel.Overall, "", "The Overall scope must not have a name.")]
+    [DataRow(CoverageScopeLevel.Module, null, "A name is required for scope level 'Module'.")]
+    [DataRow(CoverageScopeLevel.Module, "", "A name is required for scope level 'Module'.")]
+    public void Scope_OnlyOverallMayBeUnnamed(CoverageScopeLevel level, string? name, string expectedMessage)
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() => new CoverageScope(level, name));
+        Assert.AreEqual("name", exception.ParamName);
+        Assert.StartsWith(expectedMessage, exception.Message);
+        Assert.IsNull(CoverageScope.Overall.Name);
+    }
+
+    [TestMethod]
+    [DataRow(0L, 0L, false, 0d)]
+    [DataRow(0L, 8L, true, 0d)]
+    [DataRow(3L, 8L, true, 37.5d)]
+    public void CoverageMessage_CountsAndCustomIdentityProduceIndependentPercentage(long covered, long coverable, bool hasData, double percentage)
+    {
+        TestCoverageMessage message = new(
+            new SessionUid("measurement-session"), new CoverageScope(CoverageScopeLevel.Type, "App.Calculator", "source.cs"),
+            CoverageMetric.Custom, covered, coverable, "collector-7", "MC/DC");
+
+        Assert.AreEqual(covered, message.CoveredCount);
+        Assert.AreEqual(coverable, message.CoverableCount);
+        Assert.AreEqual(hasData, message.HasCoverableData);
+        Assert.AreEqual(percentage, message.Percentage);
+        Assert.AreEqual("measurement-session", message.SessionUid.Value);
+        Assert.AreEqual(CoverageScopeLevel.Type, message.Scope.Level);
+        Assert.AreEqual("App.Calculator", message.Scope.Name);
+        Assert.AreEqual("source.cs", message.Scope.ContainerHint);
+        Assert.AreEqual(CoverageMetric.Custom, message.Metric);
+        Assert.AreEqual("MC/DC", message.CustomMetricName);
+        Assert.AreEqual("collector-7", message.ProducerId);
+    }
+
+    [TestMethod]
+    public void CoverageSummary_LookupsAreOrdinalFirstProducerWinsAndMissingIsNull()
+    {
+        CoverageMetricResult line = new(CoverageMetric.Line, 3, 8, "first");
+        CoverageMetricResult custom = new(CoverageMetric.Custom, 2, 5, "first", "MC/DC");
+        List<CoverageMetricResult> metrics =
+        [
+            line, custom,
+            new(CoverageMetric.Line, 7, 8, "second"),
+            new(CoverageMetric.Custom, 4, 5, "second", "MC/DC"),
+        ];
+        CoverageScopeSummary summary = new(SessionUid, CoverageScope.Overall, metrics);
+        metrics.Clear();
+
+        Assert.HasCount(4, summary.Metrics);
+        Assert.AreSame(line, summary[CoverageMetric.Line]);
+        Assert.AreSame(custom, summary.GetCustom("MC/DC"));
+        Assert.IsNull(summary[CoverageMetric.Branch]);
+        Assert.IsNull(summary.GetCustom("mc/dc"));
+        Assert.IsNull(summary.GetCustom("missing"));
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() => _ = summary[CoverageMetric.Custom]);
+        Assert.AreEqual("metric", exception.ParamName);
+        Assert.StartsWith("Use GetCustom(name) to look up a custom metric.", exception.Message);
+        Assert.AreEqual("metrics", Assert.ThrowsExactly<ArgumentNullException>(() => new CoverageScopeSummary(SessionUid, CoverageScope.Overall, null!)).ParamName);
+    }
 }

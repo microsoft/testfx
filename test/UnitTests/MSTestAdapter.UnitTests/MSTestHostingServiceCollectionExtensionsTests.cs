@@ -5,6 +5,9 @@ using AwesomeAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -625,5 +628,74 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
             await Task.Yield();
             Disposed = true;
         }
+    }
+
+    public async Task ConfiguratorSuppliesScopedFactoryToTheRegisteredFramework()
+    {
+        ServiceCollection services = [];
+        services.AddScoped<ScopedService>();
+        services.AddMSTestTestClassInjection();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        var builder = new Mock<ITestApplicationBuilder> { DefaultValue = DefaultValue.Mock };
+        Func<IServiceProvider, ITestFrameworkCapabilities>? createCapabilities = null;
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? createFramework = null;
+        builder.Setup(value => value.RegisterTestFramework(
+            It.IsAny<Func<IServiceProvider, ITestFrameworkCapabilities>>(),
+            It.IsAny<Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>>()))
+            .Callback<Func<IServiceProvider, ITestFrameworkCapabilities>, Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>>(
+                (capabilities, framework) =>
+                {
+                    createCapabilities = capabilities;
+                    createFramework = framework;
+                })
+            .Returns(builder.Object);
+        provider.GetRequiredService<ITestingPlatformBuilderConfigurator>().Configure(builder.Object);
+        TestingPlatformBuilderHook.AddExtensions(builder.Object, []);
+        Testing.Platform.Services.ServiceProvider nativeServices = MSTestTestFrameworkContinuationTests.CreateServices(
+            Path.GetTempPath(),
+            Mock.Of<Microsoft.Testing.Platform.CommandLine.ICommandLineOptions>(),
+            Mock.Of<Microsoft.Testing.Platform.Helpers.IFileSystem>());
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+
+        try
+        {
+            ITestFrameworkCapabilities capabilities = createCapabilities!(nativeServices);
+            using var framework = (MSTestTestFramework)createFramework!(capabilities, nativeServices);
+            TestContext firstContext = CreateTestContext();
+            TestContext secondContext = CreateTestContext();
+            ITestClassInstanceLease first = framework.TestClassInstanceFactory!.CreateInstance(typeof(TestContextAndServiceTestClass), firstContext);
+            ITestClassInstanceLease second = framework.TestClassInstanceFactory.CreateInstance(typeof(TestContextAndServiceTestClass), secondContext);
+            try
+            {
+                var firstInstance = (TestContextAndServiceTestClass)first.Instance;
+                var secondInstance = (TestContextAndServiceTestClass)second.Instance;
+                firstInstance.TestContext.Should().BeSameAs(firstContext);
+                secondInstance.TestContext.Should().BeSameAs(secondContext);
+                firstInstance.Service.Should().NotBeSameAs(secondInstance.Service);
+                firstInstance.Should().NotBeSameAs(secondInstance);
+            }
+            finally
+            {
+                await first.DisposeAsync();
+                await second.DisposeAsync();
+            }
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.SetActivityFactory(null);
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public void BuilderFactoryValidationDoesNotAcceptNullDependencies()
+    {
+        var builder = new Mock<ITestApplicationBuilder>();
+        var factory = new StubFactory();
+        Action missingBuilder = () => Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.SetTestClassInstanceFactory(null!, factory);
+        Action missingFactory = () => Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.SetTestClassInstanceFactory(builder.Object, null!);
+
+        missingBuilder.Should().ThrowExactly<ArgumentNullException>().WithParameterName("testApplicationBuilder");
+        missingFactory.Should().ThrowExactly<ArgumentNullException>().WithParameterName("testClassInstanceFactory");
     }
 }
