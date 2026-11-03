@@ -90,6 +90,34 @@ function Assert-CTSComparisonArtifact {
         throw "CTS comparison is incomplete: $($Modules.Count) module inputs, $($reports.Count) TRX reports, $($committedMaps.Count) committed maps."
     }
 
+    $expectedMapModules = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($module in $Modules) {
+        if ((Get-FileHash -LiteralPath $module.Path -Algorithm SHA256).Hash -ne $module.SHA256) {
+            throw "CTS comparison input '$($module.Path)' changed after module selection."
+        }
+        $relativePath = $module.RelativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+        $nativeModule = [System.IO.Path]::GetFullPath((Join-Path (Join-Path $MapDirectory "K1") $relativePath))
+        if (-not $expectedMapModules.Add($nativeModule)) {
+            throw "CTS comparison input contains duplicate module identity '$($module.RelativePath)'."
+        }
+    }
+
+    $mappedModules = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($map in $committedMaps) {
+        $tagDirectory = $map.Directory.Parent
+        $moduleDirectory = $tagDirectory.Parent
+        if ($tagDirectory.Name -ne "testfx-cts-comparison" -or
+            -not $expectedMapModules.Contains($moduleDirectory.FullName)) {
+            throw "CTS comparison map '$($map.FullName)' does not identify an expected input module."
+        }
+        if (-not $mappedModules.Add($moduleDirectory.FullName)) {
+            throw "CTS comparison map duplicates input module '$($moduleDirectory.FullName)'."
+        }
+    }
+    if (-not $mappedModules.SetEquals($expectedMapModules)) {
+        throw "CTS comparison map inventory does not contain every input module exactly once."
+    }
+
     $reportedModules = @{}
     foreach ($report in $reports) {
         [xml]$trx = Get-Content -LiteralPath $report.FullName -Raw
@@ -131,9 +159,15 @@ function Invoke-CTSArtifactSelfTest {
     New-Item -ItemType Directory -Path $resultsDirectory, $mapDirectory -Force | Out-Null
     try {
         $modulePath = Join-Path $fixture "Example.UnitTests.dll"
-        $modules = @([pscustomobject]@{ Path = $modulePath })
+        Set-Content -LiteralPath $modulePath -Value "first module"
+        $modules = @([pscustomobject]@{
+            Path = $modulePath
+            RelativePath = "Example.UnitTests.dll"
+            SHA256 = (Get-FileHash -LiteralPath $modulePath -Algorithm SHA256).Hash
+        })
         $reportPath = Join-Path $resultsDirectory "example.trx"
-        $committedPath = Join-Path $mapDirectory "committed"
+        $committedPath = Join-Path $mapDirectory "K1\Example.UnitTests.dll\testfx-cts-comparison\first-run\committed"
+        New-Item -ItemType Directory -Path (Split-Path $committedPath -Parent) -Force | Out-Null
         $escapedPath = [System.Security.SecurityElement]::Escape($modulePath)
         $report = @"
 <TestRun>
@@ -191,7 +225,74 @@ function Invoke-CTSArtifactSelfTest {
         }
 
         Write-Output "PASS CTSMissingTimestampsAreReported"
-        Write-Output "CTS artifact self-tests: 5 passed."
+        Set-Content -LiteralPath $reportPath -Value $report
+        $secondPath = Join-Path $fixture "Other.UnitTests.dll"
+        Set-Content -LiteralPath $secondPath -Value "second module"
+        $modules += [pscustomobject]@{
+            Path = $secondPath
+            RelativePath = "Other.UnitTests.dll"
+            SHA256 = (Get-FileHash -LiteralPath $secondPath -Algorithm SHA256).Hash
+        }
+        Set-Content -LiteralPath (Join-Path $resultsDirectory "other.trx") `
+            -Value $report.Replace($escapedPath, [System.Security.SecurityElement]::Escape($secondPath))
+        $secondMap = Join-Path $mapDirectory "K1\Other.UnitTests.dll\testfx-cts-comparison\first-run\committed"
+        New-Item -ItemType Directory -Path (Split-Path $secondMap -Parent) -Force | Out-Null
+        New-Item -ItemType File -Path $secondMap | Out-Null
+        if (@(Assert-CTSComparisonArtifact -Modules $modules -ResultsDirectory $resultsDirectory -MapDirectory $mapDirectory).Count -ne 2) {
+            throw "CTSOneMapPerModuleIsAccepted: expected two independently identified maps."
+        }
+        Write-Output "PASS CTSOneMapPerModuleIsAccepted"
+        Remove-Item -LiteralPath $secondMap
+        $mapFailures = [System.Collections.Generic.List[string]]::new()
+        foreach ($case in @(
+            @{ Name = "CTSDuplicateMapCannotReplaceMissingModule"; RelativePath = "Example.UnitTests.dll" },
+            @{ Name = "CTSUnexpectedMapCannotReplaceMissingModule"; RelativePath = "Unexpected.UnitTests.dll" }
+        )) {
+            $replacement = Join-Path $mapDirectory ("K1\" + $case.RelativePath + "\testfx-cts-comparison\replacement-run\committed")
+            New-Item -ItemType Directory -Path (Split-Path $replacement -Parent) -Force | Out-Null
+            New-Item -ItemType File -Path $replacement | Out-Null
+            try {
+                $rejected = $false
+                try {
+                    Assert-CTSComparisonArtifact -Modules $modules -ResultsDirectory $resultsDirectory -MapDirectory $mapDirectory | Out-Null
+                } catch {
+                    if (-not $_.Exception.Message.StartsWith("CTS comparison map")) {
+                        throw
+                    }
+                    $rejected = $true
+                }
+                if (-not $rejected) {
+                    throw "$($case.Name): two committed markers must not hide a module with no map."
+                }
+                Write-Output "PASS $($case.Name)"
+            } catch {
+                $mapFailures.Add($_.Exception.Message)
+                Write-Output "FAIL $($case.Name): $($_.Exception.Message)"
+            } finally {
+                Remove-Item -LiteralPath $replacement
+            }
+        }
+        New-Item -ItemType File -Path $secondMap | Out-Null
+        Set-Content -LiteralPath $secondPath -Value "changed module"
+        $rejected = $false
+        try {
+            Assert-CTSComparisonArtifact -Modules $modules -ResultsDirectory $resultsDirectory -MapDirectory $mapDirectory | Out-Null
+        } catch {
+            if (-not $_.Exception.Message.StartsWith("CTS comparison input")) {
+                throw
+            }
+            $rejected = $true
+        }
+        if ($rejected) {
+            Write-Output "PASS CTSChangedInputHashIsRejected"
+        } else {
+            $mapFailures.Add("CTSChangedInputHashIsRejected: stale module fingerprints must not validate.")
+            Write-Output "FAIL CTSChangedInputHashIsRejected: stale module fingerprints must not validate."
+        }
+        if ($mapFailures.Count -gt 0) {
+            throw ($mapFailures -join [Environment]::NewLine)
+        }
+        Write-Output "CTS artifact self-tests: 9 passed."
     } finally {
         Remove-Item -LiteralPath $fixture -Recurse -Force
     }

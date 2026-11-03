@@ -535,6 +535,28 @@ A copied-PDB layout initially lost source associations, and a temporary tracked 
 was rejected by the clean-repository guard; neither is counted as successful source-map validation.
 The successful rerun keeps the original source/PDB layout and unmodified clean configuration.
 
+#### CTS native-map inventory review correction (2026-11-03)
+
+Marker counts alone did not bind each native map to a selected module. Two maps for module A
+could hide a missing B while the separate reports still identified A and B. Validation now reconciles
+the native `K1/<module-relative-path>/testfx-cts-comparison/<run>/committed` identity one-to-one
+with the selected modules, rejects duplicate/unexpected identities and rechecks the input SHA-256
+fingerprints after collection. Native bitmaps do not contain a separate SHA-256 field; the recheck
+validates the original input snapshot rather than inventing native hash metadata.
+
+**Test-value evidence:** retained `Invoke-CTSArtifactSelfTest` body
+`41B1338C9E24B3F616A3D7F112671BF7666BE56129279A6340AC06F2CAD31CAA` executes with
+`pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest`.
+Before the fix, ten cases pass and three assertions fail (exit 1):
+`CTSDuplicateMapCannotReplaceMissingModule`, `CTSUnexpectedMapCannotReplaceMissingModule`
+and `CTSChangedInputHashIsRejected`. The unchanged tests then pass all thirteen cases (exit 0),
+including a valid two-module inventory; all 71 rollout guards and package-staging validation also pass.
+The corrected validator also accepts the retained real native CTS run
+`5e0bff7df9514cb3bc571c090ae95b59`: two exact native map identities, both recorded input hashes
+still matching and 1,026 executed report identities per module. Earlier two-test native archives
+no longer match the rebuilt input binaries and are not relabeled as this evidence.
+No native producer, package pin or disabled CTS activation gate changes.
+
 ### Local acceptance profiling experiment (2026-11-03)
 
 The follow-up request is to execute genuine acceptance tests locally and use OTel or equivalent tracing
