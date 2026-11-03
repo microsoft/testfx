@@ -49,6 +49,7 @@ def _package_impl(ctx):
     names = {}
     groups = []
     version_files = [ctx.file.version_file]
+    platform_version_file = None
     dependencies = []
     for target in ctx.attr.deps:
         package = target[NuGetPackInfo]
@@ -58,16 +59,7 @@ def _package_impl(ctx):
         if ctx.attr.bound_platform and package.package_id == "Microsoft.Testing.Platform":
             if not version_file:
                 fail("The native platform dependency must carry its generated version file.")
-            bound = ctx.actions.declare_file(ctx.label.name + "/platform-dependency-range.txt")
-            ctx.actions.run(
-                executable = ctx.executable._range_tool,
-                arguments = [version_file.path, bound.path],
-                inputs = [version_file],
-                outputs = [bound],
-                mnemonic = "TestFxPlatformDependencyRange",
-            )
-            version_file = bound
-            version_files.append(bound)
+            platform_version_file = version_file
         dependencies.append(struct(
             id = package.package_id,
             version = package.version or "",
@@ -75,6 +67,8 @@ def _package_impl(ctx):
             exclude = ctx.attr.dependency_excludes.get(package.package_id, []),
         ))
 
+    if ctx.attr.bound_platform and not platform_version_file:
+        fail("A bounded package must declare the native platform dependency.")
     if len(ctx.attr.directories) != len(ctx.attr.resource_directories):
         fail("Each assembly directory needs an explicit satellite-resource policy.")
     for framework in ctx.attr.target_frameworks:
@@ -121,7 +115,8 @@ def _package_impl(ctx):
     nupkg = ctx.actions.declare_file(ctx.label.name + "/" + ctx.label.name + ".nupkg")
     nuspec = ctx.actions.declare_file(ctx.label.name + "/" + ctx.label.name + ".nuspec")
     request = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.json")
-    ctx.actions.write(request, json.encode(struct(
+    template = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.template.json") if platform_version_file else request
+    ctx.actions.write(template, json.encode(struct(
         output = nupkg.path,
         nuspecOutput = nuspec.path,
         versionFile = ctx.file.version_file.path,
@@ -136,6 +131,14 @@ def _package_impl(ctx):
         dependencyGroups = groups,
         files = [struct(source = by_path[path].path, target = path) for path in sorted(by_path.keys())],
     )))
+    if platform_version_file:
+        ctx.actions.run(
+            executable = ctx.executable._range_tool,
+            arguments = [template.path, platform_version_file.path, request.path],
+            inputs = [template, platform_version_file],
+            outputs = [request],
+            mnemonic = "TestFxPlatformDependencyRange",
+        )
     ctx.actions.run(
         executable = ctx.attr._packer[DefaultInfo].files_to_run,
         arguments = [request.path],

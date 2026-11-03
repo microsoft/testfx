@@ -3,14 +3,16 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 
-if (args.Length != 2)
+if (args.Length != 3)
 {
-    throw new ArgumentException("Expected <platform-version-file> <dependency-range-file>.");
+    throw new ArgumentException("Expected <package-request-template> <platform-version-file> <package-request-output>.");
 }
 
-string version = File.ReadAllText(args[0]).Trim();
+string version = File.ReadAllText(args[1]).Trim();
 const string Suffix = "-preview.bazel";
 if (!version.EndsWith(Suffix, StringComparison.Ordinal))
 {
@@ -19,4 +21,30 @@ if (!version.EndsWith(Suffix, StringComparison.Ordinal))
 
 Version prefix = Version.Parse(version[..^Suffix.Length]);
 int nextMajor = checked(prefix.Major + 1);
-File.WriteAllText(args[1], $"[{version}, {nextMajor}.0.0)", new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+JsonObject request = JsonNode.Parse(File.ReadAllText(args[0])) as JsonObject
+    ?? throw new InvalidDataException("Expected a package request object.");
+if (request["dependencyGroups"] is not JsonArray groups || groups.Count == 0)
+{
+    throw new InvalidDataException("Expected nonempty platform dependency groups.");
+}
+
+foreach (JsonNode? group in groups)
+{
+    if (group?["dependencies"] is not JsonArray dependencies)
+    {
+        throw new InvalidDataException("A package dependency group is missing its dependencies.");
+    }
+
+    JsonObject[] platform = dependencies.OfType<JsonObject>()
+        .Where(dependency => dependency["id"]?.GetValue<string>() == "Microsoft.Testing.Platform")
+        .ToArray();
+    if (platform.Length != 1)
+    {
+        throw new InvalidDataException("Each bounded group must declare exactly one platform dependency.");
+    }
+
+    _ = platform[0].Remove("versionFile");
+    platform[0]["version"] = $"[{version}, {nextMajor}.0.0)";
+}
+
+File.WriteAllText(args[2], request.ToJsonString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));

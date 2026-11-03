@@ -1203,6 +1203,22 @@ no shipping leg, servicing branch, or package publication is enabled here.
   dependency groups with only compile/runtime excluded. SHA-256 is
   `C589B3D8DE0DB7212AAB560621D6E037993A95E499F1F8BAF61B9E36EB01A27F`.
   This partial artifact is not a full closure or consumer pass.
+- The canonical selector correction
+  `46e50f3636cc8a7fcd3c5918b2c204a1282243ab` unblocked modern compilation.
+  The next native pack exposed a lane-owned request mismatch: the upstream
+  packer's `versionFile` accepts a version, not a dependency range. The small
+  native lane helper now resolves the platform version into literal
+  `dependency.version` ranges in the request; the pinned upstream packer still
+  writes the actual archives. No package dependency or upper bound was dropped.
+- `.\eng\bazel.ps1 build //:mstest_package_closure --jobs=2 --noshow_progress --show_result=0`
+  then exited 0, producing all eight archives. Independent archive inspection
+  confirmed the two corrected version families and entry counts: framework 89,
+  adapter 75, Telemetry 78, Platform.MSBuild 112, platform 87, TRX abstractions
+  17, TRX reporter 78, and analyzers 55. Package paths, SHA-256 hashes, and
+  dependency metadata are recorded in
+  `C:\tfb\d7ce736ef101\mstest-validation\built-packages.json`; the producer log
+  is `closure-range-correction.log` beside it. This is native package production
+  evidence; real consumer and sensitivity checks are the next gate.
 
 ### Package target contract
 
