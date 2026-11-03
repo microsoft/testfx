@@ -93,6 +93,69 @@ inside the agent-visible tree. The agent reads this manifest after extraction.
 Do not interpolate custom-step outputs into the prompt: gh-aw renders it before
 those steps run. Missing inputs are incomplete analysis, not an empty scope.
 
+#### Typed safe-output footer templates
+
+[Run 41640057298](https://github.com/microsoft/testfx/actions/runs/41640057298/job/125933099017?pr=12185)
+and four other inspected test-review runs failed during review finalization with
+`Report nodes cannot appear in scalar fields`. Analysis and threat detection
+completed; the publisher failed before submitting the review.
+
+The pinned gh-aw v1.0.1 runtime represents `{history_link}` as a typed inline
+fragment containing the separator and complete optional history link, not a URL.
+Insert it directly after `{ai_credits_suffix}`. Do not wrap it in
+`[label]({history_link})`, a code span, or another scalar field. A missing history
+URL produces an empty fragment, not a broken link. This applies to every custom
+footer, including imported shared configuration, issue/PR bodies, and failure
+reports; changing only the test reviewer leaves the same defect elsewhere.
+Attribution, AI-credit reporting, diagnostic warnings, detection, and the pinned
+runtime remain enabled.
+
+`test_gh_aw_runtime_contracts.py` exercises these authored templates using the
+actual scripts installed by the pinned setup action. It also checks the review
+buffer's final GitHub request with isolated API doubles. Run after setup:
+
+```bash
+python .github/scripts/test_gh_aw_runtime_contracts.py --actions-dir "$RUNNER_TEMP/gh-aw/actions"
+```
+
+These are local component checks, not proof of hosted review permissions,
+publication, or GitHub UI rendering. Do not dispatch a workflow or post a test
+review merely to validate the template.
+
+Local regression evidence (November 3, 2026) uses the unchanged v1.0.1 setup
+scripts at `221ba4f4319de6b8e809d1a15528b3ae6a818aa5` and Node.js v24.22.1.
+The same retained tests and assertions were run against an isolated archive of
+base `d9e38dc463365dc12f714db14815b46dedb0ed15` and the corrected sources:
+
+| Contract / test | Baseline | Corrected |
+| --- | --- | --- |
+| `test_authored_test_review_footer_publishes_complete_advisory_review` | Fails inside the real renderer with `Report nodes cannot appear in scalar fields`, before an API request. | Passes; asserts the exact composed advisory review payload, attribution, credits, commit, and diagnostic-read isolation. |
+| `test_public_review_resolver_honors_explicit_public_only_policy` | Fails: actual minimum integrity is `approved`, not `none`. | Passes; public-only visibility remains `public`. |
+
+The paired selection executed two tests in each state: baseline exit 1 with
+two intended failures; corrected exit 0 with two passes and no skips. With
+`$actions` pointing to the pinned setup scripts and `$baseline` to the isolated
+archive's `.github\workflows` directory, reproduce the identical selection:
+
+```powershell
+$cases = @(
+  'GhAwRuntimeContractTests.test_authored_test_review_footer_publishes_complete_advisory_review'
+  'GhAwRuntimeContractTests.test_public_review_resolver_honors_explicit_public_only_policy'
+)
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions --workflow-root $baseline @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions -v
+```
+
+The full final suite passes all 13 methods, including all 33 authored footer
+templates with and without history. Existing warning-contract, checkout,
+firewall, and review-input suites pass another 64 tests. Strict compilation
+passes all 37 inputs with zero warnings and ShellCheck covers 2,103 resources;
+the three final public-scoped expert consumers also pass 186 lint resources.
+The action-pin audit passes 2,759 references across 58 files. These results do
+not include a live model, hosted MCP access, review publication, or GitHub UI
+rendering.
+
 #### Category-specific threat-detection evidence
 
 [Run 38707575125](https://github.com/microsoft/testfx/actions/runs/38707575125)
@@ -132,6 +195,30 @@ base revision. The existing pin auditor checked the two reviewers plus
 zero afterwards. The repository-wide audit still reports 36 pre-existing findings
 outside these reviewers (38 before this change). No live detector replay or
 workflow dispatch was performed; the model's regression sensitivity is unproven.
+
+### Expert-review input contract
+
+[Run 41639103767](https://github.com/microsoft/testfx/actions/runs/41639103767)
+failed earlier: the public-repository default required `approved` integrity,
+so the GitHub MCP server filtered the unapproved PR diff before delegation.
+The three expert-review workflows now explicitly accept unapproved PR content
+as data, like the test reviewer, with `min-integrity: none` and shell execution
+disabled. The public-repository visibility filter, read-only MCP toolsets,
+trigger eligibility, existing credentials, threat detection, and bounded review
+publication remain in place. Untrusted diffs must never become instructions.
+
+The shared prompt also resolves the PR number from centralized slash-command
+`aw_context` for `/review`, in addition to PR/comment event fields. A required
+diff-read failure reports both missing data and a terminal incomplete result;
+it must not pretend that delegation or review succeeded.
+Resolve the fallback in frontmatter `env.REVIEW_PR_NUMBER` and reference that
+environment value in the prompt: v1.0.1 rejects `fromJSON(...)` directly in
+runtime-imported prompt text. Keep `allowed-repos: public` explicit too;
+setting only `min-integrity: none` otherwise changes the compiler's repository
+scope default to `all`.
+The pinned-runtime regression suite covers public-repository policy resolution
+and compiled consumer controls; command identity and incomplete instructions
+are static contracts, not evidence that a live model follows them.
 
 ### Firewall access for repository work
 
