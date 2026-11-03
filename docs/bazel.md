@@ -1,11 +1,12 @@
 # Experimental native Bazel build
 
 This branch provides a **staged development build, not a drop-in replacement for
-the shipping MSBuild/Arcade pipeline**. Bazel compiles 35 of the 41 projects under
-`src`, including a .NET 8/9/10/11 matrix for the portable assemblies, without
-running MSBuild or consuming its outputs. Three experimental MTP/TRX NuGets and
-four self-contained test hosts are also produced natively. Existing release,
-signing, and official packing workflows remain unchanged.
+the shipping MSBuild/Arcade pipeline**. The portable graph compiles 35 projects
+under `src` for .NET 8/9/10/11 without running MSBuild or consuming its outputs.
+Separate compatibility targets provide 26 netstandard2.0 and five net462 source
+variants. Native packaging now produces ten experimental MTP/MSTest/analyzer/SDK
+NuGets, alongside self-contained test hosts. Existing release, signing-service,
+and official packing workflows remain unchanged.
 
 ## Getting started
 
@@ -33,14 +34,23 @@ self-contained publishers on their actual .NET 8/9/10/11 runtimes.
 
 The wrapper pins and verifies Bazel **9.1.1**. Bzlmod pins `rules_dotnet` commit
 **add5c92b30888a70aa951de1744a770b8f8ef436**, with an integrity-checked archive and
-a scoped compatibility patch. Its toolchain downloads SDK
+a set of scoped compatibility patches. Its default toolchain downloads SDK
 **11.0.100-rc.3.26522.148** (runtime **11.0.0-rc.3.26522.148**). Neither the
 machine SDK nor `global.json` selects this experimental compiler.
 
-The repository's exact .NET 12 engineering SDK archive is now available on
-`ci.dot.net`, but its public release-metadata endpoint is absent. Integrating that
-SDK is still required for compiler parity; this build does not silently replace
-the repository pin or claim to use it.
+The exact `global.json` SDK, **12.0.100-alpha.1.26509.101**, is also available as
+an explicit, checksum-pinned compiler/runtime choice:
+
+```powershell
+.\eng\bazel.ps1 build //:managed_all --extra_toolchains=@dotnet_engineering_toolchains//:all
+```
+
+This opt-in uses SDK12's real compiler and execution runtime while retaining
+the published SDK11 reference/RID-pack policy for net8.0 through net11.0.
+It does not claim SDK12 bundled-pack defaults or net12.0 targeting.
+`eng/bazel/verify-engineering-sdk.ps1` audits an actual action-graph capture;
+the decision record distinguishes successful native builds/consumers from
+synthetic verifier checks. The default remains SDK11.
 
 The bootstrap supports Windows x64, Linux x64, and macOS arm64. Windows was
 executed locally; the added Windows/Linux CI job is configuration, not evidence
@@ -78,6 +88,8 @@ runfiles settings.
 | --- | --- |
 | `//:managed` | 35 source projects in the selected framework configuration (net10.0 by default). |
 | `//:managed_all` | The same graph built for net8.0, net9.0, net10.0, and net11.0, retaining fixed-framework analyzers/generators and server-client validation. |
+| `//:managed_compatibility` | All 26 netstandard2.0 and five net462 source variants, with exact-framework inventories. |
+| `//:managed_netstandard2_0`, `//:managed_net462` | The respective compatibility subgraphs; individual labels use `_netstandard2_0` or `_net462` suffixes. |
 | `//:explorer_released` | Existing platform explorer compiled against its released MTP 2.5.2 packages. |
 | `//:explorer` | The same sample compiled against this checkout's MTP and TRX assemblies. |
 | `//:simple1` | Existing `samples/public/mstest-runner/Simple1`, using the source-built MSTest runner and reporters. |
@@ -87,36 +99,44 @@ runfiles settings.
 | `//:adapter_tests` | All 152 existing adapter tests, using `TestContainer`. |
 | `//:platform_services_tests` | All 1,215 existing platform-services tests, using `TestContainer`. |
 | `//:build_tools_tests` | Thirteen cases for RESX/XLF handling, version/build-stamp generation, and experimental package-version validation. |
+| `//:reference_alias_tests` | Nine cases for aliases, signed friend access, emitted public keys, and satellite identity. |
+| `//:sdk_package_tests` | Twelve cases for native SDK/meta-package generation and dependency/asset flow. |
+| `//:compatibility_reference_tests` | Four analysis tests for package version/TFM precedence and preservation of native/independent references. |
 | `//:protocol_contract_tests` | All 27 existing protocol-contract cases, compiling the shared wire sources independently. |
 | `//:source_generation_tests` | All 197 existing source-generator cases, retaining method parallelism with four workers. |
 | `//:vstest_bridge_tests` | All 202 existing bridge cases, retaining method-level parallelism. |
 | `//:packages` | Experimental `Microsoft.Testing.Platform`, `Microsoft.Testing.Extensions.TrxReport.Abstractions`, and `Microsoft.Testing.Extensions.TrxReport` NuGets, each with four portable TFMs. |
+| `//:analyzers_package` | Native MSTest.Analyzers package, including C#/VB analyzers, C# fixes, satellites and generated analysis-mode configs. |
+| `//:mstest_packages` | Native framework, adapter, Telemetry and Platform.MSBuild packages; real netstandard task assemblies are bundled at their required paths. |
+| `//:mstest_package_closure` | Those four packages plus the original three MTP/TRX packages and analyzers: eight native archives. |
+| `//:mstest_package`, `//:mstest_sdk_package` | Native MSTest meta-package and MSTest.Sdk; together with the closure above, ten packages for isolated consumers. |
 | `//:published_samples` | Self-contained platform explorer layouts for .NET 8/9/10/11 on the selected host RID. |
 | `//:platform_tests` | Full 3,380-case MTP suite, preserving method-level parallelization. Two real Windows impersonation cases are host-blocked in local validation; this target is deliberately not part of `baseline_tests`. |
 
 The default configuration remains `net10.0`; `managed_all` explicitly builds the
 four-framework matrix. The assertion generator, MSTest
 analyzers/code fixes, and MSTest source generator retain `netstandard2.0`;
-the server-client validation assembly retains `net8.0`. This is **not** the
-full matrix of their project files: netstandard and .NET Framework variants of
-other assemblies and Windows-qualified TFMs remain outside the current graph.
+the server-client's default validation assembly retains `net8.0`.
+`managed_compatibility` explicitly selects the additional non-Windows-qualified
+project variants rather than relying on compatible-framework fallback.
+Windows-qualified/workload targets and full runtime parity remain separate gates.
 Ordinary test launches use the selected SDK's .NET 11 runtime; the separate
 self-contained publisher checks prove execution on each actual runtime.
 
 The six source projects outside `managed` are:
 
-| Project | Remaining work |
+| Project | Dedicated target or remaining work |
 | --- | --- |
-| `MSTest.Analyzers.Package` | Analyzer package assembly/layout orchestration. |
-| `MSTest` | Meta-package dependencies and packed assets. |
-| `MSTest.Sdk` | SDK templates, package metadata, and consumer build hooks. |
+| `MSTest.Analyzers.Package` | `//:analyzers_package`. |
+| `MSTest` | `//:mstest_package`. |
+| `MSTest.Sdk` | `//:mstest_sdk_package`. |
 | `Microsoft.Testing.Extensions.PackagedApp.MSBuild` | Exact controller/package layout and cross-TFM assets. |
 | `Microsoft.Testing.Extensions.PackagedApp.Controller` | Windows-targeting packs and controller apphost deployment. |
 | `TestFramework.Windows.UIAutomation` | Windows/WPF targeting and runtime validation. |
 
-Not yet migrated or established: the other unit-test projects, integration and
-package-consuming acceptance suites, every public example, the complete
-.NET Framework/netstandard matrix, WinRT/UWP/WinUI/WPF workloads, AOT,
+Not yet migrated or established: all remaining unit-test projects, the complete
+integration/acceptance suites, every public example, complete legacy runtime
+behavior, WinRT/UWP/WinUI/WPF workloads, AOT,
 SourceLink/API-audit parity, official package layout/signing/publishing,
 and downstream servicing. Native assemblies and satellites now use the same
 public-only Microsoft signing key as the repository's Arcade development build
@@ -261,8 +281,25 @@ now retain their incoming configuration. Reassess these changes on an upgrade.
 Packages carry an explicit `-preview.bazel` prerelease version derived from
 `eng/Versions.props`; they are not official shipping packages. They include the
 portable DLLs, XML documentation, PDBs, satellite resources, readme, and relevant
-`build`/`buildTransitive` assets. MSTest, analyzer, SDK/meta-package, Windows,
-and netstandard package parity is still outstanding.
+`build`/`buildTransitive` assets. Dedicated analyzer, MSTest and SDK/meta-package
+validators exercise the native layouts; complete official package/workload and
+release parity remains outstanding.
+
+```powershell
+.\eng\bazel.ps1 build //:mstest_package_closure //:mstest_package //:mstest_sdk_package
+.\eng\bazel\validate-analyzers-package.ps1 -Jobs 2 -EvidenceRoot 'C:\tfb\analyzer-evidence'
+.\eng\bazel\validate-mstest-packages.ps1 -OutputRoot 'C:\tfb\mstest-evidence' -VerifySatelliteSensitivity
+.\eng\bazel\validate-sdk-packages.ps1 -Jobs 2 -EvidenceRoot 'C:\tfb\sdk-evidence'
+```
+
+Use unique writable evidence roots for concurrent worktrees. The analyzer gate
+checks actual C#/VB compiler diagnostics, generated configs, fixes and an older
+Roslyn host. The MSTest gate checks loaded native hashes, registration,
+localization, actual four-runtime execution and MSBuild parent exits; its optional
+sensitivity check repacks the adapter without one required satellite. The SDK
+gate distinguishes layout/evaluation from execution of default/None SDK and
+meta-package consumers, including the pinned external CodeCoverage dependency.
+`-LayoutOnly` deliberately omits composed execution and is not a consumer pass.
 
 `validate-packages.ps1` stages the three NuGets in an isolated local feed and
 restores into a fresh cache. Source mapping prevents first-party packages from

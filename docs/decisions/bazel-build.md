@@ -25,8 +25,9 @@ The initial producer/consumer contract is:
   modules; one successful module must not hide a failing one.
 - Existing MTP lifecycle, controller/child launch, discovery, filtering, report
   generation, and cancellation semantics are not intentionally changed.
-- Bazel outputs are development artifacts, not signed or published replacement
-  NuGets. Package/SDK/release parity requires separate shipping-layout validation.
+- Bazel outputs are development artifacts, not officially signed or published
+  replacement NuGets. Package/SDK/release parity requires separate shipping-layout
+  validation.
 
 ## Research and experiments
 
@@ -2457,3 +2458,39 @@ again returned SDK `11.0.100-rc.3.26522.148` and runtime
 unchanged. This refresh remains local Windows x64 evidence for the bounded
 MTP/TRX contract, not official signature completion, a CI result, or validation
 of additional SDK/CodeCoverage/Windows-controller consumers.
+
+## Parent integration checkpoint (2026-11-03)
+
+At exact source revision `a6c666d157e8ad8af694c1cfa049959b4da6164c`, the
+combined public-signed modern and compatibility graph ran successfully:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfb\aliases-df07ee'
+.\eng\bazel.ps1 --host_jvm_args=-Xmx2g test //:managed_all //:managed_compatibility //:portable_tests //:reference_alias_tests //:sdk_package_tests //:compatibility_reference_tests //:compatibility_explorer_test //:framework_netstandard2_0_consumer_test //:terminal_contract_tests //:self_real_tests --jobs=2 --nocache_test_results --test_output=errors --noshow_progress
+```
+
+Exit 0: all 20 test targets passed. Twelve fresh TRX reports contain **3,501**
+executed/passed cases with no skips or failures. The other eight reports are
+Bazel analysis/executable-wrapper checks and are recorded separately rather
+than presented as additional MSTest cases. Their XML and the build-event target
+summaries were also reconciled.
+
+The build includes the four modern TFMs and all **26 netstandard2.0 plus five
+net462** variants. Both compatibility inventories were retained, and all 31
+physical implementation DLLs were read back, hashed, and verified to carry
+`B03F5F7F11D50A3A`. This checks implementation outputs, not unrequested satellite
+sidecars; runtime/package consumers must build and verify their own full layouts.
+
+Evidence is retained in
+`C:\tfb\parent-integration-evidence\a6c666d157`: source identity, complete build
+events/log, all 20 reports, `test-results.json`, both framework inventories, and
+`signed-compatibility-assemblies.json`. Only the user guide changed while the
+run was active. The 718.286-second elapsed time is a combined integration run
+with existing action-cache hits, not a cold-cache or full-cache performance
+benchmark.
+
+The subsequent source-path patch and newly integrated aliased suites require
+their own final checks. This checkpoint does not include the full MTP suite's
+two known host failures, the remaining analyzer suite, Windows-controller
+integration, CI execution, or official release/servicing certification. The
+separate lane records bind each package/SDK result to its actual source state.
