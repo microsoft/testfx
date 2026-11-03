@@ -110,7 +110,9 @@ Console.WriteLine(JsonSerializer.Serialize(new
 {
     RoslynVersion = typeof(Compilation).Assembly.GetName().Version!.ToString(),
     AnalyzerPath = analyzerAssembly.Location,
+    AnalyzerVersion = analyzerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
     CodeFixPath = fixesAssembly.Location,
+    CodeFixVersion = fixesAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
     AnalyzerTypeCount = analyzerTypes.Count(type => typeof(DiagnosticAnalyzer).IsAssignableFrom(type)),
     CodeFixTypeCount = fixerTypes.Count(type => typeof(CodeFixProvider).IsAssignableFrom(type)),
     DiagnosticId = diagnostics[0].Id,

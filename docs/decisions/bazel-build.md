@@ -95,8 +95,8 @@ campaign. Logs and TRX files are retained in the parent session's
 Starting revision: `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`.
 The producer is the native `//:analyzers` and `//:codefixes` netstandard2.0
 assemblies, their XLF-derived satellites, and `//:globalconfigs_generator`.
-`//:analyzers_package` will expose one experimental `MSTest.Analyzers` NuGet,
-using `VersionPrefix` from `eng/Versions.props` with `-bazel`, plus
+`//:analyzers_package` exposes one experimental `MSTest.Analyzers` NuGet,
+using `VersionPrefix` from `eng/Versions.props` with `-preview.bazel`, plus
 `NuGetPackInfo` for the framework/adapter and SDK package lanes.
 The coordinator subsequently changed the final experimental suffix to
 `-preview.bazel`: the original `-bazel` sorts below a required MTP dependency
@@ -218,10 +218,52 @@ binlog. The standalone host invocation is the recorded native `dotnet.exe`,
 directory and `MissingTestClass.cs`, in that order. A text transcript is more
 useful than a staged IDE screenshot for this compiler/package boundary.
 
-The shared `-preview.bazel` prerequisite and final-identity validation are still
-pending at this checkpoint. Combined shipping layouts, release signing, Linux,
+The shared `-preview.bazel` prerequisite
+`2d79cf530332c91d54e62f95f37b85c784984209` was applied after this checkpoint,
+preserving both lanes' decision-record sections. The final validator also checks
+both loaded analyzer/code-fix informational versions against the package version,
+and supports an absolute `-EvidenceRoot` like the shared validators.
+Final-identity validation is recorded below. Combined shipping layouts, release signing, Linux,
 IDE UI integration and downstream release/servicing remain coordinator-owned
 gates; this evidence does not claim them.
+
+#### Final analyzer package identity validation
+
+The corrected package is `MSTest.Analyzers` **4.6.0-preview.bazel**. Both loaded
+DLLs report the same informational version, retain their netstandard2.0 identity
+and reference Roslyn 3.11.0.0. The final package has 55 entries and SHA-256
+`F45295E95D041CF2256F906BEA63B9D5125DFD0019F64B6DD661E605BEE074AA`.
+
+Executed from this lane's worktree:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfba\6a8043a5c4a6'
+.\eng\bazel\validate-analyzers-package.ps1 -EvidenceRoot 'C:\tfba\6a8043a5c4a6\analyzer-evidence'
+```
+
+Exit **0**, all **15** checks passed. Evidence:
+`C:\tfba\6a8043a5c4a6\analyzer-evidence\20261103-142351-14e2448a`.
+`validation.json` records the package hash and loaded DLL paths/versions,
+commands, child exits and case outcomes; SARIF and binlogs establish compiler
+behavior and SDK selection. This run used the shared prerequisite applied as
+`ef4ae3790425d5472d7f9e8bec4b977ff781ce24`, with the lane's final validator and
+probe changes. Relative evidence roots and `-Jobs 0` were also rejected before
+build/restore execution.
+
+| Requirement | Evidence |
+| --- | --- |
+| Exact C#/VB package layout, resources, generated configs, assets and no dependency leakage | `package-layout-and-private-dependencies`: exact entries plus native/source payload hashes; fresh-cache restore checks. |
+| Enabled, suppressed and corrected compiler behavior | `cs-default-missing-class`, `cs-recommended-missing-class`, `cs-all-missing-class`, `cs-none-missing-class`, `cs-default-fixed`, `cs-default-disabled`, and their six `vb-` counterparts: exact MSTEST0030 count, exit and selected assets. |
+| Legacy compiler APIs, code-fix execution and localized resources | `roslyn-3.11-codefix-and-satellites`: Roslyn 3.11 host, 83 analyzer/52 fixer types loadable, actual diagnostic/fix, exact resulting source, French strings and package-aligned versions. |
+| Native producer, not an MSBuild wrapper | `native-producer-action-graph`: compiler, generator and NuGet actions inspected; MSBuild remains exclusively in the external consumers. |
+
+`bazel query 'labels(srcs, //:packages)'` still returned exactly
+`//:platform_package`, `//:trx_abstractions_package`, and `//:trx_package`.
+The new target's queried `DefaultInfo` contains one `.nupkg`; its
+`NuGetPackInfo` exposes `package_id="MSTest.Analyzers"`, `version=None`,
+`version_file=analyzers_package/version.txt`, `target_frameworks=["netstandard2.0"]`,
+and the two bundled analyzer/code-fix assembly names. Framework/adapter and SDK
+packages can consume that provider without inventing versions or dependencies.
 
 ### 2026-11-02: extending the migration after upstream SDK discovery
 

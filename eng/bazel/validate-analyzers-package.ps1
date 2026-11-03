@@ -7,7 +7,8 @@
 param(
     [string] $PackagePath,
     [ValidateRange(1, 256)]
-    [int] $Jobs = 2
+    [int] $Jobs = 2,
+    [string] $EvidenceRoot
 )
 
 $ErrorActionPreference = 'Stop'
@@ -15,7 +16,11 @@ $PSNativeCommandUseErrorActionPreference = $false
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
-$directory = Join-Path $root "artifacts\bazel-analyzer-validation\$run"
+if ($EvidenceRoot -and -not [IO.Path]::IsPathFullyQualified($EvidenceRoot)) {
+    throw 'EvidenceRoot must be an absolute path.'
+}
+$evidenceBase = if ($EvidenceRoot) { $EvidenceRoot } else { Join-Path $root 'artifacts\bazel-analyzer-validation' }
+$directory = Join-Path $evidenceBase $run
 $feed = Join-Path $directory 'feed'
 $consumer = Join-Path $directory 'consumer'
 $cache = if ($env:TESTFX_BAZEL_OUTPUT_ROOT) {
@@ -152,7 +157,7 @@ try {
     [xml]$versions = Get-Content -LiteralPath 'eng\Versions.props' -Raw
     $prefixes = @($versions.SelectNodes('//*[local-name()="VersionPrefix"]'))
     if ($prefixes.Count -ne 1) { throw 'Expected one MSTest version prefix.' }
-    $expectedVersion = $prefixes[0].InnerText + '-bazel'
+    $expectedVersion = $prefixes[0].InnerText + '-preview.bazel'
     $null = Invoke-Step 'native-pack' $bazel @('build', '//:analyzers_package', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
     $executionRoot = (& $bazel info execution_root).Trim()
     if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
@@ -336,7 +341,8 @@ End Class
         $expectedTitle = $catalog.SelectSingleNode('//*[local-name()="trans-unit" and @id="TypeContainingTestMethodShouldBeATestClassTitle"]/*[local-name()="target"]').InnerText
         [xml]$fixCatalog = Get-Content -LiteralPath (Join-Path $root 'src\Analyzers\MSTest.Analyzers.CodeFixes\xlf\CodeFixResources.fr.xlf') -Raw
         $expectedFix = $fixCatalog.SelectSingleNode('//*[local-name()="trans-unit" and @id="AddTestClassFix"]/*[local-name()="target"]').InnerText
-        if ($legacyRecord.RoslynVersion -cne '3.11.0.0' -or $legacyRecord.DiagnosticId -cne 'MSTEST0030' -or
+        if ($legacyRecord.AnalyzerVersion -cne $expectedVersion -or $legacyRecord.CodeFixVersion -cne $expectedVersion -or
+            $legacyRecord.RoslynVersion -cne '3.11.0.0' -or $legacyRecord.DiagnosticId -cne 'MSTEST0030' -or
             $legacyRecord.FrenchTitle -cne $expectedTitle -or $legacyRecord.FrenchCodeFix -cne $expectedFix) {
             throw 'The packaged assemblies failed the Roslyn API or localized resource contract.'
         }
