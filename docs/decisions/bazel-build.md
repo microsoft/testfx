@@ -265,6 +265,54 @@ The new target's queried `DefaultInfo` contains one `.nupkg`; its
 and the two bundled analyzer/code-fix assembly names. Framework/adapter and SDK
 packages can consume that provider without inventing versions or dependencies.
 
+#### Generated-config counterfactual
+
+Revision `6f69c9d135c542f6c1f3bacf4e003da66506e9f3` was tested without source
+changes. A separate native packer request copied the correct package inputs,
+changing only `dotnet_diagnostic.MSTEST0030.severity = warning` to `none` in
+`globalconfigs/mstest-default.globalconfig`. The original action inputs and
+workspace files were not edited. The already-built upstream NuGet packer
+executed successfully (exit 0); a byte comparison of all 55 archive entries
+confirmed that only this one globalconfig differed.
+
+Mutation package SHA-256:
+`FEB7BDCACAD3308BBF54F05C1ECC7F272D843A532D289395B48E05629C87BDE2`.
+Original/mutant config SHA-256:
+`2DCA22D15DC71132E7D03709B2114A05B613B4A306D1F577F9B8278CBC68A9FC` /
+`FC7FF585809806B9B95606D156BE4BF8E78FCB002F4CF567852F445720F2F931`.
+The native request, exact packer path, input paths, mutation description and
+exit are retained in `request.json` / `mutation.json` under
+`C:\tfba\6a8043a5c4a6\analyzer-counterfactual\76facf33252d4f6f93cdc6eb80a32a72`.
+
+The unchanged validation script was run against that package:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfba\6a8043a5c4a6'
+.\eng\bazel\validate-analyzers-package.ps1 `
+    -EvidenceRoot 'C:\tfba\6a8043a5c4a6\analyzer-counterfactual-evidence' `
+    -PackagePath 'C:\tfba\6a8043a5c4a6\analyzer-counterfactual\76facf33252d4f6f93cdc6eb80a32a72\MSTest.Analyzers.4.6.0-preview.bazel.nupkg'
+```
+
+| Contract / case | Without required behavior | Correct package | Evidence |
+| --- | --- | --- | --- |
+| Packaged Default analysis / `cs-default-missing-class` | Executed: detected. Compiler completed successfully, exit 0, with zero MSTEST0030 diagnostics; the outer assertion expected exit 1 and failed. | Executed: passed before and after mutation, compiler exit 1 with exactly one MSTEST0030 error; outer validation exit 0. | Same script/fixture/assertions; fresh feeds/caches; package hashes and SARIF. |
+
+This is a deliberate behavior-removal comparison, not a missing-tool, restore,
+compile-setup, or missing-symbol failure. The mutant's structural check passed,
+then the intended behavioral assertion failed: outer exit **1**, two checks
+executed (one passed, one failed). Fail-fast left the other 13 checks unexecuted;
+they are not counted as passing, failing, or paired mutation evidence.
+Red evidence:
+`C:\tfba\6a8043a5c4a6\analyzer-counterfactual-evidence\20261103-143726-14dd2d2b`.
+
+The original command was then rerun with
+`-EvidenceRoot 'C:\tfba\6a8043a5c4a6\analyzer-final-evidence'`, without
+`-PackagePath`. Exit **0**, all **15** checks passed on the unchanged revision
+and the original `F45295E9...` package.
+Final clean-revision evidence:
+`C:\tfba\6a8043a5c4a6\analyzer-final-evidence\20261103-143911-b8403951`.
+Only documentation was added after this run.
+
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
 The user authorized implementing as much of the remaining migration as possible.
