@@ -95,6 +95,7 @@ runfiles settings.
 | `//:simple1` | Existing `samples/public/mstest-runner/Simple1`, using the source-built MSTest runner and reporters. |
 | `//:baseline_tests` | Seven test targets: the three sample smoke runs, existing framework/adapter/platform-services suites, and build-tool regression cases. |
 | `//:portable_tests` | The baseline plus protocol-contract, source-generation, and VSTestBridge suites: 3,443 cases across ten targets. |
+| `//:all_unit_tests` | All thirteen original unit-test projects, including the full MTP suite and its known Windows host failures. No cases or original skips are filtered out. |
 | `//:framework_tests` | All 1,634 existing framework tests, using the existing sequential `TestContainer` engine. |
 | `//:adapter_tests` | All 152 existing adapter tests, using `TestContainer`. |
 | `//:platform_services_tests` | All 1,215 existing platform-services tests, using `TestContainer`. |
@@ -105,12 +106,21 @@ runfiles settings.
 | `//:protocol_contract_tests` | All 27 existing protocol-contract cases, compiling the shared wire sources independently. |
 | `//:source_generation_tests` | All 197 existing source-generator cases, retaining method parallelism with four workers. |
 | `//:vstest_bridge_tests` | All 202 existing bridge cases, retaining method-level parallelism. |
+| `//:terminal_contract_tests`, `//:self_real_tests` | The existing 15 terminal-contract and 24 self-real cases, with their original method/class scheduling. |
+| `//:msbuild_tests` | All 388 existing cases, including the real native netstandard task fixture and reference aliases. |
+| `//:server_client_tests` | Native self-contained host and original child-process bootstraps; 305 passes and eight original Unix-only skips on Windows. |
+| `//:extension_tests` | Original extension sources, aliases and annotation fixtures; 2,863 passes and seven original skips on Windows. |
+| `//:analyzer_tests` | All 2,102 existing analyzer/code-fix cases with ordinary test-subject references, generated Recommended policy and isolated reference-pack caches. |
 | `//:packages` | Experimental `Microsoft.Testing.Platform`, `Microsoft.Testing.Extensions.TrxReport.Abstractions`, and `Microsoft.Testing.Extensions.TrxReport` NuGets, each with four portable TFMs. |
 | `//:analyzers_package` | Native MSTest.Analyzers package, including C#/VB analyzers, C# fixes, satellites and generated analysis-mode configs. |
 | `//:mstest_packages` | Native framework, adapter, Telemetry and Platform.MSBuild packages; real netstandard task assemblies are bundled at their required paths. |
 | `//:mstest_package_closure` | Those four packages plus the original three MTP/TRX packages and analyzers: eight native archives. |
 | `//:mstest_package`, `//:mstest_sdk_package` | Native MSTest meta-package and MSTest.Sdk; together with the closure above, ten packages for isolated consumers. |
 | `//:published_samples` | Self-contained platform explorer layouts for .NET 8/9/10/11 on the selected host RID. |
+| `//:windows_libraries` | Four WinRT PackagedApp and four WPF-reference UIAutomation variants, plus three modern-UWP and three WinUI library variants. |
+| `//:windows_probes` | Seven native self-contained library consumers; no XAML application compilation. |
+| `//:windows_controllers` | Both original net8/net9 win-x64 framework-dependent apphost layouts. |
+| `//:windows_app_model` | A native console host for real loose-MSIX registration/activation and controller checks. |
 | `//:platform_tests` | Full 3,380-case MTP suite, preserving method-level parallelization. Two real Windows impersonation cases are host-blocked in local validation; this target is deliberately not part of `baseline_tests`. |
 
 The default configuration remains `net10.0`; `managed_all` explicitly builds the
@@ -119,7 +129,8 @@ analyzers/code fixes, and MSTest source generator retain `netstandard2.0`;
 the server-client's default validation assembly retains `net8.0`.
 `managed_compatibility` explicitly selects the additional non-Windows-qualified
 project variants rather than relying on compatible-framework fallback.
-Windows-qualified/workload targets and full runtime parity remain separate gates.
+Windows-qualified targets are opt-in; full workload/runtime parity remains a
+separate gate.
 Ordinary test launches use the selected SDK's .NET 11 runtime; the separate
 self-contained publisher checks prove execution on each actual runtime.
 
@@ -130,13 +141,15 @@ The six source projects outside `managed` are:
 | `MSTest.Analyzers.Package` | `//:analyzers_package`. |
 | `MSTest` | `//:mstest_package`. |
 | `MSTest.Sdk` | `//:mstest_sdk_package`. |
-| `Microsoft.Testing.Extensions.PackagedApp.MSBuild` | Exact controller/package layout and cross-TFM assets. |
-| `Microsoft.Testing.Extensions.PackagedApp.Controller` | Windows-targeting packs and controller apphost deployment. |
-| `TestFramework.Windows.UIAutomation` | Windows/WPF targeting and runtime validation. |
+| `Microsoft.Testing.Extensions.PackagedApp.MSBuild` | Windows NuGet/SDK routing and complete packaged build assets remain outstanding. |
+| `Microsoft.Testing.Extensions.PackagedApp.Controller` | `//:windows_controllers`. |
+| `TestFramework.Windows.UIAutomation` | `//:windows_ui_automation_all`. |
 
-Not yet migrated or established: all remaining unit-test projects, the complete
-integration/acceptance suites, every public example, complete legacy runtime
-behavior, WinRT/UWP/WinUI/WPF workloads, AOT,
+Native targets now exist for all thirteen repository unit-test projects; this
+does not turn the known full-MTP host failures into a passing suite.
+Not yet migrated or established: the complete integration/acceptance suites,
+every public example, complete legacy runtime behavior, native XAML/UI-thread
+and classic-UWP/AppContainer execution, NativeAOT execution,
 SourceLink/API-audit parity, official package layout/signing/publishing,
 and downstream servicing. Native assemblies and satellites use the same
 public-only Microsoft signing key as the repository's Arcade development build
@@ -144,10 +157,10 @@ public-only Microsoft signing key as the repository's Arcade development build
 needed by separately shipped extensions; it is not official signature completion
 or package publication, and requires no private key or machine verification change.
 
-The portable `PackagedApp` assembly is included; its Windows register/activate
-flavor and real packaged-app execution are **not** implied by that compilation.
-Likewise, building the server-client validation DLL does not validate the
-source-only package's consumer transformation.
+Building portable `PackagedApp` alone does not prove activation; the separate
+Windows gate below exercises that boundary. Building the server-client
+validation DLL likewise does not validate the source-only package's consumer
+transformation.
 
 ### Running applications and selecting tests
 
@@ -340,6 +353,30 @@ The same script copies each self-contained publisher outside Bazel's output
 tree, points `DOTNET_ROOT` at a nonexistent directory, checks the actual runtime
 major and loaded CoreLib location, and repeats pass/failure/zero-result checks.
 Evidence is written to `artifacts/bazel-package-validation/<run>`.
+
+## Native Windows validation
+
+On an existing AppX-capable Windows session:
+
+```powershell
+.\eng\bazel\windows\validate.ps1 -ArtifactsDirectory 'C:\tfb\windows-evidence'
+.\eng\bazel\windows\validate-app-model.ps1 -ArtifactsDirectory 'C:\tfb\app-model-evidence'
+```
+
+The first gate builds all fourteen library variants and runs seven copied
+self-contained consumers, checking actual runtimes, loaded hashes, public-key
+identity, Windows minimums and projection selection. The second builds both
+controllers and the native console host, then exercises unpackaged and
+suppressed execution, real registration/activation, 0/2/9 results, malformed
+bootstrap exit 5 and discovery without the execution handshake. It verifies
+the run-owned package/install identity and reads back empty registration after
+cleanup. It does not alter Developer Mode, ACLs, global SDKs or verification
+policy.
+
+This is a non-XAML loose-package validation, not a signed MSIX archive or a
+WinUI/XAML application pipeline. The bounded standalone XAML compiler
+experiments did not produce C# or XBF; no MSBuild hybrid bridge is presented
+as a native build. These Windows gates are separate from the portable CI job.
 
 ## Evidence and next migration gates
 

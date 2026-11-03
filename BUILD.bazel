@@ -254,3 +254,22 @@ test_suite(
         ":vstest_bridge_tests",
     ],
 )
+
+test_suite(
+    name = "all_unit_tests",
+    tests = [
+        ":adapter_tests",
+        ":analyzer_tests",
+        ":extension_tests",
+        ":framework_tests",
+        ":msbuild_tests",
+        ":platform_services_tests",
+        ":platform_tests",
+        ":protocol_contract_tests",
+        ":self_real_tests",
+        ":server_client_tests",
+        ":source_generation_tests",
+        ":terminal_contract_tests",
+        ":vstest_bridge_tests",
+    ],
+)

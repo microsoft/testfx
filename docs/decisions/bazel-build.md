@@ -3088,3 +3088,44 @@ No genuine public-signing load failure was observed with correctly staged
 artifacts on this installed CLR. Exact .NET Framework 4.6.2-runtime execution,
 environments with different verification policy, SDK 12, official signing and
 shipping-package certification remain separate validation boundaries.
+
+## Combined Windows and unit-test surfaces (2026-11-03)
+
+The Windows patch and package-origin reference patch both touch the version
+comparison context in `collect_compile_info`. Their first combined fetch failed
+before any compilation because the latter still expected the former's old
+strict version-parser line. The reference patch was rebased onto the Windows
+patch's relaxed, four-component-capable comparison; its reference-selection
+logic was unchanged. All six combined targeting/reference analysis targets then
+passed, preserving both contracts.
+
+At source revision `2e461b38250bfda24d033c0d4c47d5c39ef506da`, the parent ran:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfb\aliases-df07ee'
+.\eng\bazel\windows\validate.ps1 -ArtifactsDirectory 'C:\tfb\parent-integration-evidence\windows-composed\libraries'
+.\eng\bazel\windows\validate-app-model.ps1 -ArtifactsDirectory 'C:\tfb\parent-integration-evidence\windows-composed\app-model'
+```
+
+Both exited 0. The library gate rebuilt all fourteen variants and passed seven
+copied runtime consumers (nine recorded steps). The complete app-model gate
+passed 21 recorded steps, including both original controllers, real activation,
+0/2/9 results, malformed bootstrap 5, and discovery without the execution
+handshake. Package `TestFx.Bazel.7644695c921e4c9f9d3024e9d826e7ee` was read back
+as absent after exact cleanup, both in the gate and a separate live readback.
+No machine verification, Developer Mode, ACL or SDK setting was changed.
+
+Retained evidence is
+`windows-composed/libraries/20261103-172016-c0ddf449` and
+`windows-composed/app-model/7644695c921e4c9f9d3024e9d826e7ee` beneath the parent
+evidence root. Each `validation.json` records actual source/input hashes,
+consumer paths and expected exits. A task-owned ignored `.bazelrc.local` capped
+only the Bazel JVM heap at 2 GiB; compiler selection remained SDK11. The user
+guide was the only tracked file edited during these runs.
+
+The repository contains thirteen original unit-test project files. Their
+existing native targets are now exposed together as `//:all_unit_tests`, while
+the established `portable_tests` baseline is unchanged. The new aggregate
+deliberately includes `platform_tests`; the two known host-specific failures
+and the original platform-dependent skips are not hidden to produce green
+output. This is selection plumbing, not a change to test bodies or scheduling.
