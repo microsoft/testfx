@@ -61,6 +61,7 @@ internal static partial class CommandLineOptionsValidator
         [
             "report-gh",
             "report-gh-annotations",
+            "report-gh-attachments",
             "report-gh-failure-details",
             "report-gh-groups",
             "report-gh-slow-test-notices",

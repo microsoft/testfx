@@ -12,6 +12,7 @@ internal static class GitHubActionsCommandLineOptions
     public const string GitHubActionsHistory = "report-gh-history";
     public const string GitHubActionsHistoryWindow = "report-gh-history-window";
     public const string GitHubActionsAnnotations = "report-gh-annotations";
+    public const string GitHubActionsAttachments = "report-gh-attachments";
     public const string GitHubActionsStepSummary = "report-gh-step-summary";
     public const string GitHubActionsStepSummarySections = "report-gh-step-summary-sections";
     public const string GitHubActionsFailureDetails = "report-gh-failure-details";

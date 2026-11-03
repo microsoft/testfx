@@ -29,7 +29,13 @@ internal sealed partial class GitHubActionsSummaryReporter
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
             CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
-            if (_shouldDeferToArtifactPostProcessing()
+            if (_attachments is not null)
+            {
+                await _attachments.WriteManifestAsync(module, testSessionContext.CancellationToken).ConfigureAwait(false);
+            }
+
+            if ((_isSummaryEnabled || _historyService.IsEnabled)
+                && _shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {

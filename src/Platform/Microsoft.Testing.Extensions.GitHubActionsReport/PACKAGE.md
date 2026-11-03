@@ -51,6 +51,7 @@ The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=
 | `--report-gh` | Master switch that turns the extension on (required, in addition to running on GitHub Actions) | off |
 | `--report-gh-groups on\|off` | Per-assembly log groups | on |
 | `--report-gh-annotations on\|off` | Failure and skip annotations | on |
+| `--report-gh-attachments <directory>` | Stage failed-test attachments and an association manifest for workflow upload | off |
 | `--report-gh-step-summary on\|off\|on-failure` | Markdown job summary; `on-failure` writes it only when the test invocation fails | on |
 | `--report-gh-step-summary-sections <section>...` | Job-summary content: `test-results`, `coverage`, `slow-tests`, or `all`; accepts repeated, space-separated, and comma-separated values | `all` |
 | `--report-gh-failure-details on\|off` | Expand each failed test in the job summary into a collapsible section carrying its failure message, exception type, source location and stack trace | on |
@@ -58,6 +59,79 @@ The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=
 | `--report-gh-history-window <days>` | Retain and use 1–90 days of history | 30 |
 | `--report-gh-slow-test-notices on\|off` | Slow-test notices | on |
 | `--report-gh-slow-test-threshold <duration>` | Time before a slow-test notice is emitted; accepts a bare number of seconds or a unit suffix such as `90s`, `2m`, `1.5h` | 60s |
+
+### Publish failed-test attachments
+
+Pass `--report-gh-attachments <directory>` to copy attachments declared by failed
+tests into a staging directory. This works with MSTest's `TestContext.AddResultFile`
+and frameworks using the VSTest bridge when they supply attachments. Passing,
+skipped, discovered, and superseded in-process retry results are not collected.
+Session-level artifacts, including crash and hang dumps, are outside this option.
+
+The extension does not authenticate to GitHub or upload files. Use the official
+artifact action, followed by a summary step linking its actual `artifact-url`.
+The original test summary remains available if either step is skipped or fails.
+Failure details list paths inside the archive; GitHub does not provide supported
+links to individual archive members.
+
+> [!WARNING]
+> Attachments can contain sensitive data. Opt in only after reviewing what your
+> tests attach: uploaded artifacts are accessible to people with repository read
+> access. Choose an appropriate retention period.
+
+```yaml
+steps:
+  - name: Run tests
+    run: dotnet test --report-gh --report-gh-attachments "${{ runner.temp }}/mtp-attachments"
+
+  - name: Upload failed-test attachments
+    id: attachments
+    if: always() && !cancelled()
+    uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+    with:
+      name: test-attachments-${{ github.job }}-${{ strategy.job-index }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/mtp-attachments
+      if-no-files-found: ignore
+      retention-days: 7
+
+  - name: Link failed-test attachments
+    if: always() && steps.attachments.outputs.artifact-url != ''
+    shell: pwsh
+    env:
+      ATTACHMENT_URL: ${{ steps.attachments.outputs.artifact-url }}
+    run: |
+      "## Failed-test attachments" >> $env:GITHUB_STEP_SUMMARY
+      "[Download attachments and test association manifests]($env:ATTACHMENT_URL)" >> $env:GITHUB_STEP_SUMMARY
+```
+
+For .NET SDK 8 or 9, add `--` before the platform options. The summary step above
+uses PowerShell 7, which is available on GitHub-hosted runners; choose an installed
+shell on self-hosted runners. `upload-artifact` v4+ is not supported on GitHub
+Enterprise Server; use an uploader supported by that server and only publish a
+download link when that uploader supplies one.
+
+Each test session writes a unique directory containing staged files and an
+`attachments.json` manifest (schema version 1). The manifest identifies the
+assembly, target framework, architecture, session, retry attempt, and each
+test's UID, fully qualified name, and display name. Each attachment records its
+sanitized file name, archive-relative path, byte size, and status. Only `staged`
+entries have a path. Missing or unreadable files and count/size limits are reported
+as warnings without changing the test verdict. Successful copies survive cleanup
+of the original files.
+
+Staging is limited to 25 MiB per file, 250 MiB and 1,000 attachment entries per
+module/session, and 10 files per failed test. Files are staged independently of
+the summary's 20-failure display limit; consult the manifests for failures not
+expanded in the summary. Earlier process-retry attempts can leave their own
+files and manifests in the archive; final failure details only reference the
+final attempt. Disabling failure details hides archive paths in the summary but
+does not disable staging.
+
+Use a fresh staging directory for each workflow run. Multiple modules and TFMs
+can share it, but upload it once per job rather than repeatedly updating the same
+immutable artifact. The workflow owns staging-directory cleanup and retention.
+Cancellation propagates; a hard-killed test host may leave partial output without
+a complete manifest.
 
 ### Persist test history with workflow artifacts
 
