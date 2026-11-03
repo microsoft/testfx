@@ -4,14 +4,20 @@
 #requires -Version 7.2
 
 [CmdletBinding()]
-param()
+param(
+    [ValidateRange(1, 2147483647)]
+    [int] $Jobs = 8,
+
+    [ValidateScript({ [System.IO.Path]::IsPathFullyQualified($_) })]
+    [string] $EvidenceRoot
+)
 
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
-$directory = Join-Path $root "artifacts\bazel-package-validation\$run"
+$directory = if ($EvidenceRoot) { Join-Path $EvidenceRoot $run } else { Join-Path $root "artifacts\bazel-package-validation\$run" }
 $feed = Join-Path $directory 'feed'
 $consumer = Join-Path $directory 'consumer'
 New-Item -ItemType Directory -Path $feed, $consumer | Out-Null
@@ -63,8 +69,8 @@ try {
     [xml]$versionDocument = Get-Content -LiteralPath (Join-Path $root 'eng\Versions.props') -Raw
     $versionProperties = @($versionDocument.SelectNodes('//*[local-name()="TestingPlatformVersionPrefix"]'))
     if ($versionProperties.Count -ne 1) { throw 'Expected one platform version prefix.' }
-    $expectedPackageVersion = $versionProperties[0].InnerText + '-bazel'
-    $null = Invoke-Step 'pack' $bazel @('build', '//:packages', '--jobs=8', '--noshow_progress', '--show_result=0')
+    $expectedPackageVersion = $versionProperties[0].InnerText + '-preview.bazel'
+    $null = Invoke-Step 'pack' $bazel @('build', '//:packages', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
     $executionRoot = & $bazel info execution_root
     if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
     $paths = @(& $bazel cquery //:packages --output=files --noshow_progress)
@@ -185,7 +191,7 @@ try {
     if ($empty -notmatch 'tests ran 0, minimum expected 1') { throw 'The packaged zero-result policy did not execute.' }
 
     Set-Location $root
-    $null = Invoke-Step 'publish' $bazel @('build', '//:published_samples', '--jobs=8', '--noshow_progress', '--show_result=0')
+    $null = Invoke-Step 'publish' $bazel @('build', '//:published_samples', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
     $published = @(& $bazel cquery 'filter("explorer_net[0-9]+_0$", deps(//:published_samples))' --output=starlark '--starlark:expr=str(target.label) + "|" + providers(target)["DefaultInfo"].files_to_run.executable.path' --noshow_progress)
     if ($LASTEXITCODE -ne 0 -or $published.Count -ne 4) { throw 'Expected four native self-contained publishers.' }
     $env:DOTNET_ROOT = Join-Path $directory 'missing-runtime'
@@ -229,7 +235,7 @@ finally {
     $env:DOTNET_ROOT = $oldDotnetRoot
     $env:DOTNET_ROOT_X64 = $oldDotnetRootX64
     Pop-Location
-    [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Packages = $packageRecords; RuntimeLayouts = $runtimeRecords; Steps = $steps; ExpectedAssemblyHashes = $expectedHashes } |
+    [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Jobs = $Jobs; Packages = $packageRecords; RuntimeLayouts = $runtimeRecords; Steps = $steps; ExpectedAssemblyHashes = $expectedHashes } |
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
 }
 

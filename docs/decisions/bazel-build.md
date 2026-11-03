@@ -30,6 +30,53 @@ The initial producer/consumer contract is:
 
 ## Research and experiments
 
+### 2026-11-03: experimental version compatibility and constrained storage
+
+The repository's actual production CodeCoverage pin is
+`18.13.0-preview.26527.4`. Its package requires
+`Microsoft.Testing.Platform >= 2.6.0-preview.26526.14`; the original native
+`2.6.0-bazel` identity sorts below that requirement. Downgrading the external
+dependency, suppressing restore errors, or accepting a released platform from a
+remote feed would not validate the native product.
+
+Native package and assembly informational versions now use the common suffix
+`-preview.bazel`, keeping numeric product/assembly versions unchanged. The real
+NuGet.Versioning comparer verified that `2.6.0-preview.bazel` is above the
+required numbered preview but below stable `2.6.0`. This avoids an official-looking
+release identity or invented build number. Actual native helper compilation and
+both product-version commands, informational metadata, and missing/duplicate
+property rejection passed; integrated consumer API compatibility still needs its
+real package handoffs.
+
+Seven concurrent worktrees exhausted Q: during bootstrap. Only lane-owned caches
+were stopped/removed; build outputs and large restore/evidence directories moved
+to separate C: locations through process-local overrides. The shared validators
+now accept positive `-Jobs` and an absolute `-EvidenceRoot`, preserving default
+behavior and test-worker settings. Parameter binding was checked independently
+without launching another heavy build. Compiler work is released in small waves
+while source/layout work remains parallel.
+
+### 2026-11-03: C# reference aliases for the parallel test lane
+
+The remaining test projects require `global,PlatformMSBuild`,
+`global,serverclient`, and named-only `ghactions` references. The pinned C# rules
+have no alias attribute. Adding an extra compiler option while leaving the
+ordinary global reference intact would not preserve named-only semantics.
+
+The parent owns an additive `reference-aliases.patch`, layered after the existing
+compatibility patch. The planned interface is a C# `reference_aliases` dictionary
+from assembly simple name to alias list; the list replaces implicit `global`,
+which must be included explicitly when both access paths are needed. Reference
+providers and runtime identities remain unchanged, so aliases are local to the
+consuming compilation. All implementation/reference-only passes must receive the
+same aliases. Unknown assemblies and empty/duplicate alias declarations must fail
+explicitly rather than being ignored.
+
+Validation will compile and execute real assemblies with colliding type names,
+including friend-only members, using global-plus-named and named-only references.
+Unrelated C#/F# targets must retain the existing no-alias path. The test lane will
+receive the validated commit/interface before wiring its real legacy tests.
+
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
 The user authorized implementing as much of the remaining migration as possible.

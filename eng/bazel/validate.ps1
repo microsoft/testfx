@@ -4,13 +4,19 @@
 #requires -Version 7.2
 
 [CmdletBinding()]
-param()
+param(
+    [ValidateRange(1, 2147483647)]
+    [int] $Jobs = 8,
+
+    [ValidateScript({ [System.IO.Path]::IsPathFullyQualified($_) })]
+    [string] $EvidenceRoot
+)
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
-$directory = Join-Path $root "artifacts\bazel-validation\$run"
+$directory = if ($EvidenceRoot) { Join-Path $EvidenceRoot $run } else { Join-Path $root "artifacts\bazel-validation\$run" }
 $reports = Join-Path $directory 'reports with spaces!'
 New-Item -ItemType Directory -Path $reports -Force | Out-Null
 $steps = [System.Collections.Generic.List[object]]::new()
@@ -45,9 +51,9 @@ function Assert-Trx([string] $Path, [int] $ExpectedCount = 0) {
 
 Push-Location $root
 try {
-    $null = Invoke-BazelStep 'managed-build' @('build', '//:managed_all', '--jobs=8', '--noshow_progress', '--show_result=0')
-    $null = Invoke-BazelStep 'cached-build' @('build', '//:managed_all', '--jobs=8', '--noshow_progress', '--show_result=0')
-    $null = Invoke-BazelStep 'portable-tests' @('test', '//:portable_tests', '--jobs=8', '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'managed-build' @('build', '//:managed_all', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'cached-build' @('build', '//:managed_all', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'portable-tests' @('test', '//:portable_tests', "--jobs=$Jobs", '--nocache_test_results', '--noshow_progress', '--show_result=0')
 
     $testLogs = & $bazel info bazel-testlogs
     if ($LASTEXITCODE -ne 0) {
@@ -149,6 +155,7 @@ try {
         BaseRevision = $revision
         WorkingTree = @(git status --porcelain)
         Bazel = (Get-Content -LiteralPath .bazelversion -Raw).Trim()
+        Jobs = $Jobs
         RulesDotnet = 'add5c92b30888a70aa951de1744a770b8f8ef436'
         Sdk = '11.0.100-rc.3.26522.148'
         TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')

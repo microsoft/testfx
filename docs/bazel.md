@@ -54,6 +54,20 @@ It must not be shared by simultaneously running worktrees. Non-Windows hosts
 default to a worktree-specific temporary directory. The executable itself lives
 under `artifacts\bazel-tools`.
 
+When several worktrees share a nearly full volume, choose a unique output root
+on a volume with capacity and pass an absolute evidence root to the validators.
+Their consumer feeds and restore caches stay under that evidence root:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfb\my-bazel-worktree'
+.\eng\bazel\validate.ps1 -Jobs 2 -EvidenceRoot 'C:\tfb\my-native-evidence'
+.\eng\bazel\validate-packages.ps1 -Jobs 2 -EvidenceRoot 'C:\tfb\my-package-evidence'
+```
+
+The override is process-local; set it in every new shell rather than changing
+machine-global settings. `-Jobs` limits Bazel build concurrency, not the tests'
+existing assembly worker settings.
+
 Bazelisk users can invoke `bazel` directly, but must provide a suitably short
 Windows output root themselves. The checked-in `.bazelrc` supplies the required
 runfiles settings.
@@ -208,7 +222,7 @@ now retain their incoming configuration. Reassess these changes on an upgrade.
 
 ## Native package and runtime validation
 
-Packages carry an explicit `-bazel` prerelease version derived from
+Packages carry an explicit `-preview.bazel` prerelease version derived from
 `eng/Versions.props`; they are not official shipping packages. They include the
 portable DLLs, XML documentation, PDBs, satellite resources, readme, and relevant
 `build`/`buildTransitive` assets. MSTest, analyzer, SDK/meta-package, Windows,
