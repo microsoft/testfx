@@ -1143,9 +1143,10 @@ evidence.
 This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d` and owns
 `//:framework_package`, `//:adapter_package`, and their genuine portable support
 packages. Existing `//:packages` and its MTP-only validator remain unchanged.
-The initial consumer matrix is net8.0/net9.0/net10.0/net11.0; these are unsigned
-experimental packages, not a claim of Windows, .NET Framework, strong-name, or
-release-pipeline parity. MSTest and MTP retain their separate version families
+The consumer matrix is net8.0/net9.0/net10.0/net11.0; these are development
+public-signed experimental packages, not a claim of Windows-app-model,
+.NET Framework, or release-pipeline parity. The initial unsigned milestone is
+preserved below. MSTest and MTP retain their separate version families
 from `eng/Versions.props`, each with the explicit `-preview.bazel` suffix.
 
 The authoritative layouts are `TestFramework.Extensions.csproj`,
@@ -1419,6 +1420,62 @@ strong-name requirement for MTP's Microsoft public key. The coordinator owns
 carrying the existing public-signing contract into native outputs; these unsigned
 packages/results are preserved for comparison, not substituted with released
 MTP or presented as default-SDK/CodeCoverage success.
+
+### Signed package consumer refresh (2026-11-03)
+
+The shared identity correction
+`aff2cf0f702a07779cee99a8acf29cf515e858bb` is integrated here as
+`0ff1d234924f01d4b893cdd443a210ee3fee8f48`. The absent SDK/alias lane files and
+alias-patch wiring remain absent; the native signed runfiles source helper is
+retained. The necessary blank context line in the upstream signing patch is
+preserved as patch syntax, not trimmed to satisfy a generic whitespace check.
+
+The same complete command shown above exited **0** again: **31 expected-exit
+steps**, all eight freshly public-signed archives, new isolated package caches,
+and all four actual self-contained runtimes. In addition to the unchanged hash,
+layout, configuration, discovery, report, and exit assertions,
+`NativeAssembliesAreLoadedFromConsumer` now requires
+`B03F5F7F11D50A3A` on all nine loaded product assemblies.
+`KoreanSatellitesAreCopiedAndLoadable` requires the same token on the three
+loaded satellites. Native MSBuild parent exits remain 0/1. These checks exercise
+the packaged outputs, not a released MTP replacement.
+
+Source state is the integrated commit above plus `validated-source.patch`,
+SHA-256
+`079F51DD4F1BA30E73FCB85D533349B1EE6B5DB952ED450762339A75BD55534A`.
+Signed evidence is retained separately at
+`C:\tfb\d7ce736ef101\mstest-validation\20261103-161417-ca2c12d5`,
+including the new feeds, caches, loaded public-key/hash records, logs/binlogs,
+and all 13 TRXs. The original unsigned run remains intact.
+
+Signed framework archive SHA-256:
+`6C37A03B2025A00E8120E1C5B5F70713DD5936B5C3ACB5E09C814A2E3E4FB35B`.
+Signed adapter archive SHA-256:
+`AA105CE6E5542E5AB4C9411BE7AF1FCBA5331A6185B63ECD299044CAFEAA5D80`.
+`validation.json` records all eight package hashes and the exact invocations.
+
+**Test-value evidence — executed: detected.** The signed refresh repeats the
+same satellite-removal comparison without changing the three selected test
+identities or assertions: green 3/3 (exit 0), red 2/3 with the intended
+`KoreanSatellitesAreCopiedAndLoadable` missing-file assertion (exit 2), then green
+3/3 from a new correct-package cache (exit 0). Counterfactual request SHA-256:
+`1D6AD21519AF76843858F87DD5C77346FF1BE38B206944287BC17793246690EF`.
+Publication succeeded for both consumer variants; no setup failure or skipped
+test is counted as red evidence.
+
+The signed payload comparison again confirms one omitted satellite and
+byte-identical remaining payload/nuspec entries (apart from regenerated OPC
+metadata). Signed counterfactual archive SHA-256:
+`C275E9CBDC9D4A0DFB7AF6089BAFE8496BC4DEEA6C8BC05CA5396B6969D209E0`.
+The refreshed signed action graph still has eight `NuGetPack` and 685
+`CSharpCompile` actions and no MSBuild producer invocation. The run directory
+contains both compact summaries and the complete graph.
+
+This completes this lane's portable framework/adapter and support-package
+contract. Default SDK/meta-package/CodeCoverage composition remains the
+separately owned SDK lane's claim to validate. Full legacy/Windows-specific
+package layouts, Linux/macOS execution, official signing/publishing, SDK12,
+release-branch servicing, and replacement of the Arcade pipeline are not implied.
 
 ## 2026-11-03: native public signing and friend identities
 

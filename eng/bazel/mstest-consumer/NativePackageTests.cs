@@ -37,11 +37,13 @@ public sealed class NativePackageTests
         {
             Assembly assembly = Assembly.Load(new AssemblyName(name));
             string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
+            string publicKeyToken = Convert.ToHexString(assembly.GetName().GetPublicKeyToken() ?? []);
             Assert.AreEqual(name + ".dll", Path.GetRelativePath(AppContext.BaseDirectory, assembly.Location));
             Assert.AreEqual(assemblies.GetProperty(name).GetString(), hash, $"Unexpected native payload for {name}.");
+            Assert.AreEqual("B03F5F7F11D50A3A", publicKeyToken, name);
             Assert.IsTrue(assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
                 .Any(attribute => attribute.Key == "TestFx.BuildSystem" && attribute.Value == "Bazel"), name);
-            loaded.Add(new { Name = name, Sha256 = hash, assembly.Location });
+            loaded.Add(new { Name = name, Sha256 = hash, PublicKeyToken = publicKeyToken, assembly.Location });
         }
 
         string evidence = Environment.GetEnvironmentVariable("TESTFX_BAZEL_CONSUMER_EVIDENCE")
@@ -70,6 +72,7 @@ public sealed class NativePackageTests
             Assembly assembly = Assembly.Load(new AssemblyName(name));
             Assembly satellite = assembly.GetSatelliteAssembly(culture);
             Assert.AreEqual(Path.GetFullPath(satellitePath), satellite.Location);
+            Assert.AreEqual("B03F5F7F11D50A3A", Convert.ToHexString(satellite.GetName().GetPublicKeyToken() ?? []), name);
             Assert.AreEqual(resource.GetProperty("Sha256").GetString(), Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(satellite.Location))));
             var manager = new ResourceManager(resource.GetProperty("BaseName").GetString()!, assembly);
             Assert.AreEqual(resource.GetProperty("Value").GetString(), manager.GetString(resource.GetProperty("Key").GetString()!, culture));
