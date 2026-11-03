@@ -457,6 +457,83 @@ Public dependency pins are unchanged. `EnableCTSCollection` remains off until th
 approved/published and its pipeline pin updated. The coordinator retains dependency-flow and rollout
 ownership; the local performance results do not authorize downstream activation or private publication.
 
+### Local acceptance profiling experiment (2026-11-03)
+
+The follow-up request is to execute genuine acceptance tests locally and use OTel or equivalent tracing
+to distinguish fixture, batching and scheduling costs. This authorizes a local profiling experiment,
+not deployment, telemetry export to a remote service or an unmeasured production scheduling change.
+
+Use the existing aligned validation checkout, its packed products and pinned SDK/runtimes.
+The acceptance applications already register the MTP OpenTelemetry extension, but export nothing.
+In the task-owned checkout only, attach a per-process JSON-lines exporter to that provider and add
+`TestFx.AcceptanceProfiling` activities around fixture initialization/disposal, reflection/source-generated
+asset builds, DotnetCli admission/execution and CommandLine admission/execution. Keep assembly
+method-level CPU-count parallelization, package freshness and mutable-asset isolation unchanged.
+Trace files belong to one run/process; output capture and remote exporters are disabled. The profiling
+environment opt-in must not flow into nested generated test applications.
+
+Compare ordinary acceptance execution with smaller real-test UID replays, then compare UID-oriented
+and fixture-local batch partitions containing exactly the same tests. The replays are scheduling-cost
+experiments, not a claim of executing the SDK's affected-map protocol. Require actual test outcomes,
+source/package provenance and complete span/UID reconciliation. Measure an unexported/exported
+control so diagnostic overhead is not mistaken for a scheduling gain. Quantify initialization count
+per fixture, build time by metadata mode, nested process counts/overlap and queue waits before choosing
+an optimization. These experiments are planned; measured results will be recorded after execution.
+
+#### Profiling results
+
+The local profiling checkout is committed at `5d439192c84c8dcd4bf5078bf606f71871314e42`;
+the production worktree receives this decision/evidence record only. Both instrumented acceptance
+applications build with zero warnings/errors. The measurement scope comprises 59 representative
+fixture cases across MTP/MSTest acceptance plus two exporter-control cases, not the entire suite.
+Across exporter controls, ordinary runs, repeated batch trials and compiler controls:
+**42 valid runs, 319 passed executions, zero failures/skips and 3,423 exported spans** are verified.
+Every passing TRX is checked against independent discovery and its recorded pre-execution timestamp.
+For exported runs, the exact module/test UID multiset also agrees with the MTP test spans.
+
+The genuine ordinary runs execute 31 MTP cases in 25.202 seconds and 28 MSTest cases in 24.843 seconds.
+The exported two-test control shows 8.957–10.173 seconds in fixture initialization alone:
+5.246–6.578 seconds reflection build plus 3.568–3.686 seconds source-generation build.
+The test bodies are only about 0.4–0.6 seconds each. Per-test spans alone would miss most of that cost.
+Unexported controls take 16.162–17.369 seconds end-to-end versus 15.156–16.033 exported;
+this small sample shows no obvious material export penalty, not a statistically established overhead bound.
+
+The batch comparison preserves the same exact UID set, four batches, maximum eight cases per batch,
+two concurrent processes, metadata modes and one warmed, immutable per-suite package cache.
+UID-oriented partitioning is compared with grouping by test class/fixture. These are native test UID
+replays, not the SDK's affected-map protocol or a modification of the shipping collector.
+
+| Scope | UID-oriented fixture starts / builds | Fixture-local starts / builds | UID-oriented wall seconds, repeats | Fixture-local wall seconds, repeats |
+| --- | --- | --- | --- | --- |
+| MTP, 31 cases / four classes | 12 / 24 | 4 / 8 | 50.123, 47.416 | 44.497, 98.769 |
+| MSTest, 28 cases / four classes | 10 / 23 | 3 / 7 | 123.683, 70.861 | 201.941, 38.092 |
+
+The work reduction is repeatable; the end-to-end speedup is **not**. Source-generation/compilation
+latency varies substantially. An outlier build succeeds in 61.6 seconds, with a 55.744-second `Csc`
+task and only 1.379 seconds in `RestoreTask`; another build's largest `Csc` task is 32.292 seconds.
+These are actual recorded tasks, not an assumption that all setup time is NuGet restore or source generators.
+Analyzer timing was not emitted, so no analyzer blame or precise compiler-server contention cause is claimed.
+The outlier used shared compilation. Controlled private-compiler runs verify `UseSharedCompilation=false`
+in the binlog but take 18.900/27.401 seconds versus 12.918/22.209 with sharing; disabling it is not selected.
+
+DotnetCli/CommandLine semaphore waits stay below 0.1 milliseconds in the selected scopes. There is no
+evidence here to raise those queue limits. Nested compiler work and unequal fixture cost still require
+cost-aware balancing; grouping every whole class blindly can create stragglers and was slower in some trials.
+One selected Runner class performs per-test project builds without a reusable `TestAssetFixtureBase`
+initialization, so class affinity alone does not remove its build work.
+
+**Decision:** the next bounded experiment should combine fixture affinity with measured setup/execution
+cost and refill-on-completion, rather than impose unconditional whole-class grouping. Keep all required
+reflection/source-generation/AOT checks, normal test semantics and private mutable assets. Reuse only
+proven immutable preparation; treat persisted cost data as a scheduling hint with compatibility/invalidation
+rules, never as selection authority. No production scheduling or fixture-cache policy was changed.
+
+Exact script commands, UID partitions, environment overrides, TRX execution proofs, raw per-process JSONL,
+`analysis.json`, CSV summaries and an offline interactive `report.html` are retained in the profiling artifacts.
+The viewer uses no remote scripts/exporters and shows overlapping fixture/build/test/queue spans without
+adding inclusive durations as wall time. Failed initial format, empty-environment and SDK-discovery harness
+attempts are excluded from the passing totals and performance measurements.
+
 ### Windows timeout resolution (2026-10-26)
 
 [Run 20261025.5](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1648684), at
