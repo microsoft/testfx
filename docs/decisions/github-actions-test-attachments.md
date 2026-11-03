@@ -6,8 +6,10 @@
 publication of failed-test attachments and links from the test report. This is a
 new reporting feature, not a regression in an existing upload implementation.
 
-The producer is `Microsoft.Testing.Extensions.GitHubActionsReport` (MTP 2.6,
-developed on `main` for MSTest 4.6 / MTP 2.6). MSTest and VSTestBridge already
+The producer is `Microsoft.Testing.Extensions.GitHubActionsReport`, developed on
+`main` for the issue's next open milestone, MSTest 5.0 / MTP 3.0. The current
+checkout's build versions remain MSTest 4.6 / MTP 2.6 and are identified
+separately in the validation evidence below. MSTest and VSTestBridge already
 publish `FileArtifactProperty` values on test nodes. The consumer is the official
 GitHub Actions artifact uploader, followed by a workflow-owned summary step.
 No new core MTP API, transport protocol, GitHub token in the test process,
@@ -99,6 +101,9 @@ provide supported links to individual files inside that archive.
   The smoke originally counted the merged report as a third module. Corrected
   the harness to validate each module separately and validate optional merged
   totals without double-counting executions. The repeated composed smoke passed.
+- While implementation was running, the 4.6 / 2.6 milestone was closed and the
+  issue was advanced to MSTest 5.0 / MTP 3.0. Read back the live issue and preserved
+  that concurrent maintainer decision rather than restoring the obsolete target.
 
 ## Alternatives and decision
 
@@ -142,7 +147,7 @@ hosted-run results will be added as obtained.
 | --- | --- |
 | Collection, limits, missing input, cancellation | Executed: `CaptureAsync_StagesExactBytesAndWritesManifest`, size/count boundary cases, `CaptureAsync_CanceledDuringCopy_PropagatesTokenAndDeletesPartialFile`, and warning-failure association cases. |
 | Direct and aggregate failure details | Executed: `BuildMarkdown_WithAttachments_RendersExactArchiveRelativePaths`, `CreateModule_FragmentRoundTrip_PreservesAttachmentsOnlyOnFailures`, legacy-fragment and retry cases. |
-| Packed consumer and real framework attachment | Executed shipping smoke: four direct host runs plus real multi-module `dotnet test`, 12 executions and five intentionally failed results, parent smoke exit 0. Eight additional acceptance cases pending. |
+| Packed consumer and real framework attachment | Executed shipping smoke: four direct host runs plus real multi-module `dotnet test`, 12 executions and five intentionally failed results, parent smoke exit 0. All eight packed acceptance cases and three net8 help/info cases passed (11/11, no skips). |
 | Real GitHub Actions archive and download link | Pending composed workflow execution. |
 
 Focused unit validation compiled current production and test sources with the
@@ -224,9 +229,18 @@ That full verifier exited 1; it was not weakened or called successful. The
 Linux hosted workflow runs the repository's standard `build.sh -pack` path.
 Hosted artifact upload/download and the rendered GitHub surface remain pending.
 
+The additional acceptance run compiled the Release/net12.0 outer host with
+warnings treated as errors and executed net8.0 consumers. It selected exactly
+eight `GitHubActionsAttachmentTests` cases plus the net8 rows of
+`Help_WithAllExtensionsRegistered_OutputFullHelpContent`,
+`HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent`, and
+`Info_WithAllExtensionsRegistered_OutputFullInfoContent`. Exit 0: 11 passed,
+zero failed/skipped. TRX/JUnit/CTRF counts agreed. Restored package SHA-512 and
+deployed net8 DLL SHA-256 values matched the freshly packed artifacts.
+
 ## Open questions
 
-- This feature targets the next minor version, MSTest 4.6 / MTP 2.6. No servicing
+- This feature targets the next open version, MSTest 5.0 / MTP 3.0. No servicing
   backport is planned: existing behavior is not a regression.
 - `upload-artifact` v4+ does not support GitHub Enterprise Server. There the
   workflow must choose a supported uploader; staging and failure paths remain
