@@ -79,8 +79,11 @@ function Assert-Trx([string] $Path, [string[]] $Expected, [int] $Failed = 0, [st
         @($results | Where-Object outcome -EQ 'Failed').Count -ne $Failed) {
         throw "Unexpected executed/pass/fail/skip counters: $Path"
     }
-    if ($FailureMessage -and -not $trx.InnerText.Contains($FailureMessage)) {
-        throw "The intended behavioral assertion did not fail: $Path"
+    if ($FailureMessage) {
+        $messages = @($trx.SelectNodes('//*[local-name()="UnitTestResult" and @outcome="Failed"]//*[local-name()="ErrorInfo"]/*[local-name()="Message"]') | ForEach-Object InnerText)
+        if (@($messages | Where-Object { $_.Contains($FailureMessage) }).Count -ne 1) {
+            throw "The intended behavioral assertion did not fail: $Path"
+        }
     }
 }
 
