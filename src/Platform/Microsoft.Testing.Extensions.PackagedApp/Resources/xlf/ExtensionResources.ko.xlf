@@ -103,8 +103,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
-        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">패키지된 Windows 앱 '{0}'을(를) 시작할 수 없습니다. '{1}'이(가) 검색되었습니다. 패키지된(MSIX) 앱을 등록하고 활성화하려면 net8.0-windows10.0.19041.0 이상용으로 제공되는 이 확장의 Windows 빌드가 필요합니다. NuGet이 해당 자산을 선택하도록 대상은 'net8.0-windows10.0.19041.0'(또는 플랫폼 버전 10.0.19041.0 이상에서는 이후 버전의 net*-windows 대상 프레임워크 모니커)로 설정하세요. 현재 빌드는 패키지되지 않은(느슨한 레이아웃) 테스트 호스트만 시작합니다. https://github.com/microsoft/testfx/issues/9933을 참조하세요.</target>
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net10.0-windows10.0.19041.0 and later. Target 'net10.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="needs-review-translation">패키지된 Windows 앱 '{0}'을(를) 시작할 수 없습니다. '{1}'이(가) 검색되었습니다. 패키지된(MSIX) 앱을 등록하고 활성화하려면 net8.0-windows10.0.19041.0 이상용으로 제공되는 이 확장의 Windows 빌드가 필요합니다. NuGet이 해당 자산을 선택하도록 대상은 'net8.0-windows10.0.19041.0'(또는 플랫폼 버전 10.0.19041.0 이상에서는 이후 버전의 net*-windows 대상 프레임워크 모니커)로 설정하세요. 현재 빌드는 패키지되지 않은(느슨한 레이아웃) 테스트 호스트만 시작합니다. https://github.com/microsoft/testfx/issues/9933을 참조하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
