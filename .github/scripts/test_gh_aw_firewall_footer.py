@@ -16,7 +16,7 @@ FRONTMATTER = yaml.safe_load(SHARED_WORKFLOW.read_text(encoding="utf-8").split("
 CORRECTION = next(
     step["with"]["script"]
     for step in FRONTMATTER["safe-outputs"]["steps"]
-    if step["name"] == "Correct provisional CONNECT firewall reporting"
+    if step["name"] == "Preserve explicit firewall denials in footer reporting"
 )
 
 NODE_HARNESS = r"""
@@ -51,7 +51,7 @@ const sandbox = {
     if (name === "./sanitize_content_core.cjs") {
       return { sanitizeDomainName: value => value.replace(/[^a-zA-Z0-9.]/g, "") };
     }
-    if (["./messages_core.cjs", "./render_template.cjs"].includes(name)) return {};
+    if (["./messages_core.cjs", "./render_template.cjs", "./report_markdown.cjs", "./report_ast.cjs"].includes(name)) return {};
     throw new Error(`Unexpected upstream dependency: ${name}`);
   },
 };
@@ -148,7 +148,7 @@ class GhAwFirewallFooterTests(unittest.TestCase):
     def test_changed_upstream_module_fails_without_modifying_it(self) -> None:
         result = self.run_module(source=SOURCE + "\n// changed upstream module\n")
         self.assertEqual(
-            "The gh-aw firewall footer module changed; revalidate or remove the v0.89.21 correction.",
+            "The gh-aw firewall footer module changed; revalidate or remove the v1.0.1 correction.",
             result["error"],
         )
         self.assertTrue(result["unchanged"])
