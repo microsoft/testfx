@@ -816,3 +816,24 @@ Assembly paths and SHA-256 hashes are in the retained
 `core-metadata-verified.json`. The broader keep-going build exposed separate
 net462 facade and native executable-pack gaps; those do not invalidate this
 three-assembly metadata correction and are not reported as a matrix pass.
+
+### Preserve no-op project removals in modern JSON selection
+
+The initial compatibility source split copied all project `Compile Remove`
+entries into the modern source selection. Two entries,
+`JsonExtensions.cs` and `JsonPropertyBagDeserializer.cs`, no longer exist.
+MSBuild correctly treats those removals as no-ops; explicitly adding the paths
+back made the unchanged modern graph fail with missing inputs.
+
+`modern_json_sources()` now globs the declared removal list, preserving every
+actual JSON source while retaining no-op semantics for absent entries. This
+correction does not remove conditional production code or change the
+netstandard selection.
+
+The focused command
+`.\eng\bazel.ps1 build //:platform //:platform_msbuild //:msbuild_extension //:platform_netstandard2_0 //:platform_msbuild_netstandard2_0 //:msbuild_extension_netstandard2_0 --jobs=2 --noshow_progress`
+completed with exit 0: three modern `net10.0` and three exact `netstandard2.0`
+outputs. Retained evidence is `modern-input-fixed.log` and
+`modern-input-fixed.events.json`. The earlier missing-input report and a
+corrected Starlark syntax attempt are build failures, not behavioral red-phase
+evidence.

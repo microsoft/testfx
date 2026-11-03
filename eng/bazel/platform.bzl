@@ -7,7 +7,7 @@ _SHARED = "src/Platform/SharedExtensionHelpers"
 
 def modern_json_sources():
     """The System.Text.Json files removed by both non-.NETCoreApp project variants."""
-    return [
+    return native.glob([
         _PLATFORM + "/ServerMode/JsonRpc/Json/" + name + ".cs"
         for name in [
             "Json",
@@ -25,7 +25,7 @@ def modern_json_sources():
             "JsonValueSerializer",
             "JsonValueSerializer1",
         ]
-    ]
+    ], allow_empty = True)
 
 def ipc_sources():
     return native.glob([_PLATFORM + "/IPC/*.cs"]) + [
