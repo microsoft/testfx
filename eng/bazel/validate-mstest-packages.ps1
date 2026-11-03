@@ -43,6 +43,10 @@ function Invoke-Step([string] $Name, [string] $Executable, [string[]] $Arguments
     return Get-Content -LiteralPath $log -Raw
 }
 
+function Remove-ProcessEnvironmentVariable([string] $Name) {
+    if (Test-Path -LiteralPath "Env:$Name") { Remove-Item -LiteralPath "Env:$Name" }
+}
+
 function Read-ZipText($Archive, [string] $Path) {
     $entry = $Archive.GetEntry($Path)
     if (-not $entry) { throw "Missing package entry: $Path" }
@@ -328,11 +332,17 @@ function Run-MSBuildConsumer($Consumer) {
 
 $environmentNames = @(
     'NUGET_PACKAGES', 'DOTNET_ROOT', 'DOTNET_ROOT_X64', 'DOTNET_ROLL_FORWARD', 'DOTNET_ROLL_FORWARD_TO_PRERELEASE',
-    'MSBuildSDKsPath', 'MSBuildExtensionsPath', 'MSBUILDDISABLENODEREUSE', 'TESTFX_BAZEL_MSTEST_EXPECTATIONS',
+    'MSBuildSDKsPath', 'MSBuildExtensionsPath', 'MSBUILD_EXE_PATH', 'MSBUILDDISABLENODEREUSE', 'TESTFX_BAZEL_MSTEST_EXPECTATIONS',
     'TESTFX_BAZEL_CONSUMER_EVIDENCE', 'TESTINGPLATFORM_UI_LANGUAGE', 'TESTINGPLATFORM_TELEMETRY_OPTOUT', 'DOTNET_CLI_TELEMETRY_OPTOUT'
 )
 $previousEnvironment = @{}
-foreach ($name in $environmentNames) { $previousEnvironment[$name] = [Environment]::GetEnvironmentVariable($name) }
+foreach ($name in $environmentNames) {
+    $present = Test-Path -LiteralPath "Env:$name"
+    $previousEnvironment[$name] = @{
+        Present = $present
+        Value = if ($present) { (Get-Item -LiteralPath "Env:$name").Value } else { $null }
+    }
+}
 Push-Location $root
 try {
     $revision = git rev-parse HEAD
@@ -388,8 +398,8 @@ try {
     $dotnet = Join-Path $sdks[0].FullName $dotnetName
     $rid = if ($IsWindows) { 'win-x64' } elseif ($IsMacOS) { 'osx-arm64' } else { 'linux-x64' }
     $appExtension = if ($IsWindows) { '.exe' } else { '' }
-    foreach ($name in @('DOTNET_ROLL_FORWARD', 'DOTNET_ROLL_FORWARD_TO_PRERELEASE', 'MSBuildSDKsPath', 'MSBuildExtensionsPath')) {
-        [Environment]::SetEnvironmentVariable($name, $null)
+    foreach ($name in @('DOTNET_ROLL_FORWARD', 'DOTNET_ROLL_FORWARD_TO_PRERELEASE', 'MSBuildSDKsPath', 'MSBuildExtensionsPath', 'MSBUILD_EXE_PATH')) {
+        Remove-ProcessEnvironmentVariable $name
     }
     $env:MSBUILDDISABLENODEREUSE = '1'
     $env:TESTINGPLATFORM_UI_LANGUAGE = 'en-US'
@@ -448,7 +458,11 @@ try {
     Write-Host "Native MSTest package consumers passed. Evidence: $directory"
 }
 finally {
-    foreach ($name in $environmentNames) { [Environment]::SetEnvironmentVariable($name, $previousEnvironment[$name]) }
+    foreach ($name in $environmentNames) {
+        $previous = $previousEnvironment[$name]
+        if ($previous.Present) { Set-Item -LiteralPath "Env:$name" -Value $previous.Value }
+        else { Remove-ProcessEnvironmentVariable $name }
+    }
     Pop-Location
     [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Packages = @($packages.Values); Runs = $runs; Steps = $steps } |
         ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8

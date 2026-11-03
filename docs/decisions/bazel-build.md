@@ -1157,7 +1157,21 @@ no shipping leg, servicing branch, or package publication is enabled here.
   resources; only the provenance test writes its own evidence file. They do not
   mutate process culture or environment. Existing repository test scheduling
   is unchanged.
-- Final package builds and consumer execution are still pending the analyzer
-  and real netstandard task-library ready commits and the coordinator's next
-  validation wave. Draft sources and a syntax check do not establish package
-  or integration parity.
+- The compiled netstandard prerequisite
+  `a29a5ffc0b1005848e71a645abcdeddb818113ff` was integrated locally as
+  `81a3248d192619e7fbe6476f638a6af246226ae6`, preserving both lane records in the
+  append-only document conflict. Its providers supply genuine netstandard
+  implementations; reference-only Microsoft.Build assemblies are supplied by
+  the executing MSBuild host, not copied into the task package.
+- The consumer harness now removes the exact inherited `MSBuildSDKsPath`,
+  `MSBuildExtensionsPath`, and `MSBUILD_EXE_PATH` environment entries rather
+  than assigning null through PowerShell's .NET method binder. The analyzer lane
+  found that the latter left present-but-empty entries in this host. A local
+  process-only probe confirmed the `Env:` provider distinguishes absent and
+  present-empty states; the harness records presence and restores it in
+  `finally`. Consumer SDK commands run from their isolated `global.json`
+  directories.
+- Final package builds and consumer execution still await the analyzer and
+  common-version ready commits and the coordinator's next validation wave.
+  Draft sources and syntax/environment probes do not establish package or
+  integration parity.
