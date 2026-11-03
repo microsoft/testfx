@@ -623,8 +623,53 @@ outputs or private-key signature completion. Keep the package prerelease
 identity and unchanged dependency suppression. Source-root mapping is a shared
 compiler-input change, not a reason to alter consumer assertions.
 
-The focused signed run and its source/package provenance will be recorded
-below. The prior unsigned results remain a separate preservation baseline.
+The focused signed run passed on clean source
+`66620597c6357e3e29d94546c0a1c27d2b6d116f`:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfba\6a8043a5c4a6'
+.\eng\bazel\validate-analyzers-package.ps1 -Jobs 2 `
+    -EvidenceRoot 'C:\tfba\6a8043a5c4a6\analyzer-signed-evidence'
+```
+
+Exit **0**, all **15** original checks executed/passed. Native packing rebuilt
+128 actions (91 local actions; 14 cache hits) before the consumer run. The
+fresh package remains `MSTest.Analyzers` **4.6.0-preview.bazel**, with 55 entries,
+SHA-256
+`B417D113D797FA56C38868D99C0726BBEBD478998BB3E76A4FB4CA4B8F54F712`.
+The original gate, Roslyn host and package rule required no changes.
+
+| Requirement | Signed refresh evidence |
+| --- | --- |
+| C#/VB layout and suppressed dependencies | `package-layout-and-private-dependencies` passed; source/native payload hashes and fresh-cache provenance remain enforced. |
+| Compiler modes, corrected input and intentional suppression | All 12 unchanged `cs-` / `vb-` cases passed with the original exact diagnostic, exit, analyzer/config selection and SDK assertions. |
+| Older compiler API, real code fix and satellites | `roslyn-3.11-codefix-and-satellites` passed on Roslyn 3.11.0.0; all 83 analyzer/52 fixer types loaded, MSTEST0030 was produced, `AddTestClassFixer` changed the exact expected source, and French analyzer/fixer strings matched the XLF catalogs. Both loaded DLLs report the package-aligned informational version. |
+| Native producer and development identity | `native-producer-action-graph` passed. Supplemental read-only PE inspection verified all 42 main/satellite DLL entries carry public key token `B03F5F7F11D50A3A`, the exact pinned 160-byte key, the public-sign flag and zero/uncompleted 128-byte signature slots; no Authenticode or NuGet package signature was introduced. |
+
+The signing and source-root patch blobs match the coordinator's source commits
+exactly (`77ebdde668431f21d5e7a08d8c34098e1c36c6f5` and
+`245d283dbdd6b54ada49a1b0948e4fbda7bb2f35`, respectively). A byte comparison of
+the retained unsigned and new signed archives found exactly the 42 DLL entries
+changed; all 13 other entries, including the four generated configs, package
+metadata, readme, build hooks and signed installation scripts, are unchanged.
+
+**Test-value evidence:** the 15-case gate is an executed green-before /
+green-after preservation comparison, not proof that the old unsigned identity
+was acceptable to every downstream component. The same supplemental signing
+inspection rejects the retained unsigned code-fix DLL for its absent expected
+public key, then passes all 42 signed entries. The shared signing fixture's
+broader red/green evidence belongs to the coordinator; no new test scheduling,
+diagnostic suppression or official signing was introduced here.
+
+Evidence and the new package feed are retained at
+`C:\tfba\6a8043a5c4a6\analyzer-signed-evidence\20261103-165840-50c02dd7`.
+`validation.json` records the clean source revision, all case outcomes and
+commands/exits; compiler SARIF, binlogs and selected asset files remain beside
+it. `public-signing.json`, `verify-analyzer-public-signing.ps1`,
+`unsigned-identity-rejected.log` and `signing-refresh-comparison.json` preserve
+the supplemental probe and package comparison. The previous unsigned evidence
+and caches remain separate. Only this decision record was edited after the
+successful signed run.
 
 #### Parent integration: shared framework metadata
 
