@@ -50,6 +50,7 @@
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CtrfReport\Microsoft.Testing.Extensions.CtrfReport.csproj">
+      <Aliases>global,ctrf</Aliases>
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj">
@@ -90,5 +91,15 @@
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <!-- The reporting infrastructure adds another CTRF reference in Directory.Build.targets. Keep
+       both instances aliased so no-restore, test-only builds preserve linked-helper type identity. -->
+  <Target Name="SetCtrfTestReferenceAliases" BeforeTargets="AssignProjectConfiguration">
+    <ItemGroup>
+      <ProjectReference Condition="'%(ProjectReference.Filename)' == 'Microsoft.Testing.Extensions.CtrfReport'">
+        <Aliases>global,ctrf</Aliases>
+      </ProjectReference>
+    </ItemGroup>
+  </Target>
 
 </Project>

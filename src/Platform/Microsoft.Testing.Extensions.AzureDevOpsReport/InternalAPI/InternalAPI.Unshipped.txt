@@ -1,8 +1,22 @@
 #nullable enable
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataFamily = "MTP.CanonicalTestName/" -> string!
+const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix = "MTP.CanonicalTestName/1:" -> string!
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Comment.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Comment.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultResponse.Comment.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultResponse.Comment.set -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResult.Comment.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResult.Comment.set -> void
 *REMOVED*Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure = null) -> void
 Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure) -> void
 Microsoft.Testing.Extensions.TestRecord.SkipReason.get -> string?
 Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure, string? skipReason) -> void
 *REMOVED*const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes = 16777216 -> long
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes = 78643200 -> long
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultResponse.TestCaseTitle.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultResponse.TestCaseTitle.set -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResult.TestCaseTitle.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResult.TestCaseTitle.set -> void
 static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(string! identity, string! displayName) -> string!

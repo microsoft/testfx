@@ -44,6 +44,7 @@ function Test-SamplesAffectingPath {
         $Path.StartsWith("samples/", [System.StringComparison]::Ordinal) -or
         $Path.Equals("eng/build-samples.ps1", [System.StringComparison]::Ordinal) -or
         $Path.Equals("eng/test-samples.ps1", [System.StringComparison]::Ordinal) -or
+        $Path.Equals("eng/test-samples-output.ps1", [System.StringComparison]::Ordinal) -or
         $Path.Equals("eng/samples-tools.ps1", [System.StringComparison]::Ordinal))
 }
 
@@ -202,6 +203,18 @@ function Invoke-GitDiffSelfTest {
             throw "Git self-test expected a samples-only diff but got '$formattedClassification'."
         }
 
+        $engDirectory = Join-Path $repository "eng"
+        [System.IO.Directory]::CreateDirectory($engDirectory) | Out-Null
+        [System.IO.File]::WriteAllText((Join-Path $engDirectory "test-samples-output.ps1"), "Write-Output 'Sample checks'`n")
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Sample output checks")
+        $sampleChecksRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        $classification = Get-GitDiffClassification $samplesRevision $sampleChecksRevision $repository
+        $formattedClassification = Format-Classification $classification
+        if ($formattedClassification -cne "hasProductChanges=false;hasSamplesChanges=true;infrastructureOnly=false") {
+            throw "Git self-test expected a sample-output-check-only diff to run sample validation but got '$formattedClassification'."
+        }
+
         $productDirectory = Join-Path $repository "src"
         [System.IO.Directory]::CreateDirectory($productDirectory) | Out-Null
         [System.IO.File]::WriteAllText((Join-Path $productDirectory "Product.cs"), "class Product { }`n")
@@ -252,6 +265,7 @@ function Invoke-SelfTest {
         @{ Path = "samples/public/Sample.cs"; Infrastructure = $false; Samples = $true },
         @{ Path = "eng/build-samples.ps1"; Infrastructure = $false; Samples = $true },
         @{ Path = "eng/test-samples.ps1"; Infrastructure = $false; Samples = $true },
+        @{ Path = "eng/test-samples-output.ps1"; Infrastructure = $false; Samples = $true },
         @{ Path = "eng/samples-tools.ps1"; Infrastructure = $false; Samples = $true }
     )) {
         $actualInfrastructure = Test-InfrastructureOnlyPath $pathCase.Path
@@ -279,6 +293,9 @@ function Invoke-SelfTest {
         "eng/build-samples.ps1",
         "eng/test-samples.ps1",
         "eng/samples-tools.ps1"
+    ) $false $true $false
+    Assert-Classification "Sample output checks only" @(
+        "eng/test-samples-output.ps1"
     ) $false $true $false
     Assert-Classification "XML documentation path remains product-affecting" @(
         "src/TestFramework/Assert.cs"

@@ -28,3 +28,5 @@ with `<Compile Include>` instead of referencing the core platform project.
 The `platform-core` module selects `net9.0` and includes that suite as well as
 `MSTest.SelfRealExamples.UnitTests`, whose `net9.0` target references the core
 project and lets Stryker run those tests against the mutated platform assembly.
+The configuration check resolves `$(SupportedNetFrameworks)` from the root
+`Directory.Build.props` when checking the test project's declared TFMs.

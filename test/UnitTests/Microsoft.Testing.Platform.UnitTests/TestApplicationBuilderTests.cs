@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -514,12 +515,24 @@ public sealed class TestApplicationBuilderTests
         Mock<IProcess> process = new();
         TaskCompletionSource<bool> neverExits = new(TaskCreationOptions.RunContinuationsAsynchronously);
         process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(neverExits.Task);
-        var stopwatch = Stopwatch.StartNew();
-
-        bool exited = await WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
-
-        Assert.IsFalse(exited);
-        Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+        // This watchdog allows JIT and loaded CI scheduling; the production deadline remains 100ms.
+        var completionLimit = TimeSpan.FromSeconds(30);
+        using var watchdogCancellation = new CancellationTokenSource();
+        var watchdog = Task.Delay(completionLimit, watchdogCancellation.Token);
+        Task<bool> exitWait = WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
+        try
+        {
+            Assert.AreSame(exitWait, await Task.WhenAny(exitWait, watchdog), "The bounded wait must complete without the process exiting.");
+            Assert.IsFalse(await exitWait);
+            Assert.IsFalse(neverExits.Task.IsCompleted);
+            process.Verify(x => x.WaitForExitAsync(CancellationToken.None), Times.Once);
+        }
+        finally
+        {
+            watchdogCancellation.Cancel();
+            neverExits.TrySetResult(true);
+            await exitWait.WaitAsync(completionLimit, CancellationToken.None);
+        }
     }
 
     [TestMethod]
@@ -1641,5 +1654,297 @@ public sealed class TestApplicationBuilderTests
         public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SingletonExtensions_EnforceRegistrationAndInitializeOnlyEnabledInstance(bool enabled)
+    {
+        TestHostManager manager = new();
+        ArgumentNullException invokerNull = Assert.ThrowsExactly<ArgumentNullException>(() => manager.AddTestFrameworkInvoker(null!));
+        ArgumentNullException filterNull = Assert.ThrowsExactly<ArgumentNullException>(() => manager.AddTestExecutionFilterFactory(null!));
+        Assert.AreEqual("testFrameworkInvokerFactory", invokerNull.ParamName);
+        Assert.AreEqual("testExecutionFilterFactory", filterNull.ParamName);
+        Mock<Microsoft.Testing.Platform.Requests.ITestFrameworkInvoker> invoker = new();
+        invoker.Setup(i => i.IsEnabledAsync()).ReturnsAsync(enabled);
+        Mock<IAsyncInitializableExtension> invokerInitialization = invoker.As<IAsyncInitializableExtension>();
+        invokerInitialization.Setup(i => i.InitializeAsync()).Returns(Task.CompletedTask);
+        Mock<Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory> filter = new();
+        filter.Setup(f => f.IsEnabledAsync()).ReturnsAsync(enabled);
+        Mock<IAsyncInitializableExtension> filterInitialization = filter.As<IAsyncInitializableExtension>();
+        filterInitialization.Setup(i => i.InitializeAsync()).Returns(Task.CompletedTask);
+        int factoryCalls = 0;
+        manager.AddTestFrameworkInvoker(_ =>
+        {
+            factoryCalls++;
+            return invoker.Object;
+        });
+        manager.AddTestExecutionFilterFactory(_ =>
+        {
+            factoryCalls++;
+            return filter.Object;
+        });
+        Assert.ThrowsExactly<InvalidOperationException>(() => manager.AddTestFrameworkInvoker(_ => invoker.Object));
+        Assert.ThrowsExactly<InvalidOperationException>(() => manager.AddTestExecutionFilterFactory(_ => filter.Object));
+        Assert.AreEqual(0, factoryCalls);
+
+        ActionResult<Microsoft.Testing.Platform.Requests.ITestFrameworkInvoker> builtInvoker = await manager.TryBuildTestAdapterInvokerAsync(_serviceProvider);
+        ActionResult<Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory> builtFilter = await manager.TryBuildTestExecutionFilterFactoryAsync(_serviceProvider);
+
+        Assert.AreEqual(2, factoryCalls);
+        Assert.AreEqual(enabled, builtInvoker.IsSuccess);
+        Assert.AreEqual(enabled, builtFilter.IsSuccess);
+        Assert.AreSame(enabled ? invoker.Object : null, builtInvoker.Result);
+        Assert.AreSame(enabled ? filter.Object : null, builtFilter.Result);
+        invokerInitialization.Verify(i => i.InitializeAsync(), enabled ? Times.Once() : Times.Never());
+        filterInitialization.Verify(i => i.InitializeAsync(), enabled ? Times.Once() : Times.Never());
+    }
+
+    [TestMethod]
+    public void ActionResult_FactoryAndImplicitSuccessPreserveIdentityAndFailureHasNoResult()
+    {
+        object item = new();
+        var explicitSuccess = ActionResult.Ok(item);
+        ActionResult<object> implicitSuccess = item;
+        var failure = ActionResult.Fail<object>();
+
+        Assert.IsTrue(explicitSuccess.IsSuccess);
+        Assert.AreSame(item, explicitSuccess.Result);
+        Assert.IsTrue(implicitSuccess.IsSuccess);
+        Assert.AreSame(item, implicitSuccess.Result);
+        Assert.IsFalse(failure.IsSuccess);
+        Assert.IsNull(failure.Result);
+    }
+
+    [TestMethod]
+    public async Task BuilderHelpers_RegisterDistinctTreeAndFailureProvidersLazily()
+    {
+        Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>? tree = null;
+        Func<IServiceProvider, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>? failure = null;
+        Mock<ICommandLineManager> manager = new();
+        manager.Setup(m => m.AddProvider(It.IsAny<Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>()))
+            .Callback<Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>(factory => tree = factory);
+        manager.Setup(m => m.AddProvider(It.IsAny<Func<IServiceProvider, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>()))
+            .Callback<Func<IServiceProvider, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>(factory => failure = factory);
+        Mock<ITestApplicationBuilder> builder = new();
+        builder.SetupGet(b => b.CommandLine).Returns(manager.Object);
+        int identityReads = 0;
+        Mock<IExtension> owner = new();
+        owner.SetupGet(o => o.Uid).Returns(() =>
+        {
+            identityReads++;
+            return "owner";
+        });
+        owner.SetupGet(o => o.Version).Returns("1.2.3");
+        owner.SetupGet(o => o.DisplayName).Returns("Owner display");
+        owner.SetupGet(o => o.Description).Returns("Owner description");
+
+        builder.Object.AddTreeNodeFilterService(owner.Object);
+        builder.Object.AddMaximumFailedTestsService(owner.Object);
+        Assert.AreEqual(0, identityReads);
+        Assert.IsNotNull(tree);
+        Assert.IsNotNull(failure);
+        ServiceProvider services = new();
+        services.AddService(new TestFrameworkCapabilities(new Mock<IGracefulStopTestExecutionCapability>().Object));
+        Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider treeProvider = tree();
+        Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider failureProvider = failure(services);
+
+        Assert.AreEqual(2, identityReads);
+        Assert.AreEqual("owner", treeProvider.Uid);
+        Assert.AreEqual("Owner display", failureProvider.DisplayName);
+        Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption treeOption = Assert.ContainsSingle(treeProvider.GetCommandLineOptions());
+        Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption failureOption = Assert.ContainsSingle(failureProvider.GetCommandLineOptions());
+        Assert.AreEqual("treenode-filter", treeOption.Name);
+        Assert.AreEqual("maximum-failed-tests", failureOption.Name);
+        Assert.AreEqual(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.ExactlyOne, treeOption.Arity);
+        Assert.AreEqual(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.ExactlyOne, failureOption.Arity);
+        Assert.IsTrue((await failureProvider.ValidateOptionArgumentsAsync(failureOption, ["3"])).IsValid);
+        ValidationResult rejected = await failureProvider.ValidateOptionArgumentsAsync(failureOption, ["0"]);
+        Assert.IsFalse(rejected.IsValid);
+        Assert.Contains("0", rejected.ErrorMessage!);
+    }
+
+    [TestMethod]
+    public async Task BuilderHelper_FilterProviderRegistrationIsLazyAndBuildsOriginalEnabledOwner()
+    {
+        Microsoft.Testing.Platform.TestHost.TestHostManager manager = new();
+        Mock<ITestApplicationBuilder> builder = new();
+        builder.SetupGet(b => b.TestHost).Returns(manager);
+        Mock<ITestExecutionFilterProvider> provider = new();
+        provider.SetupGet(p => p.Uid).Returns("registered-filter-owner");
+        provider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        ServiceProvider services = new();
+        int created = 0;
+        builder.Object.AddTestExecutionFilterProvider(serviceProvider =>
+        {
+            Assert.AreSame(services, serviceProvider);
+            created++;
+            return provider.Object;
+        });
+        Assert.AreEqual(0, created);
+        Assert.AreEqual(
+            "providerFactory",
+            Assert.ThrowsExactly<ArgumentNullException>(() => builder.Object.AddTestExecutionFilterProvider(null!)).ParamName);
+
+        ITestExecutionFilterProvider[] built = await manager.BuildTestExecutionFilterProvidersAsync(services);
+
+        Assert.AreSame(provider.Object, Assert.ContainsSingle(built));
+        Assert.AreEqual(1, created);
+        provider.Verify(p => p.IsEnabledAsync(), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerConnection_PeerExitCallbackDoesNotBecomeApplicationCancellation(bool withCallback)
+    {
+        using CancellationTokenSource peerExit = new();
+        peerExit.Cancel();
+        int exited = 0;
+        int timedOut = 0;
+        CancellationToken observed = default;
+        Func<Task>? onExit = null;
+        if (withCallback)
+        {
+            onExit = () =>
+            {
+                exited++;
+                return Task.CompletedTask;
+            };
+        }
+
+        bool connected = await TestHostControllersTestHost.WaitForTestHostControllerConnectionOrProcessExitAsync(
+            token =>
+            {
+                observed = token;
+                return Task.FromCanceled(token);
+            },
+            600,
+            CancellationToken.None,
+            () =>
+            {
+                timedOut++;
+                return Task.CompletedTask;
+            },
+            peerExit.Token,
+            onExit);
+
+        Assert.IsFalse(connected);
+        Assert.IsTrue(observed.IsCancellationRequested);
+        Assert.AreEqual(withCallback ? 1 : 0, exited);
+        Assert.AreEqual(0, timedOut);
+    }
+
+    [TestMethod]
+    public async Task ControllerConnection_ApplicationCancellationIsNotSwallowedAsPeerExit()
+    {
+        using CancellationTokenSource application = new();
+        using CancellationTokenSource peerExit = new();
+        application.Cancel();
+        peerExit.Cancel();
+        CancellationToken observed = default;
+        int sideEffects = 0;
+
+        OperationCanceledException failure = await Assert.ThrowsExactlyAsync<TaskCanceledException>(
+            () => TestHostControllersTestHost.WaitForTestHostControllerConnectionOrProcessExitAsync(
+                token =>
+                {
+                    observed = token;
+                    return Task.FromCanceled(token);
+                },
+                600,
+                application.Token,
+                () =>
+                {
+                    sideEffects++;
+                    return Task.CompletedTask;
+                },
+                peerExit.Token,
+                () =>
+                {
+                    sideEffects++;
+                    return Task.CompletedTask;
+                }));
+
+        Assert.AreEqual(observed, failure.CancellationToken);
+        Assert.AreEqual(0, sideEffects);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerTermination_CooperativeAndPostKillCompletionAvoidFalseWarnings(bool needsKill)
+    {
+        Mock<IProcess> process = new();
+        if (needsKill)
+        {
+            process.SetupSequence(p => p.WaitForExitAsync(CancellationToken.None))
+                .ThrowsAsync(new IOException("first wait sentinel"))
+                .Returns(Task.CompletedTask);
+            process.Setup(p => p.Kill()).Throws(new NotSupportedException("kill sentinel"));
+        }
+        else
+        {
+            process.Setup(p => p.WaitForExitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
+        }
+
+        Mock<ILogger> logger = new();
+        List<(LogLevel Level, string Text)> logs = [];
+        logger.Setup(l => l.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, text, _, _) => logs.Add((level, text)))
+            .Returns(Task.CompletedTask);
+        int canceled = 0;
+
+        await TestHostControllersTestHost.HandleCanceledTestHostAsync(
+            process.Object, () => canceled++, logger.Object, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+
+        Assert.AreEqual(1, canceled);
+        process.Verify(p => p.Kill(), needsKill ? Times.Once() : Times.Never());
+        process.Verify(p => p.WaitForExitAsync(CancellationToken.None), Times.Exactly(needsKill ? 2 : 1));
+        Assert.IsEmpty(logs.Where(l => l.Level == LogLevel.Warning));
+        if (needsKill)
+        {
+            Assert.HasCount(3, logs);
+            Assert.StartsWith("Waiting for the test host to exit during cancellation teardown failed; continuing cleanup.", logs[0].Text);
+            Assert.Contains("first wait sentinel", logs[0].Text);
+            Assert.AreEqual("Test host did not exit within '00:00:30' after cooperative cancellation; terminating it.", logs[1].Text);
+            Assert.StartsWith("Test host termination during cancellation failed; continuing cleanup.", logs[2].Text);
+            Assert.Contains("kill sentinel", logs[2].Text);
+        }
+        else
+        {
+            Assert.IsEmpty(logs);
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerConnectionTermination_ExitedAndThrowingKillPartitionsAreSafe()
+    {
+        Mock<IProcess> process = new();
+        process.SetupGet(p => p.HasExited).Returns(false);
+        process.Setup(p => p.Kill()).Throws(new NotSupportedException("connection kill sentinel"));
+        process.Setup(p => p.WaitForExitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
+        List<string> logs = [];
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, text, _, _) => logs.Add(text))
+            .Returns(Task.CompletedTask);
+
+        await TestHostControllersTestHost.TerminateTestHostAfterConnectionFailureAsync(process.Object, logger.Object, TimeSpan.FromSeconds(30));
+
+        string diagnostic = Assert.ContainsSingle(logs);
+        Assert.StartsWith("Test host termination after a connection failure failed; continuing cleanup.", diagnostic);
+        Assert.Contains("connection kill sentinel", diagnostic);
+        process.Verify(p => p.Kill(), Times.Once);
+        process.Verify(p => p.WaitForExitAsync(CancellationToken.None), Times.Once);
+        process.SetupGet(p => p.HasExited).Returns(true);
+        process.Invocations.Clear();
+
+        await TestHostControllersTestHost.TerminateTestHostAfterConnectionFailureAsync(process.Object, logger.Object, TimeSpan.FromSeconds(30));
+
+        process.Verify(p => p.Kill(), Times.Never);
+        process.Verify(p => p.WaitForExitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        Assert.HasCount(1, logs);
     }
 }

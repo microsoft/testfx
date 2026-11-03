@@ -62,4 +62,39 @@ public class ClassCleanupManagerTests : TestContainer
         {
         }
     }
+
+    public void MultipleClassesRequireExplicitClassCompletionBeforeAssemblyCleanup()
+    {
+        var first = new TestMethod("One", "First", "source.dll", null);
+        var second = new TestMethod("Two", "Second", "source.dll", null);
+        var manager = new ClassCleanupManager([new(first), new(first), new(second)]);
+
+        manager.MarkTestComplete(first, out bool firstDone);
+        firstDone.Should().BeFalse();
+        manager.MarkTestComplete(first, out firstDone);
+        firstDone.Should().BeTrue();
+        manager.ShouldRunEndOfAssemblyCleanup.Should().BeFalse();
+        manager.MarkClassComplete("First");
+        manager.ShouldRunEndOfAssemblyCleanup.Should().BeFalse();
+        manager.MarkTestComplete(second, out bool secondDone);
+        secondDone.Should().BeTrue();
+        manager.ShouldRunEndOfAssemblyCleanup.Should().BeFalse();
+        manager.MarkClassComplete("Second");
+        manager.ShouldRunEndOfAssemblyCleanup.Should().BeTrue();
+    }
+
+    public void InvalidCompletionTransitionsFailWithTheExactInvariantKind()
+    {
+        var method = new TestMethod("One", "First", "source.dll", null);
+        var manager = new ClassCleanupManager([new(method)]);
+        Action unknownTest = () => manager.MarkTestComplete(new TestMethod("Other", "Unknown", "source.dll", null), out _);
+        Action unknownClass = () => manager.MarkClassComplete("Unknown");
+        Action incompleteClass = () => manager.MarkClassComplete("First");
+        foreach (Action invalid in new[] { unknownTest, unknownClass, incompleteClass })
+        {
+            Exception failure = invalid.Should().Throw<Exception>().Which;
+            failure.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
+            failure.Message.Should().Contain("ClassCleanupManager.cs");
+        }
+    }
 }

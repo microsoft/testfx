@@ -382,4 +382,30 @@ public sealed class PropertyBagTests
     private sealed class DummyProperty : IProperty;
 
     private sealed class DummyProperty2 : IProperty;
+
+    [TestMethod]
+    public void Enumeration_NonGenericViewResetAndDisposePreserveOrderAndInvalidCurrent()
+    {
+        TestMetadataProperty first = new("first", "value-a");
+        TestMetadataProperty second = new("second", "value-b");
+        IProperty state = PassedTestNodeStateProperty.CachedInstance;
+        PropertyBag bag = new(first, state, second);
+        IEnumerator enumerator = ((IEnumerable)bag.AsEnumerable()).GetEnumerator();
+        Assert.AreEqual(
+            "Invalid Current state, possible wrong usage.",
+            Assert.ThrowsExactly<InvalidOperationException>(() => _ = enumerator.Current).Message);
+        List<object> observed = [];
+        while (enumerator.MoveNext())
+        {
+            observed.Add(enumerator.Current);
+        }
+
+        Assert.AreSequenceEqual<object>([second, first, state], observed);
+        enumerator.Reset();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = enumerator.Current);
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(second, enumerator.Current);
+        ((IDisposable)enumerator).Dispose();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = enumerator.Current);
+    }
 }

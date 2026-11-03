@@ -36,7 +36,7 @@ public static class WellKnownEnvironmentVariables
         "AMP_HOME",
         "QWEN_CODE",
         "DROID_CLI",
-        "OPENCODE_AI",
+        "OPENCODE",
         "ZED_ENVIRONMENT",
         "ZED_TERM",
         "KIMI_CLI",

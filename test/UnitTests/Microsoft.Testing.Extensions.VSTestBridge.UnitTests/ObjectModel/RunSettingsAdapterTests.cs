@@ -78,4 +78,37 @@ public sealed class RunSettingsAdapterTests
                 It.IsAny<Func<string, Exception?, string>>()),
             Times.Once);
     }
+
+    [TestMethod]
+    public void Constructor_UnsupportedBlocks_ReportsBothWarningsWithoutDroppingSettings()
+    {
+        var fixture = new Helpers.BridgeTestFixture();
+        fixture.FileSystem.Setup(value => value.ReadAllText("tests.runsettings")).Returns(
+            "<RunSettings><LoggerRunSettings><Loggers /></LoggerRunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings></RunSettings>");
+        var warnings = new List<(TestMessageLevel Level, string Text)>();
+        var messages = new Mock<IMessageLogger>();
+        messages.Setup(value => value.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()))
+            .Callback<TestMessageLevel, string>((level, text) => warnings.Add((level, text)));
+        var configuration = new Mock<IConfiguration>();
+        configuration.SetupGet(value => value[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("results");
+
+        var adapter = new RunSettingsAdapter(fixture.CommandLineOptions.Object, fixture.FileSystem.Object,
+            configuration.Object, fixture.ClientInfo, fixture.LoggerFactory, messages.Object);
+
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                (TestMessageLevel.Warning, ExtensionResources.UnsupportedRunsettingsLoggers),
+                (TestMessageLevel.Warning, ExtensionResources.UnsupportedRunsettingsDatacollectors),
+            },
+            warnings);
+        var document = System.Xml.Linq.XDocument.Parse(adapter.SettingsXml!);
+        Assert.AreEqual(
+            "<LoggerRunSettings><Loggers /></LoggerRunSettings>",
+            document.Root!.Element("LoggerRunSettings")!.ToString(System.Xml.Linq.SaveOptions.DisableFormatting));
+        Assert.AreEqual(
+            "<DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings>",
+            document.Root.Element("DataCollectionRunSettings")!.ToString(System.Xml.Linq.SaveOptions.DisableFormatting));
+        _ = Assert.ThrowsExactly<NotImplementedException>(() => adapter.GetSettings("adapter-settings"));
+    }
 }

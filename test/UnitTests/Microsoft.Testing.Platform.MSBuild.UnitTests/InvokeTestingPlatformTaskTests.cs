@@ -11,13 +11,70 @@ using Moq;
 
 using FailedTestInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest;
 using ModuleInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.ModuleInfoRequest;
+using ModuleInfoRequestSerializer = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.ModuleInfoRequestSerializer;
 using RunSummaryInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.RunSummaryInfoRequest;
+using RunSummaryInfoRequestSerializer = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.RunSummaryInfoRequestSerializer;
+using TaskSystemEnvironment = PlatformMSBuild::Microsoft.Testing.Platform.Helpers.SystemEnvironment;
 
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
 [TestClass]
 public sealed class InvokeTestingPlatformTaskTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async System.Threading.Tasks.Task ProcessStarted_ReceivesSerializedHandshakeAndSummary_ThenStopsCleanly()
+    {
+        using AppHostTaskFixture fixture = new();
+        StubFileSystem fileSystem = new();
+        using TestableInvokeTestingPlatformTask task = CreateSimulatedTask(fixture, fileSystem);
+        List<BuildErrorEventArgs> errors = [];
+        var engine = new Mock<IBuildEngine>();
+        engine.Setup(value => value.LogErrorEvent(It.IsAny<BuildErrorEventArgs>())).Callback<BuildErrorEventArgs>(errors.Add);
+        task.BuildEngine = engine.Object;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        cancellation.CancelAfter(TimeSpan.FromSeconds(30));
+        task.StartConnectionLoop();
+        Type clientType = GetEmbeddedPipeType("Microsoft.Testing.Platform.IPC.NamedPipeClient");
+        Type responseType = GetEmbeddedPipeType("Microsoft.Testing.Platform.IPC.Models.VoidResponse");
+        using (var client = (IDisposable)Activator.CreateInstance(clientType, task.GetPipeName(), new TaskSystemEnvironment(), false)!)
+        {
+            MethodInfo register = clientType.GetMethod("RegisterSerializer")!;
+            register.Invoke(client, [new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest)]);
+            register.Invoke(client, [new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest)]);
+            register.Invoke(client, [Activator.CreateInstance(GetEmbeddedPipeType("Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer")), responseType]);
+            await (System.Threading.Tasks.Task)clientType.GetMethod("ConnectAsync")!.Invoke(client, [cancellation.Token])!;
+            object[] requests =
+            [
+                new ModuleInfoRequest("framework", "x64", "wire-results"),
+                new RunSummaryInfoRequest(1, 0, 1, 0, "1s", AllowSkipped: true),
+            ];
+            foreach (object request in requests)
+            {
+                MethodInfo send = clientType.GetMethod("RequestReplyAsync")!.MakeGenericMethod(request.GetType(), responseType);
+                await (System.Threading.Tasks.Task)send.Invoke(client, [request, cancellation.Token])!;
+            }
+        }
+
+        Assert.IsTrue(task.Execute());
+        Assert.AreEqual(1, task.SimulatedLaunches);
+        Assert.IsEmpty(errors);
+        string outputPath = Assert.ContainsSingle(fileSystem.CreatedFiles.Keys);
+        Assert.AreEqual(Path.Combine("wire-results", "apphost_net9.0_x64.log"), outputPath);
+        Assert.IsFalse(fileSystem.CreatedFiles[outputPath].CanWrite);
+        Assert.AreEqual(
+            """
+            simulated output
+
+            === COMMAND LINE ===
+            simulated command
+
+
+            """.ReplaceLineEndings(),
+            Encoding.Unicode.GetString(fileSystem.CreatedFiles[outputPath].ToArray()).TrimStart('\uFEFF').ReplaceLineEndings());
+    }
+
     [TestMethod]
     [DataRow(true, 0, true)]
     [DataRow(false, 0, false)]
@@ -253,6 +310,10 @@ public sealed class InvokeTestingPlatformTaskTests
             IsExecutable = new TaskItem("true"),
         };
     }
+
+    // Embedded transport types are intentionally hidden from cross-assembly C# consumers.
+    private static Type GetEmbeddedPipeType(string fullName)
+        => typeof(InvokeTestingPlatformTask).Assembly.GetType(fullName, throwOnError: true)!;
 
     [TestMethod]
     public void ToolResolution_DirectExecutableUsesTargetPathEvenWithAppHostInputs()
@@ -662,6 +723,8 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public string GetToolName() => ToolName;
 
+        public void StartConnectionLoop() => ProcessStarted();
+
         public int? SimulatedExitCode { get; set; }
 
         public int SimulatedLaunches { get; private set; }
@@ -769,5 +832,331 @@ public sealed class InvokeTestingPlatformTaskTests
         public string ReadAllText(string path) => throw new NotSupportedException();
 
         public void WriteAllText(string path, string? contents) => throw new NotSupportedException();
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ToolResolution_UnusableExplicitHost_UsesConfiguredArchitectureMuxer(bool existingIncompatibleHost)
+    {
+        using AppHostTaskFixture fixture = new();
+        using ToolResolutionEnvironment environment = new(fixture.DotnetRoot);
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        string requestedArchitecture = RuntimeInformation.ProcessArchitecture == Architecture.X86 ? "x64" : "x86";
+        string architecture = requestedArchitecture.ToUpperInvariant();
+        string variable = $"DOTNET_ROOT_{architecture}";
+        string muxer = CreateResolutionMuxer(fixture.DotnetRoot, "configured", requestedArchitecture == "x86" ? (ushort)0x014c : (ushort)0x8664);
+        Environment.SetEnvironmentVariable(variable, Path.GetDirectoryName(muxer));
+        task.UseAppHost = new TaskItem("false");
+        task.TargetPath = new TaskItem(Path.Combine(fixture.DotnetRoot, "assembly.DLL"));
+        task.TestArchitecture = new TaskItem(requestedArchitecture);
+        if (!existingIncompatibleHost)
+        {
+            task.DotnetHostPath = new TaskItem(Path.Combine(fixture.DotnetRoot, "missing-dotnet.exe"));
+        }
+
+        List<string> events = [];
+        task.BuildEngine = CreateToolResolutionEngine(events);
+
+        string? actual = task.GetFullToolPath();
+
+        Assert.AreEqual(muxer, actual);
+        string resolutionLog = string.Join(
+            Environment.NewLine,
+            [
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named 'dotnet.exe'",
+                $"DotnetHostHelper.IsValidArchitectureMuxer: Compatible architecture muxer, target architecture '{architecture}', actual '{architecture}'",
+                $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with '{architecture}' resolved from env variable '{variable}' in '{muxer}'",
+            ]) + Environment.NewLine;
+        Assert.AreSequenceEqual(
+            [
+                $"message:Low:Target path is a dll '{task.TargetPath.ItemSpec}'",
+                "message:Low:Tool name: 'dotnet.exe'",
+                $"message:Low:Current process architecture '{RuntimeInformation.ProcessArchitecture}'. Requested test architecture '{requestedArchitecture}'",
+                $"message:Low:{resolutionLog}",
+                $"message:Low:dotnet muxer tool path found using architecture: '{requestedArchitecture}' '{muxer}'",
+            ],
+            events);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ToolResolution_InvalidConfiguredRoot_LogsResolutionBeforeArchitectureError(bool containsIncompatibleMuxer)
+    {
+        using AppHostTaskFixture fixture = new();
+        using ToolResolutionEnvironment environment = new(fixture.DotnetRoot);
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        string requestedArchitecture = RuntimeInformation.ProcessArchitecture == Architecture.X86 ? "x64" : "x86";
+        string architecture = requestedArchitecture.ToUpperInvariant();
+        string actualArchitecture = requestedArchitecture == "x86" ? "X64" : "X86";
+        string variable = $"DOTNET_ROOT_{architecture}";
+        string configuredRoot = Path.Combine(fixture.DotnetRoot, "configured");
+        Directory.CreateDirectory(configuredRoot);
+        if (containsIncompatibleMuxer)
+        {
+            CreateResolutionMuxer(fixture.DotnetRoot, "configured", requestedArchitecture == "x86" ? (ushort)0x8664 : (ushort)0x014c);
+        }
+
+        string fallback = CreateResolutionMuxer(fixture.DotnetRoot, "fallback", requestedArchitecture == "x86" ? (ushort)0x014c : (ushort)0x8664);
+        Environment.SetEnvironmentVariable(variable, configuredRoot);
+        Environment.SetEnvironmentVariable("PATH", Path.GetDirectoryName(fallback));
+        task.UseAppHost = new TaskItem("false");
+        task.TargetPath = new TaskItem(Path.Combine(fixture.DotnetRoot, "assembly.dll"));
+        task.TestArchitecture = new TaskItem(requestedArchitecture);
+        task.DotnetHostPath = null;
+        List<string> events = [];
+        task.BuildEngine = CreateToolResolutionEngine(events);
+
+        string? actual = task.GetFullToolPath();
+
+        Assert.IsNull(actual);
+        string[] resolutionMessages = containsIncompatibleMuxer
+            ? [
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named 'dotnet.exe'",
+                $"DotnetHostHelper.IsValidArchitectureMuxer: Incompatible architecture muxer, target architecture '{architecture}', actual '{actualArchitecture}'",
+                $"DotnetHostHelper: Invalid muxer resolved using env var key '{variable}' in '{configuredRoot}'",
+            ]
+            : [
+                "DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named 'dotnet.exe'",
+                $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Folder specified by env variable does not contain any muxer: '{configuredRoot}={variable}'",
+            ];
+        string resolutionLog = string.Join(Environment.NewLine, resolutionMessages) + Environment.NewLine;
+        string expectedError = string.Format(
+            CultureInfo.InvariantCulture,
+            Microsoft.Testing.Platform.MSBuild.Resources.MSBuildResources.IncompatibleArchitecture,
+            "dotnet.exe",
+            requestedArchitecture);
+        Assert.AreSequenceEqual(
+            [
+                $"message:Low:Target path is a dll '{task.TargetPath.ItemSpec}'",
+                "message:Low:Tool name: 'dotnet.exe'",
+                $"message:Low:Current process architecture '{RuntimeInformation.ProcessArchitecture}'. Requested test architecture '{requestedArchitecture}'",
+                $"message:Low:{resolutionLog}",
+                $"error:{expectedError}",
+            ],
+            events);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Linux)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void ToolResolution_FrameworkExecutableOnUnix_UsesFirstMonoRunnerFromPath()
+    {
+        using AppHostTaskFixture fixture = new();
+        using ToolResolutionEnvironment environment = new(fixture.DotnetRoot);
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        string wrongNameRoot = Path.Combine(fixture.DotnetRoot, "wrong-name");
+        string firstRoot = Path.Combine(fixture.DotnetRoot, "first runner");
+        string secondRoot = Path.Combine(fixture.DotnetRoot, "second runner");
+        Directory.CreateDirectory(wrongNameRoot);
+        Directory.CreateDirectory(firstRoot);
+        Directory.CreateDirectory(secondRoot);
+        File.WriteAllText(Path.Combine(wrongNameRoot, "mono.exe"), string.Empty);
+        string first = Path.Combine(firstRoot, "mono");
+        File.WriteAllText(first, string.Empty);
+        File.WriteAllText(Path.Combine(secondRoot, "mono"), string.Empty);
+        Environment.SetEnvironmentVariable(
+            "PATH",
+            string.Join(Path.PathSeparator.ToString(), Path.Combine(fixture.DotnetRoot, "missing"), wrongNameRoot, firstRoot, secondRoot));
+        task.TargetFrameworkIdentifier = new TaskItem(".NETFramework");
+        task.TargetPath = new TaskItem(Path.Combine(fixture.DotnetRoot, "framework tests.EXE"));
+        List<string> events = [];
+        task.BuildEngine = CreateToolResolutionEngine(events);
+        string selectingMono = $"message:Low:Target is an '.exe' on '{RuntimeInformation.OSDescription}' trying with the mono runner.";
+
+        Assert.AreEqual("mono", task.GetToolName());
+        Assert.AreSequenceEqual([selectingMono], events);
+        events.Clear();
+
+        Assert.AreEqual(first, task.GetFullToolPath());
+        Assert.AreSequenceEqual(
+            [
+                selectingMono,
+                "message:Low:Tool name: 'mono'",
+                $"message:Low:Runner tool path found using PATH environment variable: '{first}'",
+            ],
+            events);
+        events.Clear();
+
+        Assert.AreEqual($"\"{task.TargetPath.ItemSpec}\" --internal-msbuild-node {task.GetPipeName()}", task.GetGeneratedCommandLine());
+        Assert.AreSequenceEqual([selectingMono, selectingMono], events);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Linux)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ToolResolution_FrameworkExecutableOnUnix_ReportsMissingMonoRunner(bool hasPath)
+    {
+        using AppHostTaskFixture fixture = new();
+        using ToolResolutionEnvironment environment = new(fixture.DotnetRoot);
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        Environment.SetEnvironmentVariable(
+            "PATH",
+            hasPath ? string.Join(Path.PathSeparator.ToString(), fixture.DotnetRoot, Path.Combine(fixture.DotnetRoot, "missing")) : null);
+        task.TargetFrameworkIdentifier = new TaskItem(".NETFramework");
+        task.TargetPath = new TaskItem(Path.Combine(fixture.DotnetRoot, "framework.exe"));
+        List<string> events = [];
+        task.BuildEngine = CreateToolResolutionEngine(events);
+
+        Assert.IsNull(task.GetFullToolPath());
+
+        string expectedError = string.Format(
+            CultureInfo.InvariantCulture,
+            Microsoft.Testing.Platform.MSBuild.Resources.MSBuildResources.FullPathToolCalculationFailed,
+            "mono");
+        Assert.AreSequenceEqual(
+            [
+                $"message:Low:Target is an '.exe' on '{RuntimeInformation.OSDescription}' trying with the mono runner.",
+                "message:Low:Tool name: 'mono'",
+                $"error:{expectedError}",
+            ],
+            events);
+    }
+
+    private static IBuildEngine CreateToolResolutionEngine(List<string> events)
+    {
+        Mock<IBuildEngine> engine = new();
+        engine.Setup(value => value.LogMessageEvent(It.IsAny<BuildMessageEventArgs>()))
+            .Callback<BuildMessageEventArgs>(message => events.Add($"message:{message.Importance}:{message.Message}"));
+        engine.Setup(value => value.LogErrorEvent(It.IsAny<BuildErrorEventArgs>()))
+            .Callback<BuildErrorEventArgs>(error => events.Add($"error:{error.Message}"));
+        engine.Setup(value => value.LogWarningEvent(It.IsAny<BuildWarningEventArgs>()))
+            .Callback<BuildWarningEventArgs>(warning => events.Add($"warning:{warning.Message}"));
+        return engine.Object;
+    }
+
+    private static string CreateResolutionMuxer(string root, string directory, ushort machine)
+    {
+        string muxerRoot = Path.Combine(root, directory);
+        Directory.CreateDirectory(muxerRoot);
+        string path = Path.Combine(muxerRoot, "dotnet.exe");
+        byte[] header = new byte[90];
+        BitConverter.GetBytes(0x40u).CopyTo(header, 0x3C);
+        BitConverter.GetBytes(0x00004550u).CopyTo(header, 0x40);
+        BitConverter.GetBytes(machine).CopyTo(header, 0x44);
+        BitConverter.GetBytes((ushort)0x020B).CopyTo(header, 0x58);
+        File.WriteAllBytes(path, header);
+        return path;
+    }
+
+    private sealed class ToolResolutionEnvironment : IDisposable
+    {
+        private readonly Dictionary<string, string?> _originalValues = [];
+
+        public ToolResolutionEnvironment(string path)
+        {
+            string[] keys =
+            [
+                "DOTNET_ROOT_X86", "DOTNET_ROOT_X64", "DOTNET_ROOT_ARM", "DOTNET_ROOT_ARM64",
+                "DOTNET_ROOT(x86)", "DOTNET_ROOT", "PATH",
+            ];
+            foreach (string key in keys)
+            {
+                _originalValues[key] = Environment.GetEnvironmentVariable(key);
+                Environment.SetEnvironmentVariable(key, null);
+            }
+
+            Environment.SetEnvironmentVariable("PATH", path);
+        }
+
+        public void Dispose()
+        {
+            foreach (KeyValuePair<string, string?> entry in _originalValues)
+            {
+                Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            }
+        }
+    }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void ToolResolution_OverriddenMonoRunner_UsesFirstExistingPathEntry()
+    {
+        using AppHostTaskFixture fixture = new();
+        using ToolResolutionEnvironment environment = new(fixture.DotnetRoot);
+        string wrongNameRoot = Path.Combine(fixture.DotnetRoot, "wrong-name");
+        string firstRoot = Path.Combine(fixture.DotnetRoot, "first runner");
+        string secondRoot = Path.Combine(fixture.DotnetRoot, "second runner");
+        Directory.CreateDirectory(wrongNameRoot);
+        Directory.CreateDirectory(firstRoot);
+        Directory.CreateDirectory(secondRoot);
+        File.WriteAllText(Path.Combine(wrongNameRoot, "mono.exe"), string.Empty);
+        string first = Path.Combine(firstRoot, "mono");
+        File.WriteAllText(first, string.Empty);
+        File.WriteAllText(Path.Combine(secondRoot, "mono"), string.Empty);
+        Environment.SetEnvironmentVariable(
+            "PATH",
+            string.Join(Path.PathSeparator.ToString(), Path.Combine(fixture.DotnetRoot, "missing"), wrongNameRoot, firstRoot, secondRoot));
+        using MonoRunnerInvokeTestingPlatformTask task = new(new TaskItem(Path.Combine(fixture.DotnetRoot, "custom.dll")));
+        List<string> events = [];
+        task.BuildEngine = CreateToolResolutionEngine(events);
+
+        string? actual = task.GetFullToolPath();
+
+        Assert.AreEqual(first, actual);
+        Assert.AreSequenceEqual(
+            [
+                "message:Low:Tool name: 'mono'",
+                $"message:Low:Runner tool path found using PATH environment variable: '{first}'",
+            ],
+            events);
+    }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ToolResolution_OverriddenMonoRunner_ReportsMissingPathCandidate(bool hasPath)
+    {
+        using AppHostTaskFixture fixture = new();
+        using ToolResolutionEnvironment environment = new(fixture.DotnetRoot);
+        Environment.SetEnvironmentVariable(
+            "PATH",
+            hasPath ? string.Join(Path.PathSeparator.ToString(), fixture.DotnetRoot, Path.Combine(fixture.DotnetRoot, "missing")) : null);
+        using MonoRunnerInvokeTestingPlatformTask task = new(new TaskItem(Path.Combine(fixture.DotnetRoot, "custom.dll")));
+        List<string> events = [];
+        task.BuildEngine = CreateToolResolutionEngine(events);
+
+        string? actual = task.GetFullToolPath();
+
+        Assert.IsNull(actual);
+        string expectedError = string.Format(
+            CultureInfo.InvariantCulture,
+            Microsoft.Testing.Platform.MSBuild.Resources.MSBuildResources.FullPathToolCalculationFailed,
+            "mono");
+        Assert.AreSequenceEqual(
+            [
+                "message:Low:Tool name: 'mono'",
+                $"error:{expectedError}",
+            ],
+            events);
+    }
+
+    private sealed class MonoRunnerInvokeTestingPlatformTask : InvokeTestingPlatformTask
+    {
+        [SetsRequiredMembers]
+        public MonoRunnerInvokeTestingPlatformTask(ITaskItem targetPath)
+            : base(new StubFileSystem())
+        {
+            BuildEngine = Mock.Of<IBuildEngine>();
+            TargetPath = targetPath;
+            TargetFramework = new TaskItem("net9.0");
+            TestArchitecture = new TaskItem("x64");
+            TargetFrameworkIdentifier = new TaskItem(".NETCoreApp");
+            TestingPlatformShowTestsFailure = new TaskItem("false");
+            TestingPlatformCaptureOutput = new TaskItem("true");
+            ProjectFullPath = new TaskItem("MyProject.csproj");
+        }
+
+        protected override string ToolName => "mono";
+
+        public string? GetFullToolPath() => GenerateFullPathToTool();
     }
 }

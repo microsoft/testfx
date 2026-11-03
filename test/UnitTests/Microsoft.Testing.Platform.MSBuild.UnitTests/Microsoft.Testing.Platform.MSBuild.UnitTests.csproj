@@ -23,7 +23,20 @@
   <ItemGroup>
     <!-- FailedTestInfoRequest is source-linked into both assemblies; alias this reference to select the Platform MSBuild copy in tests. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Aliases="global,PlatformMSBuild" />
+    <!-- Exercise real downlevel implementations instead of their modern BCL type forwarders. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="CompatibilityAssembly"
+                      SetTargetFramework="TargetFramework=netstandard2.0" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" />
   </ItemGroup>
+
+  <Target Name="_CopyCompatibilityAssembly" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+    <Error Condition="'@(CompatibilityAssembly)' == ''" Text="The netstandard2.0 MSBuild task is required by compatibility tests." />
+    <Copy SourceFiles="@(CompatibilityAssembly)" DestinationFolder="$(OutDir)LegacyMSBuild" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="@(CompatibilityAssembly->'$(OutDir)LegacyMSBuild\%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
 
 </Project>

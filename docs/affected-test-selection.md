@@ -457,6 +457,37 @@ Public dependency pins are unchanged. `EnableCTSCollection` remains off until th
 approved/published and its pipeline pin updated. The coordinator retains dependency-flow and rollout
 ownership; the local performance results do not authorize downstream activation or private publication.
 
+#### Current-main merge validation (2026-11-03)
+
+The original validated head `2a2240bfeaaaa044b0a41cd5ac4b49e86b341bce` is merged with
+main `165333f32123111b70b3ead7f53e40e431c02055` without rewriting the existing evidence commits.
+The sole conflict was adjacent, independent source links in the MTP unit project:
+retain main's `DiagnosticAssertionObserver` and the collection-cache helper's existing Core-only condition.
+The automatic merges also retain main's additional JSON tests and environment-name correction.
+No collection, timing, cache or test-assertion behavior is changed to resolve the conflict.
+
+Merged-source Debug validation uses the repository-local pinned SDK and the same timing/cache selection:
+
+```powershell
+$project = 'test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj'
+$filter = 'FullyQualifiedName~FormatterUtilitiesTests|FullyQualifiedName~JsonTests|FullyQualifiedName~CollectionPackageCacheTests'
+# $run is a separate task-owned result directory for each target framework.
+& .\eng\common\dotnet.ps1 test --project $project --framework $tfm -c Debug --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$run" "-bl:$run\build-test.binlog" --show-test-results failed
+```
+
+Both commands exit 0: **179 passed on net10.0 and 125 passed on net462, zero failed/skipped**.
+TRX definitions/results confirm all 48 modern/legacy UTC cases on Core, all 24 legacy UTC cases on
+Framework and the marked-cache regression actually execute. The existing script gates also pass:
+11 module-pool cases, nine CTS selector/artifact cases, 19 Windows + 39 Unix + 13 CTS wiring cases
+and the package-staging guard. The final diff passes whitespace and required C# BOM checks.
+An initial local invocation duplicated the repository-provided results-directory option and was
+rejected before tests executed; that setup failure is not regression proof.
+
+**Test-value evidence:** this is a behavior-preserving merge, not a new feature or a new red/green claim.
+Retained UTC/cache assertions pass with current main; their earlier counterfactual evidence remains
+bound to its recorded source states. Full packing, the 74-module collection benchmark and CI were
+not repeated for this merge. Historical performance/package evidence is not relabeled as this new head.
+
 ### Local acceptance profiling experiment (2026-11-03)
 
 The follow-up request is to execute genuine acceptance tests locally and use OTel or equivalent tracing

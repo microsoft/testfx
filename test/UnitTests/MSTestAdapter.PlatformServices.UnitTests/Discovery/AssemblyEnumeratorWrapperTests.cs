@@ -203,4 +203,100 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     }
 
     #endregion
+
+    public void IsolationLoaderFailuresPreserveSingleAndMultipleCauses()
+    {
+        const string Source = "isolation-source.dll";
+        SetupMocks(Source, doesFileExist: true, isAssemblyReferenced: true);
+        _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsErrorEnabled).Returns(true);
+        var single = new TypeLoadException("one loader failure");
+        var wrapped = new ReflectionTypeLoadException([typeof(object)], [single]);
+        _testablePlatformServiceProvider.MockTestSourceHost
+            .Setup(value => value.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object?[]>()))
+            .Throws(wrapped);
+        Action load = () => AssemblyEnumeratorWrapper.GetTests(Source, null, _mockTestSourceHandler.Object, false, out _);
+        load.Should().ThrowExactly<TypeLoadException>().Which.Should().BeSameAs(single);
+
+        var second = new FileLoadException("second loader failure");
+        var multiple = new ReflectionTypeLoadException([typeof(object), typeof(string)], [single, second]);
+        _testablePlatformServiceProvider.MockTestSourceHost
+            .Setup(value => value.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object?[]>()))
+            .Throws(multiple);
+        load.Should().ThrowExactly<ReflectionTypeLoadException>().Which.Should().BeSameAs(multiple);
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Error("{0}", single), Times.Once);
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Error("{0}", second), Times.Once);
+        _testablePlatformServiceProvider.MockTestSourceHost.Verify(value => value.Dispose(), Times.Exactly(2));
+    }
+
+    public void ImageProbeDistinguishesNativeMalformedAndManagedImages()
+    {
+        byte[] original = File.ReadAllBytes(typeof(AssemblyEnumeratorWrapperTests).Assembly.Location);
+        int pointer = BitConverter.ToInt32(original, 0x3C);
+        List<(string Name, byte[] Image, bool Managed)> cases =
+        [
+            ("short image", original.Take(32).ToArray(), false),
+            ("truncated headers", original.Take(pointer + 128).ToArray(), false),
+            ("PE32 managed", Patch(bytes => Header(bytes, pointer, 0x10B, 1)), true),
+            ("PE32Plus managed", Patch(bytes => Header(bytes, pointer, 0x20B, 1)), true),
+            ("PE32 native", Patch(bytes => Header(bytes, pointer, 0x10B, 0)), false),
+            ("PE32Plus native", Patch(bytes => Header(bytes, pointer, 0x20B, 0)), false),
+            ("invalid format", Patch(bytes => Header(bytes, pointer, 0x107, 1)), false),
+            ("invalid signature", Patch(bytes => WriteUInt32(bytes, pointer, 0)), false),
+            ("out of bounds pointer", Patch(bytes => WriteUInt32(bytes, 0x3C, (uint)bytes.Length)), false),
+            ("zero pointer legacy header", Patch(bytes =>
+            {
+                WriteUInt32(bytes, 0x3C, 0);
+                Header(bytes, 0x80, 0x10B, 1);
+            }), true),
+        ];
+        string directory = Path.Combine(Path.GetTempPath(), "pe-probe-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            for (int index = 0; index < cases.Count; index++)
+            {
+                (string name, byte[] image, bool managed) = cases[index];
+                string path = Path.Combine(directory, "image-" + index.ToString(CultureInfo.InvariantCulture) + ".dll");
+                File.WriteAllBytes(path, image);
+                SetupMocks(path, doesFileExist: true, isAssemblyReferenced: true);
+                var failure = new BadImageFormatException("image cannot be activated");
+                _testablePlatformServiceProvider.MockTestSourceHost
+                    .Setup(value => value.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object?[]>()))
+                    .Throws(failure);
+                if (managed)
+                {
+                    Action load = () => AssemblyEnumeratorWrapper.GetTests(path, null, _mockTestSourceHandler.Object, false, out _);
+                    load.Should().ThrowExactly<BadImageFormatException>(name).Which.Should().BeSameAs(failure);
+                }
+                else
+                {
+                    AssemblyEnumeratorWrapper.GetTests(path, null, _mockTestSourceHandler.Object, false, out List<string> warnings)
+                        .Should().BeNull(name);
+                    warnings.Should().BeEmpty(name);
+                }
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+
+        byte[] Patch(Action<byte[]> patch)
+        {
+            byte[] copy = (byte[])original.Clone();
+            patch(copy);
+            return copy;
+        }
+
+        static void Header(byte[] bytes, int offset, ushort format, uint cli)
+        {
+            WriteUInt32(bytes, offset, 0x00004550);
+            BitConverter.GetBytes(format).CopyTo(bytes, offset + 24);
+            WriteUInt32(bytes, offset + 232, format == 0x10B ? cli : 0);
+            WriteUInt32(bytes, offset + 248, format == 0x20B ? cli : 0);
+        }
+
+        static void WriteUInt32(byte[] bytes, int offset, uint value)
+            => BitConverter.GetBytes(value).CopyTo(bytes, offset);
+    }
 }

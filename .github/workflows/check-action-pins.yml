@@ -23,6 +23,7 @@ on:
       - '.github/scripts/issue-labeler.test.mjs'
       - '.github/scripts/test_gh_aw_firewall_footer.py'
       - '.github/scripts/test_build_failure_analysis_checkout.py'
+      - '.github/scripts/test_agentic_workflow_warning_contracts.py'
       - '.github/scripts/check_unused_package_versions.py'
       - '.github/scripts/test_check_unused_package_versions.py'
       - '**/*.csproj'
@@ -44,6 +45,7 @@ on:
       - '.github/scripts/issue-labeler.test.mjs'
       - '.github/scripts/test_gh_aw_firewall_footer.py'
       - '.github/scripts/test_build_failure_analysis_checkout.py'
+      - '.github/scripts/test_agentic_workflow_warning_contracts.py'
       - '.github/scripts/check_unused_package_versions.py'
       - '.github/scripts/test_check_unused_package_versions.py'
       - '**/*.csproj'
@@ -79,6 +81,8 @@ jobs:
         run: python .github/scripts/check_action_pins.py
       - name: Test build-analysis checkout identity
         run: python .github/scripts/test_build_failure_analysis_checkout.py
+      - name: Test agentic workflow runtime contracts
+        run: python .github/scripts/test_agentic_workflow_warning_contracts.py
       - name: Test and audit central package versions
         run: |
           python .github/scripts/test_check_unused_package_versions.py
@@ -86,7 +90,7 @@ jobs:
       - name: Test issue labeler helper
         run: node --test .github/scripts/issue-labeler.test.mjs
       - name: Setup pinned gh-aw scripts
-        uses: github/gh-aw-actions/setup@924af5fdc64061cfbf66fb584c8b07e2ac230c60 # v0.89.21
+        uses: github/gh-aw-actions/setup@221ba4f4319de6b8e809d1a15528b3ae6a818aa5 # v1.0.1
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Test firewall footer correction
