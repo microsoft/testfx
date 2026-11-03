@@ -83,7 +83,8 @@ safe-outputs:
 
 tools:
   github:
-    toolsets: [all]
+    # Dependabot is opt-in even when the all alias is selected.
+    toolsets: [all, dependabot]
   bash: true
 
 timeout-minutes: 15

@@ -34,7 +34,32 @@ gh aw logs <workflow-id>
 gh aw audit <run-id>
 ```
 
-For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
+For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.md`](../agents/agentic-workflows.md), which routes to the canonical `gh-aw` prompts.
+
+### Authoring-warning runtime contracts
+
+Fix authoring warnings at their execution boundary, without suppressing lint or
+weakening permissions, detection, network policy, or safe-output bounds.
+
+| Workflow | Required contract |
+| --- | --- |
+| Build failure analysis | `safe-outputs.needs` directly includes `fetch-binlog`, so publisher checkouts resolve the same validated head SHA and base ref as the analysis. Keep the binlog/source identity and publication gates intact. |
+| Dependabot PR bundler | gh-aw v1.0.1 excludes `dependabot` from the `all` alias. Opt into that toolset explicitly to expose both alert-read tools, without replacing the existing repository/PR tools or expanding permissions. |
+| `/parallel-audit` | Trusted extraction writes `/tmp/gh-aw/parallel-audit/audit-inputs.json` and its four input files inside the agent-visible tree. The prompt reads the resolved PR/revisions, counts, paths, scope, and HEAD-side regions at runtime, never from activation-time custom-step expressions. Missing required inputs mean incomplete analysis, not an empty scope. |
+| Unskip closed tests | The fresh publisher checkout does not persist credentials. Initial pushes and every branch-cleanup push use a command-scoped `gh auth git-credential` helper, leaving no credential/helper in checkout configuration. Verification, duplicate/race checks, and publication remain separate from the read-only agent. |
+
+The deterministic regression suite checks the compiled job/tool contracts and
+executes the trusted extraction and publisher scripts with isolated local
+fixtures. Run it alongside the checkout-identity tests and pin audit:
+
+```bash
+python .github/scripts/test_agentic_workflow_warning_contracts.py
+python .github/scripts/test_build_failure_analysis_checkout.py
+python .github/scripts/check_action_pins.py
+```
+
+These are local contract checks, not evidence of live GitHub alert access,
+model analysis, or review/PR publication. Live runs require separate authorization.
 
 ### Test-quality skill contract
 
@@ -94,7 +119,9 @@ close the automatically managed tracker to hide a false positive. Recompile both
 reviewers strictly and audit action pins after changing the shared prompt.
 Compilation checks prompt delivery and workflow controls, not the model's
 classification; behavioral regression sensitivity needs a matching detector
-replay. The pinned gh-aw v0.89.21 compiler does not support `--dry-run`.
+replay. That validation used gh-aw v0.89.21, which does not support `--dry-run`.
+The current compiler supports a restricted dry-run mode, but these reviewers'
+authored host steps are outside its supported scope.
 
 Local validation on October 15, 2026 used the catalog-aligned pinned compiler
 described below: both workflows compiled strictly with zero warnings, including
@@ -146,12 +173,14 @@ for the provisional CONNECT and then `TCP_TUNNEL:HIER_DIRECT / 200` for the same
 client connection. There was no `TCP_DENIED` entry in the agent's raw log.
 The v0.89.21 footer classifier nevertheless treats every `NONE_NONE` as blocked.
 
-The two test-review workflows apply a checksum-guarded correction through their
-shared `safe-outputs.steps`, after script setup and before review publication.
-It lets provisional records reach the existing success-status checks while
-preserving explicit `TCP_DENIED` decisions, including status 200, authentication
-failures, and unknown outcomes. This changes only reporting: network access,
-credentials, threat detection, raw logs, and artifacts remain unchanged.
+gh-aw v1.0.1 recognizes successful provisional CONNECT records, but its
+status-first classifier hides explicit `TCP_DENIED / 200` records. The two
+test-review workflows retain a checksum-guarded correction through their shared
+`safe-outputs.steps`, after script setup and before review publication. It checks
+explicit `TCP_DENIED` decisions before the upstream status checks, preserving
+warnings for those denials, authentication failures, and unknown outcomes without
+warning on successful provisional records. This changes only reporting: network
+access, credentials, threat detection, raw logs, and artifacts remain unchanged.
 Unexpected module bytes fail the setup step rather than silently suppressing
 warnings; repeating the correction is harmless.
 
@@ -163,30 +192,30 @@ it when updating the pinned gh-aw setup action. The action-pin check runs
 `test_gh_aw_firewall_footer.py` against that action's actual module, with isolated
 module copies and logs, so dependency changes cannot silently invalidate it.
 
-Regression evidence (October 12, 2026): the setup action at
-`924af5fdc64061cfbf66fb584c8b07e2ac230c60` ships the original module with SHA-256
-`3a9edc197333e6447d2ac557328d1e292d3a7816beca6457a161bfb542921284`.
+Regression evidence (November 3, 2026): the v1.0.1 setup action at
+`221ba4f4319de6b8e809d1a15528b3ae6a818aa5` ships the original module with SHA-256
+`31a9d24084cad849e2424f2c7d9504f6a91297ede058405103b01663f9fb1dd3`.
 With identical retained assertions, the isolated uncorrected module fails
-`test_successful_connect_has_no_blocked_domain` because it returns
-`["github.com"]` instead of `[]` (one executed test, exit 1). With the correction,
+`test_explicit_denial_is_not_hidden_by_status_or_later_success` because it returns
+`[]` instead of `["github.com"]` (one executed test, exit 1). With the correction,
 that test and the full seven-test suite pass (exit 0). Reproduce after copying the
 pinned setup action's scripts to `$env:RUNNER_TEMP\gh-aw\actions`:
 
 ```powershell
 $module = Join-Path $env:RUNNER_TEMP 'gh-aw\actions\firewall_blocked_domains.cjs'
-python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module --without-correction GhAwFirewallFooterTests.test_successful_connect_has_no_blocked_domain
+python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module --without-correction GhAwFirewallFooterTests.test_explicit_denial_is_not_hidden_by_status_or_later_success
 python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module
-gh aw compile test-reviewer-on-pr.agent test-reviewer.agent --strict --no-check-update --shellcheck
+gh aw compile --strict --no-check-update --shellcheck
 python .github\scripts\check_action_pins.py
 ```
 
-Strict compilation and shellcheck passed for both workflows; the action-pin audit
-passed with no pin changes. An offline replay using the pinned action's real
-parser, dependencies, and Markdown template against the run's unchanged raw logs
-rendered the original warning before correction and no warning afterwards. A
-`TCP_DENIED / 200` fixture still rendered the blocked-domain warning.
-This is local execution evidence, not a live workflow rerun or verification of
-GitHub publication.
+The tests exercise the pinned module in isolated directories, including
+idempotence, unchanged raw logs, and rejection of unexpected upstream bytes.
+A five-case composed replay also used the shipped parser, sanitizer, renderer,
+and Markdown template: successful CONNECT and empty logs produced no warning;
+explicit denial, proxy authentication failure, and unknown outcomes produced
+the expected domain warning. This is local execution evidence, not a live
+workflow rerun or verification of GitHub publication.
 
 ### Compile on the pinned toolchain, and check the pins afterwards
 
@@ -195,29 +224,56 @@ GitHub publication.
 
 The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
 
-This update retains gh-aw v0.89.21 because [v0.89.22](https://github.com/github/gh-aw/releases/tag/v0.89.22) is marked as a prerelease as of October 8, 2026. `gh aw upgrade` selects stable releases by default; this update does not opt into `--pre-releases`.
+The current toolchain is [gh-aw v1.0.1](https://github.com/github/gh-aw/releases/tag/v1.0.1),
+the latest stable release checked on November 3, 2026. Both `setup` and
+`setup-cli` use the matching immutable action commit
+`221ba4f4319de6b8e809d1a15528b3ae6a818aa5`. Use the matching released compiler,
+not an older installed extension; even `--no-emit` can update the action cache
+to the extension's version. The Windows amd64 release binary used for this
+refresh has SHA-256
+`1998b3443f0f7c85604ba8cdee897834033484d77daad9ff4e56d386c6e06d07`,
+verified against the release's `checksums.txt`.
 
-[`aw.json`](./aw.json) redirects gh-aw v0.89.21's embedded `actions/upload-artifact@v7.0.1` references to v7.0.2. The daily-credit guardrail otherwise retains the embedded version while other generated steps use the newer action cache entry, producing mixed pins. Keep this redirect until the compiler's embedded version catches up, and align handwritten workflows whenever updating a shared action pin.
+The migration renames the deprecated `missing-tool` and `missing-data`
+safe-output configuration keys to `report-missing-tool` and
+`report-missing-data`, and removes the unsupported Copilot `web-fetch` tool.
+The two workflows with explicit Copilot CLI versions now use 1.0.103, whose
+checksum manifest is reviewed by the pinned setup action; the old 1.0.79 and
+1.0.85 overrides are not in its trusted release catalog. Other workflows retain
+compat-driven toolcache selection. Custom prompts, triggers, credentials,
+network allowlists, and publication bounds are retained.
 
-The v0.89.21 Node.js setup helper `GenerateNodeJsSetupStep()` reads only the embedded action-pin catalog, bypassing both `aw.json` redirects and the repository cache. For a catalog-only correction, build the exact pinned gh-aw source after resolving the required action version in its cache and running upstream's [`sync-action-pins` target](https://github.com/github/gh-aw/blob/v0.89.21/Makefile). Keep the compiler code unchanged, preserve the pinned setup action, and record the source commit, verified action SHA, and reproduction commands in the PR. On Windows, clone that source with `core.autocrlf=false` so embedded prompt assets retain their committed LF endings. Regenerate the lock rather than editing it, and verify that no unrelated executable configuration changed.
+[`aw.json`](./aw.json) redirects the compiler's remaining embedded
+`actions/upload-artifact@v7.0.1` reference to v7.0.2. Keep this redirect until
+the embedded version catches up, and align handwritten workflows whenever
+updating a shared action pin. The released v1.0.1 catalog already matches this
+repository's Node.js and SARIF action pins, so the v0.89.21 catalog-only source
+build workaround is no longer needed. Regeneration must update generated
+manifests as well as executable steps; changing only `uses:` lines leaves the
+repository broken.
 
-The October 27 repair aligns the embedded catalog and repository cache with
-`actions/setup-node@v7.1.0` and `github/codeql-action/upload-sarif@v4.39.0`.
-Both actions were already used by executable workflow steps, but 33 generated
-manifests and the SARIF cache entry still described older versions. The existing
-auditor reported 36 problems. Regeneration must update the manifests as well as
-the executable steps; changing only `uses:` lines leaves the repository broken.
-The compiler remains v0.89.21 at source commit
-`c35393777e5604a63721d09512263b1383301d4f`, with catalog data synchronized from
-the repository's verified pins before building. Do not use a newer local
-extension to repair these locks: even `--no-emit` can update the action cache
-to that extension's version.
+Align mutable-name container cache entries with the release catalog too. This
+refresh updates `ghcr.io/github/gh-aw-node` to the v1.0.1 catalog's digest
+`sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f`;
+an existing cache entry otherwise keeps the old image even with the new
+compiler. Versioned unused cache entries need not be deleted to upgrade the
+images selected by the compiler. Launching the aligned image by digest reported
+Node.js v24.22.1.
 
-For that source build, set both release linker variables:
-`-ldflags "-s -w -X main.version=v0.89.21 -X main.isRelease=true"`.
-Setting only `main.version` makes `version` print the expected value but leaves
-compilation in development mode, emitting local action paths and a different
-job graph. Reject that output rather than approving its extra actions.
+Strict compilation succeeded for all 37 inputs (35 runnable workflows and two
+shared components), and ShellCheck passed for 2,100 shell resources. After
+aligning the Node image cache, the 70 affected shell resources (18 unique scripts)
+passed the same pinned ShellCheck with the compiler's exclusions; every other
+generated run script was byte-identical. The initial refresh reported 32
+existing authoring warnings: transitive `fetch-binlog`
+references, Dependabot alert tools not declared in the effective inventory,
+pre-extraction prompt references in the parallel-audit command, and persisted
+credentials in the trusted unskip publisher. The
+[authoring-contract fixes](#authoring-warning-runtime-contracts) resolve all 32
+without suppressing diagnostics or widening authored permissions. Full strict
+compilation and ShellCheck now pass with zero warnings; all 25 offline contract
+tests pass, with the same retained suite detecting the defects on the initial
+upgrade revision.
 
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 

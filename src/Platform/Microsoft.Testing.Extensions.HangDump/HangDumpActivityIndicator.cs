@@ -33,7 +33,17 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private readonly bool _traceLevelEnabled;
     private readonly ConcurrentDictionary<TestNodeUid, (string Name, Type Type, DateTimeOffset StartTime)> _testsCurrentExecutionState = new();
 
-    private bool _exitSignalActivityIndicatorAsync;
+    private readonly TimeSpan _activitySignalInterval;
+    private readonly TimeSpan _activitySignalShutdownTimeout = TimeSpan.FromSeconds(30);
+
+    private volatile bool _exitSignalActivityIndicatorAsync;
+    private int _activitySignalPending;
+
+    // The first disposer retains ownership even when it must defer cleanup past the shutdown timeout.
+    private int _disposeStarted;
+
+    private CancellationTokenSource? _activitySignalCancellation;
+    private Task? _activitySignalTask;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
     private PipeNameDescription? _pipeNameDescription;
 
@@ -58,6 +68,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
             _namedPipeClient.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
+            _activitySignalInterval = HangDumpOptions.GetActivitySignalInterval(HangDumpOptions.GetTimeout(_commandLineOptions));
         }
     }
 
@@ -100,10 +111,84 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             // Wait the connection from the testhost controller
             await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
             await _logger.LogTraceAsync("Test host controller connected").ConfigureAwait(false);
+
+            _activitySignalCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            CancellationToken stopToken = _activitySignalCancellation.Token;
+            _activitySignalTask = _task.Run(() => SignalActivityLoopAsync(stopToken, cancellationToken), CancellationToken.None);
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
             // Do nothing, we're stopping
+        }
+    }
+
+    private async Task SignalActivityLoopAsync(CancellationToken stopToken, CancellationToken sessionCancellationToken)
+    {
+        try
+        {
+            while (true)
+            {
+                await _task.Delay(_activitySignalInterval, stopToken).ConfigureAwait(false);
+
+                // The stop token only interrupts the wait. A request in flight completes, so the pipe is never
+                // left with a half-read reply when the session ends.
+                await SendPendingActivitySignalAsync(sessionCancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (stopToken.IsCancellationRequested)
+        {
+            // Stopped by the end of the session or by cancellation.
+        }
+        catch (Exception ex)
+        {
+            // Log now: without activity signals the controller can take a hang dump before the session ends
+            // and rethrows this failure.
+            await _logger.LogErrorAsync("Failed to send a hang dump activity signal to the test host controller; activity signals stopped.", ex).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async Task StopActivitySignalLoopAsync()
+    {
+        // Idempotent: whoever takes the fields stops the loop, so session end and disposal never race on them.
+        CancellationTokenSource? cancellation = Interlocked.Exchange(ref _activitySignalCancellation, null);
+        Task? loop = Interlocked.Exchange(ref _activitySignalTask, null);
+        if (cancellation is null)
+        {
+            return;
+        }
+
+        try
+        {
+#if NET
+            await cancellation.CancelAsync().ConfigureAwait(false);
+#else
+            cancellation.Cancel();
+#endif
+            if (loop is not null)
+            {
+                await loop.ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            cancellation.Dispose();
+        }
+    }
+
+    private async Task SendPendingActivitySignalAsync(CancellationToken cancellationToken)
+    {
+        if (Interlocked.Exchange(ref _activitySignalPending, 0) == 0 || _exitSignalActivityIndicatorAsync)
+        {
+            return;
+        }
+
+        ApplicationStateGuard.Ensure(_namedPipeClient is not null);
+        await _namedPipeClient.RequestReplyAsync<ActivitySignalRequest, VoidResponse>(ActivitySignalRequest.Instance, cancellationToken).ConfigureAwait(false);
+
+        if (_traceLevelEnabled)
+        {
+            await _logger.LogTraceAsync("Activity signal sent.").ConfigureAwait(false);
         }
     }
 
@@ -167,31 +252,107 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
                 await _logger.LogTraceAsync($"Signal for action node {nodeChangedMessage.TestNode.DisplayName} - '{state}'. _exitSignalActivityIndicatorAsync: {_exitSignalActivityIndicatorAsync}").ConfigureAwait(false);
             }
 
-            // Signal the activity.
-            if (!_exitSignalActivityIndicatorAsync)
-            {
-                ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-                await _namedPipeClient.RequestReplyAsync<ActivitySignalRequest, VoidResponse>(ActivitySignalRequest.Instance, cancellationToken).ConfigureAwait(false);
-
-                if (_traceLevelEnabled)
-                {
-                    await _logger.LogTraceAsync($"Activity signal sent.").ConfigureAwait(false);
-                }
-            }
+            // Record the activity; the signal loop forwards it to the controller.
+            Volatile.Write(ref _activitySignalPending, 1);
         }
     }
 
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
-        => Task.CompletedTask;
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    {
+        if (Volatile.Read(ref _activitySignalTask) is null)
+        {
+            return;
+        }
+
+        // Stop the loop before sending the last pending signal, so two requests never share the pipe.
+        await StopActivitySignalLoopAsync().ConfigureAwait(false);
+
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
+        try
+        {
+            await SendPendingActivitySignalAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The final flush is best effort. A canceled session must not skip the session-finishing handlers
+            // that run after this one.
+        }
+    }
 
 #if NETCOREAPP
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)
+        {
+            return;
+        }
+
+        // Wait (bounded) for the loop before disposing the pipe client it may be using. This also covers runs
+        // where session finishing was skipped because execution or a lifecycle handler threw. If the wait times
+        // out, the pipe client is disposed only when the loop stops.
+        Task stop = StopActivitySignalLoopAsync();
+        try
+        {
+            Task completed = await Task.WhenAny(stop, Task.Delay(_activitySignalShutdownTimeout)).ConfigureAwait(false);
+            if (completed != stop)
+            {
+                DisposePipeClientAfterLateStop(stop);
+                return;
+            }
+
+            await stop.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogDebugAsync($"Hang dump activity signal loop failed during disposal: {ex.Message}").ConfigureAwait(false);
+        }
+
         _namedPipeClient?.Dispose();
-        return ValueTask.CompletedTask;
     }
 #endif
 
     public void Dispose()
-        => _namedPipeClient?.Dispose();
+    {
+        if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)
+        {
+            return;
+        }
+
+        // Wait (bounded) for the loop before disposing the pipe client it may be using. If the wait times out, the
+        // pipe client is disposed only when the loop stops.
+        Task stop = StopActivitySignalLoopAsync();
+        try
+        {
+            if (!stop.Wait(_activitySignalShutdownTimeout))
+            {
+                DisposePipeClientAfterLateStop(stop);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug($"Hang dump activity signal loop failed during disposal: {ex.Message}");
+        }
+
+        _namedPipeClient?.Dispose();
+    }
+
+    private void DisposePipeClientAfterLateStop(Task stop)
+    {
+        // A request that is still in flight uses the pipe client's stream and buffers. On Windows a write waits for
+        // the controller to drain the pipe, and the stop request cannot interrupt that wait. Disposing the client
+        // under it would make the request fail, and the client then exits the process. Dispose the client only
+        // after the loop has finished, and observe the loop's failure so it is never unobserved.
+        _logger.LogDebug("Hang dump activity signal loop did not stop within the shutdown timeout during disposal; the pipe client is disposed when it stops.");
+        _ = stop.ContinueWith(
+            static (task, state) =>
+            {
+                _ = task.Exception;
+                ((NamedPipeClient?)state)?.Dispose();
+            },
+            _namedPipeClient,
+            CancellationToken.None,
+            TaskContinuationOptions.None,
+            TaskScheduler.Default);
+    }
 }
