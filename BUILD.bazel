@@ -1,4 +1,5 @@
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary")
+load("//eng/bazel:analyzer-packages.bzl", "analyzer_packages")
 load("//eng/bazel:analyzers.bzl", "analyzer_libraries")
 load("//eng/bazel:defs.bzl", "testfx_binary", "testfx_matrix", "testfx_test")
 load("//eng/bazel:extensions.bzl", "extension_libraries")
@@ -20,6 +21,8 @@ mstest_libraries()
 extension_libraries()
 
 analyzer_libraries()
+
+analyzer_packages()
 
 server_client_library()
 

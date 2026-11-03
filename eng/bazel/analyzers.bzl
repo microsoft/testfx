@@ -13,6 +13,7 @@ def analyzer_libraries():
             "src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md",
         ],
         linked_srcs = [
+            "//eng/bazel:AnalyzerAssemblyInfo.cs",
             "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
             "src/Platform/Microsoft.Testing.Platform/Helpers/ObjectPool.cs",
         ],
@@ -27,6 +28,7 @@ def analyzer_libraries():
         name = "codefixes",
         project = "src/Analyzers/MSTest.Analyzers.CodeFixes",
         target_frameworks = ["netstandard2.0"],
+        linked_srcs = ["//eng/bazel:AnalyzerAssemblyInfo.cs"],
         resources = {"src/Analyzers/MSTest.Analyzers.CodeFixes/CodeFixResources.resx": "MSTest.Analyzers.CodeFixResources"},
         deps = [
             ":analyzers",
@@ -62,6 +64,9 @@ def analyzer_libraries():
         name = "globalconfigs_generator",
         project = "src/Analyzers/MSTest.GlobalConfigsGenerator",
         polyfills = False,
-        linked_srcs = ["src/Analyzers/MSTest.Analyzers/Helpers/WellKnownCustomTags.cs"],
+        linked_srcs = [
+            "//eng/bazel:GlobalConfigsEnvironment.cs",
+            "src/Analyzers/MSTest.Analyzers/Helpers/WellKnownCustomTags.cs",
+        ],
         deps = ["@paket.analyzers//microsoft.codeanalysis.common"],
     )

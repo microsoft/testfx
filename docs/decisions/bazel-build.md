@@ -90,6 +90,139 @@ These are build/behavior conformance results, not a claim of a full mutation
 campaign. Logs and TRX files are retained in the parent session's
 `files/reference-aliases` evidence directory.
 
+### Native MSTest.Analyzers package lane
+
+Starting revision: `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`.
+The producer is the native `//:analyzers` and `//:codefixes` netstandard2.0
+assemblies, their XLF-derived satellites, and `//:globalconfigs_generator`.
+`//:analyzers_package` will expose one experimental `MSTest.Analyzers` NuGet,
+using `VersionPrefix` from `eng/Versions.props` with `-bazel`, plus
+`NuGetPackInfo` for the framework/adapter and SDK package lanes.
+The coordinator subsequently changed the final experimental suffix to
+`-preview.bazel`: the original `-bazel` sorts below a required MTP dependency
+minimum in the combined package graph. This lane consumes that shared version
+helper correction rather than maintaining a different version policy.
+
+The source package project is the layout contract: analyzers in both
+`analyzers/dotnet/cs` and `analyzers/dotnet/vb`, code fixes in C# only, the
+corresponding culture subdirectories, four generated globalconfigs, the
+unmodified `buildTransitive` and `tools` assets, and `PACKAGE.md`. No assembly
+belongs under `lib` or `ref`; neither Roslyn nor its dependencies may flow to
+consumers. `developmentDependency` remains true. Compilation keeps the existing
+Roslyn 3.11.0 API references rather than linking the SDK compiler's newer APIs.
+
+The simplest upstream `nuget_pack(library=...)` is not the intended contract:
+the existing native assemblies are ordinary libraries for unit-test consumption,
+and automatic library layout/dependency traversal would ship the wrong assets.
+Changing those assemblies to analyzer-only targets would change existing
+consumers. The chosen lane-local rule reuses the pinned native JSON NuGet packer
+and its provider with explicit entries and empty dependency groups. This avoids
+an MSBuild wrapper, a second ZIP writer, and changes to shared `packages.bzl`,
+`BuildTools.cs`, or the compatibility patch. This intentionally depends on the
+pinned packer/provider contract and must be rechecked when upgrading rules.
+
+The existing globalconfig generator expects an absolute `OUTPUT_PATH` and an
+analyzer DLL beside its output. A Bazel-only initializer will normalize the
+declared action-relative path; a declared symlink supplies the existing native
+DLL. The generator's source, analysis-mode policy, and error propagation stay
+unchanged.
+
+Validation will use separate run-owned feeds/caches and real C# and VB compiler
+consumers: default/recommended/all/none modes, the missing-test-class diagnostic,
+successful corrected input, effective props/targets and analyzer selection,
+exact package contents, compiler API references, satellite lookup, and a code
+fix loaded by the Roslyn 3.11 host. A repacked isolated mutant that suppresses a
+required diagnostic will test the same consumer assertion without altering the
+tests. MSBuild is permitted only for external package consumers, never for the
+producer. Process exit codes, diagnostics, package hashes, resolved asset paths,
+commands, and source states will be retained.
+
+The validation script owns its child processes, unique artifact paths and
+process-local SDK/cache overrides, restoring overrides in `finally`. It does
+not change test-assembly scheduling, machine settings, or shared caches. No
+new handshake, cancellation protocol, test-result aggregation, or runtime
+fallback is introduced by this compiler-plugin package. Publishing, signing,
+release-branch validation, and servicing remain outside this experimental lane;
+the migration coordinator owns combined integration and downstream rollout.
+
+Executed research and infrastructure observations:
+
+- Inspected the released `MSTest.Analyzers` 4.5.2 archive: the install and
+  uninstall scripts belong under `tools/`, not at the package root. They and
+  the build-transitive assets are copied without rewriting the signed scripts.
+- The initial two-worker native compilation failed because Q: had no free
+  space, not because an analyzer failed to compile. The lane-owned output base
+  was removed with `.\eng\bazel.ps1 clean --expunge`; no shared cache or other
+  checkout was removed. Subsequent commands use the process-local override
+  `$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfba\6a8043a5c4a6'`. The validation script
+  also puts its unique restore cache under that configured root when present.
+- The new validation harness parsed successfully, C# helper BOMs were checked,
+  and `git diff --check` passed. These are setup checks, not package-consumer
+  or regression-sensitivity evidence.
+- The native package built successfully in 142 actions. The initial
+  `4.6.0-bazel` archive has 55 entries and SHA-256
+  `E9E77ADA2F44098D2E783FE7DAE3017D82FB398D4EB03CA3858B6558C29D1FE1`.
+  All 12 C#/VB compiler cases passed: the four analysis modes, corrected input,
+  and intentionally disabled build analysis, with package/cache/SDK and selected
+  analyzer/config provenance checked.
+- Consumer setup caught two isolation defects in the new harness. SDK lookup
+  uses the working directory, not merely `--project`, so dotnet runs from the
+  generated consumer root. PowerShell's method binding turned a `$null`
+  environment-variable argument into a present empty value; the restore binlog
+  showed empty `MSBuildSDKsPath`/`MSBuildExtensionsPath`. Named `Env:` entries
+  are now removed and restored exactly. A later assets inspection found the
+  machine's Visual Studio fallback package folder; an explicit restore config
+  and cleared fallback folders retain the single-cache assertion.
+- The old-Roslyn host compiled, then its real package load failed the expected
+  `.NETStandard,Version=v2.0` attribute assertion (actual `null`, process exit
+  `-532462766`). The native compile configuration alone did not emit the SDK's
+  assembly attribute. A lane-local linked `AnalyzerAssemblyInfo.cs` restores
+  that metadata for the analyzer and code-fix DLLs without changing shared
+  build helpers or their compiler API references. The unchanged host source
+  has SHA-256
+  `963B99DA9CE77E318BC0831B215437843E60BAE62AC1185288A59C0D7C4802C0`;
+  that first probe subsequently caught one incorrect whitespace expectation in
+  the harness's normalized source literal, which was corrected without changing
+  the code fix.
+- `.\eng\bazel\validate-analyzers-package.ps1` then passed all 15 cases on
+  Windows x64 / SDK 11.0.100-rc.3.26522.148, before the common version correction.
+  The archive SHA-256 is
+  `C0094E399DB33DC32CBE4AC88E258C6534F34D70F5ACCA80BBC1AEE037DB7E01`.
+  `roslyn-3.11-codefix-and-satellites` loaded 83 analyzer and 52 code-fix types,
+  executed MSTEST0030, applied `AddTestClassFixer`, checked the exact resulting
+  source and disappearance of the diagnostic, and verified French analyzer and
+  code-fix resources against the XLF catalogs. The producer action graph contains
+  native compilation, globalconfig generation and NuGet packing, not MSBuild.
+
+#### Analyzer metadata test-value evidence
+
+The final host source SHA-256 is
+`1C6960A00A023EA3D382F44B44AD4966934D56C87A31F1974ECAD96C60199740`.
+The same compiled host, input document and assertions ran against both retained,
+native-built `4.6.0-bazel` package snapshots; only the loaded package directory
+changed. This is a package-snapshot comparison, not a pristine-baseline Git run:
+the Bazel packaging feature exists in both variants, and the defective variant
+lacks the analyzer/code-fix target-framework metadata.
+
+| Contract / case | Before attribute | Corrected package | Evidence |
+| --- | --- | --- | --- |
+| netstandard analyzer identity / `roslyn-3.11-codefix-and-satellites` host | Executed: detected; expected `.NETStandard,Version=v2.0`, actual `null`; child exit `-532462766`. | Executed: passed before and after comparison; child exit 0. | Package hashes above, unchanged host hash, `before-attribute.json` / `after-attribute.json` and logs. |
+
+Evidence is retained under
+`artifacts/bazel-analyzer-validation/20261103-141156-7f50da86`: `validation.json`
+lists all 15 case outcomes, exact compiler/restore/host commands and exits,
+package entries/hash, resolved package paths and old-Roslyn results. Every C#/VB
+case also retains its SARIF, selected analyzers/globalconfig, SDK provenance and
+binlog. The standalone host invocation is the recorded native `dotnet.exe`,
+`consumer/legacy/bin/Release/net11.0/LegacyHost.dll`, the selected extracted package
+directory and `MissingTestClass.cs`, in that order. A text transcript is more
+useful than a staged IDE screenshot for this compiler/package boundary.
+
+The shared `-preview.bazel` prerequisite and final-identity validation are still
+pending at this checkpoint. Combined shipping layouts, release signing, Linux,
+IDE UI integration and downstream release/servicing remain coordinator-owned
+gates; this evidence does not claim them.
+
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
 The user authorized implementing as much of the remaining migration as possible.
