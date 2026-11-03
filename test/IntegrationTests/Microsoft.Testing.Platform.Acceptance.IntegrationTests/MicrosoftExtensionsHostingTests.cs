@@ -92,7 +92,7 @@ public sealed class MicrosoftExtensionsHostingTests : AcceptanceTestBase<Microso
         <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$MicrosoftTestingExtensionsHostingVersion$" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" Condition="'$(TargetFramework)' != 'net462'" />
-        <PackageReference Include="System.Text.Json" Version="10.0.12" />
+        <PackageReference Include="System.Text.Json" Version="10.0.12" Condition="'$(TargetFramework)' == 'net462'" />
     </ItemGroup>
 </Project>
 

@@ -109,7 +109,7 @@ public sealed class GeneratedMicrosoftExtensionsHostingTests : AcceptanceTestBas
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" Condition="'$(TargetFramework)' != 'net462'" />
         <PackageReference Include="OpenTelemetry" Version="$OpenTelemetryVersion$" />
         <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$OpenTelemetryVersion$" />
-        <PackageReference Include="System.Text.Json" Version="10.0.12" />
+        <PackageReference Include="System.Text.Json" Version="10.0.12" Condition="'$(TargetFramework)' == 'net462'" />
     </ItemGroup>
 </Project>
 

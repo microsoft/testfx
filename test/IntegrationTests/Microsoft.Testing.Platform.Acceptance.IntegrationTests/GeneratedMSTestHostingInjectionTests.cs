@@ -136,7 +136,7 @@ public sealed class GeneratedMSTestHostingInjectionTests : AcceptanceTestBase<Ge
         <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestExtensionsHostingVersion$" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" Condition="'$(TargetFramework)' != 'net462'" />
-        <PackageReference Include="System.Text.Json" Version="10.0.12" />
+        <PackageReference Include="System.Text.Json" Version="10.0.12" Condition="'$(TargetFramework)' == 'net462'" />
     </ItemGroup>
 </Project>
 

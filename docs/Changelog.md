@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.6.0" />[4.6.0] - Unreleased
+## <a name="5.0.0" />[5.0.0] - Unreleased
 
 ### Breaking changes
 

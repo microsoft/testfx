@@ -93,6 +93,11 @@ inside the agent-visible tree. The agent reads this manifest after extraction.
 Do not interpolate custom-step outputs into the prompt: gh-aw renders it before
 those steps run. Missing inputs are incomplete analysis, not an empty scope.
 
+In custom safe-output footers, `{history_link}` is a complete optional inline
+fragment, including its link and separator. Insert it directly; do not wrap it
+in a Markdown link destination or another scalar field. Keep the shared and
+entry-point footer definitions aligned.
+
 #### Category-specific threat-detection evidence
 
 [Run 38707575125](https://github.com/microsoft/testfx/actions/runs/38707575125)

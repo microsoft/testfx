@@ -112,7 +112,7 @@ public sealed class WinUIExtensionTests : TestContainer
 
             // Hold the real initialization gate and observe the worker blocked on it before publishing
             // the queue. This deterministically exercises the re-check inside the production lock.
-            object gate = attributeType.GetField("InitializationLock", flags)!.GetValue(null)!;
+            var gate = (Lock)attributeType.GetField("InitializationLock", flags)!.GetValue(null)!;
             using var started = new ManualResetEventSlim();
             var completed = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var worker = new Thread(() =>
