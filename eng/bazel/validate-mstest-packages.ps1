@@ -281,9 +281,11 @@ function Run-Consumer($Consumer) {
     $env:DOTNET_ROOT = Join-Path $directory 'missing-runtime'
     $env:DOTNET_ROOT_X64 = $env:DOTNET_ROOT
     $discovery = Invoke-Step "$name-discovery" $Consumer.Executable @('--list-tests')
-    foreach ($test in $passingTests + 'IntentionalFailure') {
-        if (-not $discovery.Contains("TestFx.BazelValidation.NativePackageTests.$test")) { throw "$name did not discover $test." }
-    }
+    $plainDiscovery = [regex]::Replace($discovery, '\x1B\[[0-?]*[ -/]*[@-~]', '')
+    $allTests = $passingTests + 'IntentionalFailure'
+    $discoveredNames = @($plainDiscovery -split '\r?\n' | ForEach-Object { $_.Trim() } | Where-Object { $_ -in $allTests })
+    Assert-Names $allTests $discoveredNames "$name discovery"
+    if ($plainDiscovery -notmatch 'Test discovery summary: found 4 test\(s\)') { throw "$name did not discover exactly four tests." }
     $results = Join-Path $Consumer.Directory 'results with spaces!'
     $null = Invoke-Step "$name-pass" $Consumer.Executable @(
         '--filter', 'FullyQualifiedName!~IntentionalFailure', '--minimum-expected-tests', '3',
