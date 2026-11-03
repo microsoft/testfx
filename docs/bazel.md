@@ -409,6 +409,21 @@ experiments, exact commands, red/green evidence, and remaining limitations.
 and `actions.json`. Its portable suite has 3,443 passing cases across ten targets;
 the inspected managed action graph contains no MSBuild execution.
 
+The combined native source revision `c910ab89ce7dc95c3ab2666ed62c4172a9950183`
+was validated after integrating all seven lanes. All modern, compatibility and
+Windows library builds succeeded. The thirteen original unit projects reported
+12,502 passes, 15 original platform-dependent skips and exactly the two known
+Win32-1346 failures described above; all 34 native helper cases and six
+targeting/reference analysis checks passed. The full-unit command correctly
+returned failure rather than filtering those host limitations.
+
+On that same integrated source, the SDK/meta gate passed all 40 steps, the
+MSTest/runtime/satellite-sensitivity gate all 31 steps, and the analyzer package
+gate all 15 cases. Separately recorded parent runs cover real Windows
+registration/controllers, all 111,000 scale-example cases, copied browser-wasm
+execution with exits 0/9, and opt-in SDK12 compilation with actual 0/2/9 consumer
+outcomes. These are local results, not CI or release certification.
+
 Before replacing an existing shipping leg, add the missing framework/workload
 toolchains and test harnesses, reproduce every NuGet/SDK layout, preserve signing
 identity and audits, then run actual packed consumers and release-branch

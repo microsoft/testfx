@@ -3223,3 +3223,126 @@ the established `portable_tests` baseline is unchanged. The new aggregate
 deliberately includes `platform_tests`; the two known host-specific failures
 and the original platform-dependent skips are not hidden to produce green
 output. This is selection plumbing, not a change to test bodies or scheduling.
+
+## Final combined native stage (2026-11-03)
+
+All seven lane implementations and their evidence are integrated. The final
+behavior-bearing source revision is
+`c910ab89ce7dc95c3ab2666ed62c4172a9950183`; subsequent
+`5b51cb1bc9d97c018bb32f0363c5735fafb95809` and this handoff update change
+documentation only. Original `src` code, the thirteen original unit-project
+source trees, utilities, performance sources, and sample bodies are unchanged
+from `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`. New native-only fixtures and
+build declarations are separate. All 22 added/modified C# files retain UTF-8 BOMs.
+
+### Complete source and unit-project run
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfb\aliases-df07ee'
+.\eng\bazel.ps1 test //:managed_all //:managed_compatibility //:windows_libraries //:all_unit_tests //:build_tools_tests //:reference_alias_tests //:sdk_package_tests //:compatibility_reference_tests //:windows_targeting_test //:windows_asset_selection_test --jobs=2 --keep_going --nocache_test_results --test_output=errors --noshow_progress
+```
+
+All three source graphs built. All 22 test targets executed; 21 targets passed,
+and the full MTP target failed only its two established Windows impersonation
+cases. The aggregate correctly returned **3**. No filter, assertion change,
+machine-policy change, or success-shaped fallback concealed them.
+
+| Scope | Selected | Passed | Failed | Original skips |
+| --- | --- | --- | --- | --- |
+| Thirteen original unit-test projects | 12,519 | 12,502 | 2 | 15 |
+| Native BuildTools, SDK-package and alias/identity fixtures | 34 | 34 | 0 | 0 |
+| Six analysis-test targets | 6 targets | 6 targets | 0 | 0 |
+
+The only failing methods remain
+`CreateServerStream_AnUnauthorizedIdentityCannotConnect` and
+`CreateServerStream_AnAppContainerConnectsOnlyWhenItsOwnPackageIsAuthorized`;
+their actual failures again identify Win32 **1346**, as in the original
+independent host reproduction. The eight server-client and seven extension
+skips remain the original OS/filesystem conditions. Fresh reports and exact
+identities were parsed against the independently established per-suite counts.
+Evidence: `C:\tfb\parent-integration-evidence\c910ab89ce-full`, including all
+sixteen TRXs, six analysis XMLs, build events, exact source revision and summaries.
+
+### Composed package gates on the integrated revision
+
+```powershell
+.\eng\bazel\validate-sdk-packages.ps1 -Jobs 2 -EvidenceRoot 'C:\tfb\parent-integration-evidence\c910ab89ce-packages\sdk'
+.\eng\bazel\validate-mstest-packages.ps1 -OutputRoot 'C:\tfb\parent-integration-evidence\c910ab89ce-packages\mstest' -VerifySatelliteSensitivity
+.\eng\bazel\validate-analyzers-package.ps1 -Jobs 2 -EvidenceRoot 'C:\tfb\parent-integration-evidence\c910ab89ce-packages\analyzers'
+```
+
+All three commands exited **0**, and all three records identify the exact
+behavior-bearing revision above with no tracked source edits. Their different
+empty-status JSON representations (`""` versus no entries) were normalized
+when checking provenance, not interpreted as a dirty tree.
+
+| Gate | Actual outcome | Retained run |
+| --- | --- | --- |
+| SDK/meta | Ten freshly packed archives, ten evaluations, 40 expected-exit steps; unmodified default CodeCoverage, explicit None, native driver and VSTest all pass. | `sdk/20261103-174813-c7d23f4c` |
+| MSTest/runtime | Eight fresh archives, 31 expected-exit steps; actual .NET8/9/10/11 layouts, native loaded keys/hashes, MSBuild parent 0/1 and direct 0/2/9. | `mstest/20261103-175158-c19bcfd6` |
+| Analyzer package | All 15 unchanged layout/compiler/legacy-host cases pass, including the actual Roslyn3.11 code fix and French satellites. | `analyzers/20261103-175427-1aec260c` |
+
+The signed satellite-removal counterfactual was repeated on this integrated
+source: native production and consumer publication succeeded, the same three
+consumer cases detected the omitted Korean satellite (two pass/one intended
+failure), and a fresh correct-package cache restored three passes.
+`validation.json` retains exact package hashes, commands, expected exits and
+runtime paths. Consumer MSBuild tests the product boundary; it is not a native
+producer escape hatch. The final analyzer archive SHA-256 is
+`73721916DC47D15ED748C0B90734CEDE82B462904BB40217378F9BE3AA9E021E`.
+
+### Samples, reports and compiler selection
+
+The parent ran the unchanged baseline and all scale/reliability/sample targets:
+
+```powershell
+.\eng\bazel.ps1 test //:baseline_tests //:sdk_runner_sample_test //:reliable_suite_test //:scale_10c_test //:scale_100c_test //:scale_1000c_test //:custom_report_test //:otel_sample_test //:browser_publish //:aot_sample //:ensure_sample --jobs=2 --keep_going --nocache_test_results --test_output=errors --noshow_progress
+```
+
+Exit 0; all fourteen test targets passed. The scale reports were streamed and
+verified at 1,000, 10,000 and 100,000 actual passes; reliability had 11 and the
+SDK example one, all with zero skips. The built browser bundle was copied
+outside Bazel and run with its unchanged Node script: exactly one test passed
+both times, with exits 0 and 9 for minimum counts one and two. The managed
+source-generated AOT sample passed one real case; Ensure and the custom-report
+failure sample retained their actual single-test failures and exit 2.
+This is not native AOT execution. Evidence: `final-samples` under the parent
+evidence root, including the large reports, browser layout/logs and exit records.
+The lane's optimized in-process benchmark result remains separately bound to
+its recorded source state; no performance comparison is inferred from it.
+
+The final `.\eng\bazel\validate.ps1 -Jobs 2 -EvidenceRoot
+'C:\tfb\parent-integration-evidence\final-protocol'` command exited 0:
+discovery, actual TRX/HTML/JUnit/CTRF output, paths containing spaces and `!`,
+failure 2, empty selection 9, mixed-module aggregate 3 and the native
+no-MSBuild action audit all passed. Its record is
+`final-protocol/20261103-180527-e07947cd`.
+
+The explicit SDK12 compiler was also checked on the combined source:
+`build //:explorer //eng/bazel:build_tools
+--extra_toolchains=@dotnet_engineering_toolchains//:all --jobs=2`,
+followed by the actual `deps(//:explorer)` action audit and real explorer
+pass/failure/empty runs, all with the same explicit override. The build and
+audit exited 0; 33 declared source compiler actions use exact SDK
+`12.0.100-alpha.1.26509.101`, with two independent SDK10 bootstrap declarations.
+The native explorer actually returned 0/2/9 and its TRXs contain respectively
+one passed, one failed, and zero executed cases. The action graph SHA-256 is
+`6AE1A9A09713E86F935E858838D1A22656DA77ECE9E0A2C138F057B32AD8ACAD`.
+A no-override query then confirmed that the default is still SDK11.
+Evidence: `final-sdk12` under the parent evidence root. The broader four-TFM
+SDK12 package/runtime gate remains the separately recorded lane result, not a
+claim that every final project was executed on SDK12.
+
+### Delivery boundaries
+
+This is a committed local development branch, not a pushed TestFx PR or a
+replacement for the shipping build. Native XAML/UI-thread/classic-UWP execution,
+Windows NuGet/SDK routing, the original net8 NativeAOT publisher's unsupported
+target, the complete integration/acceptance suite, other-OS execution, official
+signatures, CI and release/servicing certification remain explicit boundaries.
+No released first-party package substituted for a missing native producer.
+The two host failures and original skips remain observable in the full unit
+aggregate. All parallel lanes stopped their owned servers/processes and retained
+their evidence. The parent stopped its own server, verified no build/test process
+remained for its exact output root, and removed the temporary heap-only rc.
+Task-owned caches, native outputs and reproducible evidence are retained.
