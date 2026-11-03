@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.6.0" />[4.6.0] - Unreleased
+
+### Breaking changes
+
+* Drop .NET 8 and .NET 9 support from MSTest, including the framework, adapter, SDK, hosting and UI Automation packages, and the modern UWP/WinUI assets. The supported modern .NET targets are .NET 10 and .NET 11; .NET Framework, .NET Standard and classic UWP assets remain where previously provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
+
 ## <a name="4.5.2" />[4.5.2] - 2026-10-27
 
 See full log [of v4.5.1...v4.5.2](https://github.com/microsoft/testfx/compare/v4.5.1...v4.5.2)
