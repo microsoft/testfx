@@ -77,6 +77,19 @@ including friend-only members, using global-plus-named and named-only references
 Unrelated C#/F# targets must retain the existing no-alias path. The test lane will
 receive the validated commit/interface before wiring its real legacy tests.
 
+Executed conformance now passes: `GlobalAndNamedAliasesReferToTheSameAssembly`,
+`NamedOnlyReferenceDoesNotMakeTheGlobalTypeAmbiguous`, and
+`AliasesPreserveFriendAssemblyAccess`, with all compiler passes enabled. The
+unchanged-alias path also passed all 13 BuildTools cases with the new shared
+package versions. Unknown, empty, and duplicate alias configurations were each
+executed through Bazel and rejected with their exact intended diagnostics.
+The first attempt used one comma-joined compiler alias argument, which Roslyn
+rejected with CS1679; the corrected implementation emits one reference switch per
+alias, matching the compiler's actual contract. No test assertions were weakened.
+These are build/behavior conformance results, not a claim of a full mutation
+campaign. Logs and TRX files are retained in the parent session's
+`files/reference-aliases` evidence directory.
+
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
 The user authorized implementing as much of the remaining migration as possible.

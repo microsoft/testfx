@@ -7,6 +7,7 @@ archive_override(
     patch_strip = 1,
     patches = [
         "//eng/bazel/patches:testfx-compatibility.patch",
+        "//eng/bazel/patches:reference-aliases.patch",
     ],
     strip_prefix = "rules_dotnet-add5c92b30888a70aa951de1744a770b8f8ef436",
     urls = ["https://github.com/bazel-contrib/rules_dotnet/archive/add5c92b30888a70aa951de1744a770b8f8ef436.zip"],

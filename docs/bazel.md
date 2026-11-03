@@ -153,6 +153,21 @@ It does not register the Arcade-only affected-test/coverage collectors or
 dogfood every extension. Suites with special child-process bootstraps or extern
 aliases need their own faithful migration, not this generic entrypoint.
 
+Native C# targets now accept consumer-local aliases by assembly simple name:
+
+```starlark
+reference_aliases = {
+    "Microsoft.Testing.Platform.MSBuild": ["global", "PlatformMSBuild"],
+    "Microsoft.Testing.Extensions.GitHubActionsReport": ["ghactions"],
+}
+```
+
+The list replaces implicit global access. Include `global` explicitly when both
+access paths are needed. The runtime dependency identity is unchanged. The
+`//:reference_alias_tests` target exercises global-plus-named, named-only, and
+friend-assembly references through every C# compiler pass. Unknown assemblies and
+empty/duplicate alias lists are rejected during analysis.
+
 Local full MTP execution reported 3,378 passes and these two failures:
 
 - `CreateServerStream_AnUnauthorizedIdentityCannotConnect`

@@ -5,6 +5,7 @@ load("//eng/bazel:extensions.bzl", "extension_libraries")
 load("//eng/bazel:mstest.bzl", "mstest_libraries")
 load("//eng/bazel:packages.bzl", "native_packages")
 load("//eng/bazel:platform.bzl", "platform_libraries")
+load("//eng/bazel:reference-alias-tests.bzl", "reference_alias_tests")
 load("//eng/bazel:server-client.bzl", "server_client_library")
 load("//eng/bazel:tests.bzl", "unit_tests")
 
@@ -25,6 +26,8 @@ server_client_library()
 unit_tests()
 
 native_packages()
+
+reference_alias_tests()
 
 filegroup(
     name = "managed",

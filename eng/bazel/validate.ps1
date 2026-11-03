@@ -146,6 +146,15 @@ try {
         }
     }
 
+    $toolchainOutput = Invoke-BazelStep 'toolchain-provenance' @(
+        'cquery', '@rules_dotnet//dotnet:resolved_toolchain', '--output=starlark', '--noshow_progress',
+        '--starlark:expr="TESTFX_TOOLCHAIN|" + providers(target)["ToolchainInfo"].dotnetinfo.sdk_version + "|" + providers(target)["ToolchainInfo"].dotnetinfo.runtime_version'
+    )
+    $toolchain = [regex]::Match($toolchainOutput, '(?m)^TESTFX_TOOLCHAIN\|([^|\r\n]+)\|([^|\r\n]+)')
+    if (-not $toolchain.Success) {
+        throw 'Could not identify the resolved producer SDK and runtime.'
+    }
+
     $revision = git rev-parse HEAD
     if ($LASTEXITCODE -ne 0) {
         throw 'Could not record the source revision.'
@@ -157,7 +166,8 @@ try {
         Bazel = (Get-Content -LiteralPath .bazelversion -Raw).Trim()
         Jobs = $Jobs
         RulesDotnet = 'add5c92b30888a70aa951de1744a770b8f8ef436'
-        Sdk = '11.0.100-rc.3.26522.148'
+        Sdk = $toolchain.Groups[1].Value
+        Runtime = $toolchain.Groups[2].Value
         TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
         TestCounts = $counts
         DeclaredCompilerActions = $compilerActions.Count
