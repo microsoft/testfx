@@ -28,14 +28,20 @@ Larger batches can conservatively associate more tests with a source, without re
 
 The initial batch size of 16, minimum size of 4, two-child limit, cancellation, authoritative exits, and atomic map
 publication are preserved. The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates
-are unchanged. The new affected-test, CodeCoverage, and Azure DevOps storage packages provide `netstandard2.0` and
-`net10.0` assets; older .NET and .NET Framework test hosts use the `netstandard2.0` assets.
+are unchanged. Affected-test hosts resolve CodeCoverage `18.13.0-preview.26553.4` through the existing test-only
+`VersionOverride` in [`test/Directory.Build.targets`](../test/Directory.Build.targets). The affected-test, matching
+test-host CodeCoverage, and Azure DevOps storage packages at that version provide `netstandard2.0` and `net10.0`
+assets; older .NET and .NET Framework test hosts use the `netstandard2.0` assets. The separate shipping CodeCoverage
+pin remains `18.13.0-preview.26530.1`; it is not the CodeCoverage version loaded by these affected-test hosts.
 
 **Test-value evidence (2026-11-03):** this dependency update is based on
 `d3ce600610baaebac245acdbd4162615f5dfcaae`; the dependency-metadata patch, excluding this document, has SHA-256
 `B067E3E0586E17320669B7E8B0190606782313DED83E3EB9B927F4C49129D3B4`. An identical clean, isolated 512-case consumer
-was built against the previous and new affected-test, storage, and matching CodeCoverage packages, using separate
-caches. Both builds used SDK `12.0.100-alpha.1.26509.101`, Debug, Windows x64, published MTP/MSBuild
+was built against affected-test, storage, and test-host CodeCoverage packages all at `18.13.0-preview.26530.1` for
+the previous variant and all at `18.13.0-preview.26553.4` for the new variant, using separate caches. The retained
+`project.assets.json` from the actual TestFx test-host build also resolves all three packages at
+`18.13.0-preview.26553.4`, confirming the existing override rather than a mixed shipping/test-host pairing.
+Both builds used SDK `12.0.100-alpha.1.26509.101`, Debug, Windows x64, published MTP/MSBuild
 `2.6.0-preview.26552.13`, and MSTest `4.6.0-preview.26531.5`. The modern consumer targets `net11.0` and runs on the
 SDK's bundled .NET 12 runtime; the second consumer targets `net481`.
 
