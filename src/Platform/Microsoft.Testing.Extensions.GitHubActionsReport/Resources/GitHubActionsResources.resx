@@ -162,6 +162,10 @@
   <data name="AttachmentPathsLabel" xml:space="preserve">
     <value>Attachments (paths inside the workflow artifact):</value>
   </data>
+  <data name="AttachmentSizeText" xml:space="preserve">
+    <value>{0} bytes</value>
+    <comment>{0} is the attachment size in bytes.</comment>
+  </data>
   <data name="AttachmentUnavailableLabel" xml:space="preserve">
     <value>not staged; see manifest.</value>
   </data>

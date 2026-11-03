@@ -42,6 +42,11 @@
         <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AttachmentSizeText">
+        <source>{0} bytes</source>
+        <target state="new">{0} bytes</target>
+        <note>{0} is the attachment size in bytes.</note>
+      </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
         <source>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</source>
         <target state="new">Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</target>

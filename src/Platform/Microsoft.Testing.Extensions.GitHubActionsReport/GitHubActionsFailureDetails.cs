@@ -380,7 +380,12 @@ internal static class GitHubActionsFailureDetails
                 builder.Append("- `").Append(EscapeInlineCode(attachment.RelativePath ?? attachment.FileName)).Append("`");
                 if (attachment.RelativePath is not null)
                 {
-                    builder.Append(" (").Append(attachment.SizeBytes.ToString(CultureInfo.InvariantCulture)).Append(" bytes)");
+                    builder.Append(" (")
+                        .AppendFormat(
+                            CultureInfo.InvariantCulture,
+                            GitHubActionsResources.AttachmentSizeText,
+                            attachment.SizeBytes)
+                        .Append(')');
                 }
                 else
                 {

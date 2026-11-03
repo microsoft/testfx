@@ -154,18 +154,20 @@ public sealed class GitHubActionsAttachmentTests : AcceptanceTestBase<GitHubActi
         Assert.HasCount(2, manifests);
         Assert.HasCount(2, manifests.Select(Path.GetDirectoryName).Distinct(StringComparer.Ordinal));
         var sessions = new List<string>();
-        foreach (string path in manifests)
+        foreach ((string path, JsonDocument manifest) in manifests.Select(path => (path, JsonDocument.Parse(File.ReadAllText(path)))))
         {
-            using var manifest = JsonDocument.Parse(File.ReadAllText(path));
-            sessions.Add(manifest.RootElement.GetProperty("sessionUid").GetString()!);
-            JsonElement tests = manifest.RootElement.GetProperty("tests");
-            Assert.AreEqual(2, tests.GetArrayLength());
-            JsonElement firstTest = tests.EnumerateArray().Single(test => test.GetProperty("uid").GetString() == "failed-1");
-            JsonElement secondTest = tests.EnumerateArray().Single(test => test.GetProperty("uid").GetString() == "failed-2");
-            AssertStagedPair(first.AttachmentsDirectory, firstTest.GetProperty("attachments"));
-            AssertStagedAttachment(
-                first.AttachmentsDirectory,
-                Assert.ContainsSingle(secondTest.GetProperty("attachments").EnumerateArray()), [0, 65, 255]);
+            using (manifest)
+            {
+                sessions.Add(manifest.RootElement.GetProperty("sessionUid").GetString()!);
+                JsonElement tests = manifest.RootElement.GetProperty("tests");
+                Assert.AreEqual(2, tests.GetArrayLength());
+                JsonElement firstTest = tests.EnumerateArray().Single(test => test.GetProperty("uid").GetString() == "failed-1");
+                JsonElement secondTest = tests.EnumerateArray().Single(test => test.GetProperty("uid").GetString() == "failed-2");
+                AssertStagedPair(first.AttachmentsDirectory, firstTest.GetProperty("attachments"));
+                AssertStagedAttachment(
+                    first.AttachmentsDirectory,
+                    Assert.ContainsSingle(secondTest.GetProperty("attachments").EnumerateArray()), [0, 65, 255]);
+            }
         }
 
         Assert.HasCount(2, sessions.Distinct(StringComparer.Ordinal));
