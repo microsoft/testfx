@@ -1602,3 +1602,185 @@ validated by its DLL compilation. Linux/macOS execution is unverified.
 The two known full-MTP Windows impersonation failures are still present and
 unchanged; they are not hidden by the portable-suite pass. No existing tests,
 assertions, or scheduling settings were removed or weakened.
+
+## Engineering SDK 12 registration investigation (2026-11-03)
+
+This lane starts from `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`.
+Its requirement is the exact `global.json` compiler,
+`12.0.100-alpha.1.26509.101`, under native Bazel, not an SDK renamed to
+resemble that version. The shipping MSBuild/Arcade build and `global.json`
+remain unchanged. Keep the working SDK 11 default until an explicit
+engineering-SDK path has trustworthy inputs and composed-product validation.
+
+### Contract and design gates
+
+- The engineering archive owns the compiler and its execution runtime; its
+  bundled metadata must identify both. An SDK version is not evidence that
+  its runtime, reference-pack, or ASP.NET versions have the same number.
+- Targeting packs, RID-specific runtime/apphost assets, and .NET 8/9/10/11
+  consumer behavior remain independent compatibility requirements.
+- `rules_dotnet`'s compiler-worker/apphost bootstrap SDK is independently
+  pinned upstream. Changing the user compiler must not retarget those tools
+  or silently change the runtime on which they execute.
+- Downloads, outputs, consumer feeds, and caches are owned by this lane.
+  Archive hashes must bind the real downloaded bytes; no invented release
+  dates, module facts, or replacement SDK tables are acceptable.
+- Native compilation, source-built consumers, and staged self-contained
+  layouts must establish provenance, real test selection/results, report
+  artifacts, and success/failure/zero-result exits. A successful download
+  or compiler version display alone is not compiler parity.
+- The coordinating Bazel migration session owns combined integration and
+  rollout. No shipping-leg replacement, package publication, servicing, or
+  backport is enabled by this experiment.
+
+### Research in progress
+
+The pinned rules' `dotnet/extensions.bzl` resolves one user SDK and one
+independent bootstrap SDK. `dotnet/private/sdk/releases.bzl` currently obtains
+SDK archives, runtime/language versions, and release dates from Microsoft's
+published release metadata, then remembers complete metadata as Bzlmod facts.
+An engineering input must be explicit rather than pretending that discovery
+produced a released SDK.
+
+On 2026-11-03, the exact SDK's Windows x64, Linux x64, and macOS arm64 archives
+on `https://ci.dot.net/public/Sdk/12.0.100-alpha.1.26509.101/` returned HTTP 200.
+Both `sdk-productVersion.txt` and `productVersion.txt` returned the exact
+engineering version. The same Windows archive on `builds.dotnet.microsoft.com`
+and the published `release-metadata/12.0/releases.json` returned HTTP 404.
+The conventional `.sha512`, `.sha512.txt`, `.sha256`, and version-level
+checksum names probed there also returned 404. These are availability
+observations, not archive verification or proof of installed contents.
+
+The first baseline command used a task-owned repository cache inside the
+checkout. Bazel 9 rejects a repository *contents* cache there. The retry uses
+a task-specific short output/cache root outside the source tree; no shared
+cache was modified. Logs remain in `artifacts/bazel-sdk12`.
+
+The checksum search resolved the official daily alias once, only to discover
+the separate `public-checksums` container. The implementation will not consume
+that mutable alias. All six host archives have version-specific SHA-512 files
+under `https://ci.dot.net/public-checksums/Sdk/12.0.100-alpha.1.26509.101/`.
+The downloaded Windows x64, Linux x64, and macOS arm64 archives match those
+published hashes. `productCommit-win-x64.txt`, the SDK's `.version`, and
+the bundled runtime identify VMR commit
+`907535df2f7eb8e1845571867684244ad04b031b`.
+
+The verified Windows installation executes Roslyn
+`5.13.0-1.26509.101 (907535df2f7eb8e1845571867684244ad04b031b)`,
+whose default/max C# language version is 15.0, and F# compiler 15.2.200.0
+for F# 11.2. Its host and three Windows shared frameworks are
+`12.0.0-alpha.1.26509.101`. The compiler runtimeconfig requests that exact
+runtime; its `tfm` string alone is not the runtime version.
+
+The bundled SDK metadata is transitional: `NETCoreAppMaximumVersion` and
+`BundledNETCoreAppTargetFramework` still name 11, but both `net11.0` and
+`net12.0` use `12.0.0-alpha.1.26509.101` reference/runtime/apphost packs.
+Linux and macOS archives agree. Earlier reference packs are 8.0.31, 9.0.20,
+and 10.0.12. The engineering packs are absent on nuget.org and the configured
+dotnet11/dotnet-public feeds, but exact package manifests are available on
+the public dotnet12 feed. Azure Artifacts rejected HEAD with HTTP 405;
+the publication check therefore used GET, not a false missing-package claim.
+
+### Narrow, reversible registration decision
+
+Use the pinned rules' existing `dotnet_sdk_repositories` and
+`dotnet_toolchains_repo` helpers from a separate, explicit module extension.
+It can describe the verified archive, compiler versions, and real runtime
+without patching upstream release discovery or writing fabricated Bzlmod
+release facts. Validate its pin against both `global.json` SDK fields.
+
+Keep `dotnet.toolchain` at the published SDK 11 pin. It remains the default
+compiler and the explicit source of the existing reference/runtime/apphost
+pack graph. Select the engineering compiler with
+`--extra_toolchains=@dotnet_engineering_toolchains//:all` during validation.
+That selection uses the real SDK 12 compiler and .NET 12 execution host,
+while self-contained .NET 8/9/10/11 applications retain their existing
+target-specific runtime packs. The bootstrap compiler stays at upstream's
+10.0.401; upstream deliberately runs its tools on the newer user runtime.
+
+This is **compiler selection, not full bundled-pack parity**. Copying SDK 12's
+`net11.0` pack choice would relabel a .NET 12 runtime as the existing .NET 11
+publisher and invalidate its runtime-major assertion. Silently keeping those
+packs while claiming SDK 12 bundled defaults would be equally misleading.
+Replacing the default or changing the target-pack policy remains a separate
+integration decision after the bounded opt-in path is proven.
+
+Disk exhaustion interrupted the first native baseline and SDK extraction on
+the shared Q: volume. The verified archive was copied and rehashed on C:;
+only this lane's partial files and failed Bazel output base were cleaned.
+New heavy downloads, SDK installation, native outputs, and caches use isolated
+C: roots. Those infrastructure failures are not compiler regressions or
+red-phase evidence.
+
+The first opt-in Bazel analysis also exposed a repository-mapping requirement:
+the root-owned extension's generated toolchains refer to `@platforms`.
+Declare `platforms` 1.0.0 directly in the root module (the same already-resolved
+version used by `rules_dotnet`); a transitive dependency is not visible through
+that extension's mapping. No upstream compatibility patch is needed.
+
+`verify-engineering-sdk.ps1` checks a native `aquery` capture against the
+independent `global.json` pin, executes the selected compiler's version
+command, verifies the SDK/VMR/runtime metadata, rejects mismatched compiler
+hosts and bootstrap compiler changes, and checks the existing four reference
+pack versions. It deliberately describes action counts as **declared**, not
+executed: an action query is not a successful build. Its companion
+`test-engineering-sdk-verifier.ps1` exercises eight explicitly synthetic
+graph fixtures with real installed compiler metadata, plus two checks that
+success and failure restore environment values and preserve absent versus
+present-but-empty entries. Those fixture results
+must not be presented as native graph or composed-product validation.
+
+The source-build validation was paused at the coordinator's request to let
+other prerequisites use the shared host's first compiler wave. Both owned
+Bazel servers were stopped. The interrupted C: baseline had not executed
+the tests and is not a passing baseline.
+
+### SDK-specific verification procedure
+
+Use one task-owned short `TESTFX_BAZEL_OUTPUT_ROOT` per concurrently active
+worktree. Keep large artifacts/caches on a volume with sufficient free space.
+The following are the intended native gates, not claims that the paused
+builds completed:
+
+```powershell
+$toolchain = '--extra_toolchains=@dotnet_engineering_toolchains//:all'
+.\eng\bazel.ps1 build //:managed_all $toolchain --jobs=2
+.\eng\bazel.ps1 test //:portable_tests $toolchain --jobs=2 --nocache_test_results
+$executionRoot = & .\eng\bazel.ps1 info execution_root
+.\eng\bazel.ps1 aquery 'deps(//:managed_all)' $toolchain --include_param_files --output=jsonproto > "$evidence\actions.json"
+.\eng\bazel\verify-engineering-sdk.ps1 -ActionGraph "$evidence\actions.json" -ExecutionRoot $executionRoot -OutputPath "$evidence\compiler.json"
+```
+
+Check every command's exit before continuing, and capture query stderr
+separately from its JSON. Retain build/test logs beside the query: the verifier
+explicitly does not turn an action description into build or runtime proof.
+Native package validation must still run against source-built NuGets and the
+published SDK 11 consumer, with the engineering override applied to the Bazel
+producer only. Self-contained .NET 8/9/10/11 layouts must still pass their
+independent runtime-major/CoreLib-path assertions.
+
+The verifier's focused fixture command was executed on Windows with the
+verified SDK 12 installation and the baseline's downloaded SDK 11:
+
+```powershell
+.\eng\bazel\test-engineering-sdk-verifier.ps1 -EngineeringSdkDirectory $sdk12 -PublishedSdkDirectory $sdk11 -EvidenceRoot $evidence
+```
+
+Exit 0, ten checks passed: `NoSourceActions`, `MismatchedCompilerHost`,
+`WrongNet11ReferencePack`, `MissingFrameworks`, `ChangedBootstrapCompiler`,
+`OutsideExecutionRoot`, `PublishedCompilerRejected`,
+`VerifiedEngineeringCompiler`, `EnvironmentRestoredAfterSuccess`, and
+`EnvironmentRestoredAfterFailure`. The first eight deliberately use synthetic
+graphs; they test the verifier, not the Bazel compiler graph.
+
+An additional existing native `build_tools.dll` (`net10.0`, built during the
+SDK 11 baseline attempt) successfully executed its `version` command on the
+verified SDK 12 host with both roll-forward environment variables absent.
+Host tracing selected
+`shared/Microsoft.NETCore.App/12.0.0-alpha.1.26509.101`, and the command
+returned 0 and wrote `2.6.0-bazel`. This rules out an assumed prerequisite
+for an ambient prerelease-roll-forward setting on this host; no speculative
+launcher patch was made. It is runtime compatibility evidence for that
+already-built helper, not evidence that SDK 12 compiled it. An earlier call
+used the wrong `packageversion` command name and reached the helper's argument
+error; that was not a host-startup failure or regression evidence.

@@ -31,6 +31,12 @@ http_file(
     urls = ["https://raw.githubusercontent.com/dotnet/arcade/4163bf82769cbb7f0a6e1e02f85090d30b53e988/src/Microsoft.DotNet.Arcade.Sdk/tools/snk/MSFT.snk"],
 )
 
+# Opt-in exact global.json compiler and execution runtime; the published SDK above
+# still owns target/RID packs. No fabricated release metadata or SDK substitution.
+# Select with --extra_toolchains=@dotnet_engineering_toolchains//:all.
+engineering = use_extension("//eng/bazel:engineering-sdk.bzl", "engineering_sdk")
+use_repo(engineering, "dotnet_engineering_toolchains")
+
 # Bootstrap the resolver without requiring dotnet tool restore or a machine SDK.
 nuget_archive = use_repo_rule("@rules_dotnet//dotnet:defs.bzl", "nuget_archive")
 
