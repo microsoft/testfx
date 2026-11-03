@@ -65,6 +65,19 @@ def _published_test_impl(ctx):
     if not runtime.runtime_path.startswith("external/"):
         fail("Published tests require the declared downloadable .NET toolchain.")
     runtime_directory = runtime.runtime_path[len("external/"):].rsplit("/", 1)[0]
+    directory = path.rsplit("/", 1)[0]
+    fixtures = []
+    if ctx.attr.repository_marker:
+        marker = ctx.actions.declare_file(directory + "/.git")
+        ctx.actions.write(marker, "Native Bazel test fixture root.\n")
+        fixtures.append(marker)
+    for target, destination in ctx.attr.files.items():
+        sources = target[DefaultInfo].files.to_list()
+        if len(sources) != 1:
+            fail("Expected one published test fixture from %s" % target.label)
+        output = ctx.actions.declare_file(directory + "/" + destination)
+        ctx.actions.symlink(output = output, target_file = sources[0])
+        fixtures.append(output)
     is_windows = application.extension == "exe"
     launcher = ctx.actions.declare_file(ctx.label.name + (".bat" if is_windows else ".sh"))
     if is_windows:
@@ -87,10 +100,13 @@ def _published_test_impl(ctx):
             "",
         ])
     ctx.actions.write(launcher, content, is_executable = True)
-    return [DefaultInfo(
-        executable = launcher,
-        runfiles = info.default_runfiles.merge(ctx.runfiles(transitive_files = depset(transitive = [info.files, runtime.runtime_files]))),
-    )]
+    return [
+        DefaultInfo(
+            executable = launcher,
+            runfiles = info.default_runfiles.merge(ctx.runfiles(files = fixtures, transitive_files = depset(transitive = [info.files, runtime.runtime_files]))),
+        ),
+        RunEnvironmentInfo(environment = {}, inherited_environment = ctx.attr.env_inherit),
+    ]
 
 testfx_published_test = rule(
     implementation = _published_test_impl,
@@ -98,5 +114,8 @@ testfx_published_test = rule(
     toolchains = ["@rules_dotnet//dotnet:toolchain_type"],
     attrs = {
         "binary": attr.label(executable = True, cfg = "target", mandatory = True),
+        "files": attr.label_keyed_string_dict(allow_files = True),
+        "repository_marker": attr.bool(default = False),
+        "env_inherit": attr.string_list(),
     },
 )

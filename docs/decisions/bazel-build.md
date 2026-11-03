@@ -2766,6 +2766,57 @@ production regression sensitivity. `stage3-checkpoint.log`,
 TRXs, and final signed TRXs preserve the executed evidence. No existing
 verified aggregate was enlarged by this checkpoint.
 
+### Stage 4: all existing analyzer cases
+
+The final prioritized suite runs all **2,102** existing analyzer cases, with
+zero failures/skips, against the source-built public-signed analyzer/codefix
+assemblies. The shared reference correction removes the conflicting Roslyn
+3.11 transitive paths while retaining the explicitly requested 4.10 test
+references. No test source, assertion, or test-version pin was changed.
+
+The native producer's `OutputGroupInfo.globalconfigs` is narrowed to exactly
+one file named `mstest-recommended.globalconfig`; no copied config text or
+combination of incompatible modes is used. Inspection also corrected an
+initially over-broad compiler-plugin dependency: unlike SelfReal, this project
+declares analyzer/codefix projects as ordinary references and has
+`UseMSTestFromSource=true`. The only inherited `OutputItemType=Analyzer`
+reference is mutation-only. Removing the accidentally added native plugin
+matches that project contract; individual diagnostics were not suppressed.
+
+Actual execution exposed two additional host requirements:
+
+- NuGet 6.3.4 consults Windows Program Files variables even with an explicit
+  repository config. These are declared inherited inputs. Its temporary
+  package area, package/HTTP caches, HOME/USERPROFILE, APPDATA and LOCALAPPDATA
+  are isolated under `TEST_TMPDIR`; no shared user configuration is written.
+- Eight tests use loaded DI assemblies as compiler references. Running net10
+  test code on the SDK's .NET 11 host supplied DI 11 to net10 reference
+  compilations, producing CS1705. A real upstream self-contained net10 publish,
+  with declared source/release/config fixtures in its runfiles layout, aligns
+  the loaded runtime and compilation references. All eight unchanged cases
+  then pass, together with the other 2,094 cases.
+
+The final full command returned 0:
+
+```powershell
+.\eng\bazel.ps1 test //:analyzer_tests --jobs=2 --nocache_test_results --noshow_progress
+```
+
+Independent discovery of the same native executable yielded 2,102 names. The
+existing repository execution gate reconciled that name multiset, the captured
+pre-run UTC boundary, and the actual TRX: 2,102 planned/selected/executed/passed,
+zero failed/skipped, process exit 0. Retained files include
+`analyzer-aligned-runtime.log`, `analyzer-aligned-run.json`,
+`analyzer-discovery-native.log`, `analyzer-expected.json`,
+`analyzer_tests-signed-net10.trx`, and `analyzer-execution-gate.log`.
+
+**Test-value evidence:** this is execution of the original analyzer safety net,
+including its real Roslyn compilations and diagnostic assertions. Initial
+reference/compiler-policy and NuGet-profile failures are setup failures, not
+behavioral red-phase proof. The runtime-mismatch failures are retained as
+integration evidence; no source assertion was weakened to accommodate them.
+Only the net10 runtime leg is claimed by this validation.
+
 ### Native source-root parity
 
 Existing extension annotation tests require real source files beneath the

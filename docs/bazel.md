@@ -197,7 +197,15 @@ shim. The other two compile net10 and execute on the pinned .NET 11 host.
 The MSBuild suite stages the real native netstandard task DLL, not a reference
 assembly. Extension source-location checks use declared original source files
 and the repository's `/_/` pathmap. These targets remain outside
-`portable_tests`; the analyzer suite is a separate pending slice.
+`portable_tests`.
+
+`//:analyzer_tests` runs all 2,102 existing analyzer cases in a native
+self-contained net10 host, with zero failures or skips. Its generated
+`mstest-recommended.globalconfig` comes from the native analyzer-package
+producer. The analyzer/codefix assemblies remain ordinary test-subject
+references, as in the original project, not compiler plugins running against
+their own tests. NuGet reference-pack downloads, HTTP cache, temporary files,
+and user-profile settings stay in Bazel's per-test temporary directory.
 
 `eng/bazel/TestMain.cs` replaces only the selected suites' registration/entrypoint
 plumbing. It keeps their test bodies and scheduling, registers the real source

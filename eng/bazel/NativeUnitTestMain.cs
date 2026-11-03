@@ -39,6 +39,11 @@ if (testTempDirectory is not null)
     Environment.SetEnvironmentVariable("TMPDIR", testTempDirectory);
     Environment.SetEnvironmentVariable("NUGET_PACKAGES", Path.Combine(testTempDirectory, "nuget"));
     Environment.SetEnvironmentVariable("NUGET_HTTP_CACHE_PATH", Path.Combine(testTempDirectory, "nuget-http"));
+    string home = Directory.CreateDirectory(Path.Combine(testTempDirectory, "home")).FullName;
+    Environment.SetEnvironmentVariable("HOME", home);
+    Environment.SetEnvironmentVariable("USERPROFILE", home);
+    Environment.SetEnvironmentVariable("APPDATA", Directory.CreateDirectory(Path.Combine(home, "roaming")).FullName);
+    Environment.SetEnvironmentVariable("LOCALAPPDATA", Directory.CreateDirectory(Path.Combine(home, "local")).FullName);
 }
 #endif
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

@@ -4,6 +4,7 @@ load(":defs.bzl", "TESTFX_PUBLIC_KEY_FILE")
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
+    "AnalyzerReferencePackMetadata.cs",
     "CompatibilityConsumer.cs",
     "CompatibilityFrameworkMetadata.cs",
     "GlobalConfigsEnvironment.cs",
