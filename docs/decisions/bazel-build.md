@@ -484,6 +484,51 @@ Implementation and initial experiments:
   in the producer graph. Both complete archives and all ten evaluations
   passed again, including the expected invalid-profile rejection.
 
+#### Composed consumer evidence: SDK/meta-package lane
+
+The native core and all six framework/adapter package checkpoints through
+`ba725abc5cb28aaa36ec789ab50891f5e65b0b6e` are integrated at
+`133c1785583d89399531b7bd7f4a1923f9c3d13d`, along with the shared version and
+analyzer prerequisites. All ten archives build and pass the SDK harness's
+layout, version and native-action checks. Consumer isolation now explicitly
+uses its own NuGet.config and clears inherited fallback package folders.
+
+The first full default-SDK build exposed a real remaining boundary, not a
+restore-source issue. In
+`bazel-sdk-validation/20261103-152228-1bdaf495/sdk-default-net8.0.binlog`,
+the generated CodeCoverage registration fails with CS0012. The external,
+unchanged CodeCoverage package requests `ITestApplicationBuilder` from
+`Microsoft.Testing.Platform, Version=2.6.0.0, PublicKeyToken=b03f5f7f11d50a3a`.
+Binlog reference provenance records the selected native
+`2.6.0-preview.bazel` compile/runtime asset in the fresh cache, with
+`PublicKeyToken=null`. The coordinator owns the shared native identity
+correction. No released MTP, coverage downgrade, warning suppression, or
+default-profile success is implied.
+
+Separate checks progressed without concealing that failure:
+
+- The explicit SDK `None` profile builds for net11.0, discovers both fixture
+  methods, verifies loaded native framework/MTP hashes, and returns 0/2/9 for
+  `NativePackagePass`, `NativePackageFailure`, and an empty selection. Its
+  restored graph contains neither the CodeCoverage nor TRX report extension;
+  all seven native archives in that graph match the freshly built feed.
+- The default meta-package builds for net8.0/net9.0/net10.0/net11.0. Its
+  actual net11.0 VSTest `dotnet test` consumer discovers both methods and
+  executes one passing case (exit 0) and one intentional assertion failure
+  (exit 1), with the corresponding single-result TRX files and zero skips.
+  All nine native archives in its graph match the isolated feed.
+- These successful scopes are deliberately separate from the default SDK.
+  The run's `validation.json` remains failed; independent command logs,
+  binlogs, `independent-consumer-provenance.json`, and meta-package TRX files
+  preserve the narrower results.
+
+Two harness assumptions were corrected against actual source/output, not by
+changing product behavior: the framework assembly is named
+`MSTest.TestFramework` in its authoritative project, and the platform's
+unconditional `--coverage-threshold-*` options do not mean the optional
+`--coverage` collector is registered. Help checks now match complete option
+tokens instead of prefixes.
+
 #### Test-value evidence: SDK/meta-package lane
 
 At `78b990d9986486f1c3755fc3a9f38ddaceab87c6` (the shared version-helper

@@ -322,7 +322,7 @@ try {
         $sourceEntries += '<add key="' + $source.key + '" value="' + [Security.SecurityElement]::Escape($source.value) + '" />'
         $mappings += '<packageSource key="' + $source.key + '"><package pattern="*" /><package pattern="Microsoft.Testing.Extensions.CodeCoverage" /></packageSource>'
     }
-    $nugetConfiguration = "<configuration><packageSources><clear />$sourceEntries</packageSources><packageSourceMapping>$mappings</packageSourceMapping></configuration>"
+    $nugetConfiguration = "<configuration><packageSources><clear />$sourceEntries</packageSources><fallbackPackageFolders><clear /></fallbackPackageFolders><packageSourceMapping>$mappings</packageSourceMapping></configuration>"
     $evaluationCases = @(
         @{ Name = 'sdk-default'; Properties = ''; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage') },
         @{ Name = 'sdk-none'; Properties = '<TestingExtensionsProfile>None</TestingExtensionsProfile>'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter') },
@@ -385,7 +385,7 @@ try {
     $noneConsumer = Join-Path $directory 'sdk-none'
     $metaConsumer = New-Consumer 'meta-default' '' -Meta
     $expectedHashes = @{
-        'Microsoft.VisualStudio.TestPlatform.TestFramework' = $packages['MSTest.TestFramework'].Files['lib/net11.0/Microsoft.VisualStudio.TestPlatform.TestFramework.dll']
+        'MSTest.TestFramework' = $packages['MSTest.TestFramework'].Files['lib/net11.0/MSTest.TestFramework.dll']
         'Microsoft.Testing.Platform' = $packages['Microsoft.Testing.Platform'].Files['lib/net11.0/Microsoft.Testing.Platform.dll']
     }
     foreach ($assemblyName in $expectedHashes.Keys) {
@@ -403,7 +403,8 @@ try {
             $project.SelectSingleNode('/Project/PropertyGroup/TargetFramework').InnerText = $framework
             $project.Save($projectPath)
             $null = Invoke-Step "build-$name-$framework" $dotnet @('build', 'Consumer.csproj', '--disable-build-servers', '-c', 'Release',
-                '--nologo', '-v:quiet', "-bl:$(Join-Path $directory "$name-$framework.binlog")") $consumer -Environment $consumerEnvironment
+                '--configfile', (Join-Path $consumer 'NuGet.config'), '--nologo', '-v:quiet',
+                "-bl:$(Join-Path $directory "$name-$framework.binlog")") $consumer -Environment $consumerEnvironment
             Assert-ResolvedPackages $consumer $framework
         }
     }
@@ -411,8 +412,8 @@ try {
         $name = Split-Path $consumer -Leaf
         $assembly = Join-Path $consumer 'bin\Release\net11.0\Consumer.dll'
         $help = Invoke-Step "help-$name" $dotnet @($assembly, '--help') $consumer -Environment $consumerEnvironment
-        Assert-Equal ($consumer -eq $defaultConsumer) $help.Contains('--report-trx') "$name TRX registration"
-        Assert-Equal ($consumer -eq $defaultConsumer) $help.Contains('--coverage') "$name coverage registration"
+        Assert-Equal ($consumer -eq $defaultConsumer) ([regex]::IsMatch($help, '(?m)^\s+--report-trx(?:\s|$)')) "$name TRX registration"
+        Assert-Equal ($consumer -eq $defaultConsumer) ([regex]::IsMatch($help, '(?m)^\s+--coverage(?:\s|$)')) "$name coverage registration"
         $discovery = Invoke-Step "discover-$name" $dotnet @($assembly, '--list-tests') $consumer -Environment $consumerEnvironment
         foreach ($test in @('NativePackagePass', 'NativePackageFailure')) {
             if (-not $discovery.Contains($test)) { throw "$name did not discover $test." }
