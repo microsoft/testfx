@@ -19,12 +19,40 @@ discovery path and Azure DevOps upload request, and ships both `netstandard2.0` 
 extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
 are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
-The affected-test packages now use `18.13.0-preview.26530.1`, built from commit
-`fe4721e980b711722351edfd491577a03b8d4421`. This includes refill-on-completion collection scheduling: a completed
-child slot can start another batch without waiting for its sibling, retaining the two-child limit, cancellation,
-failure handling, and atomic map publication. The previous pin, `18.13.0-preview.26529.4`, already includes this
-scheduler fix; this update advances to the latest published build, not a different collection algorithm.
-The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates are unchanged.
+The affected-test packages now use `18.13.0-preview.26553.4`, built from commit
+`eca1718b78e9adb640b700ede7b51ec97ed077fa`. This includes setup-aware collection batching on top of the existing
+refill-on-completion scheduler. Validated, correlated child execution timing permits batches of up to 256 test UIDs,
+amortizing repeated child initialization and collector setup. Unavailable or incompatible timing visibly retains
+the legacy 4-32 batch-size policy; an explicitly incomplete terminal-test inventory rejects the whole module map.
+Larger batches can conservatively associate more tests with a source, without removing tests or framework coverage.
+
+The initial batch size of 16, minimum size of 4, two-child limit, cancellation, authoritative exits, and atomic map
+publication are preserved. The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates
+are unchanged. The new affected-test, CodeCoverage, and Azure DevOps storage packages provide `netstandard2.0` and
+`net10.0` assets; older .NET and .NET Framework test hosts use the `netstandard2.0` assets.
+
+**Test-value evidence (2026-11-03):** this dependency update is based on
+`d3ce600610baaebac245acdbd4162615f5dfcaae`; the dependency-metadata patch, excluding this document, has SHA-256
+`B067E3E0586E17320669B7E8B0190606782313DED83E3EB9B927F4C49129D3B4`. An identical clean, isolated 512-case consumer
+was built against the previous and new affected-test, storage, and matching CodeCoverage packages, using separate
+caches. Both builds used SDK `12.0.100-alpha.1.26509.101`, Debug, Windows x64, published MTP/MSBuild
+`2.6.0-preview.26552.13`, and MSTest `4.6.0-preview.26531.5`. The modern consumer targets `net11.0` and runs on the
+SDK's bundled .NET 12 runtime; the second consumer targets `net481`.
+
+Real SDK `--collect-test-map` commands exited 0 and retained all 512 exact discovered UIDs and their source
+associations per module. The unchanged `TimingFeedbackGrowsBeyondLegacyBatchCeiling` assertion failed against the
+old package's 32-UID maximum and passed against the new package's 128-UID maximum. Both new consumer TFMs reported
+nine measured batches, zero fallback, and the unchanged two-child cap. Independent per-case execution markers
+verified the work; the SDK's zero ordinary result count during collection is expected suppressed reporting, not
+evidence of zero execution. These checks demonstrate optimization sensitivity, not a full-CI speedup measurement.
+
+Unchanged two-module affected selection exited 0 without starting test work; a missing module map fell back to
+all 512 passing cases; an intentional single-case failure retained SDK exit 2. The actual TestFx test-host graph
+also restored and built with the new dependencies, and `TerminalResources_AreCompiledIntoThisAssembly` and
+`SharedTerminalTypes_AreUsable` both executed and passed with fresh TRX verification. The repository build-wrapper
+pack attempt was blocked by Windows PowerShell lookup during runtime bootstrap; direct pinned-SDK build and
+consumer validation succeeded. Full CI collection performance, non-Windows native collection, live Azure artifact
+publication, cancellation, and partial-feedback paths were not exercised by this dependency update.
 
 Generated acceptance assets need the shipping CodeCoverage package in their local feed even when the affected-test
 host uses a newer preview. The MSTest acceptance project downloads that shipping package separately and stages it
