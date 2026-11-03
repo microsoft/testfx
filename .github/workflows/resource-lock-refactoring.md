@@ -85,7 +85,7 @@ safe-outputs:
   report-incomplete:
     create-issue: false
   messages:
-    footer: "> Automated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} | [History]({history_link})"
+    footer: "> Automated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix}{history_link}"
   create-pull-request:
     max: 1
     draft: true
