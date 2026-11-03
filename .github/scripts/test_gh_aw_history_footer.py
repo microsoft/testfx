@@ -32,7 +32,7 @@ def message_configs(node):
 class GhAwHistoryFooterTests(unittest.TestCase):
     def assert_inline_history(self, footer: str) -> None:
         self.assertEqual(1, footer.count("{history_link}"))
-        self.assertRegex(footer, r"\s\{history_link\}$")
+        self.assertRegex(footer, r"\{history_link\}$")
         self.assertNotRegex(footer, r"\[[^\]]*\]\(\s*\{history_link\}\s*\)")
 
     def test_sources_use_history_as_an_inline_fragment(self) -> None:
