@@ -10,4 +10,5 @@ exports_files([
     "satellite-assemblies.patch",
     "unique-analyzers.patch",
     "windows-launcher.patch",
+    "testfx-tests-paket-integrity.patch",
 ])

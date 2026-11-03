@@ -2023,3 +2023,123 @@ Only the obsolete interrupted Q: cache and failed partial cache move were
 cleaned; verified downloads, active task-owned C: caches, and reproducible
 evidence remain available. Delivery is local/committed, not pushed, published,
 or CI-verified.
+
+## 2026-11-03: portable tests and samples lane
+
+This additive lane starts at
+`6bc33c48b9dae0e89486862f46af3c876fd7cf5d`. It migrates existing portable test
+projects and examples, not replacement tests or the Windows application-model
+examples. The verified `portable_tests` aggregate remains unchanged until the
+coordinator composes independently passing additions. Package/SDK production,
+shared toolchain changes, final aggregate counts, and CI remain separate lanes.
+
+### Contracts and first inspection
+
+| Existing project | Native wiring requirements |
+| --- | --- |
+| TerminalReporterContract | Compile the terminal manifest's linked sources and resource into the consumer, preserve the public-abstraction exclusions when MTP is referenced, and separately establish standalone compilation. |
+| Platform.MSBuild | Preserve the `global,PlatformMSBuild` reference alias and the distinct source-linked IPC model copies. |
+| ServerMode.Client.Sources | Preserve `global,serverclient`, assembly serializer initialization, and all three self-host child fixtures before normal runner argument augmentation. |
+| Extensions | Preserve the `ghactions`-only alias, native extension references, portable PDBs, and the renamed conformance-vector runtime file. |
+| MSTest.Analyzers | Use source-built MSTest, the existing Roslyn testing versions, release-tracking input files, and reference-pack resolution. |
+| MSTest.SelfRealExamples | Preserve class-level scheduling, rather than the other suites' method-level scheduling. |
+
+All six retain their source tests, data rows, exclusions, resource declarations,
+and zero/unlimited worker settings. Existing generic native registration omits
+affected-test/coverage collectors; those CI-only collectors must be recorded
+separately from test behavior. Specialized child fixtures cannot be replaced
+with the generic runner. No failing method will be excluded or assertion changed
+to make a new aggregate green.
+
+The producer is this checkout's native Bazel graph, with its explicit Bazel 9.1.1,
+rules_dotnet, and .NET 11 RC3 pins, not Arcade outputs or released first-party
+fallbacks. The consumers are actual existing test executables and samples.
+Normal tests must produce reconciled case identities and TRX counts; failure,
+zero-result, child exit, and cleanup behavior must remain observable. Tests
+retain their scheduling while Bazel starts with `--jobs=2` on the shared host.
+Outputs, generated consumers, and any additional dependency-resolution work use
+lane-owned directories. This experimental branch does not enable release
+rollout, servicing, signing, or publishing.
+
+### Alternatives and staged validation
+
+Reusing the generic entrypoint is appropriate only where it preserves the
+suite's contract. Copying test bodies, adding released MSTest as a fallback,
+serializing suites, or invoking MSBuild from a Bazel producer would hide missing
+native wiring and is rejected. Target-specific bootstraps and explicit native
+dependencies are preferred where the existing projects require them. Additional
+third-party test dependencies will use a separately locked test-support graph
+with coordinated module wiring.
+
+The first validation is the existing native build-tools target before adding
+targets. Subsequent additions are committed in coherent working stages with
+exact commands, exits, TFMs, counts, and report locations recorded below.
+Compilation/setup failures are not behavioral red-phase evidence; unchanged
+tests passing under native wiring are preservation evidence, not a new-test
+campaign. NativeAOT/browser feasibility will be assessed against actual upstream
+build/publish paths after the portable unit targets.
+
+### Executed setup findings
+
+- The first baseline attempt ran zero tests: Q: filled during native compilation.
+  The lane stopped its own Bazel server, removed only its failed generated
+  `external`/`execroot` trees, and relocated builds to `C:\tfb\tests-05e68c`.
+  Logs and large dependency caches also moved to C:. No shared cache, another
+  worktree, machine policy, or test worker count was changed.
+- A pure standalone compile of the terminal `.props` manifest exposed missing
+  coverage-summary and retry-property dependencies. Existing MTP references
+  supply those public types in the test application, but cannot prove standalone
+  consumption. The extra standalone native target therefore explicitly includes
+  the referenced coverage/retry model closure as well as the manifest sources,
+  rather than excluding either reporter partial or adding a platform DLL.
+  This is an explicit native closure extension, not proof that the current
+  `.props` manifest itself is standalone.
+- The pinned upstream NativeAOT publisher explicitly supports Linux/macOS, not
+  Windows. Debian WSL is installed on this host; feasibility of a separate native
+  Linux build remains to be established. Browser publishing uses upstream's
+  WebAssembly bundler, not an MSBuild producer wrapper.
+- Read-only package metadata confirmed the repository-pinned Roslyn testing
+  preview is on `dotnet-tools`, not nuget.org. Its exact
+  [ReferenceAssemblies implementation](https://github.com/dotnet/roslyn-sdk/blob/f98f564816af0ca213db2bcc32afed00a6d7c14f/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/ReferenceAssemblies.cs)
+  also writes `Path.GetTempPath()/test-packages`, independently of
+  `NUGET_PACKAGES`. The native analyzer bootstrap therefore redirects both
+  temporary-directory conventions and NuGet package/HTTP caches to Bazel's
+  per-test temporary directory before any runner or verifier initialization.
+
+### Stage 1: isolated test dependencies and integrity
+
+The additional dependencies use their own `eng/bazel/tests-support/paket.lock`
+and the `testsupport.main`, `testsupport.analyzers`, and
+`testsupport.benchmarks` repositories. Roslyn tests retain 4.10.0 and
+1.1.3-beta1.26255.1; benchmarks retain BenchmarkDotNet 0.15.8. The complete
+Hosting/Configuration implementation packages use 10.0.13, matching the source
+graph's shared abstractions. No released MSTest or MTP package is introduced
+into this support graph.
+
+Upstream's hash lookup follows the preview feed's catalog URLs to unavailable
+Azure `commitLog` endpoints. A successful `bazel mod deps` consequently left
+all nine preview testing packages without persisted hashes. The separate
+`testfx-tests-paket-integrity.patch` adds an optional explicit integrity file
+to `paket.parse`, without changing existing tags. The updater downloads the
+exact locked preview packages, records SHA-512 SRI values, and removes only
+its uniquely named temporary downloads. Entries outside the lock or malformed
+SHA-512 values are rejected. `package-integrity.json` is generated, not a
+version-only or released-package fallback.
+
+Executed on Windows x64 with the lane-owned C: output root:
+
+| Command / check | Result |
+| --- | --- |
+| `.\eng\bazel\tests-support\update-dependencies.ps1 -Resolve` | Exit 0; pinned Paket 11.0.1 resolves the separate graph and records nine preview hashes. |
+| `.\eng\bazel.ps1 mod deps --lockfile_mode=update --noshow_progress` | Exit 0; the explicit pins are persisted without the failing catalog requests. |
+| `.\eng\bazel.ps1 build <nine @testsupport.analyzers//package:files labels> --jobs=2 --noshow_progress` | Exit 0; all nine actual preview archives are downloaded and verified against their SHA-512 pins; no TestFx compilation is involved. |
+| Same digest gate over retained pre-pin and current module metadata | Before: exit 1, nine missing pins. After: exit 0, all nine exact values match the generated manifest. |
+
+**Test-value evidence:** the metadata gate detects the actual missing-integrity
+state rather than treating the resolver's exit 0 as success. Patch SHA-256:
+`B2A7CBE4C97BABBBFE8A1CFCF31B3B1B0A52DC6E13EC9575993EF5673410D1ED`.
+The retained `module-before-test-integrity.json`, `verify-package-digests.py`,
+`integrity-{before,after}.log`, `integrity-validation.json`, and
+`verify-preview-downloads.log` preserve the comparison and archive verification
+under this session's `files/bazel-tests-lane` evidence. This stage validates
+dependency inputs, not execution of the pending unit/sample targets.

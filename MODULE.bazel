@@ -11,6 +11,7 @@ archive_override(
         "//eng/bazel/patches:compatibility-package-references.patch",
         "//eng/bazel/patches:reference-aliases.patch",
         "//eng/bazel/patches:public-signing.patch",
+        "//eng/bazel/patches:testfx-tests-paket-integrity.patch",
     ],
     strip_prefix = "rules_dotnet-add5c92b30888a70aa951de1744a770b8f8ef436",
     urls = ["https://github.com/bazel-contrib/rules_dotnet/archive/add5c92b30888a70aa951de1744a770b8f8ef436.zip"],
@@ -66,3 +67,11 @@ paket.parse(
     lock = "//eng/bazel/compatibility:paket.lock",
 )
 use_repo(paket, "paket.compatibility", "paket.compatibility_extensions", "paket.compatibility_hosting", "paket.compatibility_mstest")
+
+paket.parse(
+    dependencies = "//eng/bazel/tests-support:paket.dependencies",
+    integrity_file = "//eng/bazel/tests-support:package-integrity.json",
+    lock = "//eng/bazel/tests-support:paket.lock",
+    repo_prefix = "testsupport.",
+)
+use_repo(paket, "testsupport.analyzers", "testsupport.benchmarks", "testsupport.main")
