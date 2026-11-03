@@ -156,18 +156,23 @@ function Invoke-Dotnet([string[]] $Arguments, [string] $Log, [int] $ExpectedExit
     }
 }
 
-function Assert-Trx([string] $Path, [int] $Failed) {
+function Assert-Trx([string] $Path, [int] $Failed, [int] $Modules = 1) {
     [xml] $trx = Get-Content -LiteralPath $Path -Raw
     $counters = $trx.TestRun.ResultSummary.Counters
-    if ([int] $counters.total -ne 2 -or [int] $counters.executed -ne 2 -or [int] $counters.failed -ne $Failed -or [int] $counters.passed -ne (2 - $Failed)) {
+    $total = 2 * $Modules
+    if ([int] $counters.total -ne $total -or [int] $counters.executed -ne $total -or [int] $counters.failed -ne $Failed -or [int] $counters.passed -ne ($total - $Failed) -or [int] $counters.notExecuted -ne 0) {
         throw "Unexpected executed test counts in $Path."
     }
 
     $results = @($trx.TestRun.Results.UnitTestResult)
+    if ($results.Count -ne $total -or @($results.executionId | Sort-Object -Unique).Count -ne $total) {
+        throw "Missing or duplicate test executions in $Path."
+    }
+
     foreach ($name in @('FailsWithAttachment', 'PassingTest')) {
         $result = @($results | Where-Object testName -CEQ $name)
-        $outcome = if ($name -eq 'FailsWithAttachment' -and $Failed -eq 1) { 'Failed' } else { 'Passed' }
-        if ($result.Count -ne 1 -or $result[0].outcome -cne $outcome) {
+        $outcome = if ($name -eq 'FailsWithAttachment' -and $Failed -gt 0) { 'Failed' } else { 'Passed' }
+        if ($result.Count -ne $Modules -or @($result | Where-Object outcome -CNE $outcome).Count -ne 0) {
             throw "Wrong identity/outcome for $name in $Path."
         }
     }
@@ -276,13 +281,29 @@ $references
     $env:GITHUB_STEP_SUMMARY = Join-Path $work 'native.summary.md'
     $nativeResults = Join-Path $work 'native-results'
     Invoke-Dotnet @('test', '--solution', $solution, '-c', 'Release', '--no-build', '--report-gh', '--report-gh-attachments', $staging, '--report-trx', '--results-directory', $nativeResults) (Join-Path $work 'native.log') 2
-    $nativeReports = @(Get-ChildItem -LiteralPath $nativeResults -Filter '*.trx' -Recurse -File)
+    $nativeReports = @(Get-ChildItem -LiteralPath $nativeResults -Filter '*.trx' -File)
     if ($nativeReports.Count -ne 2) {
         throw "The real multi-module dotnet test run produced $($nativeReports.Count) reports, expected 2."
     }
 
     foreach ($report in $nativeReports) {
         Assert-Trx $report.FullName 1
+    }
+
+    foreach ($module in @('AttachmentsA', 'AttachmentsB')) {
+        if (@($nativeReports | Where-Object Name -like "$module`_*").Count -ne 1) {
+            throw "The native run omitted the $module report."
+        }
+    }
+
+    $mergedDirectory = Join-Path $nativeResults 'merged'
+    if (Test-Path -LiteralPath $mergedDirectory) {
+        $merged = @(Get-ChildItem -LiteralPath $mergedDirectory -Filter '*.trx' -File)
+        if ($merged.Count -ne 1) {
+            throw 'Expected one authoritative merged TRX report.'
+        }
+
+        Assert-Trx $merged[0].FullName 2 2
     }
 
     $summaries += $env:GITHUB_STEP_SUMMARY

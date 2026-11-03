@@ -89,6 +89,16 @@ provide supported links to individual files inside that archive.
   attempt a guarded user-visible warning, without discarding test results.
 - The post-upload sample now reports truncated manifests as well as truncated
   display groups. Its workflow also watches the MSBuild and TRX consumers.
+- Independent round 3 was clean at
+  `6b9bbb4b0f956a32f1920e2b8e53410fa85e8da2`.
+- The first executable ablation exposed nullable test inputs being dereferenced
+  before an assertion. Those exceptions were not counted as sensitivity proof.
+  Added explicit non-null contract assertions, retained them in both variants,
+  and repeated the same two tests green/red/green successfully.
+- Real native `dotnet test` produced two module TRX files plus one merged TRX.
+  The smoke originally counted the merged report as a third module. Corrected
+  the harness to validate each module separately and validate optional merged
+  totals without double-counting executions. The repeated composed smoke passed.
 
 ## Alternatives and decision
 
@@ -132,7 +142,7 @@ hosted-run results will be added as obtained.
 | --- | --- |
 | Collection, limits, missing input, cancellation | Executed: `CaptureAsync_StagesExactBytesAndWritesManifest`, size/count boundary cases, `CaptureAsync_CanceledDuringCopy_PropagatesTokenAndDeletesPartialFile`, and warning-failure association cases. |
 | Direct and aggregate failure details | Executed: `BuildMarkdown_WithAttachments_RendersExactArchiveRelativePaths`, `CreateModule_FragmentRoundTrip_PreservesAttachmentsOnlyOnFailures`, legacy-fragment and retry cases. |
-| Packed consumer and real framework attachment | Eight generated-consumer acceptance cases retained; package build and execution pending. |
+| Packed consumer and real framework attachment | Executed shipping smoke: four direct host runs plus real multi-module `dotnet test`, 12 executions and five intentionally failed results, parent smoke exit 0. Eight additional acceptance cases pending. |
 | Real GitHub Actions archive and download link | Pending composed workflow execution. |
 
 Focused unit validation compiled current production and test sources with the
@@ -145,7 +155,74 @@ FullyQualifiedName~GitHubActionsAttachmentCollectorTests|FullyQualifiedName~GitH
 
 Result: **269 passed, 0 failed, 0 skipped; exit 0**, including all **70 added
 cases**. TRX, JUnit and CTRF exports were parsed and reconciled. This is executed
-unit evidence; feature-ablation and shipping-package evidence remain pending.
+unit evidence. The same selection also passed **269/269** on the `net462`
+target, running on the installed `net481` runtime and exercising the extension's
+`netstandard2.0` implementation on Windows.
+
+### Executed feature-ablation evidence
+
+Base implementation: `6b9bbb4b0f956a32f1920e2b8e53410fa85e8da2`, with the two
+explicit non-null test assertions retained in both variants. The support patch's
+SHA-256 is `2DF6A32E9C2267B4B1B60A0C9265070280AB88AD375655F47F7F91E1C0A620C5`.
+The buildable production ablation replaces only attachment extraction with an
+empty array:
+
+```diff
+- FileArtifactProperty[] files = [.. testNode.Properties.OfType<FileArtifactProperty>().Take(MaxFilesPerTest + 1)];
++ FileArtifactProperty[] files = [];
+```
+
+The production-only patch SHA-256 is
+`95A07BC3991A486811747B55BFBD51A89074FCB107C78DECA3E74F0224EA470B`.
+An isolated task-owned worktree and its own outputs were used; no primary
+checkout, other session, or shared package cache was reverted or cleared.
+
+| Contract / test case | Without collection | Correct implementation |
+| --- | --- | --- |
+| `CaptureAsync_StagesExactBytesAndWritesManifest` | Executed: assertion failed, `A declared attachment must produce staged metadata.` | Executed: passed before and after ablation. |
+| `SessionFinishing_DeferredFragment_RetainsAttachmentsForAggregateRendering` | Executed: assertion failed, `Deferred failure fragments must retain attachment metadata.` | Executed: passed before and after ablation. |
+
+Each run selected/executed exactly two tests, with no skips. Green exits were 0
+(2 passed); the ablated exit was 2 (2 intended assertion failures). The same
+source test bytes were verified by SHA-256 in the primary and comparison
+worktrees. All variants were rebuilt with the pinned SDK, Debug/net8.0,
+`EnableCodeCoverage=false`, `UseSharedCompilation=false`, and
+`TreatWarningsAsErrors=true`.
+
+The identical selector was:
+
+```text
+FullyQualifiedName~GitHubActionsAttachmentCollectorTests.CaptureAsync_StagesExactBytesAndWritesManifest|FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_DeferredFragment_RetainsAttachmentsForAggregateRendering
+```
+
+### Executed packed-product smoke
+
+```powershell
+.\.github\scripts\test-gh-attachments.ps1 -WorkDirectory <fresh-task-owned-directory>
+```
+
+Executed on Windows with freshly packed `MSTest.TestFramework` and
+`MSTest.TestAdapter` **4.6.0-dev**, and `Microsoft.Testing.Platform`,
+`Microsoft.Testing.Platform.MSBuild`, `Microsoft.Testing.Extensions.TrxReport`
+and `Microsoft.Testing.Extensions.GitHubActionsReport` **2.6.0-dev**.
+The script checked each restored package's SHA-256 against its packed nupkg,
+checked the selected runtime DLLs against the executable layout, and used a
+fresh isolated NuGet cache.
+
+Observed: opt-out and passing runs created no attachment staging; intentional
+failed hosts exited 2, the passing host exited 0, and native multi-module
+`dotnet test` exited 2 with exactly four executions (2 passed/2 failed).
+All four session manifests retained the right module/test/file association and
+actual bytes. Both module reports and the authoritative 4-result merged TRX
+were checked. The outer smoke exited 0.
+
+**Local packaging limitation:** the Release build produced 32 shipping packages
+and compiled all selected source targets with zero warnings. The Windows-only
+post-pack verifier expects legacy UAP payloads omitted by the required local
+`SkipUapTargetFramework=true` dotnet build (MSTest/adapter/framework counts).
+That full verifier exited 1; it was not weakened or called successful. The
+Linux hosted workflow runs the repository's standard `build.sh -pack` path.
+Hosted artifact upload/download and the rendered GitHub surface remain pending.
 
 ## Open questions
 

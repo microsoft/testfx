@@ -456,7 +456,9 @@ public sealed partial class GitHubActionsSummaryReporterTests
         GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
             [new InputArtifact(artifact.FileInfo.FullName, artifact.Kind, null, null, null, null)],
             GitHubSummaryPostProcessor.Provider, new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
-        GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle(Assert.ContainsSingle(Assert.ContainsSingle(aggregate.Modules).Failures).Attachments!);
+        GitHubCiRunSummaryTest failure = Assert.ContainsSingle(Assert.ContainsSingle(aggregate.Modules).Failures);
+        Assert.IsNotNull(failure.Attachments, "Deferred failure fragments must retain attachment metadata.");
+        GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle(failure.Attachments);
         Assert.AreEqual("staged", attachment.Status);
         Assert.AreEqual(2L, attachment.SizeBytes);
         Assert.AreSequenceEqual(new byte[] { 32, 33 }, File.ReadAllBytes(

@@ -37,8 +37,10 @@ public sealed class GitHubActionsAttachmentCollectorTests : IDisposable
         string source = WriteSource("input/error log λ.bin", expected);
         GitHubActionsAttachmentCollector collector = CreateCollector();
 
-        GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle((await collector.CaptureAsync(
-            CreateNode("row-1", "Fails (row 1)", source), TestContext.CancellationToken))!);
+        GitHubCiRunSummaryAttachment[]? captured = await collector.CaptureAsync(
+            CreateNode("row-1", "Fails (row 1)", source), TestContext.CancellationToken);
+        Assert.IsNotNull(captured, "A declared attachment must produce staged metadata.");
+        GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle(captured);
 
         Assert.AreEqual("staged", attachment.Status);
         Assert.AreEqual("error_log__.bin", attachment.FileName);
