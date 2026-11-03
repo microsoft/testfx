@@ -8,6 +8,7 @@ load("//eng/bazel:mstest.bzl", "mstest_libraries")
 load("//eng/bazel:packages.bzl", "native_packages")
 load("//eng/bazel:platform.bzl", "platform_libraries")
 load("//eng/bazel:reference-alias-tests.bzl", "reference_alias_tests")
+load("//eng/bazel:sdk-packages.bzl", "sdk_packages")
 load("//eng/bazel:server-client.bzl", "server_client_library")
 load("//eng/bazel:tests.bzl", "unit_tests")
 
@@ -34,6 +35,8 @@ unit_tests()
 native_packages()
 
 reference_alias_tests()
+
+sdk_packages()
 
 filegroup(
     name = "managed",
