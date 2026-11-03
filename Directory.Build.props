@@ -52,6 +52,7 @@
 
   <!-- Build config -->
   <PropertyGroup>
+    <EnableProjectDataOnBuild>true</EnableProjectDataOnBuild>
     <!-- Prevent warning about deprecated target frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <!-- PDB -->
