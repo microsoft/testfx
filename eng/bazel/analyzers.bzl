@@ -13,7 +13,7 @@ def analyzer_libraries():
             "src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md",
         ],
         linked_srcs = [
-            "//eng/bazel:AnalyzerAssemblyInfo.cs",
+            "//eng/bazel:CompatibilityFrameworkMetadata.cs",
             "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
             "src/Platform/Microsoft.Testing.Platform/Helpers/ObjectPool.cs",
         ],
@@ -28,7 +28,7 @@ def analyzer_libraries():
         name = "codefixes",
         project = "src/Analyzers/MSTest.Analyzers.CodeFixes",
         target_frameworks = ["netstandard2.0"],
-        linked_srcs = ["//eng/bazel:AnalyzerAssemblyInfo.cs"],
+        linked_srcs = ["//eng/bazel:CompatibilityFrameworkMetadata.cs"],
         resources = {"src/Analyzers/MSTest.Analyzers.CodeFixes/CodeFixResources.resx": "MSTest.Analyzers.CodeFixResources"},
         deps = [
             ":analyzers",

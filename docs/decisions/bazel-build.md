@@ -313,6 +313,24 @@ Final clean-revision evidence:
 `C:\tfba\6a8043a5c4a6\analyzer-final-evidence\20261103-143911-b8403951`.
 Only documentation was added after this run.
 
+#### Parent integration: shared framework metadata
+
+The parent integrated the analyzer and netstandard core commits, then replaced
+the analyzer-only attribute file with the shared
+`CompatibilityFrameworkMetadata.cs` in exactly the two netstandard analyzer/codefix
+declarations. No modern source target receives this guarded file.
+
+The same analyzer validation command passed all 15 cases after consolidation,
+including exact emitted framework metadata, C#/VB compiler behavior, the Roslyn
+3.11 code fix and French resources. The integrated package has SHA-256
+`117B33B04791A2DBB1A1344EC50EAE5496B7F27C10D4B0EAD99A117B37CE4229`;
+the changed source/PDB provenance is not treated as byte identity with the lane
+package. Evidence is under
+`C:\tfb\parent-analyzer-evidence\20261103-151018-80b35180`.
+The run started at parent revision `11ae3b9f2369f098d1ba352df7259b6e5b5b17fe`
+with the three-file metadata consolidation; the only concurrent parent commit
+changed the separate MTP package validator, not these producer/consumer inputs.
+
 ### 2026-11-03: SDK/meta-package lane
 
 This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d` and owns

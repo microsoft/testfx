@@ -3,7 +3,6 @@ load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "dotnet_tool")
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
-    "AnalyzerAssemblyInfo.cs",
     "CompatibilityFrameworkMetadata.cs",
     "GlobalConfigsEnvironment.cs",
     "GlobalUsings.cs",
