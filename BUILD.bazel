@@ -15,6 +15,7 @@ load("//eng/bazel:reference-alias-tests.bzl", "reference_alias_tests")
 load("//eng/bazel:sdk-packages.bzl", "sdk_packages")
 load("//eng/bazel:server-client.bzl", "server_client_library")
 load("//eng/bazel:tests.bzl", "unit_tests")
+load("//eng/bazel/windows:targeting_tests.bzl", "windows_targeting_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -49,6 +50,11 @@ reference_alias_tests()
 native_mstest_packages()
 
 sdk_packages()
+
+windows_targeting_test(
+    name = "windows_targeting_test",
+    size = "small",
+)
 
 filegroup(
     name = "managed",

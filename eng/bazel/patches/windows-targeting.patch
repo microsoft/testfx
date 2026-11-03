@@ -1,0 +1,263 @@
+diff --git a/dotnet/private/common.bzl b/dotnet/private/common.bzl
+index c8a8cbd..c101e05 100644
+--- a/dotnet/private/common.bzl
++++ b/dotnet/private/common.bzl
+@@ -20,10 +20,11 @@ load(
+     "SDK_NETCOREAPP_FRAMEWORKS",
+     "SDK_NETFRAMEWORK_FRAMEWORKS",
+     "SDK_NETSTANDARD_FRAMEWORKS",
++    "WINDOWS_PLATFORM_VERSIONS",
+     _DEFAULT_TARGET_FRAMEWORK = "DEFAULT_TARGET_FRAMEWORK",
+     _FRAMEWORK_COMPATIBILITY = "FRAMEWORK_COMPATIBILITY",
+ )
+-load("//dotnet/private/sdk:packs.bzl", "WEB_SDK", "normalize_project_sdk")
++load("//dotnet/private/sdk:packs.bzl", "WEB_SDK", "WINDOWS_DESKTOP_SDK", "normalize_project_sdk")
+ load("//dotnet/private/sdk:rids.bzl", "RUNTIME_GRAPH")
+ 
+ def _collect_transitive():
+@@ -71,6 +72,7 @@ def tfm_to_semver(tfm):
+     Returns:
+         The semver version
+     """
++    tfm = tfm.split("-")[0]
+     if tfm.startswith("netstandard"):
+         return "{}.0".format(tfm.replace("netstandard", ""))
+     elif tfm.startswith("netcoreapp"):
+@@ -476,12 +478,9 @@ def get_highest_compatible_target_framework(incoming_tfm, tfms):
+     if FRAMEWORK_COMPATIBILITY[incoming_tfm] == None:
+         fail("Target framework moniker is not supported/valid: {}", incoming_tfm)
+ 
+-    incoming_tfm_index = FRAMEWORK_COMPATIBILITY.keys().index(incoming_tfm)
+-    for tfm in reversed(FRAMEWORK_COMPATIBILITY.keys()[:incoming_tfm_index]):
+-        if tfm in tfms:
+-            return tfm
+-
+-    return None
++    # Ordering alone is insufficient: a portable target must not consume a
++    # Windows asset, nor may an older Windows target consume a newer platform.
++    return get_nearest_compatible_target_framework(incoming_tfm, tfms)
+ 
+ _NUGET_FRAMEWORK_IDENTIFIERS = {
+     ".netcoreapp": "netcoreapp",
+@@ -748,6 +747,7 @@ def tfm_version(tfm):
+     Returns:
+         The version as a list of ints.
+     """
++    tfm = tfm.split("-")[0]
+     digits = tfm
+     for prefix in ["netstandard", "netcoreapp", "net"]:
+         if tfm.startswith(prefix):
+@@ -836,6 +836,14 @@ def _compute_framework_preprocessor_symbols(tfm):
+         if candidate_version <= version:
+             defines.append(symbol)
+ 
++    if "-windows" in tfm:
++        platform_version = tfm.split("-windows")[1]
++        defines.extend(["WINDOWS", "WINDOWS" + platform_version.replace(".", "_")])
++        version_parts = [int(part) for part in platform_version.split(".")]
++        for candidate in WINDOWS_PLATFORM_VERSIONS:
++            if [int(part) for part in candidate.split(".")] <= version_parts:
++                defines.append("WINDOWS" + candidate.replace(".", "_") + "_OR_GREATER")
++
+     return defines
+ 
+ def default_csharp_lang_version(tfm, sdk_default):
+@@ -853,7 +861,7 @@ def default_csharp_lang_version(tfm, sdk_default):
+     Returns:
+         The language version string to pass to csc.
+     """
+-    selected = SDK_LANG_VERSIONS.get(tfm)
++    selected = SDK_LANG_VERSIONS.get(tfm.split("-")[0])
+     if selected == None:
+         return sdk_default
+ 
+@@ -1101,7 +1109,7 @@ def generate_runtimeconfig(target_framework, project_sdk, is_self_contained, rol
+ 
+     base = {
+         "runtimeOptions": {
+-            "tfm": target_framework,
++            "tfm": target_framework.split("-")[0],
+             "rollForward": roll_forward_behavior,
+         },
+     }
+@@ -1118,7 +1126,13 @@ def generate_runtimeconfig(target_framework, project_sdk, is_self_contained, rol
+         if normalize_project_sdk(project_sdk) == WEB_SDK:
+             frameworks.append({"name": "Microsoft.AspNetCore.App", "version": framework_version})
+ 
++        if project_sdk == WINDOWS_DESKTOP_SDK:
++            frameworks.append({"name": "Microsoft.WindowsDesktop.App", "version": framework_version})
++
+         base["runtimeOptions"]["frameworks"] = frameworks
++
++    if "-windows" in target_framework:
++        base["runtimeOptions"]["configProperties"] = {"CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS": False}
+     return base
+ 
+ def to_rlocation_path(ctx, file):
+diff --git a/dotnet/private/sdk/frameworks.bzl b/dotnet/private/sdk/frameworks.bzl
+index 76dd92c..287c2fd 100644
+--- a/dotnet/private/sdk/frameworks.bzl
++++ b/dotnet/private/sdk/frameworks.bzl
+@@ -133,8 +133,48 @@ def _compatibility(families):
+ # Each framework mapped to the frameworks it can directly compile against.
+ # The relationship is transitive. Order matters: netstandard first, and
+ # within a family oldest to newest.
+-FRAMEWORK_COMPATIBILITY = _compatibility([
++_BASE_COMPATIBILITY = _compatibility([
+     SDK_NETSTANDARD_FRAMEWORKS,
+     SDK_NETFRAMEWORK_FRAMEWORKS,
+     SDK_NETCOREAPP_FRAMEWORKS,
+ ])
++
++# CsWinRT 2.x Windows platforms. The .1 platforms require the separate
++# CsWinRT 3.x generator pipeline and are deliberately not aliases for .0.
++WINDOWS_PLATFORM_VERSIONS = [
++    "7.0",
++    "8.0",
++    "10.0.17763.0",
++    "10.0.18362.0",
++    "10.0.19041.0",
++    "10.0.20348.0",
++    "10.0.22000.0",
++    "10.0.22621.0",
++    "10.0.26100.0",
++]
++
++def _with_windows_platforms(base):
++    result = {}
++    previous_net = None
++    for tfm, compatible in base.items():
++        result[tfm] = compatible
++        if tfm not in SDK_NETCOREAPP_FRAMEWORKS or tfm.startswith("netcoreapp"):
++            continue
++        # Bound this experiment to the library matrix and older package assets.
++        if _dotted_version(tfm, "net")[0] > 11:
++            continue
++        previous_platform = None
++        for version in WINDOWS_PLATFORM_VERSIONS:
++            windows_tfm = tfm + "-windows" + version
++            edges = [tfm]
++            if previous_net:
++                edges.append(previous_net + "-windows" + version)
++            if previous_platform:
++                edges.append(previous_platform)
++            result[windows_tfm] = edges
++            previous_platform = windows_tfm
++        previous_net = tfm
++    return result
++
++FRAMEWORK_COMPATIBILITY = _with_windows_platforms(_BASE_COMPATIBILITY)
++WINDOWS_FRAMEWORKS = [tfm for tfm in FRAMEWORK_COMPATIBILITY if "-windows" in tfm]
+diff --git a/dotnet/private/sdk/packs.bzl b/dotnet/private/sdk/packs.bzl
+index bb65a9f..e9b553f 100644
+--- a/dotnet/private/sdk/packs.bzl
++++ b/dotnet/private/sdk/packs.bzl
+@@ -14,17 +14,19 @@ for the SDK, or `PACK_BANDS`, with no versions, where only existence matters.
+ release packs, so their versions are literals here.
+ """
+ 
++load("//dotnet/private/sdk:frameworks.bzl", "WINDOWS_FRAMEWORKS")
+ load("//dotnet/private/sdk:pack_bands.bzl", "PACK_BANDS")
+ 
+ DEFAULT_SDK = "default"
+ WEB_SDK = "web"
+ RAZOR_SDK = "razor"
+ BLAZORWASM_SDK = "blazorwasm"
++WINDOWS_DESKTOP_SDK = "windowsdesktop"
+ 
+ # The SDKs that have a pack set of their own. `razor` and `blazorwasm` resolve
+ # the same packs as `web`, so they have no set of their own and are normalized
+ # away before lookup.
+-PROJECT_SDKS = [DEFAULT_SDK, WEB_SDK]
++PROJECT_SDKS = [DEFAULT_SDK, WEB_SDK, WINDOWS_DESKTOP_SDK]
+ 
+ # What a user may write in `project_sdk`.
+ USER_PROJECT_SDKS = PROJECT_SDKS + [RAZOR_SDK, BLAZORWASM_SDK]
+@@ -123,6 +125,13 @@ def targeting_packs(tfm, project_sdk = DEFAULT_SDK, *, bands):
+     if project_sdk == DEFAULT_SDK:
+         return [(_app_pack_id(tfm, False), band["ref"])]
+ 
++    if project_sdk == WINDOWS_DESKTOP_SDK:
++        # Desktop comes last so its WindowsBase replaces the core facade.
++        return [
++            (_app_pack_id(tfm, False), band["ref"]),
++            ("Microsoft.WindowsDesktop.App.Ref", band["ref"]),
++        ]
++
+     if "web_ref" not in band:
+         return []
+ 
+@@ -155,6 +164,9 @@ def runtime_packs(tfm, rid, project_sdk = DEFAULT_SDK, *, bands):
+     if project_sdk == WEB_SDK:
+         packs.insert(0, (_app_pack_id(tfm, True, "Runtime." + rid), band["runtime"]))
+ 
++    if project_sdk == WINDOWS_DESKTOP_SDK:
++        packs.append(("Microsoft.WindowsDesktop.App.Runtime." + rid, band["runtime"]))
++
+     return packs
+ 
+ # Blazor WebAssembly has exactly one target, so unlike every other runtime pack
+@@ -371,6 +383,13 @@ def runtime_pack_rids(tfm, project_sdk = DEFAULT_SDK):
+     if project_sdk == WEB_SDK:
+         return band.get("web_rids", band["rids"])
+ 
++    if project_sdk == WINDOWS_DESKTOP_SDK:
++        return [
++            rid
++            for rid in band["rids"]
++            if rid.startswith("win-") and not (tfm.startswith("netcoreapp") and rid == "win-arm64")
++        ]
++
+     return band["rids"]
+ 
+ def targeting_pack_tfms(project_sdk = DEFAULT_SDK):
+@@ -385,6 +404,9 @@ def targeting_pack_tfms(project_sdk = DEFAULT_SDK):
+     if project_sdk == WEB_SDK:
+         return [tfm for tfm in PACK_BANDS if "web_ref" in PACK_BANDS[tfm]]
+ 
++    if project_sdk == WINDOWS_DESKTOP_SDK:
++        return [tfm for tfm in PACK_BANDS if "runtime" in PACK_BANDS[tfm]]
++
+     if project_sdk not in PROJECT_SDKS:
+         return []
+ 
+@@ -422,8 +444,8 @@ NEWEST_BAND = "newest"
+ TARGETING_PACK_LOOKUP_TABLE = {
+     pack_set: {
+         project_sdk: {
+-            tfm: "@{}//{}/{}:{}".format(TARGETING_PACK_REPO, pack_set, project_sdk, tfm)
+-            for tfm in targeting_pack_tfms(project_sdk)
++            tfm: "@{}//{}/{}:{}".format(TARGETING_PACK_REPO, pack_set, project_sdk, tfm.split("-")[0])
++            for tfm in targeting_pack_tfms(project_sdk) + WINDOWS_FRAMEWORKS
+         }
+         for project_sdk in PROJECT_SDKS
+     }
+@@ -481,20 +503,22 @@ def host_tool_tfms(pack):
+ RUNTIME_PACK_LOOKUP_TABLE = {
+     project_sdk: {
+         tfm: {
+-            rid: "@{}//{}/{}:{}".format(RUNTIME_PACK_REPO, project_sdk, tfm, rid)
+-            for rid in runtime_pack_rids(tfm, project_sdk)
++            rid: "@{}//{}/{}:{}".format(RUNTIME_PACK_REPO, project_sdk, tfm.split("-")[0], rid)
++            for rid in runtime_pack_rids(tfm.split("-")[0], project_sdk)
++            if "-windows" not in tfm or rid.startswith("win-")
+         }
+-        for tfm in runtime_pack_tfms()
++        for tfm in runtime_pack_tfms() + WINDOWS_FRAMEWORKS
+     }
+     for project_sdk in PROJECT_SDKS
+ }
+ 
+ APPHOST_PACK_LOOKUP_TABLE = {
+     tfm: {
+-        rid: "@{}//{}:{}".format(APPHOST_PACK_REPO, tfm, rid)
+-        for rid in runtime_pack_rids(tfm)
++        rid: "@{}//{}:{}".format(APPHOST_PACK_REPO, tfm.split("-")[0], rid)
++        for rid in runtime_pack_rids(tfm.split("-")[0])
++        if "-windows" not in tfm or rid.startswith("win-")
+     }
+-    for tfm in runtime_pack_tfms()
++    for tfm in runtime_pack_tfms() + WINDOWS_FRAMEWORKS
+ }
+ 
+ NATIVEAOT_PACK_LOOKUP_TABLE = {

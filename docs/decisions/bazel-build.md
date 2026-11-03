@@ -612,6 +612,147 @@ The run started at parent revision `11ae3b9f2369f098d1ba352df7259b6e5b5b17fe`
 with the three-file metadata consolidation; the only concurrent parent commit
 changed the separate MTP package validator, not these producer/consumer inputs.
 
+### 2026-11-03: native Windows library lane
+
+This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`.
+It owns `eng/bazel/windows.bzl`, a separate Windows dependency group, and a
+scoped `windows-targeting.patch`; the portable graph and three-package aggregate
+must retain their existing behavior. Shared root wiring is additive. The
+coordinating migration session owns combined documentation, CI, integration with
+other package/SDK lanes, and any eventual release/servicing decision.
+
+The first contract is a **native library and controller foundation**, not native
+XAML application compilation:
+
+- `PackagedApp` needs its four `net8.0` through `net11.0` Windows 10.0.19041.0
+  variants, including `PACKAGEDAPP_WINRT` and actual WinRT projections.
+- `mstest-appmodel-controller` retains its net8/net9 Windows 10.0.19041.0,
+  win-x64, framework-dependent apphost layout and `LatestMajor` roll-forward.
+  Its source-built MTP/PackagedApp/reporting assemblies must not be replaced by
+  released first-party binaries through transitive NuGet resolution.
+- `MSTest.Windows.UIAutomation` needs Windows-qualified .NET 8/9/10/11 TFMs
+  and reference-only WPF targeting assets. Building this library does not
+  require XAML generation or prove UI interaction.
+- Framework extensions and adapter platform services need distinct WinUI
+  (`net8.0-windows10.0.18362.0`, minimum 10.0.17763.0) and modern UWP
+  (`net9.0-windows10.0.17763.0`) source/metadata variants. Classic UWP remains
+  separately bounded by its reference/toolchain requirements.
+- Package registration, activation, app identity, connect-back authorization,
+  cancellation, exit propagation, and cleanup remain production-owned.
+  An unpackaged/disabled launcher must not register an app; informational
+  no-handshake launches and required-handshake executions remain distinct.
+  Any real activation experiment uses only a task-owned identity and outputs.
+  Win32 1346, missing capabilities, or denied registration remain failures,
+  never a reason to alter ACLs, Developer Mode, global SDKs, or test assertions.
+
+The no-change alternative leaves the Windows source branches uncompiled.
+Manually compiling those branches against portable references would not preserve
+TFM selection or runtime projections. The chosen bounded extension therefore
+adds explicit native Windows targeting and asset selection first, then exercises
+the resulting outputs. An MSBuild-driven XAML bridge is a possible separate
+hybrid experiment, not a native producer or a replacement for this contract.
+
+Planned evidence: native action graphs; target-framework, minimum-version and
+reference/runtime asset checks; exact loaded assembly hashes; isolated
+controller/library consumers with contractual exits; a buildable
+counterfactual for new executable checks; and a bounded XAML toolchain
+assessment. At this entry these experiments have **not yet run**. No shipped
+package, application activation, native XAML pipeline, CI run, or backport is
+claimed.
+
+Research found two distinct CsWinRT 2.x profiles in the pinned SDK's
+`Microsoft.NETCoreSdk.BundledVersions.props`: the net8/net9 Windows 19041 builds
+use `Microsoft.Windows.SDK.NET.Ref` 10.0.19041.57 (`lib/net8.0`,
+WinRT.Runtime 2.2.0.0), while net10/net11 use 10.0.19041.87 (`lib/net9.0`,
+WinRT.Runtime 2.3.1.0). The packages' `data/FrameworkList.xml` separates
+the ordinary `Windows` profile from `Microsoft.Windows.UI.Xaml.dll`'s `Xaml`
+profile. The ordinary library targets must not accidentally include the latter.
+Windows SDK revision `.1` requests the new CsWinRT 3 pipeline according to
+`Microsoft.NET.Windows.targets`; it is not an alias for `.0` and stays unsupported
+by this bounded patch.
+
+The first native dependency-tool build passed on the unchanged baseline.
+Q: then ran out of space. Only this lane's Bazel resources were relocated to C:;
+an attempted link-preserving extracted-cache move failed because Robocopy could
+not recreate symbolic links without a privilege the process does not have.
+No privilege or machine policy was changed. Incomplete extracted caches were
+discarded, and subsequent native work uses fresh C: repository extractions rather
+than trusting moved cache records. The source worktree remains on Q:. Residual
+owned cache cleanup is tracked separately and is not yet claimed complete.
+
+The source draft preserves distinct modern UWP/WinUI extension, platform-service,
+and adapter assemblies. WinUI's existing source-level supported-OS annotations
+are retained (17763 for framework extensions, 18362 for platform services),
+rather than emitting duplicate attributes or silently changing those contracts.
+The desktop mode uses the WindowsDesktop reference/runtime pack without adding
+XAML generation. Ordinary WinRT imports select only the `Windows` profile and
+its matching generator/runtime. The Windows compatibility table is bounded to
+the net8-net11 library matrix plus older net5-net7 package assets; it does not
+claim untested future Windows framework or CsWinRT 3 support.
+
+The coordinator temporarily paused new heavy builds/restores for the other
+lanes' initial compiler wave. During that pause, the Windows draft gained a
+19-assertion analysis test and seven isolated library-consumer probes. These are
+not yet executed. Root wiring and the generated Windows lock will be enabled
+together after dependency resolution; the existing portable graph is unchanged.
+The controller's CodeCoverage pin is available on the repository's `test-tools`
+feed, not nuget.org. Its native dependency closure belongs to this lane, while
+the coordinating session owns the shared experimental package-version change.
+
+#### Targeting-rule test-value evidence
+
+The first bounded native check executes without C# compilation or NuGet restore:
+`//:windows_targeting_test` is one Bazel analysis-test target with 22 assertions.
+The tested production patch has SHA-256
+`218BEF63B48ED1C921CA3D6553AE82FC90194D731F4B43B4A824F3E1220D5BFB`;
+the test source has SHA-256
+`4C8CE129AF297443DBB76E441477A1CE4591E81400916C9FBB709802FC928502`,
+on the starting revision above. This validates selection, symbols, pack
+mapping and runtime-configuration generation, not compiled Windows libraries.
+
+The initial run exposed nonexistent WindowsDesktop arm64 runtime packs for
+.NET Core 3.0/3.1. The patch now preserves their actual x64-only support rather
+than declaring unsupported downloads. The final check covers that boundary too.
+
+For the counterfactual, a task-owned copy of the patched rules retained the
+Windows API/table shape but restored upstream's ordering-only
+`get_highest_compatible_target_framework`. The same test then detected both
+incorrect selections:
+
+```text
+NewerPortableCannotConsumeOlderWindows: expected None, actual "net8.0-windows10.0.19041.0"
+RuntimeUpgradeCannotRaiseWindowsMinimum: expected None, actual "net8.0-windows10.0.19041.0"
+```
+
+| Production state | Bazel exit | Executed targets | Result |
+| --- | --- | --- | --- |
+| Correct, before | 0 | 1 | All 22 assertions passed |
+| Ordering-only counterfactual | 3 | 1 | Test process exit 1; both assertions above failed |
+| Correct, after | 0 | 1 | All 22 assertions passed |
+
+The counterfactual patch SHA-256 is
+`EA7FDED741B15412701381B23CEAE8118CE1CA4259A4142B70A38F97390529F1`.
+JUnit reports were parsed for exactly one executed target, no skips, and the
+expected outcomes. The isolated comparison materialized one existing internal
+resource-test fixture symlink as a normal file; that fixture is not consumed by
+this test. No TestFx source or test assertions were changed between runs.
+
+Exact correct-state command, from the worktree root:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfbw\d683319bb48a'
+.\eng\bazel.ps1 --batch --host_jvm_args=-Xmx2g test //:windows_targeting_test --jobs=2 --noshow_progress --show_result=0 --nocache_test_results --repository_cache=C:\tfb\d683319bb48a\cache\repos\v1\content_addressable
+```
+
+The counterfactual used the same command with output root
+`C:\tfbw\d683319bb48a-red` and the additional argument
+`--override_module=rules_dotnet=C:\tfbw\d683319bb48a\targeting-counterfactual\rules_dotnet`.
+The three reports, command/test logs and counterfactual patch are retained under
+`C:\tfbw\d683319bb48a\targeting-evidence`; the excerpts and outcomes above preserve
+the decisive evidence in this versioned record. Batch mode left no test server
+running. Windows library compilation, controller layout, real registration/
+activation and native XAML remain separate, unproven gates at this stage.
+
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
 The user authorized implementing as much of the remaining migration as possible.
