@@ -67,6 +67,25 @@ try {
     $worker = Join-Path $fixture "worker.ps1"
     @'
 $ErrorActionPreference = "Stop"
+if ($args.Count -gt 0 -and $args[0] -eq "orphan-middle") {
+    $child = Start-Process -FilePath (Get-Process -Id $PID).Path `
+        -ArgumentList @("-NoProfile", "-File", "`"$PSCommandPath`"", "grandchild", "`"$($args[1])`"") `
+        -WindowStyle Hidden -PassThru `
+        -RedirectStandardOutput (Join-Path $args[1] "grandchild-output.log") `
+        -RedirectStandardError (Join-Path $args[1] "grandchild-error.log")
+    try {
+        $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+        while (-not (Test-Path -LiteralPath (Join-Path $args[1] "grandchild.started"))) {
+            if ([datetimeoffset]::UtcNow -ge $deadline) {
+                throw "The independently launched descendant did not start."
+            }
+            Start-Sleep -Milliseconds 10
+        }
+    } finally {
+        $child.Dispose()
+    }
+    exit 0
+}
 if ($args.Count -gt 0 -and $args[0] -eq "grandchild") {
     Set-Content -LiteralPath (Join-Path $args[1] "grandchild.started") -Value $PID
     while ($true) {
@@ -77,6 +96,48 @@ $moduleIndex = [Array]::IndexOf($args, "--test-modules")
 $module = $args[$moduleIndex + 1]
 $rootIndex = [Array]::IndexOf($args, "--root-directory")
 $root = $args[$rootIndex + 1]
+if ($module -like "orphan-*") {
+    if ($args[0] -ne "argument with spaces" -or $args[1] -ne "" -or
+        $args[2] -ne "trailing\" -or $args[3] -ne 'embedded"quote' -or
+        $args[4] -ne ([string][char]0x00E9 + [char]0x6E2C) -or
+        $env:TESTFX_COLLECTION_NUGET_CACHE -ne (Join-Path $root "cache\module-000")) {
+        throw "The module launch changed arguments or the Unicode cache environment."
+    }
+    Add-Type -TypeDefinition 'using System; using System.ComponentModel; using System.Runtime.InteropServices;
+        public static class FixtureOutput {
+            [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+            private static extern IntPtr GetStdHandle(int stream);
+            [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+            private static extern int SetHandleInformation(IntPtr handle, uint mask, uint flags);
+            public static void MakeChildOutputIndependent() {
+                foreach (int stream in new[] { -11, -12 })
+                    if (SetHandleInformation(GetStdHandle(stream), 1, 0) == 0)
+                        throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+        }'
+    [FixtureOutput]::MakeChildOutputIndependent()
+    $child = Start-Process -FilePath (Get-Process -Id $PID).Path `
+        -ArgumentList @("-NoProfile", "-File", "`"$PSCommandPath`"", "orphan-middle", "`"$root`"") `
+        -WindowStyle Hidden -PassThru `
+        -RedirectStandardOutput (Join-Path $root "middle-output.log") `
+        -RedirectStandardError (Join-Path $root "middle-error.log")
+    try {
+        if (-not $child.WaitForExit(10000) -or $child.ExitCode -ne 0) {
+            throw "The intermediate parent did not finish before SDK completion."
+        }
+    } finally {
+        $child.Dispose()
+    }
+    Set-Content -LiteralPath (Join-Path $root "orphan.ready") -Value $PID
+    $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+    while (-not (Test-Path -LiteralPath (Join-Path $root "orphan.release"))) {
+        if ([datetimeoffset]::UtcNow -ge $deadline) {
+            throw "The SDK completion rendezvous was not released."
+        }
+        Start-Sleep -Milliseconds 10
+    }
+    exit $(if ($module -eq "orphan-failure") { 37 } else { 0 })
+}
 if ($module -eq "slow") {
     $childInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $childInfo.FileName = (Get-Process -Id $PID).Path
@@ -304,7 +365,66 @@ exit 0
     }
 
     Write-Output "PASS ModulePoolPreservesLaunchError"
-    Write-Output "Collection module-pool self-tests: 11 passed."
+    $orphanFailures = [System.Collections.Generic.List[string]]::new()
+    if ($IsWindows) {
+        foreach ($case in @(
+            @{ Module = "orphan-success"; ExitCode = 0; Name = "ModulePoolDrainsOrphansAfterSdkCompletion" },
+            @{ Module = "orphan-failure"; ExitCode = 37; Name = "ModulePoolDrainsOrphansAfterSdkFailure" }
+        )) {
+            $script:orphanRoot = Join-Path $fixture ($case.Module + " spaced-" + [char]0x00E9)
+            New-Item -ItemType Directory -Path $script:orphanRoot | Out-Null
+            $script:orphanChild = $null
+            $savedRead = (Get-Command Read-CollectionModuleOutput).ScriptBlock
+            try {
+                function Read-CollectionModuleOutput {
+                    param($State)
+                    if ($null -eq $script:orphanChild) {
+                        $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+                        while (-not (Test-Path -LiteralPath (Join-Path $script:orphanRoot "orphan.ready"))) {
+                            if ([datetimeoffset]::UtcNow -ge $deadline) {
+                                throw "The orphan fixture did not reach its completion rendezvous."
+                            }
+                            Start-Sleep -Milliseconds 10
+                        }
+                        $childId = [int](Get-Content -LiteralPath (Join-Path $script:orphanRoot "grandchild.started") -Raw)
+                        $script:orphanChild = [System.Diagnostics.Process]::GetProcessById($childId)
+                        $null = $script:orphanChild.Handle
+                        New-Item -ItemType File -Path (Join-Path $script:orphanRoot "orphan.release") | Out-Null
+                    }
+                    & $savedRead -State $State
+                }
+                $result = Invoke-CollectionModulePool -Modules @(
+                    [pscustomobject]@{ Project = $case.Module; Framework = "fake"; RelativePath = $case.Module }) `
+                    -Repository $script:orphanRoot -ResultsDirectory (Join-Path $script:orphanRoot "results") `
+                    -DotnetPath $powershellPath -MaximumParallelModules 1 `
+                    -CommandPrefix ($prefix + @("argument with spaces", "", "trailing\", 'embedded"quote', ([string][char]0x00E9 + [char]0x6E2C))) `
+                    -PackageCacheRoot (Join-Path $script:orphanRoot "cache")
+                if ($result.ExitCode -ne $case.ExitCode -or $result.Completed -ne 1 -or
+                    -not $result.TeardownConfirmed -or -not $script:orphanChild.WaitForExit(0)) {
+                    throw "$($case.Name): SDK completion must not release its cache while an independently launched orphan is running (exit=$($result.ExitCode), completed=$($result.Completed), teardown=$($result.TeardownConfirmed), childExited=$($script:orphanChild.HasExited))."
+                }
+                Write-Output "PASS $($case.Name)"
+            } catch {
+                $orphanFailures.Add($_.Exception.Message)
+                Write-Output "FAIL $($case.Name): $($_.Exception.Message)"
+            } finally {
+                Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
+                if ($null -ne $script:orphanChild) {
+                    if (-not $script:orphanChild.HasExited) {
+                        $script:orphanChild.Kill($true)
+                        if (-not $script:orphanChild.WaitForExit(10000)) {
+                            throw "The owned orphan regression worker did not terminate during cleanup."
+                        }
+                    }
+                    $script:orphanChild.Dispose()
+                }
+            }
+        }
+    }
+    if ($orphanFailures.Count -gt 0) {
+        throw ($orphanFailures -join [Environment]::NewLine)
+    }
+    Write-Output "Collection module-pool self-tests: $(if ($IsWindows) { 13 } else { 11 }) passed."
 } finally {
     Remove-Item -LiteralPath $fixture -Recurse -Force
 }

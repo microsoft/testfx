@@ -1,3 +1,12 @@
+if ($IsWindows -and $null -eq ("TestFx.Collection.WindowsCollectionProcess" -as [type])) {
+    $repositoryRoot = Split-Path $PSScriptRoot -Parent
+    Add-Type -Path @(
+        (Join-Path $PSScriptRoot "collection-windows-process.cs"),
+        (Join-Path $repositoryRoot "src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs"),
+        (Join-Path $repositoryRoot "src\Polyfills\EmbeddedAttribute.cs")
+    ) -CompilerOptions "/langversion:preview"
+}
+
 function Get-CollectionModuleConcurrency {
     param(
         $ConfiguredBatches,
@@ -59,6 +68,11 @@ function Read-CollectionModuleOutput {
 
 function Stop-CollectionModuleProcess {
     param($State)
+
+    if ($State.JobOwned) {
+        $State.Process.StopTree(15000)
+        return
+    }
 
     $descendants = [System.Collections.Generic.List[System.Diagnostics.Process]]::new()
     $captureError = $null
@@ -233,13 +247,13 @@ function Invoke-CollectionModulePool {
                     $startInfo.Environment.Remove($variable) | Out-Null
                 }
 
-                $process = [System.Diagnostics.Process]::new()
-                $process.StartInfo = $startInfo
+                $process = $null
                 $writer = [System.IO.StreamWriter]::new((Join-Path $moduleDirectory "collection.log"), $false, [System.Text.UTF8Encoding]::new($false))
                 $state = [pscustomobject]@{
                     Index = $nextIndex
                     Module = $module
                     Process = $process
+                    JobOwned = $IsWindows
                     Writer = $writer
                     OutputReader = $null
                     ErrorReader = $null
@@ -250,15 +264,24 @@ function Invoke-CollectionModulePool {
                     Directory = $moduleDirectory
                 }
                 try {
-                    if (-not $process.Start()) {
-                        throw "Could not start collection for '$($module.RelativePath)'."
+                    if ($IsWindows) {
+                        $process = [TestFx.Collection.WindowsCollectionProcess]::Start($startInfo)
+                    } else {
+                        $process = [System.Diagnostics.Process]::new()
+                        $process.StartInfo = $startInfo
+                        if (-not $process.Start()) {
+                            throw "Could not start collection for '$($module.RelativePath)'."
+                        }
                     }
                 } catch {
                     $writer.Dispose()
-                    $process.Dispose()
+                    if ($null -ne $process) {
+                        $process.Dispose()
+                    }
                     throw
                 }
 
+                $state.Process = $process
                 $active.Add($state)
                 $state.OutputReader = $process.StandardOutput
                 $state.ErrorReader = $process.StandardError
@@ -275,6 +298,9 @@ function Invoke-CollectionModulePool {
                 }
 
                 $state.Process.WaitForExit()
+                if ($state.JobOwned) {
+                    $state.Process.StopTree(15000)
+                }
                 Complete-CollectionModuleOutput -State $state
 
                 $state.Timer.Stop()

@@ -488,6 +488,53 @@ Retained UTC/cache assertions pass with current main; their earlier counterfactu
 bound to its recorded source states. Full packing, the 74-module collection benchmark and CI were
 not repeated for this merge. Historical performance/package evidence is not relabeled as this new head.
 
+#### Descendant-ownership review correction (2026-11-03)
+
+Review exposed a gap in the teardown contract: normal SDK completion did not inspect descendants,
+and cancellation inspected a process-tree snapshot only while the SDK remained alive.
+Retained rendezvous tests reproduce the defect on head `531ac4ca16620bd9b779bd4886f219d4df3cb752`:
+an independently launched grandchild remains after both its intermediate parent and the SDK exit,
+yet the pool reports teardown confirmed. Both exit-0 and exit-37 ownership assertions fail;
+the original eleven pool cases pass and all fixture workers are joined during failure cleanup.
+An initial redirected-stream fixture instead inherited an extra pipe and hit output-drain timeout;
+that setup failure is not counted as the intended red proof.
+
+A later PID snapshot cannot reconstruct an intermediate parent that disappeared before observation.
+The chosen correction is a per-module Windows job assigned atomically by the process-creation
+`PROC_THREAD_ATTRIBUTE_JOB_LIST`, not a polling sampler or a new supervisor process.
+Windows 10/Server 2016 and later support this attribute, matching the Windows SDK collection hosts;
+see [UpdateProcThreadAttribute](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute).
+Job membership includes descendants for the entire module lifetime. Teardown retains current job-member
+handles, waits for their actual exit signals and observes zero active job processes before releasing
+cache ownership. It verifies job membership before joining a PID and rejects new membership during
+termination rather than claiming unobserved cleanup. A handle whitelist isolates redirected pipes
+between concurrent modules. Job closure is a kill-on-close safety net, not termination proof;
+query/wait failures remain explicit and retain the cache. Non-Windows collection stays disabled.
+
+**Test-value evidence:** the same final test file
+`6E14E8DEC71B6A86B6918A31240F347AB3CB8F49A50E08ABC633D7290F8C1021` runs against the archived
+pre-fix pool and the corrected pool with
+`pwsh -NoProfile -File .\eng\validate-collection-module-pool.ps1`.
+All thirteen cases execute: pre-fix has eleven passes and the two named ownership assertion failures
+(exit 1); corrected source has thirteen passes (exit 0). `ModulePoolDrainsOrphansAfterSdkCompletion`
+and `ModulePoolDrainsOrphansAfterSdkFailure` confirm native exits 0/37, independently redirected
+orphan termination before return, Unicode cache paths and argument quoting. Existing failure,
+refill, grandchild cancellation and all-peer cleanup assertions remain unchanged.
+The final CTS selector/artifact gates (nine cases), rollout wiring (71 cases) and package-staging guard
+also pass. Logs and archived comparison sources are retained under `review-descendant-teardown`.
+
+Real composed validation uses the existing packed fixture at
+`a3d06d3c82e43f3409555461e10501c1f2a3e446`, its byte-verified MTP 2.6.0 local binary payloads and
+coverage producer `8e1bd20fd881a2ca9d13e8081e39478fa1107598`; no product source/package changed
+for this launcher correction. The current entry script collects both net10.0/net462 modules with two
+SDK slots and four instrumentation-child capacity: exit 0, teardown confirmed, zero retained caches,
+1,026 exact unique UIDs and four source paths per module, with every historical association retained.
+This is mapping/ownership evidence, not 2,052 ordinary test-result passes or a new speedup claim.
+Historical mapping storage is restored byte-for-byte after preserving the new maps.
+A copied-PDB layout initially lost source associations, and a temporary tracked storage override
+was rejected by the clean-repository guard; neither is counted as successful source-map validation.
+The successful rerun keeps the original source/PDB layout and unmodified clean configuration.
+
 ### Local acceptance profiling experiment (2026-11-03)
 
 The follow-up request is to execute genuine acceptance tests locally and use OTel or equivalent tracing
