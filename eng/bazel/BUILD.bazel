@@ -17,6 +17,7 @@ exports_files([
     "analyzers.globalconfig",
     "paket.dependencies",
     "paket.lock",
+    "reflection-free.globalconfig",
 ])
 
 csharp_binary(

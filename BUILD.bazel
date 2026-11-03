@@ -15,6 +15,7 @@ load("//eng/bazel:platform.bzl", "platform_libraries")
 load("//eng/bazel:reference-alias-tests.bzl", "reference_alias_tests")
 load("//eng/bazel:sdk-packages.bzl", "sdk_packages")
 load("//eng/bazel:server-client.bzl", "server_client_library")
+load("//eng/bazel:samples.bzl", "portable_samples")
 load("//eng/bazel:tests.bzl", "unit_tests")
 load("//eng/bazel:windows.bzl", "windows_libraries")
 load("//eng/bazel/windows:asset_selection_tests.bzl", "windows_asset_selection_tests")
@@ -49,6 +50,8 @@ extension_unit_tests()
 analyzer_unit_tests()
 
 native_packages()
+
+portable_samples()
 
 reference_alias_tests()
 

@@ -27,6 +27,11 @@ if (resultsDirectory is not null && !args.Contains("--results-directory", String
 }
 
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+#if TESTFX_TOOLCHAIN_ON_PATH
+string dotnetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT")
+    ?? throw new InvalidOperationException("The native sample requires the declared .NET toolchain.");
+Environment.SetEnvironmentVariable("PATH", dotnetRoot + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH"));
+#endif
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 #if TESTFX_INTERNAL_TESTS
 builder.AddInternalTestFramework();

@@ -2817,6 +2817,68 @@ behavioral red-phase proof. The runtime-mismatch failures are retained as
 integration evidence; no source assertion was weakened to accommodate them.
 Only the net10 runtime leg is claimed by this validation.
 
+### Stage 5: existing portable samples and native browser execution
+
+The sample module preserves all existing source bodies and their declared TFMs.
+No Windows/WinUI/UWP sample is included. Source-built SDK-style examples do not
+claim to validate the separately owned MSTest.Sdk package.
+
+The first five native sample targets passed: SDK runner (one case),
+ReliableTestSuite (11 after declaring the pinned toolchain on PATH), the
+10-class scale fixture (1,000), the intentionally selected passing custom-report
+example (one), and MTPOTel (five). The unmodified 100-class and 1,000-class scale
+fixtures subsequently passed 10,000 and 100,000 cases. Large TRXs were reconciled
+with a streaming parser rather than treating one Bazel wrapper result as the
+case count. Original parallel attributes and the reliability fixture's resource
+and retry behavior remain intact.
+
+The existing custom-report failing case and EnsureTestFramework still execute
+and return 2. Ensure discovery returns 0 and names its single case. The AOT SDK
+sample compiles with the existing reflection-free generator and executes its
+one managed test; that is not an AOT runtime claim.
+
+`browser_publish` uses the actual upstream `wasm = True` path and the existing
+BrowserPlayground sources/assets. Its native bundle was copied out of Bazel
+outputs and run with the unchanged `runtests.mjs`: one browser-wasm/net10 pass
+returns 0; requiring two cases still runs the one case and returns policy exit
+9. No MSBuild producer or replacement JavaScript test is involved.
+
+BenchmarkDotNet's initial exit 0 did not mean a benchmark ran: it correctly
+rejected non-optimized source dependencies. A native `-c opt` self-contained
+build fixes that prerequisite rather than disabling the validator. All 12
+existing benchmark identities are discoverable. The bounded
+`--inProcess --job Dry --filter '*AssertThatBenchmarks*'` command executes exactly
+one existing benchmark on .NET 10.0.14 and produces CSV/HTML/Markdown artifacts,
+without compiling a replacement host through MSBuild. This single cold
+iteration proves wiring, not a performance comparison. The tool's temporary
+power-plan selection was reverted and the original active GUID was read back.
+
+Representative executed commands:
+
+```powershell
+.\eng\bazel.ps1 test //:sdk_runner_sample_test //:reliable_suite_test //:scale_10c_test //:custom_report_test //:otel_sample_test --jobs=2 --keep_going --nocache_test_results --noshow_progress
+.\eng\bazel.ps1 test //:scale_100c_test //:scale_1000c_test //:browser_publish //:benchmark_runner //:aot_sample //:ensure_sample --jobs=2 --keep_going --nocache_test_results --noshow_progress
+.\eng\bazel.ps1 build //:benchmark_runner -c opt --jobs=2 --noshow_progress
+node .\runtests.mjs --minimum-expected-tests 1
+node .\runtests.mjs --minimum-expected-tests 2
+.\MSTest.Performance.Benchmarks.exe --inProcess --job Dry --filter '*AssertThatBenchmarks*' --artifacts <isolated-results>
+```
+
+The three Bazel commands, passing Node run and optimized benchmark command
+returned 0; the second Node command returned 9 as asserted. Native copies are
+under the lane-owned `C:\tfb\tests-05e68c\sample-validation` directory. Logs and
+`sample-test-inventory.json` are retained under `files/bazel-tests-lane`;
+large scale reports remain at their recorded native test-output paths.
+
+**Test-value evidence:** these are existing tests and examples, not a new-test
+generation campaign. Actual test counts, intentional negative exits, native
+browser execution and real in-process benchmark execution are distinguished
+from wrapper success and compilation. NativeAOT requires a supported Linux/macOS
+host: Debian WSL failed to start with code 6 / step 2 / E_FAIL. An independent
+read-only probe confirmed a local Docker Linux engine, but its existing SDK
+image has no C/C++ toolchain. Native AOT validation remains a subsequent step;
+no shared WSL/service reset or machine-level tool installation was attempted.
+
 ### Native source-root parity
 
 Existing extension annotation tests require real source files beneath the

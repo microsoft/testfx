@@ -319,6 +319,27 @@ now retain their incoming configuration. Reassess these changes on an upgrade.
 
 ## Native package and runtime validation
 
+### Additional existing portable samples
+
+`eng/bazel/samples.bzl` adds opt-in targets without changing sample test bodies:
+
+| Target | Verified behavior |
+| --- | --- |
+| `sdk_runner_sample_test` | Existing net8 SDK-runner example: one passing case, using native source assemblies rather than proving SDK-package behavior. |
+| `reliable_suite_test` | All 11 existing net8 reliability cases pass, including retry/cancellation and the real pinned-dotnet executable condition. |
+| `scale_10c_test`, `scale_100c_test`, `scale_1000c_test` | Existing method-parallel net8 scale examples: 1,000, 10,000 and 100,000 passing cases. These are scalability fixtures, not newly generated coverage. |
+| `custom_report_test` | The existing passing custom-report example; the separate manual failure probe retains the intentional failing example and exit 2. |
+| `ensure_sample` | Existing custom framework: discovery finds its one case; real execution intentionally fails with exit 2. |
+| `otel_sample_test` | Existing net9 host-composition example: five passes and real source-built OpenTelemetry output. |
+| `browser_publish` | Native upstream WebAssembly bundle; unchanged Node runner passes one browser-wasm case and propagates minimum-count exit 9. |
+| `benchmark_runner` | Native self-contained net10 layout; build with `-c opt`. Twelve existing benchmarks are discoverable and an in-process Dry execution runs without an MSBuild-generated host. |
+| `aot_sample` | Existing SDK AOT sample compiles with source-generated reflection metadata and passes its one managed case. This alone is not NativeAOT execution. |
+
+The manual `aot_publish` uses upstream's native AOT publisher, which supports
+Linux/macOS rather than Windows. Native execution requires a working supported
+host and is reported separately from the managed sample. None of these targets
+enlarges the previously verified `portable_tests` aggregate.
+
 Packages carry an explicit `-preview.bazel` prerelease version derived from
 `eng/Versions.props`; they are not official shipping packages. They include the
 portable DLLs, XML documentation, PDBs, satellite resources, readme, and relevant
