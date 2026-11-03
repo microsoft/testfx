@@ -2,6 +2,7 @@ exports_files([
     "framework-reference-priority.patch",
     "generated-resource-names.patch",
     "pdb-runfiles.patch",
+    "public-signing.patch",
     "quote-csharp-sources.patch",
     "reference-only-analyzers.patch",
     "short-launcher-name.patch",

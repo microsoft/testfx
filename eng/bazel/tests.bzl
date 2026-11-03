@@ -69,7 +69,7 @@ def unit_tests():
         generate_documentation_file = False,
         data = ["//eng/bazel:build_tools"],
         envs = {"TESTFX_BAZEL_BUILD_TOOLS": "$(rlocationpath //eng/bazel:build_tools)"},
-        deps = [":adapter", ":framework", ":framework_extensions", ":trx", ":mstest_analyzer_plugin", "@rules_dotnet//tools/runfiles"],
+        deps = [":adapter", ":framework", ":framework_extensions", ":trx", ":mstest_analyzer_plugin", "//eng/bazel:runfiles"],
     )
     testfx_test(
         name = "build_tools_tests",

@@ -1,7 +1,7 @@
 """Conformance fixtures for consumer-local native C# reference aliases."""
 
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_library")
-load(":defs.bzl", "testfx_binary", "testfx_test")
+load(":defs.bzl", "TESTFX_PUBLIC_KEY_FILE", "testfx_binary", "testfx_friend_identities", "testfx_test")
 
 _PROJECT = "test/UnitTests/Bazel.ReferenceAliases.UnitTests"
 
@@ -12,7 +12,9 @@ def reference_alias_tests():
             srcs = [_PROJECT + "/" + name + ".cs"],
             out = "Bazel.Aliases." + name,
             target_frameworks = ["net8.0"],
-            internals_visible_to = ["Bazel.ReferenceAliases.UnitTests"],
+            internals_visible_to = testfx_friend_identities(["Bazel.ReferenceAliases.UnitTests"]),
+            keyfile = TESTFX_PUBLIC_KEY_FILE,
+            compiler_options = ["/publicsign+"],
             generate_documentation_file = False,
         )
     testfx_binary(
@@ -41,7 +43,7 @@ def reference_alias_tests():
     testfx_test(
         name = "reference_alias_tests",
         binary = ":reference_alias_tests_app",
-        args = ["--minimum-expected-tests", "3"],
+        args = ["--minimum-expected-tests", "9"],
         size = "small",
     )
     for name, aliases in [

@@ -6,6 +6,17 @@ PORTABLE_FRAMEWORKS = ["net8.0", "net9.0", "net10.0", "net11.0"]
 STANDARD_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["netstandard2.0"]
 DESKTOP_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["net462"]
 
+TESTFX_PUBLIC_KEY_FILE = "@testfx_public_key//file"
+_MICROSOFT_PUBLIC_KEY = "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293"
+_MOCK_PUBLIC_KEY = "0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7"
+
+def testfx_friend_identities(names):
+    """Match the repository's Microsoft and DynamicProxy friend identities."""
+    return [
+        name + ", PublicKey=" + (_MOCK_PUBLIC_KEY if name == "DynamicProxyGenAssembly2" else _MICROSOFT_PUBLIC_KEY)
+        for name in names
+    ]
+
 def testfx_compatibility_select(compatibility, modern = []):
     """Select the exact legacy configurations after the assembly's TFM transition."""
     return select({
@@ -186,6 +197,7 @@ def testfx_library(
         assembly_version = "",
         target_frameworks = PORTABLE_FRAMEWORKS,
         analyzer_configs = [],
+        compiler_options = [],
         binary = False,
         **kwargs):
     """Compile one source assembly without invoking or consuming MSBuild outputs."""
@@ -246,6 +258,8 @@ def testfx_library(
             out = (assembly_name or project.split("/")[-1]) + ".resources",
             target_frameworks = target_frameworks,
             resources = translated_resources,
+            keyfile = TESTFX_PUBLIC_KEY_FILE,
+            compiler_options = ["/publicsign+"],
             generate_documentation_file = False,
         )
         _satellite(name = satellite_name, assembly = ":" + satellite_name + "_dll", culture = culture)
@@ -271,7 +285,9 @@ def testfx_library(
         nullable = "enable",
         defines = ["TRACE"] + defines,
         deps = deps,
-        internals_visible_to = internals_visible_to,
+        internals_visible_to = testfx_friend_identities(internals_visible_to),
+        keyfile = TESTFX_PUBLIC_KEY_FILE,
+        compiler_options = ["/publicsign+"] + compiler_options,
         analyzer_configs = ["//:.editorconfig"] + analyzer_configs,
         nowarn = ["CS1701", "CS1702", "TPEXP", "TPINTERNAL", "MSTESTOBS"],
         treat_warnings_as_errors = True,

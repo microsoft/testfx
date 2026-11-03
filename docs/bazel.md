@@ -116,9 +116,13 @@ The six source projects outside `managed` are:
 
 Not yet migrated or established: the other unit-test projects, integration and
 package-consuming acceptance suites, every public example, the complete
-.NET Framework/netstandard matrix, WinRT/UWP/WinUI/WPF workloads, AOT, strong-name
-identity, SourceLink/API-audit parity, official package layout/signing/publishing,
-and downstream servicing. The assemblies are unsigned development outputs.
+.NET Framework/netstandard matrix, WinRT/UWP/WinUI/WPF workloads, AOT,
+SourceLink/API-audit parity, official package layout/signing/publishing,
+and downstream servicing. Native assemblies and satellites now use the same
+public-only Microsoft signing key as the repository's Arcade development build
+(`PublicKeyToken=b03f5f7f11d50a3a`). This preserves assembly and friend identities
+needed by separately shipped extensions; it is not official signature completion
+or package publication, and requires no private key or machine verification change.
 
 The portable `PackagedApp` assembly is included; its Windows register/activate
 flavor and real packaged-app execution are **not** implied by that compilation.
@@ -165,7 +169,8 @@ reference_aliases = {
 The list replaces implicit global access. Include `global` explicitly when both
 access paths are needed. The runtime dependency identity is unchanged. The
 `//:reference_alias_tests` target exercises global-plus-named, named-only, and
-friend-assembly references through every C# compiler pass. Unknown assemblies and
+key-qualified friend references through every C# compiler pass. It also checks
+the emitted public keys and localized satellite identity. Unknown assemblies and
 empty/duplicate alias lists are rejected during analysis.
 
 Local full MTP execution reported 3,378 passes and these two failures:

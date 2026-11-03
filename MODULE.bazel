@@ -9,6 +9,7 @@ archive_override(
     patches = [
         "//eng/bazel/patches:testfx-compatibility.patch",
         "//eng/bazel/patches:reference-aliases.patch",
+        "//eng/bazel/patches:public-signing.patch",
     ],
     strip_prefix = "rules_dotnet-add5c92b30888a70aa951de1744a770b8f8ef436",
     urls = ["https://github.com/bazel-contrib/rules_dotnet/archive/add5c92b30888a70aa951de1744a770b8f8ef436.zip"],
@@ -19,6 +20,15 @@ dotnet.toolchain(dotnet_version = "11.0.100-rc.3.26522.148")
 use_repo(dotnet, "dotnet_toolchains")
 
 register_toolchains("@dotnet_toolchains//:all")
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "testfx_public_key",
+    downloaded_file_path = "MSFT.snk",
+    sha256 = "933598639cbaa1de502f80d2fd1db78f13c8d7bb64a5fdc1bc73ac0b5ce4f5ca",
+    urls = ["https://raw.githubusercontent.com/dotnet/arcade/4163bf82769cbb7f0a6e1e02f85090d30b53e988/src/Microsoft.DotNet.Arcade.Sdk/tools/snk/MSFT.snk"],
+)
 
 # Bootstrap the resolver without requiring dotnet tool restore or a machine SDK.
 nuget_archive = use_repo_rule("@rules_dotnet//dotnet:defs.bzl", "nuget_archive")
@@ -40,7 +50,7 @@ use_repo(paket, "paket.analyzers", "paket.generator", "paket.main", "paket.sourc
 
 paket.parse(
     dependencies = "//eng/bazel/compatibility:paket.dependencies",
-    lock = "//eng/bazel/compatibility:paket.lock",
     groups = ["compatibility"],
+    lock = "//eng/bazel/compatibility:paket.lock",
 )
 use_repo(paket, "paket.compatibility")

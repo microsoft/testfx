@@ -1279,3 +1279,105 @@ no shipping leg, servicing branch, or package publication is enabled here.
 Each individual target exposes exactly one nupkg in `DefaultInfo`, the existing
 `NuGetPackInfo` with a generated version file, and `nuspec` / `package_request`
 output groups. Its public package groups are the four declared portable TFMs.
+
+## 2026-11-03: native public signing and friend identities
+
+The default SDK consumer and the Windows controller independently reached the
+same real composition failure: the repository-pinned CodeCoverage extension
+requires `Microsoft.Testing.Platform, Version=2.6.0.0,
+PublicKeyToken=b03f5f7f11d50a3a`, but native compilation emitted an unsigned
+platform. Fresh isolated-cache provenance ruled out a stale or released MTP
+substitution. The NuGet preview suffix fixes package version ordering, not
+assembly identity. The SDK None profile and the default meta-package have
+separate executed successes; they do not establish default SDK compatibility.
+
+The existing repository contract is already public signing:
+`Directory.Build.props` selects `StrongNameKeyId=Microsoft`, and the pinned
+[Arcade StrongName.targets](https://github.com/dotnet/arcade/blob/4163bf82769cbb7f0a6e1e02f85090d30b53e988/src/Microsoft.DotNet.Arcade.Sdk/tools/StrongName.targets)
+selects `PublicSign=true` and its public-only `MSFT.snk`, including on Windows.
+The 160-byte public blob was independently read and verified: SHA-256
+`933598639CBAA1DE502F80D2FD1DB78F13C8D7BB64A5FDC1BC73AC0B5CE4F5CA`,
+token `b03f5f7f11d50a3a`. No private key, signing service, machine registration,
+verification bypass, or official-signing claim is involved.
+
+Mirror that existing development-build contract in native source assemblies,
+test hosts, and satellites. Preserve the distinct `MoqPublicKey` for
+`DynamicProxyGenAssembly2`; other native friends use the Microsoft public key.
+The upstream C# provider currently matches friend names literally, so qualified
+friend attributes also require simple-name normalization for internal-reference
+selection. The actual compiler attribute retains the full public key and still
+enforces the friend identity. Keep this as a separate C# patch, independent of
+package-reference selection and Windows targeting.
+
+Leaving assemblies unsigned cannot satisfy the real consumer. Replacing native
+MTP with released bits, disabling default coverage, or changing CodeCoverage is
+not an acceptable solution. Signing only MTP would break its compiled friend
+closure. Public signing is the smallest existing-contract correction; official
+signature completion, publication, and replacement of Arcade remain out of scope.
+
+Before implementation, extend the existing alias/friend conformance fixture
+with emitted-public-key and satellite-identity assertions. Retain its three
+existing cases and method-level, CPU-count scheduling. All new observations
+read stable assembly metadata or load an explicitly named culture; no test
+changes global culture, environment, files, or scheduling, so no new lock is
+needed. Run the same cases before and after the identity correction, preserve
+their reports and source states, then re-run the real SDK/controller consumers
+from freshly packed native artifacts. Compilation failures alone are not
+test-value proof. Results and remaining platform limitations will be recorded
+after execution.
+
+The first regression attempt then found a genuinely coupled compiler failure:
+the two native build-helper test hosts referenced upstream's unsigned `runfiles`
+assembly, which now triggers CS8002 under the unchanged warnings-as-errors
+policy. No tests executed in that failed attempt. Rather than suppress the
+warning, weaken signing, or modify the helper's behavior, export its unchanged
+pinned source and compile it as `//eng/bazel:runfiles` with the same public key
+and original netstandard2.0 target. Only native tooling tests consume this
+helper; it is not added to any shipping package.
+
+### Executed identity comparison
+
+The comparison starts at `960366ed123ea6d75083afbcaa68d071f7983665`.
+The retained-test unsigned patch is
+`0097C523566740B27C1BF18020AA93329A28C7F9AC35AB48F97B252E4E9D94D2`;
+the first public-signing implementation patch is
+`FA6B86EED4ACC3991B2EA665708209F00CCFDC14942B77C0C24C8C7DF7DEC42C`.
+With `TESTFX_BAZEL_OUTPUT_ROOT=C:\tfb\aliases-df07ee`, both states ran:
+
+```powershell
+.\eng\bazel.ps1 --host_jvm_args=-Xmx2g test //:reference_alias_tests --jobs=2 --nocache_test_results --test_output=errors --noshow_progress
+```
+
+| State | Executed result |
+| --- | --- |
+| Unsigned, regression tests retained | Bazel exit 3; 9 executed, the 3 existing alias/friend cases passed and 6 identity cases failed, zero skipped. Each failure expected `B03F5F7F11D50A3A` and observed an empty token. |
+| Public-signed | Bazel exit 0; the same 9 display identities passed, zero failed/skipped. |
+
+`NativeAssembliesHaveThePublishedPublicKey` separately checks the platform,
+framework, test host, globally visible alias, and named-only alias assemblies.
+`SatellitesPreserveTheParentAssemblyIdentity` loads the actual French framework
+satellite and checks name, version, culture, and its published public-key token.
+The unchanged alias cases exercise global/named identity and actual internal
+member access. Both runs compile net8.0 and execute on the pinned SDK11 runtime.
+Fresh TRXs were parsed and their exact display-name multisets reconciled.
+Reports, logs, and reproducible patches are retained under this session's
+`files/native-signing/red` and `files/native-signing/green`.
+
+The final patch, including the unchanged-source signed runfiles helper, is
+`DB1E09501F89D8EE4B2D9166E872F2F5561FCDA5CD4BBBF9E2068CC44C8FA78A`.
+The command below exited 0; all four fresh reports were parsed: alias/identity
+9/9, PlatformServices 1,215/1,215, build helper 13/13, and SDK package helper
+12/12. Total: 1,249 passed, zero failed/skipped. The existing PlatformServices
+suite exercises real mock/friend access, and both tooling suites execute their
+real native helpers through the signed runfiles source.
+
+```powershell
+.\eng\bazel.ps1 --host_jvm_args=-Xmx2g test //:reference_alias_tests //:platform_services_tests //:build_tools_tests //:sdk_package_tests --jobs=2 --nocache_test_results --test_output=errors --noshow_progress
+```
+
+Evidence is under this session's `files/native-signing/final`, including
+`results.json`, four TRXs, the build events/log, and the complete source patch.
+Only documentation was updated after that source state. This is a validated
+shared compilation/identity checkpoint, not a claim that the signed ten-package
+SDK or Windows-controller composition has already run; their owners must repack
+and execute those consumers against this checkpoint.

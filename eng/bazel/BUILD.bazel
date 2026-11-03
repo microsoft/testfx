@@ -1,4 +1,5 @@
-load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "dotnet_tool")
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "dotnet_tool")
+load(":defs.bzl", "TESTFX_PUBLIC_KEY_FILE")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -23,6 +24,15 @@ csharp_binary(
     nullable = "enable",
     target_frameworks = ["net10.0"],
     treat_warnings_as_errors = True,
+)
+
+csharp_library(
+    name = "runfiles",
+    srcs = ["@rules_dotnet//tools/runfiles:Runfiles.cs"],
+    out = "runfiles",
+    compiler_options = ["/publicsign+"],
+    keyfile = TESTFX_PUBLIC_KEY_FILE,
+    target_frameworks = ["netstandard2.0"],
 )
 
 csharp_binary(
