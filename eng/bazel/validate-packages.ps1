@@ -30,6 +30,7 @@ $steps = [System.Collections.Generic.List[object]]::new()
 $runtimeRecords = [System.Collections.Generic.List[object]]::new()
 $expectedHashes = [ordered]@{}
 $succeeded = $false
+$consumerSdk = $null
 
 function Invoke-Step([string] $Name, [string] $Executable, [string[]] $Arguments, [int] $ExpectedExit = 0) {
     $log = Join-Path $directory "$Name.log"
@@ -55,6 +56,37 @@ function Assert-SinglePassingTest([string] $Path) {
     }
 }
 
+function Get-ConsumerSdk {
+    $sdkVersion = [regex]::Match((Get-Content -LiteralPath (Join-Path $root 'MODULE.bazel') -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value
+    if (-not $sdkVersion) { throw 'Could not identify the declared consumer SDK.' }
+    $toolchainOutput = Invoke-Step 'consumer-toolchain' $bazel @(
+        'cquery', '@rules_dotnet//dotnet:resolved_toolchain', '--extra_toolchains=@dotnet_toolchains//:all',
+        '--output=starlark', '--noshow_progress',
+        '--starlark:expr="TESTFX_CONSUMER_SDK|" + providers(target)["ToolchainInfo"].dotnetinfo.sdk_version + "|" + providers(target)["ToolchainInfo"].dotnetinfo.runtime_path'
+    )
+    $toolchain = [regex]::Match($toolchainOutput, '(?m)^TESTFX_CONSUMER_SDK\|([^|\r\n]+)\|([^|\r\n]+)')
+    if (-not $toolchain.Success -or $toolchain.Groups[1].Value -cne $sdkVersion -or -not $toolchain.Groups[2].Value.StartsWith('external/')) {
+        throw 'The resolved consumer toolchain does not match the declared SDK repository.'
+    }
+
+    # A distinct consumer SDK is materialized here, but need not be staged as a producer action input.
+    $outputBase = & $bazel info output_base
+    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the materialized SDK repositories.' }
+    $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }
+    $sdks = @(Get-ChildItem -LiteralPath (Join-Path $outputBase 'external') -Directory -Filter "*dotnet_sdk.$sdkVersion`_*" |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName $dotnetName) })
+    if ($sdks.Count -ne 1) { throw 'Expected one materialized consumer SDK for the execution host.' }
+    $dotnet = Join-Path $sdks[0].FullName $dotnetName
+    $resolvedDotnet = [IO.Path]::GetFullPath((Join-Path $outputBase $toolchain.Groups[2].Value))
+    $comparison = if ($IsWindows) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
+    if (-not [string]::Equals([IO.Path]::GetFullPath($dotnet), $resolvedDotnet, $comparison)) {
+        throw 'The materialized consumer SDK does not match the selected toolchain executable.'
+    }
+    $version = @(Get-Content -LiteralPath (Join-Path $sdks[0].FullName "sdk\$sdkVersion\.version"))
+    if ($version.Count -lt 2 -or $version[1] -cne $sdkVersion) { throw 'The consumer SDK archive has unexpected version metadata.' }
+    return [pscustomobject]@{ Version = $sdkVersion; Commit = $version[0]; Dotnet = $dotnet; Repository = $sdks[0].FullName }
+}
+
 $oldPackages = $env:NUGET_PACKAGES
 $oldRollForward = $env:DOTNET_ROLL_FORWARD
 $oldPrerelease = $env:DOTNET_ROLL_FORWARD_TO_PRERELEASE
@@ -76,13 +108,9 @@ try {
     $paths = @(& $bazel cquery //:packages --output=files --noshow_progress)
     if ($LASTEXITCODE -ne 0 -or $paths.Count -ne $expectedPackageIds.Count) { throw 'Expected exactly three native MTP packages.' }
 
-    $sdkVersion = [regex]::Match((Get-Content -LiteralPath 'MODULE.bazel' -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value
-    if (-not $sdkVersion) { throw 'Could not identify the selected native SDK.' }
-    $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }
-    $sdks = @(Get-ChildItem -LiteralPath (Join-Path $executionRoot 'external') -Directory -Filter "*dotnet_sdk.$sdkVersion`_*" |
-        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName $dotnetName) })
-    if ($sdks.Count -ne 1) { throw 'Expected one resolved native SDK for the execution host.' }
-    $dotnet = Join-Path $sdks[0].FullName $dotnetName
+    $consumerSdk = Get-ConsumerSdk
+    $sdkVersion = $consumerSdk.Version
+    $dotnet = $consumerSdk.Dotnet
 
     foreach ($path in $paths) {
         $packagePath = Join-Path $executionRoot $path
@@ -235,7 +263,7 @@ finally {
     $env:DOTNET_ROOT = $oldDotnetRoot
     $env:DOTNET_ROOT_X64 = $oldDotnetRootX64
     Pop-Location
-    [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Jobs = $Jobs; Packages = $packageRecords; RuntimeLayouts = $runtimeRecords; Steps = $steps; ExpectedAssemblyHashes = $expectedHashes } |
+    [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Jobs = $Jobs; ConsumerSdk = $consumerSdk; Packages = $packageRecords; RuntimeLayouts = $runtimeRecords; Steps = $steps; ExpectedAssemblyHashes = $expectedHashes } |
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
 }
 
