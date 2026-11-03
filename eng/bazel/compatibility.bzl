@@ -80,6 +80,7 @@ def _variant_impl(ctx):
         target[DefaultInfo],
         compile_info,
         target[DotnetAssemblyRuntimeInfo],
+        OutputGroupInfo(runtime_files = target[DefaultInfo].default_runfiles.files),
     ]
 
 testfx_framework_variant = rule(
@@ -105,6 +106,7 @@ def _inventory_impl(ctx):
             "assembly": compile_info.name,
             "target_framework": compile_info.target_framework,
             "files": [file.path for file in target[DefaultInfo].files.to_list()],
+            "satellites": [file.path for file in target[DotnetAssemblyRuntimeInfo].resource_assemblies],
             "runtime_dependencies": [
                 {
                     "assembly": dependency.name,

@@ -138,7 +138,7 @@ Not yet migrated or established: all remaining unit-test projects, the complete
 integration/acceptance suites, every public example, complete legacy runtime
 behavior, WinRT/UWP/WinUI/WPF workloads, AOT,
 SourceLink/API-audit parity, official package layout/signing/publishing,
-and downstream servicing. Native assemblies and satellites now use the same
+and downstream servicing. Native assemblies and satellites use the same
 public-only Microsoft signing key as the repository's Arcade development build
 (`PublicKeyToken=b03f5f7f11d50a3a`). This preserves assembly and friend identities
 needed by separately shipped extensions; it is not official signature completion
@@ -242,6 +242,13 @@ When changing a project, keep its native declaration aligned with the project
 file: references, linked/excluded sources, constants, usings, resource names,
 version overrides, friend assemblies, and runtime files are all significant.
 Do not treat a successful C# glob as project parity.
+
+Compatibility wrappers also expose a `runtime_files` output group. Before
+staging an external consumer, materialize its exact runtime closure, for example
+`.\eng\bazel.ps1 build //:framework_net462 --output_groups=+runtime_files`.
+Library default outputs alone do not force every satellite/runfile to be built.
+Use the inventory's `satellites` and runtime-dependency paths, and verify staged
+hashes; an old file left in the output tree is not evidence of the current build.
 
 The native build explicitly provides:
 

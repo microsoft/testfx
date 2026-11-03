@@ -2880,3 +2880,83 @@ their own final checks. This checkpoint does not include the full MTP suite's
 two known host failures, the remaining analyzer suite, Windows-controller
 integration, CI execution, or official release/servicing certification. The
 separate lane records bind each package/SDK result to its actual source state.
+## Signed compatibility validation (2026-11-03)
+
+### Public-signing checkpoint validation
+
+The next validation starts from compatibility commit
+`870a6d86b6952e6ed2eb84411c34f92c3c7ee8ad` and selectively applies the shared
+identity correction from `aff2cf0f702a07779cee99a8acf29cf515e858bb`.
+The lane-specific shared integration is
+`42b9e7f8d500cc6f3d4841136ecc67ecc9ae9cf9`.
+SDK/alias conformance files absent from this lane stay absent. The independent
+package-reference selection patch and compatibility dependency groups are
+preserved.
+
+The contract mirrors Arcade's development build: the pinned public-only
+`MSFT.snk`, public signing for native libraries and satellites, and full
+key-qualified friend identities (including DynamicProxy's distinct public key).
+No private key, verification bypass, registry setting, or machine policy change
+is allowed. Public-key identity is not official signature completion.
+
+The prior 31 unsigned DLLs were copied to separate evidence storage after
+checking every hash against the unsigned inventory; the unsigned CLR consumer
+and previous reports are retained too. Signed consumers must verify the actual
+`b03f5f7f11d50a3a` identity in addition to framework metadata and loaded paths.
+The planned checks rebuild the native compatibility matrix, run the real
+netstandard host and CLR consumers, inspect satellites/keyed friends, and report
+any genuine CLR signing/load boundary rather than weakening verification.
+
+Executed results for this checkpoint:
+
+| Contract | Evidence |
+| --- | --- |
+| Public-only key | The downloaded key is exactly 160 bytes, contains `PUBLICKEYBLOB` / `RSA1`, matches SHA-256 `933598639cbaa1de502f80d2fd1db78f13c8d7bb64a5fdc1bc73ac0b5ce4f5ca`, and derives token `b03f5f7f11d50a3a`. |
+| Signed compatibility outputs | All 31 primary DLLs have the expected token and original exact TFM metadata. All 107 friend grants have the Microsoft or DynamicProxy key as appropriate. |
+| Satellites | After materializing runtime closures, all 325 satellites (260 netstandard, 65 net462) match their parent's version/key and declare a nonempty culture. |
+| Source behavior and friend access | `.\eng\bazel.ps1 test //:managed_compatibility //:framework_tests //:compatibility_reference_tests //:compatibility_explorer_test //:framework_netstandard2_0_consumer_test --jobs=2 --noshow_progress --test_output=errors --nocache_test_results` exits 0: seven fresh targets, including all 1,634 existing framework cases and their localization checks. |
+| Signed runfiles dependency | `.\eng\bazel.ps1 test //:build_tools_tests --jobs=2 --noshow_progress --test_output=errors --nocache_test_results` exits 0; all thirteen existing build-tool cases execute/pass with the shared signed runfiles assembly. |
+| Netstandard host | The real explorer again returns 0/2/9 for pass/failure/empty selections, with parsed TRX executed counts 1/1/0. |
+| Windows CLR | The separate signed consumer builds and exits 0 on `Framework64/v4.0.30319/mscorlib.dll`, verifies the actual native framework token, loads its Korean satellite, compares full public keys, and exercises the failing-assertion path. Staged hashes match the selected producer. |
+
+#### Runtime-sidecar provenance correction
+
+The first explicit CLR satellite probe failed with `0x80131040`: its staged
+satellite was still the old unsigned file, although the primary DLL was newly
+public-signed. A library-only build had not materialized that runtime sidecar.
+The standard consumers had materialized their own satellites and passed.
+An independent satellite build in a different incoming configuration was not
+proof that the wrapper-selected runtime file had been refreshed.
+
+Compatibility wrappers now expose the existing runfiles as an additive
+`runtime_files` output group without changing their default files or assembly
+providers. The exact command
+`.\eng\bazel.ps1 build //:framework_net462 --output_groups=runtime_files --jobs=2 --noshow_progress`
+materializes the selected framework and all thirteen satellites. The generated
+inventory now names direct satellites too. After replacing the task-owned
+read-only stale copy and verifying its token/hash before launch, the same CLR
+consumer exits 0. No production source, key, machine policy, verification
+setting, or binding bypass was changed to obtain that result.
+
+The full runtime-closure build was also executed for all 31 exact wrapper labels
+using `--output_groups=+runtime_files` and exited 0. This distinguishes a
+materialized artifact from a path merely reported by analysis.
+
+**Test-value evidence:** an isolated identity counterfactual retains the exact
+signed consumer executable and correct satellite but replaces only the primary
+framework DLL with its preserved unsigned predecessor. The CLR rejects that
+wrong identity with `FileLoadException` / `0x80131040` and exit `-532462766`;
+the correct payload exits 0 before and after. The consumer SHA-256 is identical
+in all three runs:
+`D87E07279F041D94F168918E77F6B61703F30667B25D3195D091713C04C29E10`.
+This proves the identity/load boundary, not cryptographic signature completion.
+
+Signed evidence is separate under `files/bazel-signing`: key verification,
+primary/satellite/friend inventories, materialization logs, CLR build binlogs
+and matched-runtime output, TRX reports, and `identity-counterfactual.json`.
+The original unsigned evidence remains unchanged under
+`files/bazel-compatibility` and the signed evidence's `unsigned` snapshot.
+No genuine public-signing load failure was observed with correctly staged
+artifacts on this installed CLR. Exact .NET Framework 4.6.2-runtime execution,
+environments with different verification policy, SDK 12, official signing and
+shipping-package certification remain separate validation boundaries.
