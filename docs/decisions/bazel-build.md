@@ -594,6 +594,38 @@ Final clean-revision evidence:
 `C:\tfba\6a8043a5c4a6\analyzer-final-evidence\20261103-143911-b8403951`.
 Only documentation was added after this run.
 
+#### Signed analyzer compiler-host refresh
+
+The coordinator requested the same 15-case analyzer gate after the shared
+public-signing checkpoint `aff2cf0f702a07779cee99a8acf29cf515e858bb`, alias/signing
+fixture prerequisite `797eb6f29721389a9178d42df726bce6155b9e42`, and source-root
+mapping patch `adeb20ba67eefec9464be5561eecfbe03d346963`.
+Their lane-local cherry-picks end at
+`05ba1d3e10c5e504a96f5f9c9bd907bee80037e3`. Conflict resolution retains the
+shared public key, compiler options, friend identities and exact patch files;
+the unrelated absent SDK, compatibility and expanded-test declarations remain
+absent. Parent-owned decision sections are historical evidence, not claims
+that those other lanes were built in this checkout.
+
+The original `analyzer-packages.bzl`, `validate-analyzers-package.ps1` and
+`AnalyzerPackageConsumer.cs` remain byte-for-byte unchanged from the unsigned
+checkpoint. All package-layout, compiler-mode, selected-asset, Roslyn 3.11,
+code-fix and resource assertions remain enabled. New native outputs will be
+packed into a fresh feed and restored into a unique cache using the existing
+validator. The preserved unsigned feed still matches SHA-256
+`F45295E95D041CF2256F906BEA63B9D5125DFD0019F64B6DD661E605BEE074AA`.
+
+The new producer contract is public-only development signing with the pinned
+160-byte Microsoft public key, not official signing or publication. In addition
+to the unchanged gate, inspect the actual packed main/satellite DLL identities
+and strong-name signature regions to distinguish public signing from unsigned
+outputs or private-key signature completion. Keep the package prerelease
+identity and unchanged dependency suppression. Source-root mapping is a shared
+compiler-input change, not a reason to alter consumer assertions.
+
+The focused signed run and its source/package provenance will be recorded
+below. The prior unsigned results remain a separate preservation baseline.
+
 #### Parent integration: shared framework metadata
 
 The parent integrated the analyzer and netstandard core commits, then replaced
