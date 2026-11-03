@@ -30,6 +30,286 @@ The initial producer/consumer contract is:
 
 ## Research and experiments
 
+### 2026-11-03: SDK/meta-package lane
+
+This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d` and owns
+`//:mstest_package` and `//:mstest_sdk_package`. The existing three-package
+`//:packages` aggregate and validator remain unchanged. The coordinator owns
+the combined guide, CI, dependency integration, and eventual rollout.
+
+**Contract and sources.** `src/Package/MSTest.Sdk/MSTest.Sdk.csproj` explicitly
+packs ten SDK props/targets, generates `Sdk.props` and `Runner.targets` from
+their real templates, and suppresses both build output and package dependencies.
+Its packaged-app project reference orders the shipping build; it does not embed
+a controller or become an SDK NuGet dependency. The native package must retain
+the actual conditional targets for classic execution, NativeAOT, VSTest, central
+package management, test libraries, optional features, and Windows application
+models without claiming that all those consumers have been validated.
+
+`src/Package/MSTest/MSTest.csproj` packs empty `_._` files and dependencies, not
+an assembly. For each portable framework its dependencies are the framework,
+adapter, TRX reporter, Microsoft.NET.Test.Sdk, and CodeCoverage. The test SDK's
+build assets must flow transitively (`PrivateAssets="none"`); other dependencies
+retain `Build,Analyzers` exclusions. The
+[4.5.2 published manifest](https://api.nuget.org/v3-flatcontainer/mstest/4.5.2/mstest.nuspec)
+was inspected only as corroborating pack-contract evidence, not as a substitute
+for native dependencies.
+
+Version inputs remain `eng/Versions.props`, `Directory.Packages.props`, and
+`Directory.Build.props`: MSTest `4.6.0-preview.bazel`, MTP
+`2.6.0-preview.bazel`, and JUnit `1.0.0-preview.bazel` are separate families.
+CodeCoverage, Fakes, Playwright, Aspire,
+and Microsoft.NET.Test.Sdk keep their actual external pins. The producer uses
+the explicitly selected Bazel SDK 11 RC3, not the unchanged repository SDK 12
+pin. The portable meta-package scope is .NET 8/9/10/11; net462/UAP groups and
+Windows/AOT execution remain unvalidated and are not enabled by writing an
+archive.
+
+**Alternatives and decision.** The pinned upstream `nuget_pack` rule requires
+one compiled library or binary, which is inappropriate for these assembly-free
+packages. Its
+[public native packer](https://github.com/bazel-contrib/rules_dotnet/blob/add5c92b30888a70aa951de1744a770b8f8ef436/dotnet/private/tools/nuget_pack/BUILD.bazel)
+accepts file-only JSON requests and already owns deterministic ZIP, OPC, nuspec,
+and collision validation. Reuse that tool behind an area-owned rule and a small
+template/metadata generator. Do not add a fake anchor assembly, implement a
+second ZIP writer, invoke an MSBuild producer, or change shared BuildTools.cs.
+The private request schema is pinned with the upstream commit and must be
+rechecked on upgrades. Package descriptions, readmes, tags, license, and release
+notes come from the repository; native artifacts must not acquire official
+signing or servicing claims.
+
+**Planned validation and ownership.** First build and inspect both archives and
+exercise template/version/metadata rejection cases independently of other
+lanes. Then integrate the coordinator's native framework/adapter/analyzer and
+support-package commits. A fresh local feed/cache must supply every TestFx
+package; repository feeds may supply external CodeCoverage/test-SDK dependencies
+but must never conceal a missing native package. Real consumers will cover the
+default SDK, explicit extension suppression, test-library and layered-SDK
+evaluation, and the meta-package. Record actual restore/build/run exits,
+dependency versions, loaded assembly hashes, discovery identities, passing and
+intentionally failing tests, zero-result handling, and TRX content. Consumer
+MSBuild is the product boundary under test, not a producer escape hatch.
+No runtime lifecycle or scheduling changes are intended: MTP retains process
+launch, handshake, cancellation, reporting, and teardown. Composed success is
+pending the other lanes; archive/layout success alone does not satisfy it.
+
+Test generation is focused on the new SDK package helper. Tests use per-case
+temporary directories and child-process arguments, never process-global
+environment mutation. Existing method-level scheduling is retained.
+
+Implementation and initial experiments:
+
+- `eng/bazel/sdk-packages.bzl` exposes both archives through `DefaultInfo` and
+  `NuGetPackInfo`, without compiled assembly anchors. `SdkPackageTool.cs` reads
+  the real project/property inputs, checks the declared asset/dependency
+  contracts, generates the two templates outside the source tree, and feeds
+  the pinned upstream packer. It fails on unknown template tokens, version
+  ambiguity, feature-pin drift, and missing/changed package assets.
+- The first cold toolchain build failed with disk exhaustion on the shared
+  worktree drive before compilation. The lane-owned Bazel server was stopped;
+  subsequent builds use a process-local `TESTFX_BAZEL_OUTPUT_ROOT` on a drive
+  with space. Moving the cache across volumes failed on symbolic links;
+  incomplete copied contents and the lane's rebuildable extracted cache were
+  removed using ordinary file operations, without elevating privileges or
+  touching another lane's cache. Source edits were preserved.
+- A first package analysis rejected a glob for authored `.props` files because
+  this SDK currently has only a generated `.props`. Empty glob alternatives
+  are now allowed; the generator still enforces the full explicit project
+  asset set, so missing required files cannot silently pass.
+- `validate-sdk-packages.ps1 -LayoutOnly` is the independent gate: it inspects
+  archive metadata and template/static bytes, then resolves the packaged SDK
+  in an isolated cache and checks actual SDK evaluation. The default mode
+  additionally requires the native framework/adapter/analyzer/telemetry/
+  platform-MSBuild closure, builds real consumers, and executes them. It does
+  not silently downgrade a failed default consumer to the `None` profile.
+  The only public-feed exception to `Microsoft.Testing.*` source mapping is
+  the exact external `Microsoft.Testing.Extensions.CodeCoverage` ID.
+- A metadata-only read of the pinned CodeCoverage `18.13.0-preview.26527.4`
+  [manifest on test-tools](https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_packaging/438ed41f-de8e-41cb-9183-cc6c25081f52/nuget/v3/flat2/microsoft.testing.extensions.codecoverage/18.13.0-preview.26527.4/microsoft.testing.extensions.codecoverage.nuspec)
+  found a minimum MTP dependency of `2.6.0-preview.26526.14` in both its
+  `net10.0` and `.NETStandard2.0` groups. `2.6.0-bazel` sorts below that
+  minimum. The unchanged default SDK/meta-package therefore has a version-range
+  blocker even after the native closure is available. This has been raised
+  with the coordinator for a common experimental-version decision. Do not
+  hide it with a released MTP, an older CodeCoverage pin, a downgrade-warning
+  suppression, or a silent switch to the `None` profile.
+- Native compilation was paused before completion at the coordinator's
+  shared-host resource gate; the lane's own Bazel server was shut down.
+  Static inspection confirmed ten explicit SDK assets and nine version
+  substitutions, and the PowerShell parser and Git whitespace check passed.
+  These are not archive, executed-test, or composed-consumer success claims.
+- The coordinator chose the common `-preview.bazel` suffix after checking
+  NuGet.Versioning ordering: `2.6.0-preview.bazel` is above the pinned
+  CodeCoverage minimum but below stable `2.6.0`. The SDK/meta generator,
+  focused expectations, and consumer validator now use that suffix without
+  changing numeric product prefixes or external pins. The coordinator owns
+  the matching shared BuildTools and MTP package change. This resolves the
+  version-range design issue; actual binary/API compatibility still requires
+  the native composed consumer run.
+- Consumer SDK isolation removes named inherited MSBuild variables from each
+  `ProcessStartInfo.Environment` dictionary rather than setting them to empty
+  strings. This includes `MSBUILD_EXE_PATH`, as well as SDKs/extensions paths.
+  The parent process environment is unchanged, and each child starts in its
+  own consumer directory beside its pinned `global.json`.
+- At `9e1604807cacd4f704b4e416137a8ad106513634`, the resumed command
+  `.\eng\bazel.ps1 build //:mstest_sdk_package //:mstest_package --jobs=2 --noshow_progress --show_result=0`
+  completed with exit 0 and eight actions. The isolated
+  `.\eng\bazel\validate-sdk-packages.ps1 -LayoutOnly -Jobs 2` invocation
+  (with an explicit run-owned `-ArtifactsRoot` on the available drive)
+  also exited 0. It verified both complete payloads, dependency groups,
+  unchanged static assets/readmes, all generated template text, and the SDK
+  archive actually restored into the fresh cache.
+- That run evaluated eight real SDK consumers: default profile, `None`,
+  explicit extension disabling, test library, layered Web SDK, central package
+  management, VSTest precedence over AOT, and opt-in source generation. All
+  eight selected the expected references and the pinned SDK/MSBuild paths;
+  the invalid-profile target returned its expected exit 1 and diagnostic.
+  This is evaluation evidence, not AOT/Windows/source-generator execution.
+  `validation.json` explicitly records `ConsumersPassed=false`.
+  The retained run is `bazel-sdk-validation/20261103-141504-951f465d`.
+  Native archive SHA-256 values are
+  `1C2164B473C7E0128E7ABF3639485336E99FB4D6E4245A62A750874D2CC197AD`
+  (SDK) and
+  `BBC675E5100C12D7672A3C0BD1D696A2DA76A181163844BACEE1EE2848EA6195`
+  (meta-package), both at `4.6.0-preview.bazel`.
+- The final independent harness also checks AOT **reference selection only**
+  and caller-supplied version overrides, bringing the evaluated configurations
+  to ten. Each selected `PackageReference` or central `PackageVersion` is
+  checked against the correct product/external version. `-EvidenceRoot` is
+  aligned with the shared validators; `-ArtifactsRoot` remains an alias.
+  Relative roots and `-Jobs 0` fail before execution. The retained successful
+  run `bazel-sdk-validation/20261103-145104-041a6740` includes `actions.json`:
+  two native input generators, two native packers, and no MSBuild executable
+  in the producer graph. Both complete archives and all ten evaluations
+  passed again, including the expected invalid-profile rejection.
+
+#### Composed consumer evidence: SDK/meta-package lane
+
+The native core and all six framework/adapter package checkpoints through
+`ba725abc5cb28aaa36ec789ab50891f5e65b0b6e` are integrated at
+`133c1785583d89399531b7bd7f4a1923f9c3d13d`, along with the shared version and
+analyzer prerequisites. All ten archives build and pass the SDK harness's
+layout, version and native-action checks. Consumer isolation now explicitly
+uses its own NuGet.config and clears inherited fallback package folders.
+
+The first full default-SDK build exposed a real remaining boundary, not a
+restore-source issue. In
+`bazel-sdk-validation/20261103-152228-1bdaf495/sdk-default-net8.0.binlog`,
+the generated CodeCoverage registration fails with CS0012. The external,
+unchanged CodeCoverage package requests `ITestApplicationBuilder` from
+`Microsoft.Testing.Platform, Version=2.6.0.0, PublicKeyToken=b03f5f7f11d50a3a`.
+Binlog reference provenance records the selected native
+`2.6.0-preview.bazel` compile/runtime asset in the fresh cache, with
+`PublicKeyToken=null`. The coordinator owns the shared native identity
+correction. No released MTP, coverage downgrade, warning suppression, or
+default-profile success is implied.
+
+Separate checks progressed without concealing that failure:
+
+- The explicit SDK `None` profile builds for net11.0, discovers both fixture
+  methods, verifies loaded native framework/MTP hashes, and returns 0/2/9 for
+  `NativePackagePass`, `NativePackageFailure`, and an empty selection. Its
+  restored graph contains neither the CodeCoverage nor TRX report extension;
+  all seven native archives in that graph match the freshly built feed.
+- The default meta-package builds for net8.0/net9.0/net10.0/net11.0. Its
+  actual net11.0 VSTest `dotnet test` consumer discovers both methods and
+  executes one passing case (exit 0) and one intentional assertion failure
+  (exit 1), with the corresponding single-result TRX files and zero skips.
+  All nine native archives in its graph match the isolated feed.
+- These successful scopes are deliberately separate from the default SDK.
+  The run's `validation.json` remains failed; independent command logs,
+  binlogs, `independent-consumer-provenance.json`, and meta-package TRX files
+  preserve the narrower results.
+
+Two harness assumptions were corrected against actual source/output, not by
+changing product behavior: the framework assembly is named
+`MSTest.TestFramework` in its authoritative project, and the platform's
+unconditional `--coverage-threshold-*` options do not mean the optional
+`--coverage` collector is registered. Help checks now match complete option
+tokens instead of prefixes.
+
+#### Final SDK/meta-package composed validation
+
+The coordinator's public-signing checkpoint
+`aff2cf0f702a07779cee99a8acf29cf515e858bb`, with alias prerequisite
+`797eb6f29721389a9178d42df726bce6155b9e42`, is integrated as
+`3dcde1f7db1b2e85db75dadd4a8e5b157685bbf0` and
+`80b2380cc9d9065f98af2755b5d555d4561a9fca`. It supplies the repository's
+public-only Microsoft identity and proper friend/satellite identities, not
+private-key signing or official release provenance. The native net8.0 and
+net11.0 MTP files now report the required
+`PublicKeyToken=b03f5f7f11d50a3a`.
+
+At the exact integrated head
+`3dcde1f7db1b2e85db75dadd4a8e5b157685bbf0`, the original full command
+`.\eng\bazel\validate-sdk-packages.ps1 -EvidenceRoot <run-owned absolute path> -Jobs 2`
+completed with exit **0**, using the lane's isolated C: Bazel output root.
+It rebuilt all ten native archives and used a new feed/cache; it did not reuse
+the unsigned consumer cache or alter the default SDK's pinned CodeCoverage
+reference. The full commands, binaries, package SHA-256 values, selected SDK,
+native action graph, resolved assets and run outcomes are retained in
+`bazel-sdk-validation/20261103-161231-02a3781e`.
+
+| Contract | Executed result |
+| --- | --- |
+| Native packages and SDK evaluation | Ten packages, ten evaluated configurations, exact SDK/meta layouts and dependency versions; expected invalid-profile diagnostic. |
+| Unmodified default MSTest.Sdk | Builds for net8.0/net9.0/net10.0/net11.0 with CodeCoverage and TRX enabled; net11.0 discovery and native loaded-hash checks pass. |
+| Explicit SDK `None` profile | net11.0 build/discovery succeeds; collector/report options remain absent, without confusing core coverage-threshold options with the collector. |
+| SDK runtime outcomes | Both default and `None` execute `NativePackagePass` / `NativePackageFailure` / empty selection with exits 0 / 2 / 9. Default-profile pass/failure TRX files have exactly one executed case and no skips. |
+| Native SDK `dotnet test` | The real SDK 11 driver executes `NativePackagePass`, exits 0, and writes a single passing TRX result. |
+| Default MSTest meta-package | Builds for all four TFMs; net11.0 VSTest executes one pass (parent 0) and one intentional failure (parent 1), with exact TRX outcomes and no skips. |
+| Provenance and isolation | Every resolved native archive matches the newly staged feed; loaded framework/MTP hashes and Bazel metadata match; external coverage is the unchanged production pin. |
+
+The final `validation.json` records `Passed=true`, `LayoutPassed=true`,
+`ConsumersPassed=true`, **40** completed steps and **zero** unexpected exits.
+The two failed TRX cases are intentional negative fixtures asserted by the
+successful harness, not unhandled failures. This closes the observed default
+SDK/CodeCoverage identity boundary; the earlier CS0012 is retained as integration
+failure evidence, not counted as behavioral mutation proof.
+
+This lane's runtime evidence is net11.0; its other three SDK/meta TFMs are
+compiled-consumer evidence. Windows-qualified/UWP/.NET Framework execution,
+NativeAOT execution, repository SDK 12 parity, official signing/publishing, CI,
+release-branch certification and downstream servicing remain outside this
+delivery. Conditional assets are preserved without advertising those gates as
+passed.
+
+#### Test-value evidence: SDK/meta-package lane
+
+At `78b990d9986486f1c3755fc3a9f38ddaceab87c6` (the shared version-helper
+prerequisite integrated, with only this documentation update pending),
+`.\eng\bazel.ps1 test //:sdk_package_tests //:build_tools_tests --jobs=2 --noshow_progress --show_result=0 --test_output=errors`
+exited 0. The actual TRX files reported 12/12 SDK helper cases and 13/13 existing
+build-tool cases passed, with zero failures or skips. Existing method-level
+scheduling remained enabled.
+
+The same SDK test DLL then ran against an isolated, natively compiled mutation:
+only the `MicrosoftTestingPlatformVersion` substitution read MSTest's
+`VersionPrefix` instead of `TestingPlatformVersionPrefix`. The compiler and
+arguments came from the real Bazel action; only the mutant source/output paths
+changed. The original helper and test assembly hashes were unchanged afterward.
+This is a compiling behavior-removal comparison, not a pristine-baseline run.
+
+| Contract / exact test | Counterfactual | Without correct behavior | Correct implementation |
+| --- | --- | --- | --- |
+| SDK component versions / `Generate_SdkPreservesTemplatesAndComponentVersions` | Use the MSTest prefix for MTP | Executed: detected the wrong `7.8.9-preview.bazel` instead of `2.3.4-preview.bazel` in generated SDK XML | Passed before and after |
+| Meta-package dependency versions / `Generate_MetaPackagePreservesDependencyAndAssetFlow` | Same substitution | Executed: detected the wrong TRX dependency version | Passed before and after |
+
+Every paired run used
+`--filter FullyQualifiedName~SdkPackageTests --minimum-expected-tests 12 --report-trx --report-trx-filename tests.trx`
+with its own results directory. Counts were respectively 12 passed / exit 0,
+10 passed + 2 intended assertion failures / exit 2, and 12 passed / exit 0;
+all three executed 12 cases and skipped zero. The ten
+`Generate_RejectsContractDriftBeforeWritingOutputs` cases remained green.
+Mutation patch SHA-256:
+`123F7CECD92BAC1A07052F9956F89CFB2F818D047C7B1CFED9CF352A05403EB5`.
+The retained `sdk-counterfactual` artifacts contain the patch, original native
+compiler arguments, discovery, all three TRX reports, and `comparison.json`.
+An initial launcher probe used the wrong runfiles working directory, and a
+repeat encountered a copied read-only sidecar; these setup failures are not
+counted as regression evidence. The successful comparison used the real test
+runfiles root and task-owned copies.
+
 ### 2026-11-03: experimental version compatibility and constrained storage
 
 The repository's actual production CodeCoverage pin is
@@ -330,240 +610,6 @@ package. Evidence is under
 The run started at parent revision `11ae3b9f2369f098d1ba352df7259b6e5b5b17fe`
 with the three-file metadata consolidation; the only concurrent parent commit
 changed the separate MTP package validator, not these producer/consumer inputs.
-
-### 2026-11-03: SDK/meta-package lane
-
-This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d` and owns
-`//:mstest_package` and `//:mstest_sdk_package`. The existing three-package
-`//:packages` aggregate and validator remain unchanged. The coordinator owns
-the combined guide, CI, dependency integration, and eventual rollout.
-
-**Contract and sources.** `src/Package/MSTest.Sdk/MSTest.Sdk.csproj` explicitly
-packs ten SDK props/targets, generates `Sdk.props` and `Runner.targets` from
-their real templates, and suppresses both build output and package dependencies.
-Its packaged-app project reference orders the shipping build; it does not embed
-a controller or become an SDK NuGet dependency. The native package must retain
-the actual conditional targets for classic execution, NativeAOT, VSTest, central
-package management, test libraries, optional features, and Windows application
-models without claiming that all those consumers have been validated.
-
-`src/Package/MSTest/MSTest.csproj` packs empty `_._` files and dependencies, not
-an assembly. For each portable framework its dependencies are the framework,
-adapter, TRX reporter, Microsoft.NET.Test.Sdk, and CodeCoverage. The test SDK's
-build assets must flow transitively (`PrivateAssets="none"`); other dependencies
-retain `Build,Analyzers` exclusions. The
-[4.5.2 published manifest](https://api.nuget.org/v3-flatcontainer/mstest/4.5.2/mstest.nuspec)
-was inspected only as corroborating pack-contract evidence, not as a substitute
-for native dependencies.
-
-Version inputs remain `eng/Versions.props`, `Directory.Packages.props`, and
-`Directory.Build.props`: MSTest `4.6.0-preview.bazel`, MTP
-`2.6.0-preview.bazel`, and JUnit `1.0.0-preview.bazel` are separate families.
-CodeCoverage, Fakes, Playwright, Aspire,
-and Microsoft.NET.Test.Sdk keep their actual external pins. The producer uses
-the explicitly selected Bazel SDK 11 RC3, not the unchanged repository SDK 12
-pin. The portable meta-package scope is .NET 8/9/10/11; net462/UAP groups and
-Windows/AOT execution remain unvalidated and are not enabled by writing an
-archive.
-
-**Alternatives and decision.** The pinned upstream `nuget_pack` rule requires
-one compiled library or binary, which is inappropriate for these assembly-free
-packages. Its
-[public native packer](https://github.com/bazel-contrib/rules_dotnet/blob/add5c92b30888a70aa951de1744a770b8f8ef436/dotnet/private/tools/nuget_pack/BUILD.bazel)
-accepts file-only JSON requests and already owns deterministic ZIP, OPC, nuspec,
-and collision validation. Reuse that tool behind an area-owned rule and a small
-template/metadata generator. Do not add a fake anchor assembly, implement a
-second ZIP writer, invoke an MSBuild producer, or change shared BuildTools.cs.
-The private request schema is pinned with the upstream commit and must be
-rechecked on upgrades. Package descriptions, readmes, tags, license, and release
-notes come from the repository; native artifacts must not acquire official
-signing or servicing claims.
-
-**Planned validation and ownership.** First build and inspect both archives and
-exercise template/version/metadata rejection cases independently of other
-lanes. Then integrate the coordinator's native framework/adapter/analyzer and
-support-package commits. A fresh local feed/cache must supply every TestFx
-package; repository feeds may supply external CodeCoverage/test-SDK dependencies
-but must never conceal a missing native package. Real consumers will cover the
-default SDK, explicit extension suppression, test-library and layered-SDK
-evaluation, and the meta-package. Record actual restore/build/run exits,
-dependency versions, loaded assembly hashes, discovery identities, passing and
-intentionally failing tests, zero-result handling, and TRX content. Consumer
-MSBuild is the product boundary under test, not a producer escape hatch.
-No runtime lifecycle or scheduling changes are intended: MTP retains process
-launch, handshake, cancellation, reporting, and teardown. Composed success is
-pending the other lanes; archive/layout success alone does not satisfy it.
-
-Test generation is focused on the new SDK package helper. Tests use per-case
-temporary directories and child-process arguments, never process-global
-environment mutation. Existing method-level scheduling is retained.
-
-Implementation and initial experiments:
-
-- `eng/bazel/sdk-packages.bzl` exposes both archives through `DefaultInfo` and
-  `NuGetPackInfo`, without compiled assembly anchors. `SdkPackageTool.cs` reads
-  the real project/property inputs, checks the declared asset/dependency
-  contracts, generates the two templates outside the source tree, and feeds
-  the pinned upstream packer. It fails on unknown template tokens, version
-  ambiguity, feature-pin drift, and missing/changed package assets.
-- The first cold toolchain build failed with disk exhaustion on the shared
-  worktree drive before compilation. The lane-owned Bazel server was stopped;
-  subsequent builds use a process-local `TESTFX_BAZEL_OUTPUT_ROOT` on a drive
-  with space. Moving the cache across volumes failed on symbolic links;
-  incomplete copied contents and the lane's rebuildable extracted cache were
-  removed using ordinary file operations, without elevating privileges or
-  touching another lane's cache. Source edits were preserved.
-- A first package analysis rejected a glob for authored `.props` files because
-  this SDK currently has only a generated `.props`. Empty glob alternatives
-  are now allowed; the generator still enforces the full explicit project
-  asset set, so missing required files cannot silently pass.
-- `validate-sdk-packages.ps1 -LayoutOnly` is the independent gate: it inspects
-  archive metadata and template/static bytes, then resolves the packaged SDK
-  in an isolated cache and checks actual SDK evaluation. The default mode
-  additionally requires the native framework/adapter/analyzer/telemetry/
-  platform-MSBuild closure, builds real consumers, and executes them. It does
-  not silently downgrade a failed default consumer to the `None` profile.
-  The only public-feed exception to `Microsoft.Testing.*` source mapping is
-  the exact external `Microsoft.Testing.Extensions.CodeCoverage` ID.
-- A metadata-only read of the pinned CodeCoverage `18.13.0-preview.26527.4`
-  [manifest on test-tools](https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_packaging/438ed41f-de8e-41cb-9183-cc6c25081f52/nuget/v3/flat2/microsoft.testing.extensions.codecoverage/18.13.0-preview.26527.4/microsoft.testing.extensions.codecoverage.nuspec)
-  found a minimum MTP dependency of `2.6.0-preview.26526.14` in both its
-  `net10.0` and `.NETStandard2.0` groups. `2.6.0-bazel` sorts below that
-  minimum. The unchanged default SDK/meta-package therefore has a version-range
-  blocker even after the native closure is available. This has been raised
-  with the coordinator for a common experimental-version decision. Do not
-  hide it with a released MTP, an older CodeCoverage pin, a downgrade-warning
-  suppression, or a silent switch to the `None` profile.
-- Native compilation was paused before completion at the coordinator's
-  shared-host resource gate; the lane's own Bazel server was shut down.
-  Static inspection confirmed ten explicit SDK assets and nine version
-  substitutions, and the PowerShell parser and Git whitespace check passed.
-  These are not archive, executed-test, or composed-consumer success claims.
-- The coordinator chose the common `-preview.bazel` suffix after checking
-  NuGet.Versioning ordering: `2.6.0-preview.bazel` is above the pinned
-  CodeCoverage minimum but below stable `2.6.0`. The SDK/meta generator,
-  focused expectations, and consumer validator now use that suffix without
-  changing numeric product prefixes or external pins. The coordinator owns
-  the matching shared BuildTools and MTP package change. This resolves the
-  version-range design issue; actual binary/API compatibility still requires
-  the native composed consumer run.
-- Consumer SDK isolation removes named inherited MSBuild variables from each
-  `ProcessStartInfo.Environment` dictionary rather than setting them to empty
-  strings. This includes `MSBUILD_EXE_PATH`, as well as SDKs/extensions paths.
-  The parent process environment is unchanged, and each child starts in its
-  own consumer directory beside its pinned `global.json`.
-- At `9e1604807cacd4f704b4e416137a8ad106513634`, the resumed command
-  `.\eng\bazel.ps1 build //:mstest_sdk_package //:mstest_package --jobs=2 --noshow_progress --show_result=0`
-  completed with exit 0 and eight actions. The isolated
-  `.\eng\bazel\validate-sdk-packages.ps1 -LayoutOnly -Jobs 2` invocation
-  (with an explicit run-owned `-ArtifactsRoot` on the available drive)
-  also exited 0. It verified both complete payloads, dependency groups,
-  unchanged static assets/readmes, all generated template text, and the SDK
-  archive actually restored into the fresh cache.
-- That run evaluated eight real SDK consumers: default profile, `None`,
-  explicit extension disabling, test library, layered Web SDK, central package
-  management, VSTest precedence over AOT, and opt-in source generation. All
-  eight selected the expected references and the pinned SDK/MSBuild paths;
-  the invalid-profile target returned its expected exit 1 and diagnostic.
-  This is evaluation evidence, not AOT/Windows/source-generator execution.
-  `validation.json` explicitly records `ConsumersPassed=false`.
-  The retained run is `bazel-sdk-validation/20261103-141504-951f465d`.
-  Native archive SHA-256 values are
-  `1C2164B473C7E0128E7ABF3639485336E99FB4D6E4245A62A750874D2CC197AD`
-  (SDK) and
-  `BBC675E5100C12D7672A3C0BD1D696A2DA76A181163844BACEE1EE2848EA6195`
-  (meta-package), both at `4.6.0-preview.bazel`.
-- The final independent harness also checks AOT **reference selection only**
-  and caller-supplied version overrides, bringing the evaluated configurations
-  to ten. Each selected `PackageReference` or central `PackageVersion` is
-  checked against the correct product/external version. `-EvidenceRoot` is
-  aligned with the shared validators; `-ArtifactsRoot` remains an alias.
-  Relative roots and `-Jobs 0` fail before execution. The retained successful
-  run `bazel-sdk-validation/20261103-145104-041a6740` includes `actions.json`:
-  two native input generators, two native packers, and no MSBuild executable
-  in the producer graph. Both complete archives and all ten evaluations
-  passed again, including the expected invalid-profile rejection.
-
-#### Composed consumer evidence: SDK/meta-package lane
-
-The native core and all six framework/adapter package checkpoints through
-`ba725abc5cb28aaa36ec789ab50891f5e65b0b6e` are integrated at
-`133c1785583d89399531b7bd7f4a1923f9c3d13d`, along with the shared version and
-analyzer prerequisites. All ten archives build and pass the SDK harness's
-layout, version and native-action checks. Consumer isolation now explicitly
-uses its own NuGet.config and clears inherited fallback package folders.
-
-The first full default-SDK build exposed a real remaining boundary, not a
-restore-source issue. In
-`bazel-sdk-validation/20261103-152228-1bdaf495/sdk-default-net8.0.binlog`,
-the generated CodeCoverage registration fails with CS0012. The external,
-unchanged CodeCoverage package requests `ITestApplicationBuilder` from
-`Microsoft.Testing.Platform, Version=2.6.0.0, PublicKeyToken=b03f5f7f11d50a3a`.
-Binlog reference provenance records the selected native
-`2.6.0-preview.bazel` compile/runtime asset in the fresh cache, with
-`PublicKeyToken=null`. The coordinator owns the shared native identity
-correction. No released MTP, coverage downgrade, warning suppression, or
-default-profile success is implied.
-
-Separate checks progressed without concealing that failure:
-
-- The explicit SDK `None` profile builds for net11.0, discovers both fixture
-  methods, verifies loaded native framework/MTP hashes, and returns 0/2/9 for
-  `NativePackagePass`, `NativePackageFailure`, and an empty selection. Its
-  restored graph contains neither the CodeCoverage nor TRX report extension;
-  all seven native archives in that graph match the freshly built feed.
-- The default meta-package builds for net8.0/net9.0/net10.0/net11.0. Its
-  actual net11.0 VSTest `dotnet test` consumer discovers both methods and
-  executes one passing case (exit 0) and one intentional assertion failure
-  (exit 1), with the corresponding single-result TRX files and zero skips.
-  All nine native archives in its graph match the isolated feed.
-- These successful scopes are deliberately separate from the default SDK.
-  The run's `validation.json` remains failed; independent command logs,
-  binlogs, `independent-consumer-provenance.json`, and meta-package TRX files
-  preserve the narrower results.
-
-Two harness assumptions were corrected against actual source/output, not by
-changing product behavior: the framework assembly is named
-`MSTest.TestFramework` in its authoritative project, and the platform's
-unconditional `--coverage-threshold-*` options do not mean the optional
-`--coverage` collector is registered. Help checks now match complete option
-tokens instead of prefixes.
-
-#### Test-value evidence: SDK/meta-package lane
-
-At `78b990d9986486f1c3755fc3a9f38ddaceab87c6` (the shared version-helper
-prerequisite integrated, with only this documentation update pending),
-`.\eng\bazel.ps1 test //:sdk_package_tests //:build_tools_tests --jobs=2 --noshow_progress --show_result=0 --test_output=errors`
-exited 0. The actual TRX files reported 12/12 SDK helper cases and 13/13 existing
-build-tool cases passed, with zero failures or skips. Existing method-level
-scheduling remained enabled.
-
-The same SDK test DLL then ran against an isolated, natively compiled mutation:
-only the `MicrosoftTestingPlatformVersion` substitution read MSTest's
-`VersionPrefix` instead of `TestingPlatformVersionPrefix`. The compiler and
-arguments came from the real Bazel action; only the mutant source/output paths
-changed. The original helper and test assembly hashes were unchanged afterward.
-This is a compiling behavior-removal comparison, not a pristine-baseline run.
-
-| Contract / exact test | Counterfactual | Without correct behavior | Correct implementation |
-| --- | --- | --- | --- |
-| SDK component versions / `Generate_SdkPreservesTemplatesAndComponentVersions` | Use the MSTest prefix for MTP | Executed: detected the wrong `7.8.9-preview.bazel` instead of `2.3.4-preview.bazel` in generated SDK XML | Passed before and after |
-| Meta-package dependency versions / `Generate_MetaPackagePreservesDependencyAndAssetFlow` | Same substitution | Executed: detected the wrong TRX dependency version | Passed before and after |
-
-Every paired run used
-`--filter FullyQualifiedName~SdkPackageTests --minimum-expected-tests 12 --report-trx --report-trx-filename tests.trx`
-with its own results directory. Counts were respectively 12 passed / exit 0,
-10 passed + 2 intended assertion failures / exit 2, and 12 passed / exit 0;
-all three executed 12 cases and skipped zero. The ten
-`Generate_RejectsContractDriftBeforeWritingOutputs` cases remained green.
-Mutation patch SHA-256:
-`123F7CECD92BAC1A07052F9956F89CFB2F818D047C7B1CFED9CF352A05403EB5`.
-The retained `sdk-counterfactual` artifacts contain the patch, original native
-compiler arguments, discovery, all three TRX reports, and `comparison.json`.
-An initial launcher probe used the wrong runfiles working directory, and a
-repeat encountered a copied read-only sidecar; these setup failures are not
-counted as regression evidence. The successful comparison used the real test
-runfiles root and task-owned copies.
 
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
