@@ -104,7 +104,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 
         await DotnetCli.RunAsync($"build -v:normal {testAsset.TargetAssetPath} -c Release", cancellationToken: TestContext.CancellationToken);
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildOptionDefaults", "net8.0", buildConfiguration: BuildConfiguration.Release);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildOptionDefaults", "net10.0", buildConfiguration: BuildConfiguration.Release);
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildOptionDefaults.testconfig.json");
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
         using var document = JsonDocument.Parse(File.ReadAllText(generatedConfigurationFile));
@@ -167,7 +167,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
             $"build -v:normal {testAsset.TargetAssetPath} -c Release",
             cancellationToken: TestContext.CancellationToken);
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildConditionalOptionDefaults", "net8.0", buildConfiguration: BuildConfiguration.Release);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildConditionalOptionDefaults", "net10.0", buildConfiguration: BuildConfiguration.Release);
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildConditionalOptionDefaults.testconfig.json");
         using (var document = JsonDocument.Parse(File.ReadAllText(generatedConfigurationFile)))
         {
@@ -260,7 +260,7 @@ public class DummyTestFramework : ITestFramework
     #file MSBuildOptionDefaults.csproj
     <Project Sdk="Microsoft.NET.Sdk">
         <PropertyGroup>
-            <TargetFramework>net8.0</TargetFramework>
+            <TargetFramework>net10.0</TargetFramework>
             <OutputType>Exe</OutputType>
             <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
             <TrxFileName Condition="'$(TrxFileName)' == ''">{asm}.trx</TrxFileName>
@@ -286,7 +286,7 @@ public class DummyTestFramework : ITestFramework
     #file MSBuildInvalidOptionDefaults.csproj
     <Project Sdk="Microsoft.NET.Sdk">
         <PropertyGroup>
-            <TargetFramework>net8.0</TargetFramework>
+            <TargetFramework>net10.0</TargetFramework>
             <OutputType>Exe</OutputType>
             <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         </PropertyGroup>
@@ -312,7 +312,7 @@ public class DummyTestFramework : ITestFramework
     #file MSBuildConditionalOptionDefaults.csproj
     <Project Sdk="Microsoft.NET.Sdk">
         <PropertyGroup>
-            <TargetFramework>net8.0</TargetFramework>
+            <TargetFramework>net10.0</TargetFramework>
             <OutputType>Exe</OutputType>
             <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         </PropertyGroup>

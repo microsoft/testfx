@@ -86,7 +86,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
 
         buildResult.AssertExitCodeIs(1);
         buildResult.AssertOutputContains(
-            "MSTest.Windows.UIAutomation requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: 'net8.0'.");
+            "MSTest.Windows.UIAutomation requires a Windows target framework (e.g. net10.0-windows). Current TargetFramework: 'net10.0'.");
     }
 
     [TestMethod]
@@ -356,7 +356,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
 #file InvalidTargetFramework/InvalidTargetFramework.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 </Project>
@@ -364,7 +364,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
 #file UppercaseTargetFramework/UppercaseTargetFramework.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>NET8.0-WINDOWS</TargetFramework>
+    <TargetFramework>NET10.0-WINDOWS</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
@@ -374,7 +374,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
 #file CrossTargeting/CrossTargeting.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
@@ -384,7 +384,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
 #file CrossTargetingOptOut/CrossTargetingOptOut.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>

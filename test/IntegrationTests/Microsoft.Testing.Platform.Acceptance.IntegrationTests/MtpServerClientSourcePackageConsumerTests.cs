@@ -12,9 +12,9 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// hostile consumer and compiles it. The consumer mirrors the strictest real adopter (vstest):
 /// <list type="bullet">
 ///   <item><c>ImplicitUsings=disable</c> — the injected source must carry its own using directives;</item>
-///   <item>multi-targets <c>net462</c> (Windows) + <c>netstandard2.0</c> + <c>net8.0</c> — the down-level TFMs
+///   <item>multi-targets <c>net462</c> (Windows), <c>netstandard2.0</c>, and legacy/modern .NET — the down-level TFMs
 ///   need the shipped polyfills (init/required members, Index/Range, Ensure, ...) and the Jsonite JSON path,
-///   while net8.0 exercises the in-box System.Text.Json path;</item>
+///   while net10.0 and net11.0 exercise the in-box System.Text.Json path;</item>
 ///   <item><c>Nullable=enable</c> and <c>TreatWarningsAsErrors</c> — any warning in the injected source breaks
 ///   the build, exactly as it would in vstest.</item>
 /// </list>
@@ -227,8 +227,8 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
         // net462 only builds on Windows; the down-level packed source is identical to what a netstandard2.0
         // consumer compiles, so netstandard2.0 covers the Jsonite/polyfill path on non-Windows too.
         string targetFrameworks = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? "net462;netstandard2.0;net5.0;net6.0;net7.0;net8.0"
-            : "netstandard2.0;net5.0;net6.0;net7.0;net8.0";
+            ? "net462;netstandard2.0;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0;net11.0"
+            : "netstandard2.0;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0;net11.0";
 
         string patchedSources = Sources
             .PatchCodeWithReplace("$TargetFrameworks$", targetFrameworks)

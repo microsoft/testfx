@@ -17,7 +17,7 @@ from xml.sax.saxutils import escape
 
 
 SCHEMA_VERSION = 1
-DEFAULT_TARGET_FRAMEWORK = "net8.0"
+DEFAULT_TARGET_FRAMEWORK = "net10.0"
 MUTANT_STATUSES = (
     "Killed",
     "Survived",

@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class AzureDevOpsSummaryAcceptanceTests
 {
     private const string AssetName = "AzureDevOpsSummaryBehavior";
-    private const string TargetFramework = "net8.0";
+    private const string TargetFramework = "net10.0";
     private static TestAssetFixture? s_assetFixture;
 
     public TestContext TestContext { get; set; } = null!;
@@ -56,7 +56,7 @@ public sealed class AzureDevOpsSummaryAcceptanceTests
         AssertStandaloneSummary(File.ReadAllText(summaryPath));
         string upload = Assert.ContainsSingle(result.StandardOutputLines.Where(static line =>
             line.StartsWith("##vso[task.addattachment ", StringComparison.Ordinal)));
-        Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Test results - AzureDevOpsSummaryBehavior (net8.0", upload);
+        Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Test results - AzureDevOpsSummaryBehavior (net10.0", upload);
         Assert.EndsWith($";]{summaryPath}", upload);
         Assert.IsFalse(Directory.Exists(Path.Combine(directory.Path, ".ci-summary-fragments")));
     }
@@ -110,7 +110,7 @@ public sealed class AzureDevOpsSummaryAcceptanceTests
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         Assert.AreEqual(
             $"""
-            ## ❌ AzureDevOpsSummaryBehavior (net8.0)
+            ## ❌ AzureDevOpsSummaryBehavior (net10.0)
 
             **4 tests** · ✅ **1 passed** · ❌ **1 failed** · ⏭ **2 skipped** · ⏱ Test time: **17.50s** · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
 
@@ -120,7 +120,7 @@ public sealed class AzureDevOpsSummaryAcceptanceTests
 
             | Skipped | Reason | Platform | Test module |
             | ---: | --- | --- | --- |
-            | 2 | Known issue https://example.test/issues/42 | {operatingSystem} | AzureDevOpsSummaryBehavior (net8.0, {architecture}) |
+            | 2 | Known issue https://example.test/issues/42 | {operatingSystem} | AzureDevOpsSummaryBehavior (net10.0, {architecture}) |
 
             ### Top failing classes
 
