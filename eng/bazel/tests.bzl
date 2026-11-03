@@ -5,8 +5,140 @@ load(":platform.bzl", "ipc_sources")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 
+def native_unit_test_deps():
+    return [
+        ":platform",
+        ":adapter",
+        ":framework",
+        ":framework_extensions",
+        ":trx",
+        ":junit",
+        ":ctrf",
+        ":azdo_report",
+        ":crashdump",
+        ":hangdump",
+        ":opentelemetry",
+        ":mstest_analyzer_plugin",
+    ]
+
+def _terminal_contract_sources(standalone, include_reporter = True):
+    reporter = native.glob(
+        [_PLATFORM + "/OutputDevice/Terminal/*.cs"],
+        exclude = [
+            _PLATFORM + "/OutputDevice/Terminal/TerminalTestReporterCommandLineOptionsProvider.cs",
+            _PLATFORM + "/OutputDevice/Terminal/TerminalResources.cs",
+        ],
+    ) if include_reporter else []
+    return reporter + [
+        _PLATFORM + "/" + path + ".cs"
+        for path in [
+            "Helpers/ExitCodes",
+            "Helpers/RoslynString",
+            "Helpers/ApplicationStateGuard",
+            "Helpers/StackTraceHelper",
+            "Helpers/System/IConsole",
+            "Helpers/System/IStopwatch",
+            "Helpers/System/SystemConsole",
+            "Helpers/System/SystemStopwatch",
+            "Logging/NopLogger",
+            "OutputDevice/SlowTestThresholdState",
+            "OutputDevice/TargetFrameworkParser",
+            "OutputDevice/TestRunSummaryHelper",
+            "CommandLine/ZeroTestsPolicy",
+        ] + ([
+            "Logging/ILogger",
+            "Logging/LogLevel",
+            "Logging/LoggingExtensions",
+            "OutputDevice/IColor",
+            "OutputDevice/SystemConsoleColor",
+            "Helpers/RoslynHashCode",
+            "Services/CoverageScopeSummary",
+            "Services/CoverageMetricResult",
+            "TestHost/SessionUid",
+            "Messages/CoverageAggregation",
+            "Messages/CoverageCounts",
+            "Messages/CoverageMetric",
+            "Messages/CoverageMetricHelper",
+            "Messages/CoverageScope",
+            "Messages/CoverageScopeLevel",
+            "Messages/TestCoverageThresholdMessage",
+            "Messages/DataWithSessionUid",
+            "Messages/PropertyBagData",
+            "Messages/PropertyBag",
+            "Messages/PropertyBag.Property",
+            "Messages/PropertyBag.PropertyBagEnumerable",
+            "Messages/TestNodeStateProperties",
+            "Messages/IData",
+            "Messages/IProperty",
+            "Messages/RetryAttemptProperty",
+        ] if standalone else [])
+    ]
+
 def unit_tests():
     testfx_analyzer(name = "mstest_analyzer_plugin", assembly = ":analyzers")
+    terminal_resources = {
+        _PLATFORM + "/OutputDevice/Terminal/TerminalResources.resx": "Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources",
+    }
+    testfx_library(
+        name = "terminal_contract_standalone",
+        project = _PLATFORM + "/OutputDevice/Terminal",
+        exclude = [
+            _PLATFORM + "/OutputDevice/Terminal/TerminalTestReporterCommandLineOptionsProvider.cs",
+            _PLATFORM + "/OutputDevice/Terminal/TerminalResources.cs",
+        ],
+        linked_srcs = _terminal_contract_sources(standalone = True, include_reporter = False),
+        assembly_name = "TerminalReporterContract.Standalone",
+        target_frameworks = ["net8.0"],
+        resources = terminal_resources,
+        usings = ["Polyfills", "Microsoft.Testing.Platform.Helpers"],
+        generate_documentation_file = False,
+    )
+    for name, project, defines, dependencies, linked_sources, resources in [
+        (
+            "terminal_contract_tests",
+            "Microsoft.Testing.Platform.TerminalReporterContract.UnitTests",
+            [],
+            [],
+            _terminal_contract_sources(standalone = False),
+            terminal_resources,
+        ),
+        (
+            "self_real_tests",
+            "MSTest.SelfRealExamples.UnitTests",
+            ["TESTFX_CLASS_PARALLEL", "TESTFX_TELEMETRY"],
+            [":telemetry"],
+            [],
+            {},
+        ),
+    ]:
+        directory = "test/UnitTests/" + project
+        testfx_binary(
+            name = name + "_app",
+            project = directory,
+            exclude = [directory + "/Program.cs"],
+            linked_srcs = [
+                "//eng/bazel:NativeUnitTestMain.cs",
+                "//eng/bazel:PortableTestFrameworkMetadata.cs",
+            ] + linked_sources,
+            resources = resources,
+            compile_data = [":terminal_contract_standalone"] if name == "terminal_contract_tests" else [],
+            defines = defines,
+            usings = ["Polyfills"],
+            generate_documentation_file = False,
+            appsetting_files = native.glob([
+                directory + "/*.testconfig.json",
+                directory + "/*.launcher.config.json",
+                directory + "/testsbaseline*.txt",
+            ], allow_empty = True),
+            deps = native_unit_test_deps() + dependencies,
+        )
+        testfx_test(
+            name = name,
+            binary = ":" + name + "_app",
+            args = ["--minimum-expected-tests", "1"],
+            size = "medium",
+        )
+
     for name, project, dependencies, linked_sources, four_workers in [
         (
             "vstest_bridge_tests",

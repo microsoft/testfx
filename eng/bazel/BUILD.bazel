@@ -8,6 +8,8 @@ exports_files([
     "CompatibilityFrameworkMetadata.cs",
     "GlobalConfigsEnvironment.cs",
     "GlobalUsings.cs",
+    "NativeUnitTestMain.cs",
+    "PortableTestFrameworkMetadata.cs",
     "RuntimeProvenance.cs",
     "TestMain.cs",
     "analyzers.globalconfig",

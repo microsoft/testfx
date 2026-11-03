@@ -150,6 +150,22 @@ selecting `TestMethod2` returns **2**, and an empty selection with
 
 ### Test host differences
 
+The additive `//:terminal_contract_tests` and `//:self_real_tests` targets run
+the existing terminal-reporter contract and MSTest self-real-example suites.
+Their first Windows x64 validation compiled `net10.0` and executed on the pinned
+.NET 11 runtime: **15** and **24** cases passed, respectively, with no skips.
+They are not yet included in `portable_tests`. The terminal target also requires
+a standalone `net8.0` compilation of the reporter and its coverage/retry model
+closure; this does not claim that the existing `.props` manifest contains that
+entire standalone closure.
+
+These two targets use `eng/bazel/NativeUnitTestMain.cs`, preserving method-level
+and class-level scheduling respectively, with the original CPU-count worker
+setting. Their native hosts retain the normal source-built reporters, dump
+providers, and OpenTelemetry registration, but not the CI-only affected-test and
+coverage collectors. Explicit framework metadata identifies their compile TFM
+even when the test host runs on a newer runtime.
+
 `eng/bazel/TestMain.cs` replaces only the selected suites' registration/entrypoint
 plumbing. It keeps their test bodies and scheduling, registers the real source
 runner and TRX reporter, and uses each Bazel test's undeclared-output directory.

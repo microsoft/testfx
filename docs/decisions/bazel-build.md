@@ -2143,3 +2143,58 @@ The retained `module-before-test-integrity.json`, `verify-package-digests.py`,
 `verify-preview-downloads.log` preserve the comparison and archive verification
 under this session's `files/bazel-tests-lane` evidence. This stage validates
 dependency inputs, not execution of the pending unit/sample targets.
+
+### Stage 2: terminal contract and self-real suites
+
+The first two existing suites are now native targets, without test-source or
+assertion changes. Their source-bound inventory and independent discovery
+reconcile with every executed TRX result, including duplicate display names for
+the nested byte/short/long cases and the base/derived property cases.
+
+| Target | Compiled / executed runtime | Scheduling | Discovered / executed / passed / failed / skipped |
+| --- | --- | --- | --- |
+| `terminal_contract_tests` | net10.0 / .NET 11 RC3 | Method level, workers 0 | 15 / 15 / 15 / 0 / 0 |
+| `self_real_tests` | net10.0 / .NET 11 RC3 | Class level, workers 0 | 24 / 24 / 24 / 0 / 0 |
+
+The terminal target also builds `terminal_contract_standalone` for net8.0 with
+no platform reference, retaining all reporter partials and the explicit
+coverage/retry model closure described above. The generic native bootstrap is
+not substituted for the server-client child fixtures in the pending slice.
+
+The composed compatibility graph initially failed before execution because of
+two stale modern JSON source names. A temporary two-entry removal demonstrated
+15/24 passes; it was then removed, and the canonical framework-lane correction
+`46e50f3636cc8a7fcd3c5918b2c204a1282243ab` was integrated instead. Both suites
+were rebuilt and rerun successfully on that canonical correction. No competing
+selector fix is part of the test-target addition.
+
+Discovery also exposed a metadata difference: without the SDK-generated
+`TargetFrameworkAttribute`, the reporter displayed the newer runtime as the
+target. Supplying only `FrameworkName` was insufficient because the existing
+reporter reads `FrameworkDisplayName`. The native test metadata now supplies both
+SDK-compatible fields, and the same discovery commands correctly identify
+`net10.0` while execution continues on the pinned .NET 11 host.
+
+Executed commands, with `TESTFX_BAZEL_OUTPUT_ROOT=C:\tfb\tests-05e68c`:
+
+```powershell
+.\eng\bazel.ps1 test //:terminal_contract_tests //:self_real_tests --jobs=2 --nocache_test_results --noshow_progress
+.\eng\bazel.ps1 run //:terminal_contract_tests_app --jobs=2 --noshow_progress --show_result=0 '--' --list-tests
+.\eng\bazel.ps1 run //:self_real_tests_app --jobs=2 --noshow_progress --show_result=0 '--' --list-tests
+```
+
+All three commands returned 0. The repository's existing `verify_execution.py`
+gate then passed separately for 15 and 24 planned cases, using the independent
+discovery name multisets, the captured pre-run UTC boundary, and actual process
+exit 0. Retained evidence includes `stage2-final-tests.log`,
+`stage2-final-run.json`, `stage2-test-inventory.json`, both discovery logs and
+expected-name files, both `*-net10.trx` reports, and both execution-gate logs.
+The new files preserve UTF-8 BOM encoding.
+
+**Test-value evidence:** executed preservation checks cover all 39 existing
+cases, including the real Windows STA and synchronization-context cases.
+The discovery metadata guard detected the incorrect target label and passes
+with both attribute fields. Earlier missing-input/compiler failures are not
+behavioral red-phase evidence. An independent Arcade/MSBuild green-before run,
+other runtime/TFM executions, CI collectors, and the remaining four suites are
+not claimed by this slice.
