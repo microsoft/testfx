@@ -2198,3 +2198,117 @@ with both attribute fields. Earlier missing-input/compiler failures are not
 behavioral red-phase evidence. An independent Arcade/MSBuild green-before run,
 other runtime/TFM executions, CI collectors, and the remaining four suites are
 not claimed by this slice.
+
+## SDK 12 public-signing refresh (2026-11-03)
+
+Refresh the existing bounded SDK 12 MTP/TRX package/publisher gate against shared
+checkpoint `aff2cf0f702a07779cee99a8acf29cf515e858bb`, applied in this lane as
+`70e5cddb3045fbad3296e7cc38e58c23f4c1df0e`. Preserve the earlier unsigned
+packages, copied layouts, reports, and compiler evidence separately; their
+success did not prove compatibility with signed consumers such as CodeCoverage.
+
+The integration keeps the SDK 11 default and SDK 12 opt-in unchanged. It takes
+the pinned public-only Microsoft key, public-signing/friend provider patch,
+signed product/satellite definitions, and the signed runfiles helper. It does
+not introduce the absent SDK package tool, compatibility Paket group, or legacy
+framework helpers from other lanes. Existing alias/friend fixtures remain
+present and receive the checkpoint's identity assertions.
+
+Validate the same three native MTP/TRX packages and four target/runtime versions
+with fresh consumer caches and separately named signed evidence. Check the
+actual public-key token, signed satellites and key-qualified friend metadata,
+SDK 12 compiler actions, independently selected SDK 11 consumer, selected
+package assets, loaded hashes, and exact 0/2/9 child outcomes. The old unsigned
+payloads are retained as an identity counterfactual, not relabeled as signed
+evidence. Public signing preserves development-build identity; it does not
+complete an official signature, authorize publication, or change machine
+verification policy. The coordinator retains ownership of the broader
+CodeCoverage/SDK composition and combined source/test matrix.
+
+### Refreshed signed gate results
+
+The signed refresh executed on
+`70e5cddb3045fbad3296e7cc38e58c23f4c1df0e`, with documentation-only working
+changes and the same temporary engineering compiler override:
+
+```powershell
+.\eng\bazel\validate-packages.ps1 -Jobs 2 -EvidenceRoot C:\tfb\9d855da170b9-sdk12\signed-package-validation
+```
+
+Exit **0**; all **22** steps matched their expected exits. The independent
+SDK 11 consumer built net8/net9/net10/net11, loaded the new native package
+hashes, and returned 0/2/9 for pass/failure/empty selection. All four copied
+self-contained layouts repeated those outcomes on the unchanged actual
+8.0.33, 9.0.22, 10.0.14, and 11.0.0-rc.3.26522.148 runtimes. Each of the five
+passing reports contains exactly one executed `TestMethod1`, zero failures
+and zero skips. These are the bounded explorer cases, not the coordinator's
+separate 1,249-case SDK 11 signing/mock/helper run or a new CodeCoverage run.
+
+The signed run is retained under
+`signed-package-validation/20261103-161316-124e480a`; the earlier unsigned
+run `package-validation/20261103-151148-505d36d4` remains intact.
+All packages still use `2.6.0-preview.bazel`, so matching versions are not
+treated as proof of matching bits:
+
+| Signed native package | SHA-256 |
+| --- | --- |
+| `Microsoft.Testing.Platform` | `B16EA5634803520CE303990D313139134591B3D11DC58FD91BDF72A987348A9B` |
+| `Microsoft.Testing.Extensions.TrxReport.Abstractions` | `7C83682E0CE66C7E90E10D9C8370DB7BAE04DE000E9D31365CE657CB5ADF68DE` |
+| `Microsoft.Testing.Extensions.TrxReport` | `E7A15B0C863CBF2FBC241BF19F6EEBDEDD1C54D98FCF58FF7F100221A764994B` |
+
+The actual loaded net11 platform DLL hash is
+`9CC52C70A1B3989AC2848F27C4A200060F415B880B2BAB3AC96D61D01F2CB0FC`.
+Loaded TRX abstraction/reporter hashes are
+`BAF443AD6CD71C68C821597D8FA88563EC2204E9FFEE1EF7DEBDDEC91095F71E`
+and `E168EFEF3D2850C04B6C1C18FFA9C2ECBECA2E85F415A333F4EA33408B8C6194`.
+The live loader reported those hashes for both controller and child.
+
+### Public identity and test-value evidence
+
+The same PE/assembly-metadata audit was applied to the retained unsigned
+packages and the new signed packages. It checked 116 implementation/satellite
+assemblies, 128 friend attributes, 12 first-party assembly references, all
+12 selected compile/runtime payloads in the fresh primary cache, and every
+satellite's name/version/culture relationship with its parent.
+
+| Input | Executed identity assertions |
+| --- | --- |
+| Retained SDK 12 unsigned packages | Audit exit 1: 116 published-key, 128 key-qualified-friend, and 12 signed-reference assertions failed. |
+| Refreshed SDK 12 public-signed packages | Audit exit 0: all observations passed; every implementation/satellite has token `B03F5F7F11D50A3A` and the expected Microsoft public-key blob. |
+
+This is a packed-output identity counterfactual, not a new test-execution count
+or a claim that ordinary explorer tests rejected the old unsigned graph.
+The earlier explorer tests passed with unsigned inputs; the identity oracle
+distinguishes the defect. The audit source SHA-256 is
+`D26B7157908D748DF80A9146FF3AF1582FA01F6F330AB1D5B9BD3992A7FEA2A4`;
+its reports and extracted read-only inspection payloads are retained under
+`signed-identity/unsigned-counterfactual` and `signed-identity/signed`.
+An initial audit-harness attempt encountered PowerShell overload ambiguity
+for an absent unsigned public-key blob; explicit byte-array handling fixed
+that harness issue before either reported comparison run.
+
+The actual signed package/publisher graph has SHA-256
+`11FEE1B4DF6076AE6C9C69C31A1A0BC19E32BFFCA267268A11093FBBEE87C813`.
+It retains 129 SDK 12 source compiler actions, all four original reference-pack
+versions, and four SDK 10.0.401 bootstrap declarations. All 124 product,
+satellite, and internal-reference compiler actions carry `/publicsign+` and
+the one verified 160-byte public key. The remaining source actions are the
+unchanged development helper and explorer executables. The complete producer
+graph contains 465 declared actions and no MSBuild invocation.
+
+The fresh net8 consumer binlog records SDK 11's compiler/MSBuild paths and RAR
+resolution of `Microsoft.Testing.Platform, Version=2.6.0.0, Culture=neutral,
+PublicKeyToken=b03f5f7f11d50a3a` from the fresh run-owned cache. Visual Studio's
+read-only fallback folder remains present in effective restore configuration;
+it is not reported absent. All 12 checked package payloads reside in the owned
+primary cache and match the signed feed. No prior unsigned artifacts, global
+cache, machine verification setting, or shipping/default SDK policy changed.
+
+The audit source is retained as `signed-identity/audit.ps1` beside both reports.
+The temporary signing-refresh `.bazelrc.local` was removed and the owned
+Bazel server was stopped. A subsequent query without an engineering override
+again returned SDK `11.0.100-rc.3.26522.148` and runtime
+`11.0.0-rc.3.26522.148`. The original unsigned feed hashes were rechecked
+unchanged. This refresh remains local Windows x64 evidence for the bounded
+MTP/TRX contract, not official signature completion, a CI result, or validation
+of additional SDK/CodeCoverage/Windows-controller consumers.
