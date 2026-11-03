@@ -21,7 +21,7 @@ internal sealed class GitHubActionsAttachmentCollector(
 
     private readonly string _rootDirectory = Path.GetFullPath(rootDirectory);
     private readonly string _moduleDirectory = Guid.NewGuid().ToString("N");
-    private readonly List<(string Uid, string Name, string DisplayName, CiRunSummaryAttachment[] Attachments)> _tests = [];
+    private readonly List<(string Uid, string Name, string DisplayName, List<CiRunSummaryAttachment> Attachments)> _tests = [];
     private long _totalBytes;
     private int _fileCount;
     private int _testOrdinal;
@@ -49,6 +49,8 @@ internal sealed class GitHubActionsAttachmentCollector(
 
         string testDirectory = (++_testOrdinal).ToString(CultureInfo.InvariantCulture);
         var attachments = new List<CiRunSummaryAttachment>();
+        // Keep associations even if warning delivery fails after an earlier file was copied.
+        _tests.Add((testNode.Uid, TestNodeIdentity.GetTestName(testNode), testNode.DisplayName, attachments));
         foreach (FileArtifactProperty file in files)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -135,9 +137,7 @@ internal sealed class GitHubActionsAttachmentCollector(
             }
         }
 
-        CiRunSummaryAttachment[] result = [.. attachments];
-        _tests.Add((testNode.Uid, TestNodeIdentity.GetTestName(testNode), testNode.DisplayName, result));
-        return result;
+        return [.. attachments];
     }
 
     internal async Task WriteManifestAsync(CiRunSummaryModule module, CancellationToken cancellationToken)
@@ -166,7 +166,7 @@ internal sealed class GitHubActionsAttachmentCollector(
                 writer.WriteNumber("attemptNumber", module.AttemptNumber);
                 writer.WriteBoolean("truncated", _limitReported);
                 writer.WriteStartArray("tests");
-                foreach ((string uid, string name, string displayName, CiRunSummaryAttachment[] attachments) in _tests)
+                foreach ((string uid, string name, string displayName, List<CiRunSummaryAttachment> attachments) in _tests)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     writer.WriteStartObject();

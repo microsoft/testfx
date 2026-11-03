@@ -41,7 +41,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogUnexpectedException(nameof(GitHubActionsAttachmentCollector.WriteManifestAsync), ex);
+                    await ReportAttachmentFailureAsync(nameof(GitHubActionsAttachmentCollector.WriteManifestAsync), ex).ConfigureAwait(false);
                 }
             }
 
@@ -120,6 +120,22 @@ internal sealed partial class GitHubActionsSummaryReporter
         catch (Exception ex)
         {
             _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    private async Task ReportAttachmentFailureAsync(string operation, Exception error)
+    {
+        _logger.LogUnexpectedException(operation, error);
+        try
+        {
+            await _outputDevice.DisplayAsync(
+                this,
+                new WarningMessageOutputDeviceData(GitHubActionsResources.AttachmentReportingWarning),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception notificationError)
+        {
+            _logger.LogUnexpectedException(nameof(ReportAttachmentFailureAsync), notificationError);
         }
     }
 

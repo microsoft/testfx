@@ -214,6 +214,8 @@ Extension options:
         Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
     --report-gh-annotations
         Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-attachments
+        Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.
     --report-gh-failure-details
         Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-groups
@@ -641,6 +643,10 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-attachments
+        Arity: 1
+        Hidden: False
+        Description: Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.
       --report-gh-failure-details
         Arity: 1
         Hidden: False

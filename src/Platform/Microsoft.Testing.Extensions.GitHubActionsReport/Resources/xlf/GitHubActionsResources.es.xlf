@@ -32,6 +32,11 @@
         <target state="new">Attachments (paths inside the workflow artifact):</target>
         <note />
       </trans-unit>
+      <trans-unit id="AttachmentReportingWarning">
+        <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
+        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
         <target state="new">The attachment grew beyond the staging size limit while being copied.</target>

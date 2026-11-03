@@ -81,6 +81,14 @@ provide supported links to individual files inside that archive.
   drains consumption before consumer session-finish callbacks. No additional
   collector lock is required. This is source-backed ordering evidence, not a
   concurrency stress-test result.
+- Independent code-review round 2 found that the smoke script's package-prefix
+  glob also matched sibling packages. Selection now requires the exact package
+  ID followed by a numeric version and excludes symbol packages.
+- Retained manifest associations before copying so a warning-delivery failure
+  cannot orphan an earlier staged file. Unexpected attachment failures also
+  attempt a guarded user-visible warning, without discarding test results.
+- The post-upload sample now reports truncated manifests as well as truncated
+  display groups. Its workflow also watches the MSBuild and TRX consumers.
 
 ## Alternatives and decision
 
@@ -122,10 +130,22 @@ hosted-run results will be added as obtained.
 
 | Requirement | Evidence |
 | --- | --- |
-| Collection, limits, missing input, cancellation | Pending implementation and focused tests. |
-| Direct and aggregate failure details | Pending exact Markdown and fragment round-trip tests. |
-| Packed consumer and real framework attachment | Pending acceptance execution. |
+| Collection, limits, missing input, cancellation | Executed: `CaptureAsync_StagesExactBytesAndWritesManifest`, size/count boundary cases, `CaptureAsync_CanceledDuringCopy_PropagatesTokenAndDeletesPartialFile`, and warning-failure association cases. |
+| Direct and aggregate failure details | Executed: `BuildMarkdown_WithAttachments_RendersExactArchiveRelativePaths`, `CreateModule_FragmentRoundTrip_PreservesAttachmentsOnlyOnFailures`, legacy-fragment and retry cases. |
+| Packed consumer and real framework attachment | Eight generated-consumer acceptance cases retained; package build and execution pending. |
 | Real GitHub Actions archive and download link | Pending composed workflow execution. |
+
+Focused unit validation compiled current production and test sources with the
+pinned SDK, `net8.0`, code coverage disabled, and warnings treated as errors.
+Selection:
+
+```text
+FullyQualifiedName~GitHubActionsAttachmentCollectorTests|FullyQualifiedName~GitHubActionsSummaryReporterTests|FullyQualifiedName~GitHubActionsCommandLineProviderTests
+```
+
+Result: **269 passed, 0 failed, 0 skipped; exit 0**, including all **70 added
+cases**. TRX, JUnit and CTRF exports were parsed and reconciled. This is executed
+unit evidence; feature-ablation and shipping-package evidence remain pending.
 
 ## Open questions
 

@@ -149,6 +149,9 @@
     <value>Could not remove incomplete GitHub Actions attachment '{0}': {1}</value>
     <comment>{0} is the sanitized file name; {1} is the error message.</comment>
   </data>
+  <data name="AttachmentReportingWarning" xml:space="preserve">
+    <value>Some test attachments could not be staged or indexed. Test results are unaffected.</value>
+  </data>
   <data name="AttachmentManifestWarning" xml:space="preserve">
     <value>Could not write the GitHub Actions attachment manifest: {0}</value>
     <comment>{0} is the error message.</comment>

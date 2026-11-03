@@ -111,8 +111,10 @@ steps:
       [void] $summary.Append("## Failed-test attachments`n`n[Download archive and full manifests]($env:ATTACHMENT_URL)`n`n")
       $shown = 0
       $omitted = 0
+      $truncated = 0
       foreach ($file in Get-ChildItem -LiteralPath $env:ATTACHMENT_ROOT -Filter attachments.json -Recurse -File | Sort-Object FullName) {
         $module = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+        if ($module.truncated) { $truncated++ }
         foreach ($test in $module.tests) {
           $attachments = @($test.attachments | Where-Object status -CEQ staged)
           if ($attachments.Count -eq 0) { continue }
@@ -134,6 +136,7 @@ steps:
         }
       }
       if ($omitted -gt 0) { [void] $summary.Append("$omitted additional attachment groups are indexed in the manifests.`n") }
+      if ($truncated -gt 0) { [void] $summary.Append("Some modules reached the attachment limit; not every failed test's attachments were staged.`n") }
       [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary.ToString())
 ```
 
@@ -163,7 +166,7 @@ expanded in the summary. The manifest is the authoritative index: archive paths
 appear only for expanded failures whose details fit the summary byte budget.
 Earlier process-retry attempts can leave their own
 files and manifests in the archive; final failure details only reference the
-final attempt. Disabling failure details hides archive paths in the summary but
+final attempt. Disabling failure details hides archive paths in the primary summary but
 does not disable staging.
 
 Use a fresh staging directory for each workflow run. Multiple modules and TFMs

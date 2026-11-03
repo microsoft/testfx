@@ -47,8 +47,8 @@ if ($Mode -eq 'Verify') {
         $test = $module.tests[0]
         $name = "$($module.assemblyName) ($($module.targetFramework)/$($module.architecture), attempt $($module.attemptNumber)): $($test.fullyQualifiedName) - $($test.displayName)"
         $path = $test.attachments[0].relativePath
-        $matches = @($blocks | Where-Object { $_.Groups['body'].Value.Contains($path) })
-        if ($matches.Count -ne 1 -or [Net.WebUtility]::HtmlDecode($matches[0].Groups['name'].Value) -cne $name -or -not $matches[0].Groups['body'].Value.Contains("[Download attachments]($env:ATTACHMENT_URL)")) {
+        $matchedBlocks = @($blocks | Where-Object { $_.Groups['body'].Value.Contains($path) })
+        if ($matchedBlocks.Count -ne 1 -or [Net.WebUtility]::HtmlDecode($matchedBlocks[0].Groups['name'].Value) -cne $name -or -not $matchedBlocks[0].Groups['body'].Value.Contains("[Download attachments]($env:ATTACHMENT_URL)")) {
             throw 'The post-upload details lost the test, file, or actual download-link association.'
         }
     }
@@ -67,7 +67,8 @@ $dotnet = Join-Path (Join-Path $repo '.dotnet') $(if ($IsWindows) { 'dotnet.exe'
 $packages = @{}
 $provenance = @()
 foreach ($id in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.GitHubActionsReport')) {
-    $candidates = @(Get-ChildItem -LiteralPath $shipping -Filter "$id.*.nupkg" -File)
+    $candidates = @(Get-ChildItem -LiteralPath $shipping -Filter "$id.*.nupkg" -File |
+        Where-Object { $_.Name -match ('^' + [regex]::Escape($id) + '\.\d') -and $_.Name -notlike '*.symbols.nupkg' })
     if ($candidates.Count -ne 1) {
         throw "Expected one freshly packed $id package, found $($candidates.Count)."
     }

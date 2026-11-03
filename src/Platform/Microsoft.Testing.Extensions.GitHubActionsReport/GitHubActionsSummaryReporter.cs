@@ -205,7 +205,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogUnexpectedException(nameof(GitHubActionsAttachmentCollector.CaptureAsync), ex);
+                    await ReportAttachmentFailureAsync(nameof(GitHubActionsAttachmentCollector.CaptureAsync), ex).ConfigureAwait(false);
                 }
             }
 
