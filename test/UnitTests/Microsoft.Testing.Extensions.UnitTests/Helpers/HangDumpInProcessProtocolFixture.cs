@@ -26,7 +26,7 @@ using TestSessionContext = Microsoft.Testing.Platform.Services.TestSessionContex
 
 namespace Microsoft.Testing.Extensions.UnitTests.Helpers;
 
-internal sealed class HangDumpInProcessProtocolFixture
+internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
 {
     private readonly CancellationTokenSource _lifetime;
     private readonly ServiceProvider _controllerServices = new();
@@ -379,6 +379,8 @@ internal sealed class HangDumpInProcessProtocolFixture
         }
     }
 
+    public ValueTask DisposeAsync() => new(CloseAsync());
+
     public async Task CloseAsync()
     {
         if (_closed)
@@ -390,6 +392,7 @@ internal sealed class HangDumpInProcessProtocolFixture
         {
             await ShutdownAsync(useAsyncDisposal: false);
             Assert.IsTrue(AllTrackedTasksCompleted, "No task-owned pipe or lifecycle delegate may survive cleanup.");
+            _activitySignalWaitEntered.Dispose();
             AssertNoDumpWork();
         }
         finally
