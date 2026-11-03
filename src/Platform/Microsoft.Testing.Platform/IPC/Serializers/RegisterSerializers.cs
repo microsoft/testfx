@@ -25,6 +25,9 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * WaitForServerControlRequestSerializer: 13
  * ServerControlMessageSerializer: 14
  * CoverageSummaryMessagesSerializer: 15
+ * (16 is reserved - previously used by an experimental artifact response)
+ * FileArtifactTransferRequestSerializer: 17
+ * FileArtifactTransferResponseSerializer: 18
 */
 
 [Embedded]
@@ -47,5 +50,7 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new WaitForServerControlRequestSerializer(), typeof(WaitForServerControlRequest));
         namedPipeBase.RegisterSerializer(new ServerControlMessageSerializer(), typeof(ServerControlMessage));
         namedPipeBase.RegisterSerializer(new CoverageSummaryMessagesSerializer(), typeof(CoverageSummaryMessages));
+        namedPipeBase.RegisterSerializer(new FileArtifactTransferRequestSerializer(), typeof(FileArtifactTransferRequest));
+        namedPipeBase.RegisterSerializer(new FileArtifactTransferResponseSerializer(), typeof(FileArtifactTransferResponse));
     }
 }

@@ -468,6 +468,12 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.RequiredPostProcessorKinds, nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds) },
             { HandshakeMessagePropertyNames.RequiredPostProcessingSupported, nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported) },
             { HandshakeMessagePropertyNames.CoverageSummaryVersion, nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion) },
+            { HandshakeMessagePropertyNames.ServerControlTransport, nameof(HandshakeMessagePropertyNames.ServerControlTransport) },
+            { HandshakeMessagePropertyNames.FileArtifactTransfer, nameof(HandshakeMessagePropertyNames.FileArtifactTransfer) },
+            { HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes, nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes) },
+            { HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes, nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes) },
+            { HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes, nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes) },
+            { HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount, nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -491,6 +497,17 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion), properties[20]);
+        for (byte retiredId = 21; retiredId <= 25; retiredId++)
+        {
+            Assert.IsFalse(properties.ContainsKey(retiredId), $"Handshake property {retiredId} is retired.");
+        }
+
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlTransport), properties[26]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransfer), properties[27]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes), properties[28]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes), properties[29]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes), properties[30]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount), properties[31]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -688,6 +705,8 @@ public sealed class ProtocolTests
             [WaitForServerControlRequestFieldsId.MessagesSerializerId] = nameof(WaitForServerControlRequestFieldsId),
             [ServerControlMessageFieldsId.MessagesSerializerId] = nameof(ServerControlMessageFieldsId),
             [CoverageSummaryMessagesFieldsId.MessagesSerializerId] = nameof(CoverageSummaryMessagesFieldsId),
+            [FileArtifactTransferRequestFieldsId.MessagesSerializerId] = nameof(FileArtifactTransferRequestFieldsId),
+            [FileArtifactTransferResponseFieldsId.MessagesSerializerId] = nameof(FileArtifactTransferResponseFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -707,6 +726,9 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(WaitForServerControlRequestFieldsId), serializerIds[13]);
         Assert.AreEqual(nameof(ServerControlMessageFieldsId), serializerIds[14]);
         Assert.AreEqual(nameof(CoverageSummaryMessagesFieldsId), serializerIds[15]);
+        Assert.IsFalse(serializerIds.ContainsKey(16), "Serializer id 16 is retired and must not be reassigned.");
+        Assert.AreEqual(nameof(FileArtifactTransferRequestFieldsId), serializerIds[17]);
+        Assert.AreEqual(nameof(FileArtifactTransferResponseFieldsId), serializerIds[18]);
     }
 
     // The SessionEventTypes byte values flow over IPC to dotnet test in the dotnet/sdk repository.
@@ -762,7 +784,7 @@ public sealed class ProtocolTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions, ProtocolConstants.CoverageSummaryVersion];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
         Assert.AreEqual("1", versions[1]);
     }
 }

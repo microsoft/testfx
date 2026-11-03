@@ -114,6 +114,21 @@ internal static class HandshakeMessagePropertyNames
     // Missing or unknown versions mean unsupported, not zero coverage. This capability is independent
     // of the base protocol version and does not enable the server-control channel.
     internal const byte CoverageSummaryVersion = 20;
+
+    // 21-25 are retired experimental browser allocations.
+
+    // Sent only by the SDK in its handshake response. The value identifies the transport that carries
+    // WaitForServerControlRequest/ServerControlMessage traffic. "http" means the test host should park
+    // authenticated HTTP long polls on a second client while the primary client continues sending results.
+    internal const byte ServerControlTransport = 26;
+
+    // Sent only by the SDK in its handshake response. "chunked-v1" means browser/WASI-local artifacts can be
+    // uploaded through FileArtifactTransferRequest before their existing FileArtifactMessage metadata is sent.
+    internal const byte FileArtifactTransfer = 27;
+    internal const byte FileArtifactTransferMaxChunkBytes = 28;
+    internal const byte FileArtifactTransferMaxFileBytes = 29;
+    internal const byte FileArtifactTransferMaxModuleBytes = 30;
+    internal const byte FileArtifactTransferMaxFileCount = 31;
 }
 
 [Embedded]
@@ -127,6 +142,18 @@ internal static class ServerControlKinds
     // Closes a parked control request without canceling the test session. The test-host controller uses this
     // when its child has already completed normally and the auxiliary control channel can shut down.
     internal const byte CloseChannel = 2;
+}
+
+[Embedded]
+internal static class ServerControlTransports
+{
+    internal const string Http = "http";
+}
+
+[Embedded]
+internal static class FileArtifactTransferCapabilities
+{
+    internal const string ChunkedV1 = "chunked-v1";
 }
 
 [Embedded]
@@ -212,5 +239,8 @@ internal static class ProtocolConstants
     // --timeout, ...). The feature is gated on the presence of the handshake property (a capability), not on this
     // version string, so an older SDK that never advertises the pipe leaves the feature disabled. The version is
     // still bumped so the negotiated-version state advances in lockstep.
-    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0";
+    //
+    // 1.5.0 extends the existing control messages to authenticated HTTP through a capability-gated second client,
+    // and adds capability-gated chunked transfer for artifacts stored in a browser/WASI virtual filesystem.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0";
 }

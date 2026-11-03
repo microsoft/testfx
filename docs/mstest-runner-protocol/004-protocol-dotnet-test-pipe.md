@@ -7,6 +7,80 @@
 > The external SDK comparisons, gateway/browser deployment requirements, vendored-file alignment
 > and full wire-field catalog below were not independently validated in this scoped audit.
 
+**Experimental 1.5.0 contract.** The HTTP control and artifact-transfer entries below describe this
+browser-launcher prototype, not support in a released SDK. Its source-matched SDK counterpart is pinned
+in [`eng/browser-testing/sdk.json`](../../eng/browser-testing/sdk.json). The coordinated allocation
+reserves serializers 17/18 and handshake properties 26-31 for the experiment, preserving upstream
+coverage serializer 15 and handshake property 20. Both repositories must use this allocation before
+the pin is advanced; negotiating 1.5.0 alone does not establish support.
+
+**Alignment decision (2026-11-02).** The owners of this experiment and
+[dotnet/sdk#56305](https://github.com/dotnet/sdk/pull/56305) compared TestFx `main`
+`6075756d0590f3d1643d4fdf4bc03f79684660fd`, SDK `main`
+`652269386d3c0702de4e6c9a6b8495e7eef5cfbc`, and the prior paired experiment.
+Fresh allocations avoid reinterpreting retired experimental serializer 16 and properties 21-25.
+Keeping the old browser IDs would collide with upstream coverage; moving only one peer would break
+the composed product. Older experiment peers therefore follow the existing undeclared-capability
+fallback rather than receiving aliased messages. Real composed validation with newly packed TestFx
+and the aligned built SDK is required before updating the counterpart pin.
+
+Local source checks on Windows x64 with SDK `12.0.100-alpha.1.26509.101` compiled both protocol test
+projects across their normal target frameworks. The independent contract suite passed 33/33; the
+platform protocol/connection selection passed 183/183, including four explicit mixed-capability cases.
+The existing no-control-pipe test first failed because the browser change allocated a listener token
+source without a usable channel, then passed after allocation was moved inside the selected transport
+branch. These source-local checks do not replace the required aligned browser-product run.
+
+**Composed evidence (2026-11-02).** SDK `f7edbfedcb5319fd006078d1f9516f4a27442ddf`
+and immutable TestFx package source `11b0d39f9079e5ead7b91ae5ab5161b5dcd8a147` passed the
+stock Windows x64 run with SDK `12.0.100-dev`, Edge `156.0.4314.58`, and Debug shipping packages:
+
+```powershell
+.\eng\browser-testing\RunBrowserTests.ps1 -TestFxRoot artifacts\btf-dd63a33d -BrowserExecutable 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' -Configuration Debug -ResultsDirectory artifacts\log\browser-wire-composed-11b0
+```
+
+The command runs from the SDK checkout. The restored counterpart directory's actual clean HEAD is
+`11b0d39f9079e5ead7b91ae5ab5161b5dcd8a147`; its older directory label is not a source identity.
+The parent and all seven recorded commands exit `0`; all 11 required browser-package cases execute
+and pass, with no skips. All eight staged package hashes and 756 runtime file hashes were rechecked
+after acceptance. The layout is explicitly **augmented**, not an unmodified shipping SDK: it includes
+the producer-declared Core runtimes `8.0.32`, `9.0.21`, `10.0.13`, and `11.0.0-rc.2.26504.105`
+from the restored private bootstrap. SDK, muxer, hostfxr, TFM, roll-forward, and exit assertions are
+unchanged. Caller pin updates and the immutable package-source pin have separate roles.
+
+This is Windows composed proof, not current Linux or reverse-direction CI success. Those remain
+readiness gates. The canonical satellite paths are also checked by evaluating the production
+package-path expression with relative and leading Unix/Windows metadata; these source-local checks
+do not substitute for the Linux product run.
+
+**CI checkpoint (2026-11-02).** The independently downloaded Windows and Linux TRX/evidence from
+[build 1659780](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1659780)
+identify tested merge `030bcf378c5fbbbed766f101ccb305498f1d110d` and the old SDK `66309ab`.
+Both platforms execute 11 cases: eight pass, three fail, none skip. The default private-payload,
+no-build payload, and system-Node/private-driver package cases all pass; the prior three canonical
+satellite-path failures are absent. The remaining failures are a missing export directory, quota
+acceptance with the explicit unsupported-artifact-export warning, and a desktop host missing Core
+`11.0.0-rc.2.26504.105` (Linux exit `150`, Windows exit `-2147450730`). These failures are retained;
+advancing the caller pin is not itself evidence that current reverse-direction CI passes.
+
+The same build exposes a separate metadata-test defect under `DOTNET_CLI_CONTEXT_VERBOSE=1`:
+MSBuild prints `Telemetry is: Disabled` before the correct property. The test-only correction reuses
+the existing last-nonempty-line parser without changing the exact canonical-path expectation or
+disabling CI diagnostics. Four metadata forms are each evaluated with the child setting explicitly
+present and absent. With these eight rows retained, the old extraction executes four intended
+verbose-output assertion failures and four passes (exit `2`); corrected extraction passes all eight
+(exit `0`, no skips). Both states build with zero warnings/errors using
+these commands, respectively:
+
+```powershell
+.\build.cmd -c Release -msbuildEngine dotnet -bl -bln browser-path-verbose-red-20261102.binlog -projects test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj
+.\build.cmd -c Release -msbuildEngine dotnet -bl -bln browser-path-verbose-green-20261102.binlog -projects test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj
+```
+
+Both run `.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter FullyQualifiedName~BrowserPackagePathTests`,
+with separate TRX reports and result directories.
+This caller/test-harness update does not change shipping source or the immutable SDK package-source pin.
+
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
 `dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy
@@ -298,6 +372,7 @@ flowchart TD
 | `ushort` | 2 bytes | `2` |
 | `bool` | 1 byte | `1` |
 | `byte` | 1 byte | `1` |
+| raw `byte[]` | Exactly `fieldSize` bytes, without an inner length prefix | Array length; used by `FileArtifactTransferRequest.Data` |
 
 > [!NOTE]
 > **Two string conventions coexist and are both part of the contract.**
@@ -345,11 +420,11 @@ Both are optional strings; the message-specific list field(s) follow. `AzureDevO
 
 ## 6. Serializer registry (message IDs)
 
-All serializers are registered in one registry shared by both pipes
+All serializers are registered in one registry shared by the primary and control transports
 (`RegisterSerializers.RegisterAllSerializers`). **IDs are frozen for backwards compatibility** — never
 change or reuse an ID.
 
-| ID | Message | Direction (data pipe) | Kind | Since |
+| ID | Message | Direction | Kind | Since |
 | --: | --- | --- | --- | --- |
 | 0 | `VoidResponse` | SDK → host (reply) | Response | 1.0.0 |
 | 1 | `TestHostCompletedRequest` | *test host controller pipe* | Request | 1.0.0 |
@@ -364,8 +439,12 @@ change or reuse an ID.
 | 10 | `TestInProgressMessages` | host → SDK¹ | Request | 1.0.0 |
 | 11 | `AzureDevOpsLogMessage` | host → SDK | Request | 1.2.0 |
 | 12 | `DisplayMessage` | host → SDK | Request | 1.3.0 |
-| 13 | `WaitForServerControlRequest` | host → SDK (on control pipe) | Request | 1.4.0 |
-| 14 | `ServerControlMessage` | SDK → host reply (on control pipe) | Response | 1.4.0 |
+| 13 | `WaitForServerControlRequest` | host → SDK (on auxiliary control transport) | Request | 1.4.0; HTTP in experimental 1.5.0 |
+| 14 | `ServerControlMessage` | SDK → host reply (on auxiliary control transport) | Response | 1.4.0; HTTP in experimental 1.5.0 |
+| 15 | `CoverageSummaryMessages` | host → SDK | Request | `CoverageSummaryVersion=1` capability |
+| 16 | *(reserved — retired experimental artifact response)* | — | — | — |
+| 17 | `FileArtifactTransferRequest` | host → SDK (HTTP primary channel) | Request | Experimental 1.5.0 |
+| 18 | `FileArtifactTransferResponse` | SDK → host reply (HTTP primary channel) | Response | Experimental 1.5.0 |
 
 > IDs 1 and 2 belong to the sibling **test host controller** pipe (a monitoring channel between a test
 > host controller process and the test host). They share the same framing and registry but are not part
@@ -386,12 +465,13 @@ delivered in order.
 - For every data message the SDK replies with a **`VoidResponse`** (serializer ID 0, empty body). The
   host ignores the value; it only needs the reply to know the SDK consumed the message and to unblock
   the next send.
-- The one exception is the **handshake**: the SDK replies with a `HandshakeMessage` (§9), not a
-  `VoidResponse`.
+- The **handshake** receives a `HandshakeMessage` reply (§8). A `FileArtifactTransferRequest` receives
+  a `FileArtifactTransferResponse` (§9.9), not a `VoidResponse`. The separate HTTP control client can
+  receive a `ServerControlMessage` or a `VoidResponse` when a bounded long poll has no pending command (§12).
 
 The protocol is therefore "push-only" from a *semantic* standpoint (the SDK never initiates a primary
-channel request), but every push is acknowledged. HTTP needs no polling because there is no SDK-initiated
-primary-channel traffic to retrieve.
+channel request), but every push is acknowledged. The HTTP primary client does not poll. Only the
+capability-gated auxiliary control client parks long polls, independently of primary-channel requests.
 
 ```mermaid
 sequenceDiagram
@@ -445,6 +525,14 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 17 | `SupportedTruncatedRunPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 15 whose processors can consume artifacts observed before a policy-truncated run stopped. |
 | 18 | `RequiredPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 containing internal coordination kinds that must be post-processed even when only one matching artifact exists. |
 | 19 | `RequiredPostProcessingSupported` | SDK handshake response only | Boolean capability. `true` means the SDK honors ID 18 and supplies the authoritative `runSummary` manifest block before producers defer their standalone output. |
+| 20 | `CoverageSummaryVersion` | Both peers | Exactly `1` on both sides enables coverage summaries and artifact coverage metadata, independently of the base protocol version and control transport. |
+| 21-25 | *(reserved — retired experimental browser properties)* | — | Must not be reassigned or interpreted as the new browser capabilities. |
+| 26 | `ServerControlTransport` | SDK handshake response only | Experimental capability. Exactly `http` enables authenticated HTTP control on a second client; it does not activate a named pipe. |
+| 27 | `FileArtifactTransfer` | SDK handshake response only | Experimental capability. Exactly `chunked-v1`, with valid limits at IDs 28-30, enables HTTP artifact export. |
+| 28 | `FileArtifactTransferMaxChunkBytes` | SDK handshake response only | Positive decimal `Int32` chunk limit; the host additionally caps each chunk at 1 MiB. |
+| 29 | `FileArtifactTransferMaxFileBytes` | SDK handshake response only | Positive decimal `Int64` per-file byte limit. |
+| 30 | `FileArtifactTransferMaxModuleBytes` | SDK handshake response only | Positive decimal `Int64` aggregate byte limit for exported files in the module. |
+| 31 | `FileArtifactTransferMaxFileCount` | SDK handshake response only | Optional positive decimal `Int32` aggregate file-count limit. Missing or invalid values use the host ceiling of 10,000; a valid value is capped at that ceiling. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
@@ -456,25 +544,35 @@ The SDK replies with its own `HandshakeMessage`. The host reads these properties
 - `IsIDE` (ID 9): when `"true"`, the host streams **full** discovery details and streams per-test
   in-progress updates as results (see §9).
 - `ServerControlPipeName` (ID 12): when non-empty, enables the reverse control channel (§12). This is a
-  **capability signal gated on the property's presence**, independent of the version string.
+  **capability signal gated on the property's presence**, independent of the version string, and is
+  used only with the named-pipe primary transport.
+- `CoverageSummaryVersion` (ID 20): exactly `1` enables coverage only if the host also advertised `1`.
+  Missing, unknown, or older experimental `http` values do not enable coverage.
+- `ServerControlTransport` (ID 26): exactly `http` enables the auxiliary HTTP control client only when
+  the primary transport is HTTP (§12). An absent or unknown value leaves this capability disabled.
+- `FileArtifactTransfer` and limits (IDs 27-31): `chunked-v1` plus positive limits at IDs 28-30 enable
+  HTTP artifact export (§9.9). Missing or unsupported capability data does not make browser-local paths
+  usable on the SDK's filesystem.
 
 ### 8.3 Negotiation algorithm
 
-The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`).
+The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`).
 The SDK picks the **highest version present in both sets** and returns that single value. The host then:
 
 - Confirms the returned value is in its supported set (compatibility gate).
 - Derives feature flags from the negotiated `Version`:
   - `IsLogForwardingSupported` = negotiated ≥ `1.2.0`
   - `IsDisplayMessageForwardingSupported` = negotiated ≥ `1.3.0`
+- Derives control and artifact-transfer support from the advertised capabilities, not merely from
+  negotiating `1.5.0`. Older peers that omit them do not enable these features.
 
 ```mermaid
 sequenceDiagram
     participant H as Test host
     participant S as dotnet test SDK
-    H->>S: HandshakeMessage(PID, OS, SupportedProtocolVersions="1.0.0;...;1.4.0", HostType, ExecutionId, InstanceId, ExecutionMode, [AttemptNumber], ...)
+    H->>S: HandshakeMessage(PID, OS, SupportedProtocolVersions="1.0.0;...;1.5.0", HostType, ExecutionId, InstanceId, ExecutionMode, [AttemptNumber], ...)
     S->>S: pick highest mutually-supported version
-    S-->>H: HandshakeMessage(SupportedProtocolVersions=<negotiated>, [IsIDE], [ServerControlPipeName])
+    S-->>H: HandshakeMessage(SupportedProtocolVersions=<negotiated>, [IsIDE], [ServerControlPipeName or ServerControlTransport], [FileArtifactTransfer and limits])
     H->>H: validate compatibility; set IsIDE / forwarding / control-channel flags
     alt incompatible
         H->>H: exit IncompatibleProtocolVersion
@@ -586,6 +684,12 @@ with the paths from that job's manifest rather than independently normalizing it
 provenance is unavailable, including messages from older hosts. Test-scoped artifacts fill
 `TestUid`/`TestDisplayName`; session and standalone artifacts leave them empty.
 
+For HTTP, the host first exports the file bytes through the negotiated transfer capability (§9.9).
+Only the SDK's committed destination paths are then reported in `FullPath` and `InputArtifactPaths`.
+Without that capability, the host emits one compatibility warning and suppresses these artifact
+messages rather than presenting test-host-local paths as usable SDK files. Named-pipe artifact
+reporting is unchanged.
+
 ### 9.6 `CommandLineOptionMessages` (ID 3)
 
 Sent only on the **help** path (`--help`). Carries `ModulePath`(1) and a list of
@@ -620,11 +724,63 @@ and `--report-gh`; regular (informational) host output remains discarded. Unlike
 the display-message transport is **not** gated on an ADO agent. An SDK that negotiates a version below
 1.3.0 receives none of these messages; job-summary file writing is independent of this transport.
 
+### 9.9 Chunked file-artifact transfer (experimental IDs 17/18)
+
+This exchange is enabled only on HTTP when the SDK advertises `FileArtifactTransfer=chunked-v1` and
+positive chunk, file, and module byte limits. The SDK owns destination paths, quotas, authentication,
+and association with the handshaken execution/instance. The host supplies a filename, never a
+destination path, and sends the bytes before publishing the existing artifact metadata.
+
+`FileArtifactTransferRequest` uses the standard field envelope (§5.1):
+
+| Field ID | Name | Encoding | Meaning |
+| --: | --- | --- | --- |
+| 1 | `ExecutionId` | string | Execution that owns the transfer. |
+| 2 | `InstanceId` | string | Connecting host instance that owns the transfer. |
+| 3 | `TransferId` | string | New GUID in `N` format for each exported file. |
+| 4 | `FileName` | string | File basename, not a host-selected destination. |
+| 5 | `TotalLength` | `Int64`, 8 bytes | Non-negative declared file size. |
+| 6 | `Offset` | `Int64`, 8 bytes | Non-negative starting offset of this chunk. |
+| 7 | `Data` | raw bytes | Chunk payload, including an empty payload for a zero-byte file. |
+| 8 | `IsFinal` | `bool`, 1 byte | Whether this chunk completes the declared file. |
+
+All eight fields must be present. The deserializer rejects missing fields, negative lengths/offsets,
+incorrect scalar sizes, and chunks larger than 1 MiB before allocating the chunk buffer. `Data` contains
+only the raw payload: its envelope size is the byte count; there is no nested length prefix.
+
+`FileArtifactTransferResponse` contains required `NextOffset` (field 1, non-negative `Int64`) and
+optional `FullPath` (field 2, string) and `Error` (field 3, string). For every chunk the host requires
+`NextOffset` to equal the submitted offset plus payload length. The final acknowledgment must include
+a non-empty committed SDK `FullPath`. A zero-byte file still sends one final request and requires a
+committed-path acknowledgment.
+
+The host applies the lower of the advertised chunk limit and 1 MiB, checks the advertised file/module
+byte quotas, and caps the optional file-count limit at 10,000. It exports referenced `InputArtifactPaths`
+as well as the artifact itself. A negotiated transfer failure (including quota rejection, missing
+source file, peer error, wrong offset, or absent committed path) reports an error and fails the run;
+it must not degrade to a successful metadata-only report. Cancellation propagates through the transfer.
+This differs deliberately from an older peer with no transfer capability, which follows the warning
+and suppressed-artifact compatibility path in §9.5.
+
+### 9.10 Coverage summaries (ID 15)
+
+Both peers must advertise `CoverageSummaryVersion=1` at handshake property 20 before the host sends
+`CoverageSummaryMessages` or populates `FileArtifactMessage.CoverageSummary` (field 9). This capability
+is independent of the base protocol version, HTTP control, and artifact transfer. Missing or unknown
+coverage support means unavailable, not zero coverage.
+
+The message envelope carries `ExecutionId` (1), `InstanceId` (2), and a `Summaries` list (3). Each entry
+contains optional `SessionUid` (1), `ProducerId` (2), `ScopeLevel` (3, `Int32`), `ScopeName` (4),
+`Metric` (5, `Int32`), `CustomMetricName` (6), `CoveredCount` (7, `Int64`), and `CoverableCount`
+(8, `Int64`). Artifact field 9 carries the same entries. An HTTP artifact export preserves negotiated
+coverage metadata while replacing only paths; without coverage support, metadata is omitted before
+the existing export flow.
+
 ---
 
 ## 10. Versioning & compatibility
 
-`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`.
+`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`.
 
 | Version | What it adds / signals |
 | --- | --- |
@@ -632,7 +788,8 @@ the display-message transport is **not** gated on an ADO agent. An SDK that nego
 | 1.1.0 | Not a wire change: signals the host no longer plugs in `TerminalOutputDevice`, so the SDK can safely keep its live `TerminalTestReporter` output on. |
 | 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
-| 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. **testfx-side / pending SDK support:** the current `dotnet/sdk` advertises only `1.0.0`–`1.3.0` and does not vendor serializers 13/14, so it cannot advertise `ServerControlPipeName` or drive the channel yet. In practice the negotiated version tops out at 1.3.0 until the coordinated SDK change lands (see §12). |
+| 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but named-pipe control is gated on `ServerControlPipeName`, not on the version alone. SDK support must be verified for the specific counterpart (see §12). |
+| 1.5.0 (experimental) | Reuses IDs 13/14 on a second authenticated HTTP client, gated by `ServerControlTransport=http` at property 26, and adds bounded chunked artifact-transfer IDs 17/18, gated by `FileArtifactTransfer=chunked-v1` at property 27 and the advertised limits. Neither capability follows from the version string alone. |
 
 Additive fields on known messages do not require a protocol-version bump:
 
@@ -650,10 +807,16 @@ Compatibility rules / assumptions:
 - Unknown **serializer IDs**: the testfx receiver has no serializer to look up, but the current
   `dotnet/sdk` data-pipe server is created with `skipUnknownMessages: true`, so it produces an
   `UnknownMessage`, logs and skips it, and still replies with `VoidResponse`. Either way, new *messages*
-  must be **version-gated** for their semantics to be understood — do not rely on a receiver decoding an
+  must be **version- or capability-gated** for their semantics to be understood — do not rely on a receiver decoding an
   unknown serializer ID. (Unknown *fields* within a known message are always safe, per the previous rule.)
-- The control channel is capability-gated (presence of the pipe-name property) so an older SDK that
-  never advertises the pipe simply leaves it disabled.
+- The control channel is capability-gated: a named-pipe peer must advertise a pipe name, and an HTTP
+  peer must advertise `ServerControlTransport=http`. An older peer that advertises neither leaves it disabled.
+- Chunked artifact transfer is separately capability-gated. Absent or unsupported capability data
+  suppresses HTTP artifact reporting with a warning; failure after negotiation is terminal (§9.9).
+- A peer using the retired experimental browser properties 20-25 cannot enable HTTP control or
+  artifact transfer on the aligned peer. Conversely, an aligned peer does not advertise those old
+  browser properties. Mixed experiment revisions retain the undeclared-capability fallback; serializer
+  15 is never aliased to an artifact transfer.
 
 ---
 
@@ -703,21 +866,22 @@ faults its server loop instead. Neither behavior is a protocol guarantee.
 ## 12. Reverse server-control channel (≥ 1.4.0)
 
 > [!NOTE]
-> **testfx-side / pending SDK support.** The host side of this channel is implemented in testfx, but the
-> current `dotnet/sdk` does not advertise `ServerControlPipeName` or vendor serializers 13/14, so the
-> channel is **not yet driven end-to-end by `dotnet test`**. It activates only once a coordinated SDK
-> change ships. The section below describes the intended/host-side behavior.
+> The host-side behavior is defined here. SDK availability must be checked against the exact
+> source-matched counterpart, not inferred from a negotiated version or assumed for a released SDK.
+> The experimental browser counterpart is pinned in `eng/browser-testing/sdk.json`.
 
 Purpose: let the SDK push a control signal (today only session cancellation, e.g. from a global
 `--maximum-failed-tests` or `--timeout`) to the running test host, even while the host is otherwise
 silent.
 
-This reverse channel is explicitly **separate from the HTTP primary transport**. An HTTP handshake reply
-does not activate `ServerControlPipeName`, because named pipes are unavailable to `browser-wasm` and the
-host must not invent polling on the primary endpoint. A future browser-capable reverse-control transport
-requires its own capability/bootstrap contract and is out of scope for the HTTP request/reply gateway.
-Host-local cancellation (for example, the test application's own timeout token) still cancels an
-in-flight HTTP POST normally.
+This auxiliary channel is separate from the primary client's ordering lock. Named-pipe peers use the
+SDK-advertised control pipe. HTTP peers use a **second authenticated HTTP client** only when
+`ServerControlTransport=http` is advertised; `ServerControlPipeName` alone never activates HTTP
+control. The second client uses the same per-run endpoint/token, but its parked request does not block
+results or artifact transfers on the primary client. Host-local cancellation still cancels in-flight
+HTTP requests normally.
+
+### 12.1 Named-pipe control
 
 Setup and flow:
 
@@ -750,6 +914,24 @@ sequenceDiagram
 The auxiliary channel is best-effort: if it cannot be established, the run continues unaffected with the
 feature simply disabled.
 
+### 12.2 Authenticated HTTP control (experimental 1.5.0)
+
+After a successful compatible handshake advertising `ServerControlTransport=http`, the host starts a
+background listener using its second HTTP client. It parks `WaitForServerControlRequest` (ID 13) and
+accepts:
+
+- `ServerControlMessage(Kind=1)`: `CancelSession`; invoke the existing graceful-stop reaction exactly
+  once, using the same interlocked guard as named-pipe control.
+- `ServerControlMessage(Kind=2)`: `CloseChannel`; finish the listener without cancelling the session.
+- `VoidResponse`: the SDK's bounded long poll expired without a command; wait 50 ms before parking
+  another request so an immediately replying peer cannot create a tight loop.
+
+Unknown control kinds are ignored and the listener continues. Unlike a failure to establish the
+optional named-pipe connection, an HTTP control failure while the session is live requests cooperative
+cancellation and records a diagnostic. Expected listener cancellation during shutdown does not request
+another session cancellation. Exit cancels and disposes the auxiliary client and bounds the listener
+wait to five seconds.
+
 ---
 
 ## 13. End-to-end lifecycle
@@ -767,7 +949,7 @@ sequenceDiagram
     SDK->>Host: launch with named-pipe or HTTP bootstrap [--list-tests|--help|...]
     Host->>SDK: connect pipe, or initialize HttpClient (no probe)
     Host->>SDK: HandshakeMessage (request)
-    SDK-->>Host: HandshakeMessage (reply: negotiated version, [IsIDE], [ServerControlPipeName])
+    SDK-->>Host: HandshakeMessage (reply: negotiated version, [IsIDE], [control capability], [artifact-transfer capability and limits])
 
     alt incompatible version
         Host->>Host: exit IncompatibleProtocolVersion
@@ -775,12 +957,16 @@ sequenceDiagram
         Host->>SDK: CommandLineOptionMessages
         SDK-->>Host: VoidResponse
     else run / discover
-        opt named-pipe transport and control channel advertised
-            Host->>SDK: connect control pipe + park WaitForServerControlRequest
+        opt matching auxiliary control capability advertised
+            Host->>SDK: connect control pipe or second HTTP client + park WaitForServerControlRequest
         end
         Host->>SDK: TestSessionEvent(TestSessionStart)
         SDK-->>Host: VoidResponse
         loop per test node update
+            opt HTTP artifact export negotiated
+                Host->>SDK: FileArtifactTransferRequest chunk(s)
+                SDK-->>Host: FileArtifactTransferResponse (offset; final committed path)
+            end
             Host->>SDK: Discovered / Result / FileArtifact / Display / ADO
             SDK-->>Host: VoidResponse
         end
@@ -819,6 +1005,7 @@ own Execution ID (see §1/§2).
 | Serializer primitives / envelope | `IPC/Serializers/BaseSerializer.cs`, `NamedPipeSerializer.cs` |
 | Framing / named-pipe transport | `IPC/NamedPipeConnectionBase.cs`, `NamedPipeServer.cs`, `NamedPipeClient.cs` |
 | HTTP primary transport | `ServerMode/DotnetTest/Transport/DotnetTestHttpClient.cs` |
+| Chunked artifact transfer | `ServerMode/DotnetTest/IPC/Models/FileArtifactTransfer*.cs`, `ServerMode/DotnetTest/IPC/Serializers/FileArtifactTransfer*Serializer.cs` |
 | Pipe naming | `NamedPipeServer.GetPipeName` |
 | Message models | `ServerMode/DotnetTest/IPC/Models/*.cs`, `IPC/Models/*.cs` |
 | Message serializers | `ServerMode/DotnetTest/IPC/Serializers/*.cs` |

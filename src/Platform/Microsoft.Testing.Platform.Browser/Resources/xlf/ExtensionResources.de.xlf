@@ -1,0 +1,267 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="de" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="BootstrapResponseFileAccessibleByOtherUsers">
+        <source>The SDK response file is accessible by users other than its owner.</source>
+        <target state="new">The SDK response file is accessible by users other than its owner.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BootstrapResponseFileReadFailed">
+        <source>Unable to read the SDK response file.</source>
+        <target state="new">Unable to read the SDK response file.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BootstrapResponseFileRequired">
+        <source>The browser experiment requires the SDK HTTP bootstrap response file as the final test application argument.</source>
+        <target state="new">The browser experiment requires the SDK HTTP bootstrap response file as the final test application argument.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BootstrapResponseFileSymbolicLink">
+        <source>The SDK response file must not be a symbolic link or reparse point.</source>
+        <target state="new">The SDK response file must not be a symbolic link or reparse point.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserExecutableNotFound">
+        <source>The configured browser executable does not exist: '{0}'.</source>
+        <target state="new">The configured browser executable does not exist: '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserExitedBeforeCompletion">
+        <source>The browser exited before the test application completed.</source>
+        <target state="new">The browser exited before the test application completed.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserHostExitedBeforeCompletion">
+        <source>The browser host exited before the test application completed.</source>
+        <target state="new">The browser host exited before the test application completed.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserHostExitedBeforeReadiness">
+        <source>The browser host exited with code {0} before reporting readiness.</source>
+        <target state="new">The browser host exited with code {0} before reporting readiness.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserHostNonLoopbackUrl">
+        <source>The browser host reported a non-loopback application URL.</source>
+        <target state="new">The browser host reported a non-loopback application URL.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserHostNotReady">
+        <source>The browser host did not become ready within {0} seconds.</source>
+        <target state="new">The browser host did not become ready within {0} seconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserHostStartFailed">
+        <source>Unable to start the browser host command '{0}'.</source>
+        <target state="new">Unable to start the browser host command '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserHostStartReturnedNull">
+        <source>The browser host command '{0}' did not start.</source>
+        <target state="new">The browser host command '{0}' did not start.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserLaunchFailed">
+        <source>Unable to launch the Chromium browser '{0}'.</source>
+        <target state="new">Unable to launch the Chromium browser '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserNavigationOutsideOrigin">
+        <source>The browser navigated outside the expected loopback origin before the test application started.</source>
+        <target state="new">The browser navigated outside the expected loopback origin before the test application started.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserNotReady">
+        <source>The Chromium browser did not become ready within {0} seconds.</source>
+        <target state="new">The Chromium browser did not become ready within {0} seconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserPageCrashed">
+        <source>The browser page crashed.</source>
+        <target state="new">The browser page crashed.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserPageCrashedBeforeCompletion">
+        <source>The browser page crashed before completing.</source>
+        <target state="new">The browser page crashed before completing.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserPageUnhandledException">
+        <source>The browser page reported an unhandled exception before completing.</source>
+        <target state="new">The browser page reported an unhandled exception before completing.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserSupervisorBindingOriginInvalid">
+        <source>The browser supervisor binding was called outside the expected top-level loopback origin.</source>
+        <target state="new">The browser supervisor binding was called outside the expected top-level loopback origin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserSupervisorBindingRequestRejected">
+        <source>The browser supervisor binding request was rejected.</source>
+        <target state="new">The browser supervisor binding request was rejected.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserSupervisorFatalError">
+        <source>The browser supervisor reported a fatal error.</source>
+        <target state="new">The browser supervisor reported a fatal error.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserSupervisorInvalidError">
+        <source>The browser supervisor returned an invalid error value.</source>
+        <target state="new">The browser supervisor returned an invalid error value.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserSupervisorInvalidTerminalResult">
+        <source>The browser supervisor returned an invalid terminal result.</source>
+        <target state="new">The browser supervisor returned an invalid terminal result.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserTestApplicationTimeout">
+        <source>The browser test application did not complete within {0} seconds.</source>
+        <target state="new">The browser test application did not complete within {0} seconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserWorkerAuthorizationMissing">
+        <source>The browser worker did not receive its startup authorization.</source>
+        <target state="new">The browser worker did not receive its startup authorization.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserWorkerDiagnosticsReadFailed">
+        <source>Microsoft.Testing.Platform.Browser: Unable to finish reading browser worker diagnostics: {0}</source>
+        <target state="new">Microsoft.Testing.Platform.Browser: Unable to finish reading browser worker diagnostics: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserWorkerNotReady">
+        <source>The browser worker did not report readiness. Received '{0}'.</source>
+        <target state="new">The browser worker did not report readiness. Received '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserWorkerProcessPathUnavailable">
+        <source>Unable to determine the browser launcher process path.</source>
+        <target state="new">Unable to determine the browser launcher process path.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserWorkerStartFailed">
+        <source>The browser worker process did not start.</source>
+        <target state="new">The browser worker process did not start.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserWorkerTerminationFailed">
+        <source>Microsoft.Testing.Platform.Browser: Unable to terminate the browser worker: {0}</source>
+        <target state="new">Microsoft.Testing.Platform.Browser: Unable to terminate the browser worker: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateLauncherOption">
+        <source>Launcher option '{0}' was provided more than once.</source>
+        <target state="new">Launcher option '{0}' was provided more than once.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorPrefix">
+        <source>Microsoft.Testing.Platform.Browser: {0}</source>
+        <target state="new">Microsoft.Testing.Platform.Browser: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidBootstrap">
+        <source>The SDK did not provide a valid loopback authenticated HTTP dotnettestcli bootstrap.</source>
+        <target state="new">The SDK did not provide a valid loopback authenticated HTTP dotnettestcli bootstrap.</target>
+        <note>{Locked="dotnettestcli"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidLauncherOption">
+        <source>Invalid launcher option at position {0}.</source>
+        <target state="new">Invalid launcher option at position {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LauncherArgumentSeparatorMissing">
+        <source>The launcher command line must contain '--' before the Microsoft Testing Platform arguments.</source>
+        <target state="new">The launcher command line must contain '--' before the Microsoft Testing Platform arguments.</target>
+        <note>{Locked="'--'"}</note>
+      </trans-unit>
+      <trans-unit id="LauncherOptionMustBePositiveInteger">
+        <source>Launcher option '{0}' must be a positive integer.</source>
+        <target state="new">Launcher option '{0}' must be a positive integer.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoDiagnosticsCaptured">
+        <source>(no diagnostics captured)</source>
+        <target state="new">(no diagnostics captured)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NodeExecutableNotFound">
+        <source>The configured Node.js executable does not exist: '{0}'.</source>
+        <target state="new">The configured Node.js executable does not exist: '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformOptionMissingValue">
+        <source>Microsoft Testing Platform option '{0}' has no value.</source>
+        <target state="new">Microsoft Testing Platform option '{0}' has no value.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlaywrightDriverNotFound">
+        <source>The Playwright Node.js driver was not found at '{0}'.</source>
+        <target state="new">The Playwright Node.js driver was not found at '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlaywrightPlatformNotSupported">
+        <source>Microsoft.Testing.Platform.Browser does not support Playwright on {0}/{1}.</source>
+        <target state="new">Microsoft.Testing.Platform.Browser does not support Playwright on {0}/{1}.</target>
+        <note>{Locked="Microsoft.Testing.Platform.Browser"}</note>
+      </trans-unit>
+      <trans-unit id="RequiredLauncherOptionEmpty">
+        <source>Required launcher option '{0}' is empty.</source>
+        <target state="new">Required launcher option '{0}' is empty.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RequiredLauncherOptionMissing">
+        <source>Required launcher option '{0}' is missing.</source>
+        <target state="new">Required launcher option '{0}' is missing.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnknownLauncherOption">
+        <source>Unknown launcher option '{0}'.</source>
+        <target state="new">Unknown launcher option '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UserResponseFilesNotSupported">
+        <source>User response files are not supported by the browser experiment. Pass those arguments directly.</source>
+        <target state="new">User response files are not supported by the browser experiment. Pass those arguments directly.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerJobAssignmentFailed">
+        <source>Unable to assign the browser worker to its job object (error {0}).</source>
+        <target state="new">Unable to assign the browser worker to its job object (error {0}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerJobConfigurationFailed">
+        <source>Unable to configure the browser worker job object (error {0}).</source>
+        <target state="new">Unable to configure the browser worker job object (error {0}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerJobCreationFailed">
+        <source>Unable to create the browser worker job object (error {0}).</source>
+        <target state="new">Unable to create the browser worker job object (error {0}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerJobTerminationFailed">
+        <source>Unable to terminate the browser worker job object (error {0}).</source>
+        <target state="new">Unable to terminate the browser worker job object (error {0}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerProcessGroupCreationFailed">
+        <source>Unable to create the browser worker process group (errno {0}).</source>
+        <target state="new">Unable to create the browser worker process group (errno {0}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerProcessGroupMismatch">
+        <source>The browser worker did not establish its owned process group (expected {0}, received {1}, errno {2}).</source>
+        <target state="new">The browser worker did not establish its owned process group (expected {0}, received {1}, errno {2}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkerProcessGroupSignalFailed">
+        <source>Unable to signal browser worker process group {0} (signal {1}, errno {2}).</source>
+        <target state="new">Unable to signal browser worker process group {0} (signal {1}, errno {2}).</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

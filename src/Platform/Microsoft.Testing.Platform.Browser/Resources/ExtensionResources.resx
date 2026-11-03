@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BootstrapResponseFileAccessibleByOtherUsers" xml:space="preserve">
+    <value>The SDK response file is accessible by users other than its owner.</value>
+  </data>
+  <data name="BootstrapResponseFileReadFailed" xml:space="preserve">
+    <value>Unable to read the SDK response file.</value>
+  </data>
+  <data name="BootstrapResponseFileRequired" xml:space="preserve">
+    <value>The browser experiment requires the SDK HTTP bootstrap response file as the final test application argument.</value>
+  </data>
+  <data name="BootstrapResponseFileSymbolicLink" xml:space="preserve">
+    <value>The SDK response file must not be a symbolic link or reparse point.</value>
+  </data>
+  <data name="BrowserExecutableNotFound" xml:space="preserve">
+    <value>The configured browser executable does not exist: '{0}'.</value>
+  </data>
+  <data name="BrowserExitedBeforeCompletion" xml:space="preserve">
+    <value>The browser exited before the test application completed.</value>
+  </data>
+  <data name="BrowserHostExitedBeforeCompletion" xml:space="preserve">
+    <value>The browser host exited before the test application completed.</value>
+  </data>
+  <data name="BrowserHostExitedBeforeReadiness" xml:space="preserve">
+    <value>The browser host exited with code {0} before reporting readiness.</value>
+  </data>
+  <data name="BrowserHostNonLoopbackUrl" xml:space="preserve">
+    <value>The browser host reported a non-loopback application URL.</value>
+  </data>
+  <data name="BrowserHostNotReady" xml:space="preserve">
+    <value>The browser host did not become ready within {0} seconds.</value>
+  </data>
+  <data name="BrowserHostStartFailed" xml:space="preserve">
+    <value>Unable to start the browser host command '{0}'.</value>
+  </data>
+  <data name="BrowserHostStartReturnedNull" xml:space="preserve">
+    <value>The browser host command '{0}' did not start.</value>
+  </data>
+  <data name="BrowserLaunchFailed" xml:space="preserve">
+    <value>Unable to launch the Chromium browser '{0}'.</value>
+  </data>
+  <data name="BrowserNavigationOutsideOrigin" xml:space="preserve">
+    <value>The browser navigated outside the expected loopback origin before the test application started.</value>
+  </data>
+  <data name="BrowserNotReady" xml:space="preserve">
+    <value>The Chromium browser did not become ready within {0} seconds.</value>
+  </data>
+  <data name="BrowserPageCrashedBeforeCompletion" xml:space="preserve">
+    <value>The browser page crashed before completing.</value>
+  </data>
+  <data name="BrowserPageCrashed" xml:space="preserve">
+    <value>The browser page crashed.</value>
+  </data>
+  <data name="BrowserPageUnhandledException" xml:space="preserve">
+    <value>The browser page reported an unhandled exception before completing.</value>
+  </data>
+  <data name="BrowserSupervisorBindingOriginInvalid" xml:space="preserve">
+    <value>The browser supervisor binding was called outside the expected top-level loopback origin.</value>
+  </data>
+  <data name="BrowserSupervisorBindingRequestRejected" xml:space="preserve">
+    <value>The browser supervisor binding request was rejected.</value>
+  </data>
+  <data name="BrowserSupervisorFatalError" xml:space="preserve">
+    <value>The browser supervisor reported a fatal error.</value>
+  </data>
+  <data name="BrowserSupervisorInvalidError" xml:space="preserve">
+    <value>The browser supervisor returned an invalid error value.</value>
+  </data>
+  <data name="BrowserSupervisorInvalidTerminalResult" xml:space="preserve">
+    <value>The browser supervisor returned an invalid terminal result.</value>
+  </data>
+  <data name="BrowserTestApplicationTimeout" xml:space="preserve">
+    <value>The browser test application did not complete within {0} seconds.</value>
+  </data>
+  <data name="BrowserWorkerAuthorizationMissing" xml:space="preserve">
+    <value>The browser worker did not receive its startup authorization.</value>
+  </data>
+  <data name="BrowserWorkerDiagnosticsReadFailed" xml:space="preserve">
+    <value>Microsoft.Testing.Platform.Browser: Unable to finish reading browser worker diagnostics: {0}</value>
+  </data>
+  <data name="BrowserWorkerNotReady" xml:space="preserve">
+    <value>The browser worker did not report readiness. Received '{0}'.</value>
+  </data>
+  <data name="BrowserWorkerProcessPathUnavailable" xml:space="preserve">
+    <value>Unable to determine the browser launcher process path.</value>
+  </data>
+  <data name="BrowserWorkerStartFailed" xml:space="preserve">
+    <value>The browser worker process did not start.</value>
+  </data>
+  <data name="BrowserWorkerTerminationFailed" xml:space="preserve">
+    <value>Microsoft.Testing.Platform.Browser: Unable to terminate the browser worker: {0}</value>
+  </data>
+  <data name="ErrorPrefix" xml:space="preserve">
+    <value>Microsoft.Testing.Platform.Browser: {0}</value>
+  </data>
+  <data name="DuplicateLauncherOption" xml:space="preserve">
+    <value>Launcher option '{0}' was provided more than once.</value>
+  </data>
+  <data name="InvalidBootstrap" xml:space="preserve">
+    <value>The SDK did not provide a valid loopback authenticated HTTP dotnettestcli bootstrap.</value>
+    <comment>{Locked="dotnettestcli"}</comment>
+  </data>
+  <data name="InvalidLauncherOption" xml:space="preserve">
+    <value>Invalid launcher option at position {0}.</value>
+  </data>
+  <data name="LauncherArgumentSeparatorMissing" xml:space="preserve">
+    <value>The launcher command line must contain '--' before the Microsoft Testing Platform arguments.</value>
+    <comment>{Locked="'--'"}</comment>
+  </data>
+  <data name="LauncherOptionMustBePositiveInteger" xml:space="preserve">
+    <value>Launcher option '{0}' must be a positive integer.</value>
+  </data>
+  <data name="NodeExecutableNotFound" xml:space="preserve">
+    <value>The configured Node.js executable does not exist: '{0}'.</value>
+  </data>
+  <data name="NoDiagnosticsCaptured" xml:space="preserve">
+    <value>(no diagnostics captured)</value>
+  </data>
+  <data name="PlatformOptionMissingValue" xml:space="preserve">
+    <value>Microsoft Testing Platform option '{0}' has no value.</value>
+  </data>
+  <data name="PlaywrightDriverNotFound" xml:space="preserve">
+    <value>The Playwright Node.js driver was not found at '{0}'.</value>
+  </data>
+  <data name="PlaywrightPlatformNotSupported" xml:space="preserve">
+    <value>Microsoft.Testing.Platform.Browser does not support Playwright on {0}/{1}.</value>
+    <comment>{Locked="Microsoft.Testing.Platform.Browser"}</comment>
+  </data>
+  <data name="RequiredLauncherOptionEmpty" xml:space="preserve">
+    <value>Required launcher option '{0}' is empty.</value>
+  </data>
+  <data name="RequiredLauncherOptionMissing" xml:space="preserve">
+    <value>Required launcher option '{0}' is missing.</value>
+  </data>
+  <data name="UnknownLauncherOption" xml:space="preserve">
+    <value>Unknown launcher option '{0}'.</value>
+  </data>
+  <data name="UserResponseFilesNotSupported" xml:space="preserve">
+    <value>User response files are not supported by the browser experiment. Pass those arguments directly.</value>
+  </data>
+  <data name="WorkerJobAssignmentFailed" xml:space="preserve">
+    <value>Unable to assign the browser worker to its job object (error {0}).</value>
+  </data>
+  <data name="WorkerJobConfigurationFailed" xml:space="preserve">
+    <value>Unable to configure the browser worker job object (error {0}).</value>
+  </data>
+  <data name="WorkerJobCreationFailed" xml:space="preserve">
+    <value>Unable to create the browser worker job object (error {0}).</value>
+  </data>
+  <data name="WorkerJobTerminationFailed" xml:space="preserve">
+    <value>Unable to terminate the browser worker job object (error {0}).</value>
+  </data>
+  <data name="WorkerProcessGroupCreationFailed" xml:space="preserve">
+    <value>Unable to create the browser worker process group (errno {0}).</value>
+  </data>
+  <data name="WorkerProcessGroupMismatch" xml:space="preserve">
+    <value>The browser worker did not establish its owned process group (expected {0}, received {1}, errno {2}).</value>
+  </data>
+  <data name="WorkerProcessGroupSignalFailed" xml:space="preserve">
+    <value>Unable to signal browser worker process group {0} (signal {1}, errno {2}).</value>
+  </data>
+</root>

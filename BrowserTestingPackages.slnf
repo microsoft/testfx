@@ -1,0 +1,16 @@
+{
+  "solution": {
+    "path": "TestFx.slnx",
+    "projects": [
+      "src\\Adapter\\MSTest.TestAdapter\\MSTest.TestAdapter.csproj",
+      "src\\Analyzers\\MSTest.Analyzers.Package\\MSTest.Analyzers.Package.csproj",
+      "src\\Analyzers\\MSTest.GlobalConfigsGenerator\\MSTest.GlobalConfigsGenerator.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.Telemetry\\Microsoft.Testing.Extensions.Telemetry.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.TrxReport.Abstractions\\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj",
+      "src\\Platform\\Microsoft.Testing.Platform.Browser\\Microsoft.Testing.Platform.Browser.csproj",
+      "src\\Platform\\Microsoft.Testing.Platform.MSBuild\\Microsoft.Testing.Platform.MSBuild.csproj",
+      "src\\Platform\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj",
+      "src\\TestFramework\\TestFramework.Extensions\\TestFramework.Extensions.csproj"
+    ]
+  }
+}

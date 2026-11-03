@@ -192,7 +192,7 @@ public sealed class DotnetTestConnectionTests
         Assert.IsNotNull(sent);
         Assert.IsNotNull(sent.Properties);
         Assert.AreEqual("1", sent.Properties[20]);
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", sent.Properties[4]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", sent.Properties[4]);
         Assert.AreEqual(coverageEnabled, fixture.Connection.IsCoverageSummarySupported);
         Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
     }
@@ -387,6 +387,75 @@ public sealed class DotnetTestConnectionTests
             return Task.CompletedTask;
         });
         Assert.IsFalse(cancelled);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "HttpControlWithoutCoverage")]
+    [DataRow(true, DisplayName = "HttpControlWithCoverage")]
+    public async Task IsCompatibleProtocolAsync_HttpControlAndCoverageNegotiateIndependently(bool coverage)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.Http);
+        Dictionary<byte, string> reply = new()
+        {
+            [4] = "1.5.0",
+            [26] = "http",
+        };
+        if (coverage)
+        {
+            reply[20] = "1";
+        }
+
+        fixture.Client.Respond(new HandshakeMessage(reply), TestContext.CancellationToken);
+
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        Assert.IsTrue(fixture.Connection.IsServerControlChannelSupported);
+        Assert.AreEqual(coverage, fixture.Connection.IsCoverageSummarySupported);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Browser15WithoutCapabilities")]
+    [DataRow(true, DisplayName = "RetiredBrowserHandshake")]
+    public async Task SendMessageAsync_MissingOrRetiredBrowserCapabilitiesRetainArtifactFallback(bool legacyCapabilities)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.Http);
+        Dictionary<byte, string> reply = new() { [4] = "1.5.0" };
+        if (legacyCapabilities)
+        {
+            reply[20] = "http";
+            reply[21] = "chunked-v1";
+            reply[22] = "1048576";
+            reply[23] = "2097152";
+            reply[24] = "4194304";
+            reply[25] = "10";
+        }
+
+        fixture.Client.Respond(new HandshakeMessage(reply), TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
+        Assert.IsFalse(fixture.Connection.IsCoverageSummarySupported);
+
+        List<DisplayMessage> warnings = [];
+        List<FileArtifactMessages> artifacts = [];
+        fixture.Client.RespondVoid<DisplayMessage>(TestContext.CancellationToken, warnings.Add);
+        fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, artifacts.Add);
+        fixture.Client.Mock.Invocations.Clear();
+        var message = new FileArtifactMessages(
+            "execution",
+            "instance",
+            [new("browser-local.fixture", "artifact", null, null, null, "session", null)]);
+
+        await fixture.Connection.SendMessageAsync(message);
+        await fixture.Connection.SendMessageAsync(message);
+
+        DisplayMessage warning = Assert.ContainsSingle(warnings);
+        Assert.AreEqual(DisplayMessageLevels.Warning, warning.Level);
+        Assert.AreEqual(
+            "The dotnet test HTTP peer does not support remote test-host artifact export. Test-host-local artifact paths will not be reported as host artifacts.",
+            warning.Text);
+        Assert.IsEmpty(artifacts);
+        Assert.AreEqual(typeof(DisplayMessage), Assert.ContainsSingle(fixture.Client.Mock.Invocations).Method.GetGenericArguments()[0]);
     }
 
     [TestMethod]
