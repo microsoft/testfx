@@ -60,7 +60,7 @@ def platform_libraries():
         defines = ["IS_CORE_MTP"],
         usings = ["Polyfills"],
         exclude = modern_sources,
-        linked_srcs = [_SHARED + "/StackTraceRegexHelper.cs"] + testfx_compatibility_select([], modern_sources),
+        linked_srcs = [_SHARED + "/StackTraceRegexHelper.cs"] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"], modern_sources),
         resources = {
             _PLATFORM + "/Resources/PlatformResources.resx": "Microsoft.Testing.Platform.Resources.PlatformResources",
             _PLATFORM + "/OutputDevice/Terminal/TerminalResources.resx": "Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources",
@@ -153,7 +153,7 @@ def platform_libraries():
         name = "msbuild_extension",
         project = "src/Platform/Microsoft.Testing.Extensions.MSBuild",
         target_frameworks = STANDARD_FRAMEWORKS,
-        linked_srcs = ipc_sources() + runtime_helpers(),
+        linked_srcs = ipc_sources() + runtime_helpers() + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Platform/Microsoft.Testing.Extensions.MSBuild/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.MSBuild.Resources.ExtensionResources",
         },
@@ -179,7 +179,7 @@ def platform_libraries():
             "src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/FailedTestInfoRequestSerializer.cs",
             "src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/ModuleInfoRequestSerializer.cs",
             "src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/RunSummaryRequestSerializer.cs",
-        ],
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Platform/Microsoft.Testing.Platform.MSBuild/Resources/MSBuildResources.resx": "Microsoft.Testing.Platform.MSBuild.Resources.MSBuildResources",
         },

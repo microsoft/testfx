@@ -743,3 +743,28 @@ process-local overrides. Logs, compiler response files, and the inventory are
 retained in this session's `files/bazel-compatibility` evidence. Runtime consumers
 and the rest of the framework matrix remain subsequent validation; this first
 slice is a compilation delivery, not shipping-layout or CI certification.
+
+### Core assembly metadata correction
+
+The source compilation in `a29a5ffc0b1005848e71a645abcdeddb818113ff` was
+genuinely netstandard, but the three emitted assemblies had zero
+`TargetFrameworkAttribute` instances. Compiler-provider information alone does
+not establish emitted assembly metadata.
+
+The reusable `//eng/bazel:CompatibilityFrameworkMetadata.cs` now supplies exact
+`NETSTANDARD2_0` / `NET462` guarded attributes. The core declarations link it
+only for their compatibility source selection; modern sources and fixed
+analyzers are not changed by this correction. The analyzer lane can explicitly
+reuse the file instead of its temporary local attribute without duplicate
+attributes.
+
+Recompiled the three core outputs with the same pinned toolchain and inspected
+their actual `GetCustomAttributesData()` results. Each has exactly one
+`TargetFrameworkAttribute` with `FrameworkName == ".NETStandard,Version=v2.0"`.
+The focused command
+`.\eng\bazel.ps1 build //:platform_netstandard2_0 //:platform_msbuild_netstandard2_0 //:msbuild_extension_netstandard2_0 --jobs=2 --noshow_progress`
+completed with exit 0.
+Assembly paths and SHA-256 hashes are in the retained
+`core-metadata-verified.json`. The broader keep-going build exposed separate
+net462 facade and native executable-pack gaps; those do not invalidate this
+three-assembly metadata correction and are not reported as a matrix pass.
