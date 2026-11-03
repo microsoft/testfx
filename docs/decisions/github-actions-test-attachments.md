@@ -227,6 +227,7 @@ post-pack verifier expects legacy UAP payloads omitted by the required local
 `SkipUapTargetFramework=true` dotnet build (MSTest/adapter/framework counts).
 That full verifier exited 1; it was not weakened or called successful. The
 Linux hosted workflow runs the repository's standard `build.sh -pack` path.
+
 ### Executed hosted upload/download
 
 [Run 41629546864](https://github.com/microsoft/testfx/actions/runs/41629546864)
