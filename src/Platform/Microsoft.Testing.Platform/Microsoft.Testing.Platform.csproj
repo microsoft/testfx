@@ -72,7 +72,7 @@ $(CommonProductDescription)]]></PackageDescription>
       against a platform where the grant existed, so its IL calls internals such as
       Microsoft.Testing.Platform.Helpers.ArgumentGuard.Ensure. Loading that old engine against a newer platform
       that no longer grants the friend relationship fails with System.MethodAccessException (see issue #9769).
-      Restoring the grant keeps that binary compatibility, mirroring the TestRequestExecutionTimeInfo workaround.
+      Restoring the grant keeps that binary compatibility.
     -->
     <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />

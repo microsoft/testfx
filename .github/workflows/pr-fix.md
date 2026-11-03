@@ -40,7 +40,6 @@ network:
     - github.com
 
 tools:
-  web-fetch:
   bash: true
   github:
     min-integrity: none # This workflow is allowed to examine any PR because it's invoked by a repo maintainer

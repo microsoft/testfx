@@ -78,9 +78,9 @@ safe-outputs:
     engine:
       id: copilot
   report-failure-as-issue: false
-  missing-tool:
+  report-missing-tool:
     create-issue: false
-  missing-data:
+  report-missing-data:
     create-issue: false
   report-incomplete:
     create-issue: false
