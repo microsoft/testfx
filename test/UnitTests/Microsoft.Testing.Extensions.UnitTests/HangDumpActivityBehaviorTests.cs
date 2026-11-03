@@ -107,7 +107,7 @@ public sealed class HangDumpActivityBehaviorTests
     [DataRow(4, DisplayName = "ActivityTerminal_Cancelled")]
     [DataRow(5, DisplayName = "ActivityTerminal_Timeout")]
     [DataRow(6, DisplayName = "ActivityTerminal_ExecutionCompleted")]
-    public async Task Consume_TerminalUpdateReportsOriginalStartAndRemainingTestBeforeMissingChannelFails(int terminalState)
+    public async Task Consume_TerminalUpdateReportsOriginalStartAndRemainingTestWithoutIpc(int terminalState)
     {
         using var fixture = new DumpBehaviorFixture();
         using HangDumpActivityIndicator indicator = fixture.CreateActivityIndicator();
@@ -128,13 +128,11 @@ public sealed class HangDumpActivityBehaviorTests
         fixture.Now = fixture.Now.AddSeconds(4);
         TestNodeUpdateMessage terminal = DumpBehaviorFixture.Update("selected", "Terminal selected", GetTerminalProperty(terminalState));
 
-        // A disabled indicator has no activity channel. Its public invariant fails after the
-        // bookkeeping/trace diagnostics, providing a deterministic boundary without IPC or reflection.
-        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
-            () => indicator.ConsumeAsync(null!, terminal, CancellationToken.None));
-        Assert.Contains("Unexpected state", exception.Message);
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
-            () => indicator.ConsumeAsync(null!, terminal, CancellationToken.None));
+        // A disabled indicator has no activity channel, so any per-result IPC attempt would fail its
+        // state guard. Consuming only records the activity for the background signal loop, so both
+        // terminal updates complete without a request.
+        await indicator.ConsumeAsync(null!, terminal, CancellationToken.None);
+        await indicator.ConsumeAsync(null!, terminal, CancellationToken.None);
 
         Assert.AreSequenceEqual(
             ["Test removed from in-progress list 'Original selected' after '00:00:08', total in-progress '1'"],
@@ -159,21 +157,22 @@ public sealed class HangDumpActivityBehaviorTests
         fixture.Now = fixture.Now.AddSeconds(3);
         IProperty attemptState = completionMarker ? TestNodeExecutionCompletedProperty.CachedInstance : new FailedTestNodeStateProperty();
 
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => indicator.ConsumeAsync(
+        await indicator.ConsumeAsync(
             null!,
             DumpBehaviorFixture.Update("retried", "Superseded attempt", attemptState, new RetryAttemptProperty(1, isSuperseded: true)),
-            CancellationToken.None));
+            CancellationToken.None);
         Assert.IsEmpty(fixture.Logs.Where(log => log.Message.StartsWith("Test removed from in-progress list", StringComparison.Ordinal)));
 
         fixture.Now = fixture.Now.AddSeconds(8);
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => indicator.ConsumeAsync(
+        await indicator.ConsumeAsync(
             null!,
             DumpBehaviorFixture.Update("retried", "Final attempt", PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false)),
-            CancellationToken.None));
+            CancellationToken.None);
 
         Assert.AreSequenceEqual(
             ["Test removed from in-progress list 'Original retry' after '00:00:11', total in-progress '0'"],
             fixture.Logs.Select(log => log.Message).Where(message => message.StartsWith("Test removed from in-progress list", StringComparison.Ordinal)));
+        Assert.IsEmpty(fixture.Scheduler.Invocations);
     }
 
     [TestMethod]
@@ -202,15 +201,16 @@ public sealed class HangDumpActivityBehaviorTests
         using var fixture = new DumpBehaviorFixture();
         using HangDumpActivityIndicator indicator = fixture.CreateActivityIndicator();
 
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => indicator.ConsumeAsync(
+        await indicator.ConsumeAsync(
             null!,
             DumpBehaviorFixture.Update("unknown", "Untracked test"),
-            CancellationToken.None));
+            CancellationToken.None);
 
         Assert.AreSequenceEqual(
             ["Signal for action node Untracked test - ''. _exitSignalActivityIndicatorAsync: False"],
             fixture.Logs.Select(log => log.Message));
         fixture.Clock.VerifyGet(x => x.UtcNow, Times.Never);
+        Assert.IsEmpty(fixture.Scheduler.Invocations);
     }
 
     [TestMethod]
@@ -243,14 +243,14 @@ public sealed class HangDumpActivityBehaviorTests
         fixture.Clock.VerifyGet(x => x.UtcNow, Times.Once);
         fixture.Clock.SetupGet(x => x.UtcNow).Throws(new IOException("Trace-disabled terminal handling must not read elapsed time."));
 
-        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => indicator.ConsumeAsync(
+        await indicator.ConsumeAsync(
             null!,
             DumpBehaviorFixture.Update("running", "Completed test", PassedTestNodeStateProperty.CachedInstance),
-            CancellationToken.None));
+            CancellationToken.None);
 
-        Assert.Contains("Unexpected state", exception.Message);
         Assert.IsEmpty(fixture.Logs);
         fixture.Clock.VerifyGet(x => x.UtcNow, Times.Once);
+        Assert.IsEmpty(fixture.Scheduler.Invocations);
     }
 
 #if NETCOREAPP

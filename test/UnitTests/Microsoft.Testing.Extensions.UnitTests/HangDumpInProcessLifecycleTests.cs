@@ -45,8 +45,12 @@ public sealed class HangDumpInProcessLifecycleTests
             await ConsumeAsync(fixture, "not-running", "Ignoré é", SkippedTestNodeStateProperty.CachedInstance);
             await ConsumeAsync(fixture, "metadata", "No state 東京");
 
-            fixture.AssertSignalCount(4);
-            fixture.ControllerClock.VerifyGet(value => value.UtcNow, Times.Exactly(traceEnabled ? 4 : 0));
+            // Activity is only recorded on the per-result path; the background loop forwards all four
+            // updates to the controller as one coalesced signal.
+            fixture.AssertSignalCount(0);
+            await fixture.FlushActivityAsync();
+            fixture.AssertSignalCount(1);
+            fixture.ControllerClock.VerifyGet(value => value.UtcNow, Times.Exactly(traceEnabled ? 1 : 0));
             fixture.ChildClock.VerifyGet(value => value.UtcNow, Times.Exactly(traceEnabled ? 3 : 2));
             string[] removals = RemovalMessages(fixture);
             if (traceEnabled)
@@ -60,12 +64,16 @@ public sealed class HangDumpInProcessLifecycleTests
                     || message.StartsWith("New in-progress test '", StringComparison.Ordinal)));
             }
 
-            // Finishing has no transport or cancellation side effects, even with a canceled token.
+            // Finishing stops the loop and makes a best-effort final flush. With a canceled session the
+            // flush is rejected before any request is written, and finishing still completes normally so
+            // later finishing handlers run.
+            await ConsumeAsync(fixture, "pending", "Pending at finish Ω", PassedTestNodeStateProperty.CachedInstance);
             using var rejectedFinish = new CancellationTokenSource();
             rejectedFinish.Cancel();
             int logCount = fixture.Logs.Count;
-            await fixture.SessionLifetime.OnTestSessionFinishingAsync(new TestSessionContext(rejectedFinish.Token));
+            await fixture.AwaitAsync(fixture.SessionLifetime.OnTestSessionFinishingAsync(new TestSessionContext(rejectedFinish.Token)));
             Assert.HasCount(logCount, fixture.Logs);
+            fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
             fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, graceful ? Times.Never() : Times.Once());
@@ -81,7 +89,7 @@ public sealed class HangDumpInProcessLifecycleTests
     }
 
     [TestMethod]
-    public async Task RegisteredLifecycle_ActivityBeforeReverseConnectionIsAcknowledged()
+    public async Task RegisteredLifecycle_ActivityBeforeReverseConnectionIsDeliveredOnceConnected()
     {
         var fixture = new HangDumpInProcessProtocolFixture(TestContext.CancellationToken);
         try
@@ -94,14 +102,18 @@ public sealed class HangDumpInProcessLifecycleTests
             Assert.DoesNotContain("Test host controller connected", fixture.ChildMessages);
 
             // This boundary is after the primary request lock was released and before the
-            // controller ever connects back or creates an inactivity timer.
+            // controller ever connects back or creates an inactivity timer. The activity stays
+            // pending: the signal loop only starts once the handshake has completed.
             await ConsumeAsync(fixture, "before-ready", "Discovery before ready 東京", DiscoveredTestNodeStateProperty.CachedInstance);
-            fixture.AssertSignalCount(1);
+            fixture.AssertSignalCount(0);
             fixture.ProcessInformation.VerifyNoOtherCalls();
             Task controller = fixture.StartControllerAsync();
             await fixture.AwaitAsync(Task.WhenAll(child, controller));
             fixture.AssertReadyHandshake();
+            await fixture.FlushActivityAsync();
+            fixture.AssertSignalCount(1);
             await ConsumeAsync(fixture, "after-ready", "Discovery after ready Ω", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(2);
             fixture.ControllerClock.VerifyGet(value => value.UtcNow, Times.Exactly(2));
             fixture.ChildClock.VerifyGet(value => value.UtcNow, Times.Never);
@@ -139,6 +151,7 @@ public sealed class HangDumpInProcessLifecycleTests
             fixture.AssertReadyHandshake();
             Assert.AreEqual(originalEndpoint, fixture.PipeName);
             await ConsumeAsync(fixture, "accepted", "Accepted after cancellation Ω", PassedTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             Assert.IsEmpty(RemovalMessages(fixture), "Rejected terminal input must not invent a running test.");
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
@@ -172,6 +185,7 @@ public sealed class HangDumpInProcessLifecycleTests
             Assert.AreEqual(originalEndpoint, fixture.PipeName);
             Assert.HasCount(2, fixture.ControllerMessages.Where(message => message.StartsWith("Wait for test host connection to the server pipe '", StringComparison.Ordinal)));
             await ConsumeAsync(fixture, "retry", "Controller retry 東京", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
         }
@@ -223,6 +237,7 @@ public sealed class HangDumpInProcessLifecycleTests
             Assert.HasCount(1, fixture.ControllerMessages.Where(message => message.StartsWith("Client connected to ", StringComparison.Ordinal)));
             Assert.HasCount(2, fixture.ControllerMessages.Where(message => message.StartsWith("Wait for test host connection to the server pipe '", StringComparison.Ordinal)));
             await ConsumeAsync(fixture, "after-wait-cancel", "Ready after controller cancellation Ω", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
         }
@@ -267,6 +282,7 @@ public sealed class HangDumpInProcessLifecycleTests
             fixture.AssertReadyHandshake();
             Assert.HasCount(2, fixture.ControllerMessages.Where(message => message.StartsWith("Wait for test host connection to the server pipe '", StringComparison.Ordinal)));
             await ConsumeAsync(fixture, "after-wait-failure", "Ready after diagnostic failure 東京", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
         }
@@ -349,6 +365,7 @@ public sealed class HangDumpInProcessLifecycleTests
             await fixture.AwaitAsync(child);
             fixture.AssertReadyHandshake();
             await ConsumeAsync(fixture, "connected-without-timer", "Discovery after connected diagnostic failure Ω", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
             fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
@@ -380,6 +397,7 @@ public sealed class HangDumpInProcessLifecycleTests
                 : new FailedTestNodeStateProperty();
             await ConsumeAsync(fixture, "retried", "Superseded retry", supersededState, new RetryAttemptProperty(1, isSuperseded: true));
             Assert.IsEmpty(RemovalMessages(fixture));
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await ConsumeAsync(fixture, "retried", "Final retry", PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false));
             AssertRemoval(Assert.ContainsSingle(RemovalMessages(fixture)), "Original retry 東京", remaining: 1);
@@ -387,7 +405,11 @@ public sealed class HangDumpInProcessLifecycleTests
             string[] removals = RemovalMessages(fixture);
             Assert.HasCount(2, removals);
             AssertRemoval(removals[1], "Other tracked Ω", remaining: 0);
-            fixture.AssertSignalCount(3);
+
+            // Both final results are forwarded as one coalesced signal.
+            fixture.AssertSignalCount(1);
+            await fixture.FlushActivityAsync();
+            fixture.AssertSignalCount(2);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
             fixture.AssertNoDumpWork();
         }
@@ -412,6 +434,7 @@ public sealed class HangDumpInProcessLifecycleTests
             Assert.AreEqual(rejected.Token, cancellation.CancellationToken);
             fixture.ProcessInformation.VerifyNoOtherCalls();
             await ConsumeAsync(fixture, "after-rejected-exit", "Activity after rejected exit 東京", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
             fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
@@ -475,17 +498,17 @@ public sealed class HangDumpInProcessLifecycleTests
             await fixture.BindAsync();
             await fixture.ConnectAsync();
             await ConsumeAsync(fixture, "before-disposal", "Activity before disposal Ω", DiscoveredTestNodeStateProperty.CachedInstance);
+            await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.ShutdownAsync(useAsyncDisposal);
             await fixture.ShutdownAsync(useAsyncDisposal);
             Assert.IsTrue(fixture.AllTrackedTasksCompleted);
-            Assert.AreEqual(3, fixture.TrackedTransportTaskCount, "One primary accept and one loop for each registered direction must be drained.");
+            Assert.AreEqual(4, fixture.TrackedTransportTaskCount, "One primary accept, one loop for each registered direction and the activity signal loop must be drained.");
             fixture.ProcessInformation.VerifyNoOtherCalls();
 
-            // CancellationToken.None makes the disposed client, not the canceled session token,
-            // the rejection boundary. The semaphore rejects before writing to a closed pipe.
-            await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
-                () => fixture.Consumer.ConsumeAsync(null!, Update("after-disposal", "No request after disposal", DiscoveredTestNodeStateProperty.CachedInstance), CancellationToken.None));
+            // Consuming only records activity, so it completes after disposal. The stopped signal loop
+            // never forwards it to the closed pipe.
+            await fixture.AwaitAsync(fixture.Consumer.ConsumeAsync(null!, Update("after-disposal", "No request after disposal", DiscoveredTestNodeStateProperty.CachedInstance), CancellationToken.None));
             fixture.AssertSignalCount(1);
             fixture.AssertNoDumpWork();
         }

@@ -684,6 +684,40 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public void ActivityTimer_DueTimeBeyondTheTimerLimit_WaitsInSeveralPeriodsInsteadOfFailingOrDumping()
+    {
+        // The largest timeout the parser accepts plus the signal interval exceeds the longest period a Timer accepts.
+        TimeSpan dueTime = HangDumpOptions.GetInactivityTimerDueTime(TimeSpan.FromMilliseconds(uint.MaxValue - 1));
+        using var activityTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        HangDumpProcessLifetimeHandler handler = CreateHandler();
+        SetHandlerField<TimeSpan?>(handler, "_activityTimerDueTime", dueTime);
+        SetHandlerField(handler, "_activityTimer", activityTimer);
+
+        InvokeHandlerMethod(handler, "ArmActivityTimer");
+        Assert.AreEqual(TimeSpan.FromSeconds(1), GetHandlerField<TimeSpan>(handler, "_activityTimerRemainingDueTime"));
+
+        InvokeHandlerMethod(handler, "OnActivityTimerElapsed", CancellationToken.None);
+        Assert.AreEqual(0, GetHandlerField<int>(handler, "_dumpTaken"), "The first period elapsing is not inactivity for the whole timeout.");
+        Assert.AreEqual(TimeSpan.Zero, GetHandlerField<TimeSpan>(handler, "_activityTimerRemainingDueTime"));
+
+        SetHandlerField(handler, "_activityTimer", (Timer?)null);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+        handler.Dispose();
+    }
+
+    [TestMethod]
+    [DataRow(1000L, 1000L, 0L, DisplayName = "Short due time is one period")]
+    [DataRow(4294967294L, 4294967294L, 0L, DisplayName = "Maximum period is one period")]
+    [DataRow(4294968294L, 4294967294L, 1000L, DisplayName = "Longer due time waits for the rest after the period")]
+    public void GetTimerPeriod_SplitsDueTimesBeyondTheTimerLimit(long dueTimeMilliseconds, long expectedPeriodMilliseconds, long expectedRemainingMilliseconds)
+    {
+        TimeSpan period = HangDumpOptions.GetTimerPeriod(TimeSpan.FromMilliseconds(dueTimeMilliseconds), out TimeSpan remaining);
+
+        Assert.AreEqual(TimeSpan.FromMilliseconds(expectedPeriodMilliseconds), period);
+        Assert.AreEqual(TimeSpan.FromMilliseconds(expectedRemainingMilliseconds), remaining);
+    }
+
+    [TestMethod]
     public void Dispose_FaultedDump_ReportsAndRethrowsAggregateException()
     {
         var failure = new InvalidOperationException("dump failed");
@@ -920,6 +954,11 @@ public sealed class HangDumpTests
         await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
             () => (Task)operation.Invoke(pipe, [cancellationToken])!);
     }
+
+    private static void InvokeHandlerMethod(HangDumpProcessLifetimeHandler handler, string methodName, params object?[] arguments)
+        => typeof(HangDumpProcessLifetimeHandler)
+            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(handler, arguments);
 
     private static void SetHandlerField<T>(HangDumpProcessLifetimeHandler handler, string fieldName, T value)
         => typeof(HangDumpProcessLifetimeHandler)
