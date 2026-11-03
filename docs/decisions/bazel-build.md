@@ -1724,7 +1724,7 @@ command, verifies the SDK/VMR/runtime metadata, rejects mismatched compiler
 hosts and bootstrap compiler changes, and checks the existing four reference
 pack versions. It deliberately describes action counts as **declared**, not
 executed: an action query is not a successful build. Its companion
-`test-engineering-sdk-verifier.ps1` exercises eight explicitly synthetic
+`test-engineering-sdk-verifier.ps1` exercises ten explicitly synthetic
 graph fixtures with real installed compiler metadata, plus two checks that
 success and failure restore environment values and preserve absent versus
 present-but-empty entries. Those fixture results
@@ -1766,12 +1766,13 @@ verified SDK 12 installation and the baseline's downloaded SDK 11:
 .\eng\bazel\test-engineering-sdk-verifier.ps1 -EngineeringSdkDirectory $sdk12 -PublishedSdkDirectory $sdk11 -EvidenceRoot $evidence
 ```
 
-Exit 0, ten checks passed: `NoSourceActions`, `MismatchedCompilerHost`,
+The latest run exited 0 with twelve checks passed: `NoSourceActions`, `MismatchedCompilerHost`,
 `WrongNet11ReferencePack`, `MissingFrameworks`, `ChangedBootstrapCompiler`,
 `OutsideExecutionRoot`, `PublishedCompilerRejected`,
 `VerifiedEngineeringCompiler`, `EnvironmentRestoredAfterSuccess`, and
-`EnvironmentRestoredAfterFailure`. The first eight deliberately use synthetic
-graphs; they test the verifier, not the Bazel compiler graph.
+`EnvironmentRestoredAfterFailure`, plus `RequestedFrameworkSubset` and
+`ExpandedCompilerArguments`. Ten deliberately use synthetic graphs; they test
+the verifier, not the Bazel compiler graph.
 
 An additional existing native `build_tools.dll` (`net10.0`, built during the
 SDK 11 baseline attempt) successfully executed its `version` command on the
@@ -1870,3 +1871,12 @@ Only the completed exit-0 harness above is the bounded integration result.
 This proof is for the helper and source-built MTP/TRX explorer on net10 using
 the SDK 12 host. The .NET 8/9/10/11 package/publisher gate and broader combined
 source/test graph are separate validation stages.
+
+The actual Bazel 9 query expands response-file arguments directly into each
+action's `arguments` array. The verifier handles that real format as well as
+explicit `paramFiles` fixture input. `-TargetFrameworks net10.0` permits a
+bounded audit without claiming the other three frameworks were checked;
+omitting it still requires all four. That scoped audit passed against the
+real bounded query above (34 source actions, SDK 12, net10 reference 10.0.14).
+The extra fixture cases cover both the explicit subset and native expanded
+argument shape.

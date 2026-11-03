@@ -40,12 +40,13 @@ function New-Graph([string] $SdkRoot = '.', [string] $Version = '12.0.100-alpha.
     return @{ targets = @(@{ id = 1; label = '//:platform' }); actions = @($actions) }
 }
 
-function Assert-Fixture([string] $Name, [hashtable] $Graph, [int] $ExpectedExit, [string] $Message, [string] $ExecutionRoot = $engineeringSdk) {
+function Assert-Fixture([string] $Name, [hashtable] $Graph, [int] $ExpectedExit, [string] $Message, [string] $ExecutionRoot = $engineeringSdk, [string] $TargetFramework) {
     $path = Join-Path $directory "$Name.json"
     $output = Join-Path $directory "$Name.result.json"
     $log = Join-Path $directory "$Name.log"
     $Graph | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $path -Encoding utf8
-    & $pwsh -NoProfile -NonInteractive -File $verifier -ActionGraph $path -ExecutionRoot $ExecutionRoot -OutputPath $output *> $log
+    $frameworkArguments = if ($TargetFramework) { @('-TargetFrameworks', $TargetFramework) } else { @() }
+    & $pwsh -NoProfile -NonInteractive -File $verifier -ActionGraph $path -ExecutionRoot $ExecutionRoot -OutputPath $output @frameworkArguments *> $log
     $code = $LASTEXITCODE
     $text = Get-Content -LiteralPath $log -Raw
     if ($code -ne $ExpectedExit -or -not $text.Contains($Message)) { throw "Fixture $Name failed: exit=$code`n$text" }
@@ -78,7 +79,7 @@ function Assert-EnvironmentRestored([string] $Name, [string] $Fixture, [bool] $E
             & $verifier -ActionGraph (Join-Path $directory "$Fixture.json") -ExecutionRoot $engineeringSdk -OutputPath (Join-Path $directory "$Name.result.json") *> (Join-Path $directory "$Name.log")
         }
         catch [System.Management.Automation.RuntimeException] {
-            if (-not $ExpectFailure -or -not $_.Exception.Message.Contains('action graph must include all four managed TFMs')) { throw }
+            if (-not $ExpectFailure -or -not $_.Exception.Message.Contains('action graph must include the requested target frameworks')) { throw }
             $failed = $true
         }
         if ($failed -ne $ExpectFailure) { throw "$Name observed an unexpected verifier outcome." }
@@ -110,7 +111,14 @@ $graph.actions[3].paramFiles[0].arguments[0] = '-r:external/rules_dotnet++dotnet
 Assert-Fixture 'WrongNet11ReferencePack' $graph 1 'Unexpected net11.0 reference pack'
 $graph = New-Graph
 $graph.actions = @($graph.actions[0])
-Assert-Fixture 'MissingFrameworks' $graph 1 'action graph must include all four managed TFMs'
+Assert-Fixture 'MissingFrameworks' $graph 1 'action graph must include the requested target frameworks'
+Assert-Fixture 'RequestedFrameworkSubset' $graph 0 'Engineering compiler verified for 1 declared source actions' -TargetFramework 'net8.0'
+$graph = New-Graph
+foreach ($action in $graph.actions) {
+    $action.arguments += $action.paramFiles[0].arguments
+    $action.Remove('paramFiles')
+}
+Assert-Fixture 'ExpandedCompilerArguments' $graph 0 'Engineering compiler verified for 4 declared source actions'
 $graph = New-Graph
 $graph.targets += @{ id = 2; label = '@@rules_dotnet+//tools/csharp_compiler_worker:csharp_compiler_worker' }
 $graph.actions += @{

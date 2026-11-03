@@ -12,7 +12,11 @@ param(
     [string] $ExecutionRoot,
 
     [Parameter(Mandatory)]
-    [string] $OutputPath
+    [string] $OutputPath,
+
+    [ValidateSet('net8.0', 'net9.0', 'net10.0', 'net11.0')]
+    [ValidateCount(1, 4)]
+    [string[]] $TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -134,11 +138,11 @@ try {
         $coreLib = Join-Path $sdk "shared\Microsoft.NETCore.App\$runtimeVersion\System.Private.CoreLib.dll"
         $records[$records.Count - 1] | Add-Member -NotePropertyName RuntimeSha256 -NotePropertyValue (Get-FileHash -LiteralPath $coreLib -Algorithm SHA256).Hash
     }
-    if ($packs.Count -ne $packVersions.Count) {
-        throw 'The action graph must include all four managed TFMs and parameter files. Use aquery deps(//:managed_all) --include_param_files --output=jsonproto.'
+    if (@($TargetFrameworks | Where-Object { -not $packs.Contains($_) }).Count) {
+        throw "The action graph must include the requested target frameworks ($($TargetFrameworks -join ', ')) and parameter files. Use aquery with --include_param_files --output=jsonproto."
     }
     $passed = $true
-    Write-Host "Engineering compiler verified for $userActions declared source actions; .NET 8/9/10/11 reference packs preserved."
+    Write-Host "Engineering compiler verified for $userActions declared source actions; requested reference packs preserved: $($TargetFrameworks -join ', ')."
 }
 finally {
     foreach ($entry in $environment.GetEnumerator()) {
@@ -154,6 +158,7 @@ finally {
         UserCompilerActions = $userActions
         BootstrapCompilerActions = $bootstrapActions
         ReferencePacks = $packVersions
+        ExpectedReferenceFrameworks = $TargetFrameworks
         ObservedReferenceFrameworks = @($packs)
         Compilers = $records
         Scope = 'Action-graph and executed compiler identity only; pair with successful native build, tests, and composed-consumer results.'
