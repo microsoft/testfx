@@ -753,6 +753,200 @@ the decisive evidence in this versioned record. Batch mode left no test server
 running. Windows library compilation, controller layout, real registration/
 activation and native XAML remain separate, unproven gates at this stage.
 
+#### Windows library execution and the controller identity boundary
+
+The subsequent `net8.0-windows10.0.19041.0` PackagedApp build passed with
+`--jobs=1`. Its copied, self-contained consumer ran on **.NET 8.0.33**, invoked
+the real `PackageManager.RegisterPackageByUriAsync` API-presence query through
+the WinRT projection, and verified the loaded native MTP, PackagedApp,
+Microsoft.Windows.SDK.NET and WinRT.Runtime hashes against its producer.
+The staged directory contained spaces and `!`, and `DOTNET_ROOT` pointed to a
+missing directory. This is a library/runtime check, not app registration.
+The desktop reference-only consumer and modern UWP library flavors also built.
+
+The full graph exposed further native asset-selection requirements: Windows SDK
+NuGet versions have four numeric components; `lib/native/*.lib` entries are C++
+linker inputs, not unsupported managed TFMs; and a flat Bazel `select` cannot
+choose between a newer portable TFM and an older Windows-qualified TFM because
+their compatibility conditions form a partial order. The scoped patch preserves
+the full versions, ignores C++ inputs for managed references, and uses ordered
+single-condition aliases with the same nearest-framework precedence.
+
+The exact CodeCoverage payload was independently hashed because the `test-tools`
+feed's registration/catalog route did not expose its integrity. Its SHA-256 is
+`D3BD12007741B5037080C4C97802FFD5C9DB97DBE4186F040A1D4B56EA8CAE4E`,
+and the module fragment pins its SHA-512. Only that package's six managed
+assemblies, 17 satellite cultures and 11 win-x64 native/config assets are
+imported, with the source-built MTP dependency rather than the released one.
+
+Controller compilation then failed at its real CodeCoverage hook: that package
+requires `Microsoft.Testing.Platform, Version=2.6.0.0, PublicKeyToken=b03f5f7f11d50a3a`,
+while the native platform has the same version but `PublicKeyToken=null`.
+The coordinating session owns the shared signing/friend-identity correction;
+this lane does not rewrite CodeCoverage, substitute released MTP, or use
+reflection to hide the mismatch. At that point the controller was not yet a
+built deliverable.
+
+The complete **14-library Windows matrix** and seven isolated consumers
+subsequently passed:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfbw\d683319bb48a'
+.\eng\bazel\windows\validate.ps1
+```
+
+The command exited zero. WinRT consumers ran on .NET 8.0.33, 9.0.22, 10.0.14,
+and the pinned .NET 11 RC runtime; the WPF and WinUI consumers ran on 8.0.33
+and the modern UWP consumer on 9.0.22. Every loaded first-party/runtime DLL
+matched its native producer hash and was loaded from the copied layout.
+Windows target/minimum metadata, the WPF implementation-versus-reference
+boundary, the ordinary WinRT profile's exclusion of the UWP XAML projection,
+and the compiler action graph were checked. Evidence:
+`windows-validation/20261103-152856-5ac73479` beneath the lane's output root.
+
+The real packaged-host check also passed:
+
+```powershell
+.\eng\bazel\windows\validate-app-model.ps1 -HostOnly
+```
+
+This builds a native console host around the unchanged explorer framework/tests,
+not a XAML application. It checks unpackaged pass/failure/empty-selection exits
+**0/2/9**, launcher suppression without registration, then real registration,
+AUMID activation, the selected passing test's TRX, exact installed package
+identity/location, and loaded native hashes. The final registration readback
+was an empty array after removal of the exact task-owned package. Evidence:
+`windows-app-model/9f309006ea6d4343ad62a3a7704cca0e`. The identity was
+`TestFx.Bazel.9f309006ea6d4343ad62a3a7704cca0e`.
+
+Two harness attempts were corrected before that result: Windows PowerShell's
+first-module-load progress CLIXML must not be appended to stdout JSON, and an
+initial 52-character generated package name exceeded the Windows identity
+limit, causing `0x800706F7` before registration. Neither was treated as a
+production pass or a host-permission failure. No package remained registered
+after any attempt, and no ACL, Developer Mode, SDK or VS installation changed.
+`-HostOnly` explicitly excludes the still-blocked external controller checks;
+the default script requires those checks too.
+
+#### Bounded XAML boundary research
+
+The pinned Windows App SDK WinUI package contains a standalone
+`tools/net472/XamlCompiler.exe`. Invoking it with no inputs returned its documented
+two-JSON-file usage and exit zero. The package's
+`Microsoft.UI.Xaml.Markup.Compiler.interop.targets` supplies `RealBuildPass1` /
+`RealBuildPass2` inputs, then consumes generated C#, XAML and XBF outputs.
+Metadata inspection of `CompilerInputs`, `AssemblyItem` and `FileItem` established
+the actual serialized input shape without invoking MSBuild.
+
+A bounded direct-compiler experiment will test whether that private, versioned
+JSON contract can generate a tiny XAML library with explicit native references.
+That would be a compiler experiment only: it would not establish a complete
+Bazel XAML rule, WinUI deployment, application activation, or supported tooling.
+An MSBuild bridge remains hybrid and must not be described as native support.
+
+The bounded experiment was executed with the native WinUI library's actual
+compiler reference list and a tiny `MainPage.xaml`/partial C# class.
+`XamlCompiler.exe <input JSON> <output JSON>` ran directly, not through MSBuild.
+The first input returned exit 1 with an internal index-out-of-range error.
+A second input supplied the core reference root and left `LocalAssembly`
+absent; a third restored the vendor's omitted-field defaults, a trailing output
+separator and the existing Windows SDK path. Both returned exit 1 without
+generated output. Inputs and logs remain under `xaml-probe` in the owned output
+root. No generated C# or XBF, native XAML build rule, or XAML app execution is
+claimed. This establishes an unresolved private compiler-input/toolchain
+boundary, not that native XAML compilation is impossible. Further work needs a
+canonical input/output contract before a safe two-pass Bazel rule.
+
+#### Signed controller completion and configured asset evidence
+
+The shared portions of coordinator checkpoint
+`aff2cf0f702a07779cee99a8acf29cf515e858bb` were integrated without importing its
+absent SDK/alias-conformance lane files. The public-signing patch matches the
+checkpoint's Git blob `77ebdde668431f21d5e7a08d8c34098e1c36c6f5`.
+The public-only, hash-pinned MSFT key and `/publicsign+` preserve the source
+assembly token `b03f5f7f11d50a3a`, qualified mock/Microsoft friend identities and
+satellites. This is development **public signing**, not private-key release
+signing, an MSIX certificate, or authorization to publish packages.
+
+Both original `mstest-appmodel-controller` targets now build natively for their
+net8/net9 Windows 19041, win-x64, framework-dependent apphost layouts. The
+unchanged CodeCoverage extension binds to source-built MTP; none of its DLLs
+were rewritten. Its 11 native/config files remain under
+`runtimes/win-x64/native` in each controller publish layout.
+
+The full `validate-app-model.ps1` run
+`windows-app-model/2e60d7846fe94b6d8e9eb163f17c667a` exited zero. It exercised
+both controllers, not `-HostOnly`:
+
+| Path | Expected and observed exit |
+| --- | --- |
+| Each controller's malformed bootstrap | 5 |
+| Each controller's selected passing test | 0, with one executed passing TRX result |
+| Each controller's selected failing test | 2 |
+| Each controller's empty selection | 9 |
+| Each controller's discovery without execution handshake | 0, with the real host's test names |
+| Native packaged host registration/activation and suppressed launcher | 0 |
+| Exact package removal and empty registration readback | 0 |
+
+The source MTP/PackagedApp public-key tokens and loaded native hashes were
+checked in the activated host. Signed Windows-library validation also exited
+zero for all seven consumers under
+`windows-validation/20261103-162841-f7772f5c`; it additionally requires the
+correct token on every source library and executes both analysis-test targets.
+WinUI/UWP probes establish library API/metadata and runtime provenance, not
+UI-thread execution or Windows App SDK initialization. The UIAutomation probe
+loads real WPF types but does not interact with an application window.
+Classic UWP, AppContainer activation, the native SDK's full packaged-test
+routing and official packaging/release qualification remain distinct gates.
+
+`windows_asset_selection_test` adds four configured checks around actual
+`tfm_filegroup` aliases. A retained, buildable counterfactual reverses the alias
+priority while preserving the same fixture/tests. It executes and fails:
+
+```text
+NewerRuntimeWinsWithoutAmbiguity: expected ["LICENSE"], actual [".bazelversion"]
+```
+
+The files are read-only markers for newer-runtime versus older-Windows assets.
+The test passed before and after; Bazel exits were **0 / 3 / 0**, with one
+executed test target per run and no skips. Counterfactual patch SHA-256:
+`D1F37B396384FAC2354007DAEFCBA58C2B77F2E151B7034FBA67855723A15451`.
+Test-source SHA-256:
+`58960E7A1E1F703975549C5EE7241C8A3379D5B89D7F6B5AA908BEE1A74C6CEB`.
+Windows-targeting patch SHA-256:
+`2A63D276D7647CBACACCB3AA8AEBA0CD66CDDBB4A70BC6C42E948EBD8F55044F`.
+The first attempted counterfactual restored the flat `select` and failed during
+configuration before tests could execute; that is retained as an analysis
+blocker, not counted as behavioral red evidence.
+
+Exact selection command:
+
+```powershell
+.\eng\bazel.ps1 test //:windows_targeting_test //:windows_asset_selection_test --jobs=2 --noshow_progress --show_result=0 --nocache_test_results
+```
+
+The isolated red run selected only `//:windows_asset_selection_test`, used the
+owned `-red` output root and the module override described above. Reports,
+logs and patches are under `asset-selection-evidence`. The comparison checkout
+and retired Bazel output/install subtrees were removed after their evidence was
+preserved; active checksum caches and final validation evidence were retained.
+
+After the shared signing integration, the unchanged portable baseline was
+rerun with
+`.\eng\bazel.ps1 test //:baseline_tests --jobs=2 --noshow_progress --show_result=0 --nocache_test_results`
+and exited zero. Parsed reports account for **3,017 passing cases across seven
+targets**: framework 1,634; adapter 152; platform services 1,215; build tools 13;
+and one each for the source explorer, released explorer and Simple1. No cases
+were skipped. The reports and counts are retained under
+`portable-signed-evidence` in the owned output root.
+
+This lane establishes native managed Windows compilation, self-contained
+library consumers, two framework-dependent controller layouts, and real
+registration/activation of a **loose MSIX layout**. It does not produce a signed
+MSIX archive or establish native XAML, classic-UWP/AppContainer execution,
+Windows NuGet integration, release-branch servicing, or CI completion.
+The coordinating migration owner retains those rollout/integration decisions.
+
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
 The user authorized implementing as much of the remaining migration as possible.

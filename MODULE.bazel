@@ -77,3 +77,5 @@ paket.parse(
     repo_prefix = "testsupport.",
 )
 use_repo(paket, "testsupport.analyzers", "testsupport.benchmarks", "testsupport.main")
+
+include("//eng/bazel/windows:windows.MODULE.bazel")

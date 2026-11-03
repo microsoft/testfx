@@ -12,3 +12,8 @@ filegroup(
 )
 
 exports_files(["TestingPlatformExplorer.testingplatformconfig.json"])
+
+filegroup(
+    name = "framework_sources",
+    srcs = glob(["TestingFramework/*.cs"]) + ["UnitTests.cs"],
+)

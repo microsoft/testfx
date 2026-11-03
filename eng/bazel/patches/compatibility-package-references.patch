@@ -36,7 +36,7 @@ index c8a8cbd547..b92bcb0235 100644
 @@ -322,10 +339,34 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
          )
          for runtime_dependency in runtime_dependencies.to_list():
-             version = semver.to_comparable(runtime_dependency.version)
+             version = semver.to_comparable(runtime_dependency.version, relaxed = True)
 +            nuget = runtime_dependency.nuget_info
 +            package_owner = nuget.nupkg.owner.repo_name if nuget != None and nuget.nupkg != None and nuget.nupkg.owner != None else None
              for lib in runtime_dependency.libs:

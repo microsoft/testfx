@@ -1,5 +1,5 @@
 diff --git a/dotnet/private/common.bzl b/dotnet/private/common.bzl
-index c8a8cbd..c101e05 100644
+index c8a8cbd..2bb22f3 100644
 --- a/dotnet/private/common.bzl
 +++ b/dotnet/private/common.bzl
 @@ -20,10 +20,11 @@ load(
@@ -23,6 +23,24 @@ index c8a8cbd..c101e05 100644
      if tfm.startswith("netstandard"):
          return "{}.0".format(tfm.replace("netstandard", ""))
      elif tfm.startswith("netcoreapp"):
+@@ -321,7 +323,7 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+             transitive = [dep[DotnetAssemblyRuntimeInfo].deps for dep in deps],
+         )
+         for runtime_dependency in runtime_dependencies.to_list():
+-            version = semver.to_comparable(runtime_dependency.version)
++            version = semver.to_comparable(runtime_dependency.version, relaxed = True)
+             for lib in runtime_dependency.libs:
+                 lib_name = lib.basename.removesuffix(".dll").lower()
+                 if lib_name not in transitive_versions or version > transitive_versions[lib_name]:
+@@ -349,7 +351,7 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+             # `project_sdk`. System.Security.Cryptography.Xml, for example, has a
+             # minimum version for net8.0 but is only contributed by the
+             # `project_sdk = "web"` (ASP.NET) framework.
+-            add_to_output = semver.to_comparable(assembly.version) > semver.to_comparable(minimum_version, relaxed = True)
++            add_to_output = semver.to_comparable(assembly.version, relaxed = True) > semver.to_comparable(minimum_version, relaxed = True)
+             if add_to_output:
+                 if not narrowed:
+                     framework_list = dict(framework_list)
 @@ -476,12 +478,9 @@ def get_highest_compatible_target_framework(incoming_tfm, tfms):
      if FRAMEWORK_COMPATIBILITY[incoming_tfm] == None:
          fail("Target framework moniker is not supported/valid: {}", incoming_tfm)
@@ -71,6 +89,15 @@ index c8a8cbd..c101e05 100644
      if selected == None:
          return sdk_default
  
+@@ -982,7 +990,7 @@ def generate_depsjson(
+         for dep in deps:
+             # We can use the first assembly_runtime_info since all assembly_runtime_infos since all assembly_runtime_infos will
+             # have the same version for the same runtime pack.
+-            if semver.to_comparable(dep.version) > semver.to_comparable(runtime_pack_info.assembly_runtime_infos[0].version, relaxed = True):
++            if semver.to_comparable(dep.version, relaxed = True) > semver.to_comparable(runtime_pack_info.assembly_runtime_infos[0].version, relaxed = True):
+                 dep_overrides.append(dep.name.lower())
+             else:
+                 runtime_pack_overrides.append(dep.name.lower())
 @@ -1101,7 +1109,7 @@ def generate_runtimeconfig(target_framework, project_sdk, is_self_contained, rol
  
      base = {
@@ -94,6 +121,130 @@ index c8a8cbd..c101e05 100644
      return base
  
  def to_rlocation_path(ctx, file):
+diff --git a/dotnet/private/rules/nuget/nuget_archive.bzl b/dotnet/private/rules/nuget/nuget_archive.bzl
+index 1f62b91..6bfd5a3 100644
+--- a/dotnet/private/rules/nuget/nuget_archive.bzl
++++ b/dotnet/private/rules/nuget/nuget_archive.bzl
+@@ -8,10 +8,7 @@ load(
+ )
+ load(
+     "//dotnet/private:common.bzl",
+-    "COR_FRAMEWORKS",
+     "FRAMEWORK_COMPATIBILITY",
+-    "NET_FRAMEWORKS",
+-    "STD_FRAMEWORKS",
+     "get_nearest_compatible_target_framework",
+ )
+ load("//dotnet/private:portable_rids.bzl", "rids_by_preference", "to_portable_rid")
+@@ -198,6 +195,10 @@ def _process_group_with_tfm(groups, group_name, file):
+         return
+ 
+     folder = parts[1]
++    if folder.lower() == "native":
++        # C++ linker inputs (for example Windows App SDK's DWriteCore.lib)
++        # are not managed TFMs. Runtime assets are handled under runtimes/.
++        return
+     tfm = _normalize_tfm(folder)
+ 
+     if tfm == None:
+@@ -785,7 +786,7 @@ nuget_archive = repository_rule(
+ )
+ 
+ def _tfm_alias(name, targets_by_tfm, default_target):
+-    """Resolves a TFM keyed mapping through the `tfm_*` config settings.
++    """Resolves compatible TFMs in NuGet preference order without select ambiguity.
+ 
+     Args:
+       name: The name of the alias to create.
+@@ -795,72 +796,32 @@ def _tfm_alias(name, targets_by_tfm, default_target):
+     Returns:
+       The alias.
+     """
+-    std = []
+-    net = []
+-    cor = []
+-
+-    for (tfm, target) in targets_by_tfm.items():
+-        if tfm in COR_FRAMEWORKS:
+-            cor.append((tfm, target))
+-        elif tfm in STD_FRAMEWORKS:
+-            std.append((tfm, target))
+-        elif tfm in NET_FRAMEWORKS:
+-            net.append((tfm, target))
+-        else:
++    for tfm in targets_by_tfm:
++        if tfm not in FRAMEWORK_COMPATIBILITY:
+             fail("unknown framework %s" % tfm)
+ 
+-    # A netstandard candidate and a net/netcoreapp one can both be compatible
+-    # without either encapsulating the other. Splitting them into a filegroup
+-    # per family and choosing between those with an alias resolves the conflict.
+-    if std and (net or cor):
++    # Runtime version and Windows platform version form a partial order:
++    # net8.0 and net6.0-windows can both match without either specializing the
++    # other. One condition per alias keeps the same nearest-framework order as
++    # get_nearest_compatible_target_framework, including across families.
++    target = default_target
++    for index, tfm in enumerate(FRAMEWORK_COMPATIBILITY):
++        if tfm not in targets_by_tfm:
++            continue
++        alias = "%s_tfm_%d" % (name, index)
+         native.alias(
+-            name = "%s_std" % name,
+-            actual = select(
+-                {"@rules_dotnet//dotnet:tfm_%s" % tfm: target for (tfm, target) in std} |
+-                {"//conditions:default": default_target},
+-            ),
+-            visibility = ["//visibility:public"],
+-        )
+-
+-        if net:
+-            native.alias(
+-                name = "%s_net" % name,
+-                actual = select(
+-                    {"@rules_dotnet//dotnet:tfm_%s" % tfm: target for (tfm, target) in net} |
+-                    {"//conditions:default": ":%s_std" % name},
+-                ),
+-                visibility = ["//visibility:public"],
+-            )
+-
+-        if cor:
+-            native.alias(
+-                name = "%s_cor" % name,
+-                actual = select(
+-                    {"@rules_dotnet//dotnet:tfm_%s" % tfm: target for (tfm, target) in cor} |
+-                    {"//conditions:default": ":%s_std" % name},
+-                ),
+-                visibility = ["//visibility:public"],
+-            )
+-
+-        return native.alias(
+-            name = name,
++            name = alias,
+             actual = select({
+-                # targeting net(core)
+-                "@rules_dotnet//dotnet:tfm_netcoreapp1.0": (":%s_cor" % name) if cor else (":%s_std" % name),
+-                # targeting netframework
+-                "@rules_dotnet//dotnet:tfm_net11": (":%s_net" % name) if net else (":%s_std" % name),
+-                # targeting netstandard
+-                "//conditions:default": (":%s_std" % name),
++                "@rules_dotnet//dotnet:tfm_%s" % tfm: targets_by_tfm[tfm],
++                "//conditions:default": target,
+             }),
+             visibility = ["//visibility:public"],
+         )
++        target = ":%s" % alias
+ 
+     return native.alias(
+         name = name,
+-        actual = select(
+-            {"@rules_dotnet//dotnet:tfm_%s" % tfm: target for (tfm, target) in targets_by_tfm.items()} |
+-            {"//conditions:default": default_target},
+-        ),
++        actual = target,
+         visibility = ["//visibility:public"],
+     )
+ 
 diff --git a/dotnet/private/sdk/frameworks.bzl b/dotnet/private/sdk/frameworks.bzl
 index 76dd92c..287c2fd 100644
 --- a/dotnet/private/sdk/frameworks.bzl

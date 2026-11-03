@@ -1,0 +1,18 @@
+windows_paket = use_extension("@rules_dotnet//dotnet:paket.bzl", "paket")
+windows_paket.parse(
+    dependencies = "//eng/bazel/windows:paket.dependencies",
+    lock = "//eng/bazel/windows:paket.lock",
+    repo_prefix = "windows.",
+)
+use_repo(windows_paket, "windows.coverage", "windows.main", "windows.sdk17763", "windows.sdk18362", "windows.sdk19041", "windows.sdk19041net10")
+
+# The test-tools feed does not expose a package hash through NuGet registration.
+# Pin the controller's actual payload, independently of the metadata-only lock.
+windows_nuget_archive = use_repo_rule("@rules_dotnet//dotnet:defs.bzl", "nuget_archive")
+windows_nuget_archive(
+    name = "windows_codecoverage_archive",
+    id = "microsoft.testing.extensions.codecoverage",
+    version = "18.13.0-preview.26527.4",
+    sha512 = "sha512-aZ73kAvDq/KT5z9w0I1NHoADclM9n2qIf/o6FVknNGsNn50DVk4toDZcu9zg0mSrLkk09EpVq7NvIUYY9SkVIw==",
+    sources = ["https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json"],
+)
