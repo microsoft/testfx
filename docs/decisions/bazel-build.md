@@ -1784,3 +1784,89 @@ launcher patch was made. It is runtime compatibility evidence for that
 already-built helper, not evidence that SDK 12 compiled it. An earlier call
 used the wrong `packageversion` command name and reached the helper's argument
 error; that was not a host-startup failure or regression evidence.
+
+### Executed selection evidence
+
+Implementation commit: `1bbefce63f8cc733831d62835deca9a187b6448e`.
+The shared package-version/evidence-root update
+`2d79cf530332c91d54e62f95f37b85c784984209` was applied locally as
+`9df2a5f363b89c88bb5befa600c04a8b234e187b` for the forthcoming consumers.
+
+At that source state, the cached
+`cquery @rules_dotnet//dotnet:resolved_toolchain` with
+`--extra_toolchains=@dotnet_engineering_toolchains//:all` exited 0.
+It configured the actual toolchain and reported:
+
+```text
+sdk_version=12.0.100-alpha.1.26509.101
+runtime_version=12.0.0-alpha.1.26509.101
+runtime_tfm=net12.0
+csharp_default_version=15.0
+fsharp_default_version=11.2
+```
+
+Both `runtime_path` and `csharp_compiler_path` point into Bazel's
+`+engineering_sdk+dotnet_sdk.12.0.100-alpha.1.26509.101_x86_64-pc-windows-msvc`
+repository. The materialized `csc.dll` has SHA-256
+`2A7EF338D000A8814BB1CAC533ED6694DF1AEC0FA8BE6716C69972F68A3CF513`,
+matching the separate checksum-verified archive installation. The query ran
+**zero build actions**; this is selection/provenance evidence only.
+
+The opt-in does not enable `net12.0` source targets or claim the SDK's
+transitional targeting defaults. Those remain bounded by the published
+SDK 11 pack graph. Windows x64 SDK/compiler execution is established;
+Linux x64 and macOS arm64 archive bytes and metadata were verified, not
+executed. The other three host hashes were read from the authoritative
+checksum feed, without claiming downloaded or executed archives.
+
+### Bounded native compilation and consumer proof
+
+On `9df2a5f363b89c88bb5befa600c04a8b234e187b` (plus documentation-only
+working changes), this command completed with exit 0:
+
+```powershell
+.\eng\bazel.ps1 --host_jvm_args=-Xmx2g --host_jvm_args=-XX:ActiveProcessorCount=2 build //eng/bazel:build_tools //:explorer --extra_toolchains=@dotnet_engineering_toolchains//:all --jobs=2 --loading_phase_threads=2
+```
+
+The isolated C: output/cache configuration produced 157 actions, including
+106 local processes; elapsed time was 193.922 seconds. This is an executed
+native build, not an SDK download or a wrapper around MSBuild.
+
+The subsequent
+`aquery 'deps(set(//eng/bazel:build_tools //:explorer))' --include_param_files --output=jsonproto`
+uses the same engineering selection. Its SHA-256 is
+`B5C0F9AD748B5F7B08C1CBBEF5EE67163F4E0FA1EF9C1F250E0DBB3868144E4A`.
+All 34 source-owned C# actions name the SDK 12 compiler. Two additional
+*declared* upstream tool actions (`scoped_css` and `static_web_assets`) name
+SDK 10.0.401 and reference pack 10.0.12. They are not counted as executed
+bootstrap tools merely because the query traversed them. The source-owned
+net10 compilation retains reference pack 10.0.14.
+
+The compiled explorer's actual `--info` output reports platform version
+`2.6.0-preview.bazel` and `win-x64 - .NET 12.0.0-alpha.1.26509.101`.
+With the same `run //:explorer` toolchain selection:
+
+| Application arguments | Observed result |
+| --- | --- |
+| `--list-tests` | Exit 0; exactly four named sample tests discovered. |
+| `--filter-uid TestingPlatformExplorer.UnitTests.SomeTests.TestMethod1 --report-trx --report-trx-filename sdk12-pass.trx --results-directory <owned path with spaces!>` | Exit 0; TRX contains exactly one executed/passed `TestMethod1`, zero failures/skips, and the real controller observes child exit 0. |
+| `--filter-uid TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2` | Test executes and fails intentionally; child and Bazel-run exits are both 2. |
+| `--filter-uid NoMatchingTest --minimum-expected-tests 1` | Zero-result diagnostic; child and Bazel-run exits are both 9. |
+
+The outer bounded harness exits 0 after asserting those child outcomes.
+Evidence is in the task-owned `bounded-consumers/dfc2058d51064e2c8681b67ea1322425`
+directory, with the actual command arrays in `validation.json`, individual
+logs, and the parsed TRX. Both roll-forward environment variables were removed
+for this run. The built platform DLL SHA-256 is
+`4731C9ACBEA68117200BE683113E19BCDBD9E7A0FDFB0C6141012BA41591070A`.
+
+Initial harness attempts exposed three harness-only mistakes: a status message
+was accidentally returned with log data, the ordinary test output was assumed
+to include the full banner instead of querying `--info`, and the outer shell
+inherited the intentionally nonzero final child exit. These were corrected
+without changing product code or assertions about the intended test outcomes.
+Only the completed exit-0 harness above is the bounded integration result.
+
+This proof is for the helper and source-built MTP/TRX explorer on net10 using
+the SDK 12 host. The .NET 8/9/10/11 package/publisher gate and broader combined
+source/test graph are separate validation stages.
