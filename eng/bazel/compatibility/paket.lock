@@ -1,0 +1,52 @@
+
+
+GROUP compatibility
+STORAGE: NONE
+STRATEGY: MIN
+LOWEST_MATCHING: TRUE
+RESTRICTION: == netstandard2.0
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Build.Framework (17.11.48)
+      Microsoft.Win32.Registry (>= 5.0)
+      System.Memory (>= 4.5.5)
+      System.Runtime.CompilerServices.Unsafe (>= 6.0)
+      System.Security.Principal.Windows (>= 5.0)
+    Microsoft.Build.Utilities.Core (17.11.48)
+      Microsoft.Build.Framework (>= 17.11.48)
+      Microsoft.NET.StringTools (>= 17.11.48)
+      Microsoft.Win32.Registry (>= 5.0)
+      System.Collections.Immutable (>= 8.0)
+      System.Configuration.ConfigurationManager (>= 8.0)
+      System.Memory (>= 4.5.5)
+      System.Runtime.CompilerServices.Unsafe (>= 6.0)
+      System.Security.Principal.Windows (>= 5.0)
+      System.Text.Encoding.CodePages (>= 7.0)
+    Microsoft.NET.StringTools (17.11.48)
+      System.Memory (>= 4.5.5)
+      System.Runtime.CompilerServices.Unsafe (>= 6.0)
+    Microsoft.Win32.Registry (5.0)
+      System.Buffers (>= 4.5.1)
+      System.Memory (>= 4.5.4)
+      System.Security.AccessControl (>= 5.0)
+      System.Security.Principal.Windows (>= 5.0)
+    System.Buffers (4.5.1)
+    System.Collections.Immutable (8.0)
+      System.Memory (>= 4.5.5)
+      System.Runtime.CompilerServices.Unsafe (>= 6.0)
+    System.Configuration.ConfigurationManager (8.0)
+      System.Security.Cryptography.ProtectedData (>= 8.0)
+    System.Memory (4.5.5)
+      System.Buffers (>= 4.5.1)
+      System.Numerics.Vectors (>= 4.4)
+      System.Runtime.CompilerServices.Unsafe (>= 4.5.3)
+    System.Numerics.Vectors (4.4)
+    System.Runtime.CompilerServices.Unsafe (6.0)
+    System.Security.AccessControl (5.0)
+      System.Security.Principal.Windows (>= 5.0)
+    System.Security.Cryptography.ProtectedData (8.0)
+      System.Memory (>= 4.5.5)
+    System.Security.Principal.Windows (5.0)
+    System.Text.Encoding.CodePages (7.0)
+      System.Memory (>= 4.5.5)
+      System.Runtime.CompilerServices.Unsafe (>= 6.0)

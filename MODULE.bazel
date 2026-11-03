@@ -36,3 +36,10 @@ paket.parse(
     lock = "//eng/bazel:paket.lock",
 )
 use_repo(paket, "paket.analyzers", "paket.generator", "paket.main", "paket.source")
+
+paket.parse(
+    dependencies = "//eng/bazel/compatibility:paket.dependencies",
+    lock = "//eng/bazel/compatibility:paket.lock",
+    groups = ["compatibility"],
+)
+use_repo(paket, "paket.compatibility")

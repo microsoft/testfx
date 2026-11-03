@@ -1,9 +1,31 @@
 """The dependency-free platform and native report build graph."""
 
-load(":defs.bzl", "testfx_library")
+load(":defs.bzl", "STANDARD_FRAMEWORKS", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 _SHARED = "src/Platform/SharedExtensionHelpers"
+
+def modern_json_sources():
+    """The System.Text.Json files removed by both non-.NETCoreApp project variants."""
+    return [
+        _PLATFORM + "/ServerMode/JsonRpc/Json/" + name + ".cs"
+        for name in [
+            "Json",
+            "Json.Deserializers",
+            "Json.Serializers",
+            "Json.TestNodeSerializer",
+            "JsonCollectionDeserializer",
+            "JsonDeserializer",
+            "JsonElementDeserializer",
+            "JsonExtensions",
+            "JsonObjectSerializer",
+            "JsonObjectSerializer1",
+            "JsonPropertyBagDeserializer",
+            "JsonSerializer",
+            "JsonValueSerializer",
+            "JsonValueSerializer1",
+        ]
+    ]
 
 def ipc_sources():
     return native.glob([_PLATFORM + "/IPC/*.cs"]) + [
@@ -29,13 +51,16 @@ def runtime_helpers():
     ]
 
 def platform_libraries():
+    modern_sources = modern_json_sources() + [_PLATFORM + "/Configurations/JsonConfigurationFileParser.cs"]
     testfx_library(
         name = "platform",
         project = _PLATFORM,
+        target_frameworks = STANDARD_FRAMEWORKS,
         allow_unsafe_blocks = True,
         defines = ["IS_CORE_MTP"],
         usings = ["Polyfills"],
-        linked_srcs = [_SHARED + "/StackTraceRegexHelper.cs"],
+        exclude = modern_sources,
+        linked_srcs = [_SHARED + "/StackTraceRegexHelper.cs"] + testfx_compatibility_select([], modern_sources),
         resources = {
             _PLATFORM + "/Resources/PlatformResources.resx": "Microsoft.Testing.Platform.Resources.PlatformResources",
             _PLATFORM + "/OutputDevice/Terminal/TerminalResources.resx": "Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources",
@@ -127,6 +152,7 @@ def platform_libraries():
     testfx_library(
         name = "msbuild_extension",
         project = "src/Platform/Microsoft.Testing.Extensions.MSBuild",
+        target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = ipc_sources() + runtime_helpers(),
         resources = {
             "src/Platform/Microsoft.Testing.Extensions.MSBuild/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.MSBuild.Resources.ExtensionResources",
@@ -138,6 +164,7 @@ def platform_libraries():
     testfx_library(
         name = "platform_msbuild",
         project = "src/Platform/Microsoft.Testing.Platform.MSBuild",
+        target_frameworks = STANDARD_FRAMEWORKS,
         defines = ["MTP_MSBUILD_TASKS"],
         usings = ["Polyfills"],
         linked_srcs = ipc_sources() + runtime_helpers() + native.glob([_PLATFORM + "/ServerMode/JsonRpc/Json/Jsonite/*.cs"]) + [
@@ -160,9 +187,10 @@ def platform_libraries():
         deps = [
             ":platform",
             ":msbuild_extension",
-            "@paket.source//microsoft.build.framework",
-            "@paket.source//microsoft.build.utilities.core",
-        ],
+        ] + testfx_nuget([
+            "microsoft.build.framework",
+            "microsoft.build.utilities.core",
+        ]) + testfx_compatibility_select(["@paket.compatibility//microsoft.win32.registry"]),
     )
     testfx_library(
         name = "retry",

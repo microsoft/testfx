@@ -3,6 +3,23 @@
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "import_library")
 
 PORTABLE_FRAMEWORKS = ["net8.0", "net9.0", "net10.0", "net11.0"]
+STANDARD_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["netstandard2.0"]
+DESKTOP_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["net462"]
+
+def testfx_compatibility_select(compatibility, modern = []):
+    """Select the exact legacy configurations after the assembly's TFM transition."""
+    return select({
+        "//eng/bazel/compatibility:netstandard2_0": compatibility,
+        "//eng/bazel/compatibility:net462": compatibility,
+        "//conditions:default": modern,
+    })
+
+def testfx_nuget(packages):
+    """Keep compatibility-only package resolution separate from the modern lock."""
+    return testfx_compatibility_select(
+        ["@paket.compatibility//" + package for package in packages],
+        ["@paket.source//" + package for package in packages],
+    )
 
 def _matrix_transition_impl(_settings, attr):
     return {
@@ -184,9 +201,10 @@ def testfx_library(
     sources = native.glob(
         [project + "/**/*.cs"],
         exclude = [project + "/bin/**", project + "/obj/**"] + exclude,
-    ) + linked_srcs + ["//eng/bazel:GlobalUsings.cs", ":" + name + "_metadata"]
+    )
+    generated_sources = ["//eng/bazel:GlobalUsings.cs", ":" + name + "_metadata"]
     if polyfills:
-        sources += native.glob(["src/Polyfills/**/*.cs"])
+        generated_sources += native.glob(["src/Polyfills/**/*.cs"])
     embedded = []
     localized = {}
     for index, (path, type_name) in enumerate(resources.items()):
@@ -194,7 +212,7 @@ def testfx_library(
         testfx_resx(name = resource_name, src = path, type_name = type_name)
         native.filegroup(name = resource_name + "_sources", srcs = [":" + resource_name], output_group = "sources")
         native.filegroup(name = resource_name + "_resources", srcs = [":" + resource_name], output_group = "resources")
-        sources.append(":" + resource_name + "_sources")
+        generated_sources.append(":" + resource_name + "_sources")
         embedded.append(":" + resource_name + "_resources")
         directory, filename = path.rsplit("/", 1)
         stem = filename.removesuffix(".resx")
@@ -244,7 +262,7 @@ def testfx_library(
     assembly_rule = csharp_binary if binary else csharp_library
     assembly_rule(
         name = name,
-        srcs = sources,
+        srcs = sources + linked_srcs + generated_sources,
         resources = embedded,
         resource_assemblies = satellites,
         out = assembly_name or project.split("/")[-1],

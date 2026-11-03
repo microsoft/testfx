@@ -642,3 +642,104 @@ compatibility, all platforms, and shipping/servicing parity remain unproven.
 - Release rollout/backports: none enabled. This branch owns the experiment;
   replacing any supported shipping build requires an explicit later decision and
   real package-consuming acceptance evidence.
+
+## Framework compatibility lane (2026-11-03)
+
+### Contract and inventory
+
+This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`.
+It adds opt-in native compilation for the actual non-Windows-qualified
+`netstandard2.0` and `net462` project variants, without changing the modern
+`managed`/`managed_all` selection, production source, test assertions, or
+scheduling. Compilation against a compatible lower TFM is valid for a dependency,
+but is not evidence that the requested project output was built for that TFM.
+
+The project inventory identifies these boundaries:
+
+- MTP, its portable extensions, and the server-client validation assembly declare
+  `netstandard2.0`. The portable `PackagedApp` project does not. The controller,
+  packaged-app build package, SDK/meta-packages, and Windows-qualified variants
+  belong to other lanes.
+- `TestFramework` and `TestFramework.Extensions` declare both `netstandard2.0`
+  and `net462`. PlatformServices, TestAdapter, and MSTest.Extensions.Hosting
+  declare `net462`, but not `netstandard2.0`.
+- The platform and server-client remove the System.Text.Json engine for
+  non-.NETCoreApp builds. The platform additionally removes
+  `JsonConfigurationFileParser.cs`. Keep the Jsonite sources and all
+  conditionally compiled legacy code.
+- The server-client has seven additional, explicitly curated compatibility
+  polyfills; it must not acquire the complete polyfill glob. Other projects keep
+  their existing polyfill exclusions and linked sources.
+- The framework extensions and platform services require the framework
+  `System.Configuration` reference on `net462`. Adapter/platform services need
+  `System.Memory` 4.6.3 and `System.Threading.Tasks.Extensions` 4.5.4 there;
+  Platform.MSBuild requires `Microsoft.Win32.Registry` 5.0.0 on netstandard.
+- Preserve existing assembly names and friend grants. These remain unsigned
+  development outputs; strong-name/package identity is not established by this
+  lane. Fixed-framework analyzers and generators remain unchanged.
+
+### Decision and planned experiments
+
+Keep one source declaration per assembly, add its actual supported framework
+choices, and select only the project-defined source/dependency differences.
+An opt-in compatibility aggregate will verify the compiled TFM instead of
+silently accepting the rules' highest-compatible fallback. Duplicating every
+project macro would make source parity harder to maintain; globally changing the
+default framework would disrupt other migration lanes.
+
+Resolve the compatibility-only NuGet closure in its own Paket file/group.
+The modern lock's `>= net8.0` restriction cannot describe dependencies needed only
+by older package assets. Shared `MODULE.bazel` or rules patches require
+coordination with the migration owner.
+
+Validation uses an isolated Bazel output root and `--jobs=2` on the shared host:
+compile every claimed project/TFM, inspect the selected framework/reference
+inputs, run representative compatible consumers, and retain an unchanged modern
+baseline. A failed compilation is build-contract evidence, not behavioral
+red-phase proof. Exact results, unavailable variants, and runtime limitations
+will be recorded as each experiment completes. Shipping packaging, SDK 12,
+release-branch validation and rollout are separate gates.
+
+### First independently usable slice
+
+The first delivery is deliberately limited to three real `netstandard2.0`
+outputs: `//:platform_netstandard2_0`,
+`//:msbuild_extension_netstandard2_0`, and
+`//:platform_msbuild_netstandard2_0`. Each wrapper forwards `DefaultInfo`,
+`DotnetAssemblyCompileInfo`, and `DotnetAssemblyRuntimeInfo`, and rejects a
+compiled framework different from the requested one. `//:managed_netstandard2_0`
+also emits a JSON inventory of exact frameworks, output files, and runtime
+dependencies. Its current membership is these three assemblies, not the whole
+planned compatibility matrix.
+
+The initial broad dependency experiment resolved, but combining the newer
+AI/hosting closure with the adapter's exact Tasks.Extensions pin produced a
+lock containing incompatible minimum-version requirements. It is not the
+delivered lock. The first slice instead resolves only the MSBuild task's actual
+three package references in an independent 14-package closure; broader areas
+must keep independently compatible dependency groups.
+
+Executed on Windows x64 with Bazel 9.1.1, rules_dotnet
+`add5c92b30888a70aa951de1744a770b8f8ef436`, SDK
+`11.0.100-rc.3.26522.148`, and `NETStandard.Library` 2.0.3 reference assemblies:
+
+| Command | Result |
+| --- | --- |
+| Pinned Paket launcher, from `eng/bazel/compatibility`: `paket update --no-install` | Exit 0; 14 locked packages, with the existing modern lock unchanged. |
+| `.\eng\bazel.ps1 build //:managed_netstandard2_0 --jobs=2 --noshow_progress` | Exit 0; all three implementation DLLs and the exact-TFM inventory built. |
+
+The platform remains dependency-free. Its non-.NETCoreApp source selection
+retains Jsonite, excludes only the project-declared System.Text.Json files, and
+preserves the linked sources/polyfills. The task references the real
+netstandard Microsoft.Build reference assemblies; their NuGets deliberately
+provide no netstandard runtime DLL, because the executing MSBuild host supplies
+them. Consumers must not stage these reference-only DLLs as runtime binaries.
+Use the inventory/provider runtime closure for the remaining companion files.
+
+The initial Q-drive baseline was interrupted by ENOSPC and is not a test pass
+or a compatibility-source failure. Only the lane-owned failed output/cache was
+removed, and subsequent heavy outputs and retained evidence moved to C: using
+process-local overrides. Logs, compiler response files, and the inventory are
+retained in this session's `files/bazel-compatibility` evidence. Runtime consumers
+and the rest of the framework matrix remain subsequent validation; this first
+slice is a compilation delivery, not shipping-layout or CI certification.
