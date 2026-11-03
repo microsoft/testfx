@@ -1475,3 +1475,130 @@ Only documentation was updated after that source state. This is a validated
 shared compilation/identity checkpoint, not a claim that the signed ten-package
 SDK or Windows-controller composition has already run; their owners must repack
 and execute those consumers against this checkpoint.
+## 2026-11-03: completed compatibility validation
+
+### Complete compatibility source matrix
+
+The opt-in matrix now compiles **26 netstandard2.0 and five net462 source
+variants**. Every implementation DLL was inspected and has exactly one
+`TargetFrameworkAttribute` naming its requested framework. The generated
+`managed_netstandard2_0.json` and `managed_net462.json` inventories include the
+assembly names, output paths and runtime dependencies; retained
+`verified-project-frameworks.json` additionally records the owning project,
+actual framework metadata and SHA-256.
+
+All labels below are workspace-root labels. Append `_netstandard2_0` or
+`_net462` to the listed assembly label to select that exact output:
+
+| Framework | Validated source labels |
+| --- | --- |
+| netstandard2.0 | `ai`, `azdo_report`, `azure_foundry`, `configuration`, `crashdump`, `ctrf`, `framework`, `framework_extensions`, `github_report`, `hangdump`, `hosting`, `hotreload`, `html`, `junit`, `logging`, `msbuild_extension`, `opentelemetry`, `platform`, `platform_msbuild`, `retry`, `server_client`, `telemetry`, `trx`, `trx_abstractions`, `video`, `vstest_bridge` |
+| net462 | `adapter`, `framework`, `framework_extensions`, `mstest_hosting`, `platform_services` |
+
+The existing modern `managed` / `managed_all` defaults remain unchanged.
+Fixed-framework analyzers and generators are not duplicated in this aggregate.
+The server-client validation assembly uses its project-defined seven additional
+polyfills and Jsonite source selection, not the full repository polyfill glob.
+
+#### Dependency and framework-reference decisions
+
+Compatibility dependencies are independently locked by area rather than
+overriding incompatible minimum-version requirements:
+
+| Paket group | Contract |
+| --- | --- |
+| `compatibility` | The original 14-package MSBuild closure remains independent, including Immutable 8. |
+| `compatibility_mstest` | Repository telemetry/ObjectModel dependencies; net462 Memory 4.6.3 and Tasks.Extensions 4.5.4. ObjectModel's net462 assets require Immutable 10. |
+| `compatibility_hosting` | Repository Configuration/Hosting 8 and DI/Logging 9.0.4 rather than the unrelated AI closure. |
+| `compatibility_extensions` | The existing native graph's newer AI/report convergence, allowing its required Tasks.Extensions 4.6.3 instead of forcing 4.5.4. |
+
+Additional groups use Paket `=` constraints rather than `==` overrides.
+Regenerate from `eng/bazel/compatibility` with the existing pinned Paket launcher
+(`update --no-install`), then run `.\eng\bazel.ps1 mod deps --lockfile_mode=update`.
+The original `eng/bazel/paket.dependencies` and `paket.lock` remain unchanged.
+
+Net462 projects consuming netstandard assemblies need the SDK's genuine
+`Microsoft/Microsoft.NET.Build.Extensions/net461/lib/netstandard.dll` facade
+and `System.Runtime.InteropServices.RuntimeInformation.dll`. Native declarations
+obtain these from the selected pinned toolchain, not an ambient SDK, a higher
+framework's reference pack, or a copied modern implementation. They are added
+only to the affected net462 adapter/hosting dependencies. Framework extensions
+and platform services retain their own reference-pack `System.Configuration`
+and polyfill behavior.
+
+The separately maintained `compatibility-package-references.patch` addresses
+two real reference-closure failures without changing the original shared patch:
+
+- A newer NuGet package reference replaces an older reference of the same DLL
+  basename only when package/file ownership and version are known. Source-built
+  and unknown owners are preserved; a published package's numeric version must
+  not evict a native assembly's placeholder provider version.
+- A direct package reference selects the consumer's appropriate TFM asset.
+  Its same-package transitive alternate-TFM reference must not be passed too.
+  This matters for DI.Abstractions 9.0.4: its netstandard and net462 reference
+  assemblies have different assembly versions and otherwise produce CS0433.
+
+Actual compiler response files confirm that the independent MSBuild task still
+uses only Immutable 8, while the net462 adapter uses only Immutable 10.
+
+#### Executed validation and test-value evidence
+
+Validation uses SDK 11 RC3 and isolated C-drive outputs on Windows x64.
+The source baseline is `6bc33c48b9dae0e89486862f46af3c876fd7cf5d`, with the
+independent core/correction commits above and this additive matrix change.
+
+| Command / scenario | Result |
+| --- | --- |
+| `.\eng\bazel.ps1 test //:managed_compatibility //:compatibility_reference_tests //:compatibility_explorer_test //:framework_netstandard2_0_consumer_test --jobs=2 --noshow_progress --test_output=errors --nocache_test_results` | Exit 0; all 31 source outputs and six fresh checks: four reference-selection analysis tests and two real consumer probes. |
+| `.\eng\bazel.ps1 test //:managed_all //:portable_tests --jobs=2 --noshow_progress --test_output=errors` | Exit 0; the four modern frameworks build, and all 3,443 existing cases execute/pass across ten targets, with zero failures/skips. Counts were reconciled with logs and available TRX files. |
+| `.\eng\bazel.ps1 run //:compatibility_explorer --jobs=2 --noshow_progress '--' --filter-uid <UID> --minimum-expected-tests 1 --report-trx --report-trx-filename result.trx --results-directory <isolated-case-directory>` | Real netstandard MTP/TRX consumer: `SomeTests.TestMethod1` exits 0 with one pass; `SomeTests.TestMethod2` exits 2 with one failure; `Compatibility.NoMatchingTest` exits 9 with zero results. All three TRX files were parsed and checked. |
+| Pinned SDK: `dotnet build LegacyConsumer.csproj -c Release --disable-build-servers -p:UseSharedCompilation=false -m:2 '-bl:legacy-consumer-{}.binlog'`, then `CompatibilityConsumer.Net462.exe '.NETFramework,Version=v4.6.2'` | Both exit 0. An isolated external consumer references the actual native net462 framework DLL, resolves reference assemblies 1.0.3, executes on Windows CLR/mscorlib, verifies framework metadata, and observes an intentionally mismatched MSTest assertion throwing. Its copied framework hash matches the native producer. |
+
+The CLR consumer is validation only: MSBuild did not build the TestFx producer.
+Upstream `csharp_binary` currently asks for unavailable apphost/runtime packs on
+net462, so no native net462 executable target or modern-runtime fallback is
+claimed. Runtime execution was on the installed compatible Windows CLR, not a
+claim that the machine runs the original .NET Framework 4.6.2 release.
+
+**Test-value evidence:**
+
+| Contract / unchanged check | Without behavior | Correct implementation |
+| --- | --- | --- |
+| `compatibility_reference_newer_package_test` | Executed against isolated pre-fix rules: expected only the newer reference, but received older + newer; failed. | Passed. |
+| `compatibility_reference_direct_tfm_test` | Same tests and isolated prior rules: expected direct reference only, but received the alternate TFM too; failed. | Passed. |
+| `compatibility_reference_independent_test`, `compatibility_reference_native_test` | Both pass with prior rules, preserving the independent old closure and native placeholder-version reference. | Both pass; preservation is intentional. |
+| `CompatibilityConsumer.Main` framework-metadata assertion | A buildable isolated producer counterfactual omitted only `CompatibilityFrameworkMetadata.cs`'s attributes. The unchanged CLR consumer exited 2 at the exact framework-name equality assertion: expected `.NETFramework,Version=v4.6.2`, actual `null`. | The identical consumer executable exited 0 before and after. Its SHA-256 is `4240E40D746FB9CA0B2827EAFB0F686B5C883EFF5BAC5D0D402E5C9412B61A39`. |
+
+The reference-selection comparison executes the actual Starlark collector, not
+a translated implementation. Four tests execute in both states: pre-fix exit 3
+(two pass, two fail), then corrected exit 0 (four pass). The isolated prior
+`common.bzl` SHA-256 is
+`DBD5C9F95EF1F3BAF6E455CC128F48DDDF1823E6A9BBD351E97A31C60B10AF56`.
+Unknown/native preservation is also an explicit positive assertion.
+
+The metadata counterfactual uses the real native compiler arguments and source,
+changing only output locations and the attribute input. Initial setup failures
+from an inactive Bazel input symlink forest and a corrected diagnostic-text
+matcher are not counted as red-phase evidence. Paired metadata execution covers
+net462; netstandard attributes were separately inspected and exercised by the
+standard consumer.
+
+Retained evidence includes `final-verification.log`,
+`verified-project-frameworks.json`, `verified-immutable-references.txt`,
+`modern-test-counts.json`, `explorer-results.json`, paired analysis-test XML/logs,
+the metadata counterfactual response file/results, and the external consumer's
+binlog/assets. Console output and structured artifacts are the demonstration;
+no media or GitHub publication is implied.
+
+#### Remaining boundaries
+
+No new package layout, signing, release/servicing rollout, Windows-qualified
+TFM, WinRT/UWP/WPF workload, or SDK 12 claim is made here. Those remain owned by
+their lanes and require their composed shipping-consumer validation. Net462
+adapter/hosting compilation is not full CLR execution coverage for every
+adapter feature. The source-only server client's package transformation is not
+validated by its DLL compilation. Linux/macOS execution is unverified.
+
+The two known full-MTP Windows impersonation failures are still present and
+unchanged; they are not hidden by the portable-suite pass. No existing tests,
+assertions, or scheduling settings were removed or weakened.

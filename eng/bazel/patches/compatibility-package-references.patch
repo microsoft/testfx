@@ -1,0 +1,103 @@
+diff --git a/dotnet/private/common.bzl b/dotnet/private/common.bzl
+index c8a8cbd547..b92bcb0235 100644
+--- a/dotnet/private/common.bzl
++++ b/dotnet/private/common.bzl
+@@ -268,6 +268,19 @@ def _resolve_analyzers(direct, transitive):
+ 
+     return depset(resolved.values())
+ 
++def _is_superseded_nuget_reference(reference, package_versions, maximum_versions, non_package_owners, direct_package_references):
++    if reference.owner == None:
++        return False
++    assembly_name = reference.basename.removesuffix(".dll").lower()
++    key = (reference.owner.repo_name, assembly_name)
++    if key in non_package_owners:
++        return False
++    version = package_versions.get(key)
++    if version != None and version < maximum_versions.get(assembly_name, version):
++        return True
++    preferred = direct_package_references.get(key)
++    return preferred != None and reference not in preferred
++
+ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+     """Determine the transitive dependencies by the target framework.
+ 
+@@ -315,6 +328,10 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+         direct_compile_data.extend(targeting_pack_info.compile_data)
+ 
+     transitive_versions = {}
++    package_reference_versions = {}
++    maximum_package_versions = {}
++    non_package_reference_owners = {}
++    direct_package_references = {}
+     if not strict_deps:
+         runtime_dependencies = depset(
+             direct = [dep[DotnetAssemblyRuntimeInfo] for dep in deps],
+@@ -322,10 +339,34 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+         )
+         for runtime_dependency in runtime_dependencies.to_list():
+             version = semver.to_comparable(runtime_dependency.version)
++            nuget = runtime_dependency.nuget_info
++            package_owner = nuget.nupkg.owner.repo_name if nuget != None and nuget.nupkg != None and nuget.nupkg.owner != None else None
+             for lib in runtime_dependency.libs:
+                 lib_name = lib.basename.removesuffix(".dll").lower()
+                 if lib_name not in transitive_versions or version > transitive_versions[lib_name]:
+                     transitive_versions[lib_name] = version
++                if lib.owner == None:
++                    continue
++                key = (lib.owner.repo_name, lib_name)
++                if package_owner != None and lib.owner.repo_name == package_owner:
++                    package_reference_versions[key] = max(version, package_reference_versions.get(key, version))
++                    maximum_package_versions[lib_name] = max(version, maximum_package_versions.get(lib_name, version))
++                else:
++                    # Source-built assemblies have placeholder provider versions;
++                    # a released package's number must not evict their references.
++                    non_package_reference_owners[key] = True
++
++        # A direct package reference already selected the consumer's best TFM.
++        # Do not also pass that package's same-version asset from a dependency's TFM.
++        for dep in deps:
++            nuget = dep[DotnetAssemblyRuntimeInfo].nuget_info
++            if nuget == None or nuget.nupkg == None or nuget.nupkg.owner == None:
++                continue
++            assembly = dep[DotnetAssemblyCompileInfo]
++            for reference in (assembly.irefs if name in assembly.internals_visible_to else assembly.refs):
++                if reference.owner != None and reference.owner.repo_name == nuget.nupkg.owner.repo_name:
++                    key = (reference.owner.repo_name, reference.basename.removesuffix(".dll").lower())
++                    direct_package_references.setdefault(key, []).append(reference)
+ 
+     for dep in deps:
+         assembly = dep[DotnetAssemblyCompileInfo]
+@@ -357,7 +398,11 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+                 framework_list.pop(dep_name, None)
+ 
+         if add_to_output:
+-            direct_iref.extend(assembly.irefs if name in assembly.internals_visible_to else assembly.refs)
++            direct_iref.extend([
++                reference
++                for reference in (assembly.irefs if name in assembly.internals_visible_to else assembly.refs)
++                if not _is_superseded_nuget_reference(reference, package_reference_versions, maximum_package_versions, non_package_reference_owners, direct_package_references)
++            ])
+             direct_ref.extend(assembly.refs)
+             direct_analyzers.extend(assembly.analyzers)
+             direct_analyzers_csharp.extend(assembly.analyzers_csharp)
+@@ -367,12 +412,18 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+ 
+         # We take all the exports of each dependency and add them
+         # to the direct refs.
+-        direct_iref.extend(assembly.exports)
++        direct_iref.extend([
++            reference
++            for reference in assembly.exports
++            if not _is_superseded_nuget_reference(reference, package_reference_versions, maximum_package_versions, non_package_reference_owners, direct_package_references)
++        ])
+ 
+         if not strict_deps:
+             # Apply the same package-version precedence to transitive references
+             # as direct ones; a newer package must supersede an older framework.
+             for transitive_assembly in assembly.transitive_refs.to_list():
++                if _is_superseded_nuget_reference(transitive_assembly, package_reference_versions, maximum_package_versions, non_package_reference_owners, direct_package_references):
++                    continue
+                 transitive_name = transitive_assembly.basename.replace(".dll", "").lower()
+                 minimum = targeting_pack_overrides.get(transitive_name)
+                 if minimum == None and transitive_name in framework_list:

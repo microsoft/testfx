@@ -25,10 +25,10 @@ def testfx_compatibility_select(compatibility, modern = []):
         "//conditions:default": modern,
     })
 
-def testfx_nuget(packages):
+def testfx_nuget(packages, compatibility_group = "compatibility"):
     """Keep compatibility-only package resolution separate from the modern lock."""
     return testfx_compatibility_select(
-        ["@paket.compatibility//" + package for package in packages],
+        ["@paket." + compatibility_group + "//" + package for package in packages],
         ["@paket.source//" + package for package in packages],
     )
 

@@ -102,11 +102,14 @@ def platform_libraries():
     testfx_library(
         name = "trx_abstractions",
         project = "src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions",
+        target_frameworks = STANDARD_FRAMEWORKS,
+        linked_srcs = testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         deps = [":platform"],
     )
     testfx_library(
         name = "trx",
         project = "src/Platform/Microsoft.Testing.Extensions.TrxReport",
+        target_frameworks = STANDARD_FRAMEWORKS,
         allow_unsafe_blocks = True,
         defines = ["USE_TRX_NAMESPACE"],
         linked_srcs = native.glob([_PLATFORM + "/IPC/*.cs"]) + [
@@ -138,7 +141,7 @@ def platform_libraries():
             _SHARED + "/NamedPipeServerFactory.cs",
             _SHARED + "/PipeNameEnvironmentVariableProviderBase.cs",
             "src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpCommandLineOptions.cs",
-        ],
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Platform/Microsoft.Testing.Extensions.TrxReport/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources",
         },
@@ -195,11 +198,12 @@ def platform_libraries():
     testfx_library(
         name = "retry",
         project = "src/Platform/Microsoft.Testing.Extensions.Retry",
+        target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = ipc_sources() + runtime_helpers() + [
             _PLATFORM + "/Helpers/ArgumentGuard.cs",
             _PLATFORM + "/Helpers/PasteArguments.cs",
             _SHARED + "/RetryArtifactManifest.cs",
-        ],
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Platform/Microsoft.Testing.Extensions.Retry/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources",
         },
@@ -210,13 +214,14 @@ def platform_libraries():
     testfx_library(
         name = "telemetry",
         project = "src/Platform/Microsoft.Testing.Extensions.Telemetry",
+        target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = [
             _PLATFORM + "/Helpers/CIEnvironmentDetector.cs",
             _PLATFORM + "/Helpers/RoslynString.cs",
             _PLATFORM + "/Helpers/RoslynDebug.cs",
             _PLATFORM + "/Helpers/RuntimeFeatureHelper.cs",
             _PLATFORM + "/Messages/SingleConsumerUnboundedChannel.cs",
-        ],
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Platform/Microsoft.Testing.Extensions.Telemetry/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources",
         },
@@ -225,9 +230,8 @@ def platform_libraries():
             "Microsoft.Testing.Extensions.UnitTests",
             "DynamicProxyGenAssembly2",
         ],
-        deps = [
-            ":platform",
-            "@paket.source//microsoft.applicationinsights",
-            "@paket.source//system.diagnostics.diagnosticsource",
-        ],
+        deps = [":platform"] + testfx_nuget([
+            "microsoft.applicationinsights",
+            "system.diagnostics.diagnosticsource",
+        ], compatibility_group = "compatibility_mstest"),
     )

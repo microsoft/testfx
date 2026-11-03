@@ -9,3 +9,54 @@ group compatibility
     nuget Microsoft.Build.Framework == 17.11.48
     nuget Microsoft.Build.Utilities.Core == 17.11.48
     nuget Microsoft.Win32.Registry == 5.0.0
+
+group compatibility_mstest
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0, net462
+    storage: none
+    strategy: min
+    lowest_matching: true
+
+    // Use exact requirements, not Paket's == override of transitive constraints.
+    nuget Microsoft.ApplicationInsights = 2.23.0
+    nuget System.Diagnostics.DiagnosticSource = 6.0.0
+    nuget Microsoft.TestPlatform.ObjectModel = 18.10.1
+    nuget Microsoft.TestPlatform.Filter.Source = 18.10.1
+    nuget System.Memory = 4.6.3
+    nuget System.Threading.Tasks.Extensions = 4.5.4
+
+group compatibility_hosting
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0, net462
+    storage: none
+    strategy: min
+    lowest_matching: true
+
+    nuget Microsoft.Extensions.Configuration.Abstractions = 8.0.0
+    nuget Microsoft.Extensions.DependencyInjection.Abstractions = 9.0.4
+    nuget Microsoft.Extensions.Hosting.Abstractions = 8.0.0
+    nuget Microsoft.Extensions.Logging = 9.0.4
+
+group compatibility_extensions
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+    strategy: min
+    lowest_matching: true
+
+    // Preserve the modern graph's AI/report convergence without downgrading Tasks.Extensions.
+    nuget Microsoft.Diagnostics.NETCore.Client = 0.2.607501
+    nuget System.Diagnostics.DiagnosticSource = 10.0.13
+    nuget Microsoft.Extensions.Configuration.Abstractions = 10.0.13
+    nuget Microsoft.Extensions.DependencyInjection.Abstractions = 10.0.13
+    nuget Microsoft.Extensions.Hosting.Abstractions = 10.0.13
+    nuget Microsoft.Extensions.Logging = 10.0.13
+    nuget Microsoft.Extensions.FileSystemGlobbing = 9.0.4
+    nuget System.Text.Json = 10.0.12
+    nuget OpenTelemetry = 1.19.1
+    nuget OpenTelemetry.Exporter.OpenTelemetryProtocol = 1.19.1
+    nuget Microsoft.Extensions.AI = 9.10.0
+    nuget Microsoft.Extensions.AI.OpenAI = 9.10.0-preview.1.25513.3
+    nuget Azure.AI.OpenAI = 2.1.0
+    nuget Azure.Core = 1.64.0
+    nuget Microsoft.Extensions.Resilience = 10.11.0

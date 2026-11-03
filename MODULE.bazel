@@ -8,6 +8,7 @@ archive_override(
     patch_strip = 1,
     patches = [
         "//eng/bazel/patches:testfx-compatibility.patch",
+        "//eng/bazel/patches:compatibility-package-references.patch",
         "//eng/bazel/patches:reference-aliases.patch",
         "//eng/bazel/patches:public-signing.patch",
     ],
@@ -50,7 +51,12 @@ use_repo(paket, "paket.analyzers", "paket.generator", "paket.main", "paket.sourc
 
 paket.parse(
     dependencies = "//eng/bazel/compatibility:paket.dependencies",
-    groups = ["compatibility"],
+    groups = [
+        "compatibility",
+        "compatibility_extensions",
+        "compatibility_hosting",
+        "compatibility_mstest",
+    ],
     lock = "//eng/bazel/compatibility:paket.lock",
 )
-use_repo(paket, "paket.compatibility")
+use_repo(paket, "paket.compatibility", "paket.compatibility_extensions", "paket.compatibility_hosting", "paket.compatibility_mstest")

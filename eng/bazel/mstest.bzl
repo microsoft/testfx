@@ -1,6 +1,6 @@
 """Native MSTest source assemblies and their compiler generator."""
 
-load(":defs.bzl", "testfx_library")
+load(":defs.bzl", "DESKTOP_FRAMEWORKS", "STANDARD_FRAMEWORKS", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 _SHARED = "src/Platform/SharedExtensionHelpers"
@@ -19,12 +19,13 @@ def mstest_libraries():
     testfx_library(
         name = "framework",
         project = _FRAMEWORK,
+        target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
         assembly_name = "MSTest.TestFramework",
         defines = ["EXCLUDE_RANGE_INDEX_POLYFILL", "EXCLUDE_OS_POLYFILL", "TESTFRAMEWORK_CI_DETECTOR"],
         linked_srcs = [
             _PLATFORM + "/Helpers/RoslynHashCode.cs",
             _PLATFORM + "/Helpers/CIEnvironmentDetector.cs",
-        ],
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {_FRAMEWORK + "/Resources/FrameworkMessages.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages"},
         usings = ["Polyfills", "Microsoft.VisualStudio.TestTools.UnitTesting.Resources"],
         internals_visible_to = [
@@ -42,6 +43,8 @@ def mstest_libraries():
     testfx_library(
         name = "framework_extensions",
         project = "src/TestFramework/TestFramework.Extensions",
+        target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
+        linked_srcs = testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         assembly_name = "MSTest.TestFramework.Extensions",
         defines = ["EXCLUDE_RANGE_INDEX_POLYFILL", "EXCLUDE_OS_POLYFILL"],
         usings = ["Polyfills", "Microsoft.VisualStudio.TestTools.UnitTesting.Resources"],
@@ -60,10 +63,11 @@ def mstest_libraries():
     testfx_library(
         name = "platform_services",
         project = "src/Adapter/MSTestAdapter.PlatformServices",
+        target_frameworks = DESKTOP_FRAMEWORKS,
         allow_unsafe_blocks = True,
         defines = ["EXCLUDE_OS_POLYFILL"],
         usings = ["Polyfills", "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources"],
-        linked_srcs = native.glob(["src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/**/*.cs"]),
+        linked_srcs = native.glob(["src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/**/*.cs"]) + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Adapter/MSTestAdapter.PlatformServices/Resources/Resource.resx": "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource",
         },
@@ -75,11 +79,15 @@ def mstest_libraries():
             "MSTest.Acceptance.IntegrationTests",
             "MSTest.Performance.Benchmarks",
         ],
-        deps = [":framework", ":framework_extensions"],
+        deps = [":framework", ":framework_extensions"] + testfx_compatibility_select([
+            "@paket.compatibility_mstest//system.memory",
+            "@paket.compatibility_mstest//system.threading.tasks.extensions",
+        ]),
     )
     testfx_library(
         name = "adapter",
         project = "src/Adapter/MSTest.TestAdapter",
+        target_frameworks = DESKTOP_FRAMEWORKS,
         defines = ["MSTEST_TESTADAPTER"],
         usings = ["Polyfills", "ExecutionScope=Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope"],
         linked_srcs = [
@@ -91,7 +99,7 @@ def mstest_libraries():
             _SHARED + "/TestRunParametersCommandLineOptionsProviderBase.cs",
             _SHARED + "/TestCaseFilterCommandLineOptionsProviderBase.cs",
             "@paket.source//microsoft.testplatform.filter.source:content_files",
-        ],
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Adapter/MSTest.TestAdapter/Resources/PlatformAdapterResources.resx": "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources",
         },
@@ -116,8 +124,13 @@ def mstest_libraries():
             ":retry",
             ":platform_msbuild",
             ":framework_extensions",
-            "@paket.source//microsoft.testplatform.objectmodel",
-        ],
+        ] + testfx_nuget(["microsoft.testplatform.objectmodel"], compatibility_group = "compatibility_mstest") + testfx_compatibility_select([
+            "@paket.compatibility_mstest//system.memory",
+            "@paket.compatibility_mstest//system.threading.tasks.extensions",
+        ]) + select({
+            "//eng/bazel/compatibility:net462": [":netframework_netstandard_facade", ":netframework_runtime_information"],
+            "//conditions:default": [],
+        }),
     )
     testfx_library(
         name = "internal_test_framework",

@@ -1,4 +1,5 @@
 exports_files([
+    "compatibility-package-references.patch",
     "framework-reference-priority.patch",
     "generated-resource-names.patch",
     "pdb-runfiles.patch",

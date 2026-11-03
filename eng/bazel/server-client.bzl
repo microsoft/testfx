@@ -1,6 +1,7 @@
 """Compile the existing source-only server client validation assembly."""
 
-load(":defs.bzl", "testfx_library")
+load(":defs.bzl", "testfx_compatibility_select", "testfx_library")
+load(":platform.bzl", "modern_json_sources")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 
@@ -8,7 +9,7 @@ def server_client_library():
     testfx_library(
         name = "server_client",
         project = "src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["netstandard2.0", "net8.0"],
         polyfills = False,
         defines = ["IS_CORE_MTP", "IS_MTP_SERVER_MODE_CLIENT", "IS_MTP_CLIENT_REPO"],
         usings = ["Polyfills"],
@@ -42,7 +43,21 @@ def server_client_library():
         ] + [
             _PLATFORM + "/Helpers/" + name + ".cs"
             for name in ["ObjectPool", "ApplicationStateGuard", "RoslynString", "RoslynHashCode", "RoslynDebug", "TaskExtensions"]
-        ] + native.glob([_PLATFORM + "/ServerMode/JsonRpc/Json/**/*.cs"]) + native.glob(
+        ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"] + [
+            "src/Polyfills/" + name + ".cs"
+            for name in [
+                "CallerArgumentExpressionAttribute",
+                "CompilerFeatureRequiredAttribute",
+                "ExperimentalAttribute",
+                "IsExternalInit",
+                "NullableAttribtues",
+                "RequiredMemberAttribute",
+                "UnreachableException",
+            ]
+        ], modern_json_sources()) + native.glob(
+            [_PLATFORM + "/ServerMode/JsonRpc/Json/**/*.cs"],
+            exclude = modern_json_sources(),
+        ) + native.glob(
             [_PLATFORM + "/Messages/*.cs"],
             exclude = [
                 _PLATFORM + "/Messages/" + name + ".cs"

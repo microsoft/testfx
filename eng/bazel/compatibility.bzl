@@ -1,14 +1,60 @@
 """Exact, opt-in source-project compatibility variants; never a lower-TFM fallback."""
 
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "import_library")
 load("@rules_dotnet//dotnet/private:providers.bzl", "DotnetAssemblyCompileInfo", "DotnetAssemblyRuntimeInfo")
+load(":defs.bzl", "testfx_test")
 
 _PROJECTS = {
     "netstandard2.0": [
+        "ai",
+        "azdo_report",
+        "azure_foundry",
+        "configuration",
+        "crashdump",
+        "ctrf",
+        "framework",
+        "framework_extensions",
+        "github_report",
+        "hangdump",
+        "hosting",
+        "hotreload",
+        "html",
+        "junit",
+        "logging",
         "msbuild_extension",
+        "opentelemetry",
         "platform",
         "platform_msbuild",
+        "retry",
+        "server_client",
+        "telemetry",
+        "trx",
+        "trx_abstractions",
+        "video",
+        "vstest_bridge",
+    ],
+    "net462": [
+        "adapter",
+        "framework",
+        "framework_extensions",
+        "mstest_hosting",
+        "platform_services",
     ],
 }
+
+def _sdk_netframework_assembly_impl(ctx):
+    toolchain = ctx.toolchains["@rules_dotnet//dotnet:toolchain_type"]
+    suffix = "/sdk/{}/Microsoft/Microsoft.NET.Build.Extensions/net461/lib/{}.dll".format(toolchain.dotnetinfo.sdk_version, ctx.attr.assembly_name)
+    files = [file for file in toolchain.default.files.to_list() if file.path.endswith(suffix)]
+    if len(files) != 1:
+        fail("Expected the selected SDK's .NET Framework compatibility assembly at " + suffix)
+    return [DefaultInfo(files = depset(files))]
+
+_sdk_netframework_assembly = rule(
+    implementation = _sdk_netframework_assembly_impl,
+    attrs = {"assembly_name": attr.string(mandatory = True)},
+    toolchains = ["@rules_dotnet//dotnet:toolchain_type"],
+)
 
 def _framework_transition_impl(_settings, attr):
     return {"@rules_dotnet//dotnet:target_framework": attr.target_framework}
@@ -82,6 +128,18 @@ _inventory = rule(
 
 def compatibility_libraries():
     """Declare only frameworks that the corresponding source projects actually target."""
+    for name, assembly, version in [
+        ("netframework_netstandard_facade", "netstandard", "2.0.0"),
+        ("netframework_runtime_information", "System.Runtime.InteropServices.RuntimeInformation", "4.0.2"),
+    ]:
+        _sdk_netframework_assembly(name = name + "_file", assembly_name = assembly)
+        import_library(
+            name = name,
+            library_name = assembly,
+            version = version,
+            refs = [":" + name + "_file"],
+            libs = [":" + name + "_file"],
+        )
     inventories = []
     for framework, projects in _PROJECTS.items():
         suffix = framework.replace(".", "_")
@@ -98,3 +156,46 @@ def compatibility_libraries():
         )
         inventories.append(":" + inventory)
     native.filegroup(name = "managed_compatibility", srcs = inventories)
+
+    csharp_binary(
+        name = "compatibility_explorer",
+        srcs = ["//samples/public/TestingPlatformExamples/TestingPlatformExplorer:sources"],
+        out = "TestingPlatformExplorer",
+        appsetting_files = ["//samples/public/TestingPlatformExamples/TestingPlatformExplorer:TestingPlatformExplorer.testingplatformconfig.json"],
+        generate_documentation_file = False,
+        langversion = "preview",
+        nullable = "enable",
+        target_frameworks = ["net8.0"],
+        deps = [
+            ":platform_netstandard2_0",
+            ":trx_netstandard2_0",
+            ":trx_abstractions_netstandard2_0",
+        ],
+    )
+    testfx_test(
+        name = "compatibility_explorer_test",
+        size = "small",
+        binary = ":compatibility_explorer",
+        args = [
+            "--filter-uid",
+            "TestingPlatformExplorer.UnitTests.SomeTests.TestMethod1",
+            "--minimum-expected-tests",
+            "1",
+        ],
+    )
+    csharp_binary(
+        name = "framework_netstandard2_0_consumer",
+        srcs = ["//eng/bazel:CompatibilityConsumer.cs"],
+        out = "CompatibilityConsumer",
+        target_frameworks = ["net8.0"],
+        langversion = "preview",
+        nullable = "enable",
+        generate_documentation_file = False,
+        deps = [":framework_netstandard2_0"],
+    )
+    testfx_test(
+        name = "framework_netstandard2_0_consumer_test",
+        size = "small",
+        binary = ":framework_netstandard2_0_consumer",
+        args = [".NETStandard,Version=v2.0"],
+    )

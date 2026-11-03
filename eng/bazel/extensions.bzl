@@ -1,12 +1,12 @@
 """The remaining portable MTP extensions, using their existing source and assets."""
 
-load(":defs.bzl", "testfx_library")
+load(":defs.bzl", "DESKTOP_FRAMEWORKS", "PORTABLE_FRAMEWORKS", "STANDARD_FRAMEWORKS", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 load(":platform.bzl", "ipc_sources", "runtime_helpers")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 _SHARED = "src/Platform/SharedExtensionHelpers"
 
-def _extension(name, product, root_namespace = None, build_info = True, **kwargs):
+def _extension(name, product, root_namespace = None, build_info = True, target_frameworks = STANDARD_FRAMEWORKS, linked_srcs = [], **kwargs):
     project = "src/Platform/" + product
     resources = {
         path: (root_namespace or product) + ".Resources." + path.rsplit("/", 1)[-1][:-5]
@@ -15,6 +15,8 @@ def _extension(name, product, root_namespace = None, build_info = True, **kwargs
     testfx_library(
         name = name,
         project = project,
+        target_frameworks = target_frameworks,
+        linked_srcs = linked_srcs + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = resources,
         build_info = _SHARED + "/BuildInfo.cs.template" if build_info else None,
         **kwargs
@@ -83,10 +85,10 @@ def _ci_report_sources():
 
 def extension_libraries():
     for name, product, dependencies in [
-        ("configuration", "Configuration", ["@paket.source//microsoft.extensions.configuration.abstractions"]),
-        ("logging", "Logging", ["@paket.source//microsoft.extensions.logging"]),
-        ("hosting", "Hosting", [":configuration", ":logging", "@paket.source//microsoft.extensions.hosting.abstractions"]),
-        ("opentelemetry", "OpenTelemetry", ["@paket.source//opentelemetry", "@paket.source//opentelemetry.exporter.opentelemetryprotocol"]),
+        ("configuration", "Configuration", testfx_nuget(["microsoft.extensions.configuration.abstractions"], compatibility_group = "compatibility_hosting")),
+        ("logging", "Logging", testfx_nuget(["microsoft.extensions.logging"], compatibility_group = "compatibility_hosting")),
+        ("hosting", "Hosting", [":configuration", ":logging"] + testfx_nuget(["microsoft.extensions.hosting.abstractions"], compatibility_group = "compatibility_hosting")),
+        ("opentelemetry", "OpenTelemetry", testfx_nuget(["opentelemetry", "opentelemetry.exporter.opentelemetryprotocol"], compatibility_group = "compatibility_extensions")),
     ]:
         _extension(
             name = name,
@@ -121,7 +123,7 @@ def extension_libraries():
             _PLATFORM + "/OutputDevice/TargetFrameworkParser.cs",
         ],
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests"],
-        deps = [":platform", "@paket.source//microsoft.diagnostics.netcore.client"],
+        deps = [":platform"] + testfx_nuget(["microsoft.diagnostics.netcore.client"], compatibility_group = "compatibility_extensions"),
     )
     _extension(
         name = "hotreload",
@@ -169,7 +171,7 @@ def extension_libraries():
             "Microsoft.Testing.Extensions.VSTestBridge.UnitTests",
             "MSTest.Performance.Benchmarks",
         ],
-        deps = [":platform", ":trx_abstractions", ":telemetry", "@paket.source//microsoft.testplatform.objectmodel"],
+        deps = [":platform", ":trx_abstractions", ":telemetry"] + testfx_nuget(["microsoft.testplatform.objectmodel"], compatibility_group = "compatibility_mstest"),
     )
     for name, product in [("html", "HtmlReport"), ("junit", "JUnitReport"), ("ctrf", "CtrfReport")]:
         _extension(
@@ -181,25 +183,26 @@ def extension_libraries():
                 "src/Platform/Microsoft.Testing.Extensions.HtmlReport/Templates/report-template.html": "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html",
             } if name == "html" else {},
             internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "DynamicProxyGenAssembly2"],
-            deps = [":platform", "@paket.source//system.text.json"],
+            deps = [":platform"] + testfx_nuget(["system.text.json"], compatibility_group = "compatibility_extensions"),
         )
     _extension(
         name = "azdo_report",
         product = "Microsoft.Testing.Extensions.AzureDevOpsReport",
         linked_srcs = _ci_report_sources() + [_SHARED + "/ReportFileNameSanitizer.cs"],
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "DynamicProxyGenAssembly2"],
-        deps = [":platform", "@paket.source//system.text.json", "@paket.source//microsoft.extensions.filesystemglobbing"],
+        deps = [":platform"] + testfx_nuget(["system.text.json", "microsoft.extensions.filesystemglobbing"], compatibility_group = "compatibility_extensions"),
     )
     _extension(
         name = "github_report",
         product = "Microsoft.Testing.Extensions.GitHubActionsReport",
         linked_srcs = _ci_report_sources() + [_PLATFORM + "/Helpers/TimeSpanParser.cs"],
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "DynamicProxyGenAssembly2"],
-        deps = [":platform", "@paket.source//system.text.json"],
+        deps = [":platform"] + testfx_nuget(["system.text.json"], compatibility_group = "compatibility_extensions"),
     )
     _extension(
         name = "packaged_app",
         product = "Microsoft.Testing.Extensions.PackagedApp",
+        target_frameworks = PORTABLE_FRAMEWORKS,
         linked_srcs = [
             _PLATFORM + "/Helpers/PasteArguments.cs",
             _SHARED + "/RetryArtifactManifest.cs",
@@ -213,7 +216,7 @@ def extension_libraries():
         product = "Microsoft.Testing.Platform.AI",
         build_info = False,
         version_override = "1.0.0",
-        deps = [":platform", "@paket.source//microsoft.extensions.ai"],
+        deps = [":platform"] + testfx_nuget(["microsoft.extensions.ai"], compatibility_group = "compatibility_extensions"),
     )
     _extension(
         name = "azure_foundry",
@@ -222,19 +225,23 @@ def extension_libraries():
         version_override = "1.0.0",
         linked_srcs = [_PLATFORM + "/Helpers/RoslynString.cs"],
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests"],
-        deps = [
-            ":ai",
-            "@paket.source//azure.ai.openai",
-            "@paket.source//azure.core",
-            "@paket.source//microsoft.extensions.ai.openai",
-        ],
+        deps = [":ai"] + testfx_nuget([
+            "azure.ai.openai",
+            "azure.core",
+            "microsoft.extensions.ai.openai",
+        ], compatibility_group = "compatibility_extensions"),
     )
     testfx_library(
         name = "mstest_hosting",
         project = "src/Adapter/MSTest.Extensions.Hosting",
+        target_frameworks = DESKTOP_FRAMEWORKS,
+        linked_srcs = testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
             "src/Adapter/MSTest.Extensions.Hosting/Resources/HostingResources.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Hosting.Resources.HostingResources",
         },
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests"],
-        deps = [":adapter", ":hosting", ":framework_extensions", "@paket.source//microsoft.extensions.dependencyinjection.abstractions"],
+        deps = [":adapter", ":hosting", ":framework_extensions"] + testfx_nuget(["microsoft.extensions.dependencyinjection.abstractions"], compatibility_group = "compatibility_hosting") + select({
+            "//eng/bazel/compatibility:net462": [":netframework_netstandard_facade", ":netframework_runtime_information"],
+            "//conditions:default": [],
+        }),
     )
