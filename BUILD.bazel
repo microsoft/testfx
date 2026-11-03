@@ -1,10 +1,12 @@
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary")
 load("//eng/bazel:analyzer-packages.bzl", "analyzer_packages")
 load("//eng/bazel:analyzers.bzl", "analyzer_libraries")
-load("//eng/bazel:compatibility.bzl", "compatibility_libraries")
 load("//eng/bazel:compatibility-tests.bzl", "compatibility_reference_tests")
+load("//eng/bazel:compatibility.bzl", "compatibility_libraries")
 load("//eng/bazel:defs.bzl", "testfx_binary", "testfx_matrix", "testfx_test")
+load("//eng/bazel:extension-tests.bzl", "extension_unit_tests")
 load("//eng/bazel:extensions.bzl", "extension_libraries")
+load("//eng/bazel:extra-tests.bzl", "extra_unit_tests")
 load("//eng/bazel:mstest-packages.bzl", "native_mstest_packages")
 load("//eng/bazel:mstest.bzl", "mstest_libraries")
 load("//eng/bazel:packages.bzl", "native_packages")
@@ -35,6 +37,10 @@ compatibility_libraries()
 compatibility_reference_tests()
 
 unit_tests()
+
+extra_unit_tests()
+
+extension_unit_tests()
 
 native_packages()
 

@@ -186,6 +186,19 @@ providers, and OpenTelemetry registration, but not the CI-only affected-test and
 coverage collectors. Explicit framework metadata identifies their compile TFM
 even when the test host runs on a newer runtime.
 
+Three further opt-in targets retain their original method-level, CPU-count
+scheduling: `//:msbuild_tests` passes 388 existing cases;
+`//:server_client_tests` passes 305 with eight original Unix-only skips;
+`//:extension_tests` passes 2,863 with seven original OS/filesystem skips on
+Windows. Their native test hosts and source dependencies are public-signed.
+The server suite uses a real self-contained .NET 10 publish so its child
+process fixtures can launch the same assembly outside Bazel's application
+shim. The other two compile net10 and execute on the pinned .NET 11 host.
+The MSBuild suite stages the real native netstandard task DLL, not a reference
+assembly. Extension source-location checks use declared original source files
+and the repository's `/_/` pathmap. These targets remain outside
+`portable_tests`; the analyzer suite is a separate pending slice.
+
 `eng/bazel/TestMain.cs` replaces only the selected suites' registration/entrypoint
 plumbing. It keeps their test bodies and scheduling, registers the real source
 runner and TRX reporter, and uses each Bazel test's undeclared-output directory.

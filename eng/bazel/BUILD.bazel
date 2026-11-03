@@ -11,6 +11,7 @@ exports_files([
     "NativeUnitTestMain.cs",
     "PortableTestFrameworkMetadata.cs",
     "RuntimeProvenance.cs",
+    "ServerClientTestMain.cs",
     "TestMain.cs",
     "analyzers.globalconfig",
     "paket.dependencies",

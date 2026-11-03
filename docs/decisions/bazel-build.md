@@ -2303,6 +2303,57 @@ behavioral red-phase evidence. An independent Arcade/MSBuild green-before run,
 other runtime/TFM executions, CI collectors, and the remaining four suites are
 not claimed by this slice.
 
+### Stage 3: aliased MSBuild, server-client, and extension suites
+
+The separately checkpointed slice exposes only three verified targets; the
+analyzer target remains separate until its existing tests execute. All original
+test sources, assertions, assembly initialization, resource locks, exclusions,
+method-level scheduling, and CPU-count worker settings are retained.
+
+| Target | Selected | Executed / passed | Original skips | Runtime |
+| --- | --- | --- | --- | --- |
+| `msbuild_tests` | 388 | 388 | 0 | SDK .NET 11, net10 compilation |
+| `server_client_tests` | 313 | 305 | 8 Unix-only cases | Native self-contained .NET 10.0.14 |
+| `extension_tests` | 2,870 | 2,863 | 7 OS/filesystem cases | SDK .NET 11, net10 compilation |
+
+The exact `global,PlatformMSBuild`, `global,serverclient`, and named-only
+`ghactions` semantics are preserved by the coordinated compiler patch. The
+MSBuild fixture stages the native netstandard implementation at
+`LegacyMSBuild/Microsoft.Testing.Platform.MSBuild.dll`, enabling all nine
+existing legacy-configuration cases without a reference-assembly fallback.
+
+The native launcher executes an application's physical DLL, not a runfiles
+alias of its directory. The fixture wrapper therefore declares files beside
+that actual DLL in the same TFM configuration and rejects a configuration/path
+mismatch. Extension fixtures contain the original source files, including the
+assertion implementation files whose real existence is part of the annotation
+tests, and the correctly renamed appx conformance-vector JSON.
+
+The server's original early child fixtures are preserved before any results
+arguments are added: stdout flooding, stderr exit 17, and release-file exit 23.
+Initially four tests executed but their children could not resolve the
+runfiles-oriented dependency manifest. An upstream native self-contained
+publish supplies a real executable/DLL/dependency layout. A separate published
+test launcher retains every published file rather than renaming the apphost
+away from its DLL, and declares the pinned muxer on PATH for the intentionally
+missing-DLL fallback case. Neither production launch logic nor assertions were
+changed to mask those failures.
+
+After public signing and the source-root correction below, the full checkpoint
+command returned 0:
+
+```powershell
+.\eng\bazel.ps1 test //:msbuild_tests //:server_client_tests //:extension_tests --jobs=2 --nocache_test_results --noshow_progress
+```
+
+The three reports reconcile to 3,571 selected, 3,556 passed, zero failed, and
+the 15 original skips. The prior missing-child dependency and missing-source
+failures are retained separately; launch/setup failures are not claimed as
+production regression sensitivity. `stage3-checkpoint.log`,
+`stage3-test-inventory.json`, `signed-test-inventory.json`, the original failure
+TRXs, and final signed TRXs preserve the executed evidence. No existing
+verified aggregate was enlarged by this checkpoint.
+
 ### Native source-root parity
 
 Existing extension annotation tests require real source files beneath the
