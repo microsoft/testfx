@@ -148,7 +148,7 @@ hosted-run results will be added as obtained.
 | Collection, limits, missing input, cancellation | Executed: `CaptureAsync_StagesExactBytesAndWritesManifest`, size/count boundary cases, `CaptureAsync_CanceledDuringCopy_PropagatesTokenAndDeletesPartialFile`, and warning-failure association cases. |
 | Direct and aggregate failure details | Executed: `BuildMarkdown_WithAttachments_RendersExactArchiveRelativePaths`, `CreateModule_FragmentRoundTrip_PreservesAttachmentsOnlyOnFailures`, legacy-fragment and retry cases. |
 | Packed consumer and real framework attachment | Executed shipping smoke: four direct host runs plus real multi-module `dotnet test`, 12 executions and five intentionally failed results, parent smoke exit 0. All eight packed acceptance cases and three net8 help/info cases passed (11/11, no skips). |
-| Real GitHub Actions archive and download link | Pending composed workflow execution. |
+| Real GitHub Actions archive and download link | Executed: [hosted run 41629546864](https://github.com/microsoft/testfx/actions/runs/41629546864) passed at `dd69b2f47dc2ab1f4b9df23c8d2d3451f21ec1cd`; actual archive uploaded, downloaded and verified. |
 
 Focused unit validation compiled current production and test sources with the
 pinned SDK, `net8.0`, code coverage disabled, and warnings treated as errors.
@@ -227,7 +227,30 @@ post-pack verifier expects legacy UAP payloads omitted by the required local
 `SkipUapTargetFramework=true` dotnet build (MSTest/adapter/framework counts).
 That full verifier exited 1; it was not weakened or called successful. The
 Linux hosted workflow runs the repository's standard `build.sh -pack` path.
-Hosted artifact upload/download and the rendered GitHub surface remain pending.
+### Executed hosted upload/download
+
+[Run 41629546864](https://github.com/microsoft/testfx/actions/runs/41629546864)
+passed at `dd69b2f47dc2ab1f4b9df23c8d2d3451f21ec1cd` on ubuntu-latest.
+The standard `./build.sh -pack -c Release -bl` step passed, followed by the
+12-execution composed smoke, official upload, the exact documented post-upload
+script, real archive download, and byte/association verification.
+
+- [Failed-test attachments](https://github.com/microsoft/testfx/actions/runs/41629546864/artifacts/13227777694):
+  four staged files and four manifests, all eight downloaded files verified.
+- [Reproducible validation evidence](https://github.com/microsoft/testfx/actions/runs/41629546864/artifacts/13226914918):
+  binlogs, actual package versions/hashes, TRX, source-resolved assets and summary
+  transcripts.
+- Artifact digest:
+  `sha256:48579a59a0b7a0ae7c46596aca5982b220c20e9a53e8d9b31d6f8fe5fbfdddeb`.
+- The verifier matched all four supplementary test-details blocks to their
+  module/test/file and the actual returned archive URL. This proves generated
+  output and real download behavior, not authenticated browser rendering.
+
+The public browser showed the successful job and both artifacts. The available
+browser is signed out and GitHub requires sign-in for job logs/summaries, so the
+expanded per-test hosted UI, wrapping and controls were not visually inspected.
+No substitute rendering or fabricated screenshot is claimed. The actual saved
+Markdown and console transcript are the accessible demonstration.
 
 The additional acceptance run compiled the Release/net12.0 outer host with
 warnings treated as errors and executed net8.0 consumers. It selected exactly
