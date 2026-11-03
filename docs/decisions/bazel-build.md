@@ -455,6 +455,16 @@ Implementation and initial experiments:
   (SDK) and
   `BBC675E5100C12D7672A3C0BD1D696A2DA76A181163844BACEE1EE2848EA6195`
   (meta-package), both at `4.6.0-preview.bazel`.
+- The final independent harness also checks AOT **reference selection only**
+  and caller-supplied version overrides, bringing the evaluated configurations
+  to ten. Each selected `PackageReference` or central `PackageVersion` is
+  checked against the correct product/external version. `-EvidenceRoot` is
+  aligned with the shared validators; `-ArtifactsRoot` remains an alias.
+  Relative roots and `-Jobs 0` fail before execution. The retained successful
+  run `bazel-sdk-validation/20261103-145104-041a6740` includes `actions.json`:
+  two native input generators, two native packers, and no MSBuild executable
+  in the producer graph. Both complete archives and all ten evaluations
+  passed again, including the expected invalid-profile rejection.
 
 #### Test-value evidence: SDK/meta-package lane
 

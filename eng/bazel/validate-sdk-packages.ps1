@@ -6,16 +6,18 @@
 [CmdletBinding()]
 param(
     [switch] $LayoutOnly,
-    [string] $ArtifactsRoot,
+    [Alias('ArtifactsRoot')]
+    [string] $EvidenceRoot,
     [ValidateRange(1, 64)]
     [int] $Jobs = 2
 )
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-if (-not $ArtifactsRoot) { $ArtifactsRoot = Join-Path $root 'artifacts\bazel-sdk-validation' }
+if ($EvidenceRoot -and -not [IO.Path]::IsPathFullyQualified($EvidenceRoot)) { throw 'EvidenceRoot must be an absolute path.' }
+if (-not $EvidenceRoot) { $EvidenceRoot = Join-Path $root 'artifacts\bazel-sdk-validation' }
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
-$directory = [IO.Path]::GetFullPath((Join-Path $ArtifactsRoot $run))
+$directory = [IO.Path]::GetFullPath((Join-Path $EvidenceRoot $run))
 $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $pwsh = Join-Path $PSHOME $(if ($IsWindows) { 'pwsh.exe' } else { 'pwsh' })
@@ -183,7 +185,7 @@ function Assert-ResolvedPackages([string] $Consumer, [string] $Framework) {
 }
 
 try {
-    $revision = Invoke-Step 'revision' 'git' @('rev-parse', 'HEAD')
+    $revision = (Invoke-Step 'revision' 'git' @('rev-parse', 'HEAD')).Trim()
     $dirty = Invoke-Step 'working-tree' 'git' @('status', '--porcelain')
     [xml]$versions = Get-Content -LiteralPath (Join-Path $root 'eng\Versions.props') -Raw
     [xml]$repositoryProperties = Get-Content -LiteralPath (Join-Path $root 'Directory.Build.props') -Raw
@@ -207,6 +209,16 @@ try {
     $null = Invoke-Bazel 'pack' (@('build') + $targets + @("--jobs=$Jobs", '--noshow_progress', '--show_result=0'))
     $executionRoot = (Invoke-Bazel 'execution-root' @('info', 'execution_root')).Trim()
     $paths = (Invoke-Bazel 'package-files' @('cquery', "set($($targets -join ' '))", '--output=files', '--noshow_progress')).Trim() -split '\r?\n'
+    $graphJson = Invoke-Bazel 'native-actions' @('aquery', "deps(set($($targets -join ' ')))", '--output=jsonproto', '--include_artifacts=false', '--noshow_progress')
+    [IO.File]::WriteAllText((Join-Path $directory 'actions.json'), $graphJson)
+    $actions = ($graphJson | ConvertFrom-Json).actions
+    Assert-Equal 2 @($actions | Where-Object mnemonic -EQ 'TestFxSdkPackageInputs').Count 'Native SDK input-generation actions'
+    Assert-Equal 2 @($actions | Where-Object mnemonic -EQ 'TestFxSdkNuGetPack').Count 'Native SDK packing actions'
+    foreach ($action in $actions) {
+        if (@($action.arguments | Where-Object { $_ -match '(?i)(^|[\\/])MSBuild\.(exe|dll)$' -or $_ -in @('msbuild', 'dotnet build', 'dotnet pack') }).Count) {
+            throw 'The native producer action graph invokes MSBuild.'
+        }
+    }
     foreach ($relative in $paths) {
         $path = Join-Path $executionRoot $relative
         $archive = [IO.Compression.ZipFile]::OpenRead($path)
@@ -319,7 +331,9 @@ try {
         @{ Name = 'sdk-layered'; Properties = ''; Layered = $true; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage') },
         @{ Name = 'sdk-central'; Properties = '<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage') },
         @{ Name = 'sdk-vstest-precedence'; Properties = '<UseVSTest>true</UseVSTest><PublishAot>true</PublishAot>'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.NET.Test.Sdk') },
-        @{ Name = 'sdk-source-generation'; Properties = '<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage', 'MSTest.SourceGeneration') }
+        @{ Name = 'sdk-source-generation'; Properties = '<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage', 'MSTest.SourceGeneration') },
+        @{ Name = 'sdk-aot-selection'; Properties = '<PublishAot>true</PublishAot>'; Expected = @('Microsoft.Testing.Platform.MSBuild', 'MSTest.TestFramework', 'MSTest.SourceGeneration', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage', 'Microsoft.CodeCoverage.MSBuild') },
+        @{ Name = 'sdk-version-overrides'; Properties = '<MSTestVersion>7.8.9</MSTestVersion><MicrosoftTestingPlatformVersion>3.2.1</MicrosoftTestingPlatformVersion>'; MSTestVersion = '7.8.9'; PlatformVersion = '3.2.1'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage') }
     )
     foreach ($case in $evaluationCases) {
         $consumer = New-Consumer $case.Name $case.Properties -Layered:([bool]$case.Layered)
@@ -329,17 +343,28 @@ try {
         $evaluation = $result | ConvertFrom-Json -AsHashtable
         $references = @($evaluation.Items.PackageReference | Where-Object Sdk -EQ 'MSTest')
         Assert-Set $case.Expected @($references.Identity) "$($case.Name) selected SDK packages"
-        Assert-Equal $mstestVersion $evaluation.Properties.MSTestVersion "$($case.Name) MSTest version"
-        Assert-Equal $platformVersion $evaluation.Properties.MicrosoftTestingPlatformVersion "$($case.Name) platform version"
+        $expectedMSTestVersion = if ($case.MSTestVersion) { $case.MSTestVersion } else { $mstestVersion }
+        $expectedPlatformVersion = if ($case.PlatformVersion) { $case.PlatformVersion } else { $platformVersion }
+        Assert-Equal $expectedMSTestVersion $evaluation.Properties.MSTestVersion "$($case.Name) MSTest version"
+        Assert-Equal $expectedPlatformVersion $evaluation.Properties.MicrosoftTestingPlatformVersion "$($case.Name) platform version"
         Assert-Equal $sdkVersion $evaluation.Properties.NETCoreSdkVersion "$($case.Name) actual SDK"
         Assert-Equal ([IO.Path]::GetFullPath((Join-Path $sdks[0].FullName "sdk\$sdkVersion")).TrimEnd('\', '/')) `
             ([IO.Path]::GetFullPath($evaluation.Properties.MSBuildToolsPath).TrimEnd('\', '/')) "$($case.Name) MSBuild tool provenance"
         Assert-Equal 'true' $evaluation.Properties.UsingMSTestSdk "$($case.Name) SDK import"
         Assert-Equal $(if ($case.Layered) { 'false' } else { 'true' }) $evaluation.Properties._MSTestSdkImportsMicrosoftNETSdk "$($case.Name) layered imports"
         if ($case.Name -eq 'sdk-library') { Assert-Equal 'Library' $evaluation.Properties.OutputType 'Test library output' }
+        $versionedReferences = $references
         if ($case.Name -eq 'sdk-central') {
             Assert-Set $case.Expected @($evaluation.Items.PackageVersion.Identity) 'Central package versions'
             foreach ($reference in $references) { Assert-Equal '' ([string]$reference.Version) 'CPM reference without inline version' }
+            $versionedReferences = $evaluation.Items.PackageVersion
+        }
+        foreach ($reference in $versionedReferences) {
+            $expectedVersion = if ($reference.Identity -like 'MSTest.*') { $expectedMSTestVersion }
+            elseif ($reference.Identity -in @('Microsoft.Testing.Extensions.CodeCoverage', 'Microsoft.CodeCoverage.MSBuild')) { $componentVersions.MicrosoftTestingExtensionsCodeCoverageVersion }
+            elseif ($reference.Identity -eq 'Microsoft.NET.Test.Sdk') { $componentVersions.MicrosoftNETTestSdkVersion }
+            else { $expectedPlatformVersion }
+            Assert-Equal $expectedVersion $reference.Version "$($case.Name) reference $($reference.Identity)"
         }
         if ((Get-Content -LiteralPath (Join-Path $directory "evaluate-$($case.Name).log") -Raw).Contains('MSB4011')) { throw 'Duplicate SDK imports.' }
         $evaluations.Add([pscustomobject]@{ Name = $case.Name; Directory = $consumer; Evaluation = $evaluation })
