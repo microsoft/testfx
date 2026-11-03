@@ -189,12 +189,12 @@ try {
     [xml]$repositoryProperties = Get-Content -LiteralPath (Join-Path $root 'Directory.Build.props') -Raw
     [xml]$sourceProperties = Get-Content -LiteralPath (Join-Path $root 'src\Directory.Build.props') -Raw
     [xml]$centralPackages = Get-Content -LiteralPath (Join-Path $root 'Directory.Packages.props') -Raw
-    $mstestVersion = (Read-Property $versions 'VersionPrefix') + '-bazel'
-    $platformVersion = (Read-Property $versions 'TestingPlatformVersionPrefix') + '-bazel'
+    $mstestVersion = (Read-Property $versions 'VersionPrefix') + '-preview.bazel'
+    $platformVersion = (Read-Property $versions 'TestingPlatformVersionPrefix') + '-preview.bazel'
     $componentVersions = @{
         MSTestVersion = $mstestVersion; MSTestWindowsUIAutomationVersion = $mstestVersion
         MicrosoftTestingPlatformVersion = $platformVersion
-        MicrosoftTestingExtensionsJUnitReportVersion = (Read-Property $repositoryProperties 'MicrosoftTestingExtensionsJUnitReportVersionPrefix') + '-bazel'
+        MicrosoftTestingExtensionsJUnitReportVersion = (Read-Property $repositoryProperties 'MicrosoftTestingExtensionsJUnitReportVersionPrefix') + '-preview.bazel'
         MicrosoftTestingExtensionsCodeCoverageVersion = Read-Property $versions 'MicrosoftTestingExtensionsCodeCoverageVersion'
     }
     foreach ($name in @('MicrosoftNETTestSdkVersion', 'MicrosoftTestingExtensionsFakesVersion', 'MicrosoftPlaywrightVersion', 'AspireHostingTestingVersion')) {
@@ -360,8 +360,11 @@ try {
     $metaConsumer = New-Consumer 'meta-default' '' -Meta
     $expectedHashes = @{
         'Microsoft.VisualStudio.TestPlatform.TestFramework' = $packages['MSTest.TestFramework'].Files['lib/net11.0/Microsoft.VisualStudio.TestPlatform.TestFramework.dll']
+        'Microsoft.Testing.Platform' = $packages['Microsoft.Testing.Platform'].Files['lib/net11.0/Microsoft.Testing.Platform.dll']
     }
-    if (-not $expectedHashes.Values[0]) { throw 'The native framework package has no net11 runtime assembly.' }
+    foreach ($assemblyName in $expectedHashes.Keys) {
+        if (-not $expectedHashes[$assemblyName]) { throw "The native packages have no net11 runtime assembly for $assemblyName." }
+    }
     $expectations = Join-Path $directory 'expected-assemblies.json'
     $expectedHashes | ConvertTo-Json | Set-Content -LiteralPath $expectations -Encoding utf8
     $consumerEnvironment.TESTFX_BAZEL_PACKAGE_EXPECTATIONS = $expectations
@@ -396,7 +399,9 @@ try {
             $failureArgs += $reportArgs + @('--report-trx-filename', 'failure.trx')
         }
         $pass = Invoke-Step "pass-$name" $dotnet $passArgs $consumer -Environment $consumerEnvironment
-        if (-not $pass.Contains('BAZEL_PACKAGE_ASSEMBLY: Microsoft.VisualStudio.TestPlatform.TestFramework;')) { throw "$name did not verify its loaded native framework." }
+        foreach ($assemblyName in $expectedHashes.Keys) {
+            if (-not $pass.Contains("BAZEL_PACKAGE_ASSEMBLY: $assemblyName;")) { throw "$name did not verify its loaded native $assemblyName." }
+        }
         $failure = Invoke-Step "failure-$name" $dotnet $failureArgs $consumer -ExpectedExit 2 -Environment $consumerEnvironment
         if (-not $failure.Contains('Intentional native package consumer failure.')) { throw "$name did not execute the intentional failure." }
         $empty = Invoke-Step "empty-$name" $dotnet @($assembly, '--filter', 'FullyQualifiedName~NoMatchingNativeTest', '--minimum-expected-tests', '1') $consumer -ExpectedExit 9 -Environment $consumerEnvironment

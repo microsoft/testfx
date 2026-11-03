@@ -339,8 +339,9 @@ was inspected only as corroborating pack-contract evidence, not as a substitute
 for native dependencies.
 
 Version inputs remain `eng/Versions.props`, `Directory.Packages.props`, and
-`Directory.Build.props`: MSTest `4.6.0-bazel`, MTP `2.6.0-bazel`, and JUnit
-`1.0.0-bazel` are separate families. CodeCoverage, Fakes, Playwright, Aspire,
+`Directory.Build.props`: MSTest `4.6.0-preview.bazel`, MTP
+`2.6.0-preview.bazel`, and JUnit `1.0.0-preview.bazel` are separate families.
+CodeCoverage, Fakes, Playwright, Aspire,
 and Microsoft.NET.Test.Sdk keep their actual external pins. The producer uses
 the explicitly selected Bazel SDK 11 RC3, not the unchanged repository SDK 12
 pin. The portable meta-package scope is .NET 8/9/10/11; net462/UAP groups and
@@ -420,6 +421,14 @@ Implementation and initial experiments:
   Static inspection confirmed ten explicit SDK assets and nine version
   substitutions, and the PowerShell parser and Git whitespace check passed.
   These are not archive, executed-test, or composed-consumer success claims.
+- The coordinator chose the common `-preview.bazel` suffix after checking
+  NuGet.Versioning ordering: `2.6.0-preview.bazel` is above the pinned
+  CodeCoverage minimum but below stable `2.6.0`. The SDK/meta generator,
+  focused expectations, and consumer validator now use that suffix without
+  changing numeric product prefixes or external pins. The coordinator owns
+  the matching shared BuildTools and MTP package change. This resolves the
+  version-range design issue; actual binary/API compatibility still requires
+  the native composed consumer run.
 
 ### 2026-11-02: extending the migration after upstream SDK discovery
 

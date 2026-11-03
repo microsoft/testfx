@@ -20,10 +20,10 @@ public sealed class SdkPackageTests(TestContext context)
         Assert.AreEqual("""
             <Project>
               <PropertyGroup Condition="'$(Override)' == ''">
-                <MSTest>7.8.9-bazel</MSTest>
-                <Windows>7.8.9-bazel</Windows>
-                <Platform>2.3.4-bazel</Platform>
-                <JUnit>1.2.3-bazel</JUnit>
+                <MSTest>7.8.9-preview.bazel</MSTest>
+                <Windows>7.8.9-preview.bazel</Windows>
+                <Platform>2.3.4-preview.bazel</Platform>
+                <JUnit>1.2.3-preview.bazel</JUnit>
                 <Coverage>18.13.0-preview.42</Coverage>
                 <TestSdk>18.10.1</TestSdk>
                 <Fakes>18.1.1</Fakes>
@@ -35,7 +35,7 @@ public sealed class SdkPackageTests(TestContext context)
         Assert.AreEqual("""
             <Project><Import Project="$(MSBuildThisFileDirectory)NativeAOT.targets" Condition="'$(PublishAot)' == 'true'" /></Project>
             """, File.ReadAllText(PathFor("generated.targets")));
-        Assert.AreEqual("7.8.9-bazel", File.ReadAllText(PathFor("version.txt")));
+        Assert.AreEqual("7.8.9-preview.bazel", File.ReadAllText(PathFor("version.txt")));
         using JsonDocument request = JsonDocument.Parse(File.ReadAllText(PathFor("pack.json")));
         JsonElement metadata = request.RootElement.GetProperty("metadata");
         Assert.AreEqual("MSTest.Sdk", metadata.GetProperty("id").GetString());
@@ -63,7 +63,7 @@ public sealed class SdkPackageTests(TestContext context)
         (int exitCode, string output) = await RunAsync(input);
 
         Assert.AreEqual(0, exitCode, output);
-        Assert.AreEqual("7.8.9-bazel", File.ReadAllText(PathFor("version.txt")));
+        Assert.AreEqual("7.8.9-preview.bazel", File.ReadAllText(PathFor("version.txt")));
         using JsonDocument request = JsonDocument.Parse(File.ReadAllText(PathFor("pack.json")));
         Assert.AreEqual("MSTest", request.RootElement.GetProperty("metadata").GetProperty("id").GetString());
         JsonElement[] groups = request.RootElement.GetProperty("dependencyGroups").EnumerateArray().ToArray();
@@ -74,9 +74,9 @@ public sealed class SdkPackageTests(TestContext context)
             CollectionAssert.AreEquivalent(
                 new[] { "MSTest.TestFramework", "MSTest.TestAdapter", "Microsoft.Testing.Extensions.TrxReport", "Microsoft.NET.Test.Sdk", "Microsoft.Testing.Extensions.CodeCoverage" },
                 dependencies.Keys.ToArray());
-            Assert.AreEqual("7.8.9-bazel", dependencies["MSTest.TestFramework"].GetProperty("version").GetString());
-            Assert.AreEqual("7.8.9-bazel", dependencies["MSTest.TestAdapter"].GetProperty("version").GetString());
-            Assert.AreEqual("2.3.4-bazel", dependencies["Microsoft.Testing.Extensions.TrxReport"].GetProperty("version").GetString());
+            Assert.AreEqual("7.8.9-preview.bazel", dependencies["MSTest.TestFramework"].GetProperty("version").GetString());
+            Assert.AreEqual("7.8.9-preview.bazel", dependencies["MSTest.TestAdapter"].GetProperty("version").GetString());
+            Assert.AreEqual("2.3.4-preview.bazel", dependencies["Microsoft.Testing.Extensions.TrxReport"].GetProperty("version").GetString());
             Assert.AreEqual("18.10.1", dependencies["Microsoft.NET.Test.Sdk"].GetProperty("version").GetString());
             Assert.AreEqual("18.13.0-preview.42", dependencies["Microsoft.Testing.Extensions.CodeCoverage"].GetProperty("version").GetString());
             foreach ((string id, JsonElement dependency) in dependencies)

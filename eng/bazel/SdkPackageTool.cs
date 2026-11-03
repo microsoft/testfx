@@ -178,7 +178,7 @@ static string ExperimentalVersion(XElement project, string name)
 {
     string value = Property(project, name);
     _ = Version.Parse(value);
-    return value + "-bazel";
+    return value + "-preview.bazel";
 }
 
 static void CheckFeatureVersion(XElement centralPackages, string package, string expected)
