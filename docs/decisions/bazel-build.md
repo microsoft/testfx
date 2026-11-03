@@ -429,6 +429,11 @@ Implementation and initial experiments:
   the matching shared BuildTools and MTP package change. This resolves the
   version-range design issue; actual binary/API compatibility still requires
   the native composed consumer run.
+- Consumer SDK isolation removes named inherited MSBuild variables from each
+  `ProcessStartInfo.Environment` dictionary rather than setting them to empty
+  strings. This includes `MSBUILD_EXE_PATH`, as well as SDKs/extensions paths.
+  The parent process environment is unchanged, and each child starts in its
+  own consumer directory beside its pinned `global.json`.
 
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
