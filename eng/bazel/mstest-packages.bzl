@@ -102,6 +102,14 @@ def _package_impl(ctx):
 
     for target in ctx.attr.task_libraries:
         _add_assembly(entries, target, "netstandard2.0", "_MSBuildTasks/netstandard2.0", "_MSBuildTasks/netstandard2.0")
+        # Match the shipping task project's RuntimeTargetsCopyLocalItems payload.
+        # MSBuild's reference-only Framework/Utilities assemblies remain host-owned.
+        for dependency in target[DotnetAssemblyRuntimeInfo].deps.to_list():
+            if dependency.nuget_info == None:
+                continue
+            for file in dependency.libs + dependency.native:
+                if "/runtimes/" in file.path:
+                    entries.append(("_MSBuildTasks/netstandard2.0/" + file.basename, file))
 
     entries.append(("PACKAGE.md", ctx.file.readme))
     by_path = {}

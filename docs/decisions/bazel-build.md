@@ -1171,6 +1171,16 @@ no shipping leg, servicing branch, or package publication is enabled here.
   present-empty states; the harness records presence and restores it in
   `finally`. Consumer SDK commands run from their isolated `global.json`
   directories.
+- The imported task-runtime inventory identifies the selected Registry,
+  AccessControl, and Principal.Windows runtime assets on Windows. The package
+  projects' `RuntimeTargetsCopyLocalItems` contract is reproduced from those
+  declared native dependency files under the task folder; no reference-only
+  MSBuild DLL or invented support-package ID is introduced.
+- Consumer restore now uses its explicit `NuGet.config` and clears
+  `fallbackPackageFolders`, preserving the single run-owned cache assertion
+  instead of accepting a machine Visual Studio fallback directory. Discovery
+  matches MSTest's source-declared short display names and the exact total,
+  not fully qualified names that the native terminal reporter does not print.
 - Final package builds and consumer execution still await the analyzer and
   common-version ready commits and the coordinator's next validation wave.
   Draft sources and syntax/environment probes do not establish package or

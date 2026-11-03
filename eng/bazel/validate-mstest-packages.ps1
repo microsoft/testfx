@@ -121,6 +121,14 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                 $null = Get-ZipHash $Archive "lib/$framework/Microsoft.Testing.Extensions.MSBuild.dll"
                 $null = Get-ZipHash $Archive '_MSBuildTasks/netstandard2.0/Microsoft.Testing.Platform.MSBuild.dll'
                 $null = Get-ZipHash $Archive '_MSBuildTasks/netstandard2.0/Microsoft.Testing.Platform.dll'
+                if ($IsWindows) {
+                    foreach ($companion in @('Microsoft.Win32.Registry', 'System.Security.AccessControl', 'System.Security.Principal.Windows')) {
+                        $null = Get-ZipHash $Archive "_MSBuildTasks/netstandard2.0/$companion.dll"
+                    }
+                }
+                foreach ($hostAssembly in @('Microsoft.Build.Framework', 'Microsoft.Build.Utilities.Core')) {
+                    if ($Archive.GetEntry("_MSBuildTasks/netstandard2.0/$hostAssembly.dll")) { throw "The MSBuild host must supply $hostAssembly, not a packed reference assembly." }
+                }
                 foreach ($area in @('build', 'buildTransitive', 'buildMultiTargeting')) {
                     $null = Get-ZipHash $Archive "$area/Microsoft.Testing.Platform.MSBuild.props"
                     $null = Get-ZipHash $Archive "$area/Microsoft.Testing.Platform.MSBuild.targets"
@@ -226,6 +234,7 @@ function New-Consumer([string] $Name, [string] $Framework, [string] $PackageFeed
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources><clear /><add key="native" value="$escapedFeed" /><add key="nuget" value="https://api.nuget.org/v3/index.json" /></packageSources>
+  <fallbackPackageFolders><clear /></fallbackPackageFolders>
   <packageSourceMapping>
     <packageSource key="native"><package pattern="MSTest.*" /><package pattern="Microsoft.Testing.*" /></packageSource>
     <packageSource key="nuget"><package pattern="*" /></packageSource>
@@ -249,6 +258,7 @@ function Build-Consumer([string] $Name, [string] $Framework, [string] $PackageFe
             'publish', 'MSTestPackageConsumer.csproj', '--disable-build-servers', '-c', 'Release',
             '--self-contained', 'true', '-r', $rid, '-o', $publish,
             "-p:MSTestVersion=$mstestVersion", "-p:MTPVersion=$mtpVersion",
+            "-p:RestoreConfigFile=$(Join-Path $consumer 'NuGet.config')",
             "-bl:$(Join-Path $directory "$Name.binlog")", '--nologo', '-v:quiet'
         )
     }
