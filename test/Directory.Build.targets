@@ -4,7 +4,7 @@
   <Import Project="../Directory.Build.targets" />
 
   <PropertyGroup>
-    <MutationTestingTargetFramework Condition="'$(MutationTesting)' == 'true' AND '$(MutationTestingTargetFramework)' == ''">net8.0</MutationTestingTargetFramework>
+    <MutationTestingTargetFramework Condition="'$(MutationTesting)' == 'true' AND '$(MutationTestingTargetFramework)' == ''">net10.0</MutationTestingTargetFramework>
     <TargetFrameworks Condition="'$(MutationTesting)' == 'true'">$(MutationTestingTargetFramework)</TargetFrameworks>
     <GenerateProgramFile>false</GenerateProgramFile>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>

@@ -29,7 +29,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string controller = Path.Combine(
             Environment.GetEnvironmentVariable("NUGET_PACKAGES")!,
             "microsoft.testing.extensions.packagedapp.msbuild", MicrosoftTestingPlatformVersion,
-            "tools", "AppModelController", "net8.0", "mstest-appmodel-controller.exe");
+            "tools", "AppModelController", "net10.0", "mstest-appmodel-controller.exe");
         Dictionary<string, string?> environment = new()
         {
             ["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"] = mstest ? "msbuild;packagedapp;mstest" : "msbuild;packagedapp",
@@ -149,7 +149,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     {
         _ = helper;
         using TestAsset asset = await GenerateConsumerAsync(package, properties);
-        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.exe");
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
@@ -182,7 +182,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task ComputeRunArguments_PreservesExplicitOverrides(string properties, string expectedCommand)
     {
         using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{properties}");
-        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.exe");
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
@@ -275,7 +275,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             "MSTest.TestAdapter",
             """
             <UseWinUI>true</UseWinUI>
-            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net10.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
             """ + (specialPath ? """<IntermediateOutputPath>obj\controller's &amp; special path\</IntermediateOutputPath>""" : string.Empty));
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
@@ -284,7 +284,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string bootstrapFile = (await File.ReadAllTextAsync(
             Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
         string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
-        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0");
         string[] launchers =
         [
             Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
@@ -326,7 +326,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             "MSTest.TestAdapter",
             """
             <UseWinUI>true</UseWinUI>
-            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net10.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
             """);
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
@@ -336,7 +336,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             Assert.AreEqual(0, first.ExitCode, first.ToString());
         }
 
-        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0");
         string[] launchers =
         [
             Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
@@ -399,7 +399,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             "MSTest.TestAdapter",
             """
             <UseWinUI>true</UseWinUI>
-            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net10.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
             """,
             extraReferences: """
                 <None Include="CallerExecutable.json" TargetPath="PackagedConsumer.launcher.config.json" CopyToOutputDirectory="Always" />
@@ -422,7 +422,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, rebuild.ExitCode, rebuild.ToString());
-        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0");
         foreach (string launcher in new[] { "PackagedConsumer.launcher.config.json", "PackagedConsumer.build.launcher.config.json" })
         {
             Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(Path.Combine(directory, launcher), TestContext.CancellationToken), launcher);
@@ -442,7 +442,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, result.ToString());
-        Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.launcher.config.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.launcher.config.json")));
     }
 
     [TestMethod]
@@ -453,7 +453,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     {
         using TestAsset asset = await GenerateConsumerAsync(package, string.Empty, "Custom");
         _ = await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", cancellationToken: TestContext.CancellationToken);
-        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Release", "net8.0", "PackagedConsumer.exe");
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Release", "net10.0", "PackagedConsumer.exe");
         string resultsDirectory = Path.Combine(asset.TargetAssetPath, "results");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"msbuild \"{asset.TargetAssetPath}\" -t:InvokeTestingPlatform -p:Configuration=Release -p:UseWinUI=true " +
@@ -535,7 +535,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         {
             XElement test = Assert.ContainsSingle(XDocument.Load(report).Descendants(ns + "UnitTestResult"));
             string expectedOutcome = outcome == "Mixed"
-                ? Path.GetFileName(report).Contains("net9.0", StringComparison.Ordinal) ? "Failed" : "Passed"
+                ? Path.GetFileName(report).Contains("net11.0", StringComparison.Ordinal) ? "Failed" : "Passed"
                 : outcome;
             Assert.AreEqual(expectedOutcome, (string?)test.Attribute("outcome"), report);
         }
@@ -676,8 +676,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                     [TestMethod]
                     public void Test()
                     {
-                #if NET9_0
-                        Assert.Fail("expected failure only in the net9 module");
+                #if NET11_0
+                        Assert.Fail("expected failure only in the net11 module");
                 #else
                         Assert.AreEqual(4, 2 + 2);
                 #endif
@@ -692,7 +692,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             #file PackagedConsumer.csproj
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
-                {{(multiTarget ? "<TargetFrameworks>net8.0;net9.0</TargetFrameworks>" : "<TargetFramework>net8.0</TargetFramework>")}}
+                {{(multiTarget ? "<TargetFrameworks>net10.0;net11.0</TargetFrameworks>" : "<TargetFramework>net10.0</TargetFramework>")}}
                 <OutputType>Exe</OutputType>
                 <EnableMSTestRunner>true</EnableMSTestRunner>
                 <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>

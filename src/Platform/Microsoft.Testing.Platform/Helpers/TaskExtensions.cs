@@ -17,7 +17,7 @@ internal static class TaskExtensions
     public static Task WaitAsync(
         this Task target,
         TimeSpan timeout) =>
-        target.WaitAsync(timeout, default);
+        target.WaitAsync(timeout, cancellationToken: default);
 
     public static async Task WaitAsync(
         this Task target,

@@ -50,10 +50,10 @@ Once the desired project has been built, invoke its test host directly. Note tha
 
 ```powershell
 # Filter by UID — works with both MSTest and MTP-based hosts
-dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net8.0 --no-build -c Debug -- --filter-uid <TestUid>
+dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net10.0 --no-build -c Debug -- --filter-uid <TestUid>
 
 # Tree-node / wildcard filter — MTP-only (faster to type than a UID)
-dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
+dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
 ```
 
 For acceptance tests that drive generated assets, prefer running them through the test explorer or `dotnet test --filter "FullyQualifiedName~MyTest"` on the specific project, after `-pack`.

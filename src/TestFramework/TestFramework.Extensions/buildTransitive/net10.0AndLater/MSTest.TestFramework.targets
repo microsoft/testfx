@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
-    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net8.0/winui/</_TestFrameworkExtensionsRoot>
+    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net10.0/winui/</_TestFrameworkExtensionsRoot>
   </PropertyGroup>
 
   <!--
@@ -9,7 +9,7 @@
     resolved tooling property so an explicit false continues to select the ordinary assembly.
   -->
   <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
-    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestFrameworkExtensionsRoot>
+    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net10.0/uwp/</_TestFrameworkExtensionsRoot>
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwpTools)' != 'true' ">

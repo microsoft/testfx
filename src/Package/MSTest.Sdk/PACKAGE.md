@@ -11,7 +11,7 @@ Create a test project by using `MSTest.Sdk` as the project SDK. Replace the exam
 ```xml
 <Project Sdk="MSTest.Sdk/4.1.0">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 </Project>
 ```
@@ -19,10 +19,10 @@ Create a test project by using `MSTest.Sdk` as the project SDK. Replace the exam
 Supported platforms:
 
 - .NET 4.6.2+
-- .NET 8.0+
-- .NET 8.0 Windows.18362+ (WinUI)
+- .NET 10.0+
+- .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 9
+- UWP 10.0.17763 with .NET 10+
 
 For package identity, AUMID activation, unpackaged WinUI, UWP launch activation, UI dispatchers, and
 AppContainer security guidance, see

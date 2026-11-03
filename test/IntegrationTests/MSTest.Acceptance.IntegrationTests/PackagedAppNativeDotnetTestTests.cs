@@ -46,8 +46,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     }
 
     [TestMethod]
-    [DataRow("net8.0", false, false, "Passed")]
-    [DataRow("net8.0", true, true, "Passed")]
+    [DataRow("net10.0", false, false, "Passed")]
+    [DataRow("net10.0", true, true, "Passed")]
     [DataRow("net10.0", false, true, "Passed")]
     [DataRow("net10.0", true, false, "Failed")]
     [DataRow("net10.0", true, true, "Retry")]
@@ -144,7 +144,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             "--results-directory \"$(MSBuildProjectDirectory)\\filtered results\" " +
             "--diagnostic --diagnostic-output-directory \"$(MSBuildProjectDirectory)\\diagnostics\" " + arguments;
         TestAsset asset = await GenerateAssetAsync(
-            native ? "net10.0" : "net8.0", identity, executionId, outcome,
+            "net10.0", identity, executionId, outcome,
             commandLineArguments: native ? string.Empty : platformArguments);
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
@@ -233,7 +233,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, Guid.NewGuid().ToString("N"), "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
             asset,
@@ -287,7 +287,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed", appContainer);
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, Guid.NewGuid().ToString("N"), "Passed", appContainer);
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         if (!appContainer)
         {
@@ -316,7 +316,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, Guid.NewGuid().ToString("N"), "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
             asset,
@@ -342,7 +342,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
         string executionId = Guid.NewGuid().ToString("N");
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, executionId, "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
             asset,
@@ -373,7 +373,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
         string executionId = Guid.NewGuid().ToString("N");
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, executionId, "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
         string profileResults = Path.Combine(asset.TargetAssetPath, "profile results");
         string explicitResults = Path.Combine(asset.TargetAssetPath, "explicit results");
@@ -438,7 +438,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, Guid.NewGuid().ToString("N"), "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "informational.rsp"), "--list-tests", TestContext.CancellationToken);
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
@@ -498,7 +498,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "EarlyExit");
+        TestAsset asset = await GenerateAssetAsync("net10.0", identity, Guid.NewGuid().ToString("N"), "EarlyExit");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
             asset,

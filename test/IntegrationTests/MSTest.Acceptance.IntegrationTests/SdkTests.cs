@@ -1191,7 +1191,7 @@ namespace MSTestWebTest
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
         result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
-        result.AssertOutputContains("ControllerTfm=net9.0");
+        result.AssertOutputContains("ControllerTfm=net11.0");
         result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx;mstest;EndContract");
         result.AssertOutputContains("MSTest.TestAdapter");
         result.AssertOutputContains("MSTest.TestFramework");
@@ -1462,10 +1462,8 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [DataRow("net8.0", "Windows_NT", "mstest-appmodel-controller.exe", "net8.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("net9.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("net10.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("net11.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net10.0", "Windows_NT", "mstest-appmodel-controller.exe", "net10.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0", "Windows_NT", "mstest-appmodel-controller.exe", "net11.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
     [DataRow("net11.0", "Unix", "", "", "")]
     public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
         string targetFramework, string operatingSystem, string controller, string controllerTfm, string controllerExtensions)

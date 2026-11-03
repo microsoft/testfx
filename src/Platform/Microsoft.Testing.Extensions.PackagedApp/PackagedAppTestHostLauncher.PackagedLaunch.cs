@@ -209,7 +209,7 @@ internal sealed partial class PackagedAppTestHostLauncher
     {
         // Registering and activating a packaged (MSIX) app needs the PackageManager WinRT projection,
         // which is only available in the Windows build of this extension. When a consumer resolves the
-        // plain net8.0/net9.0 build, fail fast with an actionable message — including the AUMID that
+        // plain net10.0/net11.0 build, fail fast with an actionable message — including the AUMID that
         // activation would use — pointing at the Windows TFM, instead of starting an executable that
         // cannot host the run.
         _ = cancellationToken;

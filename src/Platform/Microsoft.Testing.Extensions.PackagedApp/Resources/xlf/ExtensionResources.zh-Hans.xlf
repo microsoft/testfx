@@ -103,8 +103,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
-        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">无法启动打包的 Windows 应用“{0}”(找到了“{1}”)。注册和激活打包(MSIX)应用需要此扩展的 Windows 版本，该版本随 net8.0-windows10.0.19041.0 及更高版本提供。目标为 "net8.0-windows10.0.19041.0"(或在平台版本 10.0.19041.0 或更高版本上，为更高 net*-windows 目标框架名字对象)，以便 NuGet 选择该资产。当前版本仅启动非打包(松散布局)测试主机。请参阅 https://github.com/microsoft/testfx/issues/9933。</target>
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net10.0-windows10.0.19041.0 and later. Target 'net10.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="needs-review-translation">无法启动打包的 Windows 应用“{0}”(找到了“{1}”)。注册和激活打包(MSIX)应用需要此扩展的 Windows 版本，该版本随 net8.0-windows10.0.19041.0 及更高版本提供。目标为 "net8.0-windows10.0.19041.0"(或在平台版本 10.0.19041.0 或更高版本上，为更高 net*-windows 目标框架名字对象)，以便 NuGet 选择该资产。当前版本仅启动非打包(松散布局)测试主机。请参阅 https://github.com/microsoft/testfx/issues/9933。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">

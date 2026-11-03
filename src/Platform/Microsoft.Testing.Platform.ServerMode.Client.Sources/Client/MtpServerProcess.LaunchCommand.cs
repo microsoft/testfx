@@ -95,7 +95,7 @@ internal sealed partial class MtpServerProcess
 #if NET7_0_OR_GREATER
         // Fenced on the target framework because File.GetUnixFileMode is .NET 7+. Deliberately not the
         // package's modern-.NET compilation symbol: that one records which JSON slice a consumer compiles
-        // and is defined only for net8.0+, while NuGet serves the net5.0 slice to net5.0, net6.0 and net7.0
+        // and is defined only for net10.0+, while NuGet serves the netstandard slice to net5.0 through net9.0
         // consumers alike. Fencing on it would drop a Linux net7.0 consumer back to the existence-only
         // preflight even though it has the API. net462, netstandard2.0, net5.0 and net6.0 consumers genuinely
         // lack the API and keep the existence check above; all target frameworks still recover from EACCES

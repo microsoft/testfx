@@ -14,7 +14,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///   <item>it carries no compiled output (no <c>lib/</c>, <c>ref/</c>, <c>runtimes/</c>) — source only;</item>
 ///   <item>every packed <c>.cs</c> is declared in the nuspec <c>&lt;contentFiles&gt;</c> with
 ///   <c>buildAction="Compile"</c>, and the manifest matches the packed files exactly (no orphan either way);</item>
-///   <item>the netstandard2.0 JSON path is Jsonite only, while net8.0 additionally carries the in-box
+///   <item>the netstandard2.0 JSON path is Jsonite only, while net10.0 additionally carries the in-box
 ///   System.Text.Json engine — so a net462/netstandard consumer never compiles the STJ files;</item>
 ///   <item>the client API ships in every target framework, and every client source file on disk is packed;</item>
 ///   <item>every packed linked/client file is a pack-time transformed copy — it starts with the
@@ -32,9 +32,9 @@ public sealed class MtpServerClientSourcePackageTests
     private const string PackageId = "Microsoft.Testing.Platform.ServerMode.Client.Sources";
 
     // The two target frameworks the package project multi-targets. netstandard2.0 covers net462 consumers
-    // (Jsonite JSON path); net8.0 covers modern .NET consumers (in-box System.Text.Json JSON path).
+    // (Jsonite JSON path); net10.0 covers modern .NET consumers (in-box System.Text.Json JSON path).
     private const string NetStandard = "netstandard2.0";
-    private const string Net = "net8.0";
+    private const string Net = "net10.0";
 
     // Logical path prefix (under contentFiles/cs/<tfm>/) of the shared JSON engine folder.
     private const string JsonFolder = "Linked/ServerMode/JsonRpc/Json/";
@@ -134,7 +134,7 @@ public sealed class MtpServerClientSourcePackageTests
             Package.PackedCsByTfm[NetStandard],
             "Expected the Jsonite parser (Json/Jsonite/Json.cs) to be packed for netstandard2.0.");
 
-        // net8.0 must carry the in-box System.Text.Json engine that netstandard2.0 does not.
+        // net10.0 must carry the in-box System.Text.Json engine that netstandard2.0 does not.
         var stjOnlyOnNet = Package.PackedCsByTfm[Net]
             .Where(IsJsonEngineFile)
             .Where(logical => !IsJsonitePath(logical))
@@ -143,9 +143,9 @@ public sealed class MtpServerClientSourcePackageTests
 
         Assert.IsNotEmpty(
             stjOnlyOnNet,
-            "Expected net8.0 to add System.Text.Json engine files that netstandard2.0 does not carry, but found none.");
+            "Expected net10.0 to add System.Text.Json engine files that netstandard2.0 does not carry, but found none.");
 
-        // net8.0 is a superset of the netstandard2.0 protocol/client source. Down-level BCL polyfills are
+        // net10.0 is a superset of the netstandard2.0 protocol/client source. Down-level BCL polyfills are
         // intentionally omitted because their types are already in-box.
         var missingOnNet = Package.PackedCsByTfm[NetStandard]
             .Where(logical => !logical.StartsWith("Polyfills/", StringComparison.Ordinal))
@@ -154,7 +154,7 @@ public sealed class MtpServerClientSourcePackageTests
 
         Assert.IsEmpty(
             missingOnNet,
-            $"net8.0 must ship every non-polyfill source file netstandard2.0 ships (plus the STJ engine), but these are missing on net8.0:{Environment.NewLine}" +
+            $"net10.0 must ship every non-polyfill source file netstandard2.0 ships (plus the STJ engine), but these are missing on net10.0:{Environment.NewLine}" +
             string.Join(Environment.NewLine, missingOnNet));
     }
 
@@ -344,8 +344,8 @@ public sealed class MtpServerClientSourcePackageTests
         // File.GetUnixFileMode is .NET 7+, so the apphost execute-bit check is fenced on NET7_0_OR_GREATER,
         // which the pack transform leaves alone and every net7.0+ consumer defines. It must NOT ride on
         // MTP_CLIENT_USE_MODERN_DOTNET (what the transform makes of NETCOREAPP): that symbol records which
-        // JSON slice the consumer compiles and is defined only for net8.0+. NuGet serves the net5.0 slice to
-        // net5.0, net6.0 and net7.0 consumers, so reusing it here would drop a Linux net7.0 consumer back to
+        // JSON slice the consumer compiles and is defined only for net10.0+. NuGet serves the net5.0 slice to
+        // net5.0 through net9.0 consumers, so reusing it here would drop a Linux net7.0 consumer back to
         // the existence-only check, select a non-executable apphost, and abort with 'Permission denied'
         // instead of falling back to `dotnet <dll>`.
         const string Logical = "Client/MtpServerProcess.LaunchCommand.cs";

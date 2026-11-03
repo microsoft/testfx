@@ -4,7 +4,7 @@
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
     <TargetFrameworks>$(NetStandardNetFrameworkHolder);$(SupportedNetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(WinUiMinimum)</TargetFrameworks>
-    <IsNetCoreApp Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsNetCoreApp>
+    <IsNetCoreApp Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">true</IsNetCoreApp>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</AssemblyName>
     <UseInternalTestFramework>true</UseInternalTestFramework>
@@ -18,6 +18,8 @@
     <WindowsPackageType>None</WindowsPackageType>
     <!-- Carry the WinUI runtime locally instead of blocking CI on the bootstrapper's installation dialog. -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- This managed test host does not export its enumerable assertion fixtures to WinRT or Native AOT. -->
+    <CsWinRTAotOptimizerEnabled>false</CsWinRTAotOptimizerEnabled>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 

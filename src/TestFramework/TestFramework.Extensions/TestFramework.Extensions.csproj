@@ -27,10 +27,10 @@
 
 Supported platforms:
 - .NET 4.6.2+
-- .NET 8.0+
-- .NET 8.0 Windows.18362+ (WinUI)
+- .NET 10.0+
+- .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 9+
+- UWP 10.0.17763 with .NET 10+
 
 $(CommonProductDescription)]]></PackageDescription>
     <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
@@ -102,7 +102,7 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <PropertyGroup>
     <_ApiTargetFramework>$(TargetFramework)</_ApiTargetFramework>
-    <_ApiTargetFramework Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0')) AND !$(TargetFramework.Contains('-'))">net9.0</_ApiTargetFramework>
+    <_ApiTargetFramework Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0')) AND !$(TargetFramework.Contains('-'))">net10.0</_ApiTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -127,16 +127,12 @@ $(CommonProductDescription)]]></PackageDescription>
   -->
   <ItemGroup Label="Package build assets">
     <None Include="build\netstandard2.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\netstandard2.0\" />
-    <None Include="build\net8.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net8.0\" />
-    <None Include="build\net9.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net9.0\" />
     <None Include="build\net10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net10.0\" />
     <None Include="build\net11.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net11.0\" />
 
     <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\netstandard2.0\" />
-    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
-    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
-    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
-    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
+    <None Include="buildTransitive\net10.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\net10.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
   </ItemGroup>
 
   <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
@@ -207,8 +203,8 @@ $(CommonProductDescription)]]></PackageDescription>
       - core MSTest.TestFramework.dll/.xml/resources -> lib/<tfm> (except the WinUI/UWP only passes)
       - MSTest.TestFramework.Extensions.dll/.xml     -> lib/<tfm> for netstandard2.0/net462/uap10.0
                                                      -> buildTransitive/<tfm> for supported .NET frameworks
-                                                     -> buildTransitive/net8.0/winui (WinUI pass)
-                                                     -> buildTransitive/net9.0/uwp   (ModernUwp pass)
+                                                     -> buildTransitive/net10.0/winui (WinUI pass)
+                                                     -> buildTransitive/net10.0/uwp   (ModernUwp pass)
   -->
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddTestFrameworkPackageFiles</TargetsForTfmSpecificContentInPackage>
@@ -222,9 +218,9 @@ $(CommonProductDescription)]]></PackageDescription>
 
       <!-- Destination of the Extensions assembly and whether the core assembly is bundled in lib for this TFM. -->
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' ">lib\$(_PackageTfm)\</_ExtensionsPackagePath>
-      <_ExtensionsPackagePath Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
-      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_ExtensionsPackagePath>
-      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net10.0\winui\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net10.0\uwp\</_ExtensionsPackagePath>
 
       <!-- The core assembly is bundled in lib for every TFM except the WinUI/UWP-only passes. -->
       <_BundleCoreAssembly>true</_BundleCoreAssembly>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Classic UWP uses the adapter's bootstrap, not the modern PackagedApp runtime assembly. -->
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsTrimmable>false</IsTrimmable>
     <IsAotCompatible>false</IsAotCompatible>
@@ -19,7 +19,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <ProjectReference Include="..\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
                       PrivateAssets="none" />
     <ProjectReference Include="..\Microsoft.Testing.Extensions.PackagedApp\Microsoft.Testing.Extensions.PackagedApp.csproj"
-                      Condition="'$(TargetFramework)' == 'net8.0'" PrivateAssets="none" />
+                      Condition="'$(TargetFramework)' == 'net10.0'" PrivateAssets="none" />
     <ProjectReference Include="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
                       ReferenceOutputAssembly="false" PrivateAssets="all"
                       SkipGetTargetFrameworkProperties="true"
@@ -41,7 +41,7 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <Target Name="_AddPackagedAppControllerToPackage" Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <ItemGroup>
-      <_PackagedAppControllerFramework Include="net8.0;net9.0" />
+      <_PackagedAppControllerFramework Include="$(SupportedNetFrameworks)" />
     </ItemGroup>
     <MSBuild Projects="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
              Targets="Build"
