@@ -1,5 +1,6 @@
 module(name = "testfx")
 
+bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_dotnet", version = "0.0.0")
 archive_override(
     module_name = "rules_dotnet",

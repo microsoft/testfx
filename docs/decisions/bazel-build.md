@@ -1181,7 +1181,40 @@ no shipping leg, servicing branch, or package publication is enabled here.
   instead of accepting a machine Visual Studio fallback directory. Discovery
   matches MSTest's source-declared short display names and the exact total,
   not fully qualified names that the native terminal reporter does not print.
-- Final package builds and consumer execution still await the analyzer and
-  common-version ready commits and the coordinator's next validation wave.
-  Draft sources and syntax/environment probes do not establish package or
-  integration parity.
+- All source prerequisites are now integrated, including the analyzer's final
+  identity follow-up `6f69c9d135c542f6c1f3bacf4e003da66506e9f3` and core
+  netstandard metadata `b156a7381a6b627d504e2d2b06e4002c6d3d97e4`. The latter
+  is compatibility-only; this lane does not claim portable assembly
+  `TargetFrameworkAttribute` parity from it.
+- The first full closure attempt found that root Bzlmod could not resolve the
+  adapter's `@platforms//os:windows` selector. A direct dependency on
+  `platforms` 1.0.0 exposes the already-selected module; `bazel mod graph` and
+  the existing lock confirmed that version before the edit. This was an
+  analysis/setup failure, not test-value evidence.
+- The two-worker C: closure then completed 601 local actions but failed two
+  missing modern platform inputs introduced by the compatibility declaration:
+  `JsonExtensions.cs` and `JsonPropertyBagDeserializer.cs`. Neither is tracked;
+  the original project removal list tolerated them, whereas `linked_srcs`
+  requires real files. The framework-parity owner was given that exact failure
+  for a narrow correction. This is an integration/build failure, not a failing
+  consumer assertion.
+- That attempt did produce the real framework package: its inspected archive
+  has 89 entries, version `4.6.0-preview.bazel`, and the four expected analyzer
+  dependency groups with only compile/runtime excluded. SHA-256 is
+  `C589B3D8DE0DB7212AAB560621D6E037993A95E499F1F8BAF61B9E36EB01A27F`.
+  This partial artifact is not a full closure or consumer pass.
+
+### Package target contract
+
+| Target | Package / result | Native payload contract |
+| --- | --- | --- |
+| `//:framework_package` | `MSTest.TestFramework`, MSTest version family | Core DLL/docs/PDBs/satellites in `lib/<tfm>`; Extensions DLL/docs/PDBs and existing hooks in `buildTransitive/<tfm>`. |
+| `//:adapter_package` | `MSTest.TestAdapter`, MSTest version family | Adapter and PlatformServices in `buildTransitive/<tfm>`, shared localized satellites, and unchanged registration/resource/parallelization hooks. |
+| `//:telemetry_package` | `Microsoft.Testing.Extensions.Telemetry`, MTP version family | Four portable assemblies/resources, existing build hooks, native platform bound and locked external dependencies. |
+| `//:platform_msbuild_package` | `Microsoft.Testing.Platform.MSBuild`, MTP version family | Portable Extensions.MSBuild in `lib/<tfm>`; genuine netstandard task/platform binaries and selected runtime companions in `_MSBuildTasks/netstandard2.0`; unchanged root-relative build assets. |
+| `//:mstest_packages` | Four packages above | Does not change the existing MTP-only `//:packages` aggregate. |
+| `//:mstest_package_closure` | Eight-package isolated feed | Those four, the existing three MTP/TRX packages, and the independent native analyzer package. |
+
+Each individual target exposes exactly one nupkg in `DefaultInfo`, the existing
+`NuGetPackInfo` with a generated version file, and `nuspec` / `package_request`
+output groups. Its public package groups are the four declared portable TFMs.
