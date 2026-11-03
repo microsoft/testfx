@@ -335,7 +335,7 @@ function Run-MSBuildConsumer($Consumer) {
             $null = Invoke-Step $name $dotnet @(
                 'msbuild', 'MSTestPackageConsumer.csproj', '-t:InvokeTestingPlatform', '-p:Configuration=Release',
                 "-p:RuntimeIdentifier=$rid", "-p:MSTestVersion=$mstestVersion", "-p:MTPVersion=$mtpVersion",
-                "-p:TestingPlatformExecutablePath=$($Consumer.Executable)", "-p:TestingPlatformCommandLineArguments=$arguments",
+                "-p:TestingPlatformExecutablePath=$($Consumer.Executable)", "-p:TestingPlatformCommandLineArguments=$($arguments.Replace('"', '%22'))",
                 "-bl:$(Join-Path $directory "$name.binlog")", '-nologo', '-v:minimal'
             ) $scenario.Exit
         }
