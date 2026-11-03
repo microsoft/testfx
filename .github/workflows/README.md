@@ -264,12 +264,16 @@ Strict compilation succeeded for all 37 inputs (35 runnable workflows and two
 shared components), and ShellCheck passed for 2,100 shell resources. After
 aligning the Node image cache, the 70 affected shell resources (18 unique scripts)
 passed the same pinned ShellCheck with the compiler's exclusions; every other
-generated run script was byte-identical. The current compiler reports 32
+generated run script was byte-identical. The initial refresh reported 32
 existing authoring warnings: transitive `fetch-binlog`
 references, Dependabot alert tools not declared in the effective inventory,
 pre-extraction prompt references in the parallel-audit command, and persisted
-credentials in the trusted unskip publisher. These warnings remain visible;
-the upgrade does not suppress diagnostics or widen authored permissions.
+credentials in the trusted unskip publisher. The
+[authoring-contract fixes](#authoring-warning-runtime-contracts) resolve all 32
+without suppressing diagnostics or widening authored permissions. Full strict
+compilation and ShellCheck now pass with zero warnings; all 25 offline contract
+tests pass, with the same retained suite detecting the defects on the initial
+upgrade revision.
 
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
