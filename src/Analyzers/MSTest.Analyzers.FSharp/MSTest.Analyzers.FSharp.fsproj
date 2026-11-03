@@ -1,0 +1,45 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <PackageTags>$(CommonPackageTags) MSTest F# fsharp-analyzer</PackageTags>
+    <PackageDescription><![CDATA[Reports MSTest usage diagnostics in F# projects through Ionide and the F# analyzer CLI.
+
+$(CommonProductDescription)]]></PackageDescription>
+    <PackageReleaseNotes>F# equivalents for the applicable MSTest diagnostics. Built against FSharp.Analyzers.SDK $(FSharpAnalyzersSdkVersion); use a matching fsharp-analyzers CLI or FsAutoComplete host.</PackageReleaseNotes>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackFSharpAnalyzers</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Core.fs" />
+    <Compile Include="DataRules.fs" />
+    <Compile Include="DependencyRules.fs" />
+    <Compile Include="DeclarationRules.fs" />
+    <Compile Include="ExpressionRules.fs" />
+    <Compile Include="Analyzers.fs" />
+    <EmbeddedResource Include="..\MSTest.Analyzers\Resources.resx" Link="Resources.resx" LogicalName="MSTest.Analyzers.Resources.resources" />
+    <PackageReference Include="FSharp.Analyzers.SDK" PrivateAssets="all" />
+    <PackageReference Include="FSharp.Core" VersionOverride="$(FSharpAnalyzersCoreVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="_PackFSharpAnalyzers" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetPath)" PackagePath="analyzers/dotnet/fs" />
+      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths)" PackagePath="analyzers/dotnet/fs/%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+    </ItemGroup>
+  </Target>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <ItemGroup>
+    <!-- Share the existing rule messages without generating a C# accessor in an F# project. -->
+    <EmbeddedResource Update="..\MSTest.Analyzers\Resources.resx" GenerateSource="false" />
+  </ItemGroup>
+</Project>

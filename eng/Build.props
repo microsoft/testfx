@@ -23,10 +23,12 @@
   <ItemGroup Condition=" '$(ProductsToBuild)' == 'mstest' AND '$(OS)' != 'Windows_NT' ">
     <ProjectToBuild Include="$(RepoRoot)src/Adapter/**/*.csproj" />
     <ProjectToBuild Include="$(RepoRoot)src/Analyzers/**/*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)src/Analyzers/**/*.fsproj" />
     <ProjectToBuild Include="$(RepoRoot)src/Package/**/*.csproj" />
     <ProjectToBuild Include="$(RepoRoot)src/TestFramework/**/*.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Analyzers.FSharp.Acceptance.IntegrationTests/MSTest.Analyzers.FSharp.Acceptance.IntegrationTests.csproj" />
   </ItemGroup>
 
   <!-- When building Microsoft.Testing.Platform only -->

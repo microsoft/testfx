@@ -1,0 +1,3 @@
+MSTest.Analyzers.FSharp.Analyzers
+static MSTest.Analyzers.FSharp.Analyzers.analyzeCli(FSharp.Analyzers.SDK.CliContext context) -> Microsoft.FSharp.Control.FSharpAsync<Microsoft.FSharp.Collections.FSharpList<FSharp.Analyzers.SDK.Message>>
+static MSTest.Analyzers.FSharp.Analyzers.analyzeEditor(FSharp.Analyzers.SDK.EditorContext context) -> Microsoft.FSharp.Control.FSharpAsync<Microsoft.FSharp.Collections.FSharpList<FSharp.Analyzers.SDK.Message>>
