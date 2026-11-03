@@ -1,4 +1,5 @@
 exports_files([
+    "testfx-source-pathmap.patch",
     "compatibility-package-references.patch",
     "framework-reference-priority.patch",
     "generated-resource-names.patch",

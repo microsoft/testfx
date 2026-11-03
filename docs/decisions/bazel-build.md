@@ -2245,6 +2245,48 @@ behavioral red-phase evidence. An independent Arcade/MSBuild green-before run,
 other runtime/TFM executions, CI collectors, and the remaining four suites are
 not claimed by this slice.
 
+### Native source-root parity
+
+Existing extension annotation tests require real source files beneath the
+repository root and the existing Arcade `/_/` deterministic source-path
+contract. Declaring the original source files beside the native fixture root
+resolved eight of the nine initial failures. The remaining
+`RealAssertFailure_AnnotationPointsAtTestMethodAndNotAtFrameworkFile` failure
+observed `CallerFilePath == "./test/..."` while the real annotation normalized
+it to `test/...`; its assertion already handles Arcade's `/_/` form.
+
+The separately scoped `testfx-source-pathmap.patch` changes only the execution-
+time pathmap destination from `.` to `/_/` in the Windows and POSIX wrappers,
+the common worker subprocess path, and the F# worker in-process path. It does
+not change signing, aliases, reference selection, test assertions, or test
+scheduling. This is development source-path parity, not SourceLink parity.
+The first generated multi-file patch lacked the file separators required by
+Bazel's patcher; regenerating standard `diff --git` boundaries fixed that
+setup error before compilation.
+
+With the shared public-signing checkpoint integrated, this command returned 0:
+
+```powershell
+.\eng\bazel.ps1 test //:terminal_contract_tests //:self_real_tests //:msbuild_tests //:server_client_tests //:extension_tests --jobs=2 --keep_going --nocache_test_results --noshow_progress
+```
+
+The five real reports reconcile to 3,610 selected, 3,595 executed/passed, zero
+failed, and 15 unchanged OS/filesystem skips: terminal 15/15, self-real 24/24,
+MSBuild 388/388, server-client 305 passes plus eight Unix-only skips, and
+extensions 2,863 passes plus seven existing skips. The extension test host's
+actual token is `B03F5F7F11D50A3A`. The server-client run uses native self-contained
+.NET 10.0.14; the other hosts use the pinned .NET 11 runtime.
+
+**Test-value evidence:** the original extension source-location assertion
+failed on the `.` mapping and now executes/passes on `/_/`, without edits or
+exclusions. Those recorded before/after runs also cross the shared signing
+checkpoint; they are not an isolated same-signing counterfactual. Evidence is
+retained in `extension_tests-initial.trx`,
+`stage4-reference-source-fixtures.log`, `signed-pathmap-suites.log`,
+`signed-test-inventory.json`, and five `*-signed-net10.trx` files. Wrapper-based
+Windows execution is verified; optional worker execution and POSIX/F# execution
+remain separately scoped checks.
+
 ## SDK 12 public-signing refresh (2026-11-03)
 
 Refresh the existing bounded SDK 12 MTP/TRX package/publisher gate against shared
