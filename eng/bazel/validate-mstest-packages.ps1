@@ -433,7 +433,9 @@ try {
         $mutationDirectory = Join-Path $directory 'satellite-counterfactual'
         $mutationFeed = Join-Path $mutationDirectory 'feed'
         New-Item -ItemType Directory -Path $mutationFeed -Force | Out-Null
-        Get-ChildItem -LiteralPath $feed -File | Copy-Item -Destination $mutationFeed
+        Get-ChildItem -LiteralPath $feed -File |
+            Where-Object Name -NE "MSTest.TestAdapter.$mstestVersion.nupkg" |
+            Copy-Item -Destination $mutationFeed
         $request = Get-Content -LiteralPath $packages['MSTest.TestAdapter'].Request -Raw | ConvertFrom-Json
         $removed = 'buildTransitive/_localization/ko/MSTest.TestAdapter.resources.dll'
         if (@($request.files | Where-Object target -EQ $removed).Count -ne 1) { throw 'The counterfactual must remove exactly one adapter satellite.' }

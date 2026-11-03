@@ -1280,6 +1280,100 @@ Each individual target exposes exactly one nupkg in `DefaultInfo`, the existing
 `NuGetPackInfo` with a generated version file, and `nuspec` / `package_request`
 output groups. Its public package groups are the four declared portable TFMs.
 
+### Executed unsigned consumer gate (2026-11-03)
+
+The complete focused command exited **0**, with all **31 expected-exit steps**
+validated:
+
+```powershell
+$env:TESTFX_BAZEL_OUTPUT_ROOT = 'C:\tfb\d7ce736ef101'
+.\eng\bazel\validate-mstest-packages.ps1 -OutputRoot 'C:\tfb\d7ce736ef101\mstest-validation' -VerifySatelliteSensitivity
+```
+
+Source state: `42dac12d6c5d7c79d1d6b1aed2fd20bc0683396a` plus the retained
+`validated-harness.patch`, SHA-256
+`FA281DC1151587A102AD3811642B4C8580B4C5BD89624AE2F39F34A8A0A3193B`.
+The patch only prevents copying a read-only original adapter archive into the
+counterfactual output slot; the native packer creates that variant afresh.
+Full evidence is retained under
+`C:\tfb\d7ce736ef101\mstest-validation\20261103-152848-a61a3ac9`.
+It includes all eight original feed packages, isolated caches, generated
+projects/assets, loaded-assembly hashes, command logs/binlogs, 13 TRX files, the
+counterfactual request/package, the validated patch, and `validation.json`.
+
+| Consumer TFM | Actual self-contained runtime | Discovery / pass / intentional failure / empty selection |
+| --- | --- | --- |
+| net8.0 | .NET 8.0.33 | Exits 0 / 0 / 2 / 9. |
+| net9.0 | .NET 9.0.22 | Exits 0 / 0 / 2 / 9. |
+| net10.0 | .NET 10.0.14 | Exits 0 / 0 / 2 / 9. |
+| net11.0 | .NET 11.0.0-rc.3.26522.148 | Exits 0 / 0 / 2 / 9. |
+
+Each discovery listed the four declared cases. Each positive run executed and
+passed exactly three cases with no skips. Each negative run executed only
+`IntentionalFailure`, returned 2, and emitted the expected assertion marker.
+The published applications ran with `DOTNET_ROOT` pointing to a nonexistent
+directory; their loaded CoreLib locations were verified inside their own
+published layouts. The native netstandard MSBuild task also launched the net11
+application through `InvokeTestingPlatform`: parent exits 0 and 1 corresponded
+to three passing cases and the one intended failing case, with separate TRX
+reports. Both paths retained result directories containing spaces and `!`.
+
+| Requirement | Evidence |
+| --- | --- |
+| Native resolution and runtime provenance | `NativeAssembliesAreLoadedFromConsumer` checks all nine runtime assembly hashes, local loaded paths, and Bazel metadata. The outer harness checks the eight package/cache hashes, exact restore closure, and published CoreLib path. |
+| Bundled localization | `KoreanSatellitesAreCopiedAndLoadable` checks three actual satellite files, hashes, load paths, and translated strings against the source catalogs. Archive checks require every declared framework/adapter source culture. |
+| Build and registration hooks | `PackagedTargetsProvideExtensionsAndParallelization` checks the Extensions assembly, generated method-level/two-worker attribute, and generated option-default configuration. The outer harness also checks the generated MSTest builder registration. |
+| Discovery, reports, and failure propagation | All four named cases are discovered; positive/negative TRX identities and counters are reconciled. `IntentionalFailure` supplies the failure marker; zero-result runs and real native MSBuild parent exits are checked separately. |
+
+### Test-value evidence: package payload removal
+
+The same three positive consumer cases and filter
+`FullyQualifiedName!~IntentionalFailure` ran in all three states:
+
+| State | Executed | Passed | Failed | Host exit |
+| --- | --- | --- | --- | --- |
+| Correct native package, before | 3 | 3 | 0 | 0 |
+| Repacked adapter without its Korean satellite | 3 | 2 | 1 | 2 |
+| Correct native package, fresh restored cache | 3 | 3 | 0 | 0 |
+
+**Executed: detected.** `KoreanSatellitesAreCopiedAndLoadable` failed at
+`Assert.IsTrue(File.Exists(satellitePath))` with
+`Missing native Korean satellite: MSTest.TestAdapter.` Both package production
+and consumer publication succeeded for the negative variant. It is not a
+compile/restore/launch failure. Only
+`buildTransitive/_localization/ko/MSTest.TestAdapter.resources.dll` was removed
+from the payload; all remaining payload entries and the nuspec are byte-identical.
+The native packer regenerated the expected OPC core-properties identifier and
+relationship metadata.
+
+Counterfactual request SHA-256:
+`FB446EAB0440A7CF110F7F7A39BFBE949F1199A962D63EE48DBF637AFF25CE70`.
+Original adapter archive SHA-256:
+`5658CB1D5468AA681310AE9CB56C3722AD3094A7D10CB6D698033BC9A576DC5C`.
+Counterfactual archive SHA-256:
+`738061DC328BFA039FF6ACC56927D96B7F420C3FCF003F1F68EEE68B29CA9081`.
+`counterfactual-package-diff.json` records the exact payload comparison.
+
+The native producer action graph contains eight `NuGetPack` and 685
+`CSharpCompile` actions, with no MSBuild executable or `dotnet build/pack/test`
+invocation found in producer command arguments. The graph and its compact
+summary are retained in the same evidence directory. MSBuild was used only for
+external consumers.
+
+Earlier harness failures were corrected rather than hidden: failed-test messages
+must be read from TRX `ErrorInfo` rather than PowerShell's null
+`XmlDocument.InnerText`; nested command-line quotes must use MSBuild `%22`
+escaping; and a counterfactual writer must not overwrite a copied read-only
+Bazel archive. The final complete command includes all affected checks.
+
+This gate is **Windows x64 and unsigned-native-closure evidence**. It does not
+establish Linux/macOS, net462/Windows-app-model, or official-release parity.
+The separately owned default SDK consumer exposed the external CodeCoverage
+strong-name requirement for MTP's Microsoft public key. The coordinator owns
+carrying the existing public-signing contract into native outputs; these unsigned
+packages/results are preserved for comparison, not substituted with released
+MTP or presented as default-SDK/CodeCoverage success.
+
 ## 2026-11-03: native public signing and friend identities
 
 The default SDK consumer and the Windows controller independently reached the
