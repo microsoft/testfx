@@ -434,6 +434,63 @@ Implementation and initial experiments:
   strings. This includes `MSBUILD_EXE_PATH`, as well as SDKs/extensions paths.
   The parent process environment is unchanged, and each child starts in its
   own consumer directory beside its pinned `global.json`.
+- At `9e1604807cacd4f704b4e416137a8ad106513634`, the resumed command
+  `.\eng\bazel.ps1 build //:mstest_sdk_package //:mstest_package --jobs=2 --noshow_progress --show_result=0`
+  completed with exit 0 and eight actions. The isolated
+  `.\eng\bazel\validate-sdk-packages.ps1 -LayoutOnly -Jobs 2` invocation
+  (with an explicit run-owned `-ArtifactsRoot` on the available drive)
+  also exited 0. It verified both complete payloads, dependency groups,
+  unchanged static assets/readmes, all generated template text, and the SDK
+  archive actually restored into the fresh cache.
+- That run evaluated eight real SDK consumers: default profile, `None`,
+  explicit extension disabling, test library, layered Web SDK, central package
+  management, VSTest precedence over AOT, and opt-in source generation. All
+  eight selected the expected references and the pinned SDK/MSBuild paths;
+  the invalid-profile target returned its expected exit 1 and diagnostic.
+  This is evaluation evidence, not AOT/Windows/source-generator execution.
+  `validation.json` explicitly records `ConsumersPassed=false`.
+  The retained run is `bazel-sdk-validation/20261103-141504-951f465d`.
+  Native archive SHA-256 values are
+  `1C2164B473C7E0128E7ABF3639485336E99FB4D6E4245A62A750874D2CC197AD`
+  (SDK) and
+  `BBC675E5100C12D7672A3C0BD1D696A2DA76A181163844BACEE1EE2848EA6195`
+  (meta-package), both at `4.6.0-preview.bazel`.
+
+#### Test-value evidence: SDK/meta-package lane
+
+At `78b990d9986486f1c3755fc3a9f38ddaceab87c6` (the shared version-helper
+prerequisite integrated, with only this documentation update pending),
+`.\eng\bazel.ps1 test //:sdk_package_tests //:build_tools_tests --jobs=2 --noshow_progress --show_result=0 --test_output=errors`
+exited 0. The actual TRX files reported 12/12 SDK helper cases and 13/13 existing
+build-tool cases passed, with zero failures or skips. Existing method-level
+scheduling remained enabled.
+
+The same SDK test DLL then ran against an isolated, natively compiled mutation:
+only the `MicrosoftTestingPlatformVersion` substitution read MSTest's
+`VersionPrefix` instead of `TestingPlatformVersionPrefix`. The compiler and
+arguments came from the real Bazel action; only the mutant source/output paths
+changed. The original helper and test assembly hashes were unchanged afterward.
+This is a compiling behavior-removal comparison, not a pristine-baseline run.
+
+| Contract / exact test | Counterfactual | Without correct behavior | Correct implementation |
+| --- | --- | --- | --- |
+| SDK component versions / `Generate_SdkPreservesTemplatesAndComponentVersions` | Use the MSTest prefix for MTP | Executed: detected the wrong `7.8.9-preview.bazel` instead of `2.3.4-preview.bazel` in generated SDK XML | Passed before and after |
+| Meta-package dependency versions / `Generate_MetaPackagePreservesDependencyAndAssetFlow` | Same substitution | Executed: detected the wrong TRX dependency version | Passed before and after |
+
+Every paired run used
+`--filter FullyQualifiedName~SdkPackageTests --minimum-expected-tests 12 --report-trx --report-trx-filename tests.trx`
+with its own results directory. Counts were respectively 12 passed / exit 0,
+10 passed + 2 intended assertion failures / exit 2, and 12 passed / exit 0;
+all three executed 12 cases and skipped zero. The ten
+`Generate_RejectsContractDriftBeforeWritingOutputs` cases remained green.
+Mutation patch SHA-256:
+`123F7CECD92BAC1A07052F9956F89CFB2F818D047C7B1CFED9CF352A05403EB5`.
+The retained `sdk-counterfactual` artifacts contain the patch, original native
+compiler arguments, discovery, all three TRX reports, and `comparison.json`.
+An initial launcher probe used the wrong runfiles working directory, and a
+repeat encountered a copied read-only sidecar; these setup failures are not
+counted as regression evidence. The successful comparison used the real test
+runfiles root and task-owned copies.
 
 ### 2026-11-02: extending the migration after upstream SDK discovery
 
