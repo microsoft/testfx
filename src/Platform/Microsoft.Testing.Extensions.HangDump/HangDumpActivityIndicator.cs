@@ -38,6 +38,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     private volatile bool _exitSignalActivityIndicatorAsync;
     private int _activitySignalPending;
+
+    // The first disposer retains ownership even when it must defer cleanup past the shutdown timeout.
+    private int _disposeStarted;
+
     private CancellationTokenSource? _activitySignalCancellation;
     private Task? _activitySignalTask;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
@@ -278,6 +282,11 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)
+        {
+            return;
+        }
+
         // Wait (bounded) for the loop before disposing the pipe client it may be using. This also covers runs
         // where session finishing was skipped because execution or a lifecycle handler threw. If the wait times
         // out, the pipe client is disposed only when the loop stops.
@@ -304,6 +313,11 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)
+        {
+            return;
+        }
+
         // Wait (bounded) for the loop before disposing the pipe client it may be using. If the wait times out, the
         // pipe client is disposed only when the loop stops.
         Task stop = StopActivitySignalLoopAsync();

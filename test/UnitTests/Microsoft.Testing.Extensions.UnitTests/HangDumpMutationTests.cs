@@ -189,6 +189,38 @@ public sealed class HangDumpActivityIndicatorMutationTests
     }
 
     [TestMethod]
+    [DataRow(false, false, DisplayName = "ShutdownTimeout_DisposeThenDispose")]
+#if NETCOREAPP
+    [DataRow(true, true, DisplayName = "ShutdownTimeout_DisposeAsyncThenDisposeAsync")]
+    [DataRow(true, false, DisplayName = "ShutdownTimeout_DisposeAsyncThenDispose")]
+    [DataRow(false, true, DisplayName = "ShutdownTimeout_DisposeThenDisposeAsync")]
+#endif
+    public async Task Dispose_ShutdownTimeout_RepeatedCallsKeepPipeClientAlive(bool firstAsync, bool secondAsync)
+    {
+        HangDumpActivityIndicator indicator = CreateEnabledIndicator();
+        SetPrivateField(indicator, "_activitySignalShutdownTimeout", TimeSpan.FromMilliseconds(50));
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+
+        await AssertPipeClientDisposalDeferredAsync(
+            indicator,
+            loop,
+            () => DisposeIndicatorAsync(firstAsync),
+            () => DisposeIndicatorAsync(secondAsync));
+
+        Task DisposeIndicatorAsync(bool useAsyncDisposal)
+        {
+#if NETCOREAPP
+            if (useAsyncDisposal)
+            {
+                return indicator.DisposeAsync().AsTask();
+            }
+#endif
+
+            return Task.Run(indicator.Dispose, TestContext.CancellationToken);
+        }
+    }
+
+    [TestMethod]
     public async Task OnTestSessionFinishingAsync_CanceledSessionWithPendingActivity_CompletesSoLaterHandlersRun()
     {
         using HangDumpActivityIndicator indicator = CreateEnabledIndicator();
@@ -206,20 +238,24 @@ public sealed class HangDumpActivityIndicatorMutationTests
         Assert.AreEqual(0, GetPrivateField<int>(indicator, "_activitySignalPending"));
     }
 
-    private async Task AssertPipeClientDisposalDeferredAsync(HangDumpActivityIndicator indicator, GatedActivitySignalLoop loop, Func<Task> dispose)
+    private async Task AssertPipeClientDisposalDeferredAsync(HangDumpActivityIndicator indicator, GatedActivitySignalLoop loop, params Func<Task>[] disposals)
     {
         object pipeClient = GetPrivateField<object>(indicator, "_namedPipeClient");
         try
         {
-            Task disposal = dispose();
-            Assert.AreSame(disposal, await Task.WhenAny(disposal, Task.Delay(GateTimeout, TestContext.CancellationToken)), "Disposal must return after the shutdown timeout.");
-            await disposal;
+            foreach (Func<Task> dispose in disposals)
+            {
+                Task disposal = dispose();
+                Assert.AreSame(disposal, await Task.WhenAny(disposal, Task.Delay(GateTimeout, TestContext.CancellationToken)), "Disposal must return after the shutdown timeout.");
+                await disposal;
 
-            Assert.IsFalse(GetPrivateField<bool>(pipeClient, "_disposed"), "The pipe client must not be disposed while an activity signal request may still use it.");
+                Assert.IsFalse(GetPrivateField<bool>(pipeClient, "_disposed"), "The pipe client must not be disposed while an activity signal request may still use it.");
+            }
         }
         finally
         {
             loop.Release();
+            await loop.Completion;
         }
 
         Assert.IsTrue(
@@ -261,6 +297,8 @@ public sealed class HangDumpActivityIndicatorMutationTests
     private sealed class GatedActivitySignalLoop(Task cancellationObserved, TaskCompletionSource<bool> gate)
     {
         public Task CancellationObserved { get; } = cancellationObserved;
+
+        public Task Completion => gate.Task;
 
         public void Release() => gate.TrySetResult(true);
     }
