@@ -1,6 +1,14 @@
 #nullable enable
 Microsoft.Testing.Platform.Helpers.IFileSystem.IsRegularFile(string! path) -> bool
 Microsoft.Testing.Platform.Helpers.SystemFileSystem.IsRegularFile(string! path) -> bool
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.Description.get -> string?
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.DisplayName.get -> string!
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TestRequestExecutionTimeInfo() -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TestRequestExecutionTimeInfo(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo timingInfo) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TimingInfo.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
+*REMOVED*Microsoft.Testing.Platform.Requests.TestHostTestFrameworkInvoker.DataTypesProduced.get -> System.Type![]!
+*REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.ToString() -> string!
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!

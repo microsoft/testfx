@@ -143,11 +143,8 @@ public sealed class TestHostTestFrameworkInvokerTests
         Assert.AreSequenceEqual(["create", "execute", "close"], lifecycle);
         Assert.AreSequenceEqual(["create warning", "close warning"], warnings);
         Assert.AreSequenceEqual([fallbackError ? "Test adapter test session failure" : "create rejected", "close rejected"], errors);
-        Assert.HasCount(1, published);
-#pragma warning disable CS0618 // The invoker intentionally publishes this legacy compatibility message.
-        Assert.IsInstanceOfType<TestRequestExecutionTimeInfo>(published[0]);
-        Assert.AreSequenceEqual(new[] { typeof(TestRequestExecutionTimeInfo) }, invoker.DataTypesProduced);
-#pragma warning restore CS0618
+        Assert.IsEmpty(published);
+        Assert.IsNotInstanceOfType<IDataProducer>(invoker);
         Assert.AreEqual("TestHostTestFrameworkInvoker", invoker.Uid);
         Assert.AreEqual(PlatformTestMetadata.Version, invoker.Version);
         Assert.AreEqual(string.Empty, invoker.DisplayName);

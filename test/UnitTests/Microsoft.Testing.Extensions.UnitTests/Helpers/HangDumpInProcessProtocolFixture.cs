@@ -26,7 +26,7 @@ using TestSessionContext = Microsoft.Testing.Platform.Services.TestSessionContex
 
 namespace Microsoft.Testing.Extensions.UnitTests.Helpers;
 
-internal sealed class HangDumpInProcessProtocolFixture
+internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
 {
     private readonly CancellationTokenSource _lifetime;
     private readonly ServiceProvider _controllerServices = new();
@@ -36,6 +36,8 @@ internal sealed class HangDumpInProcessProtocolFixture
     private readonly ConcurrentQueue<Task> _transportTasks = new();
     private readonly ConcurrentQueue<Task> _operations = new();
     private readonly ConcurrentDictionary<Task, bool> _observedOperations = new();
+    private readonly ConcurrentQueue<(TimeSpan Delay, TaskCompletionSource<bool> Wait)> _activitySignalWaits = new();
+    private readonly SemaphoreSlim _activitySignalWaitEntered = new(0);
     private readonly ICompositeExtensionFactory _consumerFactory;
     private readonly ICompositeExtensionFactory _sessionFactory;
     private HangDumpProcessLifetimeHandler? _controller;
@@ -80,6 +82,20 @@ internal sealed class HangDumpInProcessProtocolFixture
                 var task = Task.Run(callback, token);
                 _transportTasks.Enqueue(task);
                 return task;
+            });
+
+        // The activity indicator forwards coalesced activity from a background loop that waits between
+        // flushes. Each wait is held until a test advances it, so signal delivery is deterministic and
+        // never depends on wall-clock time. Cancellation still ends the wait, as Task.Delay does.
+        Scheduler.Setup(value => value.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .Returns((TimeSpan delay, CancellationToken token) =>
+            {
+                var wait = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                CancellationTokenRegistration registration = token.Register(() => wait.TrySetCanceled(token));
+                _ = wait.Task.ContinueWith(_ => registration.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                _activitySignalWaits.Enqueue((delay, wait));
+                _activitySignalWaitEntered.Release();
+                return wait.Task;
             });
 
         _controllerServices.AddServices(
@@ -267,6 +283,25 @@ internal sealed class HangDumpInProcessProtocolFixture
         AssertNoDumpWork();
     }
 
+    /// <summary>
+    /// Ends the activity loop's current wait and returns once the loop has flushed any pending activity
+    /// and started its next wait. A pending signal is therefore acknowledged by the controller on return.
+    /// </summary>
+    public async Task FlushActivityAsync()
+    {
+        await AwaitAsync(_activitySignalWaitEntered.WaitAsync(Token));
+        Assert.IsTrue(_activitySignalWaits.TryDequeue(out (TimeSpan Delay, TaskCompletionSource<bool> Wait) current));
+
+        // A one-hour timeout gives a tenth of the timeout capped at one second.
+        Assert.AreEqual(TimeSpan.FromSeconds(1), current.Delay);
+        Assert.IsTrue(current.Wait.TrySetResult(true), "The loop must still be waiting when the test advances it.");
+
+        // The loop only waits again after the flush's request has been acknowledged. Leave that wait for
+        // the next advance.
+        await AwaitAsync(_activitySignalWaitEntered.WaitAsync(Token));
+        _activitySignalWaitEntered.Release();
+    }
+
     public void AssertSignalCount(int count)
     {
         int tracedCount = TraceEnabled ? count : 0;
@@ -344,6 +379,8 @@ internal sealed class HangDumpInProcessProtocolFixture
         }
     }
 
+    public ValueTask DisposeAsync() => new(CloseAsync());
+
     public async Task CloseAsync()
     {
         if (_closed)
@@ -355,6 +392,7 @@ internal sealed class HangDumpInProcessProtocolFixture
         {
             await ShutdownAsync(useAsyncDisposal: false);
             Assert.IsTrue(AllTrackedTasksCompleted, "No task-owned pipe or lifecycle delegate may survive cleanup.");
+            _activitySignalWaitEntered.Dispose();
             AssertNoDumpWork();
         }
         finally

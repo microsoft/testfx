@@ -28,6 +28,32 @@ public sealed class GlobalConfigGeneratorContinuationTests
     }
 
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Environment-driven crash dumps are supported on Unix.")]
+    public async Task MissingOutputPathWithInheritedCrashDumpSettingsDoesNotProduceDump()
+    {
+        using var directory = new OwnedDirectory();
+        string dumpPath = System.IO.Path.Combine(directory.Path, "unexpected_%p.dmp");
+
+        // Keep any unexpected dump small while exercising the CI inheritance.
+        ToolResult result = await RunToolAsync(
+            directory.Path,
+            provideOutputPath: false,
+            environmentVariables: new Dictionary<string, string>
+            {
+                ["DOTNET_DbgEnableMiniDump"] = "1",
+                ["COMPlus_DbgEnableMiniDump"] = "1",
+                ["DOTNET_DbgMiniDumpName"] = dumpPath,
+                ["COMPlus_DbgMiniDumpName"] = dumpPath,
+                ["DOTNET_DbgMiniDumpType"] = "1",
+                ["COMPlus_DbgMiniDumpType"] = "1",
+            });
+
+        Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
+        StringAssert.Contains(result.StandardError, "System.InvalidOperationException: OUTPUT_PATH environment variable is not set.");
+        Assert.IsEmpty(Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories), result.StandardOutput);
+    }
+
+    [TestMethod]
     public async Task ActualAnalyzerAssemblyProducesAllFourModeConfigurations()
     {
 #if DEBUG
@@ -235,7 +261,10 @@ public sealed class GlobalConfigGeneratorContinuationTests
         Assert.IsTrue(emitted.Success, string.Join(Environment.NewLine, emitted.Diagnostics));
     }
 
-    private static async Task<ToolResult> RunToolAsync(string directory, bool provideOutputPath = true)
+    private static async Task<ToolResult> RunToolAsync(
+        string directory,
+        bool provideOutputPath = true,
+        IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
         string root = RootFinder.Find();
         string tool = GetToolPath();
@@ -249,6 +278,18 @@ public sealed class GlobalConfigGeneratorContinuationTests
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
+        if (environmentVariables is not null)
+        {
+            foreach (KeyValuePair<string, string> variable in environmentVariables)
+            {
+                startInfo.EnvironmentVariables[variable.Key] = variable.Value;
+            }
+        }
+
+        // Expected tool failures must not inherit the test host's full crash-dump settings.
+        startInfo.EnvironmentVariables["DOTNET_DbgEnableMiniDump"] = "0";
+        startInfo.EnvironmentVariables["COMPlus_DbgEnableMiniDump"] = "0";
+
         if (provideOutputPath)
         {
             startInfo.EnvironmentVariables["OUTPUT_PATH"] = directory;
