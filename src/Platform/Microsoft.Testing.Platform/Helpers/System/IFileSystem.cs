@@ -7,6 +7,8 @@ internal interface IFileSystem
 {
     bool ExistFile(string path);
 
+    bool IsRegularFile(string path);
+
     bool ExistDirectory(string? path);
 
     string CreateDirectory(string path);

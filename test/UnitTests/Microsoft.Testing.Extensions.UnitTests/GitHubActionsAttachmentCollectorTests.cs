@@ -150,6 +150,29 @@ public sealed class GitHubActionsAttachmentCollectorTests : IDisposable
     }
 
     [TestMethod]
+    public async Task CaptureAsync_NonRegularSource_IsRejectedBeforeOpening()
+    {
+        string source = Path.Combine(_directory, "non-regular.log");
+        Mock<IFileSystem> fileSystem = CreateVirtualFileSystem(source, 0, 0, physicalOutput: true);
+        fileSystem.Setup(value => value.IsRegularFile(source)).Returns(false);
+        GitHubActionsAttachmentCollector collector = CreateCollector(fileSystem.Object);
+
+        GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle((await collector.CaptureAsync(
+            CreateNode("special", "Non-regular source", source), TestContext.CancellationToken))!);
+
+        Assert.AreEqual("non-regular", attachment.Status);
+        Assert.IsNull(attachment.RelativePath);
+        Assert.AreEqual(0L, attachment.SizeBytes);
+        fileSystem.Verify(value => value.NewFileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read), Times.Never);
+        Assert.Contains("non-regular", Assert.ContainsSingle(_warnings));
+        Assert.IsFalse(Directory.Exists(StagingDirectory));
+        await collector.WriteManifestAsync(CreateModule(), TestContext.CancellationToken);
+        using JsonDocument manifest = ReadSingleManifest();
+        JsonElement row = Assert.ContainsSingle(manifest.RootElement.GetProperty("tests").EnumerateArray());
+        AssertManifestAttachment(attachment, Assert.ContainsSingle(row.GetProperty("attachments").EnumerateArray()));
+    }
+
+    [TestMethod]
     [DataRow(0L, true, DisplayName = "Empty file")]
     [DataRow(26214399L, true, DisplayName = "One byte below file limit")]
     [DataRow(26214400L, true, DisplayName = "Exact file limit")]
@@ -635,6 +658,7 @@ public sealed class GitHubActionsAttachmentCollectorTests : IDisposable
     {
         var real = new SystemFileSystem();
         var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>()))
             .Returns((string path) => physicalOutput ? real.CreateDirectory(path) : path);
         fileSystem.Setup(value => value.ExistFile(It.IsAny<string>()))

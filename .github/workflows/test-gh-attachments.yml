@@ -53,6 +53,17 @@ jobs:
           persist-credentials: false
       - name: Pack shipping products
         run: ./build.sh -pack -c Release -bl
+      - name: Reject Linux FIFO attachment sources
+        run: >-
+          ./.dotnet/dotnet test
+          --project test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj
+          --configuration Release --framework net8.0 --no-build --no-restore
+          -p:EnableCodeCoverage=false
+          -bl:artifacts/log/Release/fifo-regression-{}.binlog
+          --filter FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary
+          --minimum-expected-tests 2
+          --report-trx --report-trx-filename fifo-regression.trx
+          --results-directory artifacts/TestResults/fifo-regression
       - name: Exercise packed MSTest and GitHub Actions report
         shell: pwsh
         run: ./.github/scripts/test-gh-attachments.ps1 -WorkDirectory "${{ runner.temp }}/mtp-attachment-smoke"
@@ -108,5 +119,6 @@ jobs:
             ${{ runner.temp }}/mtp-attachment-smoke/packages.json
             ${{ runner.temp }}/mtp-attachment-smoke/expected.json
             artifacts/log/Release
+            artifacts/TestResults/fifo-regression
           if-no-files-found: ignore
           retention-days: 7

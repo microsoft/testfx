@@ -5570,6 +5570,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool ExistFile(string path) => _inner.ExistFile(path);
 
+        public bool IsRegularFile(string path) => _inner.IsRegularFile(path);
+
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
         public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false)
@@ -5635,6 +5637,8 @@ public sealed class AzureDevOpsLivePublishingTests
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 
         public bool ExistFile(string path) => !(HideBlockedFile && path == BlockedDeletePath) && _inner.ExistFile(path);
+
+        public bool IsRegularFile(string path) => _inner.IsRegularFile(path);
 
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 

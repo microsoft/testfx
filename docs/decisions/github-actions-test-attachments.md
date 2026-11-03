@@ -12,7 +12,7 @@ checkout's build versions remain MSTest 4.6 / MTP 2.6 and are identified
 separately in the validation evidence below. MSTest and VSTestBridge already
 publish `FileArtifactProperty` values on test nodes. The consumer is the official
 GitHub Actions artifact uploader, followed by a workflow-owned summary step.
-No new core MTP API, transport protocol, GitHub token in the test process,
+No new public core MTP API, transport protocol, GitHub token in the test process,
 companion action, or service dependency is required.
 
 The opt-in contract is `--report-gh --report-gh-attachments <absolute-directory>`.
@@ -106,6 +106,52 @@ provide supported links to individual files inside that archive.
   that concurrent maintainer decision rather than restoring the obsolete target.
 
 ## Alternatives and decision
+
+### Linux FIFO follow-up
+
+A declared Linux FIFO with no writer can block the synchronous source open before
+size checks or cancellation are reached. Exception isolation cannot recover from
+an open that never returns.
+
+The collector now asks the existing filesystem abstraction whether the source is
+a regular file before requesting its read stream. On Unix this uses the
+[runtime's normalized stat ABI](https://github.com/dotnet/runtime/blob/v8.0.0/src/native/libs/System.Native/pal_io.h),
+whose fixed-width `FileStatus` avoids architecture-specific libc `stat` layouts.
+`File.Exists`, `FileAttributes` and size-zero checks were rejected: FIFOs can
+appear as existing ordinary files and empty regular files must remain supported.
+Metadata failures retain the existing unavailable-file warning behavior;
+non-regular entries get `non-regular`, no path and zero staged bytes.
+
+The Linux regression creates actual no-writer FIFOs, including a symlink case,
+and forwards the metadata probe to the real filesystem. Its stream-open trap
+fails immediately if a source open is attempted, rather than allowing the old
+code to hang the test runner. It checks normal session completion, original
+failure/totals/history, the primary summary, warning and manifest. Positive
+regular-file tests continue to exercise real copying, including Unicode names.
+This is a metadata classification contract; producers still own source lifetime
+and must not retarget a declared path concurrently with its consumption.
+
+Executed evidence for this follow-up:
+
+- Pinned SDK `12.0.100-alpha.1.26509.101` compiled the net8.0 guard/tests and
+  netstandard2.0 fallback with warnings treated as errors: exit 0.
+- Pinned Linux .NET `8.0.33` executed all 272 focused attachment cases:
+  272 passed, zero failed/skipped. Both real FIFO cases completed and preserved
+  the primary summary, failed verdict, history and manifest.
+- Windows executed 270 passed cases; the two explicitly Linux-only FIFO cases
+  were skipped there and are not counted as Linux proof.
+- With only the collector's regular-file guard removed in an owned comparison,
+  both unchanged Linux FIFO cases executed and failed the `Times.Never`
+  source-open assertion (one forbidden open per case), exit 2. Rebuilt restored
+  production libraries were hash-verified and both cases passed, exit 0. No
+  blocked FIFO worker, writer, or timeout was used to manufacture the red phase.
+- The dedicated hosted workflow now explicitly selects both Linux FIFO cases
+  after packing and retains their TRX.
+- A separate optional NativeAOT probe was not executed: package restore hit
+  shared-drive exhaustion. Only the task-owned optional SDK was removed to
+  recover space; no global caches were cleared. The import uses
+  `libSystem.Native`, matching the runtime's NativeAOT direct-P/Invoke library
+  name. This source compatibility check is not a claimed NativeAOT execution.
 
 1. **No change / upload the whole results directory:** preserves today's report,
    but loses per-test association and may miss attachments outside that directory.

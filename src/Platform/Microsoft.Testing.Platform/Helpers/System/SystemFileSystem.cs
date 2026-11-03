@@ -3,9 +3,14 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal sealed class SystemFileSystem : IFileSystem
+internal sealed partial class SystemFileSystem : IFileSystem
 {
     public bool ExistFile(string path) => File.Exists(path);
+
+    public bool IsRegularFile(string path)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? (File.GetAttributes(path) & (FileAttributes.Directory | FileAttributes.Device)) == 0
+            : IsRegularUnixFile(path);
 
     public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;
 

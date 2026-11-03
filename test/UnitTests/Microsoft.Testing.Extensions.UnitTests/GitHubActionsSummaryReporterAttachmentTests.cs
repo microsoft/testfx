@@ -76,6 +76,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
         using SummaryExecutionFixture fixture = new(historyOnly: true, exitCode: 2, stageAttachments: true);
         string missing = Path.Combine(fixture.DirectoryPath, "missing.log");
         var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>())).Returns(true);
         // ArgumentException is a normal best-effort file error; use an unexpected failure to reach
         // the reporter isolation catch rather than the collector's unavailable-file path.
         fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -123,6 +124,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
         using SummaryExecutionFixture fixture = new(historyOnly: true, exitCode: 2, stageAttachments: true);
         using var cancellation = new CancellationTokenSource();
         var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, FileShare.Read))
             .Throws(new OperationCanceledException(cancellation.Token));
         GitHubActionsSummaryReporter reporter = fixture.CreateReporter(fileSystem.Object);
@@ -139,6 +141,88 @@ public sealed partial class GitHubActionsSummaryReporterTests
         Assert.IsEmpty(fixture.History.Writes);
         Assert.IsEmpty(fixture.Warnings);
     }
+
+#if NETCOREAPP
+    [TestMethod]
+    [OSCondition(OperatingSystems.Linux)]
+    [DataRow(false, DisplayName = "FIFO with no writer")]
+    [DataRow(true, DisplayName = "Symlink to FIFO with no writer")]
+    public async Task SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary(bool symlink)
+    {
+        using SummaryExecutionFixture fixture = new(exitCode: 2, stageAttachments: true);
+        string fifo = Path.Combine(fixture.DirectoryPath, "no-writer.fifo");
+        using (var process = new Process
+        {
+            StartInfo = new ProcessStartInfo("mkfifo")
+            {
+                UseShellExecute = false,
+                ArgumentList = { "--", fifo },
+            },
+        })
+        {
+            Assert.IsTrue(process.Start());
+            if (!process.WaitForExit(30_000))
+            {
+                process.Kill();
+                process.WaitForExit();
+                Assert.Fail("The FIFO fixture could not be created within the setup timeout.");
+            }
+
+            Assert.AreEqual(0, process.ExitCode);
+        }
+
+        string source = fifo;
+        if (symlink)
+        {
+            source = Path.Combine(fixture.DirectoryPath, "fifo-link");
+            File.CreateSymbolicLink(source, fifo);
+        }
+
+        Assert.IsTrue(File.Exists(source), "File.Exists alone must not be used to classify a FIFO.");
+        var real = new SystemFileSystem();
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>()))
+            .Returns((string path) => real.IsRegularFile(path));
+        fileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>()))
+            .Returns((string path) => real.CreateDirectory(path));
+        fileSystem.Setup(value => value.ExistFile(It.IsAny<string>()))
+            .Returns((string path) => real.ExistFile(path));
+        fileSystem.Setup(value => value.DeleteFile(It.IsAny<string>()))
+            .Callback((string path) => real.DeleteFile(path));
+        fileSystem.Setup(value => value.MoveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Callback((string from, string to, bool overwrite) => real.MoveFile(from, to, overwrite));
+        fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode mode, FileAccess access, FileShare share) =>
+            {
+                Assert.AreNotEqual(source, path, "A no-writer FIFO must be rejected before attempting a blocking open.");
+                return real.NewFileStream(path, mode, access, share);
+            });
+        GitHubActionsSummaryReporter reporter = fixture.CreateReporter(fileSystem.Object);
+        await reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+
+        await reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateAttachmentUpdate(fixture, "FifoFailure", new FailedTestNodeStateProperty("original test failure"), source),
+            TestContext.CancellationToken);
+        await reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        fileSystem.Verify(value => value.NewFileStream(source, It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()), Times.Never);
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        Assert.AreEqual(1, module.TotalTests);
+        Assert.AreEqual(1, module.FailedTests);
+        Assert.AreEqual(2, module.ExitCode);
+        GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle(Assert.ContainsSingle(module.Failures).Attachments!);
+        Assert.AreEqual("non-regular", attachment.Status);
+        Assert.IsNull(attachment.RelativePath);
+        Assert.AreEqual(0L, attachment.SizeBytes);
+        Assert.Contains("non-regular", Assert.ContainsSingle(fixture.Warnings));
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains("original test failure", markdown);
+        Assert.Contains("| 1 | 0 | 1 | 0 | 0 | 0ms |", markdown);
+        using JsonDocument manifest = ReadAttachmentManifest(fixture);
+        Assert.AreEqual("non-regular", manifest.RootElement.GetProperty("tests")[0].GetProperty("attachments")[0].GetProperty("status").GetString());
+    }
+#endif
 
     [TestMethod]
     [DataRow("passed", false, DisplayName = "Passing test excluded")]

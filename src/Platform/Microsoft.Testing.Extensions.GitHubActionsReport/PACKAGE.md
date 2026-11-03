@@ -155,6 +155,12 @@ entries have a path. Missing or unreadable files and count/size limits are repor
 as warnings without changing the test verdict. Successful copies survive cleanup
 of the original files.
 
+Only regular file sources are opened. The extension inspects file metadata first
+and records FIFOs, devices, directories, and other non-regular sources as
+`non-regular`, with no staged path. This includes links whose targets are
+non-regular. A Unix FIFO with no writer is rejected without opening it, so it
+cannot block normal session completion and the primary failure summary.
+
 Staging is limited to 25 MiB per file, 250 MiB and 1,000 attachment entries per
 module/session, and 10 files per failed test. Unavailable entries and per-test
 overflow markers also consume the entry budget, bounding retained diagnostics

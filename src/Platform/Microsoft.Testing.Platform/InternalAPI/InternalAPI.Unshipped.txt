@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.IFileSystem.IsRegularFile(string! path) -> bool
+Microsoft.Testing.Platform.Helpers.SystemFileSystem.IsRegularFile(string! path) -> bool
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
