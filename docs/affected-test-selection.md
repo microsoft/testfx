@@ -19,12 +19,46 @@ discovery path and Azure DevOps upload request, and ships both `netstandard2.0` 
 extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
 are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
-The affected-test packages now use `18.13.0-preview.26530.1`, built from commit
-`fe4721e980b711722351edfd491577a03b8d4421`. This includes refill-on-completion collection scheduling: a completed
-child slot can start another batch without waiting for its sibling, retaining the two-child limit, cancellation,
-failure handling, and atomic map publication. The previous pin, `18.13.0-preview.26529.4`, already includes this
-scheduler fix; this update advances to the latest published build, not a different collection algorithm.
-The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates are unchanged.
+The affected-test packages now use `18.13.0-preview.26553.4`, built from commit
+`eca1718b78e9adb640b700ede7b51ec97ed077fa`. This includes setup-aware collection batching on top of the existing
+refill-on-completion scheduler. Validated, correlated child execution timing permits batches of up to 256 test UIDs,
+amortizing repeated child initialization and collector setup. Unavailable or incompatible timing visibly retains
+the legacy 4-32 batch-size policy; an explicitly incomplete terminal-test inventory rejects the whole module map.
+Larger batches can conservatively associate more tests with a source, without removing tests or framework coverage.
+
+The initial batch size of 16, minimum size of 4, two-child limit, cancellation, authoritative exits, and atomic map
+publication are preserved. The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates
+are unchanged. Affected-test hosts resolve CodeCoverage `18.13.0-preview.26553.4` through the existing test-only
+`VersionOverride` in [`test/Directory.Build.targets`](../test/Directory.Build.targets). The affected-test, matching
+test-host CodeCoverage, and Azure DevOps storage packages at that version provide `netstandard2.0` and `net10.0`
+assets; older .NET and .NET Framework test hosts use the `netstandard2.0` assets. The separate shipping CodeCoverage
+pin remains `18.13.0-preview.26530.1`; it is not the CodeCoverage version loaded by these affected-test hosts.
+
+**Test-value evidence (2026-11-03):** this dependency update is based on
+`d3ce600610baaebac245acdbd4162615f5dfcaae`; the dependency-metadata patch, excluding this document, has SHA-256
+`B067E3E0586E17320669B7E8B0190606782313DED83E3EB9B927F4C49129D3B4`. An identical clean, isolated 512-case consumer
+was built against affected-test, storage, and test-host CodeCoverage packages all at `18.13.0-preview.26530.1` for
+the previous variant and all at `18.13.0-preview.26553.4` for the new variant, using separate caches. The retained
+`project.assets.json` from the actual TestFx test-host build also resolves all three packages at
+`18.13.0-preview.26553.4`, confirming the existing override rather than a mixed shipping/test-host pairing.
+Both builds used SDK `12.0.100-alpha.1.26509.101`, Debug, Windows x64, published MTP/MSBuild
+`2.6.0-preview.26552.13`, and MSTest `4.6.0-preview.26531.5`. The modern consumer targets `net11.0` and runs on the
+SDK's bundled .NET 12 runtime; the second consumer targets `net481`.
+
+Real SDK `--collect-test-map` commands exited 0 and retained all 512 exact discovered UIDs and their source
+associations per module. The unchanged `TimingFeedbackGrowsBeyondLegacyBatchCeiling` assertion failed against the
+old package's 32-UID maximum and passed against the new package's 128-UID maximum. Both new consumer TFMs reported
+nine measured batches, zero fallback, and the unchanged two-child cap. Independent per-case execution markers
+verified the work; the SDK's zero ordinary result count during collection is expected suppressed reporting, not
+evidence of zero execution. These checks demonstrate optimization sensitivity, not a full-CI speedup measurement.
+
+Unchanged two-module affected selection exited 0 without starting test work; a missing module map fell back to
+all 512 passing cases; an intentional single-case failure retained SDK exit 2. The actual TestFx test-host graph
+also restored and built with the new dependencies, and `TerminalResources_AreCompiledIntoThisAssembly` and
+`SharedTerminalTypes_AreUsable` both executed and passed with fresh TRX verification. The repository build-wrapper
+pack attempt was blocked by Windows PowerShell lookup during runtime bootstrap; direct pinned-SDK build and
+consumer validation succeeded. Full CI collection performance, non-Windows native collection, live Azure artifact
+publication, cancellation, and partial-feedback paths were not exercised by this dependency update.
 
 Generated acceptance assets need the shipping CodeCoverage package in their local feed even when the affected-test
 host uses a newer preview. The MSTest acceptance project downloads that shipping package separately and stages it
@@ -86,6 +120,573 @@ builds that contain only the no-handshake fix.
   nested-process isolation, command names, and fallbacks. Its `-SelfTest` mode, run by `DetectChanges`, also rejects
   shared collection/validation jobs, regressed collection budgets, bypassed rollout gates, ignored collection
   failures, and artifact collisions.
+
+### CTS comparison: research and decisions (2026-10-31)
+
+The requested comparison is legacy CTS collection versus affected-test collection on the same unofficial-main
+revision, Windows image, Release outputs, and test modules/frameworks. It must not replace full validation, alter
+PR selection, publish CTS data into `TestFx_AffectedTestsMaps`, or change official/release-branch builds.
+
+[Run 20261030.35](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1657355), at
+`5fffd919d0f88837dce2e3799a8084d996e5fe2a`, spent 224.42 minutes in collection. Its 74 module/framework maps contain
+70,695 discovered UIDs, not executed-test counts. Summing each module's start-to-upload interval gives 223.34
+minutes, with no overlapping modules; discovery accounts for only 90.07 seconds. The ordinary Windows Release
+test step took 62.03 minutes, independently of collection.
+
+| Collection workload | Time, minutes |
+| --- | ---: |
+| MSTest acceptance | 80.44 |
+| MTP acceptance | 75.76 |
+| Analyzer unit tests, five frameworks | 25.43 |
+| Other maps | 41.71 |
+
+The two acceptance projects account for about 70% of collection time. Inspecting CTS confirms that its worker
+pool can process different modules concurrently and that its batch-size strategy targets the fraction of a
+batch spent executing tests, rather than just total elapsed time. Those are distinct from the refill-on-completion
+repair already shipped by the affected-test extension. Candidate improvements are bounded module scheduling,
+setup-cost-aware batch sizing, and avoiding repeated acceptance-fixture initialization. These remain proposals;
+the logs do not expose per-batch setup/execution splits and do not establish a controlled CTS speedup.
+
+The standalone tool is `cts` `2.13.0-alpha.26530.1`, independently versioned from the affected-test packages.
+Its `collect testingplatform` command uses MTP's server protocol rather than `dotnet test --collect-test-map`.
+CTS's default worker count is the logical processor count; the comparison must record this rather than imply
+that it uses the affected collector's two-child limit. Its native maps are batch-based and are not compatible
+with affected-test v2 shards. Compare test/module coverage, source associations, batch sizes, elapsed time,
+failures, and missing modules, not literal map-file equality.
+
+The configured comparison enables CTS's same-module batch parallelism and records the worker count explicitly.
+It selects the affected-test-capable Release hosts from the existing build outputs, uses managed DLLs for .NET
+and EXEs for .NET Framework, and records every input path/hash. CTS otherwise deduplicates identical apphosts
+by hash and can silently drop a distinct framework/flavor. Successful collection must produce one consistent
+TRX and committed native map per input; failed CTS exits remain failures and retain diagnostics.
+
+Real package validation also exposed a separate timing contract gap. Both MTP JSON-RPC test-node serializers
+emit `time.duration-ms`, but omit `time.start-utc` and `time.stop-utc`. CTS expects the latter fields and substitutes
+minimum timestamps when they are absent. The paired .NET 10/.NET Framework run therefore reports nonzero test
+durations in TRX but zero average test-time participation; its overhead-aware batcher cannot calibrate correctly.
+The comparison warns and records timestamp availability rather than treating those metrics as trustworthy.
+Fixing this producer/consumer contract is an additional prerequisite for evaluating CTS's adaptive policy,
+not a protocol change made by this pipeline experiment.
+
+**Activation prerequisite:** this CTS package is currently available only in the private VS-Platform feed.
+Anonymous access is denied, it is absent from `test-tools`, and the current public pipeline has no external NuGet
+feed connection. The producer's public-feed publishing allowlist also omits CTS. Prepare the comparison against
+the existing public `test-tools` source, but keep it disabled until CTS is approved and published there and a
+real composed-product smoke run succeeds. Do not substitute the affected-test extension, invent a service
+connection, publish a private package, or commit credentials to make activation appear successful.
+
+An isolated main-only job is preferable to adding CTS to Release validation or to the affected-test job:
+both alternatives share deadlines and outputs, and could instrument the same applications concurrently.
+The comparison should reuse the Windows build/prerequisites, own its timeout and artifact names, use local
+filesystem map storage, retain CTS's exit status, and preserve failed-run diagnostics. Full-suite CI performance,
+public-feed restore, and full map/result parity remain live validation requirements. No product servicing or
+backport is required for this temporary unofficial-main experiment.
+
+#### Local validation and remaining gates
+
+The local implementation is based on `b150f7d75b285c55d49b553d6d143d969be761f0`. Its six executable/configuration
+files, excluding this record, have combined SHA-256
+`A502C0D4E7D62020CD395054A0D95D91DF0CF6D809725FABD6C2B95C4AADA549`.
+The identity hashes sorted repository-relative paths plus a NUL, each file's raw bytes, and another NUL.
+The unchanged ordinary Windows test dispatch remains in the shared template's `else` branch.
+
+The actual CTS nupkg has SHA-256 `A003A1880135262D71C327B80E21884B5FED77F46D3A7825B832944F05D6D105`
+and identifies producer commit `fe4721e980b711722351edfd491577a03b8d4421`, matching the affected-test package build.
+It targets .NET 10; the smoke run used the repository SDK `12.0.100-alpha.1.26509.101` and runtime `10.0.13`.
+Its generated consumer resolves MSTest `4.6.0-preview.26530.8`, MTP `2.6.0-preview.26530.8`, and affected-test
+packages `18.13.0-preview.26530.1`. Both executed MTP DLLs match their resolved nupkg assets by SHA-256.
+The consumer is a task-owned Git repository, not the main checkout.
+
+| Contract / evidence | Executed result |
+| --- | --- |
+| Independent main-only comparison / `CTSComparisonUsesIndependentJob` | Retaining the new guard against the actual base pipeline rejects it at the intended missing-job assertion. The implemented pipeline passes all 12 CTS wiring cases, including main/skip gates, artifact isolation, native failures, and exclusive dispatch. |
+| Framework input fidelity / `ManagedModulesAvoidApphostDeduplication` | An API-compatible counterfactual selecting apphosts instead of DLLs fails at the identical-module guard, exit 1. Restoring the implementation passes the same selection/artifact self-tests, exit 0. |
+| Complete maps and reports / `CTSCompleteArtifactsAreVerified`, `CTSMissingReportIsRejected`, `CTSUncommittedMapIsRejected`, `CTSUnexpectedReportModuleIsRejected` | A successful run requires one TRX and committed map per input and the correct reported module paths. Each incomplete fixture is rejected. |
+| Real packaged collection / `PositiveValueHasOneAdded`, `NegativeValueHasOneAdded` | Both tests execute on .NET 10 and .NET Framework 4.6.2: four passes, two TRX files and two committed maps, native/wrapper exit 0. Injecting one intentional failure per framework retains four executed tests, two failures, both reports, and native/wrapper exit 1. |
+| Timing disclosure / `CTSMissingTimestampsAreReported` | Missing UTC test timing is recorded and warned about, not presented as valid adaptive-batching data. |
+
+The following source-level commands exit 0. The collector has nine selection/artifact cases; each rollout
+invocation retains 19 Windows and 39 Unix cases, adds 12 CTS cases, and passes the existing package-staging guard.
+Changed YAML parses, the new script passes the repository's PowerShell analyzer settings, and the existing
+validator retains its ten pre-existing analyzer findings without new findings.
+
+```powershell
+pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests false -EnableNonWindowsAffectedTests true
+```
+
+The packaged invocation is `pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -Repository <owned-consumer>
+-Configuration Release -DegreeOfParallelism 2`. Source, command arguments, input hashes, exits, console output,
+TRX, and native maps are retained together. The canonical acceptance execution verifier was also attempted:
+it rejects CTS's legacy TRX run timestamps because they omit a UTC offset. Reports and the verifier were not
+rewritten or weakened. Direct test identities/counts and fresh run-owned artifacts establish the smoke execution,
+but this does **not** claim that the canonical acceptance gate passed.
+
+An initial `net12.0` smoke target was rejected by this SDK outside the repository's framework setup, and the
+first tool launch lacked the pinned .NET 10 runtime. Neither setup failure counts as behavioral red evidence.
+The final consumer uses supported `net10.0` and `net462` targets. Full-suite performance, internal TestContainer
+and sample/module parity, public-feed restore, and Azure template expansion against published source remain
+unverified. Enabling `EnableCTSCollection` is therefore not part of this local delivery; publishing/authorizing
+CTS access and repairing the timing contract remain prerequisites.
+
+### Collection acceleration implementation (2026-10-31)
+
+The follow-up request authorizes implementation in TestFx and vs-code-coverage, not just a CTS comparison.
+The shipped refill-on-completion improvement remains the baseline. No publication, new SDK-repository work,
+private-package redistribution, test/framework exclusions, or changes to official validation are authorized.
+The source identities in the earlier comparison record describe that completed investigation, not this new patch.
+
+TestFx owns the MTP JSON-RPC timing producer, repository collection orchestration and acceptance-asset setup.
+The isolated vs-code-coverage implementation owns execution feedback, adaptive batching, CTS report timestamps
+and the changed collector packages. The coordinator owns aligned-package composed testing and the eventual
+rollout decision. Both repositories must preserve test identities, conservative associations, failed-test versus
+infrastructure-failure exits, cancellation/draining, atomic map publication and legacy/absent-feedback behavior.
+
+The timing repair adds invariant, offset-bearing UTC start/stop fields when the corresponding real
+`TimingInfo` values are available, retaining `time.duration-ms`. Unknown/default timestamps remain absent;
+older consumers may ignore the additive fields. Both legacy and modern JSON serializers and the source-only
+client package must stay consistent.
+
+TestFx uses a bounded pool of independent SDK invocations against exact prebuilt
+test modules. This avoids the SDK's forbidden in-invocation parallel-collection option without modifying the SDK.
+The global instrumentation budget is at most four children, bounded by available logical CPUs,
+usually two module slots with two child batches each. Each module owns logs/results and its lifecycle; artifact
+publication still uses the provider's shared-container coordination. Scheduling must not silently multiply
+per-module child limits, omit frameworks or turn partial/canceled collection into success.
+
+Execution feedback must identify the protocol version, module/run/batch and planned/executed identity set.
+Atomic, task-owned feedback is preferable to parsing localized console text or coupling the extension to the
+standalone CTS client's dependency closure. The schema and bounds below were agreed against the coverage implementation's current source;
+absent, incompatible, incomplete or invalid timing is a distinct state with
+observable conservative behavior. Increasing batch sizes without knowing setup versus execution cost was not
+selected as an evidence-backed optimization.
+
+The agreed feedback artifact uses `MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH` and
+`MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID`, with `schemaVersion: 1`, `batchId`, `exitCode` and
+`tests[].{uid,state,timingStatus,startUtc,stopUtc}`. Timing is `measured`, `unavailable`, or `notExecuted`;
+skipped entries have no timestamps. Superseded retry and nonterminal updates do not count as completed UIDs.
+Only an exact correlated terminal UID set with coherent offset-bearing intervals inside the child lifetime
+can enable timing-based adaptation. Supported feedback missing or duplicating required identities rejects
+the map; absent/incompatible/unusable timing remains an observable legacy 4–32 fallback.
+
+The coverage implementation selected a finite 256-UID timed ceiling, retaining initial 16/minimum 4,
+at most 2x growth/50% shrink, and an execution target of `max(30s, 3 * observed setup)` capped at 120 seconds.
+Its committed-source packaged measurement retains 1,024 UIDs and maps while reducing 33 published-baseline
+startups to 11 at that ceiling. The aligned measurements below establish local composition,
+not a full TestFx CI speedup. Larger batches preserve conservative associations
+but may select more unaffected tests later.
+
+Acceptance setup changes share only the traced immutable-package lifetime, not generated projects or outputs.
+Shared caches may not conceal freshly packed producer changes or introduce cross-test/process races.
+Required evidence is focused red/green sensitivity, actual changed shipping packages and representative
+startup-heavy multi-module collection with identities, mappings, exits, cancellation/fallback and timings.
+No full-suite speedup or downstream activation is claimed before that evidence exists.
+
+The selected TestFx setup optimization shares only immutable NuGet package payloads among acceptance children
+inside one parent-owned, marked collection-run/module directory (`TESTFX_COLLECTION_NUGET_CACHE`).
+Ordinary acceptance still creates its fresh random cache. Mutable generated assets/build outputs remain private;
+the assembly fixture never deletes the shared cache, nested test applications do not inherit the opt-in,
+and the coordinator removes it only after confirming all owning SDK/collection children have terminated.
+The cache is not part of published test-result artifacts and is not reused across packing/collection runs.
+
+The SDK pool now prioritizes the two known long acceptance suites, then analyzer workloads, instead of leaving
+the longest work behind short modules. It uses exact repository-relative module patterns and the repository
+working directory; an absolute pattern is not accepted by SDK module globbing. An owned short results root
+is supported for legacy .NET Framework deployment paths. With the unchanged published collector and an identical
+196-UID startup-heavy two-framework fixture, the first interleaved measurement was 18.79 seconds with one module
+slot and 11.91 seconds with two, both with ten startups and two complete 98-UID maps. This isolates module overlap,
+not the new batching feedback or cache benefit, and is not a full-suite forecast.
+
+#### Final local composition and performance evidence
+
+The TestFx implementation is bound to base `b150f7d75b285c55d49b553d6d143d969be761f0` plus the
+22-file executable/configuration/test manifest SHA-256
+`771FB071D0C6C76CB5FE78008F4A3A4B6F507EACAC63765952C27167877F545A`.
+This excludes this decision record and hashes sorted `relative-path|uppercase SHA256` lines,
+joined with LF and encoded as UTF-8 without BOM. The retained `final-source-evidence.json`
+contains every individual path/hash. Local commit/package handoff records preserve the resulting
+commit identity; neither evidence nor local commits imply a push, public package or CI result.
+
+The coverage implementation is clean at `8e1bd20fd881a2ca9d13e8081e39478fa1107598` on
+`dev/amauryleve/affected-collection-acceleration`. The final local affected, coverage and storage packages
+are `18.13.0-local.acceleration.20261031.2`; CTS is `2.13.0-local.acceleration.20261031.2`.
+Nuspecs identify that exact source revision. Native payloads were preserved byte-for-byte from
+`fe4721e980b711722351edfd491577a03b8d4421` (42 entries each in coverage and CTS).
+This validates the available Windows x64 composition, not an ARM64/native rebuild or Unix execution.
+
+The aligned MTP snapshot is `Microsoft.Testing.Platform.2.6.0-preview.26530.8.nupkg`,
+SHA-256 `D4B104B10128CC749382D1063AFFFBFE7AE9114B412D8EA8F550BDA18A14E8C1`.
+Its source-only companion has SHA-256
+`C540970AAAF2CCBB062D4A57DF15262389217827F1D41E8FBAFB8F689052DD5F`.
+These are local corrected snapshots, not the original published bytes despite the same version.
+Fresh caches and consumer `project.assets.json` were checked; the actual .NET 10 DLL is
+`5A735D0F6E9BD26A7D04ADDD802FA770AB32DA1FD8AFA9978F638D04B9A1776E`,
+and the .NET Framework consumer's netstandard2.0 DLL is
+`145A4381C8794518038447F8C1B69DBF6A071F2907D0D93CDBF35EF12DD0E085`.
+
+The larger TestFx fixture contains 1,024 data rows plus two ordinary cases **per framework**,
+2,052 identities across .NET 10 and .NET Framework 4.6.2. Each assembly startup waits 300 ms;
+each data row waits 5 ms and asserts `Arithmetic.AddOne`. The unchanged source methods are
+`StartupHeavyCollectionPreservesEveryCase`, `PositiveValueHasOneAdded` and `NegativeValueHasOneAdded`.
+Published/final variants differ only in collector dependencies and their isolated configuration/cache.
+They retain the same MTP producer snapshot. No builds ran concurrently with these five interleaved samples.
+
+| Same 2,052-identity fixture | SDK slots | Maximum instrumentation children | Seconds | Assembly startups |
+| --- | ---: | ---: | ---: | ---: |
+| Published collector, serial modules | 1 | 2 | 85.787 | 68 |
+| Published collector, overlapping modules | 2 | 4 | 41.237 | 68 |
+| Published collector, warm overlap repeat | 2 | 4 | 40.999 | 68 |
+| Final collector, overlapping modules | 2 | 4 | 32.759 | 22 |
+| Final collector, overlap repeat | 2 | 4 | 24.496 | 22 |
+
+Every sample exits 0 with two complete, nonduplicated 1,026-UID inventories and four expected sources
+per module. Exact UID/source inventories agree between variants; every baseline source-to-UID association
+is present in the final maps. Additional conservative associations are permitted, never missing ones.
+Both final samples report 11 measured batches per framework and zero timing fallback. The range,
+rather than just the fastest sample, is reported: combined improvement is approximately 2.6–3.5x here.
+The smaller 196-identity fixture did not expose larger-batch benefits: final serial/parallel samples
+were 22.941/11.171 seconds versus published 18.788/11.910. Do not infer a universal batching speedup.
+These synthetic startup costs do not measure the cache benefit or predict the 70,695-UID CI workload.
+
+The separate coverage-owned, unchanged 1,024-UID fixture builds a real startup project in each child.
+Published collection took 82.495 seconds (warm repeat 81.870), 33 startups. Committed final packages took
+31.412 seconds; with the exact MTP snapshot above, 30.661 seconds, 11 startups and zero fallback.
+Those results are not interchangeable with the two-framework TestFx fixture.
+
+Real final CTS also collected/executed/passed all 2,052 TestFx fixture identities, with two committed
+native maps, native/wrapper exit 0, valid non-minimum UTC timestamps and complete module reports.
+Its two-worker run took 35.439 seconds; that has **two**, not four, instrumentation workers.
+The matched four-worker CTS run took 26.112 seconds, with the same two complete 1,026-case reports/maps,
+consistent with the final affected collector's 24.496–32.759-second range at a four-child ceiling.
+Independent `--list-tests json` plans contain 1,026 unique cases per framework. Both actual CTS TRX files
+pass the unmodified canonical execution verifier against those plans and pre-execution discovery timestamps.
+This closes the earlier legacy-TRX timestamp gate for the **final local CTS**, not the old pipeline pin.
+
+The collection/cache composition invokes the actual built `AcceptanceFixture`, `DotnetCli.RunAsync`
+and `TestHost.ExecuteAsync`, not replacement helpers. Eight real generated restores verify current MTP
+package bytes and effective package folders. Four ordinary fixture children keep different fresh caches,
+which assembly cleanup removes. Four marked children reuse their module's immutable package without
+rewriting it; different modules retain different caches. Nested TestHost execution sees no collection-cache
+opt-in, even with an invalid opt-in deliberately inherited by the coordinator. Parent cache removal occurs
+only after both owning SDK processes return and descendant/output teardown is confirmed.
+This establishes isolation and provenance, not a measured acceptance-suite cache speedup.
+
+Assembly scheduling remains unchanged: acceptance tests still use method-level CPU-count parallelism.
+The assembly fixture runs before test workers. Package payloads alone are shared through NuGet's own
+package locking; mutable assets/builds and module caches remain separate. No additional test locks,
+serialization, framework exclusions, disabled assertions or successful zero-test fallbacks were introduced.
+
+#### Test-value evidence and reproducible gates
+
+| Requirement / retained test | Without the relevant behavior | Final implementation |
+| --- | --- | --- |
+| UTC presence/culture/state / both `Serialize_TestNodeTiming_PreservesUtcPresenceDurationAndState` fixtures | Same assertions execute 169/125 cases on .NET 10/.NET Framework; 38/20 fail for missing UTC fields, exits 2. | 169/125 pass, exits 0; 33/17 source-only serialization cases and strict C# 12 packed consumers pass. |
+| Safe cache reuse / `CollectionSharesOnlyExplicitMarkedRunCache` | An isolated, buildable mutation restores fresh-cache selection only for a valid marked path. All six cases execute; this equality assertion fails, exit 2. | The same six cases pass, exit 0; normal/invalid/unmarked controls remain intact. |
+| Refill/budget / `ModulePoolRefillsWithoutWaveBarrier`, `ModulePoolNeverMultipliesChildBudget` | Rendezvous requires a new module to start before the held peer completes; budget cases cover CPUs 1/2/3/4/16, explicit one-child mode and rejected invalid/oversubscribed values. | All eleven pool cases pass. This is real child-process/configuration proof, not a full-suite performance claim. |
+| Native failure despite logging faults / `ModulePoolPreservesNativeFailureDuringOutputError` | Removing the post-fault native-exit inspection replaces exit 37 with an output exception; the unchanged assertion detects it, exit 1. | Exit 37 remains authoritative and both additional output/cleanup errors are observable; metadata/cache-cleanup errors likewise cannot neutralize an existing native failure. |
+| Cancellation/error ownership / `ModulePoolDrainsFailedPeers`, `ModulePoolDrainsEveryPeerAfterCleanupError` | A retained-test mutation aborting cleanup after its first error fails the named all-peer assertion, exit 1; the probe reaps its remaining owned child. | Native exit 37 stays authoritative; peers and a real grandchild terminate, all peers are attempted after an error, primary errors remain visible and unconfirmed caches are preserved. |
+| CTS isolation/results / `CTSComparisonUsesIndependentJob`, `CTSComparisonSharedResultDirectoryIsRejected` | Missing jobs, rollout bypasses, shared results, ignored failures and wrong dispatch are rejected by executable guards. | 19 Windows + 39 Unix + 13 CTS wiring cases pass, along with nine selector/artifact cases and the package-staging guard. |
+| Shipping composition / `StartupHeavyCollectionPreservesEveryCase` | Exact published/final fixture inventories are compared; setup/build failures do not count as behavioral red. | Both complete maps retain all baseline source associations; actual CTS independently executes both 1,026-case plans with no failures/skips. |
+
+Repository-pinned SDK `12.0.100-alpha.1.26509.101` was used through `eng\common\dotnet.ps1`.
+The current all-TFM unit-project build and actual Release acceptance-fixture build pass with zero warnings/errors.
+C# BOMs, changed YAML parsing, PowerShell parsing/analyzer settings and whitespace gates pass.
+The cache-comparison retained test SHA-256 is
+`F75D045CEB750C261D99E94AF50EDEFEDB87DBB9FE53E0C974975F16C3A185B3`;
+its behavior-removal helper is `AA3875D2772B9B373680B2306B4D5187FCB79FBE34CBA480CDC9977C3EF96EA5`.
+The unchanged pool validator SHA-256 is
+`8AA0DF8BA19AAE71EBD10D1C84F1E81915071CCF2B4C79090887D1B71C1C1179`;
+its all-peer behavior-removal pool is `891020E309D5D4C9D38C8E9EBB4F14D470E3E350921B7DC24644F209454BB646`,
+and its native-output behavior-removal pool is
+`E4A8E6609F3DAAC69550213CD4905FC034DB3A3610588716E39EA7E2EDC34696`.
+The final default-cache collection entry point also passes with both complete 1,026-UID maps,
+zero timing fallback, confirmed teardown and no remaining owned module cache. That functional
+check ran beside the fault probes and is not added to the controlled performance table.
+
+```powershell
+pwsh -NoProfile -File .\eng\validate-collection-module-pool.ps1
+pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false
+.\eng\common\dotnet.ps1 build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Debug -v:q "-bl:<owned-evidence>\unit-build.binlog"
+.\eng\common\dotnet.ps1 build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release -v:q "-bl:<owned-evidence>\acceptance-build.binlog"
+pwsh -NoProfile -File .\eng\collect-affected-test-maps.ps1 -Repository <clean-packed-fixture> -Configuration Release -ChildBudget 4 -MaximumParallelModules 2 -ResultsDirectory <short-owned-results> -DisablePackageCacheReuse
+pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -Repository <clean-packed-fixture> -Configuration Release -DegreeOfParallelism 2 -ResultsDirectory <short-owned-results>
+git --no-pager diff --check
+```
+
+All commands above completed with exit 0 for the corresponding final checks/samples.
+The owned `Measure-LargeCollection.ps1` retains exact per-sample parameters, logs, package/consumer
+provenance, complete inventories and source associations; `Verify-CacheFixture.ps1` retains cache/restore/
+nested-host evidence. Red/green reports, native maps and full package metadata remain in session artifacts,
+not source control. Text transcripts and these assertions communicate the CLI change better than screenshots.
+Initial scratch failures from missing feeds/native layout, duplicate generated inputs and an artifact-root
+lookup were repaired in owned layouts; none is counted as regression detection.
+
+#### Committed-source package handoff
+
+The implementation commit is `24644925e47e5c8d8f55bb8c71e37a8b9d1b9a80`.
+Both MTP projects were repacked from that clean source using `VersionSuffix=preview.local.acceleration.20261101.1`,
+with `SourceRevisionId` and `RepositoryCommit` set to the exact commit. Both resulting nuspecs were read back.
+This unique local version avoids confusing the corrected package with the existing published preview.
+
+| Final local package | SHA-256 |
+| --- | --- |
+| `Microsoft.Testing.Platform.2.6.0-preview.local.acceleration.20261101.1.nupkg` | `BD4DFB3AFF38D16A6DD8951C7102182C1B0215682913B7123C9483A598D14C16` |
+| `Microsoft.Testing.Platform.ServerMode.Client.Sources.2.6.0-preview.local.acceleration.20261101.1.nupkg` | `220AEF9493A6A8A476B6F1CB8BFAE605807618E226B174A775C6AA8D57306158` |
+
+The unchanged test sources were rebuilt from clean fixture commit `a3d06d3c82e43f3409555461e10501c1f2a3e446`
+against these packages and the committed coverage packages, in a fresh dedicated cache.
+`project.assets.json`, cached nupkg bytes and both executed DLLs match the selected feed/payloads:
+.NET 10 DLL `AAE770725CBA12123608879C33F3162CCAC137F279A4C988A3ACFB0CC1A2E534`;
+.NET Framework/netstandard2.0 DLL `DB81A2E23C28C0F2E3BB7AB5ABC707C7A227BDC9804ED66F0366B69369625FA5`.
+The final default affected entry point took 27.060 seconds, returned 0, retained both exact 1,026-UID maps
+and every baseline association, and reported 11 measured/zero fallback batches per framework.
+Native CTS at the same four-child ceiling took 23.387 seconds, executed/passed all 2,052 planned identities,
+returned 0, and passed both canonical TRX gates with UTC timestamps. These sequential final-composition checks
+confirm the committed packages; the earlier interleaved samples remain the controlled performance comparison.
+Exact final package metadata, loaded paths, commands and outcomes are retained in `final-package-evidence.json`.
+
+#### Full real-solution collection validation
+
+An isolated checkout of the committed implementation was built and packed with the final coverage packages,
+the pinned SDK/runtimes, `FastAcceptanceTest=true` (as in the Windows pipeline), local storage and the short
+local package suffix `preview.full1`. The validation-only configuration commit is
+`f3a630003e981ec94d3759c714074cf18535d015`. The complete Windows solution builds/packs with
+zero warnings/errors and produces the same 74 module/framework inputs as the original pipeline inventory.
+No main checkout, global credentials, product pins or publishing configuration was changed.
+
+The corrected real collection completes **74/74 modules in 2,366.615 seconds (39.444 minutes)**,
+parent exit 0, with **828 measured batches, zero timing fallback and confirmed teardown**.
+All module caches are removed after their owners finish. Independent JSON discovery agrees exactly with
+all **70,935 unique module/UID identities** in the committed shards, and every UID has a source association.
+This includes all .NET/.NET Framework targets, internal TestContainer hosts and the playground modules.
+MTP acceptance takes 26.681 minutes and MSTest acceptance 23.546 minutes, overlapping in the bounded pool.
+The original 224.42-minute CI run is not a controlled machine/revision comparison, so no full-suite
+speedup factor is inferred from these different environments.
+
+A preliminary run is **not performance evidence**: superseded packages from an earlier, longer local suffix
+made acceptance-fixture version resolution ambiguous and caused class initialization failures.
+The 32 specifically identified, task-owned superseded nupkgs were moved out of the active feeds; a real
+package-consuming help fixture then passes both .NET 11/.NET Framework cases before the full rerun.
+Discovery was refreshed for both acceptance modules after that repair. The NUnit playground intentionally
+declares `[Values("one", "one")]`; its two byte-equivalent discovery records represent one UID.
+The inventory verifier records that multiplicity, rejects conflicting records and still forbids duplicated
+or missing UIDs in maps. None of these harness/setup failures is counted as behavioral red proof.
+
+The earlier oversized inherited PATH prevented CMD from resolving PowerShell. A process-only bounded PATH
+restored the normal Windows launcher; the missing declared runtimes were installed only into the task's
+local SDK layout. Correcting the isolated clone's origin restored package URL provenance. The short suffix
+keeps NuGet's long-path guard enabled rather than suppressing NU5123 or dropping source/native entries.
+The final linear-time inventory checker and complete build/collection logs are retained with
+`corrected-full-summary.json` and `verified-inventory.json` in the validation artifacts.
+Collection still accepts failed-test batch exit 2 by contract; its successful map outcome is not a claim
+that every acceptance test passed or a substitute for ordinary authoritative CI validation.
+
+**Remaining delivery gates:** collection/selection on a capable live main CI agent, public package flow
+and Azure multi-agent publication, release-branch
+proof/servicing decisions, ARM64/native rebuild and non-Windows support remain unverified.
+The full rebuilt 74-module local runtime/discovery/map inventory is now verified, not just statically predicted.
+Public dependency pins are unchanged. `EnableCTSCollection` remains off until the corrected CTS tool is
+approved/published and its pipeline pin updated. The coordinator retains dependency-flow and rollout
+ownership; the local performance results do not authorize downstream activation or private publication.
+
+#### Current-main merge validation (2026-11-03)
+
+The original validated head `2a2240bfeaaaa044b0a41cd5ac4b49e86b341bce` is merged with
+main `165333f32123111b70b3ead7f53e40e431c02055` without rewriting the existing evidence commits.
+The sole conflict was adjacent, independent source links in the MTP unit project:
+retain main's `DiagnosticAssertionObserver` and the collection-cache helper's existing Core-only condition.
+The automatic merges also retain main's additional JSON tests and environment-name correction.
+No collection, timing, cache or test-assertion behavior is changed to resolve the conflict.
+
+Merged-source Debug validation uses the repository-local pinned SDK and the same timing/cache selection:
+
+```powershell
+$project = 'test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj'
+$filter = 'FullyQualifiedName~FormatterUtilitiesTests|FullyQualifiedName~JsonTests|FullyQualifiedName~CollectionPackageCacheTests'
+# $run is a separate task-owned result directory for each target framework.
+& .\eng\common\dotnet.ps1 test --project $project --framework $tfm -c Debug --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$run" "-bl:$run\build-test.binlog" --show-test-results failed
+```
+
+Both commands exit 0: **179 passed on net10.0 and 125 passed on net462, zero failed/skipped**.
+TRX definitions/results confirm all 48 modern/legacy UTC cases on Core, all 24 legacy UTC cases on
+Framework and the marked-cache regression actually execute. The existing script gates also pass:
+11 module-pool cases, nine CTS selector/artifact cases, 19 Windows + 39 Unix + 13 CTS wiring cases
+and the package-staging guard. The final diff passes whitespace and required C# BOM checks.
+An initial local invocation duplicated the repository-provided results-directory option and was
+rejected before tests executed; that setup failure is not regression proof.
+
+**Test-value evidence:** this is a behavior-preserving merge, not a new feature or a new red/green claim.
+Retained UTC/cache assertions pass with current main; their earlier counterfactual evidence remains
+bound to its recorded source states. Full packing, the 74-module collection benchmark and CI were
+not repeated for this merge. Historical performance/package evidence is not relabeled as this new head.
+
+#### Descendant-ownership review correction (2026-11-03)
+
+Review exposed a gap in the teardown contract: normal SDK completion did not inspect descendants,
+and cancellation inspected a process-tree snapshot only while the SDK remained alive.
+Retained rendezvous tests reproduce the defect on head `531ac4ca16620bd9b779bd4886f219d4df3cb752`:
+an independently launched grandchild remains after both its intermediate parent and the SDK exit,
+yet the pool reports teardown confirmed. Both exit-0 and exit-37 ownership assertions fail;
+the original eleven pool cases pass and all fixture workers are joined during failure cleanup.
+An initial redirected-stream fixture instead inherited an extra pipe and hit output-drain timeout;
+that setup failure is not counted as the intended red proof.
+
+A later PID snapshot cannot reconstruct an intermediate parent that disappeared before observation.
+The chosen correction is a per-module Windows job assigned atomically by the process-creation
+`PROC_THREAD_ATTRIBUTE_JOB_LIST`, not a polling sampler or a new supervisor process.
+Windows 10/Server 2016 and later support this attribute, matching the Windows SDK collection hosts;
+see [UpdateProcThreadAttribute](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute).
+Job membership includes descendants for the entire module lifetime. Teardown retains current job-member
+handles, waits for their actual exit signals and observes zero active job processes before releasing
+cache ownership. It verifies job membership before joining a PID and rejects new membership during
+termination rather than claiming unobserved cleanup. A handle whitelist isolates redirected pipes
+between concurrent modules. Job closure is a kill-on-close safety net, not termination proof;
+query/wait failures remain explicit and retain the cache. Non-Windows collection stays disabled.
+
+**Test-value evidence:** the same final test file
+`6E14E8DEC71B6A86B6918A31240F347AB3CB8F49A50E08ABC633D7290F8C1021` runs against the archived
+pre-fix pool and the corrected pool with
+`pwsh -NoProfile -File .\eng\validate-collection-module-pool.ps1`.
+All thirteen cases execute: pre-fix has eleven passes and the two named ownership assertion failures
+(exit 1); corrected source has thirteen passes (exit 0). `ModulePoolDrainsOrphansAfterSdkCompletion`
+and `ModulePoolDrainsOrphansAfterSdkFailure` confirm native exits 0/37, independently redirected
+orphan termination before return, Unicode cache paths and argument quoting. Existing failure,
+refill, grandchild cancellation and all-peer cleanup assertions remain unchanged.
+The final CTS selector/artifact gates (nine cases), rollout wiring (71 cases) and package-staging guard
+also pass. Logs and archived comparison sources are retained under `review-descendant-teardown`.
+
+Real composed validation uses the existing packed fixture at
+`a3d06d3c82e43f3409555461e10501c1f2a3e446`, its byte-verified MTP 2.6.0 local binary payloads and
+coverage producer `8e1bd20fd881a2ca9d13e8081e39478fa1107598`; no product source/package changed
+for this launcher correction. The current entry script collects both net10.0/net462 modules with two
+SDK slots and four instrumentation-child capacity: exit 0, teardown confirmed, zero retained caches,
+1,026 exact unique UIDs and four source paths per module, with every historical association retained.
+This is mapping/ownership evidence, not 2,052 ordinary test-result passes or a new speedup claim.
+Historical mapping storage is restored byte-for-byte after preserving the new maps.
+A copied-PDB layout initially lost source associations, and a temporary tracked storage override
+was rejected by the clean-repository guard; neither is counted as successful source-map validation.
+The successful rerun keeps the original source/PDB layout and unmodified clean configuration.
+
+#### CTS native-map inventory review correction (2026-11-03)
+
+Marker counts alone did not bind each native map to a selected module. Two maps for module A
+could hide a missing B while the separate reports still identified A and B. Validation now reconciles
+the native `K1/<module-relative-path>/testfx-cts-comparison/<run>/committed` identity one-to-one
+with the selected modules, rejects duplicate/unexpected identities and rechecks the input SHA-256
+fingerprints after collection. Native bitmaps do not contain a separate SHA-256 field; the recheck
+validates the original input snapshot rather than inventing native hash metadata.
+
+**Test-value evidence:** retained `Invoke-CTSArtifactSelfTest` body
+`41B1338C9E24B3F616A3D7F112671BF7666BE56129279A6340AC06F2CAD31CAA` executes with
+`pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest`.
+Before the fix, ten cases pass and three assertions fail (exit 1):
+`CTSDuplicateMapCannotReplaceMissingModule`, `CTSUnexpectedMapCannotReplaceMissingModule`
+and `CTSChangedInputHashIsRejected`. The unchanged tests then pass all thirteen cases (exit 0),
+including a valid two-module inventory; all 71 rollout guards and package-staging validation also pass.
+The corrected validator also accepts the retained real native CTS run
+`5e0bff7df9514cb3bc571c090ae95b59`: two exact native map identities, both recorded input hashes
+still matching and 1,026 executed report identities per module. Earlier two-test native archives
+no longer match the rebuilt input binaries and are not relabeled as this evidence.
+No native producer, package pin or disabled CTS activation gate changes.
+
+#### Grouped review-maintenance validation (2026-11-03)
+
+The requested nine-comment batch keeps the collection contract unchanged while compiling the native
+helper and linked sources with explicit C# 12, naming the Win32 flags without changing their values,
+and naming the PowerShell cache protocol values. Per-line disk flushing is removed; bounded
+`StreamWriter` buffering and the existing completion/error disposal preserve captured logs.
+`Write-Host` still streams live output. No wall-time speedup is inferred.
+
+Identical strengthened pool tests pass before and after (14/14, exit 0), including exact completion,
+stderr, native-failure, output-exception and cancellation logs. The combined changes pass the same
+14-case command and all thirteen CTS cases; native interop probes also preserve exits 0/37,
+Unicode I/O/environment, cancellation, launch errors and struct layouts. An actual synchronous
+`CreatePipe` handle rejects `FileStream(..., isAsync: true)`, so overlapped-pipe redesign is declined.
+Four isolated metadata-precedence probes confirm the existing entry script retains original
+exceptions and native nonzero exits, rejects metadata failure after an exit-0 result, and writes
+successful metadata only under the owned result path. No fallback location or metadata change is needed.
+The review evidence is green/green preservation, not a new bug-fix red/green claim.
+Combined real collection also completes both packed net10.0/net462 modules with all 2,052 exact UIDs
+and historical source associations retained, exit 0 and confirmed teardown; historical maps are restored.
+
+### Local acceptance profiling experiment (2026-11-03)
+
+The follow-up request is to execute genuine acceptance tests locally and use OTel or equivalent tracing
+to distinguish fixture, batching and scheduling costs. This authorizes a local profiling experiment,
+not deployment, telemetry export to a remote service or an unmeasured production scheduling change.
+
+Use the existing aligned validation checkout, its packed products and pinned SDK/runtimes.
+The acceptance applications already register the MTP OpenTelemetry extension, but export nothing.
+In the task-owned checkout only, attach a per-process JSON-lines exporter to that provider and add
+`TestFx.AcceptanceProfiling` activities around fixture initialization/disposal, reflection/source-generated
+asset builds, DotnetCli admission/execution and CommandLine admission/execution. Keep assembly
+method-level CPU-count parallelization, package freshness and mutable-asset isolation unchanged.
+Trace files belong to one run/process; output capture and remote exporters are disabled. The profiling
+environment opt-in must not flow into nested generated test applications.
+
+Compare ordinary acceptance execution with smaller real-test UID replays, then compare UID-oriented
+and fixture-local batch partitions containing exactly the same tests. The replays are scheduling-cost
+experiments, not a claim of executing the SDK's affected-map protocol. Require actual test outcomes,
+source/package provenance and complete span/UID reconciliation. Measure an unexported/exported
+control so diagnostic overhead is not mistaken for a scheduling gain. Quantify initialization count
+per fixture, build time by metadata mode, nested process counts/overlap and queue waits before choosing
+an optimization. These experiments are planned; measured results will be recorded after execution.
+
+#### Profiling results
+
+The local profiling checkout is committed at `5d439192c84c8dcd4bf5078bf606f71871314e42`;
+the production worktree receives this decision/evidence record only. Both instrumented acceptance
+applications build with zero warnings/errors. The measurement scope comprises 59 representative
+fixture cases across MTP/MSTest acceptance plus two exporter-control cases, not the entire suite.
+Across exporter controls, ordinary runs, repeated batch trials and compiler controls:
+**42 valid runs, 319 passed executions, zero failures/skips and 3,423 exported spans** are verified.
+Every passing TRX is checked against independent discovery and its recorded pre-execution timestamp.
+For exported runs, the exact module/test UID multiset also agrees with the MTP test spans.
+
+The genuine ordinary runs execute 31 MTP cases in 25.202 seconds and 28 MSTest cases in 24.843 seconds.
+The exported two-test control shows 8.957–10.173 seconds in fixture initialization alone:
+5.246–6.578 seconds reflection build plus 3.568–3.686 seconds source-generation build.
+The test bodies are only about 0.4–0.6 seconds each. Per-test spans alone would miss most of that cost.
+Unexported controls take 16.162–17.369 seconds end-to-end versus 15.156–16.033 exported;
+this small sample shows no obvious material export penalty, not a statistically established overhead bound.
+
+The batch comparison preserves the same exact UID set, four batches, maximum eight cases per batch,
+two concurrent processes, metadata modes and one warmed, immutable per-suite package cache.
+UID-oriented partitioning is compared with grouping by test class/fixture. These are native test UID
+replays, not the SDK's affected-map protocol or a modification of the shipping collector.
+
+| Scope | UID-oriented fixture starts / builds | Fixture-local starts / builds | UID-oriented wall seconds, repeats | Fixture-local wall seconds, repeats |
+| --- | --- | --- | --- | --- |
+| MTP, 31 cases / four classes | 12 / 24 | 4 / 8 | 50.123, 47.416 | 44.497, 98.769 |
+| MSTest, 28 cases / four classes | 10 / 23 | 3 / 7 | 123.683, 70.861 | 201.941, 38.092 |
+
+The work reduction is repeatable; the end-to-end speedup is **not**. Source-generation/compilation
+latency varies substantially. An outlier build succeeds in 61.6 seconds, with a 55.744-second `Csc`
+task and only 1.379 seconds in `RestoreTask`; another build's largest `Csc` task is 32.292 seconds.
+These are actual recorded tasks, not an assumption that all setup time is NuGet restore or source generators.
+Analyzer timing was not emitted, so no analyzer blame or precise compiler-server contention cause is claimed.
+The outlier used shared compilation. Controlled private-compiler runs verify `UseSharedCompilation=false`
+in the binlog but take 18.900/27.401 seconds versus 12.918/22.209 with sharing; disabling it is not selected.
+
+DotnetCli/CommandLine semaphore waits stay below 0.1 milliseconds in the selected scopes. There is no
+evidence here to raise those queue limits. Nested compiler work and unequal fixture cost still require
+cost-aware balancing; grouping every whole class blindly can create stragglers and was slower in some trials.
+One selected Runner class performs per-test project builds without a reusable `TestAssetFixtureBase`
+initialization, so class affinity alone does not remove its build work.
+
+**Decision:** the next bounded experiment should combine fixture affinity with measured setup/execution
+cost and refill-on-completion, rather than impose unconditional whole-class grouping. Keep all required
+reflection/source-generation/AOT checks, normal test semantics and private mutable assets. Reuse only
+proven immutable preparation; treat persisted cost data as a scheduling hint with compatibility/invalidation
+rules, never as selection authority. No production scheduling or fixture-cache policy was changed.
+
+Exact script commands, UID partitions, environment overrides, TRX execution proofs, raw per-process JSONL,
+`analysis.json`, CSV summaries and an offline interactive `report.html` are retained in the profiling artifacts.
+The viewer uses no remote scripts/exporters and shows overlapping fixture/build/test/queue spans without
+adding inclusive durations as wall time. Failed initial format, empty-environment and SDK-discovery harness
+attempts are excluded from the passing totals and performance measurements.
 
 ### Windows timeout resolution (2026-10-26)
 

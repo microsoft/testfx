@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "cts": {
+      "version": "2.13.0-alpha.26530.1",
+      "commands": [
+        "cts"
+      ],
+      "rollForward": false
+    }
+  }
+}
