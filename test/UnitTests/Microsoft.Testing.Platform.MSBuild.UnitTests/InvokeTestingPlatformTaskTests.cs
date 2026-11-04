@@ -233,6 +233,7 @@ public sealed class InvokeTestingPlatformTaskTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    [ResourceLock(StackTraceHelperTests.RegexCacheResource, Mode = ResourceAccessMode.Read)]
     public void Execute_FailedTestRequestHonorsShowFailuresAndPreservesSourceLocation(bool showFailures)
     {
         using AppHostTaskFixture fixture = new();

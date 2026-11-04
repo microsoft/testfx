@@ -11,6 +11,7 @@ using FailedTestInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBu
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
 [TestClass]
+[ResourceLock(StackTraceHelperTests.RegexCacheResource, Mode = ResourceAccessMode.Read)]
 public sealed class FailedTestHelperTests
 {
     [TestMethod]

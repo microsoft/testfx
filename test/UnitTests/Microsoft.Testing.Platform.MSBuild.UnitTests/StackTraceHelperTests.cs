@@ -8,7 +8,12 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 [TestClass]
 public sealed class StackTraceHelperTests
 {
+    // Guards StackTraceHelper's process-wide s_regex cache. Every test in this assembly that reaches
+    // StackTraceHelper (directly or through FailedTestHelper.FromFailedTest) must declare this key.
+    internal const string RegexCacheResource = nameof(RegexCacheResource);
+
     [TestMethod]
+    [ResourceLock(RegexCacheResource, Mode = ResourceAccessMode.Read)]
     public void TryFindLocationFromStackFrame_WhenLocationExists_ReturnsLocation()
     {
         const string stackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
@@ -22,6 +27,7 @@ public sealed class StackTraceHelperTests
     }
 
     [TestMethod]
+    [ResourceLock(RegexCacheResource, Mode = ResourceAccessMode.Read)]
     public void TryFindLocationFromStackFrame_WhenLocationIsMissing_ReturnsFalse()
     {
         const string stackTrace = "   at Program.Main()";
@@ -35,6 +41,7 @@ public sealed class StackTraceHelperTests
     }
 
     [TestMethod]
+    [ResourceLock(RegexCacheResource)] // Resets s_regex to null.
     public void TryFindLocationFromStackFrame_InitializesRegexWithBoundedTimeout()
     {
         const string stackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
@@ -83,7 +90,7 @@ public sealed class StackTraceHelperTests
             StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false));
 
     [TestMethod]
-    [DoNotParallelize] // Replaces the process-wide regex cache also used by task execution.
+    [ResourceLock(RegexCacheResource)] // Replaces s_regex.
     public void TryFindLocationFromStackFrame_RegexTimeout_ReturnsNoLocation()
     {
         FieldInfo regexField = typeof(StackTraceHelper).GetField("s_regex", BindingFlags.NonPublic | BindingFlags.Static)
