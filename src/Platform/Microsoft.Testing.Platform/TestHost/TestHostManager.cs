@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
-
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -127,17 +125,6 @@ internal sealed class TestHostManager : ITestHostManager
 
         return [.. dataConsumers];
     }
-
-    [Obsolete("Use AddTestSessionLifetimeHandler instead.", error: true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AddTestSessionLifetimeHandle(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
-        => AddTestSessionLifetimeHandler(testSessionLifetimeHandleFactory);
-
-    [Obsolete("Use AddTestSessionLifetimeHandler instead.", error: true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AddTestSessionLifetimeHandle<T>(CompositeExtensionFactory<T> compositeServiceFactory)
-        where T : class, ITestSessionLifetimeHandler
-        => AddTestSessionLifetimeHandler(compositeServiceFactory);
 
     public void AddTestSessionLifetimeHandler(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
     {
