@@ -255,6 +255,34 @@ usually two module slots with two child batches each. Each module owns logs/resu
 publication still uses the provider's shared-container coordination. Scheduling must not silently multiply
 per-module child limits, omit frameworks or turn partial/canceled collection into success.
 
+The pool adds a project/TFM label to unscoped stdout and stderr. Affected-test diagnostics that already start
+with `[affected-tests] [assembly | framework | ...]` retain that context without an additional pool label.
+The trailing `[RID - runtime]` on a `Test-map collection child failed: MSTest v...` banner is also omitted when
+both values exactly match the full leading context. Different child runtime/RID values, banners without that
+context, other diagnostic text and additional failure details are preserved. This keeps runtime/RID details
+once, including when the assembly name differs from the project/output directory. Removing every pool label
+would make interleaved unscoped messages ambiguous; stripping the provider's label would discard useful runtime
+information. Only the console presentation changes:
+per-module `collection.log` files retain the original output, and scheduling, collection failures, exit codes,
+package versions and rollout gates are unchanged.
+
+**Output regression evidence (2026-11-04):** the source/test patch is based on
+`8bae1c65b06293e2aea4481e4a7fd661279fd95b`; its SHA-256, excluding this document, is
+`128E4D5005A75E2F9D8A4D14A4B77CF28D5CCDDC0DADA100CA622A1B69676D6F`.
+`pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1` passes all 30 checks on Windows,
+PowerShell 7.6.9 (exit 0). Two isolated comparisons retain the identical validator. The original reader from
+the base revision exits 1 with 18 exact console-output assertion failures across nine scoped cases on stdout
+and stderr, including `ModuleOutputDoesNotRepeatAffectedTestContext`. The prefix-only reader, SHA-256
+`DB6E482A834B5147A3E32526B6E75CCDD8D99164D125FD50BBA8BF569F55C3B2`, exits 1 solely because
+`ModuleOutputDoesNotRepeatRuntimeAndRid` still sees the duplicate suffix on both streams.
+Different child runtimes/RIDs, missing full context, non-banner diagnostics and trailing failure details are
+preserved in the prefix-only and final states. Raw-log preservation assertions pass in all three states.
+Both red runs stop before the existing process-lifecycle checks; the complete green run includes them.
+Before/after fixture replays of the actual reader were inspected at 80 columns by 24 rows for the initial
+prefix cleanup and 85 columns by 58 rows for the runtime/RID suffix, including the full reported diagnostic.
+This is output-reader and existing process-harness evidence, not a new SDK collection or hosted Azure DevOps
+rendering run. No shipped .NET binaries or package versions change.
+
 Execution feedback must identify the protocol version, module/run/batch and planned/executed identity set.
 Atomic, task-owned feedback is preferable to parsing localized console text or coupling the extension to the
 standalone CTS client's dependency closure. The schema and bounds below were agreed against the coverage implementation's current source;
