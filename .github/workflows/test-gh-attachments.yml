@@ -57,7 +57,7 @@ jobs:
         run: >-
           ./.dotnet/dotnet test
           --project test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj
-          --configuration Release --framework net8.0 --no-build --no-restore
+          --configuration Release --framework net8.0
           -p:EnableCodeCoverage=false
           -bl:artifacts/log/Release/fifo-regression-{}.binlog
           --filter FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary
