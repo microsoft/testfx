@@ -5,7 +5,7 @@
     <TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>
 
     <ProjectReferenceTFM>netstandard2.0</ProjectReferenceTFM>
-    <ProjectReferenceTFM Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">$(TargetFramework)</ProjectReferenceTFM>
+    <ProjectReferenceTFM Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">$(TargetFramework)</ProjectReferenceTFM>
 
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>

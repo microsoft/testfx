@@ -22,6 +22,7 @@ on:
       - '.github/scripts/issue-labeler.mjs'
       - '.github/scripts/issue-labeler.test.mjs'
       - '.github/scripts/test_gh_aw_firewall_footer.py'
+      - '.github/scripts/test_gh_aw_review_footer.py'
       - '.github/scripts/test_gh_aw_runtime_contracts.py'
       - '.github/scripts/test_build_failure_analysis_checkout.py'
       - '.github/scripts/test_agentic_workflow_warning_contracts.py'
@@ -45,6 +46,7 @@ on:
       - '.github/scripts/issue-labeler.mjs'
       - '.github/scripts/issue-labeler.test.mjs'
       - '.github/scripts/test_gh_aw_firewall_footer.py'
+      - '.github/scripts/test_gh_aw_review_footer.py'
       - '.github/scripts/test_gh_aw_runtime_contracts.py'
       - '.github/scripts/test_build_failure_analysis_checkout.py'
       - '.github/scripts/test_agentic_workflow_warning_contracts.py'
@@ -97,5 +99,7 @@ jobs:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Test firewall footer correction
         run: python .github/scripts/test_gh_aw_firewall_footer.py --module-path "$RUNNER_TEMP/gh-aw/actions/firewall_blocked_domains.cjs"
+      - name: Test review footer fragments
+        run: python .github/scripts/test_gh_aw_review_footer.py --scripts-directory "$RUNNER_TEMP/gh-aw/actions"
       - name: Test pinned gh-aw footer and review contracts
         run: python .github/scripts/test_gh_aw_runtime_contracts.py --actions-dir "$RUNNER_TEMP/gh-aw/actions"

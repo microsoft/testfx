@@ -102,7 +102,7 @@ public sealed class PackageMetadataGuardTests
         string projectContents = $"""
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <PackageId>{assetId}</PackageId>
 {descriptionProperty}  </PropertyGroup>
@@ -174,7 +174,7 @@ public sealed class DependencyFreeProjectGuardTests
 
         AssertBuildFailed(
             result,
-            "must remain dependency-free for net8.0, but dependency assets were resolved",
+            "must remain dependency-free for net10.0, but dependency assets were resolved",
             "Microsoft.Extensions.Logging");
     }
 
@@ -187,7 +187,7 @@ public sealed class DependencyFreeProjectGuardTests
 
         AssertBuildFailed(
             result,
-            "must remain dependency-free for net8.0, but dependency assets were resolved",
+            "must remain dependency-free for net10.0, but dependency assets were resolved",
             "native asset");
     }
 
@@ -200,7 +200,7 @@ public sealed class DependencyFreeProjectGuardTests
 
         AssertBuildFailed(
             result,
-            "must remain dependency-free for net8.0, but dependency assets were resolved",
+            "must remain dependency-free for net10.0, but dependency assets were resolved",
             "assembly reference");
     }
 
@@ -245,7 +245,7 @@ public sealed class DependencyFreeProjectGuardTests
         string projectContents = $"""
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <EnforceDependencyFreeProject>true</EnforceDependencyFreeProject>
 {dependencyProperties}
   </PropertyGroup>
@@ -311,7 +311,7 @@ public sealed class DependencyFreeProjectGuardTests
                 """
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 </Project>
 """,

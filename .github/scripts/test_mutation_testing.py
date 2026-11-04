@@ -230,7 +230,22 @@ class MutationTestingTests(unittest.TestCase):
                 ):
                     declared_target_frameworks(project, properties)
 
-    def test_repository_platform_core_uses_net9_direct_reference_tests(self) -> None:
+    def test_repository_targets_only_supported_net_frameworks(self) -> None:
+        project = ET.parse(REPOSITORY_ROOT / "Directory.Build.props").getroot()
+        frameworks = project.findtext("PropertyGroup/SupportedNetFrameworks")
+        self.assertEqual("net10.0;net11.0", frameworks)
+
+    def test_repository_installs_only_supported_net_runtimes(self) -> None:
+        global_json = json.loads(
+            (REPOSITORY_ROOT / "global.json").read_text(encoding="utf-8")
+        )
+        for runtime, versions in global_json["tools"]["runtimes"].items():
+            with self.subTest(runtime=runtime):
+                self.assertEqual(
+                    {"10", "11"}, {version.split(".")[0] for version in versions}
+                )
+
+    def test_repository_platform_core_uses_net10_direct_reference_tests(self) -> None:
         target_manifest = MUTATION_TESTING.load_manifest(
             REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
         )
@@ -241,7 +256,7 @@ class MutationTestingTests(unittest.TestCase):
             "MSTest.SelfRealExamples.UnitTests.csproj"
         )
 
-        self.assertEqual("net9.0", core.get("targetFramework"))
+        self.assertEqual("net10.0", core.get("targetFramework"))
         self.assertIn(direct_test_project, core["testProjects"])
         project = ET.parse(REPOSITORY_ROOT / direct_test_project).getroot()
         shared_props = ET.parse(REPOSITORY_ROOT / "Directory.Build.props").getroot()
@@ -292,7 +307,7 @@ class MutationTestingTests(unittest.TestCase):
         self.assertEqual("$(MutationTestingTargetFramework)", framework.text)
         default = project.find("PropertyGroup/MutationTestingTargetFramework")
         self.assertIsNotNone(default)
-        self.assertEqual("net8.0", default.text)
+        self.assertEqual("net10.0", default.text)
         self.assertEqual(
             "'$(MutationTesting)' == 'true' AND '$(MutationTestingTargetFramework)' == ''",
             default.get("Condition"),
@@ -512,7 +527,7 @@ class MutationTestingTests(unittest.TestCase):
             )
 
             self.assertEqual(
-                [enabled | {"targetFramework": "net8.0"}],
+                [enabled | {"targetFramework": "net10.0"}],
                 matrix["include"],
             )
             self.assertNotIn("targetFramework", enabled)

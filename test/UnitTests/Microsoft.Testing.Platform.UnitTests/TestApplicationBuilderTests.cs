@@ -372,6 +372,17 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    [DataRow(typeof(ITestHostManager))]
+    [DataRow(typeof(TestHostManager))]
+    public void TestSessionLifetimeHandlerRegistration_UsesCorrectMethodName(Type managerType)
+    {
+        string[] methodNames = [.. managerType.GetMethods().Select(method => method.Name)];
+
+        Assert.DoesNotContain("AddTestSessionLifetimeHandle", methodNames);
+        Assert.HasCount(2, methodNames.Where(name => name == nameof(ITestHostManager.AddTestSessionLifetimeHandler)));
+    }
+
+    [TestMethod]
     public async Task TestSessionLifetimeHandle_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();

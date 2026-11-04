@@ -17,8 +17,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class ModernUwpTests : AcceptanceTestBase
 {
-    private const string Net9TargetFramework = "net9.0-windows10.0.26100.0";
     private const string Net10TargetFramework = "net10.0-windows10.0.26100.0";
+    private const string Net11TargetFramework = "net11.0-windows10.0.26100.0";
 
     [DataRow("x86")]
     [DataRow("ARM64")]
@@ -54,8 +54,8 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             Net10TargetFramework);
     }
 
-    [DataRow(Net9TargetFramework)]
     [DataRow(Net10TargetFramework)]
+    [DataRow(Net11TargetFramework)]
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP execution is supported only on Windows.")]
     public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp(string targetFramework)

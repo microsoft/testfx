@@ -7,10 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class MicrosoftExtensionsHostingTests : AcceptanceTestBase<MicrosoftExtensionsHostingTests.TestAssetFixture>
 {
     private const string AssetName = "MicrosoftExtensionsHostingTest";
-    private static readonly string[] HostingCompatibilityFrameworks =
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? ["net462", "net8.0", "net9.0", "net10.0"]
-            : ["net8.0", "net9.0", "net10.0"];
+    private static readonly string[] HostingCompatibilityFrameworks = TargetFrameworks.All;
 
     public static IEnumerable<object[]> HostingCompatibilityFrameworksForDynamicData { get; } =
         HostingCompatibilityFrameworks.Select(static tfm => new object[] { tfm });
@@ -94,10 +91,8 @@ public sealed class MicrosoftExtensionsHostingTests : AcceptanceTestBase<Microso
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$MicrosoftTestingExtensionsHostingVersion$" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" Condition="'$(TargetFramework)' == 'net10.0'" />
-        <PackageReference Include="System.Text.Json" Version="10.0.12" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" Condition="'$(TargetFramework)' != 'net462'" />
+        <PackageReference Include="System.Text.Json" Version="10.0.12" Condition="'$(TargetFramework)' == 'net462'" />
     </ItemGroup>
 </Project>
 

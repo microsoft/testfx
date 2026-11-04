@@ -104,6 +104,7 @@ public static class WellKnownEnvironmentVariables
         "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
         "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
         "TESTINGPLATFORM_EXITCODE_IGNORE",
+        "TESTFX_COLLECTION_NUGET_CACHE",
 
         // Logical run correlation. A CI job may set this to tie several modules or machines into one
         // logical run, so it must not bleed into child test hosts and make a test observe an id it did

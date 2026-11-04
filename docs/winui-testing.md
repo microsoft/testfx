@@ -114,7 +114,7 @@ Set `WindowsPackageType` to `None`:
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <UseWinUI>true</UseWinUI>
 
@@ -207,7 +207,7 @@ Set `<EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingE
 
 Requirements and limitations:
 
-- Target a Windows TFM at platform version `10.0.19041.0` or higher (for example `net8.0-windows10.0.19041.0`) so NuGet resolves the Windows asset that contains the register-and-activate path. The plain `net8.0`/`net9.0` asset fails fast with an actionable message instead.
+- Target a Windows TFM at platform version `10.0.19041.0` or higher (for example `net10.0-windows10.0.19041.0`) so NuGet resolves the Windows asset that contains the register-and-activate path. The plain `net10.0`/`net11.0` assets fail fast with an actionable message instead.
 - Registering an unsigned build-output layout requires **Developer Mode** (or sideloading) to be enabled on the machine.
 - `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).

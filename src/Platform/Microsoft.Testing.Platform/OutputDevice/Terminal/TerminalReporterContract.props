@@ -6,9 +6,9 @@
     PURPOSE
       The terminal reporter (progress rendering, summary, ANSI/non-ANSI terminals, state model) is hard-forked
       into dotnet/sdk's 'dotnet test' implementation. testfx is the SOURCE OF TRUTH; this .props is the canonical
-      enumeration of the shared reporter source. It lets the same files be compiled into a standalone in-repo
-      consumer (the reporter contract test project) that guarantees they build independently, and it tells testfx
-      contributors exactly which files dotnet/sdk vendors. dotnet/sdk hand-copies these files and tracks them in its
+      enumeration of the shared reporter source. The in-repo reporter contract test project compiles these files
+      into its own assembly with a platform reference; it does not validate consumption without that reference.
+      This manifest also tells testfx contributors exactly which files dotnet/sdk hand-copies and tracks in its
       eng/vendored-files.json manifest; a scheduled workflow there opens an issue whenever these upstream files
       change, so any change here may require a coordinated port in dotnet/sdk (see dotnet/sdk eng/vendored-files.md).
 
@@ -51,7 +51,7 @@
     USAGE
       Import this file from any project that needs the reporter source. Microsoft.Testing.Platform itself does
       NOT import it (it compiles these files via its default source globbing); importing it there would
-      double-include them. Importing consumers (e.g. the standalone contract test project) get the .cs as <Compile>
+      double-include them. Importing consumers (e.g. the reporter contract test project) get the .cs as <Compile>
       items and the resx as an <EmbeddedResource GenerateSource="true"> (the defaults below), so the generated
       TerminalResources accessor + satellites are embedded in the consumer's own assembly. No IS_CORE_MTP symbol is
       needed: TerminalResources.cs (the only IS_CORE_MTP-conditional file) is excluded, and the resx generates the

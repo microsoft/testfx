@@ -14,8 +14,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class WindowsApplicationModelPackageTests
 {
     [TestMethod]
-    [DataRow("net9.0-windows10.0.26100.0", "net9.0", "net10.0")]
-    [DataRow("net10.0-windows10.0.26100.0", "net10.0", "net9.0")]
+    [DataRow("net10.0-windows10.0.26100.0", "net10.0", "net11.0")]
+    [DataRow("net11.0-windows10.0.26100.0", "net11.0", "net10.0")]
     public void ModernUwp_ResolvedAssetsRequireMatchingFrameworkAndSpecializedPayloads(
         string targetFramework,
         string frameworkAsset,
@@ -27,9 +27,9 @@ public sealed class WindowsApplicationModelPackageTests
             TargetFramework={{targetFramework}}
             UseUwpTools=true
             /lib/{{frameworkAsset}}/MSTest.TestFramework.dll
-            /buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll
-            /buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll
-            /buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll
+            /buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll
+            /buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll
+            /buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll
             """;
         File.WriteAllText(reportPath, report);
 
@@ -48,7 +48,7 @@ public sealed class WindowsApplicationModelPackageTests
         AssertFailedException ordinaryPayload = Assert.ThrowsExactly<AssertFailedException>(() =>
             WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
-        Assert.Contains("/buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll", ordinaryPayload.Message);
+        Assert.Contains("/buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll", ordinaryPayload.Message);
     }
 
     [TestMethod]
@@ -101,6 +101,29 @@ public sealed class WindowsApplicationModelPackageTests
         Assert.ContainsSingle(typeof(PackagedAppNativeDotnetTestTests).GetCustomAttributes(typeof(MemberConditionAttribute), inherit: false));
     }
 
+    [TestMethod]
+    [DataRow("MSTest.TestFramework", "lib", "MSTest.TestFramework.dll", false)]
+    [DataRow("MSTest.TestAdapter", "buildTransitive", "MSTest.TestAdapter.dll", false)]
+    [DataRow("Microsoft.Testing.Platform", "lib", "Microsoft.Testing.Platform.dll", true)]
+    [DataRow("Microsoft.Testing.Extensions.PackagedApp", "lib", "Microsoft.Testing.Extensions.PackagedApp.dll", true)]
+    [DataRow("Microsoft.Testing.Extensions.PackagedApp.MSBuild", "tools/AppModelController", "mstest-appmodel-controller.exe", true)]
+    public void PackedPackages_TargetOnlySupportedNetFrameworks(
+        string packageId, string folder, string assembly, bool platformVersion)
+    {
+        string? version = platformVersion ? AcceptanceTestBase.MicrosoftTestingPlatformVersion : null;
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath(packageId, version));
+        string[] entries = archive.Entries.Select(entry => entry.FullName.Replace('\\', '/')).ToArray();
+
+        foreach (string framework in new[] { "net10.0", "net11.0" })
+        {
+            Assert.Contains($"{folder}/{framework}/{assembly}", entries, packageId);
+        }
+
+        Assert.IsEmpty(
+            entries.Where(entry => Regex.IsMatch(entry, @"(^|/)net[89]\.0([-/]|$)", RegexOptions.CultureInvariant)).ToArray(),
+            $"Package '{packageId}' must not ship .NET 8 or .NET 9 assets.");
+    }
+
     private static readonly string[] RequiredTestAdapterEntries =
     [
         // Classic UWP.
@@ -115,23 +138,16 @@ public sealed class WindowsApplicationModelPackageTests
         "buildTransitive/uap10.0/MSTest.TestAdapter.targets",
         "buildTransitive/uap10.0/Parallelize.targets",
 
-        // Modern UWP and its normal net9.0 selection targets.
-        "build/net9.0/MSTest.TestAdapter.props",
-        "build/net9.0/MSTest.TestAdapter.targets",
-        "buildTransitive/net9.0/MSTest.TestAdapter.props",
-        "buildTransitive/net9.0/MSTest.TestAdapter.targets",
-        "buildTransitive/net9.0/Parallelize.targets",
-        "buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll",
-        "buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll",
-
-        // WinUI and its normal net8.0 selection targets.
-        "build/net8.0/MSTest.TestAdapter.props",
-        "build/net8.0/MSTest.TestAdapter.targets",
-        "buildTransitive/net8.0/MSTest.TestAdapter.props",
-        "buildTransitive/net8.0/MSTest.TestAdapter.targets",
-        "buildTransitive/net8.0/Parallelize.targets",
-        "buildTransitive/net8.0/winui/MSTest.TestAdapter.dll",
-        "buildTransitive/net8.0/winui/MSTestAdapter.PlatformServices.dll",
+        // Modern UWP, WinUI, and their normal net10.0 selection targets.
+        "build/net10.0/MSTest.TestAdapter.props",
+        "build/net10.0/MSTest.TestAdapter.targets",
+        "buildTransitive/net10.0/MSTest.TestAdapter.props",
+        "buildTransitive/net10.0/MSTest.TestAdapter.targets",
+        "buildTransitive/net10.0/Parallelize.targets",
+        "buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll",
+        "buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll",
+        "buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
+        "buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
     ];
 
     private static readonly string[] RequiredTestFrameworkEntries =
@@ -144,21 +160,15 @@ public sealed class WindowsApplicationModelPackageTests
         "build/uap10.0/MSTest.TestFramework.targets",
         "buildTransitive/uap10.0/MSTest.TestFramework.targets",
 
-        // Modern UWP and its normal net9.0 framework assets.
-        "lib/net9.0/MSTest.TestFramework.dll",
-        "lib/net9.0/MSTest.TestFramework.xml",
-        "build/net9.0/MSTest.TestFramework.targets",
-        "buildTransitive/net9.0/MSTest.TestFramework.targets",
-        "buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll",
-        "buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.xml",
-
-        // WinUI and its normal net8.0 framework assets.
-        "lib/net8.0/MSTest.TestFramework.dll",
-        "lib/net8.0/MSTest.TestFramework.xml",
-        "build/net8.0/MSTest.TestFramework.targets",
-        "buildTransitive/net8.0/MSTest.TestFramework.targets",
-        "buildTransitive/net8.0/winui/MSTest.TestFramework.Extensions.dll",
-        "buildTransitive/net8.0/winui/MSTest.TestFramework.Extensions.xml",
+        // Modern UWP, WinUI, and their normal net10.0 framework assets.
+        "lib/net10.0/MSTest.TestFramework.dll",
+        "lib/net10.0/MSTest.TestFramework.xml",
+        "build/net10.0/MSTest.TestFramework.targets",
+        "buildTransitive/net10.0/MSTest.TestFramework.targets",
+        "buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll",
+        "buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.xml",
+        "buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
+        "buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.xml",
     ];
 
     [TestMethod]
@@ -208,7 +218,7 @@ public sealed class WindowsApplicationModelPackageTests
             entries.Where(entry => entry.Contains('\\') || entry.Contains("//", StringComparison.Ordinal)).ToArray(),
             "Controller ZIP entries must use canonical single-slash paths on every producer host.");
 
-        string[] targetFrameworks = ["net8.0", "net9.0"];
+        string[] targetFrameworks = ["net10.0", "net11.0"];
         foreach (string targetFramework in targetFrameworks)
         {
             Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);

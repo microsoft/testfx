@@ -23,10 +23,12 @@
   <PropertyGroup>
     <!--
       Mirror the platform's TFMs: netstandard2.0 exercises the Jsonite (!NETCOREAPP) path that net462
-      consumers compile; net8.0 exercises the in-box System.Text.Json path. net462 consumer-compile
+      consumers compile; net10.0 exercises the in-box System.Text.Json path. net462 consumer-compile
       (ambient refs such as System.ValueTuple) is validated later during packaging / vstest adoption.
     -->
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <!-- Validate the same language level as the source package's C# 12 consumers. -->
+    <LangVersion>12.0</LangVersion>
 
     <!-- Match the platform: several linked files (e.g. ObjectPool.cs namespace switch) key off this. -->
     <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
@@ -366,8 +368,8 @@
             text = Regex.Replace(text, @"^\s*\[Embedded\]\s*\r?\n", string.Empty, RegexOptions.Multiline);
 
             // Packed source uses a package-specific modern-runtime symbol instead of NETCOREAPP. This lets
-            // net5.0-net7.0 consumers select the netstandard/Jsonite implementation even though their SDK
-            // defines NETCOREAPP, while net8.0+ consumers keep the System.Text.Json implementation.
+            // net5.0-net9.0 consumers select the netstandard/Jsonite implementation even though their SDK
+            // defines NETCOREAPP, while net10.0+ consumers keep the System.Text.Json implementation.
             text = Regex.Replace(text, @"\bNETCOREAPP\b", "MTP_CLIENT_USE_MODERN_DOTNET");
 
             sb.Append(typeRx.Replace(text, delegate(Match m) { return "internal" + m.Groups[1].Value; }));

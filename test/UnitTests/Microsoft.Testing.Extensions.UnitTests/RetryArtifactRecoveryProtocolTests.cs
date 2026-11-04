@@ -435,13 +435,14 @@ public sealed class RetryArtifactRecoveryProtocolTests
                 }
             }
 
+            // Stack-frame locations can change between logging and assertion.
             Assert.AreSequenceEqual(
                 new[]
             {
                 deleteFailure
-                    ? $"Failed to delete recovered retry artifact manifest '{attempt.ManifestPath}': {original}"
-                    : $"Failed to read recovered retry artifact manifest '{attempt.ManifestPath}': {original}",
-            }, fixture.Warnings);
+                    ? $"Failed to delete recovered retry artifact manifest '{attempt.ManifestPath}': {original.GetType().FullName}: {original.Message}"
+                    : $"Failed to read recovered retry artifact manifest '{attempt.ManifestPath}': {original.GetType().FullName}: {original.Message}",
+            }, fixture.Warnings.Select(static warning => warning.Split('\n')[0].TrimEnd('\r')));
             Assert.AreEqual(deleteFailure, fixture.Files.ContainsKey(attempt.ManifestPath));
             if (deleteFailure)
             {

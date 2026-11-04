@@ -15,7 +15,7 @@ public sealed class MtpDiscoveryCacheTests : AcceptanceTestBase<NopAssetFixture>
 #file DiscoveryCacheHost/DiscoveryCacheHost.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <GenerateProgramFile>false</GenerateProgramFile>
@@ -398,7 +398,7 @@ internal static class Program
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.StandardError);
-        var host = TestHost.LocateFrom(project, AssetName, "net8.0",
+        var host = TestHost.LocateFrom(project, AssetName, "net10.0",
             buildConfiguration: Enum.Parse<BuildConfiguration>(Constants.BuildConfiguration), metadataMode: metadataMode);
         using var command = new CommandLine();
         int exitCode = await command.RunAsyncAndReturnExitCodeAsync(

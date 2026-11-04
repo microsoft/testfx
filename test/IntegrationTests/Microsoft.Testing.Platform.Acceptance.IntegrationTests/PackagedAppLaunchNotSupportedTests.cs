@@ -32,9 +32,11 @@ public sealed class PackagedAppLaunchNotSupportedTests : AcceptanceTestBase<Pack
         testHostResult.AssertExitCodeIs(LaunchNotSupportedExitCode);
 
         // The message must stay actionable: it names the exact packaged app (via its AUMID) that could
-        // not be launched and points at the tracking issue for the missing activation support.
+        // not be launched and points at the supported Windows target and the tracking issue.
         testHostResult.AssertOutputContains(ExpectedAppUserModelId);
         testHostResult.AssertOutputContains(TrackingIssueUrl);
+        testHostResult.AssertOutputContains(
+            "which ships for net10.0-windows10.0.19041.0 and later. Target 'net10.0-windows10.0.19041.0'");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

@@ -743,7 +743,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
     private static IEnumerable<object[]> GetSourceCompatibilityTargetFrameworks()
     {
         yield return [TargetFrameworks.NetCurrent];
-        yield return ["net8.0"];
+        yield return ["net10.0"];
     }
 
     private static void VerifyEveryPublicAssertMethodFamilyHasAConsumerCall()
@@ -763,8 +763,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             Path.Combine(publicApiDirectory, "PublicAPI.Unshipped.txt"),
             Path.Combine(publicApiDirectory, "net", "PublicAPI.Shipped.txt"),
             Path.Combine(publicApiDirectory, "net", "PublicAPI.Unshipped.txt"),
-            Path.Combine(publicApiDirectory, "net9.0", "PublicAPI.Shipped.txt"),
-            Path.Combine(publicApiDirectory, "net9.0", "PublicAPI.Unshipped.txt"),
+            Path.Combine(publicApiDirectory, "net10.0", "PublicAPI.Shipped.txt"),
+            Path.Combine(publicApiDirectory, "net10.0", "PublicAPI.Unshipped.txt"),
         ];
 
         var publicMethodFamilies = publicApiFiles
