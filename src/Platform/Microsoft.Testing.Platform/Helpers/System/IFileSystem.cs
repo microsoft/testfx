@@ -9,6 +9,8 @@ internal interface IFileSystem
 
     bool IsRegularFile(string path);
 
+    IFileStream? OpenReadRegularFile(string path);
+
     bool ExistDirectory(string? path);
 
     string CreateDirectory(string path);

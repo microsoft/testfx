@@ -77,6 +77,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
         string missing = Path.Combine(fixture.DirectoryPath, "missing.log");
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(value => value.OpenReadRegularFile(It.IsAny<string>()))
+            .Returns((string path) => fileSystem.Object.NewFileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
         // ArgumentException is a normal best-effort file error; use an unexpected failure to reach
         // the reporter isolation catch rather than the collector's unavailable-file path.
         fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -125,6 +127,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
         using var cancellation = new CancellationTokenSource();
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(value => value.OpenReadRegularFile(It.IsAny<string>()))
+            .Returns((string path) => fileSystem.Object.NewFileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
         fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, FileShare.Read))
             .Throws(new OperationCanceledException(cancellation.Token));
         GitHubActionsSummaryReporter reporter = fixture.CreateReporter(fileSystem.Object);
@@ -145,9 +149,11 @@ public sealed partial class GitHubActionsSummaryReporterTests
 #if NETCOREAPP
     [TestMethod]
     [OSCondition(OperatingSystems.Linux)]
-    [DataRow(false, DisplayName = "FIFO with no writer")]
-    [DataRow(true, DisplayName = "Symlink to FIFO with no writer")]
-    public async Task SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary(bool symlink)
+    [DataRow(false, false, DisplayName = "FIFO with no writer")]
+    [DataRow(true, false, DisplayName = "Symlink to FIFO with no writer")]
+    [DataRow(false, true, DisplayName = "Regular file replaced with FIFO after metadata check")]
+    [DataRow(true, true, DisplayName = "Symlink retargeted to FIFO after metadata check")]
+    public async Task SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary(bool symlink, bool replaceAfterMetadataCheck)
     {
         using SummaryExecutionFixture fixture = new(exitCode: 2, stageAttachments: true);
         string fifo = Path.Combine(fixture.DirectoryPath, "no-writer.fifo");
@@ -171,18 +177,43 @@ public sealed partial class GitHubActionsSummaryReporterTests
             Assert.AreEqual(0, process.ExitCode);
         }
 
-        string source = fifo;
+        string target = replaceAfterMetadataCheck
+            ? WriteAttachmentSource(fixture, "regular-before-open.log", [71, 0, 255])
+            : fifo;
+        string source = target;
         if (symlink)
         {
             source = Path.Combine(fixture.DirectoryPath, "fifo-link");
-            File.CreateSymbolicLink(source, fifo);
+            File.CreateSymbolicLink(source, target);
         }
 
         Assert.IsTrue(File.Exists(source), "File.Exists alone must not be used to classify a FIFO.");
         var real = new SystemFileSystem();
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>()))
-            .Returns((string path) => real.IsRegularFile(path));
+            .Returns((string path) =>
+            {
+                bool result = real.IsRegularFile(path);
+                if (replaceAfterMetadataCheck && path == source)
+                {
+                    Assert.IsTrue(result);
+                    File.Delete(source);
+                    if (symlink)
+                    {
+                        File.CreateSymbolicLink(source, fifo);
+                    }
+                    else
+                    {
+                        File.Move(fifo, source);
+                    }
+
+                    Assert.IsFalse(real.IsRegularFile(source));
+                }
+
+                return result;
+            });
+        fileSystem.Setup(value => value.OpenReadRegularFile(It.IsAny<string>()))
+            .Returns((string path) => real.OpenReadRegularFile(path));
         fileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>()))
             .Returns((string path) => real.CreateDirectory(path));
         fileSystem.Setup(value => value.ExistFile(It.IsAny<string>()))
@@ -207,6 +238,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
         await reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
 
         fileSystem.Verify(value => value.NewFileStream(source, It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()), Times.Never);
+        fileSystem.Verify(value => value.OpenReadRegularFile(source), replaceAfterMetadataCheck ? Times.Once() : Times.Never());
         GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
         Assert.AreEqual(1, module.TotalTests);
         Assert.AreEqual(1, module.FailedTests);
@@ -221,6 +253,107 @@ public sealed partial class GitHubActionsSummaryReporterTests
         Assert.Contains("| 1 | 0 | 1 | 0 | 0 | 0ms |", markdown);
         using JsonDocument manifest = ReadAttachmentManifest(fixture);
         Assert.AreEqual("non-regular", manifest.RootElement.GetProperty("tests")[0].GetProperty("attachments")[0].GetProperty("status").GetString());
+        Assert.DoesNotContain(
+            link => link == fifo || link == source,
+            Directory.EnumerateFiles("/proc/self/fd").Select(path => new FileInfo(path).LinkTarget),
+            "Rejected FIFO descriptors must not remain open.");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Linux)]
+    [DataRow(false, DisplayName = "Regular pathname replaced after acquisition")]
+    [DataRow(true, DisplayName = "Symlink retargeted after acquisition")]
+    public async Task SessionFinishing_LinuxSourceRetargeting_ReadsAcquiredRegularFile(bool symlink)
+    {
+        using SummaryExecutionFixture fixture = new(exitCode: 2, stageAttachments: true);
+        byte[] expected = [71, 0, 255];
+        string original = WriteAttachmentSource(fixture, "original.log", expected);
+        byte[] replacement = [9, 8, 7, 6];
+        string other = WriteAttachmentSource(fixture, "replacement.log", replacement);
+        string source = original;
+        if (symlink)
+        {
+            source = Path.Combine(fixture.DirectoryPath, "regular-link");
+            File.CreateSymbolicLink(source, original);
+        }
+
+        var real = new SystemFileSystem();
+        var fileSystem = new Mock<IFileSystem>();
+        IFileStream? acquired = null;
+        fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>()))
+            .Returns((string path) => real.IsRegularFile(path));
+        fileSystem.Setup(value => value.OpenReadRegularFile(source))
+            .Returns(() =>
+            {
+                acquired = real.OpenReadRegularFile(source);
+                Assert.IsNotNull(acquired);
+                File.Delete(source);
+                if (symlink)
+                {
+                    File.CreateSymbolicLink(source, other);
+                }
+                else
+                {
+                    File.WriteAllBytes(source, replacement);
+                }
+
+                return acquired;
+            });
+        fileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>()))
+            .Returns((string path) => real.CreateDirectory(path));
+        fileSystem.Setup(value => value.ExistFile(It.IsAny<string>()))
+            .Returns((string path) => real.ExistFile(path));
+        fileSystem.Setup(value => value.DeleteFile(It.IsAny<string>()))
+            .Callback((string path) => real.DeleteFile(path));
+        fileSystem.Setup(value => value.MoveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Callback((string from, string to, bool overwrite) => real.MoveFile(from, to, overwrite));
+        fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode mode, FileAccess access, FileShare share) =>
+            {
+                Assert.AreNotEqual(source, path, "The validated source must not be reopened by pathname.");
+                return real.NewFileStream(path, mode, access, share);
+            });
+        GitHubActionsSummaryReporter reporter = fixture.CreateReporter(fileSystem.Object);
+        await reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+
+        try
+        {
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateAttachmentUpdate(fixture, "RetargetedFailure", new FailedTestNodeStateProperty("original test failure"), source),
+                TestContext.CancellationToken);
+            await reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+            fileSystem.Verify(value => value.OpenReadRegularFile(source), Times.Once);
+            fileSystem.Verify(value => value.NewFileStream(source, It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()), Times.Never);
+            Assert.IsNotNull(acquired);
+            Assert.IsFalse(acquired.Stream.CanRead, "The acquired descriptor must be disposed after copying.");
+            GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+            Assert.AreEqual(1, module.TotalTests);
+            Assert.AreEqual(1, module.FailedTests);
+            Assert.AreEqual(2, module.ExitCode);
+            GitHubCiRunSummaryAttachment attachment = Assert.ContainsSingle(Assert.ContainsSingle(module.Failures).Attachments!);
+            Assert.AreEqual("staged", attachment.Status);
+            Assert.AreEqual(3L, attachment.SizeBytes);
+            Assert.IsNotNull(attachment.RelativePath);
+            Assert.AreSequenceEqual(expected, File.ReadAllBytes(Path.Combine(fixture.AttachmentsDirectory, attachment.RelativePath)));
+            Assert.AreSequenceEqual(replacement, File.ReadAllBytes(source));
+            Assert.IsEmpty(fixture.Warnings);
+            string markdown = File.ReadAllText(fixture.SummaryPath);
+            Assert.Contains("original test failure", markdown);
+            Assert.Contains("| 1 | 0 | 1 | 0 | 0 | 0ms |", markdown);
+            using JsonDocument manifest = ReadAttachmentManifest(fixture);
+            JsonElement row = Assert.ContainsSingle(manifest.RootElement.GetProperty("tests").EnumerateArray());
+            Assert.AreEqual("RetargetedFailure", row.GetProperty("uid").GetString());
+            JsonElement saved = Assert.ContainsSingle(row.GetProperty("attachments").EnumerateArray());
+            Assert.AreEqual("staged", saved.GetProperty("status").GetString());
+            Assert.AreEqual(3L, saved.GetProperty("sizeBytes").GetInt64());
+            Assert.AreEqual(attachment.RelativePath, saved.GetProperty("relativePath").GetString());
+        }
+        finally
+        {
+            acquired?.Dispose();
+        }
     }
 #endif
 

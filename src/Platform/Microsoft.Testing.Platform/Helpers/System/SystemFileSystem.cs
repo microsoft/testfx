@@ -12,6 +12,36 @@ internal sealed partial class SystemFileSystem : IFileSystem
             ? (File.GetAttributes(path) & (FileAttributes.Directory | FileAttributes.Device)) == 0
             : IsRegularUnixFile(path);
 
+    public IFileStream? OpenReadRegularFile(string path)
+    {
+        string fullPath = Path.GetFullPath(path);
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return OpenReadRegularUnixFile(fullPath);
+        }
+
+        var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        bool transferred = false;
+        try
+        {
+            if (!stream.CanSeek)
+            {
+                return null;
+            }
+
+            var result = new SystemFileStream(stream, fullPath);
+            transferred = true;
+            return result;
+        }
+        finally
+        {
+            if (!transferred)
+            {
+                stream.Dispose();
+            }
+        }
+    }
+
     public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;
 
 #if NETCOREAPP

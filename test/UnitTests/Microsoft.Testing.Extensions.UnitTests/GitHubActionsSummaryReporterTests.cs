@@ -3582,6 +3582,8 @@ public sealed partial class GitHubActionsSummaryReporterTests
 
         public bool IsRegularFile(string path) => _inner.IsRegularFile(path);
 
+        public IFileStream? OpenReadRegularFile(string path) => _inner.OpenReadRegularFile(path);
+
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 
         public string CreateDirectory(string path) => _inner.CreateDirectory(path);

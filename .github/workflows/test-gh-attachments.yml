@@ -60,8 +60,8 @@ jobs:
           --configuration Release --framework net10.0
           -p:EnableCodeCoverage=false
           -bl:artifacts/log/Release/fifo-regression-{}.binlog
-          --filter FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary
-          --minimum-expected-tests 2
+          --filter "FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary|FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxSourceRetargeting_ReadsAcquiredRegularFile"
+          --minimum-expected-tests 6
           --report-trx --report-trx-filename fifo-regression.trx
           --results-directory artifacts/TestResults/fifo-regression
       - name: Exercise packed MSTest and GitHub Actions report

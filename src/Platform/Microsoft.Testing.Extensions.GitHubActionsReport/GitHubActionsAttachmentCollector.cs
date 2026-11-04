@@ -87,7 +87,14 @@ internal sealed class GitHubActionsAttachmentCollector(
                     continue;
                 }
 
-                using IFileStream source = fileSystem.NewFileStream(file.FileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using IFileStream? source = fileSystem.OpenReadRegularFile(file.FileInfo.FullName);
+                if (source is null)
+                {
+                    attachment.Status = "non-regular";
+                    await WarnAsync(attachment).ConfigureAwait(false);
+                    continue;
+                }
+
                 long length = source.Stream.Length;
                 if (length > MaxFileBytes || length > MaxTotalBytes - _totalBytes)
                 {

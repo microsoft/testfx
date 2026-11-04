@@ -734,6 +734,8 @@ public sealed class GitHubActionsAttachmentCollectorTests : IDisposable
         var real = new SystemFileSystem();
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(value => value.IsRegularFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(value => value.OpenReadRegularFile(It.IsAny<string>()))
+            .Returns((string path) => fileSystem.Object.NewFileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
         fileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>()))
             .Returns((string path) => physicalOutput ? real.CreateDirectory(path) : path);
         fileSystem.Setup(value => value.ExistFile(It.IsAny<string>()))
