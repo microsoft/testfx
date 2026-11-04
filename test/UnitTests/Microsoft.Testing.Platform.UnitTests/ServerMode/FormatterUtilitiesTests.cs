@@ -517,6 +517,52 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
+    [DynamicData(
+        nameof(TestNodeTimingData.Cases),
+        typeof(TestNodeTimingData),
+        DynamicDataDisplayName = nameof(TestNodeTimingData.GetDisplayName),
+        DynamicDataDisplayNameDeclaringType = typeof(TestNodeTimingData))]
+    public async Task Serialize_TestNodeTiming_PreservesUtcPresenceDurationAndState(string caseName)
+    {
+        var data = TestNodeTimingData.Create(caseName);
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            // CurrentCulture is ExecutionContext-local on all these TFMs, including net462.
+            // Do not change the process-wide default or serialize otherwise independent tests.
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(data.CultureName);
+
+            // On .NET the formatter overrides this serializer. Assert the dictionary directly so both
+            // implementations are covered there, as well as real Jsonite formatting on net462.
+            string serialized = await _formatter.SerializeAsync(data.TestNode);
+            IDictionary<string, object?> properties = SerializerUtilities.Serialize(data.TestNode);
+            Assert.AreEqual(data.ExpectedDuration.HasValue, properties.ContainsKey("time.duration-ms"), caseName);
+            if (data.ExpectedDuration is { } duration)
+            {
+                Assert.AreEqual(duration, properties["time.duration-ms"], caseName);
+            }
+
+            Assert.AreEqual(data.ExpectedStartUtc is not null, properties.ContainsKey("time.start-utc"), caseName);
+            if (data.ExpectedStartUtc is { } startUtc)
+            {
+                Assert.AreEqual(startUtc, properties["time.start-utc"], caseName);
+            }
+
+            Assert.AreEqual(data.ExpectedStopUtc is not null, properties.ContainsKey("time.stop-utc"), caseName);
+            if (data.ExpectedStopUtc is { } stopUtc)
+            {
+                Assert.AreEqual(stopUtc, properties["time.stop-utc"], caseName);
+            }
+
+            Assert.AreEqual(data.ExpectedJson, serialized, caseName);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
+    [TestMethod]
     public async Task Serialize_TestNodeWithSupersededRetryAttempt_EmitsIsSupersededTrue()
     {
         var testNode = new TestNode
@@ -890,7 +936,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNode))
         {
-            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual(TestNodeTimingData.EscapeUtcOffsets("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""").Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -902,7 +948,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNodeUpdateMessage))
         {
-            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual(TestNodeTimingData.EscapeUtcOffsets("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""").Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
