@@ -199,7 +199,7 @@ try {
         @"
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -227,20 +227,20 @@ $references
         }
 
         foreach ($id in @('Microsoft.Testing.Platform', 'Microsoft.Testing.Extensions.GitHubActionsReport')) {
-            $resolved = $assets.targets.'net8.0'.PSObject.Properties["$id/$($packages[$id])"].Value
+            $resolved = $assets.targets.'net10.0'.PSObject.Properties["$id/$($packages[$id])"].Value
             $runtimeAsset = @($resolved.runtime.PSObject.Properties.Name | Where-Object { $_.EndsWith("/$id.dll", [StringComparison]::Ordinal) })
             if ($runtimeAsset.Count -ne 1) {
                 throw "Expected one resolved runtime assembly for $id."
             }
 
             $cached = Join-Path $env:NUGET_PACKAGES "$($id.ToLowerInvariant())/$($packages[$id])/$($runtimeAsset[0])"
-            $executableLayout = Join-Path $directory "bin/Release/net8.0/$id.dll"
+            $executableLayout = Join-Path $directory "bin/Release/net10.0/$id.dll"
             if ((Get-FileHash -LiteralPath $cached -Algorithm SHA256).Hash -cne (Get-FileHash -LiteralPath $executableLayout -Algorithm SHA256).Hash) {
                 throw "The executable layout contains stale $id bits."
             }
         }
 
-        $hostDll = Join-Path $directory "bin/Release/net8.0/$module.dll"
+        $hostDll = Join-Path $directory "bin/Release/net10.0/$module.dll"
         foreach ($case in $(if ($module -eq 'AttachmentsA') { @('disabled', 'passing', 'failed') } else { @('failed') })) {
             $env:TESTFX_ATTACHMENT_SMOKE_PASS = if ($case -eq 'passing') { 'true' } else { 'false' }
             $env:TESTFX_ATTACHMENT_SMOKE_ORIGINALS = Join-Path $directory "originals-$case"

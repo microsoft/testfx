@@ -308,6 +308,30 @@ eight `GitHubActionsAttachmentTests` cases plus the net8 rows of
 zero failed/skipped. TRX/JUnit/CTRF counts agreed. Restored package SHA-512 and
 deployed net8 DLL SHA-256 values matched the freshly packed artifacts.
 
+## CI runtime alignment (November 4, 2026)
+
+Upstream change #12185 narrows the MTP 3.0 supported frameworks to .NET 10 and
+.NET 11. The PR's CI merge uses that policy even before the feature branch is
+updated. Requesting a .NET 8 FIFO host therefore fails with `NETSDK1005`; its
+restore assets contain only .NET 10/11.
+
+The FIFO selection and packed-package smoke consumers now target .NET 10, the
+oldest supported framework. Runtime-payload checks and collected evidence paths
+use the same framework. The two-test FIFO gate, direct and multi-module smoke
+assertions, and upload/download checks remain unchanged. Earlier .NET 8 results
+above describe their original revisions and are not relabeled as .NET 10 proof.
+
+Local validation rebuilt the Release .NET 10 FIFO host and ran both real Linux
+cases on the pinned .NET 10.0.14 runtime: two passed, none failed or skipped.
+The updated smoke script also passed with portable MSTest 5.0.0-dev / MTP
+3.0.0-dev package payloads: twelve executed tests, five intentional failures,
+four staged attachments with preserved module/test associations, and matching
+restored/deployed package hashes. The local Windows full-package inventory
+check failed because legacy UWP payloads were omitted; targeted portable
+composition does not establish a successful full Windows pack.
+Hosted upload/download verification for the .NET 10 configuration remains
+pending CI.
+
 ## Open questions
 
 - This feature targets the next open version, MSTest 5.0 / MTP 3.0. No servicing

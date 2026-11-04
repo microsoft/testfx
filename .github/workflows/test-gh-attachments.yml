@@ -57,7 +57,7 @@ jobs:
         run: >-
           ./.dotnet/dotnet test
           --project test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj
-          --configuration Release --framework net8.0
+          --configuration Release --framework net10.0
           -p:EnableCodeCoverage=false
           -bl:artifacts/log/Release/fifo-regression-{}.binlog
           --filter FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary
@@ -115,7 +115,7 @@ jobs:
             ${{ runner.temp }}/mtp-attachment-smoke/**/*.trx
             ${{ runner.temp }}/mtp-attachment-smoke/**/*.summary.md
             ${{ runner.temp }}/mtp-attachment-smoke/**/obj/project.assets.json
-            ${{ runner.temp }}/mtp-attachment-smoke/**/bin/Release/net8.0/*.deps.json
+            ${{ runner.temp }}/mtp-attachment-smoke/**/bin/Release/net10.0/*.deps.json
             ${{ runner.temp }}/mtp-attachment-smoke/packages.json
             ${{ runner.temp }}/mtp-attachment-smoke/expected.json
             artifacts/log/Release
