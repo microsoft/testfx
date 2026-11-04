@@ -26,7 +26,7 @@ public sealed class DoNotUseSystemDescriptionAttributeFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.DoNotUseSystemDescriptionAttributeRuleId);
+        = [DiagnosticIds.DoNotUseSystemDescriptionAttributeRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

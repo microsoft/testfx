@@ -174,7 +174,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
     {
         if (Count == 0)
         {
-            return ImmutableArray<U>.Empty;
+            return [];
         }
 
         var tmp = ArrayBuilder<U>.GetInstance(Count);
@@ -296,7 +296,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
         {
             var dictionary1 = new Dictionary<K, ImmutableArray<T>>(1, comparer);
             T value = this[0];
-            dictionary1.Add(keySelector(value), ImmutableArray.Create(value));
+            dictionary1.Add(keySelector(value), [value]);
             return dictionary1;
         }
 

@@ -25,7 +25,7 @@ public sealed class UseCancellationTokenPropertyFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseCancellationTokenPropertyRuleId);
+        = [DiagnosticIds.UseCancellationTokenPropertyRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider? GetFixAllProvider()

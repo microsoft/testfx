@@ -27,7 +27,7 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.TestContextShouldBeValidRuleId);
+        = [DiagnosticIds.TestContextShouldBeValidRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

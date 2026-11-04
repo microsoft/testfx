@@ -30,7 +30,7 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : D
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TestMethodAttributeShouldSetDisplayNameCorrectlyRule);
+        = [TestMethodAttributeShouldSetDisplayNameCorrectlyRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

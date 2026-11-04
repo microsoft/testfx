@@ -37,7 +37,7 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+        = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -231,7 +231,7 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
 
         return isMatchingProcessStart
             || (operation is not (IAnonymousFunctionOperation or ILocalFunctionOperation)
-                && operation.Children.Any(child =>
+                && operation.ChildOperations.Any(child =>
                     ContainsMatchingProcessStart(child, processSymbol, processStartInfoSymbol, executable)));
     }
 

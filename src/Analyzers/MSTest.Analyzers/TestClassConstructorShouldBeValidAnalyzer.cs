@@ -66,11 +66,13 @@ public sealed class TestClassConstructorShouldBeValidAnalyzer : DiagnosticAnalyz
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(
+        =
+        [
             TestClassConstructorShouldBeValidRule,
             MultiplePreferredConstructorsRule,
             DerivedTestContextRule,
-            MSTestHostTestClassInjectionNotSupportedRule);
+            MSTestHostTestClassInjectionNotSupportedRule,
+        ];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

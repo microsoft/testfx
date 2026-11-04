@@ -33,7 +33,7 @@ public sealed class UseRetryWithTestMethodAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(UseRetryWithTestMethodRule);
+        = [UseRetryWithTestMethodRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

@@ -33,7 +33,7 @@ public sealed class TestContextPropertyUsageAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [Rule];
 
     // Properties that cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup
     private static readonly ImmutableHashSet<string> RestrictedInAllFixtureMethods = ImmutableHashSet.Create(

@@ -27,7 +27,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PreferAssertFailOverAlwaysFalseConditionsRuleId);
+        = [DiagnosticIds.PreferAssertFailOverAlwaysFalseConditionsRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -26,7 +26,7 @@ public sealed class DuplicateTestMethodAttributeFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.DuplicateTestMethodAttributeRuleId);
+        = [DiagnosticIds.DuplicateTestMethodAttributeRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

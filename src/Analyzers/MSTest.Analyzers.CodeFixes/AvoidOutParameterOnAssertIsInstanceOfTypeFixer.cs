@@ -24,7 +24,7 @@ public sealed class AvoidOutParameterOnAssertIsInstanceOfTypeFixer : CodeFixProv
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create("CS1615");
+        = ["CS1615"];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

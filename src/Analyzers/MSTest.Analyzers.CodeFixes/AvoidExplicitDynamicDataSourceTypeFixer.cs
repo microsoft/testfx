@@ -28,7 +28,7 @@ public sealed class AvoidExplicitDynamicDataSourceTypeFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AvoidExplicitDynamicDataSourceTypeRuleId);
+        = [DiagnosticIds.AvoidExplicitDynamicDataSourceTypeRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -250,7 +250,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+        = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

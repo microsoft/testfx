@@ -37,7 +37,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(FlowTestContextCancellationTokenRule);
+        = [FlowTestContextCancellationTokenRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

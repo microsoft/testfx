@@ -27,7 +27,7 @@ public sealed class UseAttributeOnTestMethodFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseAttributeOnTestMethodRuleId);
+        = [DiagnosticIds.UseAttributeOnTestMethodRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

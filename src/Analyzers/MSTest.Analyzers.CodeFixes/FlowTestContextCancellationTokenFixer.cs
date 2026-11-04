@@ -27,7 +27,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.FlowTestContextCancellationTokenRuleId);
+        = [DiagnosticIds.FlowTestContextCancellationTokenRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

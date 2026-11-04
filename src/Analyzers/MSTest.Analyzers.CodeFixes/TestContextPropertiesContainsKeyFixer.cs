@@ -23,7 +23,7 @@ public sealed class TestContextPropertiesContainsKeyFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds
-        => ImmutableArray.Create("CS1503");
+        => ["CS1503"];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -27,7 +27,7 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PreferTestInitializeOverConstructorRuleId);
+        = [DiagnosticIds.PreferTestInitializeOverConstructorRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -34,7 +34,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TestClassShouldHaveTestMethodRule);
+        = [TestClassShouldHaveTestMethodRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

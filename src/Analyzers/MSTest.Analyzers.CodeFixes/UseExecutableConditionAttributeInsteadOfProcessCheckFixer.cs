@@ -25,7 +25,7 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckFixer : 
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseExecutableConditionAttributeInsteadOfProcessCheckRuleId);
+        = [DiagnosticIds.UseExecutableConditionAttributeInsteadOfProcessCheckRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

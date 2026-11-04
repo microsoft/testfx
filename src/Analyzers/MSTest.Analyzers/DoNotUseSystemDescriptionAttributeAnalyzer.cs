@@ -33,7 +33,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzer : DiagnosticAnaly
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(DoNotUseSystemDescriptionAttributeRule);
+        = [DoNotUseSystemDescriptionAttributeRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

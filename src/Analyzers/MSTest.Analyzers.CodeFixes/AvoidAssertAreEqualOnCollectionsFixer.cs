@@ -28,7 +28,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AvoidAssertAreEqualOnCollectionsRuleId);
+        = [DiagnosticIds.AvoidAssertAreEqualOnCollectionsRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

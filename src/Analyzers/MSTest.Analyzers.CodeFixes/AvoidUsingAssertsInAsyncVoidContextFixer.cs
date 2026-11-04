@@ -27,7 +27,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
 
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AvoidUsingAssertsInAsyncVoidContextRuleId);
+        = [DiagnosticIds.AvoidUsingAssertsInAsyncVoidContextRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
@@ -203,7 +203,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         for (int i = 0; i < existing.Count; i++)
         {
             UsingDirectiveSyntax current = existing[i];
-            if (IsGlobalUsing(current))
+            if (current.GlobalKeyword.IsKind(SyntaxKind.GlobalKeyword))
             {
                 continue;
             }
@@ -225,14 +225,6 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         }
 
         return existing.Insert(insertionIndex, newUsing);
-    }
-
-    private static bool IsGlobalUsing(UsingDirectiveSyntax usingDirective)
-    {
-        // 'global' is a contextual keyword introduced in C# 10. Detect it textually so the build-time
-        // Roslyn 3.11 package does not need to expose UsingDirectiveSyntax.GlobalKeyword.
-        SyntaxToken firstToken = usingDirective.GetFirstToken();
-        return firstToken.Text == "global";
     }
 
     private static SyntaxTrivia DetectEndOfLineTrivia(CompilationUnitSyntax compilationUnit)

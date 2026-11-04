@@ -32,7 +32,7 @@ public sealed class AvoidExplicitDynamicDataSourceTypeAnalyzer : DiagnosticAnaly
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(PreferAutoDetectRule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [PreferAutoDetectRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

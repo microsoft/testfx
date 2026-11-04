@@ -34,7 +34,7 @@ public sealed class UseCancellationTokenPropertyAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(UseCancellationTokenPropertyRule);
+        = [UseCancellationTokenPropertyRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

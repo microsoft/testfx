@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace MSTest.Analyzers.Test;
@@ -40,6 +41,16 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, invocationCount: 3);
 
         AssertGeneratedMetadata(result, output, language);
+    }
+
+    [TestMethod]
+    [DataRow(LanguageNames.CSharp)]
+    [DataRow(LanguageNames.VisualBasic)]
+    public async Task Generate_InvocationRemoved_RemovesMetadata(string language)
+    {
+        (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, removeInvocationAfterFirstRun: true);
+
+        AssertNoMetadata(result, output);
     }
 
     [TestMethod]
@@ -91,7 +102,8 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
         string scenario = "valid",
         bool reducedExtension = false,
         int invocationCount = 1,
-        bool nameofOnly = false)
+        bool nameofOnly = false,
+        bool removeInvocationAfterFirstRun = false)
     {
         ImmutableArray<MetadataReference> references = await AnalyzerTestReferenceAssemblies.Default.ResolveAsync(language, CancellationToken.None);
         string assemblyName = scenario == "assembly" ? "Other.Hosting" : "MSTest.Extensions.Hosting";
@@ -190,11 +202,21 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
         // without exposing a production API or testing private implementation helpers.
         Type generatorType = typeof(ReviewAlwaysTrueAssertConditionAnalyzer).Assembly.GetType(
             "MSTest.Analyzers.MSTestHostInjectionMetadataGenerator", throwOnError: true)!;
-        var generator = (ISourceGenerator)Activator.CreateInstance(generatorType, nonPublic: true)!;
+        ISourceGenerator generator = ((IIncrementalGenerator)Activator.CreateInstance(generatorType, nonPublic: true)!).AsSourceGenerator();
         GeneratorDriver driver = language == LanguageNames.CSharp
             ? CSharpGeneratorDriver.Create(generator)
             : VisualBasicGeneratorDriver.Create(ImmutableArray.Create(generator));
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation output, out ImmutableArray<Diagnostic> diagnostics);
+
+        if (removeInvocationAfterFirstRun)
+        {
+            Assert.IsEmpty(diagnostics);
+            AssertGeneratedMetadata(driver.GetRunResult(), output, language);
+            SyntaxTree originalTree = compilation.SyntaxTrees.Single();
+            SyntaxTree updatedTree = originalTree.WithChangedText(SourceText.From(source.Replace(invocation, string.Empty), Encoding.UTF8));
+            compilation = compilation.ReplaceSyntaxTree(originalTree, updatedTree);
+            driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out output, out diagnostics);
+        }
 
         Assert.IsEmpty(diagnostics);
         AssertNoCompilationErrors(output);

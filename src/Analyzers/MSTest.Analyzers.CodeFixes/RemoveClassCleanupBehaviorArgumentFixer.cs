@@ -23,7 +23,7 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create("CS0103");
+        = ["CS0103"];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

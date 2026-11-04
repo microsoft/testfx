@@ -26,7 +26,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseOSConditionAttributeInsteadOfRuntimeCheckRuleId);
+        = [DiagnosticIds.UseOSConditionAttributeInsteadOfRuntimeCheckRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
@@ -123,7 +123,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
             if (index >= 0 && index < block.Statements.Count - 1)
             {
                 StatementSyntax nextStatement = block.Statements[index + 1];
-                SyntaxTriviaList cleanedTrivia = new(nextStatement.GetLeadingTrivia().Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia)));
+                SyntaxTriviaList cleanedTrivia = [.. nextStatement.GetLeadingTrivia().Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia))];
                 StatementSyntax newNextStatement = nextStatement.WithLeadingTrivia(cleanedTrivia);
                 trackedMethod = trackedMethod.ReplaceNode(nextStatement, newNextStatement);
                 trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);

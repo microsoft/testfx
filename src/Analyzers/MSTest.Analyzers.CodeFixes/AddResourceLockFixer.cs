@@ -36,9 +36,7 @@ public sealed class AddResourceLockFixer : CodeFixProvider
 
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(
-            DiagnosticIds.UndeclaredProcessGlobalStateMutationRuleId,
-            DiagnosticIds.CurrentDirectoryMutationUnderParallelizationRuleId);
+        = [DiagnosticIds.UndeclaredProcessGlobalStateMutationRuleId, DiagnosticIds.CurrentDirectoryMutationUnderParallelizationRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

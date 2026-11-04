@@ -29,7 +29,7 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
         new(DiagnosticIds.NonNullableReferenceNotInitializedSuppressorRuleId, SuppressedDiagnosticId, Resources.NonNullableReferenceNotInitializedSuppressorJustification);
 
     /// <inheritdoc />
-    public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);
+    public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = [Rule];
 
     /// <inheritdoc />
     public override void ReportSuppressions(SuppressionAnalysisContext context)

@@ -27,7 +27,7 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
         new(DiagnosticIds.UnusedParameterSuppressorRuleId, SuppressedDiagnosticId, Resources.UnusedParameterSuppressorJustification);
 
     /// <inheritdoc />
-    public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);
+    public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = [Rule];
 
     /// <inheritdoc />
     public override void ReportSuppressions(SuppressionAnalysisContext context)

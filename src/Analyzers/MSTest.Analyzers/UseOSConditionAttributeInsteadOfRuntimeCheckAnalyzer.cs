@@ -38,7 +38,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+        = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

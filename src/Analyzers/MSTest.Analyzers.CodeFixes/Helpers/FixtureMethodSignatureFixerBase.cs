@@ -40,7 +40,7 @@ public abstract class FixtureMethodSignatureFixerBase : CodeFixProvider
         {
             if (_fixableDiagnosticIds.IsDefault)
             {
-                _fixableDiagnosticIds = ImmutableArray.Create(DiagnosticRuleId);
+                _fixableDiagnosticIds = [DiagnosticRuleId];
             }
 
             return _fixableDiagnosticIds;

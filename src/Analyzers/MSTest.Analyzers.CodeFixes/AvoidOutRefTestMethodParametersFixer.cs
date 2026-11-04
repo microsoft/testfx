@@ -28,7 +28,7 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds
-        => ImmutableArray.Create(DiagnosticIds.AvoidOutRefTestMethodParametersRuleId);
+        => [DiagnosticIds.AvoidOutRefTestMethodParametersRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
