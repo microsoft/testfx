@@ -2,8 +2,29 @@
 
   <!-- Early .NET 12 SDKs map net11.0 to .NET 12 packs. Keep net11.0 binaries runnable on .NET 11. -->
   <PropertyGroup>
-    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0-rc.2.26504.105</Net11RuntimeVersion>
+    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0-rc.3.26522.148</Net11RuntimeVersion>
+    <Net10NativeAotRuntimeVersion Condition=" '$(Net10NativeAotRuntimeVersion)' == '' ">10.0.14</Net10NativeAotRuntimeVersion>
   </PropertyGroup>
+
+  <!-- Keep NativeAOT compiler, linker and runtime packs on the serviced runtime used by the tests. -->
+  <Target Name="_UseNet10NativeAotCompatibilityPacks"
+          BeforeTargets="ProcessFrameworkReferences"
+          Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' == 'v10.0' AND '$(PublishAot)' == 'true' ">
+    <ItemGroup>
+      <KnownILCompilerPack Update="@(KnownILCompilerPack)"
+                          Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net10.0' ">
+        <ILCompilerPackVersion>$(Net10NativeAotRuntimeVersion)</ILCompilerPackVersion>
+      </KnownILCompilerPack>
+      <KnownRuntimePack Update="@(KnownRuntimePack)"
+                        Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net10.0' AND '%(KnownRuntimePack.RuntimePackLabels)' == 'NativeAOT' ">
+        <LatestRuntimeFrameworkVersion>$(Net10NativeAotRuntimeVersion)</LatestRuntimeFrameworkVersion>
+      </KnownRuntimePack>
+      <KnownILLinkPack Update="@(KnownILLinkPack)"
+                      Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net10.0' ">
+        <ILLinkPackVersion>$(Net10NativeAotRuntimeVersion)</ILLinkPackVersion>
+      </KnownILLinkPack>
+    </ItemGroup>
+  </Target>
 
   <Target Name="_UseNet11CompatibilityPacks"
           BeforeTargets="ProcessFrameworkReferences"
