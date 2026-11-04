@@ -22,6 +22,15 @@ namespace TestFx.Collection;
 
 public sealed class WindowsCollectionProcess : IDisposable
 {
+    private const uint JobObjectLimitKillOnJobClose = 0x2000;
+    private const int JobObjectExtendedLimitInformation = 9;
+    private const uint ProcThreadAttributeHandleList = 0x20002;
+    private const uint ProcThreadAttributeJobList = 0x2000D;
+    private const uint StartfUseStdHandles = 0x100;
+    private const uint ExtendedStartupInfoPresent = 0x00080000;
+    private const uint CreateUnicodeEnvironment = 0x00000400;
+    private const uint CreateNoWindow = 0x08000000;
+
     private readonly SafeFileHandle _process;
     private readonly SafeFileHandle _job;
 
@@ -93,8 +102,8 @@ public sealed class WindowsCollectionProcess : IDisposable
         bool transferred = false;
         try
         {
-            JobLimits limits = new() { Basic = new() { LimitFlags = 0x2000 } };
-            Check(SetInformationJobObject(job, 9, ref limits, (uint)Marshal.SizeOf<JobLimits>()), nameof(SetInformationJobObject));
+            JobLimits limits = new() { Basic = new() { LimitFlags = JobObjectLimitKillOnJobClose } };
+            Check(SetInformationJobObject(job, JobObjectExtendedLimitInformation, ref limits, (uint)Marshal.SizeOf<JobLimits>()), nameof(SetInformationJobObject));
 
             SecurityAttributes security = new() { Length = Marshal.SizeOf<SecurityAttributes>(), InheritHandle = 1 };
             using SafeFileHandle input = CreateFileW("NUL", 0x80000000, 3, ref security, 3, 0x80, IntPtr.Zero);
@@ -122,11 +131,11 @@ public sealed class WindowsCollectionProcess : IDisposable
             Marshal.WriteIntPtr(handles, 0, input.DangerousGetHandle());
             Marshal.WriteIntPtr(handles, IntPtr.Size, outputWrite.DangerousGetHandle());
             Marshal.WriteIntPtr(handles, 2 * IntPtr.Size, errorWrite.DangerousGetHandle());
-            Check(UpdateProcThreadAttribute(attributes, 0, new UIntPtr(0x20002), handles, new UIntPtr((uint)(3 * IntPtr.Size)), IntPtr.Zero, IntPtr.Zero), nameof(UpdateProcThreadAttribute));
+            Check(UpdateProcThreadAttribute(attributes, 0, new UIntPtr(ProcThreadAttributeHandleList), handles, new UIntPtr((uint)(3 * IntPtr.Size)), IntPtr.Zero, IntPtr.Zero), nameof(UpdateProcThreadAttribute));
             jobValue = Marshal.AllocHGlobal(IntPtr.Size);
             Marshal.WriteIntPtr(jobValue, job.DangerousGetHandle());
             // Job membership is established by CreateProcess, before any child can be spawned.
-            Check(UpdateProcThreadAttribute(attributes, 0, new UIntPtr(0x2000D), jobValue, new UIntPtr((uint)IntPtr.Size), IntPtr.Zero, IntPtr.Zero), nameof(UpdateProcThreadAttribute));
+            Check(UpdateProcThreadAttribute(attributes, 0, new UIntPtr(ProcThreadAttributeJobList), jobValue, new UIntPtr((uint)IntPtr.Size), IntPtr.Zero, IntPtr.Zero), nameof(UpdateProcThreadAttribute));
 
             StringBuilder command = new();
             command.Append('"').Append(startInfo.FileName).Append('"');
@@ -144,7 +153,7 @@ public sealed class WindowsCollectionProcess : IDisposable
                 Info = new()
                 {
                     Size = Marshal.SizeOf<StartupInfoEx>(),
-                    Flags = 0x100,
+                    Flags = StartfUseStdHandles,
                     Input = input.DangerousGetHandle(),
                     Output = outputWrite.DangerousGetHandle(),
                     Error = errorWrite.DangerousGetHandle(),
@@ -152,7 +161,7 @@ public sealed class WindowsCollectionProcess : IDisposable
                 Attributes = attributes,
             };
             Check(CreateProcessW(startInfo.FileName, (command.ToString() + "\0").ToCharArray(),
-                IntPtr.Zero, IntPtr.Zero, 1, 0x08080400, environment, startInfo.WorkingDirectory,
+                IntPtr.Zero, IntPtr.Zero, 1, ExtendedStartupInfoPresent | CreateUnicodeEnvironment | CreateNoWindow, environment, startInfo.WorkingDirectory,
                 ref startup, out ProcessInformation info), nameof(CreateProcessW));
             process = new SafeFileHandle(info.Process, true);
             using SafeFileHandle thread = new(info.Thread, true);

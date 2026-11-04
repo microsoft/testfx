@@ -557,6 +557,26 @@ still matching and 1,026 executed report identities per module. Earlier two-test
 no longer match the rebuilt input binaries and are not relabeled as this evidence.
 No native producer, package pin or disabled CTS activation gate changes.
 
+#### Grouped review-maintenance validation (2026-11-03)
+
+The requested nine-comment batch keeps the collection contract unchanged while compiling the native
+helper and linked sources with explicit C# 12, naming the Win32 flags without changing their values,
+and naming the PowerShell cache protocol values. Per-line disk flushing is removed; bounded
+`StreamWriter` buffering and the existing completion/error disposal preserve captured logs.
+`Write-Host` still streams live output. No wall-time speedup is inferred.
+
+Identical strengthened pool tests pass before and after (14/14, exit 0), including exact completion,
+stderr, native-failure, output-exception and cancellation logs. The combined changes pass the same
+14-case command and all thirteen CTS cases; native interop probes also preserve exits 0/37,
+Unicode I/O/environment, cancellation, launch errors and struct layouts. An actual synchronous
+`CreatePipe` handle rejects `FileStream(..., isAsync: true)`, so overlapped-pipe redesign is declined.
+Four isolated metadata-precedence probes confirm the existing entry script retains original
+exceptions and native nonzero exits, rejects metadata failure after an exit-0 result, and writes
+successful metadata only under the owned result path. No fallback location or metadata change is needed.
+The review evidence is green/green preservation, not a new bug-fix red/green claim.
+Combined real collection also completes both packed net10.0/net462 modules with all 2,052 exact UIDs
+and historical source associations retained, exit 0 and confirmed teardown; historical maps are restored.
+
 ### Local acceptance profiling experiment (2026-11-03)
 
 The follow-up request is to execute genuine acceptance tests locally and use OTel or equivalent tracing

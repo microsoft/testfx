@@ -96,11 +96,20 @@ $moduleIndex = [Array]::IndexOf($args, "--test-modules")
 $module = $args[$moduleIndex + 1]
 $rootIndex = [Array]::IndexOf($args, "--root-directory")
 $root = $args[$rootIndex + 1]
+if ($module -notlike "orphan-*" -and -not [string]::IsNullOrEmpty($env:TESTFX_COLLECTION_NUGET_CACHE)) {
+    throw "A module without an owned cache inherited the collection-cache opt-in."
+}
+if ($module -eq "error-stream") {
+    [Console]::Error.WriteLine("error stream first")
+    [Console]::Error.WriteLine("error stream second")
+    exit 0
+}
 if ($module -like "orphan-*") {
     if ($args[0] -ne "argument with spaces" -or $args[1] -ne "" -or
         $args[2] -ne "trailing\" -or $args[3] -ne 'embedded"quote' -or
         $args[4] -ne ([string][char]0x00E9 + [char]0x6E2C) -or
-        $env:TESTFX_COLLECTION_NUGET_CACHE -ne (Join-Path $root "cache\module-000")) {
+        $env:TESTFX_COLLECTION_NUGET_CACHE -ne (Join-Path $root "cache\module-000") -or
+        (Get-Content -LiteralPath (Join-Path $env:TESTFX_COLLECTION_NUGET_CACHE ".testfx-collection-cache") -Raw).Trim() -ne "testfx-collection-cache-v1") {
         throw "The module launch changed arguments or the Unicode cache environment."
     }
     Add-Type -TypeDefinition 'using System; using System.ComponentModel; using System.Runtime.InteropServices;
@@ -154,8 +163,8 @@ if ($module -eq "slow") {
         Start-Sleep -Milliseconds 10
     }
 }
-Set-Content -LiteralPath (Join-Path $root "$module.started") -Value $PID
 Write-Output "$module started"
+Set-Content -LiteralPath (Join-Path $root "$module.started") -Value $PID
 if ($module -eq "failure") {
     if (Test-Path -LiteralPath (Join-Path $root "cancel-peer-mode")) {
         $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
@@ -204,6 +213,16 @@ exit 0
         -not (Test-Path -LiteralPath (Join-Path $fixture "third.started"))) {
         throw "ModulePoolRefillsWithoutWaveBarrier: both first workers must start and the third must refill while the second waits."
     }
+    foreach ($completed in $result.Modules) {
+        $expectedLog = @"
+$($completed.Module.Project) started
+$($completed.Module.Project) finished
+
+"@
+        if ((Get-Content -LiteralPath $completed.LogPath -Raw).Replace("`r`n", "`n") -ne $expectedLog.Replace("`r`n", "`n")) {
+            throw "ModulePoolRefillsWithoutWaveBarrier: each completed module must preserve its entire output log."
+        }
+    }
 
     Write-Output "PASS ModulePoolRefillsWithoutWaveBarrier"
 
@@ -212,12 +231,32 @@ exit 0
     }
     $result = Invoke-CollectionModulePool -Modules $modules -Repository $fixture -ResultsDirectory (Join-Path $fixture "failure") `
         -DotnetPath $powershellPath -MaximumParallelModules 1 -CommandPrefix $prefix
+    $expectedFailureLog = @'
+failure started
+
+'@
     if ($result.ExitCode -ne 37 -or $result.Started -ne 1 -or
-        (Test-Path -LiteralPath (Join-Path $fixture "never-started.started"))) {
+        (Test-Path -LiteralPath (Join-Path $fixture "never-started.started")) -or
+        (Get-Content -LiteralPath $result.Modules[0].LogPath -Raw).Replace("`r`n", "`n") -ne $expectedFailureLog.Replace("`r`n", "`n")) {
         throw "ModulePoolPreservesFailure: a native failure must stop new launches and preserve its exit code."
     }
 
     Write-Output "PASS ModulePoolPreservesFailure"
+
+    $result = Invoke-CollectionModulePool -Modules @(
+        [pscustomobject]@{ Project = "error-stream"; Framework = "fake"; RelativePath = "error-stream" }) `
+        -Repository $fixture -ResultsDirectory (Join-Path $fixture "error-stream") `
+        -DotnetPath $powershellPath -MaximumParallelModules 1 -CommandPrefix $prefix
+    $expectedErrorLog = @'
+error stream first
+error stream second
+
+'@
+    if ($result.ExitCode -ne 0 -or $result.Completed -ne 1 -or
+        (Get-Content -LiteralPath $result.Modules[0].LogPath -Raw).Replace("`r`n", "`n") -ne $expectedErrorLog.Replace("`r`n", "`n")) {
+        throw "ModulePoolPreservesBufferedErrorOutput: process completion must preserve the entire stderr log."
+    }
+    Write-Output "PASS ModulePoolPreservesBufferedErrorOutput"
 
     $savedRead = (Get-Command Read-CollectionModuleOutput).ScriptBlock
     try {
@@ -230,6 +269,7 @@ exit 0
                 }
                 Start-Sleep -Milliseconds 10
             }
+            & $savedRead -State $State
             throw "Injected output failure after native exit."
         }
         $result = $null
@@ -243,8 +283,9 @@ exit 0
             $caught = $_
         }
         if ($null -ne $caught -or $null -eq $result -or $result.ExitCode -ne 37 -or $result.TeardownConfirmed -or
-            -not ($result.CleanupErrors -join " ").Contains("Injected output failure after native exit.")) {
-            throw "ModulePoolPreservesNativeFailureDuringOutputError: logging failure must not replace an observed native exit."
+            -not ($result.CleanupErrors -join " ").Contains("Injected output failure after native exit.") -or
+            (Get-Content -LiteralPath (Join-Path $fixture "output-error\module-000\collection.log") -Raw).Replace("`r`n", "`n") -ne $expectedFailureLog.Replace("`r`n", "`n")) {
+            throw "ModulePoolPreservesNativeFailureDuringOutputError: logging failure must not replace an observed native exit or lose captured output."
         }
     } finally {
         Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
@@ -259,10 +300,15 @@ exit 0
         -DotnetPath $powershellPath -MaximumParallelModules 2 -CommandPrefix $prefix
     $pidText = Get-Content -LiteralPath (Join-Path $fixture "slow.started") -Raw
     $grandchildPid = [int](Get-Content -LiteralPath (Join-Path $fixture "grandchild.started") -Raw)
+    $expectedCanceledLog = @'
+slow started
+
+'@
     if ($result.ExitCode -ne 37 -or -not $result.TeardownConfirmed -or $result.CanceledModules.Count -ne 1 -or
         (Get-Process -Id ([int]$pidText) -ErrorAction SilentlyContinue) -or
-        (Get-Process -Id $grandchildPid -ErrorAction SilentlyContinue)) {
-        throw "ModulePoolDrainsFailedPeers: the still-running child must terminate before pool ownership is released."
+        (Get-Process -Id $grandchildPid -ErrorAction SilentlyContinue) -or
+        (Get-Content -LiteralPath $result.CanceledModules[0].LogPath -Raw).Replace("`r`n", "`n") -ne $expectedCanceledLog.Replace("`r`n", "`n")) {
+        throw "ModulePoolDrainsFailedPeers: the still-running child must terminate and retain its log before pool ownership is released."
     }
 
     Write-Output "PASS ModulePoolDrainsFailedPeers"
@@ -424,7 +470,7 @@ exit 0
     if ($orphanFailures.Count -gt 0) {
         throw ($orphanFailures -join [Environment]::NewLine)
     }
-    Write-Output "Collection module-pool self-tests: $(if ($IsWindows) { 13 } else { 11 }) passed."
+    Write-Output "Collection module-pool self-tests: $(if ($IsWindows) { 14 } else { 12 }) passed."
 } finally {
     Remove-Item -LiteralPath $fixture -Recurse -Force
 }

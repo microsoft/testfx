@@ -1,10 +1,14 @@
+$script:CollectionPackageCacheEnvironmentVariable = "TESTFX_COLLECTION_NUGET_CACHE"
+$script:CollectionPackageCacheMarkerFileName = ".testfx-collection-cache"
+$script:CollectionPackageCacheMarkerContent = "testfx-collection-cache-v1"
+
 if ($IsWindows -and $null -eq ("TestFx.Collection.WindowsCollectionProcess" -as [type])) {
     $repositoryRoot = Split-Path $PSScriptRoot -Parent
     Add-Type -Path @(
         (Join-Path $PSScriptRoot "collection-windows-process.cs"),
         (Join-Path $repositoryRoot "src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs"),
         (Join-Path $repositoryRoot "src\Polyfills\EmbeddedAttribute.cs")
-    ) -CompilerOptions "/langversion:preview"
+    ) -CompilerOptions "/langversion:12.0"
 }
 
 function Get-CollectionModuleConcurrency {
@@ -59,7 +63,6 @@ function Read-CollectionModuleOutput {
             }
 
             $State.Writer.WriteLine($line)
-            $State.Writer.Flush()
             Write-Host "[$($State.Module.Project) | $($State.Module.Framework)] $line"
             $State.$taskName = $State.$readerName.ReadLineAsync()
         }
@@ -236,18 +239,19 @@ function Invoke-CollectionModulePool {
                 }
 
                 $startInfo.Environment["DOTNET_CLI_ENABLE_AFFECTED_TESTS"] = "1"
-                $startInfo.Environment.Remove("TESTFX_COLLECTION_NUGET_CACHE") | Out-Null
+                $startInfo.Environment.Remove($script:CollectionPackageCacheEnvironmentVariable) | Out-Null
                 if (-not [string]::IsNullOrEmpty($PackageCacheRoot)) {
                     $cacheDirectory = Join-Path $PackageCacheRoot ("module-{0:D3}" -f $nextIndex)
                     New-Item -ItemType Directory -Path $cacheDirectory -Force | Out-Null
-                    Set-Content -LiteralPath (Join-Path $cacheDirectory ".testfx-collection-cache") -Value "testfx-collection-cache-v1" -Encoding utf8
-                    $startInfo.Environment["TESTFX_COLLECTION_NUGET_CACHE"] = $cacheDirectory
+                    Set-Content -LiteralPath (Join-Path $cacheDirectory $script:CollectionPackageCacheMarkerFileName) -Value $script:CollectionPackageCacheMarkerContent -Encoding utf8
+                    $startInfo.Environment[$script:CollectionPackageCacheEnvironmentVariable] = $cacheDirectory
                 }
                 foreach ($variable in @("DOTNET_CLI_TEST_AFFECTED_TESTS_MODE", "TESTINGPLATFORM_EXITCODE_IGNORE")) {
                     $startInfo.Environment.Remove($variable) | Out-Null
                 }
 
                 $process = $null
+                # Completion and error cleanup both dispose the writer, flushing its buffered output.
                 $writer = [System.IO.StreamWriter]::new((Join-Path $moduleDirectory "collection.log"), $false, [System.Text.UTF8Encoding]::new($false))
                 $state = [pscustomobject]@{
                     Index = $nextIndex
