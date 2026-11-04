@@ -38,7 +38,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// <see cref="GetAuthorizedSecurityIdentitiesAsync"/>), which is what lets a restricted
 /// AppContainer token reach the controller at all. The full register-and-activate path
 /// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
-/// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
+/// <c>PackageManager</c> WinRT projection is available. The plain <c>net10.0</c>/<c>net11.0</c> build
 /// still deploys and launches an opted-in non-packaged loose layout, but rejects a packaged layout with
 /// an actionable error so a consumer that resolves that build is told to target a Windows TFM. Registering
 /// an unsigned build-output layout additionally requires Developer Mode (or sideloading) to be enabled

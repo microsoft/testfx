@@ -1,8 +1,8 @@
 # Run tests in docker
 
-This example shows one way to test a dockerized application. The application is built, and depends on the ASP.NET runtime image `mcr.microsoft.com/dotnet/aspnet:8.0`. This image .NET runtime, but does not contain the full .NET SDK.
+This example shows one way to test a dockerized application. The application is built, and depends on the ASP.NET runtime image `mcr.microsoft.com/dotnet/aspnet:10.0`. This image .NET runtime, but does not contain the full .NET SDK.
 
-A later stage in the Dockerfile, then adds a layer containing the tests for the application. The tests start the server application and execute integration tests against it. Again there is no .NET SDK needed to run those tests, just the .NET runtime that is coming from the `mcr.microsoft.com/dotnet/aspnet:8.0` image.
+A later stage in the Dockerfile, then adds a layer containing the tests for the application. The tests start the server application and execute integration tests against it. Again there is no .NET SDK needed to run those tests, just the .NET runtime that is coming from the `mcr.microsoft.com/dotnet/aspnet:10.0` image.
 
 The advantage here is that we can build our application, and test the same build of the application that we are shipping. Our images are also smaller, becuase they don't depend on .NET SDK.
 

@@ -106,6 +106,169 @@ function Assert-CollectionJobIsolation {
     }
 }
 
+function Assert-CTSComparisonWiring {
+    param(
+        [string]$Pipeline,
+        [string]$WindowsBuildTemplate,
+        [string]$CTSTestTemplate,
+        [string]$CollectorScript,
+        [string]$ManifestText
+    )
+
+    $job = [regex]::Match(
+        $Pipeline,
+        '(?ms)^        - job: WindowsCTSComparison\r?\n(?<job>.*?)(?=^      - (?:job:|\$\{\{)|\z)').Groups["job"].Value
+    if ($job -notmatch '- name: _BuildConfig\s+value: Release' -or
+        $job -notmatch '- name: _CollectAffectedTests\s+value: false' -or
+        $job -notmatch '- name: _TestArtifactsName\s+value: CTSComparison' -or
+        $job -notmatch 'CollectCTS: true') {
+        throw "CTSComparisonUsesIndependentJob: CTS must own a Release job and distinct artifacts, not run in validation or affected-test collection."
+    }
+
+    $gate = '${{ if and(eq(variables[''Build.SourceBranch''], ''refs/heads/main''), eq(parameters.SkipTests, False), eq(parameters.EnableCTSCollection, true)) }}:'
+    if ($Pipeline -notmatch ('(?m)^      - ' + [regex]::Escape($gate) + '\r?\n        - job: WindowsCTSComparison\r?$')) {
+        throw "CTSComparisonHonorsRolloutGates: CTS comparison requires main, enabled tests, and its own explicit opt-in."
+    }
+
+    if ($Pipeline -notmatch '- name: EnableCTSCollection\s+displayName:[^\r\n]+\s+type: boolean\s+default: false') {
+        throw "CTSComparisonRequiresPublicPackage: CTS must remain disabled by default until its tool is publicly available and verified."
+    }
+
+    if ($job -notmatch '(?m)^          timeoutInMinutes: 360\r?$' -or
+        -not $job.Contains("windows.vs2026preview.scout.amd64.open") -or
+        -not $job.Contains("template: /eng/pipelines/steps/build-test-windows.yml")) {
+        throw "CTSComparisonPreservesBuildProvenance: CTS needs the same Windows image/build steps and its own six-hour budget."
+    }
+
+    $ctsBranch = [regex]::Match(
+        $WindowsBuildTemplate,
+        '(?s)\$\{\{ if eq\(parameters\.CollectCTS, true\) \}\}:(?<branch>.*?)(?=\$\{\{ else \}\}:)').Groups["branch"].Value
+    if (-not $WindowsBuildTemplate.Contains('${{ if eq(parameters.SkipTests, False) }}') -or
+        -not $ctsBranch.Contains("template: /eng/pipelines/steps/test-cts-comparison.yml") -or
+        $ctsBranch.Contains("test-windows-configuration-tests.yml") -or
+        $WindowsBuildTemplate -notmatch '- name: CollectCTS\s+type: boolean\s+default: false') {
+        throw "CTSComparisonAndValidationAreExclusive: the shared build must dispatch either CTS or ordinary test steps under SkipTests."
+    }
+
+    if (-not $CTSTestTemplate.Contains('dotnet tool restore --tool-manifest .config\cts\dotnet-tools.json --configfile NuGet.config') -or
+        -not $CTSTestTemplate.Contains('exit $LASTEXITCODE')) {
+        throw "CTSComparisonUsesIsolatedToolManifest: restore the pinned CTS manifest without changing ordinary tool restore."
+    }
+
+    if ($CTSTestTemplate -match 'DOTNET_CLI_ENABLE_AFFECTED_TESTS|--collect-test-map|--affected-tests|continueOnError:\s*true' -or
+        -not $CollectorScript.Contains('& dotnet tool run cts -- @arguments') -or
+        -not $CollectorScript.Contains('exit $exitCode') -or
+        -not $CollectorScript.Contains('"--storage-type", "filesystem"') -or
+        -not $CollectorScript.Contains('@("TestResults", $Configuration, "CTS")') -or
+        -not $CollectorScript.Contains('$runDirectory = Join-Path $resultsRoot ([guid]::NewGuid().ToString("N"))')) {
+        throw "CTSComparisonPreservesNativeCollection: run the actual CTS tool, preserve failures, and store its maps separately."
+    }
+
+    $manifest = $ManifestText | ConvertFrom-Json
+    if (-not $manifest.isRoot -or @($manifest.tools.PSObject.Properties).Count -ne 1 -or
+        $manifest.tools.cts.version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$' -or
+        @($manifest.tools.cts.commands).Count -ne 1 -or $manifest.tools.cts.commands[0] -ne "cts" -or
+        $manifest.tools.cts.rollForward -ne $false) {
+        throw "CTSComparisonPinsActualTool: the isolated manifest must pin only the CTS tool without runtime roll-forward."
+    }
+}
+
+function Invoke-CTSComparisonSelfTest {
+    param(
+        [string]$Pipeline,
+        [string]$WindowsBuildTemplate,
+        [string]$CTSTestTemplate,
+        [string]$CollectorScript,
+        [string]$ManifestText
+    )
+
+    Assert-CTSComparisonWiring -Pipeline $Pipeline -WindowsBuildTemplate $WindowsBuildTemplate `
+        -CTSTestTemplate $CTSTestTemplate -CollectorScript $CollectorScript -ManifestText $ManifestText
+    Write-Output "PASS CTSComparisonUsesIndependentJob"
+    $cases = @(
+        @{
+            Name = "CTSComparisonJobRemovedIsRejected"
+            Pipeline = $Pipeline.Replace("        - job: WindowsCTSComparison", "        - job: RemovedCTSComparison")
+            ExpectedFailure = "CTSComparisonUsesIndependentJob"
+        },
+        @{
+            Name = "CTSComparisonNonMainRunIsRejected"
+            Pipeline = $Pipeline.Replace(
+                "eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableCTSCollection, true)",
+                "eq(parameters.SkipTests, False), eq(parameters.EnableCTSCollection, true)")
+            ExpectedFailure = "CTSComparisonHonorsRolloutGates"
+        },
+        @{
+            Name = "CTSComparisonSkipTestsBypassIsRejected"
+            Pipeline = $Pipeline.Replace(
+                "eq(parameters.SkipTests, False), eq(parameters.EnableCTSCollection, true)",
+                "eq(parameters.EnableCTSCollection, true)")
+            ExpectedFailure = "CTSComparisonHonorsRolloutGates"
+        },
+        @{
+            Name = "CTSComparisonEnabledBeforePublicPackageIsRejected"
+            Pipeline = [regex]::Replace($Pipeline, '(?s)(- name: EnableCTSCollection.*?default:) false', '$1 true')
+            ExpectedFailure = "CTSComparisonRequiresPublicPackage"
+        },
+        @{
+            Name = "CTSComparisonSharedTimeoutIsRejected"
+            Pipeline = [regex]::Replace($Pipeline, '(?s)(- job: WindowsCTSComparison.*?timeoutInMinutes:) 360', '$1 240')
+            ExpectedFailure = "CTSComparisonPreservesBuildProvenance"
+        },
+        @{
+            Name = "CTSComparisonArtifactCollisionIsRejected"
+            Pipeline = $Pipeline.Replace("value: CTSComparison", "value: Release")
+            ExpectedFailure = "CTSComparisonUsesIndependentJob"
+        },
+        @{
+            Name = "CTSComparisonSharedToolManifestIsRejected"
+            CTSTestTemplate = $CTSTestTemplate.Replace('.config\cts\dotnet-tools.json', '.config\dotnet-tools.json')
+            ExpectedFailure = "CTSComparisonUsesIsolatedToolManifest"
+        },
+        @{
+            Name = "CTSComparisonAffectedModeIsRejected"
+            CTSTestTemplate = $CTSTestTemplate + "`n  env:`n    DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1"
+            ExpectedFailure = "CTSComparisonPreservesNativeCollection"
+        },
+        @{
+            Name = "CTSComparisonIgnoredFailureIsRejected"
+            CollectorScript = $CollectorScript.Replace('exit $exitCode', 'exit 0')
+            ExpectedFailure = "CTSComparisonPreservesNativeCollection"
+        },
+        @{
+            Name = "CTSComparisonSharedResultDirectoryIsRejected"
+            CollectorScript = $CollectorScript.Replace(
+                '$runDirectory = Join-Path $resultsRoot ([guid]::NewGuid().ToString("N"))',
+                '$runDirectory = $resultsRoot')
+            ExpectedFailure = "CTSComparisonPreservesNativeCollection"
+        },
+        @{
+            Name = "CTSComparisonOrdinaryTestsAreRejected"
+            WindowsBuildTemplate = $WindowsBuildTemplate.Replace(
+                "    - template: /eng/pipelines/steps/test-cts-comparison.yml",
+                "    - template: /eng/pipelines/steps/test-cts-comparison.yml`n    - template: /eng/pipelines/steps/test-windows-configuration-tests.yml")
+            ExpectedFailure = "CTSComparisonAndValidationAreExclusive"
+        },
+        @{
+            Name = "CTSComparisonRuntimeRollForwardIsRejected"
+            ManifestText = $ManifestText.Replace('"rollForward": false', '"rollForward": true')
+            ExpectedFailure = "CTSComparisonPinsActualTool"
+        }
+    )
+    Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{
+        Pipeline = $Pipeline
+        WindowsBuildTemplate = $WindowsBuildTemplate
+        CTSTestTemplate = $CTSTestTemplate
+        CollectorScript = $CollectorScript
+        ManifestText = $ManifestText
+    } -Validator {
+        param($Pipeline, $WindowsBuildTemplate, $CTSTestTemplate, $CollectorScript, $ManifestText)
+        Assert-CTSComparisonWiring -Pipeline $Pipeline -WindowsBuildTemplate $WindowsBuildTemplate `
+            -CTSTestTemplate $CTSTestTemplate -CollectorScript $CollectorScript -ManifestText $ManifestText
+    }
+    Write-Output "CTS comparison self-tests: $($cases.Count + 1) passed."
+}
+
 function Invoke-SelfTestCases {
     param(
         $Cases,
@@ -1003,6 +1166,17 @@ if ($SelfTest) {
 } else {
     Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $templateWithoutComments $windowsBuildTemplate
     Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate
+}
+
+$ctsTestTemplate = Get-Content -LiteralPath (Join-Path $repoRoot "eng/pipelines/steps/test-cts-comparison.yml") -Raw
+$ctsCollectorScript = Get-Content -LiteralPath (Join-Path $repoRoot "eng/collect-cts-comparison.ps1") -Raw
+$ctsManifestText = Get-Content -LiteralPath (Join-Path $repoRoot ".config/cts/dotnet-tools.json") -Raw
+if ($SelfTest) {
+    Invoke-CTSComparisonSelfTest -Pipeline $pipeline -WindowsBuildTemplate $windowsBuildTemplate `
+        -CTSTestTemplate $ctsTestTemplate -CollectorScript $ctsCollectorScript -ManifestText $ctsManifestText
+} else {
+    Assert-CTSComparisonWiring -Pipeline $pipeline -WindowsBuildTemplate $windowsBuildTemplate `
+        -CTSTestTemplate $ctsTestTemplate -CollectorScript $ctsCollectorScript -ManifestText $ctsManifestText
 }
 
 if (-not $templateWithoutComments.Contains('$exitCode -in 2, 8') -or

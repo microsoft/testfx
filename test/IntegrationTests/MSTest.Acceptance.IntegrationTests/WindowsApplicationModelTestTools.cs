@@ -202,7 +202,7 @@ internal static class WindowsApplicationModelTestTools
     public static void AssertResolvedMSTestAssets(
         string reportPath,
         WindowsApplicationModelAssetKind assetKind,
-        string targetFramework = "net9.0")
+        string targetFramework = "net10.0")
     {
         Assert.IsTrue(File.Exists(reportPath), $"The resolved MSTest asset report '{reportPath}' does not exist.");
         string report = File.ReadAllText(reportPath).Replace('\\', '/');
@@ -225,26 +225,26 @@ internal static class WindowsApplicationModelTestTools
             (
                 [
                     $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
-                    "/buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll",
+                    "/buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll",
+                    "/buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll",
+                    "/buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll",
                 ],
                 [
-                    "/buildTransitive/net9.0/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net9.0/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net9.0/MSTest.TestFramework.Extensions.dll",
+                    "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
+                    "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
+                    "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
                 ]),
             WindowsApplicationModelAssetKind.WinUI =>
             (
                 [
-                    "/buildTransitive/net8.0/winui/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net8.0/winui/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net8.0/winui/MSTest.TestFramework.Extensions.dll",
+                    "/buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
+                    "/buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
+                    "/buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
                 ],
                 [
-                    "/buildTransitive/net8.0/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net8.0/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net8.0/MSTest.TestFramework.Extensions.dll",
+                    "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
+                    "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
+                    "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
                 ]),
             _ => throw new ArgumentOutOfRangeException(nameof(assetKind), assetKind, "Unknown Windows application model."),
         };

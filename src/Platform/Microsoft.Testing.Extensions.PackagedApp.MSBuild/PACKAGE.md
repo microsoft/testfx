@@ -2,7 +2,7 @@
 
 Run packaged Windows test applications from MSBuild through an out-of-process
 Microsoft.Testing.Platform controller. This package supplies shared targets and
-complete, framework-dependent `win-x64` controller layouts for .NET 8 and .NET 9.
+complete, framework-dependent `win-x64` controller layouts for .NET 10 and .NET 11.
 The controller is an executable, not code loaded into MSBuild, so desktop
 `.NET Framework` MSBuild and `dotnet msbuild` use the same process contract.
 
@@ -147,7 +147,7 @@ The legacy executable name `mstest-appmodel-controller.exe` and the
 `MSTEST_APPMODEL_CONTROLLER_EXTENSIONS` and `TESTINGPLATFORM_PACKAGEDAPP_TARGET`
 environment identifiers are intentionally preserved for compatibility.
 
-The x64 controller needs a .NET 8 or later runtime (roll-forward is enabled) and
+The x64 controller needs a .NET 10 or later runtime (roll-forward is enabled) and
 Windows 10 19041 or later. The application itself may use another architecture.
 Unsigned layouts need Developer Mode or sideloading. UWP compilation continues
 to require the Visual Studio UWP workload.

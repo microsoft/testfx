@@ -20,7 +20,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 {
-    private const string TargetFramework = "net8.0-windows10.0.19041.0";
+    private const string TargetFramework = "net10.0-windows10.0.19041.0";
     private const string RuntimeIdentifier = "win-x64";
     private const string Publisher = "CN=MSTestAcceptance";
     private const string DotnetTestExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID";
@@ -211,8 +211,8 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                     Directory.Exists(runtimeDirectory),
                     $"The runtime directory '{runtimeDirectory}' does not exist.");
                 Assert.IsNotEmpty(
-                    Directory.GetDirectories(runtimeDirectory, "8.*"),
-                    $"No .NET 8 runtime was found under '{dotnetRoot}'.");
+                    Directory.GetDirectories(runtimeDirectory, "10.*"),
+                    $"No .NET 10 runtime was found under '{dotnetRoot}'.");
 
                 string globalJsonPath = Path.Combine(generatedAsset.TestAsset.TargetAssetPath, "global.json");
                 await File.WriteAllTextAsync(
@@ -970,24 +970,24 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         string[] required =
         [
-            "/buildTransitive/net8.0/winui/MSTest.TestAdapter.dll",
-            "/buildTransitive/net8.0/winui/MSTestAdapter.PlatformServices.dll",
-            "/buildTransitive/net8.0/winui/MSTest.TestFramework.Extensions.dll",
-            "/lib/net8.0-windows10.0.19041/Microsoft.Testing.Extensions.PackagedApp.dll",
+            "/buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
+            "/buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
+            "/buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
+            "/lib/net10.0-windows10.0.19041/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];
         string[] rejected =
         [
-            "/buildTransitive/net8.0/MSTest.TestAdapter.dll",
-            "/buildTransitive/net8.0/MSTestAdapter.PlatformServices.dll",
-            "/buildTransitive/net8.0/MSTest.TestFramework.Extensions.dll",
-            "/lib/net8.0/Microsoft.Testing.Extensions.PackagedApp.dll",
+            "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
+            "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
+            "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
+            "/lib/net10.0/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];
 
         string[] missing = required.Where(path => !report.Contains(path, StringComparison.OrdinalIgnoreCase)).ToArray();
         string[] unexpectedlyResolved = rejected.Where(path => report.Contains(path, StringComparison.OrdinalIgnoreCase)).ToArray();
         Assert.IsEmpty(
             missing,
-            $"The packaged WinUI consumer did not resolve all required net8.0/winui and Windows packaged-app assets:" +
+            $"The packaged WinUI consumer did not resolve all required net10.0/winui and Windows packaged-app assets:" +
             $"{Environment.NewLine}{string.Join(Environment.NewLine, missing)}{Environment.NewLine}Report: '{reportPath}'.");
         Assert.IsEmpty(
             unexpectedlyResolved,

@@ -10,9 +10,9 @@
     <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 
-  <!-- Exercise both contract consumption modes: net8 compiles fully standalone, while net9 and later reference the
-       platform and verify duplicate public abstractions are removed from the shared-source set. -->
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+  <!-- Both supported TFMs reference the platform and verify duplicate public abstractions are removed
+       from the shared-source set. -->
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
@@ -27,10 +27,10 @@
   </ItemGroup>
 
   <!--
-    The net8 target intentionally does NOT reference Microsoft.Testing.Platform's terminal reporter types. It compiles
-    the shared terminal reporter source (reporter + rendering + state + the small platform abstractions, and the
-    TerminalResources.resx) into its own assembly via the shared .props, proving the reporter can live in testfx
-    and be consumed by an independent assembly (e.g. dotnet/sdk's 'dotnet test') with a single source of truth.
+    Compile the shared terminal reporter, rendering, state and TerminalResources.resx into this assembly.
+    The platform's terminal reporter types are embedded and not exposed to this consumer; its public logging
+    and color abstractions are supplied by the platform reference above. This project does not validate
+    consumption without a platform reference.
   -->
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalReporterContract.props" />
 

@@ -51,7 +51,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [OSCondition(OperatingSystems.Windows, IgnoreMessage = "WinUI is Windows-only.")]
 public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 {
-    private const string TargetFramework = "net8.0-windows10.0.19041.0";
+    private const string TargetFramework = "net10.0-windows10.0.19041.0";
 
     // Self-contained deployment of the Windows App SDK needs an explicit RID; it also puts the build
     // output under a RID-specific folder, which BuildAssetAsync accounts for.

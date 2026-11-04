@@ -32,10 +32,10 @@
 
 Supported platforms:
 - .NET 4.6.2+
-- .NET 8.0+
-- .NET 8.0 Windows.18362+ (WinUI)
+- .NET 10.0+
+- .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 9
+- UWP 10.0.17763 with .NET 10+
 
 $(CommonProductDescription)]]></PackageDescription>
     <!-- Nothing in lib but that's expected -->
@@ -146,25 +146,15 @@ $(CommonProductDescription)]]></PackageDescription>
     they are added at evaluation time. net462/uap10.0 assets are only relevant on Windows where those TFMs build.
   -->
   <ItemGroup Label="Package build assets">
-    <None Include="build\net8.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net8.0\" />
-    <None Include="build\net8.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net8.0\" />
-    <None Include="build\net9.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net9.0\" />
-    <None Include="build\net9.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net9.0\" />
     <None Include="build\net10.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net10.0\" />
     <None Include="build\net10.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net10.0\" />
     <None Include="build\net11.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net11.0\" />
     <None Include="build\net11.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net11.0\" />
 
-    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net8.0\" />
-    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
-    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net9.0\" />
-    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net10.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net11.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
-    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
-    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
   </ItemGroup>
@@ -196,15 +186,15 @@ $(CommonProductDescription)]]></PackageDescription>
   <Target Name="_AddTestAdapterPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
     <PropertyGroup>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">buildTransitive\net462\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">buildTransitive\$(TargetFramework)\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">buildTransitive\$(TargetFramework)\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">buildTransitive\uap10.0\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net10.0\winui\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net10.0\uwp\</_BuildTransitiveDir>
 
       <!-- All TFMs share the same resx, so the localized satellites are shipped once, taken from a single TFM.
-           That source TFM must be one that is actually built on the current OS: net462 on Windows, otherwise net8.0. -->
+           That source TFM must be one that is actually built on the current OS: net462 on Windows, otherwise net10.0. -->
       <_LocalizationSourceTfm Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum)</_LocalizationSourceTfm>
-      <_LocalizationSourceTfm Condition=" '$(OS)' != 'Windows_NT' ">net8.0</_LocalizationSourceTfm>
+      <_LocalizationSourceTfm Condition=" '$(OS)' != 'Windows_NT' ">net10.0</_LocalizationSourceTfm>
     </PropertyGroup>
 
     <ItemGroup>

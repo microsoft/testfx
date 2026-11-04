@@ -3,6 +3,9 @@ parameters:
   type: boolean
 - name: EnableAffectedTests
   type: boolean
+- name: CollectCTS
+  type: boolean
+  default: false
 
 steps:
 - template: /eng/pipelines/steps/install-windows-prereqs.yml
@@ -32,13 +35,16 @@ steps:
 
 - ${{ if eq(parameters.SkipTests, False) }}:
 
-  - template: /eng/pipelines/steps/test-windows-configuration-tests.yml
-    parameters:
-      enableAffectedTests: ${{ parameters.EnableAffectedTests }}
-      ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-        affectedTestsMode: collect
-      ${{ else }}:
-        affectedTestsMode: run
+  - ${{ if eq(parameters.CollectCTS, true) }}:
+    - template: /eng/pipelines/steps/test-cts-comparison.yml
+  - ${{ else }}:
+    - template: /eng/pipelines/steps/test-windows-configuration-tests.yml
+      parameters:
+        enableAffectedTests: ${{ parameters.EnableAffectedTests }}
+        ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+          affectedTestsMode: collect
+        ${{ else }}:
+          affectedTestsMode: run
 
   # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
   # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the

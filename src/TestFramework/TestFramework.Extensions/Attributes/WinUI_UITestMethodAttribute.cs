@@ -25,7 +25,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     // Serializes the check-and-start below. Application.Start can only be called once per process, so
     // without this two [UITestMethod]s running in parallel could both observe "not started yet" and each
     // start an application.
-    private static readonly object InitializationLock = new();
+    private static readonly Lock InitializationLock = new();
 
     // Written on the UI thread and read on the test thread, so all three are volatile: this runs on ARM64
     // as well as x64, where non-volatile reads are not guaranteed to observe the writes.

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="3.0.0" />[3.0.0] - Unreleased
 
+### Breaking changes
+
+* Drop the dedicated .NET 8 and .NET 9 assets from Microsoft.Testing.Platform and its extensions, including the packaged-app controllers. The supported modern .NET targets are .NET 10 and .NET 11; existing .NET Standard and .NET Framework assets remain where provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
+* Retarget the modern `Microsoft.Testing.Platform.ServerMode.Client.Sources` source slice to .NET 10. Consumers below .NET 10, including .NET 8 and .NET 9, now select the preserved Jsonite fallback instead of the in-box System.Text.Json source slice; legacy source compilation remains covered, in [#12185](https://github.com/microsoft/testfx/pull/12185).
+
 ### Changed
 
 * Align the CTRF reporter with specification 0.2.0 by emitting native final-attempt identities, retaining legacy retry identity support, and keeping compatible mixed-version merges correctly versioned and identified.

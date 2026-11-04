@@ -13,7 +13,7 @@ Enable the feature when using `MSTest.Sdk`:
 ```xml
 <Project Sdk="MSTest.Sdk/4.5.0">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 </Project>
