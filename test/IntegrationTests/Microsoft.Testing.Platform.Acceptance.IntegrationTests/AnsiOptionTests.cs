@@ -283,7 +283,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
     }
 }
