@@ -411,7 +411,7 @@ public class FileWritingTests
         // On pass, `dir` is deleted automatically. On failure, it is kept for inspection.
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("alpha")]
     [DataRow("beta")]
     public void EachDataRowGetsItsOwnDirectory(string name)

@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// <summary>
 /// Execute test code in UI thread for Windows store apps.
 /// </summary>
-public class UITestMethodAttribute : TestMethodAttribute
+public sealed class UITestMethodAttribute : TestMethodAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.

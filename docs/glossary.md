@@ -292,7 +292,7 @@ An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, ena
 
 ### MSTEST0089 (conflicting data-row display names)
 
-An MSTest analyzer (`ConflictingDataRowDisplayNamesAnalyzer`, warning severity, enabled by default) that reports constant `DisplayName` and `ArgumentsDisplayName` values supplied together on `[DataRow]`, `new DataRowAttribute(...)`, or `new TestDataRow<T>(...)` when the full name makes the non-blank argument label ineffective. A blank full name is unset on `DataRowAttribute`, but any non-null full name takes precedence on `TestDataRow<T>`. Null or blank argument labels, values not known at compile time, generated code, and custom derived attributes are not reported. Remove `ArgumentsDisplayName` to preserve the existing full name, or remove `DisplayName` to retain the method name with the argument label. The analyzer does not change runtime precedence.
+An MSTest analyzer (`ConflictingDataRowDisplayNamesAnalyzer`, warning severity, enabled by default) that reports constant `DisplayName` and `ArgumentsDisplayName` values supplied together on `[DataRow]`, `new DataRowAttribute(...)`, or `new TestDataRow<T>(...)` when the full name makes the non-blank argument label ineffective. A blank full name is unset on `DataRowAttribute`, but any non-null full name takes precedence on `TestDataRow<T>`. Null or blank argument labels, values not known at compile time, generated code, and custom derived attributes from older MSTest versions are not reported. `DataRowAttribute` is sealed in MSTest 5. Remove `ArgumentsDisplayName` to preserve the existing full name, or remove `DisplayName` to retain the method name with the argument label. The analyzer does not change runtime precedence.
 
 ### MSTest
 

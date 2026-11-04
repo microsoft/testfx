@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -122,6 +124,53 @@ public sealed class WindowsApplicationModelPackageTests
         Assert.IsEmpty(
             entries.Where(entry => Regex.IsMatch(entry, @"(^|/)net[89]\.0([-/]|$)", RegexOptions.CultureInvariant)).ToArray(),
             $"Package '{packageId}' must not ship .NET 8 or .NET 9 assets.");
+    }
+
+    [TestMethod]
+    [DataRow("lib/netstandard2.0/MSTest.TestFramework.dll")]
+    [DataRow("lib/net10.0/MSTest.TestFramework.dll")]
+    [DataRow("lib/net11.0/MSTest.TestFramework.dll")]
+    public void PackedMSTestTestFramework_SealsConcreteCoreAttributes(string assemblyPath)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
+        Dictionary<string, TypeAttributes> types = ReadPublicTypeAttributes(archive, assemblyPath);
+        const string prefix = "Microsoft.VisualStudio.TestTools.UnitTesting.";
+        string[] sealedAttributes =
+        [
+            nameof(DiscoverInternalsAttribute),
+            nameof(DoNotParallelizeAttribute),
+            nameof(ParallelizeAttribute),
+            nameof(TestDataSourceDiscoveryAttribute),
+            nameof(STATestClassAttribute),
+            nameof(DataRowAttribute),
+        ];
+
+        foreach (string attribute in sealedAttributes)
+        {
+            Assert.AreEqual(TypeAttributes.Sealed, types[prefix + attribute] & TypeAttributes.Sealed, $"{assemblyPath}: {attribute}");
+        }
+
+        Assert.DoesNotContain(prefix + "DataTestMethodAttribute", types.Keys, assemblyPath);
+        Assert.AreEqual((TypeAttributes)0, types[prefix + nameof(TestClassAttribute)] & TypeAttributes.Sealed, assemblyPath);
+        Assert.AreEqual((TypeAttributes)0, types[prefix + nameof(TestMethodAttribute)] & TypeAttributes.Sealed, assemblyPath);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
+    [DataRow("lib/uap10.0/MSTest.TestFramework.Extensions.dll", false)]
+    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll", false)]
+    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll", true)]
+    public void PackedMSTestTestFramework_SealsConcreteUIAttributes(string assemblyPath, bool winUI)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
+        Dictionary<string, TypeAttributes> types = ReadPublicTypeAttributes(archive, assemblyPath);
+        const string prefix = "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.";
+
+        Assert.AreEqual(TypeAttributes.Sealed, types[prefix + "UITestMethodAttribute"] & TypeAttributes.Sealed, assemblyPath);
+        if (winUI)
+        {
+            Assert.AreEqual(TypeAttributes.Sealed, types[prefix + "WinUITestTargetAttribute"] & TypeAttributes.Sealed, assemblyPath);
+        }
     }
 
     private static readonly string[] RequiredTestAdapterEntries =
@@ -336,6 +385,26 @@ public sealed class WindowsApplicationModelPackageTests
             $"The only '{packageId}' package does not match the exact locally packed MSTest version '{expectedVersion}'.");
         Assert.IsTrue(File.Exists(expectedPath), $"The expected current packed package '{expectedPath}' does not exist.");
         return expectedPath;
+    }
+
+    private static Dictionary<string, TypeAttributes> ReadPublicTypeAttributes(ZipArchive archive, string assemblyPath)
+    {
+        ZipArchiveEntry? entry = archive.GetEntry(assemblyPath);
+        Assert.IsNotNull(entry, $"The packed framework is missing '{assemblyPath}'.");
+        using Stream stream = entry.Open();
+        using var image = new MemoryStream();
+        stream.CopyTo(image);
+        image.Position = 0;
+        using var peReader = new PEReader(image);
+        MetadataReader reader = peReader.GetMetadataReader();
+
+        return reader.TypeDefinitions
+            .Select(reader.GetTypeDefinition)
+            .Where(type => (type.Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.Public)
+            .ToDictionary(
+                type => $"{reader.GetString(type.Namespace)}.{reader.GetString(type.Name)}",
+                type => type.Attributes,
+                StringComparer.Ordinal);
     }
 
     private static void AssertPackageContainsAllEntries(string packagePath, IEnumerable<string> expectedEntries)

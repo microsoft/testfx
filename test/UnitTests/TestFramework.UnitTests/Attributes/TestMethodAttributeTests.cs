@@ -68,10 +68,10 @@ public sealed class TestMethodAttributeTests : TestContainer
         ignored.IgnoreReason.Should().Be("policy contract");
     }
 
-    public async Task DataTestMethod_PropagatesSourceAndRetainsBaseExecutionContract()
+    public async Task DerivedTestMethod_PropagatesSourceAndRetainsBaseExecutionContract()
     {
-        var attribute = new DataTestMethodAttribute("data-source.cs", 47);
-        var result = new TestResult { Outcome = UnitTestOutcome.Passed, DisplayName = "data result" };
+        var attribute = new DerivedTestMethodAttribute("derived-source.cs", 47);
+        var result = new TestResult { Outcome = UnitTestOutcome.Passed, DisplayName = "derived result" };
         var method = new Mock<ITestMethod>();
         Exception? fault = null;
         method.Setup(test => test.InvokeAsync(null)).Returns(
@@ -79,9 +79,9 @@ public sealed class TestMethodAttributeTests : TestContainer
 
         TestResult[] actual = await attribute.ExecuteAsync(method.Object);
         actual.Should().ContainSingle().Which.Should().BeSameAs(result);
-        attribute.DeclaringFilePath.Should().Be("data-source.cs");
+        attribute.DeclaringFilePath.Should().Be("derived-source.cs");
         attribute.DeclaringLineNumber.Should().Be(47);
-        var original = new InvalidOperationException("data invocation contract");
+        var original = new InvalidOperationException("derived invocation contract");
         fault = original;
         Func<Task> rejected = () => attribute.ExecuteAsync(method.Object);
         (await rejected.Should().ThrowExactlyAsync<InvalidOperationException>()).Which.Should().BeSameAs(original);
@@ -113,5 +113,13 @@ public sealed class TestMethodAttributeTests : TestContainer
         testClass.GetTestMethodAttribute(null!).Should().BeNull();
         method.Verify(test => test.InvokeAsync(null), Times.Once);
         method.VerifyNoOtherCalls();
+    }
+
+    private sealed class DerivedTestMethodAttribute : TestMethodAttribute
+    {
+        public DerivedTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+            : base(callerFilePath, callerLineNumber)
+        {
+        }
     }
 }

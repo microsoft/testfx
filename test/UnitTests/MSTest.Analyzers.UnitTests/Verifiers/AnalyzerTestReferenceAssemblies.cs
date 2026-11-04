@@ -11,6 +11,12 @@ internal static class AnalyzerTestReferenceAssemblies
 
     public static ReferenceAssemblies Default { get; } = CreateDefault();
 
+    // v4's netstandard2.0 package assets include both framework and extensions (for example DeploymentItemAttribute).
+    // Its newer targets put extensions in buildTransitive, which the analyzer reference resolver does not import.
+    public static ReferenceAssemblies MSTestV4 { get; } =
+        ReferenceAssemblies.NetStandard.NetStandard20.WithNuGetConfigFilePath(NuGetConfigFilePath)
+            .AddPackages([new PackageIdentity("MSTest.TestFramework", "4.0.2")]);
+
     public static ReferenceAssemblies Net100OrLater { get; } =
 #if NET11_0
         Default;

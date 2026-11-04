@@ -205,12 +205,14 @@ public class DataRowAttributeTests : TestContainer
         attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod ( {m} {a} \"label\" )");
     }
 
-    public void GetDisplayNameArgumentsDisplayNameHonorsOverride()
+    public void GetDisplayNameArgumentsDisplayNameWorksThroughTestDataSource()
     {
-        var attribute = new DummyDataRowAttribute { ArgumentsDisplayName = "label" };
+        var attribute = new DataRowAttribute(7) { ArgumentsDisplayName = "label" };
+        ITestDataSource dataSource = attribute;
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
 
-        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
+        dataSource.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod (label)");
+        dataSource.GetData(methodInfo).Should().ContainSingle().Which.Should().Equal(7);
     }
 
     public void GetDisplayNameArgumentsDisplayNameRefreshesLocalizedFormat()
@@ -247,17 +249,13 @@ public class DataRowAttributeTests : TestContainer
         displayName.Should().Be("MyMethod ([\"a\"])");
     }
 
-    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
+    public void GetDisplayName_DoesNotExposeAnOverridableImplementation()
     {
-        // Arrange
-        var dataRow = new DummyDataRowAttribute();
-        var methodInfoMock = new Mock<MethodInfo>();
+        MethodInfo displayNameMethod = typeof(DataRowAttribute).GetMethod(nameof(DataRowAttribute.GetDisplayName))!;
 
-        // Act
-        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
-
-        // Assert
-        displayName.Should().Be("Overridden DisplayName");
+        // A nonvirtual C# method implementing an interface can be emitted as virtual and final.
+        (displayNameMethod.IsVirtual && !displayNameMethod.IsFinal).Should()
+            .BeFalse("DataRowAttribute no longer exposes an override-based display-name extension point");
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()
@@ -426,11 +424,6 @@ public class DataRowAttributeTests : TestContainer
         {
             CultureInfo.CurrentUICulture = previousUICulture;
         }
-    }
-
-    private class DummyDataRowAttribute : DataRowAttribute
-    {
-        public override string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }
 
     private sealed class UICultureChangingValue

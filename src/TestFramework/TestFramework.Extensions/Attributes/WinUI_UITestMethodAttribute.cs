@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// <summary>
 /// Execute test code in UI thread for Windows store apps.
 /// </summary>
-public class UITestMethodAttribute : TestMethodAttribute
+public sealed class UITestMethodAttribute : TestMethodAttribute
 {
     // How often the application-startup wait re-checks that the UI thread is still alive. Short enough
     // that a failed startup is reported promptly, long enough not to spin.

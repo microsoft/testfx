@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// Specifies <see cref="UI.Xaml.Application" /> derived class to run UI tests on.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
-public class WinUITestTargetAttribute : Attribute
+public sealed class WinUITestTargetAttribute : Attribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="WinUITestTargetAttribute"/> class.

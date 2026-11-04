@@ -420,7 +420,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -963,7 +963,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DataTestMethod]
+                [TestMethod]
                 [DataRow(
                     "123",
                     new string[] { "something" },

@@ -582,7 +582,8 @@ public sealed class TestClassShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"),
-            fixedCode);
+            fixedCode,
+            useMSTestV4: true);
     }
 
     [TestMethod]

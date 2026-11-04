@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Attribute to define in-line data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnoreCapability
+public sealed class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnoreCapability
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -70,7 +70,7 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnor
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => [Data];
 
     /// <inheritdoc />
-    public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
+    public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
             : !StringEx.IsNullOrWhiteSpace(ArgumentsDisplayName)

@@ -393,7 +393,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]

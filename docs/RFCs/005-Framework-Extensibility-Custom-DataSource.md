@@ -90,10 +90,10 @@ public void TestMethod1(int a, int b, int c)
 In a similar way, multiple test methods can be decorated with same data source.
 A test method can also be decorated with multiple data sources.
 
-Users can customize the display name of tests in test results by overriding `GetDisplayName()` method.
+Users can customize the display name of tests in test results by implementing `ITestDataSource.GetDisplayName()` on their custom attribute. In MSTest 5, `DataRowAttribute` is sealed; use its `DisplayName` or `ArgumentsDisplayName` properties for inline data, or implement `ITestDataSource` for a custom data source.
 
 ```csharp
-public override string GetDisplayName(MethodInfo methodInfo, object[] data)
+public string GetDisplayName(MethodInfo methodInfo, object[] data)
 {
     return string.Format(CultureInfo.CurrentCulture, "MyFavMSTestV2Test ({0})", string.Join(",", data));
 }

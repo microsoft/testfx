@@ -223,7 +223,7 @@ public sealed class UseRetryWithTestMethodAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]
