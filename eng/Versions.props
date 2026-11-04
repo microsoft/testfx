@@ -11,7 +11,7 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion>18.13.0-preview.26553.3</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsAffectedTestsVersion>18.13.0-preview.26553.4</MicrosoftTestingExtensionsAffectedTestsVersion>
     <!-- empty line to avoid merge conflicts for darc PRs to update CC and MSTest+MTP -->
-    <MSTestVersion>4.6.0-preview.26531.5</MSTestVersion>
-    <MicrosoftTestingPlatformVersion>2.6.0-preview.26531.5</MicrosoftTestingPlatformVersion>
+    <MSTestVersion>4.6.0-preview.26552.13</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>2.6.0-preview.26552.13</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
 </Project>

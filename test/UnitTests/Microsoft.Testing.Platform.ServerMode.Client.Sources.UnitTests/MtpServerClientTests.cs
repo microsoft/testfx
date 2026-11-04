@@ -1485,8 +1485,7 @@ public sealed class MtpServerClientTests
             out QueueingSynchronizationContext context);
 
         handlerCompletion.TrySetResult(new Dictionary<string, object?> { ["success"] = true });
-        bool completedWithoutPumping = await CompletesQuicklyAsync(invocation).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, invocation);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(invocation, context).ConfigureAwait(false);
         _ = await invocation.ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Awaiting the public server-request handler must not capture the calling synchronization context.");
@@ -1708,8 +1707,7 @@ public sealed class MtpServerClientTests
         writeCompletion.TrySetResult(true);
         readCompletion.TrySetResult(new ResponseMessage(1, new Dictionary<string, object?>()));
 
-        bool completedWithoutPumping = await CompletesQuicklyAsync(request).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, request);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(request, context).ConfigureAwait(false);
         _ = await request.ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Request continuations must not be posted to the caller's synchronization context.");
@@ -1736,8 +1734,7 @@ public sealed class MtpServerClientTests
             out QueueingSynchronizationContext context);
         firstWriteCompletion.TrySetResult(true);
 
-        bool completedWithoutPumping = await CompletesQuicklyAsync(second).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, second);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(second, context).ConfigureAwait(false);
         await Task.WhenAll(first, second).ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Waiting for the write lock must not post to the caller's synchronization context.");
@@ -1764,7 +1761,7 @@ public sealed class MtpServerClientTests
 
         readCompletion.TrySetResult(new NotificationMessage("notification", null));
 
-        bool completedWithoutPumping = await CompletesQuicklyAsync(notificationReceived.Task).ConfigureAwait(false);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(notificationReceived.Task, context).ConfigureAwait(false);
         DrainContextUntilCompleted(context, readLoop);
         await WithTimeoutAsync(readLoop).ConfigureAwait(false);
         Assert.IsTrue(completedWithoutPumping, "The read loop must not post message dispatch to a handler-provided synchronization context.");
@@ -1791,8 +1788,7 @@ public sealed class MtpServerClientTests
             out QueueingSynchronizationContext context);
 
         handlerCompletion.TrySetResult(new Dictionary<string, object?> { ["success"] = true });
-        bool completedWithoutPumping = await CompletesQuicklyAsync(request).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, request);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(request, context).ConfigureAwait(false);
         await request.ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Awaiting the server-request handler must not capture the calling synchronization context.");
@@ -1820,8 +1816,7 @@ public sealed class MtpServerClientTests
         await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
 
         writeCompletion.TrySetResult(true);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(request).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, request);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(request, context).ConfigureAwait(false);
         await request.ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Awaiting the server response write must not capture the calling synchronization context.");
@@ -1842,8 +1837,7 @@ public sealed class MtpServerClientTests
         await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
 
         cancelWriteCompletion.TrySetResult(true);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(cancel).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, cancel);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(cancel, context).ConfigureAwait(false);
         await cancel.ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Awaiting the cancel notification write must not capture the calling synchronization context.");
@@ -2165,8 +2159,7 @@ public sealed class MtpServerClientTests
     private static async Task<T> AssertCompletesWithoutPumpingAsync<T>(Func<Task<T>> action)
     {
         Task<T> task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(task).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, task);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(task, context).ConfigureAwait(false);
         T result = await task.ConfigureAwait(false);
 
         Assert.IsTrue(
@@ -2178,8 +2171,7 @@ public sealed class MtpServerClientTests
     private static async Task AssertCompletesWithoutPumpingAsync(Func<Task> action)
     {
         Task task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(task).ConfigureAwait(false);
-        DrainContextUntilCompleted(context, task);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(task, context).ConfigureAwait(false);
         await task.ConfigureAwait(false);
 
         Assert.IsTrue(
@@ -2221,8 +2213,20 @@ public sealed class MtpServerClientTests
         }
     }
 
-    private static async Task<bool> CompletesQuicklyAsync(Task task)
-        => await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false) == task;
+    private static async Task<bool> CompletesWithoutPumpingAsync(Task task, QueueingSynchronizationContext context)
+    {
+        try
+        {
+            Task completed = await WithTimeoutAsync(Task.WhenAny(task, context.ContinuationPosted)).ConfigureAwait(false);
+            return completed == task && context.PostCount == 0;
+        }
+        finally
+        {
+            DrainContextUntilCompleted(context, task);
+            // Join completion without rethrowing faults that the caller asserts separately.
+            _ = await WithTimeoutAsync(Task.WhenAny(task)).ConfigureAwait(false);
+        }
+    }
 
     private static void DrainContextUntilCompleted(QueueingSynchronizationContext context, Task task)
     {
@@ -2293,9 +2297,12 @@ public sealed class MtpServerClientTests
 #else
         private readonly object _lock = new();
 #endif
+        private readonly TaskCompletionSource<bool> _continuationPosted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private int _postCount;
 
         public int PostCount => Volatile.Read(ref _postCount);
+
+        public Task ContinuationPosted => _continuationPosted.Task;
 
         public override void Post(SendOrPostCallback d, object? state)
         {
@@ -2304,6 +2311,8 @@ public sealed class MtpServerClientTests
             {
                 _callbacks.Enqueue((d, state));
             }
+
+            _continuationPosted.TrySetResult(true);
         }
 
         public bool TryRunOne()
