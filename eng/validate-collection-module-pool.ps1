@@ -131,6 +131,16 @@ try {
             Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] No test map is available."
         },
         @{
+            Name = "ModuleOutputPrefixesDiagnosticsContainingBracketedText"
+            Line = "[affected-tests] [warning] saw [a | b] in output"
+            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] saw [a | b] in output"
+        },
+        @{
+            Name = "ModuleOutputPreservesEmbeddedBannerInUnscopedDiagnostic"
+            Line = "[affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+        },
+        @{
             Name = "ModuleOutputPrefixesIncompleteModuleContext"
             Line = "[affected-tests] [Sample.Tests | net12.0"
             Expected = "[Sample.Tests | net12.0] [affected-tests] [Sample.Tests | net12.0"

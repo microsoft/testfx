@@ -257,6 +257,8 @@ per-module child limits, omit frameworks or turn partial/canceled collection int
 
 The pool adds a project/TFM label to unscoped stdout and stderr. Affected-test diagnostics that already start
 with `[affected-tests] [assembly | framework | ...]` retain that context without an additional pool label.
+Assembly names may contain balanced bracketed text, but recognition cannot cross an unscoped tag such as
+`[warning]` to treat a later `[a | b]` as the leading context. Suffix cleanup runs only after this scope check.
 The trailing `[RID - runtime]` on a `Test-map collection child failed: MSTest v...` banner is also omitted when
 both values exactly match the full leading context. Different child runtime/RID values, banners without that
 context, other diagnostic text and additional failure details are preserved. This keeps runtime/RID details
@@ -266,7 +268,8 @@ information. Only the console presentation changes:
 per-module `collection.log` files retain the original output, and scheduling, collection failures, exit codes,
 package versions and rollout gates are unchanged.
 
-**Output regression evidence (2026-11-04):** the source/test patch is based on
+**Initial output regression evidence (2026-11-04, `f8c87eb536b50fe26199ec271c001f2ea3feb1df`):**
+the source/test patch is based on
 `8bae1c65b06293e2aea4481e4a7fd661279fd95b`; its SHA-256, excluding this document, is
 `128E4D5005A75E2F9D8A4D14A4B77CF28D5CCDDC0DADA100CA622A1B69676D6F`.
 `pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1` passes all 30 checks on Windows,
@@ -282,6 +285,23 @@ Before/after fixture replays of the actual reader were inspected at 80 columns b
 prefix cleanup and 85 columns by 58 rows for the runtime/RID suffix, including the full reported diagnostic.
 This is output-reader and existing process-harness evidence, not a new SDK collection or hosted Azure DevOps
 rendering run. No shipped .NET binaries or package versions change.
+
+The initial PR's Ubuntu 22.04 `Validate bounded collection scheduling` step also reports
+`Collection module-pool self-tests: 28 passed.` in
+[build 1664226](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1664226&view=logs&jobId=51849d02-8791-58b9-bb59-332a6babfdac),
+log 8. This confirms the initial Linux count, not the later correction below; macOS execution is not claimed.
+
+**Context-boundary regression evidence (2026-11-04):** the correction is based on
+`f8c87eb536b50fe26199ec271c001f2ea3feb1df`; its source/test patch SHA-256, excluding this document, is
+`23C9057C4552729C5BE4FEE343D37C48620393A7589C9B2AF880EBEF7A4BB24F`.
+The same validator is retained with that revision's reader in an isolated comparison.
+`ModuleOutputPrefixesDiagnosticsContainingBracketedText` and
+`ModuleOutputPreservesEmbeddedBannerInUnscopedDiagnostic` fail their exact console-output assertions on
+both streams (exit 1, four assertion failures). The unchanged command
+`pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1` then passes all 32 Windows checks
+with the correction (PowerShell 7.6.9, exit 0). Bracketed assembly names and raw logs remain preserved.
+The red comparison stops before the existing process-lifecycle checks; the complete green run includes them.
+Linux/macOS execution of this correction remains unverified.
 
 Execution feedback must identify the protocol version, module/run/batch and planned/executed identity set.
 Atomic, task-owned feedback is preferable to parsing localized console text or coupling the extension to the
