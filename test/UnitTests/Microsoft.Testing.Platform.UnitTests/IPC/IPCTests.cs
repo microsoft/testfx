@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Pipes;
+
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -301,7 +303,7 @@ public sealed class IPCTests
     public async Task SingleConnectionNamedPipeServer_ClientDisconnectsBeforeReply_LogsConciseClosure()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-        TaskCompletionSource<bool> requestReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<IRequest> requestReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> releaseResponse = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<string> loggedMessage = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ILogger> logger = new();
@@ -319,9 +321,9 @@ public sealed class IPCTests
 
         NamedPipeServer server = new(
             pipeNameDescription,
-            async _ =>
+            async request =>
             {
-                requestReceived.TrySetResult(true);
+                requestReceived.TrySetResult(request);
                 await releaseResponse.Task.ConfigureAwait(false);
                 return VoidResponse.CachedInstance;
             },
@@ -329,14 +331,16 @@ public sealed class IPCTests
             logger.Object,
             new SystemTask(),
             _testContext.CancellationToken);
-        server.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        IntMessageSerializer requestSerializer = new();
+        server.RegisterSerializer(requestSerializer, typeof(IntMessage));
         server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        NamedPipeClient client = new(
+        // This server-side scenario needs no client reply read. Dispose the idle peer before releasing the
+        // response, without racing the client's pending read and its buffer/semaphore cleanup.
+        NamedPipeClientStream client = new(
+            ".",
             pipeNameDescription.Name,
-            new SystemEnvironment(),
-            exitProcessOnConnectionLoss: false);
-        client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
-        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+            PipeDirection.InOut,
+            PipeOptions.Asynchronous);
 
         try
         {
@@ -344,10 +348,15 @@ public sealed class IPCTests
             await client.ConnectAsync(_testContext.CancellationToken);
             await waitConnectionTask;
 
-            Task<VoidResponse> requestTask = client.RequestReplyAsync<IntMessage, VoidResponse>(
-                new IntMessage(42),
-                _testContext.CancellationToken);
+            byte[] requestBytes =
+            [
+                .. BitConverter.GetBytes(sizeof(int) * 2),
+                .. BitConverter.GetBytes(requestSerializer.Id),
+                .. BitConverter.GetBytes(42),
+            ];
+            await client.WriteAsync(requestBytes, 0, requestBytes.Length, _testContext.CancellationToken);
             await requestReceived.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            Assert.AreEqual(new IntMessage(42), await requestReceived.Task);
             client.Dispose();
             releaseResponse.TrySetResult(true);
 
@@ -356,11 +365,9 @@ public sealed class IPCTests
             Assert.AreEqual(
                 $"Pipe '{pipeNameDescription.Name}' closed while writing reply; exiting server loop.",
                 message);
-            Task completedRequestTask = await Task.WhenAny(
-                requestTask,
-                Task.Delay(TimeoutHelper.DefaultHangTimeSpanTimeout, _testContext.CancellationToken));
-            Assert.AreSame(requestTask, completedRequestTask, "The client request did not observe the closed pipe.");
-            await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => requestTask);
+            Assert.IsTrue(
+                await server.WaitForDisconnectAsync(TimeoutHelper.DefaultHangTimeSpanTimeout),
+                "The server loop did not observe the closed pipe.");
         }
         finally
         {
