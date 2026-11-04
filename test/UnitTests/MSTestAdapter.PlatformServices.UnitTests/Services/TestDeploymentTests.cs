@@ -244,34 +244,40 @@ public class TestDeploymentTests : TestContainer
 #endif
     }
 
-    // TODO: This test has to have mocks (tracked by https://github.com/microsoft/testfx/issues/8086). It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
-    internal void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
+    public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
-        UnitTestElement testCase = CreateTestElement(typeof(TestDeploymentTests).Assembly.Location);
-        KeyValuePair<string, string>[] kvpArray =
+        string source = typeof(TestDeploymentTests).Assembly.Location;
+        string deploymentItem = Path.Combine(Path.GetDirectoryName(source)!, "deployment.txt");
+        UnitTestElement testCase = CreateTestElement(source);
+        testCase.DeploymentItems =
         [
-            new KeyValuePair<string, string>(
-                        DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory)
+            new KeyValuePair<string, string>(deploymentItem, DefaultDeploymentItemOutputDirectory)
         ];
-        testCase.DeploymentItems = kvpArray;
-        var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionOperations.Object),
-            new DeploymentUtility(),
-            _mockFileUtility.Object);
 
-        string runSettingsXml =
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
+        string destination = Path.Combine(testRunDirectories.OutDirectory, DefaultDeploymentItemOutputDirectory, Path.GetFileName(deploymentItem));
+        _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(deploymentItem)).Returns(false);
+        _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(deploymentItem, destination, out It.Ref<string?>.IsAny)).Returns(destination);
+
+        const string runSettingsXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        using StringReader stringReader = new(runSettingsXml);
+        using var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
 
-        // Deployment should happen
-        testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(null, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
+        try
+        {
+            testDeployment.Deploy(new List<UnitTestElement> { testCase }, new DeploymentContext(testRunDirectories.RootDeploymentDirectory, null), new Mock<IAdapterMessageLogger>().Object).Should().BeTrue();
 
-        // Deployment directories should get created
-        testDeployment.GetDeploymentDirectory().Should().NotBeNull();
+            testDeployment.GetDeploymentDirectory().Should().Be(testRunDirectories.OutDirectory);
+            _mockFileUtility.Verify(fu => fu.CopyFileOverwrite(deploymentItem, destination, out It.Ref<string?>.IsAny), Times.Once);
+        }
+        finally
+        {
+            TestDeployment.Reset();
+            MSTestSettingsProvider.Reset();
+        }
     }
 
     #endregion
