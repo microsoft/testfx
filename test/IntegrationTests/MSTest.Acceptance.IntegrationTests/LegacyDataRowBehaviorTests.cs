@@ -239,6 +239,7 @@ public sealed class LegacyDataRowBehaviorTests : AcceptanceTestBase<LegacyDataRo
 #file DataRowCases.cs
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LegacyDataRowBehavior;
@@ -554,7 +555,7 @@ public class RegularShapes
 public class DisplayNameCases
 {
     [TestMethod]
-    [DataRow(DisplayName = "Overridden DisplayName")]
+    [DummyDataRow]
     public void CustomDataRowDisplayName() { }
 
     [TestMethod(DisplayName = "SomeCustomDisplayName2")]
@@ -567,6 +568,10 @@ public class DisplayNameCases
 
     public static IEnumerable<object[]> Data => [["SomeData"]];
 
+    private sealed class DummyDataRowAttribute : DataRowAttribute
+    {
+        public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
+    }
 }
 """;
     }

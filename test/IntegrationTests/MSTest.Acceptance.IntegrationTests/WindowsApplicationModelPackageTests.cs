@@ -142,7 +142,6 @@ public sealed class WindowsApplicationModelPackageTests
             nameof(ParallelizeAttribute),
             nameof(TestDataSourceDiscoveryAttribute),
             nameof(STATestClassAttribute),
-            nameof(DataRowAttribute),
         ];
 
         foreach (string attribute in sealedAttributes)
@@ -151,6 +150,7 @@ public sealed class WindowsApplicationModelPackageTests
         }
 
         Assert.DoesNotContain(prefix + "DataTestMethodAttribute", types.Keys, assemblyPath);
+        Assert.AreEqual((TypeAttributes)0, types[prefix + nameof(DataRowAttribute)] & TypeAttributes.Sealed, assemblyPath);
         Assert.AreEqual((TypeAttributes)0, types[prefix + nameof(TestClassAttribute)] & TypeAttributes.Sealed, assemblyPath);
         Assert.AreEqual((TypeAttributes)0, types[prefix + nameof(TestMethodAttribute)] & TypeAttributes.Sealed, assemblyPath);
     }

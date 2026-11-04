@@ -215,6 +215,15 @@ public class DataRowAttributeTests : TestContainer
         dataSource.GetData(methodInfo).Should().ContainSingle().Which.Should().Equal(7);
     }
 
+    public void GetDisplayNameArgumentsDisplayNameHonorsOverride()
+    {
+        var attribute = new DummyDataRowAttribute { ArgumentsDisplayName = "label" };
+        ITestDataSource dataSource = attribute;
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        dataSource.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
+    }
+
     public void GetDisplayNameArgumentsDisplayNameRefreshesLocalizedFormat()
     {
         CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
@@ -249,13 +258,12 @@ public class DataRowAttributeTests : TestContainer
         displayName.Should().Be("MyMethod ([\"a\"])");
     }
 
-    public void GetDisplayName_DoesNotExposeAnOverridableImplementation()
+    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
-        MethodInfo displayNameMethod = typeof(DataRowAttribute).GetMethod(nameof(DataRowAttribute.GetDisplayName))!;
+        var attribute = new DummyDataRowAttribute();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
 
-        // A nonvirtual C# method implementing an interface can be emitted as virtual and final.
-        (displayNameMethod.IsVirtual && !displayNameMethod.IsFinal).Should()
-            .BeFalse("DataRowAttribute no longer exposes an override-based display-name extension point");
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()
@@ -424,6 +432,11 @@ public class DataRowAttributeTests : TestContainer
         {
             CultureInfo.CurrentUICulture = previousUICulture;
         }
+    }
+
+    private sealed class DummyDataRowAttribute : DataRowAttribute
+    {
+        public override string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }
 
     private sealed class UICultureChangingValue

@@ -28,8 +28,8 @@ public sealed class MetadataAttributePolicyTests : TestContainer
     public void STATestClassAttribute_IsSealed()
         => typeof(STATestClassAttribute).IsSealed.Should().BeTrue("custom class execution extends TestClassAttribute instead");
 
-    public void DataRowAttribute_IsSealed()
-        => typeof(DataRowAttribute).IsSealed.Should().BeTrue("custom data sources implement ITestDataSource instead");
+    public void DataRowAttribute_RemainsExtensible()
+        => typeof(DataRowAttribute).IsSealed.Should().BeFalse("custom data rows can override their display names");
 
 #if WIN_UI
     public void WinUITestTargetAttribute_IsSealed()

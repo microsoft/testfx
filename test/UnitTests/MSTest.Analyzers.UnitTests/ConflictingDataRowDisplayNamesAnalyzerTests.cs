@@ -177,6 +177,29 @@ public sealed class ConflictingDataRowDisplayNamesAnalyzerTests
     }
 
     [TestMethod]
+    public async Task DerivedDataRowAttributeWithDisplayNameOverride_NoDiagnostic()
+    {
+        string code = """
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomDataRowAttribute : DataRowAttribute
+            {
+                public override string GetDisplayName(MethodInfo method, object[] data)
+                    => DisplayName + ArgumentsDisplayName;
+            }
+            public class MyClass
+            {
+                [CustomDataRow(DisplayName = "full", ArgumentsDisplayName = "label")]
+                public void Test() { }
+                public object Create()
+                    => new CustomDataRowAttribute { DisplayName = "full", ArgumentsDisplayName = "label" };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task LegacyDerivedDataRowAttribute_NoDiagnostic()
     {
         string code = """

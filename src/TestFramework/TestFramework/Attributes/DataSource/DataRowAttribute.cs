@@ -8,8 +8,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Attribute to define in-line data for a test method.
 /// </summary>
+/// <remarks>
+/// Override <see cref="GetDisplayName"/> in a derived attribute to customize the display name of its test cases.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-public sealed class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnoreCapability
+public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnoreCapability
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -70,7 +73,7 @@ public sealed class DataRowAttribute : Attribute, ITestDataSource, ITestDataSour
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => [Data];
 
     /// <inheritdoc />
-    public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
+    public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
             : !StringEx.IsNullOrWhiteSpace(ArgumentsDisplayName)
