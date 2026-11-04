@@ -57,6 +57,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly GitHubActionsStepSummarySections _sections;
     private readonly bool _includeFailureDetails;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
+    private readonly string? _attachmentsDirectory;
 
 #if NET9_0_OR_GREATER
     private readonly System.Threading.Lock _stateLock = new();
@@ -87,6 +88,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly Dictionary<string, PendingFailure> _pendingFailures = new Dictionary<string, PendingFailure>(StringComparer.Ordinal);
 #pragma warning restore IDE0028
 
+    private GitHubActionsAttachmentCollector? _attachments;
+
     public GitHubActionsSummaryReporter(
         ICommandLineOptions commandLineOptions,
         IConfiguration configuration,
@@ -113,7 +116,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _historyService = historyService ?? DisabledGitHubActionsHistoryService.Instance;
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isSummaryEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
-        _isEnabled = _isSummaryEnabled || _historyService.IsEnabled;
+        _attachmentsDirectory = GitHubActionsFeature.IsMasterEnabled(commandLineOptions, environment)
+            && commandLineOptions.TryGetOptionArgumentList(GitHubActionsCommandLineOptions.GitHubActionsAttachments, out string[]? attachmentArguments)
+            && attachmentArguments is [string attachmentDirectory]
+                ? attachmentDirectory
+                : null;
+        _isEnabled = _isSummaryEnabled || _historyService.IsEnabled || _attachmentsDirectory is not null;
         _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
         _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _includeFailureDetails = GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
@@ -136,6 +144,20 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
+        _attachments = _attachmentsDirectory is null
+            ? null
+            : new GitHubActionsAttachmentCollector(
+                _attachmentsDirectory,
+                _fileSystem,
+                async warning =>
+                {
+                    if (_logger.IsEnabled(LogLevel.Warning))
+                    {
+                        await _logger.LogWarningAsync(warning).ConfigureAwait(false);
+                    }
+
+                    await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), CancellationToken.None).ConfigureAwait(false);
+                });
         lock (_stateLock)
         {
             _records.Clear();
@@ -149,7 +171,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         return Task.CompletedTask;
     }
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         try
         {
@@ -157,19 +179,35 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             if (!_isEnabled || value is not TestNodeUpdateMessage update)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
             TerminalKind kind = SummaryReporterHelpers.GetTerminalKind(state);
             if (kind == TerminalKind.NotTerminal)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
             RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
+            CiRunSummaryAttachment[]? attachments = null;
+            if (kind == TerminalKind.Failed && retryAttempt is not { IsSuperseded: true } && _attachments is not null)
+            {
+                try
+                {
+                    attachments = await _attachments.CaptureAsync(update.TestNode, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    await ReportAttachmentFailureAsync(nameof(GitHubActionsAttachmentCollector.CaptureAsync), ex).ConfigureAwait(false);
+                }
+            }
 
             // Keep the stable identity for history and aggregation; add distinguishing display names only when rendering.
             string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);
@@ -205,7 +243,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                         _inProcessFailedTests.Add(uid);
                     }
 
-                    return Task.CompletedTask;
+                    return;
                 }
 
                 if (kind is TerminalKind.Failed or TerminalKind.Skipped)
@@ -224,7 +262,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     : 1;
                 _finalRowCountsByUid[uid] = finalRowCount;
                 string recordKey = $"{uid}\0{finalRowCount.ToString(CultureInfo.InvariantCulture)}";
-                _records.Add((uid, recordKey, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
+                TestFailureDetails? attachmentDetails = attachments is null
+                    ? null
+                    : new TestFailureDetails(null, null, null, null, 0) { Attachments = attachments };
+                _records.Add((uid, recordKey, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky, attachmentDetails)));
                 if (isFlaky)
                 {
                     if (!_flakyRecordIndicesByUid.TryGetValue(uid, out List<int>? indices))
@@ -267,8 +308,6 @@ internal sealed partial class GitHubActionsSummaryReporter :
         {
             _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
-
-        return Task.CompletedTask;
     }
 
     private int GetAttemptNumber()

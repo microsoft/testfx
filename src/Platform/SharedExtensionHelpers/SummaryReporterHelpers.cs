@@ -66,6 +66,8 @@ internal readonly struct TestRecord
 /// </summary>
 internal sealed class TestFailureDetails
 {
+    public CiRunSummaryAttachment[]? Attachments { get; set; }
+
     public TestFailureDetails(string? message, string? exceptionType, string? stackTrace, string? filePath, int lineNumber)
     {
         Message = message;
@@ -107,7 +109,8 @@ internal sealed class TestFailureDetails
         => RoslynString.IsNullOrWhiteSpace(Message)
             && RoslynString.IsNullOrWhiteSpace(ExceptionType)
             && RoslynString.IsNullOrWhiteSpace(StackTrace)
-            && RoslynString.IsNullOrWhiteSpace(FilePath);
+            && RoslynString.IsNullOrWhiteSpace(FilePath)
+            && Attachments is not { Length: > 0 };
 }
 
 /// <summary>

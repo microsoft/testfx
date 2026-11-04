@@ -455,6 +455,10 @@ public sealed class TrxResultStreamingStoreTests
 
         public bool ExistFile(string path) => File.Exists(path);
 
+        public bool IsRegularFile(string path) => new SystemFileSystem().IsRegularFile(path);
+
+        public IFileStream? OpenReadRegularFile(string path) => new SystemFileSystem().OpenReadRegularFile(path);
+
         public bool ExistDirectory(string? path) => path is not null && Directory.Exists(path);
 
         public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;

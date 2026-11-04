@@ -29,7 +29,24 @@ internal sealed partial class GitHubActionsSummaryReporter
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
             CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
-            if (_shouldDeferToArtifactPostProcessing()
+            if (_attachments is not null)
+            {
+                try
+                {
+                    await _attachments.WriteManifestAsync(module, testSessionContext.CancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    await ReportAttachmentFailureAsync(nameof(GitHubActionsAttachmentCollector.WriteManifestAsync), ex).ConfigureAwait(false);
+                }
+            }
+
+            if ((_isSummaryEnabled || _historyService.IsEnabled)
+                && _shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
@@ -103,6 +120,22 @@ internal sealed partial class GitHubActionsSummaryReporter
         catch (Exception ex)
         {
             _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    private async Task ReportAttachmentFailureAsync(string operation, Exception error)
+    {
+        _logger.LogUnexpectedException(operation, error);
+        try
+        {
+            await _outputDevice.DisplayAsync(
+                this,
+                new WarningMessageOutputDeviceData(GitHubActionsResources.AttachmentReportingWarning),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception notificationError)
+        {
+            _logger.LogUnexpectedException(nameof(ReportAttachmentFailureAsync), notificationError);
         }
     }
 

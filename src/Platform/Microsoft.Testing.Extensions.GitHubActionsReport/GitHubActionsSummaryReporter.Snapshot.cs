@@ -55,6 +55,8 @@ internal sealed partial class GitHubActionsSummaryReporter
             {
                 expanded++;
                 TestFailureDetails? failureDetails = CaptureFailureDetails(failure);
+                failureDetails?.Attachments = record.Failure?.Attachments;
+
                 if (failureDetails is not null
                     && _historyService.TryGetStats(
                         entry.Uid,
@@ -71,7 +73,10 @@ internal sealed partial class GitHubActionsSummaryReporter
                         failureDetails.ExceptionType,
                         failureDetails.StackTrace,
                         failureDetails.FilePath,
-                        failureDetails.LineNumber);
+                        failureDetails.LineNumber)
+                    {
+                        Attachments = failureDetails.Attachments,
+                    };
                 }
 
                 record = new TestRecord(

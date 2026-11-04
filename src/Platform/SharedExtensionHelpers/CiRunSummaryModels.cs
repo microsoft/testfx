@@ -113,6 +113,9 @@ internal static class CiRunSummaryModuleIdentity
 
 internal sealed class CiRunSummaryTest
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CiRunSummaryAttachment[]? Attachments { get; set; }
+
     public string DisplayName { get; set; } = string.Empty;
 
     public string FullyQualifiedName { get; set; } = string.Empty;
@@ -140,6 +143,17 @@ internal sealed class CiRunSummaryTest
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LineNumber { get; set; }
+}
+
+internal sealed class CiRunSummaryAttachment
+{
+    public string FileName { get; set; } = string.Empty;
+
+    public string? RelativePath { get; set; }
+
+    public long SizeBytes { get; set; }
+
+    public string Status { get; set; } = string.Empty;
 }
 
 internal sealed class CiRunSummarySkipReason

@@ -108,7 +108,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                         failure.Failure?.ExceptionType,
                         failure.Failure?.StackTrace,
                         failure.Failure?.FilePath,
-                        failure.Failure?.LineNumber ?? 0))],
+                        failure.Failure?.LineNumber ?? 0,
+                        failure.Failure?.Attachments))],
                     failed,
                     includeFailureDetails,
                     budget);
@@ -234,7 +235,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                         failure.ErrorType,
                         failure.StackTrace,
                         failure.FilePath,
-                        failure.LineNumber ?? 0))],
+                        failure.LineNumber ?? 0,
+                        failure.Attachments))],
                     module.FailedTests,
                     includeFailureDetails,
                     budget);

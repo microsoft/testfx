@@ -150,6 +150,7 @@ internal static partial class CiRunSummaryAggregation
             test.StackTrace = failure.StackTrace;
             test.FilePath = failure.FilePath;
             test.LineNumber = failure.LineNumber > 0 ? failure.LineNumber : null;
+            test.Attachments = failure.Attachments;
         }
 
         return test;

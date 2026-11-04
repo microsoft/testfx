@@ -1,4 +1,9 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.IFileSystem.IsRegularFile(string! path) -> bool
+Microsoft.Testing.Platform.Helpers.IFileSystem.OpenReadRegularFile(string! path) -> Microsoft.Testing.Platform.Helpers.IFileStream?
+Microsoft.Testing.Platform.Helpers.SystemFileSystem.IsRegularFile(string! path) -> bool
+Microsoft.Testing.Platform.Helpers.SystemFileSystem.OpenReadRegularFile(string! path) -> Microsoft.Testing.Platform.Helpers.IFileStream?
+Microsoft.Testing.Platform.Helpers.SystemFileStream.SystemFileStream(System.IO.FileStream! stream, string! name) -> void
 *REMOVED*Microsoft.Testing.Platform.TestHost.TestHostManager.AddTestSessionLifetimeHandle(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.TestHost.TestHostManager.AddTestSessionLifetimeHandle<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo

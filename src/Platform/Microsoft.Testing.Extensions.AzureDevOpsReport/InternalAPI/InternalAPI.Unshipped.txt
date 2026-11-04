@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Extensions.TestFailureDetails.Attachments.get -> Microsoft.Testing.Extensions.CiRunSummaryAttachment![]?
+Microsoft.Testing.Extensions.TestFailureDetails.Attachments.set -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataFamily = "MTP.CanonicalTestName/" -> string!

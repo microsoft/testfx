@@ -34,7 +34,7 @@ using GitHubSummaryPostProcessor = ghactions::Microsoft.Testing.Extensions.GitHu
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
-public sealed class GitHubActionsSummaryReporterTests
+public sealed partial class GitHubActionsSummaryReporterTests
 {
     public TestContext TestContext { get; set; } = null!;
 
@@ -323,26 +323,54 @@ public sealed class GitHubActionsSummaryReporterTests
         private readonly Mock<IConfiguration> _configuration = new();
         private readonly Mock<IEnvironment> _environment = new();
         private readonly Mock<IMessageBus> _bus = new();
-        private readonly Mock<IOutputDevice> _output = new();
         private readonly Mock<ITestApplicationModuleInfo> _module = new();
         private readonly Mock<ITestApplicationProcessExitCode> _exit = new();
         private readonly Mock<ITestCoverageResult> _coverage = new();
         private readonly Mock<ILoggerFactory> _factory = new();
+        private readonly bool _deferToArtifactPostProcessing;
 
-        public SummaryExecutionFixture(bool historyOnly = false, bool summaryPathMissing = false, bool onFailureOnly = false, int exitCode = 0)
+        public SummaryExecutionFixture(
+            bool historyOnly = false,
+            bool summaryPathMissing = false,
+            bool onFailureOnly = false,
+            int exitCode = 0,
+            bool stageAttachments = false,
+            bool includeFailureDetails = true,
+            bool reportGh = true,
+            string? githubActions = "true",
+            bool deferToArtifactPostProcessing = false,
+            bool historyEnabled = true)
         {
             DirectoryPath = Path.Combine(Path.GetTempPath(), "github-summary-coverage-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(DirectoryPath);
             SummaryPath = Path.Combine(DirectoryPath, "summary.md");
-            Dictionary<string, string[]> options = new() { [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [] };
+            History = new CapturingHistoryService(isEnabled: historyEnabled);
+            _deferToArtifactPostProcessing = deferToArtifactPostProcessing;
+            Dictionary<string, string[]> options = [];
+            if (reportGh)
+            {
+                options[GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [];
+            }
+
             if (historyOnly || onFailureOnly)
             {
                 options[GitHubActionsCommandLineOptions.GitHubActionsStepSummary] =
                     [historyOnly ? "off" : GitHubActionsCommandLineOptions.StepSummaryOnFailureValue];
             }
 
+            if (stageAttachments)
+            {
+                options[GitHubActionsCommandLineOptions.GitHubActionsAttachments] = [AttachmentsDirectory];
+            }
+
+            if (!includeFailureDetails)
+            {
+                options[GitHubActionsCommandLineOptions.GitHubActionsFailureDetails] = ["off"];
+            }
+
             _options = new TestCommandLineOptions(options);
-            _environment.Setup(value => value.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+            _configuration.SetupGet(value => value[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(DirectoryPath);
+            _environment.Setup(value => value.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions);
             _environment.Setup(value => value.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(summaryPathMissing ? null : SummaryPath);
             _module.Setup(value => value.TryGetAssemblyName()).Returns("Coverage.Reporter.Tests");
             _module.Setup(value => value.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(DirectoryPath, "Tests.dll"));
@@ -351,8 +379,11 @@ public sealed class GitHubActionsSummaryReporterTests
             _coverage.SetupGet(value => value.Thresholds).Returns([]);
             Logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
             _factory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(Logger.Object);
-            _output.Setup(value => value.DisplayAsync(It.IsAny<Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer>(), It.IsAny<Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            Output.Setup(value => value.DisplayAsync(It.IsAny<Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer>(), It.IsAny<Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData>(), It.IsAny<CancellationToken>()))
                 .Callback<Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData, CancellationToken>((_, data, _) => Warnings.Add(((WarningMessageOutputDeviceData)data).Message))
+                .Returns(Task.CompletedTask);
+            _bus.Setup(value => value.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
+                .Callback<IDataProducer, IData>((_, data) => Artifacts.Add((SessionFileArtifact)data))
                 .Returns(Task.CompletedTask);
             Session.SetupGet(value => value.SessionUid).Returns(new SessionUid("summary-coverage-session"));
             Session.SetupGet(value => value.CancellationToken).Returns(CancellationToken.None);
@@ -363,7 +394,11 @@ public sealed class GitHubActionsSummaryReporterTests
 
         public string SummaryPath { get; }
 
-        public CapturingHistoryService History { get; } = new(isEnabled: true);
+        public string AttachmentsDirectory => Path.Combine(DirectoryPath, "attachments");
+
+        public List<SessionFileArtifact> Artifacts { get; } = [];
+
+        public CapturingHistoryService History { get; }
 
         public Mock<ITestSessionContext> Session { get; } = new();
 
@@ -373,9 +408,11 @@ public sealed class GitHubActionsSummaryReporterTests
 
         public Mock<ILogger> Logger { get; } = new();
 
+        public Mock<IOutputDevice> Output { get; } = new();
+
         public GitHubActionsSummaryReporter CreateReporter(IFileSystem fileSystem)
             => new(_options, _configuration.Object, _environment.Object, fileSystem, _bus.Object,
-                _output.Object, _module.Object, _exit.Object, _coverage.Object, _factory.Object, static () => false, History);
+                Output.Object, _module.Object, _exit.Object, _coverage.Object, _factory.Object, () => _deferToArtifactPostProcessing, History);
 
         public void Dispose() => Directory.Delete(DirectoryPath, recursive: true);
     }
@@ -3542,6 +3579,10 @@ public sealed class GitHubActionsSummaryReporterTests
         }
 
         public bool ExistFile(string path) => _inner.ExistFile(path);
+
+        public bool IsRegularFile(string path) => _inner.IsRegularFile(path);
+
+        public IFileStream? OpenReadRegularFile(string path) => _inner.OpenReadRegularFile(path);
 
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 

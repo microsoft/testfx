@@ -131,6 +131,44 @@
     <value>Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
     <comment>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
+  <data name="AttachmentsOptionDescription" xml:space="preserve">
+    <value>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</value>
+    <comment>{Locked="--report-gh"}</comment>
+  </data>
+  <data name="InvalidAttachmentsPath" xml:space="preserve">
+    <value>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</value>
+  </data>
+  <data name="AttachmentCountLimitWarning" xml:space="preserve">
+    <value>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</value>
+  </data>
+  <data name="AttachmentSkippedWarning" xml:space="preserve">
+    <value>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</value>
+    <comment>{0} is the sanitized file name; {1} is the invariant status code.</comment>
+  </data>
+  <data name="AttachmentCleanupWarning" xml:space="preserve">
+    <value>Could not remove incomplete GitHub Actions attachment '{0}': {1}</value>
+    <comment>{0} is the sanitized file name; {1} is the error message.</comment>
+  </data>
+  <data name="AttachmentReportingWarning" xml:space="preserve">
+    <value>Some test attachments could not be staged or indexed. Test results are unaffected.</value>
+  </data>
+  <data name="AttachmentManifestWarning" xml:space="preserve">
+    <value>Could not write the GitHub Actions attachment manifest: {0}</value>
+    <comment>{0} is the error message.</comment>
+  </data>
+  <data name="AttachmentSizeChanged" xml:space="preserve">
+    <value>The attachment grew beyond the staging size limit while being copied.</value>
+  </data>
+  <data name="AttachmentPathsLabel" xml:space="preserve">
+    <value>Attachments (paths inside the workflow artifact):</value>
+  </data>
+  <data name="AttachmentSizeText" xml:space="preserve">
+    <value>{0} bytes</value>
+    <comment>{0} is the attachment size in bytes.</comment>
+  </data>
+  <data name="AttachmentUnavailableLabel" xml:space="preserve">
+    <value>not staged; see manifest.</value>
+  </data>
   <data name="HistoryOptionDescription" xml:space="preserve">
     <value>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</value>
     <comment>{Locked=&quot;--report-gh&quot;}</comment>
