@@ -124,8 +124,8 @@ internal sealed partial class TerminalOutputDevice
             }
         }
 
-        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
-        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
         int slowestTestsCount = GetSlowestTestsCount(_commandLineOptions);
         TestResultVisibility showTestResults = GetShowTestResultsVisibility(_commandLineOptions);
 
@@ -194,11 +194,7 @@ internal sealed partial class TerminalOutputDevice
                 ? count
                 : 0;
 
-    // When the option is absent, default to OutputShowMode.Failed when running under a known
-    // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.
-    // An explicit --show-stdout/--show-stderr value always wins over the LLM-aware default.
-    // TODO(#8772): Update the --show-stdout/--show-stderr help text to reflect the LLM-aware default.
-    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName, bool isLLMEnvironment)
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
         => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
             ? arguments[0] switch
             {
@@ -206,7 +202,7 @@ internal sealed partial class TerminalOutputDevice
                 string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
                 _ => OutputShowMode.All,
             }
-            : isLLMEnvironment ? OutputShowMode.Failed : OutputShowMode.All;
+            : OutputShowMode.Failed;
 
     // Resolves which per-test terminal blocks are rendered. An explicit --show-test-results value or its passive
     // configuration default wins over --output; an explicit value wins over the passive default. When neither is

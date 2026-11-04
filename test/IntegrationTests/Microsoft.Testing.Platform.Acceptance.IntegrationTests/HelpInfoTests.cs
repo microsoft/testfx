@@ -91,10 +91,10 @@ Options:
         Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-stdout
         Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
     --show-test-results
         Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
         Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
@@ -364,12 +364,12 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' \(or 'Failed' when an LLM/AI agent environment is detected\).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
       --show-stdout
         Arity: 1
         Hidden: False
         Description: Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All' \(or 'Failed' when an LLM/AI agent environment is detected\).
+        Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.
       --show-test-results
         Arity: 1..N
         Hidden: False
