@@ -26,7 +26,7 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.CollectionAssertToAssertRuleId);
+        = [DiagnosticIds.CollectionAssertToAssertRuleId];
 
     /// <inheritdoc />
     public sealed override FixAllProvider GetFixAllProvider()

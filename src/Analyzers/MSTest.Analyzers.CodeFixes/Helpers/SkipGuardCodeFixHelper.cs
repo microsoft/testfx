@@ -117,8 +117,7 @@ internal static class SkipGuardCodeFixHelper
             firstMeaningfulTrivia++;
         }
 
-        return new SyntaxTriviaList(
-            leadingTrivia.Take(firstMeaningfulTrivia).Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia))
-                .Concat(leadingTrivia.Skip(firstMeaningfulTrivia)));
+        return [.. leadingTrivia.Take(firstMeaningfulTrivia).Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia))
+            .Concat(leadingTrivia.Skip(firstMeaningfulTrivia))];
     }
 }

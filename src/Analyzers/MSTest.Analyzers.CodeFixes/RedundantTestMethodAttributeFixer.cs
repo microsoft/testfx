@@ -24,7 +24,7 @@ public sealed class RedundantTestMethodAttributeFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.RedundantTestMethodAttributeRuleId);
+        = [DiagnosticIds.RedundantTestMethodAttributeRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

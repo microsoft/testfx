@@ -69,7 +69,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+        = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -109,7 +109,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             return;
         }
 
-        context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule, additionalLocations: ImmutableArray.Create(additionalLocation), properties: null));
+        context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule, additionalLocations: [additionalLocation], properties: null));
     }
 
     private static bool HasAnyConditionalAccessOperationChild(IInvocationOperation invocationOperation, int argumentCountToCheck, [NotNullWhen(true)] out Location? additionalLocation)

@@ -5,6 +5,15 @@ MSTest is Microsoft supported Test Framework.
 This package includes static code analyzers for C# and VB.NET helping you to better use and design your tests.
 For access to the testing framework, install the MSTest.TestFramework package.
 
+## Requirements
+
+Starting with MSTest 5, the analyzers and code fixes require Roslyn 4.14 or newer:
+Visual Studio 2022 17.14 or a .NET SDK 9.0.300 or newer compiler host.
+This requirement applies to the compiler or IDE, not the project's target framework.
+Roslyn assemblies are supplied by the host and are not included in this package.
+Older hosts cannot load these analyzers; use MSTest.Analyzers 4.x if you cannot
+upgrade the host.
+
 ## Pinning constant contracts
 
 MSTEST0032 reports assertions whose conditions are always true, but permits

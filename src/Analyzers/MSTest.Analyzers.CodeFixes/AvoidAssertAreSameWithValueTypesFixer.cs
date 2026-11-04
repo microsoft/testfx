@@ -26,7 +26,7 @@ public sealed class AvoidAssertAreSameWithValueTypesFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AvoidAssertAreSameWithValueTypesRuleId);
+        = [DiagnosticIds.AvoidAssertAreSameWithValueTypesRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

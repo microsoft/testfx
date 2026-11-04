@@ -48,7 +48,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
             Rule,
-            additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation()),
+            additionalLocations: [expectedArgument.Syntax.GetLocation()],
             properties: properties.ToImmutable(),
             "IsEmpty",
             "HasCount"));

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- We use a more recent version for tests so that we have bug fixes like https://github.com/dotnet/roslyn/pull/69309 -->
+    <!-- Exercise analyzers and code fixes with the oldest supported Roslyn host. -->
     <PackageReference Include="Microsoft.CodeAnalysis" VersionOverride="$(MicrosoftCodeAnalysisVersionForTests)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" VersionOverride="$(MicrosoftCodeAnalysisVersionForTests)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="$(MicrosoftCodeAnalysisVersionForTests)" />

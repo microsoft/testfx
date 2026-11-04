@@ -28,7 +28,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationFixer : C
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds
-        => ImmutableArray.Create(DiagnosticIds.TestMethodAttributeShouldPropagateSourceInformationRuleId);
+        => [DiagnosticIds.TestMethodAttributeShouldPropagateSourceInformationRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
@@ -65,14 +65,8 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationFixer : C
         }
     }
 
-    private static ParameterSyntax? GetNewParameter(int existingIndex, string attributeName)
+    private static ParameterSyntax GetNewParameter(string attributeName)
     {
-        if (existingIndex > -1)
-        {
-            // Parameter already exists. We don't create it.
-            return null;
-        }
-
         (string parameterName, SyntaxKind typeKind, ExpressionSyntax defaultValueExpression) = attributeName switch
         {
             "CallerFilePath" => ("callerFilePath", SyntaxKind.StringKeyword, GetDefaultExpressionForCallerFilePath()),
@@ -103,8 +97,8 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationFixer : C
     {
         int callerFilePathIndex = GetCallerFilePathParameterIndex(constructorDeclaration);
         int callerLineNumberIndex = GetCallerLineNumberParameterIndex(constructorDeclaration);
-        ParameterSyntax? newCallerFilePathParameter = GetNewParameter(callerFilePathIndex, "CallerFilePath");
-        ParameterSyntax? newCallerLineNumberParameter = GetNewParameter(callerLineNumberIndex, "CallerLineNumber");
+        ParameterSyntax? newCallerFilePathParameter = callerFilePathIndex < 0 ? GetNewParameter("CallerFilePath") : null;
+        ParameterSyntax? newCallerLineNumberParameter = callerLineNumberIndex < 0 ? GetNewParameter("CallerLineNumber") : null;
 
         ParameterListSyntax updatedParameterList = constructorDeclaration.ParameterList;
         if (newCallerFilePathParameter is not null && newCallerLineNumberParameter is not null)
@@ -162,7 +156,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationFixer : C
         var generator = SyntaxGenerator.GetGenerator(document);
         SyntaxNode constructor = generator.ConstructorDeclaration(
             typeDeclarationSyntax.Identifier.ValueText,
-            [GetNewParameter(-1, "CallerFilePath"), GetNewParameter(-1, "CallerLineNumber")],
+            [GetNewParameter("CallerFilePath"), GetNewParameter("CallerLineNumber")],
             Accessibility.Public,
             DeclarationModifiers.None,
             [SyntaxFactory.IdentifierName("callerFilePath"), SyntaxFactory.IdentifierName("callerLineNumber")]);

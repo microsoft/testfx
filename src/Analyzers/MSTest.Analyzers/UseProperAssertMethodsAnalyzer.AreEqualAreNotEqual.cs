@@ -46,11 +46,13 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument);
                 context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                     Rule,
-                    additionalLocations: ImmutableArray.Create(
+                    additionalLocations:
+                    [
                         expectedArgument.Syntax.GetLocation(),
                         actualArgument.Syntax.GetLocation(),
                         predicateExpr2.GetLocation(),
-                        linqCollectionExpr2.GetLocation()),
+                        linqCollectionExpr2.GetLocation(),
+                    ],
                     properties: properties.ToImmutable(),
                     properAssertMethod,
                     "AreEqual"));
@@ -87,10 +89,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                     properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentAndReplaceArgument);
                     context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                         Rule,
-                        additionalLocations: ImmutableArray.Create(
-                            nodeToBeReplaced2.GetLocation(),
-                            nodeToBeReplaced1.GetLocation(),
-                            replacement1.GetLocation()),
+                        additionalLocations: [nodeToBeReplaced2.GetLocation(), nodeToBeReplaced1.GetLocation(), replacement1.GetLocation()],
                         properties: properties.ToImmutable(),
                         properAssertMethod,
                         "AreEqual"));
@@ -102,8 +101,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                     context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                         Rule,
                         additionalLocations: nodeToBeReplaced2 is not null && replacement2 is not null
-                            ? ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation(), nodeToBeReplaced2.GetLocation(), replacement2.GetLocation())
-                            : ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation()),
+                            ? [nodeToBeReplaced1.GetLocation(), replacement1.GetLocation(), nodeToBeReplaced2.GetLocation(), replacement2.GetLocation()]
+                            : [nodeToBeReplaced1.GetLocation(), replacement1.GetLocation()],
                         properties: properties.ToImmutable(),
                         properAssertMethod,
                         "AreEqual"));
@@ -144,10 +143,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentAndReplaceArgument);
                 context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                     Rule,
-                    additionalLocations: ImmutableArray.Create(
-                        nodeToBeReplacedNE2.GetLocation(),
-                        nodeToBeReplacedNE1.GetLocation(),
-                        replacementNE1.GetLocation()),
+                    additionalLocations: [nodeToBeReplacedNE2.GetLocation(), nodeToBeReplacedNE1.GetLocation(), replacementNE1.GetLocation()],
                     properties: properties.ToImmutable(),
                     "IsNotEmpty",
                     "AreNotEqual"));
@@ -183,7 +179,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), boolActualArgValue?.Syntax.GetLocation() ?? Location.None),
+                additionalLocations: [expectedArgument.Syntax.GetLocation(), boolActualArgValue?.Syntax.GetLocation() ?? Location.None],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 "AreEqual"));
@@ -202,7 +198,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation()),
+                additionalLocations: [expectedArgument.Syntax.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));

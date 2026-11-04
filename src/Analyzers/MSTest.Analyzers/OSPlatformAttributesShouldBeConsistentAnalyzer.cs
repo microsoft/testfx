@@ -44,7 +44,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -194,7 +194,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             }
         }
 
-        return builder?.ToImmutable() ?? ImmutableArray<AttributeData>.Empty;
+        return builder?.ToImmutable() ?? [];
     }
 
     private static bool HasVersionedUnsupportedPlatformAttribute(

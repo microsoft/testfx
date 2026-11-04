@@ -28,7 +28,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PreferAsyncAssertionRuleId);
+        = [DiagnosticIds.PreferAsyncAssertionRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

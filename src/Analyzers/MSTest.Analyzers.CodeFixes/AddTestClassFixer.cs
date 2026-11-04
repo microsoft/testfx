@@ -31,10 +31,12 @@ public sealed class AddTestClassFixer : CodeFixProvider
 
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(
+        =
+        [
             DiagnosticIds.PublicTypeShouldBeTestClassRuleId,
             DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId,
-            DiagnosticIds.UseConditionBaseWithTestClassRuleId);
+            DiagnosticIds.UseConditionBaseWithTestClassRuleId,
+        ];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

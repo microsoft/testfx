@@ -33,7 +33,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(DoNotUseShadowingRule);
+        = [DoNotUseShadowingRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

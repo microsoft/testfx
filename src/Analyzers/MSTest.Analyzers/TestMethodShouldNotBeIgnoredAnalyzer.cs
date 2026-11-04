@@ -35,7 +35,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TestMethodShouldNotBeIgnoredRule);
+        = [TestMethodShouldNotBeIgnoredRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

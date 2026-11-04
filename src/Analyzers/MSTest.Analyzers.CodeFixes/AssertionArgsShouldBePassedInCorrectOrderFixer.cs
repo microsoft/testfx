@@ -26,7 +26,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AssertionArgsShouldBePassedInCorrectOrderRuleId);
+        = [DiagnosticIds.AssertionArgsShouldBePassedInCorrectOrderRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

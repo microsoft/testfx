@@ -27,7 +27,7 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseCooperativeCancellationForTimeoutRuleId);
+        = [DiagnosticIds.UseCooperativeCancellationForTimeoutRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

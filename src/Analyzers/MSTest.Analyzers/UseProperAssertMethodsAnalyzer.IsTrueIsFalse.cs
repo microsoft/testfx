@@ -45,7 +45,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeSimple);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), expressionUnderTest.GetLocation()),
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), expressionUnderTest.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -71,10 +71,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(
-                    conditionArgument.Syntax.GetLocation(),
-                    predicateExpr.GetLocation(),
-                    linqCollectionExpr.GetLocation()),
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), predicateExpr.GetLocation(), linqCollectionExpr.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -99,7 +96,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()),
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -119,7 +116,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
                 context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                     Rule,
-                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                    additionalLocations: [conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()],
                     properties: properties.ToImmutable(),
                     properAssertMethod,
                     isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -135,7 +132,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 properties.Add(CodeFixModeKey, CodeFixModeAddTwoArguments);
                 context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                     Rule,
-                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation(), comparerExpr!.GetLocation()),
+                    additionalLocations: [conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation(), comparerExpr!.GetLocation()],
                     properties: properties.ToImmutable(),
                     properAssertMethod,
                     isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -159,7 +156,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeSimple);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), collectionEmptinessExpr!.GetLocation()),
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), collectionEmptinessExpr!.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -194,10 +191,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 context.ReportDiagnostic(
                     context.Operation.CreateDiagnostic(
                         Rule,
-                        additionalLocations: ImmutableArray.Create(
-                            conditionArgument.Syntax.GetLocation(),
-                            countPredicateExpr.GetLocation(),
-                            countCollectionExpr.GetLocation()),
+                        additionalLocations: [conditionArgument.Syntax.GetLocation(), countPredicateExpr.GetLocation(), countCollectionExpr.GetLocation()],
                         properties: properties.ToImmutable(),
                         properAssertMethod,
                         isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -261,7 +255,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), firstArg!.GetLocation(), secondArg!.GetLocation()),
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), firstArg!.GetLocation(), secondArg!.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -290,7 +284,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), toBecomeExpected.GetLocation(), toBecomeActual.GetLocation()),
+                additionalLocations: [conditionArgument.Syntax.GetLocation(), toBecomeExpected.GetLocation(), toBecomeActual.GetLocation()],
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));

@@ -72,7 +72,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
 
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AssertionArgsShouldAvoidConditionalAccessRuleId);
+        = [DiagnosticIds.AssertionArgsShouldAvoidConditionalAccessRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

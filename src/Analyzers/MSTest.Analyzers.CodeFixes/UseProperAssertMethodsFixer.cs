@@ -27,7 +27,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseProperAssertMethodsRuleId);
+        = [DiagnosticIds.UseProperAssertMethodsRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

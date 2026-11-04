@@ -19,8 +19,9 @@
          the two drift apart. -->
     <AspireHostingTestingVersion>13.5.3</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
+    <!-- Roslyn is supplied by the analyzer host: Visual Studio 2022 17.14 / .NET SDK 9.0.300 or newer. -->
+    <MicrosoftCodeAnalysisVersion>4.14.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersionForTests>4.14.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers.
          On a 5.10.0-1.* (roslyn main) preview from the dnceng dotnet-tools feed to pick up the
