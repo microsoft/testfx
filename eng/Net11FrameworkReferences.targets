@@ -2,8 +2,21 @@
 
   <!-- Early .NET 12 SDKs map net11.0 to .NET 12 packs. Keep net11.0 binaries runnable on .NET 11. -->
   <PropertyGroup>
-    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0-rc.2.26504.105</Net11RuntimeVersion>
+    <Net10RuntimeVersion Condition=" '$(Net10RuntimeVersion)' == '' ">10.0.14</Net10RuntimeVersion>
+    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0-rc.3.26522.148</Net11RuntimeVersion>
   </PropertyGroup>
+
+  <!-- The pinned SDK's implicit Native AOT compiler predates the runtime servicing version in global.json. -->
+  <Target Name="_UseNet10NativeAotCompilerPack"
+          BeforeTargets="ProcessFrameworkReferences"
+          Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' == 'v10.0' ">
+    <ItemGroup>
+      <KnownILCompilerPack Update="@(KnownILCompilerPack)"
+                           Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net10.0' ">
+        <ILCompilerPackVersion>$(Net10RuntimeVersion)</ILCompilerPackVersion>
+      </KnownILCompilerPack>
+    </ItemGroup>
+  </Target>
 
   <Target Name="_UseNet11CompatibilityPacks"
           BeforeTargets="ProcessFrameworkReferences"
