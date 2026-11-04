@@ -222,7 +222,7 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
         string assemblyName = $"LegacyLifecycleObjectModel_{tfm.Replace('.', '_')}";
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, assemblyName, tfm);
         TestHostResult result = await testHost.ExecuteAsync(
-            "--output Detailed",
+            "--output Detailed --show-stdout all",
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
