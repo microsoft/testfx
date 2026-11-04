@@ -59,7 +59,8 @@ function Assert-Fixture([string] $Name, [hashtable] $Graph, [int] $ExpectedExit,
 function Assert-EnvironmentRestored([string] $Name, [string] $Fixture, [bool] $ExpectFailure) {
     $expected = @{
         DOTNET_CLI_HOME = 'caller home with spaces'
-        DOTNET_CLI_TELEMETRY_OPTOUT = ''
+        # PowerShell 7.5 added empty-but-present environment values.
+        DOTNET_CLI_TELEMETRY_OPTOUT = if ($PSVersionTable.PSVersion -ge [version]'7.5') { '' } else { $null }
         DOTNET_ROLL_FORWARD = 'Major'
         DOTNET_ROLL_FORWARD_TO_PRERELEASE = $null
     }
