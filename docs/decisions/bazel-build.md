@@ -3346,3 +3346,171 @@ aggregate. All parallel lanes stopped their owned servers/processes and retained
 their evidence. The parent stopped its own server, verified no build/test process
 remained for its exact output root, and removed the temporary heap-only rc.
 Task-owned caches, native outputs and reproducible evidence are retained.
+
+## 2026-11-04: independent build-and-test cache dogfood
+
+### Approved outcome and comparison contract
+
+The user approved a separate, non-required Azure pipeline to measure Bazel
+build and test caching over ordinary changes. The existing required pipeline,
+affected-test selection, coverage, integration tests, packaging and shipping
+process remain authoritative and unchanged. Adding a serial step to the
+MSBuild job was rejected because it adds latency and allows existing outputs
+to contaminate the experiment. A job in that pipeline would still delay its
+overall completion; the dogfood therefore has its own pipeline definition.
+Registering that definition and making it required are separate operations.
+
+The initial workload is the thirteen existing unit projects at net10.0,
+Release/optimized compilation, on the same Windows image used by ordinary CI.
+Both producers use the exact SDK12 compiler pinned in `global.json`. Native
+test targets, rather than the primary-output matrix, request their complete
+runtime dependencies, including localized satellites. The comparison must
+reconcile canonical test identities and outcomes, not merely equal totals.
+This is a matched unit-workload experiment, not full shipping-pipeline parity.
+The source build systems still have different policy and generation machinery.
+
+Inspection found two existing runtime layouts: eleven framework-dependent
+native suites run on the selected compiler toolchain runtime, while analyzer
+and server-client tests use self-contained net10.0 layouts. The MSBuild runner
+must preserve that distinction and explicitly select the corresponding runtime;
+silently running all MSBuild assemblies on the repository's older net10 patch
+would not be a matched comparison. Existing test bodies, assertions, scheduling,
+skips, and the two locally observed Windows impersonation failures stay intact.
+Coverage and affected-test filtering are not enabled in this bounded workload;
+their existing authoritative CI runs are not changed.
+
+### Cache, lifetime and failure contracts
+
+The four modes are MSBuild reference, Bazel cold compiled/test outputs, Bazel
+build-cache reuse with forced test execution, and Bazel build plus test-result
+reuse. Default CI/PR runs execute the last mode. Scheduled or explicitly
+requested benchmark runs also execute the controls, on separate fresh agents.
+Compiler-node and concurrent-test-process budgets are explicit and shared by
+the comparable modes; in-process test scheduling is not rewritten.
+
+The first cache transport is Azure `Cache@2`, not a new server. Persist the
+dedicated Bazel action store and downloaded dependency archives separately.
+Do not persist the server/output tree or extracted repositories with
+machine-specific links. Cache snapshots are immutable, with compatible restore
+prefixes so new commits can reuse older actions and add new entries. Azure's
+pipeline/branch scopes prevent PR writers from updating the target-branch
+cache. No cache miss suppresses a build or test. No remote-cache credentials or
+write access to a trusted shared cache are supplied to PR code.
+
+Each invocation owns fresh output and evidence directories; it never cleans a
+shared cache or stops another invocation's server. Only its own Bazel server
+and child processes may be stopped. Build, test, bootstrap and report failures
+remain nonzero, including missing/partial/zero-result reports. Evidence is
+published on failure where available. A reused TRX is explicitly reported as
+cached evidence, not newly executed cases. Failed or incomplete runs do not
+become successful timing samples.
+
+Reports retain source/manifest/toolchain identities, exact commands, test
+selection and outcome hashes, BEP cache statistics and separate build/test
+durations. A dependent summary job must account for cache restore and post-job
+save time from Azure's timeline; unavailable timing is unknown, not zero.
+Overall job time includes bootstrap and cache transport. Queue delay and extra
+dogfood agent consumption are distinct from build-system savings.
+
+### Research, alternatives and planned proof
+
+- Repository sources: `azure-pipelines.yml`, the Windows build/test templates,
+  `BUILD.bazel`, `eng/bazel/{tests,extra-tests,analyzer-tests,test-assets}.bzl`,
+  and the pinned SDK extension. The ordinary PR pipeline already selects
+  affected tests; its complete duration is not a comparable full-test baseline.
+- [Bazel cache contract](https://bazel.build/remote/caching): action results and
+  content-addressed outputs can be shared through a disk cache; declared inputs
+  and environment determine validity. Test caching is per test target, not per
+  MSTest method.
+- [Azure cache contract](https://learn.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops):
+  immutable snapshots, prefix restores, branch/pipeline isolation and post-job
+  upload. Whole-cache transfer can dominate a small incremental workload.
+- A remote action-cache service is deferred until measured archive overhead
+  justifies its operation and authorization. Replacing required validation or
+  advertising the earlier 6-8 second local no-op as CI savings is rejected.
+
+Planned validation, not yet claimed as executed: strict BEP/TRX/timeline parser
+fixtures, a buildable false-green counterfactual, real cold/forced/cached runs
+with fresh output roots, and changed source/test/resource/configuration inputs.
+Cross-machine Azure cache restore/upload and pipeline registration require
+separate live evidence. Record actual outcomes and any comparison gaps below
+before handoff.
+
+### Implementation experiments and corrections
+
+The initial driver experiments exposed three integration details before any CI
+speedup could be claimed:
+
+- Passing Bazel flags through PowerShell `-File` reparsed embedded colons in
+  Windows paths and Bazel option names. The driver now passes arguments as JSON
+  data to a fixed child entry script; named MSBuild parameters remain a
+  hashtable, not reparsed command text. Four launcher checks exercise literal
+  options, Windows PowerShell parameter binding, nonzero exits, streaming logs
+  and child termination. The accidental, task-owned output directory from the
+  failed probe was moved into retained evidence only after its server exited.
+- A previously extracted Arcade toolset can return before SDK initialization.
+  The baseline now calls the existing `eng/common/dotnet.ps1` bootstrap, pins its
+  process-local SDK paths, and runs the normal `eng/build.ps1` with PowerShell 7
+  and the normal Windows VS MSBuild engine. This also avoids treating a benign
+  native workload-status message as a terminating PowerShell 5 error.
+- Applying a global `TargetFramework=net10.0` during restore produced NU1510 for
+  packages still needed by dependencies' older frameworks. The driver now
+  restores the declared graph first, verifies selected framework assets, then
+  builds net10.0 without another restore. No warning was suppressed and no
+  package reference was removed. Restore and compilation both count toward the
+  MSBuild build duration.
+
+The first real protocol run executed all 27 cases on SDK12's runtime. A second,
+fresh Bazel output root restored 453 actions from the disk cache and reused the
+same 27-case report. The MSBuild control executed the same 27 canonical
+identities and outcomes on that exact runtime. These are local harness/cache
+checks, not a representative CI speedup or Azure cache-transfer measurement.
+
+The full optimized SDK12 native run selected 12,505 cases across all thirteen
+projects: 12,487 passed, 15 retained platform skips and three failed. Two are the
+previously observed Win32-1346 impersonation failures. The third is the existing
+`FailedLaunchDisposesProcessHandles` assertion, which observed 13 handles against
+an upper bound of 12. It is not retried away or weakened. The full MSBuild
+control retained the same two impersonation failures, and that handle test
+passed. The Release selection is smaller than the earlier fastbuild selection
+because conditional tests differ by configuration.
+
+The MSBuild control also exposed nine legacy-task cases relying on a conventional
+unqualified output directory. Their existing helper already accepts a
+`LegacyMSBuild` sidecar, which the native lane uses. The driver now builds the
+same netstandard2.0 task fixture and materializes that sidecar in its isolated
+unit output. A fresh focused baseline then executed all 388 MSBuild cases
+successfully. No original test or fixture helper was edited.
+
+Raw TRX identity comparison found one clock-dependent display name in the MTP
+suite: `DotnetTestDataConsumerTests` supplies two `TimingProperty` objects using
+`DateTimeOffset.UtcNow` to a duplicate-property rejection test. All other
+identities matched. The opt-in `TestFxDynamicTimingV1` policy now projects only
+that row's four clock fields, preserving its type, duration, remaining data,
+counters and multiplicity. Raw TRXs and `RawSelectionHash` preserve the original
+identities. The paired 3,380-case selections agree under this policy, with
+exactly one projected key in each report. General date stripping or method-only
+comparison is rejected, as is changing the original test to make the benchmark
+look consistent.
+
+The finalized parser passed 77 checks, including the original 67 unchanged
+test bodies and ten narrow policy cases. In an isolated copy, disabling only
+the clock projection caused seven intended new-policy assertion failures;
+restoring it returned 77 passes. The earlier missing-target guard mutation
+caused its intended assertion failure as well. Four launcher checks and five
+comparison checks passed, including literal Windows/Bazel argument forwarding,
+nonzero child exits, mismatched identities, missing controls and unknown timing.
+These helper checks do not substitute for the pending live Azure cache-transfer
+and complete post-correction workload comparison.
+
+CI restores caches into fresh per-job temporary directories. This is necessary
+even with Azure's branch-scoped cache service: reusing a local agent directory
+could otherwise carry an untrusted branch's old files across a cache miss.
+Ordinary Bazel `auto` test-cache policy retains eligibility rules rather than
+forcing reuse of unsuccessful results.
+
+Evidence for these implementation experiments is retained under
+`artifacts/bazel-dogfood-validation/20261104-104557-177b20c8`. Failed bootstrap,
+restore and comparison attempts remain separate from successful samples.
+The source state is the original local head plus the recorded working patch;
+none of this is published or live-pipeline verification yet.

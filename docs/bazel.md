@@ -401,6 +401,78 @@ WinUI/XAML application pipeline. The bounded standalone XAML compiler
 experiments did not produce C# or XBF; no MSBuild hybrid bridge is presented
 as a native build. These Windows gates are separate from the portable CI job.
 
+## Build-and-test cache dogfood
+
+`azure-pipelines-bazel.yml` is an independent experimental pipeline. Register it
+against this repository in the public dnceng project and keep its GitHub status
+**non-required**. It is not imported by the required or official pipelines and
+does not supply their binaries, tests or coverage. Keep fork secrets disabled;
+only the summary job maps the job token for build-timeline reads.
+
+Ordinary PR/main runs select `Cached`. The nightly schedule and the manual
+`runBenchmarks` parameter also select the three controls:
+
+| Mode | Work |
+| --- | --- |
+| `MSBuild` | Fresh MSBuild outputs and execution of the matching unit assemblies. |
+| `Cold` | Fresh Bazel outputs and compiled/test cache; tests execute. |
+| `BuildCache` | Fresh outputs restored from the action cache; tests must execute. |
+| `Cached` | Fresh outputs, build-cache and eligible test-result reuse. |
+
+The bounded workload is all thirteen original unit projects at net10.0, using
+the exact SDK12 compiler, Release/optimized compilation, eight build workers and
+at most two test processes. Existing in-process scheduling is unchanged. The
+analyzer/server-client suites retain their self-contained runtime; MSBuild
+explicitly uses the matching runtime for those assemblies. Other suites use
+the SDK runtime. Runtime drift, missing targets, empty/partial TRXs and different
+canonical test identities/outcomes prevent a comparable result.
+
+This is not the full required pipeline: no affected-test filtering, coverage,
+acceptance, packaging, Windows application activation or shipping validation
+is included. Those remain on the existing pipeline. The comparison includes
+the selected test targets' localization/runtime dependencies, not just the
+primary-output matrix.
+
+For a local experiment, keep a dedicated cache and use a **new run directory
+for every command**:
+
+```powershell
+$cache = Join-Path $PWD 'artifacts\bazel-dogfood-cache'
+$runs = Join-Path $PWD 'artifacts\bazel-dogfood-runs'
+.\eng\bazel\dogfood.ps1 -Mode Cached -CacheRoot $cache -RunRoot (Join-Path $runs ([guid]::NewGuid().ToString('N')))
+.\eng\bazel\dogfood.ps1 -Mode Cached -CacheRoot $cache -RunRoot (Join-Path $runs ([guid]::NewGuid().ToString('N')))
+.\eng\bazel\dogfood.ps1 -Mode BuildCache -CacheRoot $cache -RunRoot (Join-Path $runs ([guid]::NewGuid().ToString('N')))
+```
+
+`-Targets '//:protocol_contract_tests'` is a smaller local probe. Its selection
+gets a different scope fingerprint and must not be compared with the full
+workload. Remove any `.bazelrc.local` override in an isolated checkout rather
+than letting local options silently change the experiment. Windows x64, the
+repository's normal build prerequisites and symlink capability are required.
+
+Azure caches downloaded archives and the action store separately. It does not
+cache the output/server tree or extracted repositories with machine-specific
+links. Compatible prefix restores allow reuse across commits; per-run keys
+allow immutable snapshots to accumulate new entries. PR cache writes cannot
+replace the target branch's cache. The MSBuild control caches its private pinned
+SDK/runtimes and NuGet packages, not its `bin/obj`.
+
+Each job retains `context.json`, `result.json`, exact commands, logs, BEP/binlogs
+and TRXs. Newly executed reports are published to Azure test results; reused
+reports remain under `reports/cached` as historical evidence, never as new
+passes. A dependent summary reads Azure's completed timeline, including
+post-job cache uploads. `comparison.json`, `timings.csv` and the job summary
+show build/test/job time, cache-transfer time and executed/reused counts.
+Missing timing stays unknown and is not included in a speedup. Compatible
+successful history records provide sample/revision counts, median and P95 job
+times; a repeated SHA or small sample is not a representative CI estimate.
+
+The original host-dependent failures are not suppressed. Failed or incomplete
+runs remain failed and are excluded from successful timing samples. Cached test
+results are experimental, target-level evidence; regular forced-execution
+controls and input-invalidation checks are required before considering any
+replacement of authoritative validation.
+
 ## Evidence and next migration gates
 
 See the maintained [research and decision record](decisions/bazel-build.md) for
