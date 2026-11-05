@@ -30,7 +30,7 @@ public sealed class IgnoreShouldHaveJustificationFixer : CodeFixProvider
 
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.IgnoreShouldHaveJustificationRuleId);
+        = [DiagnosticIds.IgnoreShouldHaveJustificationRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -36,7 +36,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TestContextShouldBeValidRule);
+        = [TestContextShouldBeValidRule];
 
     private static IFieldSymbol? TryGetReturnedField(ImmutableArray<IOperation> operations)
     {

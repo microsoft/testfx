@@ -197,4 +197,29 @@ public class RetryAttributeTests : TestContainer
             UnitTestOutcome.Passed);
         result.AllResults[result.AllResults.Count - 1].Should().BeSameAs(result.TryGetLast());
     }
+
+    public async Task RetryContext_ProvidesOriginalAttemptBeforeInvokingNextAttempt()
+    {
+        var originalFailure = new InvalidOperationException("first attempt contract");
+        var failed = new TestResult { Outcome = UnitTestOutcome.Failed, TestFailureException = originalFailure };
+        TestResult[] firstAttempt = [failed];
+        var passed = new TestResult { Outcome = UnitTestOutcome.Passed };
+        int calls = 0;
+        var context = new RetryContext(
+            () =>
+            {
+                calls++;
+                return Task.FromResult(new[] { passed });
+            }, firstAttempt);
+        context.FirstRunResults.Should().BeSameAs(firstAttempt);
+        context.FirstRunResults.Single().TestFailureException.Should().BeSameAs(originalFailure);
+        calls.Should().Be(0);
+
+        RetryResult result = await new RetryAttribute(1).ExecuteAsync(context);
+
+        calls.Should().Be(1);
+        result.TryGetLast().Should().ContainSingle().Which.Should().BeSameAs(passed);
+        context.FirstRunResults.Single().Outcome.Should().Be(UnitTestOutcome.Failed);
+        context.FirstRunResults.Single().TestFailureException.Should().BeSameAs(originalFailure);
+    }
 }

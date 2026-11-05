@@ -26,7 +26,7 @@ public sealed class PublicMethodShouldBeTestMethodFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds
-        => ImmutableArray.Create(DiagnosticIds.PublicMethodShouldBeTestMethodRuleId);
+        => [DiagnosticIds.PublicMethodShouldBeTestMethodRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

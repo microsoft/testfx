@@ -33,7 +33,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(PublicMethodShouldBeTestMethodRule);
+        = [PublicMethodShouldBeTestMethodRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

@@ -555,4 +555,68 @@ public class ConsoleRouterTests : TestContainer
             }
         }
     }
+
+    public void ErrorRouterModeChangesApplyToCharsAndBufferSlices()
+    {
+        var original = new StringWriter();
+        TestContextImplementation context = CreateTestContext();
+        TestOutputCaptureMode mode = TestOutputCaptureMode.Result;
+        var router = new ConsoleErrorRouter(original, () => mode);
+
+        using (TestContextImplementation.SetCurrentTestContext(context))
+        {
+            router.Write('a');
+            router.Write("_bc_".ToCharArray(), 1, 2);
+            mode = TestOutputCaptureMode.Live;
+            router.Write('d');
+            router.Write("_ef_".ToCharArray(), 1, 2);
+            mode = TestOutputCaptureMode.None;
+            router.Write('g');
+            router.Write("_hi_".ToCharArray(), 1, 2);
+        }
+
+        context.GetAndClearError().Should().Be("abcdef");
+        context.GetAndClearOutput().Should().BeNull();
+        original.ToString().Should().Be("defghi");
+    }
+
+    public void NoContextCharAndBufferWritesPassThroughWithoutCapturing()
+    {
+        var original = new StringWriter();
+        var router = new ConsoleErrorRouter(original, Mode(TestOutputCaptureMode.Result));
+
+        using (TestContextImplementation.SetCurrentTestContext(null))
+        {
+            router.Write('a');
+            router.Write("_bc_".ToCharArray(), 1, 2);
+        }
+
+        original.ToString().Should().Be("abc");
+        router.Encoding.Should().BeSameAs(Encoding.UTF8);
+    }
+
+    public void TraceCharWritesHonorModeChangesAndIgnoreNoContext()
+    {
+        var original = new StringWriter();
+        TestContextImplementation context = CreateTestContext();
+        TestOutputCaptureMode mode = TestOutputCaptureMode.Result;
+        var writer = new TraceTextWriter(original, () => mode);
+        using (TestContextImplementation.SetCurrentTestContext(null))
+        {
+            writer.Write('x');
+        }
+
+        using (TestContextImplementation.SetCurrentTestContext(context))
+        {
+            writer.Write('a');
+            mode = TestOutputCaptureMode.Live;
+            writer.Write('b');
+            mode = TestOutputCaptureMode.None;
+            writer.Write('c');
+        }
+
+        context.GetAndClearTrace().Should().Be("ab");
+        original.ToString().Should().Be("b");
+        writer.Encoding.Should().BeSameAs(Encoding.UTF8);
+    }
 }

@@ -49,7 +49,7 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule, DoNotUseBothAttributesRule);
+        = [Rule, DoNotUseBothAttributesRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

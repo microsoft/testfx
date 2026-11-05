@@ -24,6 +24,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistory, GitHubActionsResources.HistoryOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow, GitHubActionsResources.HistoryWindowOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAnnotations, GitHubActionsResources.AnnotationsOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAttachments, GitHubActionsResources.AttachmentsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummary, GitHubActionsResources.StepSummaryOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections, GitHubActionsResources.StepSummarySectionsOptionDescription, ArgumentArity.OneOrMore, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails, GitHubActionsResources.FailureDetailsOptionDescription, ArgumentArity.ExactlyOne, false),
@@ -50,6 +51,9 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
             GitHubActionsCommandLineOptions.GitHubActionsHistory
                 when arguments is not [string historyPath] || !IsValidHistoryPath(historyPath)
                 => ValidationResult.InvalidTask(GitHubActionsResources.InvalidHistoryPath),
+            GitHubActionsCommandLineOptions.GitHubActionsAttachments
+                when arguments is not [string attachmentsPath] || !IsValidAttachmentsPath(attachmentsPath)
+                => ValidationResult.InvalidTask(GitHubActionsResources.InvalidAttachmentsPath),
             GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow
                 when !int.TryParse(arguments[0], NumberStyles.None, CultureInfo.InvariantCulture, out int historyWindow)
                 || historyWindow is < 1 or > 90
@@ -81,6 +85,27 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
         }
     }
 
+    private static bool IsValidAttachmentsPath(string path)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            string fullPath = Path.GetFullPath(path);
+            // Windows drive-relative and current-drive-rooted paths still depend on the host's working directory.
+            return Path.IsPathRooted(path)
+                && Path.GetPathRoot(path)!.Length == Path.GetPathRoot(fullPath)!.Length
+                && !File.Exists(fullPath);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+    }
+
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => RequiresMainOption(
             commandLineOptions,
@@ -89,6 +114,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 GitHubActionsCommandLineOptions.GitHubActionsHistory,
                 GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow,
                 GitHubActionsCommandLineOptions.GitHubActionsAnnotations,
+                GitHubActionsCommandLineOptions.GitHubActionsAttachments,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummary,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections,
                 GitHubActionsCommandLineOptions.GitHubActionsFailureDetails,

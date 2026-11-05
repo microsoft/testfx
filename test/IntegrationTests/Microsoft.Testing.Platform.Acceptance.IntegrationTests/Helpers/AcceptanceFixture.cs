@@ -22,7 +22,11 @@ public static class AcceptanceFixture
         // packages should be picked.
         // If we restore to the same place (whether or not it is the machine-wide cache), NuGet will consider restore up-to-date and
         // will use stale packages.
-        string nugetCache = Path.Combine(s_directoryToCleanup, ".packages");
+        // Collection batches share only immutable packages within one parent-owned run. Normal acceptance
+        // runs still create a fresh cache, and assembly cleanup never owns the optional shared directory.
+        string nugetCache = CollectionPackageCache.Select(
+            Environment.GetEnvironmentVariable(CollectionPackageCache.EnvironmentVariableName),
+            s_directoryToCleanup);
         Directory.CreateDirectory(nugetCache);
         Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetCache);
     }

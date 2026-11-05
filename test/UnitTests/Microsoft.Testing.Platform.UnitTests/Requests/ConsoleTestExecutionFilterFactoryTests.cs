@@ -74,4 +74,36 @@ public sealed class ConsoleTestExecutionFilterFactoryTests
 
         Assert.AreEqual(typeof(global::System.Diagnostics.UnreachableException).FullName, exception.GetType().FullName);
     }
+
+    [TestMethod]
+    public async Task Factories_AdvertiseDistinctModesAndCreateUnconstrainedRequests()
+    {
+        ConsoleTestExecutionFilterFactory console = new(new Mock<ICommandLineOptions>().Object);
+        ServerTestExecutionFilterFactory server = new();
+        Assert.AreEqual("ConsoleTestExecutionFilterFactory", console.Uid);
+        Assert.AreEqual("Console test execution filter factory", console.DisplayName);
+        Assert.AreEqual("Creates the right test execution filter for console mode", console.Description);
+        Assert.AreEqual("ServerTestExecutionFilterFactory", server.Uid);
+        Assert.AreEqual("Server test execution filter factory", server.DisplayName);
+        Assert.AreEqual("Creates the right test execution filter for server mode", server.Description);
+        Assert.AreEqual(PlatformTestMetadata.Version, console.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, server.Version);
+        Assert.IsTrue(await console.IsEnabledAsync());
+        Assert.IsTrue(await server.IsEnabledAsync());
+        (bool success, ITestExecutionFilter? filter) = await server.TryCreateAsync();
+        Assert.IsTrue(success);
+        Assert.IsInstanceOfType<NopFilter>(filter);
+
+        Microsoft.Testing.Platform.TestHost.TestSessionContext session = new(new("session-17"));
+        TestExecutionRequest[] requests = [new RunTestExecutionRequest(session), new DiscoverTestExecutionRequest(session)];
+        foreach (TestExecutionRequest request in requests)
+        {
+            Assert.AreSame(session, request.Session);
+            Assert.AreEqual("session-17", request.Session.SessionUid.Value);
+            ITestExecutionFilter composed = await TestExecutionFilterComposer.ComposeAsync(
+                request.Filter, [], new(TestExecutionRequestKind.Run, TestExecutionRequestOrigin.Console), true, CancellationToken.None);
+            Assert.IsInstanceOfType<NopFilter>(composed);
+            Assert.AreSame(request.Filter, composed);
+        }
+    }
 }

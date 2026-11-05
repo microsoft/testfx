@@ -22,7 +22,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///   and assert, via the consumer's own exit code and stdout markers, that it discovered then ran the single
 ///   expected node over the JSON-RPC wire.</item>
 /// </list>
-/// The end-to-end run covers the net8.0 (System.Text.Json) axis vstest's .NET runner uses. A Unix-only net6.0
+/// The end-to-end run covers the net10.0 and net11.0 (System.Text.Json) axes. A Unix-only net6.0
 /// run additionally proves that the down-level package slice retries through the muxer when the sibling apphost
 /// exists but the current process cannot execute it. The package must have been produced first (build with
 /// <c>-pack</c>); otherwise the test fails with a hint.
@@ -38,7 +38,7 @@ public sealed class MtpServerClientPackagedConsumerRunTests : AcceptanceTestBase
     // net-STJ-client cross-formatter leg on the real wire; here we focus on compile + run through a real
     // PackageReference, which is the exact shape of the vstest adoption.
     private const string Net6Tfm = "net6.0";
-    private const string Net8Tfm = "net8.0";
+    private const string Net10Tfm = "net10.0";
 
     private const string Sources = """
 #file PackagedConsumer/PackagedConsumer.csproj
@@ -303,8 +303,10 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public async Task PackagedConsumer_LaunchesRealServer_DiscoversAndRunsExpectedNode()
-        => await RunPackagedConsumerAsync(Net8Tfm, useManagedChildPath: false, TestContext.CancellationToken);
+    [DataRow("net10.0")]
+    [DataRow("net11.0")]
+    public async Task PackagedConsumer_LaunchesRealServer_DiscoversAndRunsExpectedNode(string targetFramework)
+        => await RunPackagedConsumerAsync(targetFramework, useManagedChildPath: false, TestContext.CancellationToken);
 
     [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Unix execute permission classes do not apply on Windows.")]
@@ -319,7 +321,7 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     {
         string patchedSources = Sources
             .PatchCodeWithReplace("$ConsumerTfm$", consumerTfm)
-            .PatchCodeWithReplace("$DummyTfm$", Net8Tfm)
+            .PatchCodeWithReplace("$DummyTfm$", Net10Tfm)
             .PatchCodeWithReplace("$ServerClientSourceVersion$", ResolveServerClientSourceVersion())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
 
@@ -335,7 +337,7 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 
         // Build the consumer against a throwaway packages folder so a stale same-version (2.4.0-dev) cache of the
         // source-only package can never mask the freshly packed one. The source-only package has no transitive
-        // dependencies, so the isolated restore only fetches it (the net8.0 framework reference comes from the SDK).
+        // dependencies, so the isolated restore only fetches it (the net10.0 framework reference comes from the SDK).
         string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
         var consumerBuildEnvironment = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -352,7 +354,7 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
         string consumerExe = TestInfrastructure.TestHost.LocateFrom(
             Path.Combine(testAsset.TargetAssetPath, "PackagedConsumer"), "PackagedConsumer", consumerTfm, buildConfiguration: configuration).FullName;
         string dummyAppExe = TestInfrastructure.TestHost.LocateFrom(
-            Path.Combine(testAsset.TargetAssetPath, "DummyApp"), "DummyApp", Net8Tfm, buildConfiguration: configuration).FullName;
+            Path.Combine(testAsset.TargetAssetPath, "DummyApp"), "DummyApp", Net10Tfm, buildConfiguration: configuration).FullName;
 
         string childSource = dummyAppExe;
         if (useManagedChildPath && !OperatingSystem.IsWindows())
@@ -370,9 +372,9 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
         // full launch -> initialize -> discover, then a second launch -> initialize -> run through the packed
         // client and asserts the node internally; it exits 0 only when both halves matched exactly.
         using var command = new TestInfrastructure.CommandLine();
-        string consumerCommand = consumerTfm == Net8Tfm
-            ? $"\"{consumerExe}\""
-            : $"dotnet \"{Path.Combine(Path.GetDirectoryName(consumerExe)!, "PackagedConsumer.dll")}\"";
+        string consumerCommand = consumerTfm == Net6Tfm
+            ? $"dotnet \"{Path.Combine(Path.GetDirectoryName(consumerExe)!, "PackagedConsumer.dll")}\""
+            : $"\"{consumerExe}\"";
         int exitCode = await command.RunAsyncAndReturnExitCodeAsync(
             $"{consumerCommand} \"{childSource}\"",
             environmentVariables: CreateChildEnvironment(),

@@ -32,7 +32,7 @@ public sealed class UseConditionBaseWithTestClassAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(UseConditionBaseWithTestClassRule);
+        = [UseConditionBaseWithTestClassRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

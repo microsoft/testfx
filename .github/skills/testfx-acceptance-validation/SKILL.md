@@ -69,6 +69,25 @@ Use this risk table to choose cases, not to impose a full matrix on every change
 | Handshake/capability | Normal handshake, intentionally suppressed/no-handshake path, and one old/incompatible consumer when relevant. A successful no-work child must not become a false parent failure; a missing required handshake must not become false success. |
 | Failure/fallback | Nonzero child exit, zero-result selection, partial/missing input, and missing/stale/incompatible data where fallback is supported. Assert which work actually runs, not only a message saying fallback ran. |
 | Orchestration | Cancellation with bounded teardown and one mixed-success multi-module/TFM run. Verify every module's artifacts and the aggregate parent exit; do not let one passed module conceal a missing or failed module. |
+| Reporter/result mapping | Real packed runner with multiple distinguishable results; parse the final artifact or captured publishing request and assert each name, external identity/grouping key, outcome, and relevant metadata association. One correct reporter does not prove another. |
+| UI/layout | Inspect the actual rendered affected surface at representative normal/constrained dimensions, with relevant long-content and interaction states. HTML/JSON source checks are not rendering proof; record unavailable hosted/IDE UI checks explicitly. |
+
+For display-name changes, choose multiple rows of one method and, when relevant,
+different methods with the same row label. Assert distinct rows remain distinct
+through the consumer's identity/grouping rules, not merely that the title field
+contains the right string. Cover the affected default, full-name override,
+arguments-only override, and method-display-name paths without multiplying
+equivalent cases. Folded rows sharing a UID and reflection/source-generated
+execution need separate cases when the changed mapping treats them differently.
+Preserve expected per-row counts and associations even if ordering is variable.
+
+Pair automated content/identity checks with
+[rendered-surface validation](../feature-delivery/SKILL.md#4-demonstrate-the-feature-and-prepare-the-pr).
+A captured Azure DevOps publishing request is useful E2E evidence for the
+publisher boundary, but does not establish how the live Tests tab renders or
+groups it. Record that limitation rather than broadening execution into an
+unauthorized external publish. Apply the same distinction to IDE discovery and
+HTML source versus their rendered UI.
 
 ## 2. Pack and establish provenance
 

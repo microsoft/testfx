@@ -32,6 +32,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
         ];
 
         string heading = new('#', headingLevel);
+        if (durationHistory.Length == 0 && modules.Any(static module => module.TotalTests > 0))
+        {
+            builder.Append("> Duration history unavailable for the observed tests; current timings are not a historical baseline.\n\n");
+        }
+
         if (flakyHistory.Length > 0)
         {
             builder.Append(heading).Append(" Flakiness history\n\n");

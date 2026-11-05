@@ -60,4 +60,37 @@ public sealed class UILanguageOverrideTests
             .Returns<string>(key => values.TryGetValue(key, out string? value) ? value : null);
         return environment.Object;
     }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void SetCultureSpecifiedByUser_AppliesSelectedLanguageAndPreservesGranularChildOverrides()
+    {
+        CultureInfo? previous = CultureInfo.DefaultThreadCurrentUICulture;
+        Dictionary<string, string?> variables = new()
+        {
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = "fr-FR",
+            ["DOTNET_CLI_UI_LANGUAGE"] = "de-DE",
+            ["VSLANG"] = null,
+            ["PreferredUILang"] = null,
+        };
+        List<(string Name, string? Value)> writes = [];
+        Mock<IEnvironment> environment = new(MockBehavior.Strict);
+        environment.Setup(e => e.GetEnvironmentVariable(Moq.It.IsAny<string>()))
+            .Returns<string>(name => variables.TryGetValue(name, out string? value) ? value : null);
+        environment.Setup(e => e.SetEnvironmentVariable(Moq.It.IsAny<string>(), Moq.It.IsAny<string?>()))
+            .Callback<string, string?>((name, value) => writes.Add((name, value)));
+        try
+        {
+            UILanguageOverride.SetCultureSpecifiedByUser(environment.Object);
+
+            Assert.AreEqual("fr-FR", CultureInfo.DefaultThreadCurrentUICulture?.Name);
+            Assert.AreSequenceEqual<(string, string?)>([("VSLANG", "1036"), ("PreferredUILang", "fr-FR")], writes);
+            environment.Verify(e => e.SetEnvironmentVariable("TESTINGPLATFORM_UI_LANGUAGE", Moq.It.IsAny<string?>()), Times.Never);
+            environment.Verify(e => e.SetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE", Moq.It.IsAny<string?>()), Times.Never);
+        }
+        finally
+        {
+            CultureInfo.DefaultThreadCurrentUICulture = previous;
+        }
+    }
 }

@@ -20,7 +20,7 @@ internal static class DiagnosticExtensions
         DiagnosticDescriptor rule,
         ImmutableDictionary<string, string?>? properties,
         params object[] args)
-        => node.CreateDiagnostic(rule, additionalLocations: ImmutableArray<Location>.Empty, properties, args);
+        => node.CreateDiagnostic(rule, additionalLocations: [], properties, args);
 
     public static Diagnostic CreateDiagnostic(
         this SyntaxNode node,
@@ -86,7 +86,7 @@ internal static class DiagnosticExtensions
         DiagnosticDescriptor rule,
         ImmutableDictionary<string, string?>? properties,
         params object[] args)
-        => location.CreateDiagnostic(rule, ImmutableArray<Location>.Empty, properties, args);
+        => location.CreateDiagnostic(rule, [], properties, args);
 
     public static Diagnostic CreateDiagnostic(
         this Location location,
@@ -136,16 +136,6 @@ internal static class DiagnosticExtensions
         params object[] args)
         => syntaxReference.GetSyntax(cancellationToken).CreateDiagnostic(rule, args);
 
-    /// <summary>
-    /// Reflection is used to read diagnostic severity overrides in a way that works across Microsoft.CodeAnalysis versions:
-    /// 'CompilationOptions.SyntaxTreeOptionsProvider' is preferred (>= 3.7) and the deprecated 'SyntaxTree.DiagnosticOptions' is used as a fallback (3.3 - 3.7).
-    /// </summary>
-    private static readonly PropertyInfo? s_syntaxTreeDiagnosticOptionsProperty =
-        typeof(SyntaxTree).GetTypeInfo().GetDeclaredProperty("DiagnosticOptions");
-
-    private static readonly PropertyInfo? s_compilationOptionsSyntaxTreeOptionsProviderProperty =
-        typeof(CompilationOptions).GetTypeInfo().GetDeclaredProperty("SyntaxTreeOptionsProvider");
-
     public static void ReportNoLocationDiagnostic(
         this CompilationAnalysisContext context,
         DiagnosticDescriptor rule,
@@ -180,12 +170,8 @@ internal static class DiagnosticExtensions
 
         DiagnosticSeverity? GetEffectiveSeverity()
         {
-            // Microsoft.CodeAnalysis version >= 3.7 exposes options through 'CompilationOptions.SyntaxTreeOptionsProvider.TryGetDiagnosticValue'
-            // Microsoft.CodeAnalysis version 3.3 - 3.7 exposes options through 'SyntaxTree.DiagnosticOptions'. This API is deprecated in 3.7.
-
-            object? syntaxTreeOptionsProvider = s_compilationOptionsSyntaxTreeOptionsProviderProperty?.GetValue(compilation.Options);
-            MethodInfo? syntaxTreeOptionsProviderTryGetDiagnosticValueMethod = syntaxTreeOptionsProvider?.GetType().GetRuntimeMethods().FirstOrDefault(m => m.Name == "TryGetDiagnosticValue");
-            if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod is null && s_syntaxTreeDiagnosticOptionsProperty is null)
+            SyntaxTreeOptionsProvider? syntaxTreeOptionsProvider = compilation.Options.SyntaxTreeOptionsProvider;
+            if (syntaxTreeOptionsProvider is null)
             {
                 return rule.DefaultSeverity;
             }
@@ -193,36 +179,7 @@ internal static class DiagnosticExtensions
             ReportDiagnostic? overriddenSeverity = null;
             foreach (SyntaxTree tree in compilation.SyntaxTrees)
             {
-                ReportDiagnostic? configuredValue = null;
-
-                // Prefer 'CompilationOptions.SyntaxTreeOptionsProvider', if available.
-                if (s_compilationOptionsSyntaxTreeOptionsProviderProperty is not null)
-                {
-                    if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod is not null)
-                    {
-                        // public abstract bool TryGetDiagnosticValue(SyntaxTree tree, string diagnosticId, out ReportDiagnostic severity);
-                        // public abstract bool TryGetDiagnosticValue(SyntaxTree tree, string diagnosticId, CancellationToken cancellationToken, out ReportDiagnostic severity);
-                        object?[] parameters = syntaxTreeOptionsProviderTryGetDiagnosticValueMethod.GetParameters().Length == 3
-                            ? [tree, rule.Id, null]
-                            : [tree, rule.Id, CancellationToken.None, null];
-                        if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod.Invoke(syntaxTreeOptionsProvider, parameters) is true &&
-                            parameters.Last() is ReportDiagnostic value)
-                        {
-                            configuredValue = value;
-                        }
-                    }
-                }
-                else
-                {
-                    RoslynDebug.Assert(s_syntaxTreeDiagnosticOptionsProperty is not null);
-                    var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree);
-                    if (options.TryGetValue(rule.Id, out ReportDiagnostic value))
-                    {
-                        configuredValue = value;
-                    }
-                }
-
-                if (configuredValue is null)
+                if (!syntaxTreeOptionsProvider.TryGetDiagnosticValue(tree, rule.Id, CancellationToken.None, out ReportDiagnostic configuredValue))
                 {
                     continue;
                 }
@@ -237,7 +194,7 @@ internal static class DiagnosticExtensions
                 {
                     overriddenSeverity = configuredValue;
                 }
-                else if (overriddenSeverity.Value.IsLessSevereThan(configuredValue.Value))
+                else if (overriddenSeverity.Value.IsLessSevereThan(configuredValue))
                 {
                     // Choose the most severe value for conflicts.
                     overriddenSeverity = configuredValue;

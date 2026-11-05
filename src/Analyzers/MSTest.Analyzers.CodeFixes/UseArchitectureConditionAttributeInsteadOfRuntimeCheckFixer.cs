@@ -24,7 +24,7 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckFixer 
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseArchitectureConditionAttributeInsteadOfRuntimeCheckRuleId);
+        = [DiagnosticIds.UseArchitectureConditionAttributeInsteadOfRuntimeCheckRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -15,8 +15,9 @@ containing the dispatcher-preserving timeout fix.
 
 - Windows 10 version 2004 (10.0.19041) or later.
 - .NET SDK 10 or later for the native Microsoft.Testing.Platform runner and `dotnet test` CLI.
-- .NET 8 Desktop Runtime for the selected architecture to run this framework-dependent
-  `net8.0-windows10.0.19041.0` application.
+- .NET 10 Desktop Runtime for the selected architecture to run this framework-dependent
+  `net10.0-windows10.0.19041.0` application. The Windows .NET 10 SDK includes it; install it
+  separately if you only have a newer SDK.
 - Visual Studio 2022 or later with the Windows application development tools.
 
 ## Run
@@ -30,8 +31,8 @@ dotnet test --project . --no-build -p:Platform=x64
 ```
 
 Both run commands must finish without manually closing the window. The .NET 10 SDK runs the native
-Microsoft.Testing.Platform CLI, but it does not supply the .NET 8 Desktop Runtime required by this
-framework-dependent .NET application. `WindowsAppSDKSelfContained=true` applies only to the Windows
+Microsoft.Testing.Platform CLI and includes the matching Desktop Runtime on Windows.
+`WindowsAppSDKSelfContained=true` applies only to the Windows
 App SDK: it avoids a machine-wide Windows App Runtime dependency and prevents its bootstrapper from
 blocking unattended runs when that runtime is missing.
 

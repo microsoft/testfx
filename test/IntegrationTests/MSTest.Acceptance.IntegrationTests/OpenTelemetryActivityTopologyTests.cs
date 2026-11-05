@@ -41,8 +41,8 @@ public sealed class OpenTelemetryActivityTopologyTests : AcceptanceTestBase<Open
 
     public static IEnumerable<object[]> TargetFrameworksToTest { get; } =
     [
-        ["net8.0"],
-        ["net9.0"],
+        ["net10.0"],
+        ["net11.0"],
     ];
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -811,7 +811,7 @@ public sealed class ProducerTimestampTests
                 AssetName,
                 AssetName,
                 Sources
-                    .PatchCodeWithReplace("$TargetFrameworks$", "net8.0;net9.0")
+                    .PatchCodeWithReplace("$TargetFrameworks$", "net10.0;net11.0")
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                     .PatchCodeWithReplace("$MicrosoftExtensionsHostingVersion$", MicrosoftExtensionsHostingVersion)
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)

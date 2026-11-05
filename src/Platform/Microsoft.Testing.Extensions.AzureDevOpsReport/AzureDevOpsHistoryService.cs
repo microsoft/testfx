@@ -154,7 +154,8 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
-        return Volatile.Read(ref _statsByTest).TryGetValue(testName, out stats);
+        IReadOnlyDictionary<string, FlakyStats> statsByTest = Volatile.Read(ref _statsByTest);
+        return statsByTest.TryGetValue(testName, out stats);
     }
 
     public bool IsLikelyFlaky(string testName, double threshold)
@@ -171,7 +172,30 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
-        return Volatile.Read(ref _durationStatsByTest).TryGetValue(testName, out stats);
+        IReadOnlyDictionary<string, DurationHistoryStats> statsByTest = Volatile.Read(ref _durationStatsByTest);
+        return statsByTest.TryGetValue(testName, out stats);
+    }
+
+    private static string GetCanonicalTestName(AzureDevOpsTestResult result)
+    {
+        string name = result.AutomatedTestName;
+        return result.Comment switch
+        {
+            string comment when comment.StartsWith(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataFamily, StringComparison.Ordinal)
+                => !comment.StartsWith(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix, StringComparison.Ordinal)
+                    ? throw new NotSupportedException()
+                    : int.TryParse(
+                comment.Substring(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix.Length),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out int length)
+            && length > 0
+            && length <= name.Length
+            && (length == name.Length || name.Substring(length).StartsWith(" (", StringComparison.Ordinal))
+                    ? name.Substring(0, length)
+                    : throw new FormatException(),
+            _ => name,
+        };
     }
 
     private async Task LoadHistoryAsync(AzureDevOpsHistoryQuery query, int historyWindowInDays, CancellationToken cancellationToken)
@@ -214,12 +238,13 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             AzureDevOpsTestResultsPage page = await _historyClient.GetResultsAsync(query, run.Url, skip, ResultsPageSize, continuationToken, cancellationToken).ConfigureAwait(false);
             foreach (AzureDevOpsTestResult result in page.Results)
             {
-                if (!counts.TryGetValue(result.AutomatedTestName, out (int PassCount, int FailCount) currentCount))
+                string testName = GetCanonicalTestName(result);
+                if (!counts.TryGetValue(testName, out (int PassCount, int FailCount) currentCount))
                 {
                     currentCount = default;
                 }
 
-                counts[result.AutomatedTestName] = result.Outcome switch
+                counts[testName] = result.Outcome switch
                 {
                     "Passed" => (currentCount.PassCount + 1, currentCount.FailCount),
                     "Failed" => (currentCount.PassCount, currentCount.FailCount + 1),
@@ -228,10 +253,10 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
                 if (durations is not null && result.DurationMilliseconds is double durationMs && durationMs > 0)
                 {
-                    if (!durations.TryGetValue(result.AutomatedTestName, out List<double>? samples))
+                    if (!durations.TryGetValue(testName, out List<double>? samples))
                     {
                         samples = [];
-                        durations[result.AutomatedTestName] = samples;
+                        durations[testName] = samples;
                     }
 
                     if (samples.Count < MaxDurationSamplesPerTest)

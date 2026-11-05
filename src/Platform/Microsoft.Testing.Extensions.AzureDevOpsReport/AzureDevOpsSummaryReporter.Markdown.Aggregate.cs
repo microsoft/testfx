@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -25,7 +26,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             aggregate.SkippedTests,
             aggregate.FlakyTests.Count,
             aggregate.Duration,
-            aggregate.ExitCode);
+            aggregate.HasAuthoritativeRunSummary ? null : aggregate.ExitCode,
+            isRunElapsed: true);
+        CiRunSummaryExitCode.AppendRunnerPolicy(builder, aggregate, AzureDevOpsResources.ResourceManager);
         if (aggregate.IsPartial)
         {
             builder.Append("> **Partial summary:** the test run was truncated.\n\n");
@@ -38,9 +41,10 @@ internal sealed partial class AzureDevOpsSummaryReporter
         CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
         AppendHistoryMarkdown(builder, aggregate.Modules, headingLevel: 3);
         AppendDependenciesMarkdown(builder, aggregate.Modules, headingLevel: 3);
+        AppendSkipReasonsMarkdown(builder, aggregate.Modules, headingLevel: 3);
 
         builder.Append("### Test modules\n\n");
-        builder.Append("| Result | Test module | Total | Passed | Failed | Skipped | Flaky | Duration |\n");
+        builder.Append("| Result | Test module | Total | Passed | Failed | Skipped | Flaky | Test time |\n");
         builder.Append("| :---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |\n");
         CiRunSummaryModule[] orderedModules =
         [
@@ -66,6 +70,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         }
 
         builder.Append('\n');
+        builder.Append(TestTimeExplanation);
 
         int remainingFailureDetails = MaxAggregateFailureDetails;
         CiRunSummaryModule[] modulesWithFailures =
@@ -107,7 +112,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
             {
                 builder.Append("- **").Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append("** — ")
                     .Append(FormatTestName(test.DisplayName))
-                    .Append(" — ");
+                    .Append(" — ").Append(test.Outcome ?? "outcome unavailable").Append(" — ");
                 AppendModuleIdentity(builder, aggregate.Modules, module);
                 builder.Append('\n');
             }
@@ -212,13 +217,14 @@ internal sealed partial class AzureDevOpsSummaryReporter
             AppendDependenciesMarkdown(builder, [module], headingLevel);
         }
 
-        if (module.SlowestTests.Length > 0)
+        if (includeInsights && module.SlowestTests.Length > 0)
         {
             builder.Append(heading).Append(" ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)
             {
                 builder.Append("- **").Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append("** — ")
-                    .Append(FormatTestName(test.DisplayName)).Append('\n');
+                    .Append(FormatTestName(test.DisplayName))
+                    .Append(" — ").Append(test.Outcome ?? "outcome unavailable").Append('\n');
             }
 
             builder.Append('\n');

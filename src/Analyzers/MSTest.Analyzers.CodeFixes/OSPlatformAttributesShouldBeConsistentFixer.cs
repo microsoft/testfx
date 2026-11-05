@@ -31,7 +31,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentFixer : CodeFixProvide
 
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.OSPlatformAttributesShouldBeConsistentRuleId);
+        = [DiagnosticIds.OSPlatformAttributesShouldBeConsistentRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

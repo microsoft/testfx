@@ -26,7 +26,12 @@ internal readonly struct TestRecord
     {
     }
 
-    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, bool isFlaky, TestFailureDetails? failure = null)
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, bool isFlaky, TestFailureDetails? failure)
+        : this(displayName, fullyQualifiedName, kind, duration, isFlaky, failure, skipReason: null)
+    {
+    }
+
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, bool isFlaky, TestFailureDetails? failure, string? skipReason)
     {
         DisplayName = displayName;
         FullyQualifiedName = fullyQualifiedName;
@@ -34,6 +39,7 @@ internal readonly struct TestRecord
         Duration = duration;
         IsFlaky = isFlaky;
         Failure = failure;
+        SkipReason = skipReason;
     }
 
     public string DisplayName { get; }
@@ -51,6 +57,8 @@ internal readonly struct TestRecord
     /// record is not a failure or the reporter does not collect failure diagnostics.
     /// </summary>
     public TestFailureDetails? Failure { get; }
+
+    public string? SkipReason { get; }
 }
 
 /// <summary>
@@ -58,6 +66,8 @@ internal readonly struct TestRecord
 /// </summary>
 internal sealed class TestFailureDetails
 {
+    public CiRunSummaryAttachment[]? Attachments { get; set; }
+
     public TestFailureDetails(string? message, string? exceptionType, string? stackTrace, string? filePath, int lineNumber)
     {
         Message = message;
@@ -99,7 +109,8 @@ internal sealed class TestFailureDetails
         => RoslynString.IsNullOrWhiteSpace(Message)
             && RoslynString.IsNullOrWhiteSpace(ExceptionType)
             && RoslynString.IsNullOrWhiteSpace(StackTrace)
-            && RoslynString.IsNullOrWhiteSpace(FilePath);
+            && RoslynString.IsNullOrWhiteSpace(FilePath)
+            && Attachments is not { Length: > 0 };
 }
 
 /// <summary>

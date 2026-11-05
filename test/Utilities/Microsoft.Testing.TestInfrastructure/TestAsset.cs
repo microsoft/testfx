@@ -27,7 +27,6 @@ public class TestAsset : IDisposable
     }
 
     public TestAsset(string assetName, string assetCode)
-        : this(assetName, assetCode, new TempDirectory(subDirectory: null))
     {
         AssetId = assetName;
         _assetCode = assetCode;

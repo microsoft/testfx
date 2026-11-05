@@ -1,3 +1,5 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void
+*REMOVED*Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.CoverageSummary.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>?
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.ProcessedArtifact(string! path, string! kind, string! displayName, string? description, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>? coverageSummary) -> void

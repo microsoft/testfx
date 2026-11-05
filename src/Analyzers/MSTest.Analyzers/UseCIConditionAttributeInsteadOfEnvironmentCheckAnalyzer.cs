@@ -47,7 +47,7 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer : D
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+        = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

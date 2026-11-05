@@ -29,7 +29,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(PreferTestMethodOverDataTestMethodRule);
+        = [PreferTestMethodOverDataTestMethodRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

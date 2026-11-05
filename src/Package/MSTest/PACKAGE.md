@@ -21,10 +21,10 @@ public class CalculatorTests
 Supported platforms:
 
 - .NET 4.6.2+
-- .NET 8.0+
-- .NET 8.0 Windows.18362+ (WinUI)
+- .NET 10.0+
+- .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 9+
+- UWP 10.0.17763 with .NET 10+
 
 ## Documentation
 

@@ -4,7 +4,7 @@
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
     <TargetFrameworks>$(NetStandardNetFrameworkHolder);$(SupportedNetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(WinUiMinimum)</TargetFrameworks>
-    <IsNetCoreApp Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsNetCoreApp>
+    <IsNetCoreApp Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">true</IsNetCoreApp>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</AssemblyName>
     <UseInternalTestFramework>true</UseInternalTestFramework>
@@ -18,27 +18,36 @@
     <WindowsPackageType>None</WindowsPackageType>
     <!-- Carry the WinUI runtime locally instead of blocking CI on the bootstrapper's installation dialog. -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- This managed test host does not export its enumerable assertion fixtures to WinRT or Native AOT. -->
+    <CsWinRTAotOptimizerEnabled>false</CsWinRTAotOptimizerEnabled>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.SourceGeneration\TestFramework.SourceGeneration.csproj" Condition=" '$(IsNetCoreApp)' == 'true' " />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(IsNetCoreApp)' != 'true' ">
+    <Compile Remove="Assertions\AssertInterpolatedStringAppendMethodsGeneratorTests.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" PrivateAssets="all" Condition=" '$(IsNetCoreApp)' == 'true' " />
     <!-- Needed to execute the shipping WinUI Extensions assembly; its private SDK dependency does not flow here. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
   </ItemGroup>
 
 </Project>

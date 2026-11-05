@@ -25,7 +25,7 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PreferTestMethodOverDataTestMethodRuleId);
+        = [DiagnosticIds.PreferTestMethodOverDataTestMethodRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

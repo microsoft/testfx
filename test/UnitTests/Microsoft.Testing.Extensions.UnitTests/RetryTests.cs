@@ -802,7 +802,6 @@ public class RetryTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         using var server = new RetryFailedTestsPipeServer(serviceProvider, [], Mock.Of<ILogger>());
-        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         Mock<ILogger> logger = CreateRecordingLogger();
 
         RetryTestHostRunner.AttemptResult result = await RetryTestHostRunner.RunAttemptAsync(
@@ -815,7 +814,7 @@ public class RetryTests
             [],
             attemptCount: 1,
             userMaxRetryCount: 1,
-            cancellation.Token);
+            TestContext.CancellationToken);
 
         Assert.AreEqual(9, result.ExitCode);
         Assert.IsTrue(result.ExitedBeforeConnect);

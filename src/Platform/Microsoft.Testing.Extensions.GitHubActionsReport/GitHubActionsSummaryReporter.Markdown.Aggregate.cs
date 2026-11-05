@@ -45,6 +45,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
+            CiRunSummaryExitCode.AppendRunnerPolicy(builder, aggregate, GitHubActionsResources.ResourceManager);
             if (aggregate.IsPartial)
             {
                 builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
@@ -54,21 +55,22 @@ internal sealed partial class GitHubActionsSummaryReporter
                 builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
             }
 
-            if (aggregate.ExitCode is int authoritativeExitCode
-                && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
+            if (!aggregate.HasAuthoritativeRunSummary
+                && aggregate.ExitCode is int observedExitCode
+                && !GitHubActionsExitCode.IsTestResultOutcome(observedExitCode))
             {
                 string calloutText = string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.ExitCodeCallout,
-                    authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
-                    GitHubActionsExitCode.GetName(authoritativeExitCode),
-                    GitHubActionsExitCode.GetReason(authoritativeExitCode));
+                    observedExitCode.ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsExitCode.GetName(observedExitCode),
+                    GitHubActionsExitCode.GetReason(observedExitCode));
                 builder.Append("> [!WARNING]\n> ").Append(GitHubActionsFailureDetails.EscapeInlineCode(calloutText)).Append("\n\n");
             }
 
             AppendFlakyTests(
                 builder,
-                aggregate.FlakyTests.Select(static test => test.FullyQualifiedName),
+                aggregate.FlakyTests.Select(static test => TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)),
                 aggregate.FlakyTests.Count);
         }
 

@@ -88,4 +88,37 @@ public sealed class MessageLoggerAdapterTests
 
         Assert.AreSame(failure, actual);
     }
+
+    [TestMethod]
+    public async Task SendMessage_OutputProducerRetainsOwningExtensionIdentityAndEnablement()
+    {
+        var fixture = new BridgeTestFixture();
+        var owner = new Mock<Platform.Extensions.IExtension>();
+        owner.SetupGet(value => value.Uid).Returns("adapter-owner");
+        owner.SetupGet(value => value.Version).Returns("2.3.4");
+        owner.SetupGet(value => value.DisplayName).Returns("Owned adapter");
+        owner.SetupGet(value => value.Description).Returns("Diagnostic owner");
+        owner.Setup(value => value.IsEnabledAsync()).ReturnsAsync(false);
+        Platform.Extensions.IExtension? actualOwner = null;
+        fixture.OutputDevice.Setup(value => value.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), CancellationToken.None))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((producer, data, _) =>
+            {
+                actualOwner = producer;
+                Assert.AreEqual("payload", Assert.IsInstanceOfType<TextOutputDeviceData>(data).Text);
+                Assert.AreEqual("adapter-owner", producer.Uid);
+                Assert.AreEqual("2.3.4", producer.Version);
+                Assert.AreEqual("Owned adapter", producer.DisplayName);
+                Assert.AreEqual("Diagnostic owner", producer.Description);
+            })
+            .Returns(Task.CompletedTask);
+        var adapter = new MessageLoggerAdapter(fixture.LoggerFactory, fixture.OutputDevice.Object, owner.Object, null, CancellationToken.None);
+
+        adapter.SendMessage(TestMessageLevel.Informational, "payload");
+
+        Assert.AreSame(adapter, actualOwner);
+        Assert.IsNotNull(actualOwner);
+        Assert.IsFalse(await actualOwner.IsEnabledAsync());
+        owner.Verify(value => value.IsEnabledAsync(), Times.Once);
+    }
 }

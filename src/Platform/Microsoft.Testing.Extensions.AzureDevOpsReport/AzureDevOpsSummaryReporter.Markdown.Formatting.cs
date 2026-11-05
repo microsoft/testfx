@@ -19,7 +19,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
         long skipped,
         long flaky,
         TimeSpan? duration,
-        int? exitCode)
+        int? exitCode,
+        bool isRunElapsed)
     {
         builder.Append("**").Append(total.ToString(CultureInfo.InvariantCulture))
             .Append(total == 1 ? " test**" : " tests**")
@@ -31,7 +32,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append(" · ⚠ **").Append(flaky.ToString(CultureInfo.InvariantCulture)).Append(" flaky**");
         }
 
-        builder.Append(" · ⏱ **").Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
+        builder.Append(isRunElapsed ? " · ⏱ Elapsed: **" : " · ⏱ Test time: **")
+            .Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
         if (exitCode is int processExitCode && processExitCode != 0)
         {
             builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (");

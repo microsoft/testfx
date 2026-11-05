@@ -26,7 +26,7 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyFixer : Code
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId);
+        = [DiagnosticIds.TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

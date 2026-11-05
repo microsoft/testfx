@@ -33,7 +33,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(AvoidOutRefParametersRule);
+        = [AvoidOutRefParametersRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

@@ -26,4 +26,13 @@ public class ApplicationStateGuardTests : TestContainer
         exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
         exception.Message.Should().Contain("thought to be unreachable");
     }
+
+    public void CallerLocationGuardReportsExactLocationAndAcceptsValidState()
+    {
+        ApplicationStateGuard.Ensure(true, path: "fixture.cs", line: 42);
+        Action action = () => ApplicationStateGuard.Ensure(false, path: "fixture.cs", line: 42);
+
+        action.Should().ThrowExactly<InvalidOperationException>()
+            .WithMessage("Unexpected state in file 'fixture.cs' at line '42'");
+    }
 }

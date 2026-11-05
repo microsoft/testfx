@@ -36,7 +36,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+        = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -74,8 +74,8 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
     {
         IArgumentOperation? messageArg = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == MessageParameterName && arg.ArgumentKind != ArgumentKind.DefaultValue);
         return messageArg is null
-            ? ImmutableArray<Location>.Empty
-            : ImmutableArray.Create(messageArg.Syntax.GetLocation());
+            ? []
+            : [messageArg.Syntax.GetLocation()];
     }
 
     private static bool IsAlwaysFalse(IInvocationOperation operation)

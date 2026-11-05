@@ -26,7 +26,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.DoNotNegateBooleanAssertionRuleId);
+        = [DiagnosticIds.DoNotNegateBooleanAssertionRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

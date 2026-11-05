@@ -27,7 +27,7 @@ public sealed class PreferTestCleanupOverDisposeFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PreferTestCleanupOverDisposeRuleId);
+        = [DiagnosticIds.PreferTestCleanupOverDisposeRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

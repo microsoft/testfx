@@ -432,4 +432,102 @@ public sealed class ServiceProviderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
     }
+
+    [TestMethod]
+    public void RequiredServices_ResolveRegisteredConfigurationAndArtifactNamingAndRejectMissing()
+    {
+        Mock<Microsoft.Testing.Platform.Configurations.IConfigurationRoot> configuration = new();
+        Mock<IArtifactNamingService> naming = new();
+        _serviceProvider.AddService(configuration.Object);
+        _serviceProvider.AddService(naming.Object);
+
+        Assert.AreSame(configuration.Object, _serviceProvider.GetConfigurationRoot());
+        Assert.AreSame(naming.Object, _serviceProvider.GetArtifactNamingService());
+        InvalidOperationException missingConfiguration = Assert.ThrowsExactly<InvalidOperationException>(() => new ServiceProvider().GetConfigurationRoot());
+        InvalidOperationException missingNaming = Assert.ThrowsExactly<InvalidOperationException>(() => new ServiceProvider().GetArtifactNamingService());
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(Microsoft.Testing.Platform.Configurations.IConfigurationRoot)),
+            missingConfiguration.Message);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(IArtifactNamingService)),
+            missingNaming.Message);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task Authorization_AbsentOrEmptyAuthorizerClearsStaleIdentities(int kind)
+    {
+        _serviceProvider.TestHostControllerAuthorizedSecurityIdentities = ["stale"];
+        Mock<ITestHostLauncher> launcher = new();
+        if (kind > 0)
+        {
+            launcher.As<ITestHostControllerConnectionAuthorizer>()
+                .Setup(a => a.GetAuthorizedSecurityIdentitiesAsync("host.exe", CancellationToken.None))
+                .ReturnsAsync(kind == 1 ? null! : Array.Empty<string>());
+        }
+
+        Mock<ILogger> logger = new(MockBehavior.Strict);
+        IReadOnlyList<string>? identities = await _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+            launcher.Object, "host.exe", logger.Object, CancellationToken.None);
+
+        Assert.IsNull(identities);
+        Assert.IsNull(_serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities());
+        logger.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Authorization_InvalidIdentityIsRejectedOnWindowsAndIgnoredElsewhere(bool valid)
+    {
+        const string PackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+        string identity = valid ? PackageSid : "not-a-sid";
+        List<string> requested = [identity];
+        using CancellationTokenSource cancellation = new();
+        Mock<ITestHostLauncher> launcher = new();
+        launcher.SetupGet(l => l.Uid).Returns("launcher");
+        launcher.SetupGet(l => l.DisplayName).Returns("Launcher display");
+        Mock<ITestHostControllerConnectionAuthorizer> authorizer = launcher.As<ITestHostControllerConnectionAuthorizer>();
+        authorizer.Setup(a => a.GetAuthorizedSecurityIdentitiesAsync("host.exe", cancellation.Token)).ReturnsAsync(requested);
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !valid)
+        {
+            InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+                _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(launcher.Object, "host.exe", logger.Object, cancellation.Token));
+            Assert.AreEqual(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.GetResourceString("TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage"),
+                    "Launcher display", "launcher", "not-a-sid", "S-1-15-2-1"),
+                failure.Message);
+            Assert.IsNull(_serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities());
+        }
+        else
+        {
+            IReadOnlyList<string>? identities = await _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                launcher.Object, "host.exe", logger.Object, cancellation.Token);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.AreSequenceEqual([PackageSid], identities!);
+                requested[0] = "changed after validation";
+                Assert.AreSequenceEqual([PackageSid], _serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities()!);
+                logger.Verify(
+                    l => l.LogAsync(LogLevel.Debug, "'launcher' requested the following validated security identity/identities for controller-side connections: " + PackageSid, null, LoggingExtensions.Formatter),
+                    Times.Once);
+            }
+            else
+            {
+                Assert.IsNull(identities);
+                Assert.IsNull(_serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities());
+                logger.Verify(
+                    l => l.LogAsync(LogLevel.Debug, "'launcher' requested 1 connection authorization(s), ignored on this operating system.", null, LoggingExtensions.Formatter),
+                    Times.Once);
+            }
+        }
+
+        authorizer.Verify(a => a.GetAuthorizedSecurityIdentitiesAsync("host.exe", cancellation.Token), Times.Once);
+    }
 }

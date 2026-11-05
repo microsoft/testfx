@@ -34,7 +34,7 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(ValidTestMethodSignatureRule);
+        = [ValidTestMethodSignatureRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

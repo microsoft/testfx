@@ -24,7 +24,7 @@ if (-not (Test-Path -LiteralPath $DotnetPath -PathType Leaf) -or -not (Test-Path
 $ResultsDirectory = [IO.Path]::GetFullPath($ResultsDirectory)
 $null = New-Item -ItemType Directory -Path $ResultsDirectory -Force
 $project = Join-Path $PSScriptRoot 'WinUIMtpPackagedApp.csproj'
-$dependenciesPath = Join-Path $PSScriptRoot "bin\x64\$Configuration\net8.0-windows10.0.19041.0\win-x64\WinUIMtpPackagedApp.deps.json"
+$dependenciesPath = Join-Path $PSScriptRoot "bin\x64\$Configuration\net10.0-windows10.0.19041.0\win-x64\WinUIMtpPackagedApp.deps.json"
 $dependencies = Get-Content -LiteralPath $dependenciesPath -Raw | ConvertFrom-Json
 $packages = @($dependencies.libraries.PSObject.Properties.Name | ForEach-Object { $_.Split('/')[0] })
 foreach ($extension in @(

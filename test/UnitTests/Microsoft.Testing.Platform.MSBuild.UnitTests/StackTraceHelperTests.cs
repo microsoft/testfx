@@ -8,7 +8,12 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 [TestClass]
 public sealed class StackTraceHelperTests
 {
+    // Guards StackTraceHelper's process-wide s_regex cache. Every test in this assembly that reaches
+    // StackTraceHelper (directly or through FailedTestHelper.FromFailedTest) must declare this key.
+    internal const string RegexCacheResource = nameof(RegexCacheResource);
+
     [TestMethod]
+    [ResourceLock(RegexCacheResource, Mode = ResourceAccessMode.Read)]
     public void TryFindLocationFromStackFrame_WhenLocationExists_ReturnsLocation()
     {
         const string stackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
@@ -22,6 +27,7 @@ public sealed class StackTraceHelperTests
     }
 
     [TestMethod]
+    [ResourceLock(RegexCacheResource, Mode = ResourceAccessMode.Read)]
     public void TryFindLocationFromStackFrame_WhenLocationIsMissing_ReturnsFalse()
     {
         const string stackTrace = "   at Program.Main()";
@@ -35,6 +41,7 @@ public sealed class StackTraceHelperTests
     }
 
     [TestMethod]
+    [ResourceLock(RegexCacheResource)] // Resets s_regex to null.
     public void TryFindLocationFromStackFrame_InitializesRegexWithBoundedTimeout()
     {
         const string stackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
@@ -81,4 +88,55 @@ public sealed class StackTraceHelperTests
         => Assert.AreEqual(
             @"^   at (?<code>.+) in (?<file>.+):line (?<line>\d+)$",
             StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false));
+
+    [TestMethod]
+    [ResourceLock(RegexCacheResource)] // Replaces s_regex.
+    public void TryFindLocationFromStackFrame_RegexTimeout_ReturnsNoLocation()
+    {
+        FieldInfo regexField = typeof(StackTraceHelper).GetField("s_regex", BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not resolve StackTraceHelper.s_regex.");
+        object? original = regexField.GetValue(null);
+        try
+        {
+            regexField.SetValue(null, new TimeoutRegex());
+
+            bool foundLocation = StackTraceHelper.TryFindLocationFromStackFrame(
+                "   at Program.Main() in /repo/Program.cs:line 42",
+                out string? file,
+                out int lineNumber,
+                out string? place);
+
+            Assert.IsFalse(foundLocation);
+            Assert.IsNull(file);
+            Assert.AreEqual(0, lineNumber);
+            Assert.IsNull(place);
+        }
+        finally
+        {
+            regexField.SetValue(null, original);
+        }
+    }
+
+    private sealed class TimeoutRegex : Regex
+    {
+        public TimeoutRegex()
+            : base(".*")
+            => factory = new TimeoutRegexRunnerFactory();
+    }
+
+    private sealed class TimeoutRegexRunnerFactory : RegexRunnerFactory
+    {
+        protected override RegexRunner CreateInstance() => new TimeoutRegexRunner();
+    }
+
+    private sealed class TimeoutRegexRunner : RegexRunner
+    {
+        protected override void Go() => throw new RegexMatchTimeoutException();
+
+        protected override bool FindFirstChar() => throw new RegexMatchTimeoutException();
+
+        protected override void InitTrackCount()
+        {
+        }
+    }
 }

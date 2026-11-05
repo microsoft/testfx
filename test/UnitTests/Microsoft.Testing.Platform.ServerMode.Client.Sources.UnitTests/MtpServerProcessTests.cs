@@ -42,6 +42,34 @@ public sealed class MtpServerProcessTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public async Task StartAsync_NullSource_RejectsBeforeLaunching()
+    {
+        ArgumentNullException asynchronous = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+            () => MtpServerProcess.StartAsync(null!, cancellationToken: TestContext.CancellationToken));
+        ArgumentNullException synchronous = Assert.ThrowsExactly<ArgumentNullException>(() => MtpServerProcess.Start(null!));
+
+        Assert.AreEqual("source", asynchronous.ParamName);
+        Assert.AreEqual("source", synchronous.ParamName);
+    }
+
+    [TestMethod]
+    public void ProcessState_WhenUnderlyingProcessHasNoReadableState_ReturnsSafeDefaults()
+    {
+        using Process process = new();
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        using MtpJsonRpcConnection connection = new(new EmptyMessageHandler());
+        ConstructorInfo constructor = typeof(MtpServerProcess).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
+        using var owner = (MtpServerProcess)constructor.Invoke(
+            [listener, process, connection, new StringBuilder(), NullMtpClientLogger.Instance]);
+
+        Assert.AreEqual(0, owner.ProcessId);
+        Assert.IsNull(owner.ExitCode);
+        owner.Dispose();
+        Assert.AreEqual(0, owner.ProcessId);
+        Assert.IsNull(owner.ExitCode);
+    }
+
+    [TestMethod]
     public async Task StartAsyncWithCustomOptionsUsesLoggerAndPreservesLaunchDetails()
     {
         using var temp = TempDirectory.Create();
@@ -178,23 +206,19 @@ public sealed class MtpServerProcessTests
     {
         using var temp = TempDirectory.Create();
         string source = Path.Combine(temp.Path, "Missing.dll");
-        var connectionTimeout = TimeSpan.FromSeconds(30);
-        // Allow process startup and stderr-drain delays on loaded agents while retaining a ten-second gap that
-        // distinguishes early-exit detection from waiting for the full connection timeout.
-        var maximumExpectedDuration = TimeSpan.FromSeconds(20);
-        var options = new MtpServerClientOptions { ConnectionTimeout = connectionTimeout };
-        var stopwatch = Stopwatch.StartNew();
+        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromMinutes(5) };
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        // Bound a missing exit probe, not startup performance: allow a minute for muxer startup and stderr
+        // draining on loaded agents, well below the five-minute connection timeout.
+        var startupHangTimeout = TimeSpan.FromMinutes(1);
+        cancellation.CancelAfter(startupHangTimeout);
 
         MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
-            () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
-        stopwatch.Stop();
+            () => MtpServerProcess.StartAsync(source, options, cancellation.Token));
 
         Assert.Contains("exited with code", exception.Message);
         Assert.Contains("before connecting back", exception.Message);
-        Assert.IsLessThan(
-            maximumExpectedDuration,
-            stopwatch.Elapsed,
-            "A process that exits during startup must be reported immediately instead of waiting for the connection timeout.");
+        Assert.DoesNotContain("did not connect back within", exception.Message);
     }
 
     [TestMethod]
@@ -942,6 +966,15 @@ public sealed class MtpServerProcessTests
     private static void MakeExecutable(string path)
         => File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 #endif
+
+    private sealed class EmptyMessageHandler : Microsoft.Testing.Platform.ServerMode.IMessageHandler
+    {
+        public Task<Microsoft.Testing.Platform.ServerMode.RpcMessage?> ReadAsync(CancellationToken cancellationToken)
+            => Task.FromResult<Microsoft.Testing.Platform.ServerMode.RpcMessage?>(null);
+
+        public Task WriteRequestAsync(Microsoft.Testing.Platform.ServerMode.RpcMessage message, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
 
     private sealed class TempDirectory : IDisposable
     {

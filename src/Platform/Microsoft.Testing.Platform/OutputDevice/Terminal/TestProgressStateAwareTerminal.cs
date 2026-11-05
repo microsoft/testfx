@@ -315,7 +315,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                         try
                         {
                             _terminal.StartUpdate();
-                            _terminal.AppendLine(message);
+                            if (_renderer is SilenceDrivenHeartbeatRenderer)
+                            {
+                                _renderer.OnWrite(_terminal, _progressItems, terminal => terminal.AppendLine(message));
+                            }
+                            else
+                            {
+                                _terminal.AppendLine(message);
+                            }
                         }
                         finally
                         {

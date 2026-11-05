@@ -12,6 +12,56 @@
         <target state="new">Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
+      <trans-unit id="AttachmentCleanupWarning">
+        <source>Could not remove incomplete GitHub Actions attachment '{0}': {1}</source>
+        <target state="new">Could not remove incomplete GitHub Actions attachment '{0}': {1}</target>
+        <note>{0} is the sanitized file name; {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="AttachmentCountLimitWarning">
+        <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
+        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AttachmentManifestWarning">
+        <source>Could not write the GitHub Actions attachment manifest: {0}</source>
+        <target state="new">Could not write the GitHub Actions attachment manifest: {0}</target>
+        <note>{0} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="AttachmentPathsLabel">
+        <source>Attachments (paths inside the workflow artifact):</source>
+        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AttachmentReportingWarning">
+        <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
+        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AttachmentSizeChanged">
+        <source>The attachment grew beyond the staging size limit while being copied.</source>
+        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AttachmentSizeText">
+        <source>{0} bytes</source>
+        <target state="new">{0} bytes</target>
+        <note>{0} is the attachment size in bytes.</note>
+      </trans-unit>
+      <trans-unit id="AttachmentSkippedWarning">
+        <source>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</source>
+        <target state="new">Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</target>
+        <note>{0} is the sanitized file name; {1} is the invariant status code.</note>
+      </trans-unit>
+      <trans-unit id="AttachmentUnavailableLabel">
+        <source>not staged; see manifest.</source>
+        <target state="new">not staged; see manifest.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AttachmentsOptionDescription">
+        <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
+        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <note>{Locked="--report-gh"}</note>
+      </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
         <target state="translated">GitHub Actions でのテスト実行で第一級エクスペリエンスを実現するためのワークフロー コマンドを生成する GitHub Actions レポート生成プログラム。</target>
@@ -201,6 +251,11 @@
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
         <target state="translated">GitHub Actions のテスト履歴スナップショットを '{0}' に書き込めませんでした: {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="InvalidAttachmentsPath">
+        <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
+        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
         <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>

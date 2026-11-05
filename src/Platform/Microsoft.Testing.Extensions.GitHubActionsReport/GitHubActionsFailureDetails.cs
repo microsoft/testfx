@@ -20,7 +20,8 @@ internal readonly struct GitHubActionsFailureEntry
         string? exceptionType = null,
         string? stackTrace = null,
         string? filePath = null,
-        int lineNumber = 0)
+        int lineNumber = 0,
+        CiRunSummaryAttachment[]? attachments = null)
     {
         FullyQualifiedName = fullyQualifiedName;
         Duration = duration;
@@ -29,6 +30,7 @@ internal readonly struct GitHubActionsFailureEntry
         StackTrace = stackTrace;
         FilePath = filePath;
         LineNumber = lineNumber;
+        Attachments = attachments;
     }
 
     public string FullyQualifiedName { get; }
@@ -45,11 +47,14 @@ internal readonly struct GitHubActionsFailureEntry
 
     public int LineNumber { get; }
 
+    public CiRunSummaryAttachment[]? Attachments { get; }
+
     public bool HasDetails
         => !RoslynString.IsNullOrWhiteSpace(Message)
             || !RoslynString.IsNullOrWhiteSpace(ExceptionType)
             || !RoslynString.IsNullOrWhiteSpace(StackTrace)
-            || !RoslynString.IsNullOrWhiteSpace(FilePath);
+            || !RoslynString.IsNullOrWhiteSpace(FilePath)
+            || Attachments is { Length: > 0 };
 }
 
 /// <summary>
@@ -365,6 +370,30 @@ internal static class GitHubActionsFailureDetails
         {
             string fence = GetCodeFence(body);
             builder.Append(fence).Append("text\n").Append(body).Append('\n').Append(fence).Append('\n');
+        }
+
+        if (entry.Attachments is { Length: > 0 })
+        {
+            builder.Append("\n**").Append(GitHubActionsResources.AttachmentPathsLabel).Append("**\n\n");
+            foreach (CiRunSummaryAttachment attachment in entry.Attachments)
+            {
+                builder.Append("- `").Append(EscapeInlineCode(attachment.RelativePath ?? attachment.FileName)).Append("`");
+                if (attachment.RelativePath is not null)
+                {
+                    builder.Append(" (")
+                        .AppendFormat(
+                            CultureInfo.InvariantCulture,
+                            GitHubActionsResources.AttachmentSizeText,
+                            attachment.SizeBytes)
+                        .Append(')');
+                }
+                else
+                {
+                    builder.Append(" — ").Append(GitHubActionsResources.AttachmentUnavailableLabel);
+                }
+
+                builder.Append('\n');
+            }
         }
 
         builder.Append("\n</details>\n\n");

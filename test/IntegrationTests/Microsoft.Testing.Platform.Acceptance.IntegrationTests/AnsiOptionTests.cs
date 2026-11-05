@@ -205,7 +205,7 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         ["AMP_HOME"] = string.Empty,
         ["QWEN_CODE"] = string.Empty,
         ["DROID_CLI"] = string.Empty,
-        ["OPENCODE_AI"] = string.Empty,
+        ["OPENCODE"] = string.Empty,
         ["ZED_ENVIRONMENT"] = string.Empty,
         ["ZED_TERM"] = string.Empty,
         ["KIMI_CLI"] = string.Empty,
@@ -283,7 +283,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchTargetFrameworks([TargetFrameworks.NetCurrent])
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
     }
 }

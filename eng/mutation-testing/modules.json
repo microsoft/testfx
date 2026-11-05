@@ -4,7 +4,7 @@
   "excludedProjects": [
     {
       "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.Controller/Microsoft.Testing.Extensions.PackagedApp.Controller.csproj",
-      "reason": "Windows-only controller targets net8.0-windows/net9.0-windows and win-x64; it cannot execute in the Ubuntu/net8.0 mutation shards."
+      "reason": "Windows-only controller targets net10.0-windows/net11.0-windows and win-x64; it cannot execute in the Ubuntu/net10.0 mutation shards."
     },
     {
       "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.MSBuild/Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj",
@@ -32,7 +32,7 @@
     },
     {
       "project": "src/TestFramework/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj",
-      "reason": "Windows desktop UI Automation project requiring the WPF framework; it cannot execute in the Ubuntu/net8.0 mutation shards."
+      "reason": "Windows desktop UI Automation project requiring the WPF framework; it cannot execute in the Ubuntu/net10.0 mutation shards."
     }
   ],
   "modules": [
@@ -308,7 +308,7 @@
         "test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj",
         "test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj"
       ],
-      "targetFramework": "net9.0",
+      "targetFramework": "net10.0",
       "timeoutMinutes": 360,
       "enabled": true,
       "legacyReport": false

@@ -29,7 +29,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PreferDisposeOverTestCleanupRuleId);
+        = [DiagnosticIds.PreferDisposeOverTestCleanupRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

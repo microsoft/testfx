@@ -169,6 +169,17 @@ author claims and a checked template box are not execution proof.
   Accept a clearer transcript/artifact or an explained unavailable/inapplicable
   capture. A diagram alone is not a running-feature demonstration; media is not
   test execution or shipping-product proof. Never request public sensitive data.
+- Check the feature's requirement-to-consumer matrix against exact automated E2E
+  cases and final consumed output. Credit existing coverage. Formatter/unit tests
+  or correct HTML do not prove another reporter's external identities/grouping;
+  verify per-result names, counts, and metadata association at each changed
+  boundary. Do not demand a full product matrix for an unaffected surface.
+- For output/layout changes, distinguish actual rendered checks from HTML/JSON
+  source assertions or captured publishing payloads. Look for representative
+  dimensions, relevant long/escaped-content states, readable labels, aligned
+  rows, reachable controls, and exercised interactions. An inaccessible hosted
+  UI or IDE remains an explicit gap, not a claimed pass or permission to access
+  it. Review available captures/artifacts; do not execute PR code to fill gaps.
 - For behavioral regression coverage, verify the same tests/assertions/selection
   were retained without the production change, executed, and failed at the
   intended assertion, then executed and passed with it. Check source states,
@@ -413,3 +424,7 @@ post on their originating PRs.
 | A behavior-preserving refactor has focused green-before/green-after runs and no useful visual surface. | Accept equivalence and explained inapplicable media; do not require a fabricated red run or screenshot. |
 | A test-only safety net passes before and after, and a relevant compiling mutation fails its intended assertion. | Accept green/green plus labeled mutation sensitivity; do not claim the old production state was defective. |
 | A new user-visible feature lacks media or a decision record, but correctness is otherwise established. | Identify useful missing evidence proportionately in the summary; do not block solely for absent media/record or create an inline code finding. |
+| Data-row formatter tests and HTML pass, but CI publishing uses a method-only identity for distinct rows. | Trace the consuming identity/grouping contract and look for a multiple-row E2E assertion. Report a verified identity collision as a correctness defect; otherwise state the consumer-proof gap without claiming the UI failed. |
+| An HTML test checks strings and the PR calls this a rendered-layout check. | Credit content coverage, not layout proof; identify the missing rendered dimensions/states/interactions in the summary without inventing clipping or overlap. |
+| A packed consumer test verifies distinct publishing identities, but the live Azure DevOps UI is inaccessible. | Credit publisher-boundary evidence and retain the explicit UI limitation. Do not claim a live Tests-tab pass or require unauthorized external writes. |
+| Existing E2E assertions protect the changed mapping and real rendered checks cover representative widths and long labels. | Accept that evidence; do not demand duplicate tests, screenshots for every equivalent case, or a new visual-test stack. |

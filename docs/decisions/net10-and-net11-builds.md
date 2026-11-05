@@ -532,14 +532,110 @@ manifests. No workflow files were changed by this PR. The coordinator confirms
 that broader main maintenance is separate; do not hand-edit generated locks
 or mix that unrelated repair into this framework branch.
 
+## CI follow-up: Native AOT compiler-pack servicing
+
+Run [20261104.1](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1663474)
+uses source `06c0abb53e12c0700ab608fca4c733c89da57a1c`. Native AOT sample
+builds, generated acceptance consumers, and Modern UWP restores fail before
+their intended test behavior can execute. Bootstrapping newer runtimes does
+not update the pinned SDK's implicit compiler dependencies or the existing
+.NET 11 compatibility override.
+
+Align those compiler selections with the runtimes already installed from
+`global.json`. Preserve the existing .NET 11 pack-correction hook and its
+imports; extend it narrowly for the .NET 10 Native AOT compiler, without
+changing .NET 10 reference packs or ordinary framework-dependent runtime
+requirements. Public samples need an explicit import because their shared
+build files intentionally do not import the repository's root build policy.
+Keep the SDK, package auditing, warning enforcement, test assertions, and
+parallel scheduling unchanged.
+
+`FrameworkTargetingTests.NativeAotCompilerPack_MatchesBootstrappedRuntime`
+queries the real SDK's selected `Microsoft.DotNet.ILCompiler` dependency for
+both supported runtimes and compares it with the independent bootstrap
+configuration. Before changing the pack policy, both new cases executed and
+failed at their version equality assertions, with no setup failures or skips.
+The unchanged public `NativeAotRunner` build also reproduced the restore
+failure locally.
+
+Local desktop MSBuild additionally exposes an unrelated `ProjectData` task-host
+failure after `a33417660883fc7122dcac18369386ac442cc02d` enabled project-data
+generation. That commit postdates this CI run's source. Validation uses
+`/p:EnableProjectDataOnBuild=false`, matching the original run; this is not a
+claim that the current default-settings build passes. No project-data policy
+change is included in this repair.
+
+### Executed repair evidence
+
+The tested source is base `f253732f9835476058494595f84ff4054ea683ef` plus
+the retained code patch with SHA-256
+`FBDA8C59FC88E5CEA38BE82B4BE584FCF22C51E118221AA2C22628BC0EB18482`.
+The regression-only patch used before changing the policy has SHA-256
+`889A4B50742C0DFDA1A6A1F53AB6766B09FCC2E255D08A3B80F5582B6F76C2BA`.
+Both states use SDK `12.0.100-alpha.1.26509.101`, Release packages, and the
+same two version-equality assertions.
+
+The corrected full build/pack and package-content/metadata verifier exit `0`,
+with no warnings or errors, using the explicit project-data setting above.
+Both originally failing sample projects build with warnings-as-errors and
+exit `0`. The existing sample validation script then executes one test in
+`ProjectWithNativeAOT` and six in `NativeAotRunner`: seven passed, none skipped.
+
+The final acceptance selection independently discovers and executes all
+17 planned cases: 17 passed, zero failed/skipped, parent exit `0`. This includes
+both metadata regressions, the existing packed-framework consumers, actual
+.NET 10/.NET 11 Native AOT publish/run cases, managed AOT/source-generation
+boundaries, x86/ARM64 Modern UWP package builds, and real Modern UWP activation
+on both supported frameworks. The unchanged assembly scheduling remains
+method-level with 32 workers; the existing Modern UWP class exclusion remains
+in place. The execution gate reconciles the fresh TRX with the independent
+case plan; JUnit and CTRF exports also parse and reconcile successfully.
+
+Actual generated-consumer assets select compiler versions `10.0.14` and
+`11.0.0-rc.3.26522.148`. Thirteen cached product archives match the final
+shipping packages byte-for-byte (`MSTest.*` `5.0.0-dev` and
+`Microsoft.Testing.*` `3.0.0-dev`). The existing framework consumer also compares
+five loaded assemblies with their exact package entries. App-model preflight
+and the final registration leak check both pass.
+
+Two preliminary consumer runs exposed local desktop `MAX_PATH` limits, first
+in the package cache and then in controller satellite-copy outputs. A short
+parent-owned cache and a temporary short worktree alias resolve those limits
+without changing source, assertions, package contents, or test selection.
+Keep the checkout below the alias root so the test infrastructure can find
+its `.git` marker. Retain the failed attempts separately from the successful
+run; neither partial run is counted as all-green evidence.
+
+Representative successful commands, with a configuration-matched local
+`DOTNET_ROOT`, a preflight-capable Windows host, and short validation paths:
+
+```powershell
+.\eng\build.ps1 -restore -build -pack -configuration Release -binaryLog /p:EnableProjectDataOnBuild=false "/bl:$evidence\build-pack-{}.binlog"
+.\.dotnet\dotnet.exe build samples\public\mstest-runner\NativeAotRunner\TestProject1\TestProject1.csproj -c Release -p:TreatWarningsAsErrors=true "-bl:$evidence\nativeaot-sample.binlog"
+.\.dotnet\dotnet.exe build samples\public\DemoMSTestSdk\ProjectWithNativeAOT\ProjectWithNativeAOT.csproj -c Release -p:TreatWarningsAsErrors=true "-bl:$evidence\sdk-sample.binlog"
+.\eng\test-samples.ps1 -Configuration Release -Include @('*ProjectWithNativeAOT*', '*NativeAotRunner*TestProject1*')
+$env:TESTFX_RUN_WINDOWS_APP_MODEL_TESTS = '1'
+$filter = 'FullyQualifiedName~FrameworkTargetingTests|FullyQualifiedName~MSTest.Acceptance.IntegrationTests.NativeAotTests|FullyQualifiedName~AssemblyFixtureProviderNativeAotTests|FullyQualifiedName~PublishAotNonNativeTests|FullyQualifiedName~MSTestSdk_SourceGenerationOptIn_NativeAotLibraryBuilds|FullyQualifiedName~MSTestSdk_SourceGenerationOptIn_VSTestTakesPrecedenceOverNativeAot|FullyQualifiedName~SdkTests.NativeAot_Smoke_Test|FullyQualifiedName~ModernUwpTests'
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Acceptance.IntegrationTests\Release\net12.0\MSTest.Acceptance.IntegrationTests.dll --filter $filter --report-trx --report-trx-filename framework-packs.trx --report-junit --report-junit-filename framework-packs.xml --report-ctrf --report-ctrf-filename framework-packs.ctrf.json --results-directory $evidence --show-test-results all
+```
+
+Each command exits `0`. The final runner uses the same built module and
+assertions as the earlier native `dotnet test --project` attempts, invoked
+directly through the short alias to keep generated paths short. This internal
+build-policy change has no visual surface; dependency manifests, binary
+comparisons, executed consumers, and transcripts are the demonstration.
+Fresh Azure Pipelines and Linux/macOS runs are not claimed.
+
 ## Open questions
 
 This change is scoped to `main`; no downstream rollout or servicing/backport is
 authorized. The .NET 11 runtime remains prerelease and must continue to flow
 with future dependency updates.
 
-Linux/macOS CI, Release validation and WASI runtime execution were not run
-locally. `wasmtime` is unavailable; the selected WASI regressions do not skip
+Linux/macOS CI and WASI runtime execution were not run locally. Focused Release
+validation for the compiler-pack repair is recorded above; the separate current
+default Windows `ProjectData` build failure remains open. `wasmtime` is
+unavailable; the selected WASI regressions do not skip
 because they are build assertions. Windows Modern UWP activation was subsequently
 validated during the CI follow-up above. The existing .NET 8/.NET 9 controller
 deployment contract is preserved; no new scheduling opt-in, runtime

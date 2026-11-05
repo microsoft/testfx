@@ -24,7 +24,7 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckFixer : Code
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.UseCIConditionAttributeInsteadOfEnvironmentCheckRuleId);
+        = [DiagnosticIds.UseCIConditionAttributeInsteadOfEnvironmentCheckRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

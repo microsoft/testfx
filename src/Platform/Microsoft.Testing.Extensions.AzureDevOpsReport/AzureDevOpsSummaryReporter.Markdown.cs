@@ -10,6 +10,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
     private const int MaxDependencies = 50;
     private const int MaxAggregateFailureDetails = 20;
     private const int MaxSlowestTests = 10;
+    private const int MaxSkipReasonRows = 10;
+    private const string TestTimeExplanation = "> Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.\n\n";
 
     internal static /* for testing */ string BuildMarkdown(
         IReadOnlyList<TestRecord> records,
@@ -52,8 +54,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
             module.SkippedTests,
             module.FlakyTests.Length,
             TimeSpan.FromTicks(module.TestDurationTicks),
-            module.ExitCode);
+            module.ExitCode,
+            isRunElapsed: false);
+        builder.Append(TestTimeExplanation);
         CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel: 3);
+        AppendSkipReasonsMarkdown(builder, [module], headingLevel: 3);
         _ = AppendModuleDiagnostics(
             builder,
             module,

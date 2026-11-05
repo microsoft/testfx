@@ -24,7 +24,7 @@ public sealed class UseExecuteAsyncOverrideFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create("CS0115");
+        = ["CS0115"];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

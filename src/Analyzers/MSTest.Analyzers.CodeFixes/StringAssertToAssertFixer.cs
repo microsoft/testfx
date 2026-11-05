@@ -22,7 +22,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.StringAssertToAssertRuleId);
+        = [DiagnosticIds.StringAssertToAssertRuleId];
 
     /// <inheritdoc />
     public sealed override FixAllProvider GetFixAllProvider()

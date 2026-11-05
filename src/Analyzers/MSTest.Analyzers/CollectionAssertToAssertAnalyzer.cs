@@ -64,7 +64,7 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [Rule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -129,21 +131,42 @@ public sealed class TelemetryCollectorTests : TestContainer
 #if NET8_0_OR_GREATER
     public void TrackAssertionCall_DoesNotAllocateAfterCounterExists()
     {
+        const int CallCount = 10_000;
         TelemetryCollector.DrainAssertionCallCounts();
-        for (int i = 0; i < 1_000; i++)
-        {
-            TelemetryCollector.TrackAssertionCall("TelemetryCollectorTests.Allocations", isEnabled: true);
-        }
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 10_000; i++)
-        {
-            TelemetryCollector.TrackAssertionCall("TelemetryCollectorTests.Allocations", isEnabled: true);
-        }
+        // Warm the measuring method too, so first-use runtime/JIT work is not charged to the hot path.
+        _ = TrackCallsAndGetAllocatedBytes();
 
-        long allocatedBytes = GC.GetAllocatedBytesForCurrentThread() - before;
+        long allocatedBytes = TrackCallsAndGetAllocatedBytes();
         allocatedBytes.Should().Be(0);
-        TelemetryCollector.DrainAssertionCallCounts()["TelemetryCollectorTests.Allocations"].Should().Be(11_000);
+        TelemetryCollector.DrainAssertionCallCounts()["TelemetryCollectorTests.Allocations"].Should().Be(2 * CallCount);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static long TrackCallsAndGetAllocatedBytes()
+        {
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < CallCount; i++)
+            {
+                TelemetryCollector.TrackAssertionCall("TelemetryCollectorTests.Allocations", isEnabled: true);
+            }
+
+            return GC.GetAllocatedBytesForCurrentThread() - before;
+        }
     }
 #endif
+
+    public void TrackAssertionCall_InvalidNameCannotEscapeOrCorruptOtherCounters()
+    {
+        const string Name = "FrameworkCoverage.InvalidTelemetryNeighbor";
+        TelemetryCollector.DrainAssertionCallCounts();
+        TelemetryCollector.TrackAssertionCall(Name, isEnabled: true);
+        TelemetryCollector.TrackAssertionCall(Name, isEnabled: true);
+        Action invalid = () => TelemetryCollector.TrackAssertionCall(null!, isEnabled: true);
+        invalid.Should().NotThrow();
+        TelemetryCollector.TrackAssertionCall(Name, isEnabled: true);
+
+        Dictionary<string, long> snapshot = TelemetryCollector.DrainAssertionCallCounts();
+        snapshot[Name].Should().Be(3);
+        TelemetryCollector.DrainAssertionCallCounts().Should().NotContainKey(Name);
+    }
 }

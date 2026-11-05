@@ -33,7 +33,7 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(UseCooperativeCancellationForTimeoutRule);
+        = [UseCooperativeCancellationForTimeoutRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

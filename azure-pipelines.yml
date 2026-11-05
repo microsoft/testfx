@@ -65,6 +65,10 @@ parameters:
   displayName: "Enable Linux/macOS affected tests (requires verified collector support)"
   type: boolean
   default: false
+- name: EnableCTSCollection
+  displayName: "Compare CTS collection on main (requires public CTS package)"
+  type: boolean
+  default: false
 
 variables:
   # Cannot use key:value syntax in root defined variables
@@ -132,6 +136,10 @@ stages:
       clean: false
     - pwsh: ./eng/validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }} -EnableNonWindowsAffectedTests ${{ parameters.EnableNonWindowsAffectedTests }}
       displayName: Validate affected-test rollout
+    - pwsh: ./eng/collect-cts-comparison.ps1 -SelfTest
+      displayName: Validate CTS module selection
+    - pwsh: ./eng/validate-collection-module-pool.ps1
+      displayName: Validate bounded collection scheduling
     - bash: |
         set -euo pipefail
 
@@ -259,6 +267,32 @@ stages:
             SkipTests: ${{ parameters.SkipTests }}
             EnableAffectedTests: ${{ parameters.EnableAffectedTests }}
 
+      - ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableCTSCollection, true)) }}:
+        - job: WindowsCTSComparison
+          displayName: Windows CTS comparison
+          dependsOn: DetectChanges
+          condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'))
+          timeoutInMinutes: 360
+          pool:
+            name: NetCore-Public
+            demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+          variables:
+            - template: /eng/pipelines/variables/test-env-vars.yml
+            - name: _XmlDocsOnly
+              value: $[ dependencies.DetectChanges.outputs['detect.xmlDocsOnly'] ]
+            - name: _BuildConfig
+              value: Release
+            - name: _CollectAffectedTests
+              value: false
+            - name: _TestArtifactsName
+              value: CTSComparison
+          steps:
+          - template: /eng/pipelines/steps/build-test-windows.yml
+            parameters:
+              SkipTests: ${{ parameters.SkipTests }}
+              EnableAffectedTests: ${{ parameters.EnableAffectedTests }}
+              CollectCTS: true
+
       # Matrix variables aren't available when the service resolves the job timeout. Keep collection
       # in a separate job so its six-hour budget cannot resolve to ordinary validation's four hours.
       - ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)) }}:
@@ -369,10 +403,12 @@ stages:
         # Linux and Windows pools. Keep macOS coverage on main CI, nightly, and manually queued builds, but
         # exclude it from PR validation so agent availability does not delay the required PR status.
         condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(variables['Build.Reason'], 'PullRequest'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        # Build, tests, and report merging have exhausted 90 minutes even when all tests pass.
+        # Leave headroom for hosted-agent variability and artifact publishing, without changing hang detection.
         ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
           timeoutInMinutes: 240
         ${{ else }}:
-          timeoutInMinutes: 90
+          timeoutInMinutes: 120
         pool:
           name: Azure Pipelines
           vmImage: macos-latest
@@ -463,6 +499,22 @@ stages:
             failOnStderr: false
 
         - ${{ if eq(parameters.SkipTests, False) }}:
+          - task: PowerShell@2
+            displayName: 'Validate sample output capture (Windows PowerShell 5.1)'
+            inputs:
+              targetType: filePath
+              filePath: './eng/test-samples-output.ps1'
+              pwsh: false
+              failOnStderr: false
+
+          - task: PowerShell@2
+            displayName: 'Validate sample output capture (pwsh)'
+            inputs:
+              targetType: filePath
+              filePath: './eng/test-samples-output.ps1'
+              pwsh: true
+              failOnStderr: false
+
           - task: PowerShell@2
             displayName: 'Test Samples'
             inputs:

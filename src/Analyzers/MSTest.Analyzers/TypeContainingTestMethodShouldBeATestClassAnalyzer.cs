@@ -33,7 +33,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TypeContainingTestMethodShouldBeATestClassRule);
+        = [TypeContainingTestMethodShouldBeATestClassRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

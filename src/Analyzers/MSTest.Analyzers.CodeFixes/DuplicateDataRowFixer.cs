@@ -24,7 +24,7 @@ public sealed class DuplicateDataRowFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.DuplicateDataRowRuleId);
+        = [DiagnosticIds.DuplicateDataRowRuleId];
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()

@@ -1276,4 +1276,100 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void AreEquivalent_DictionaryEnumerationFailure_ReportsOriginalExceptionAndSide()
+    {
+        foreach (bool wrapped in new[] { false, true })
+        {
+            foreach (bool expectedSide in new[] { false, true })
+            {
+                Exception original = new InvalidOperationException("dictionary enumeration boom");
+                Exception error = wrapped ? new TargetInvocationException(original) : original;
+                IDictionary faulting = new FaultingHashtable("enumeration", error) { ["key"] = 7 };
+                IDictionary healthy = new Hashtable { ["key"] = 7 };
+                IDictionary expected = expectedSide ? faulting : healthy;
+                IDictionary actual = expectedSide ? healthy : faulting;
+                string side = expectedSide ? "expected" : "actual";
+                foreach (bool inverse in new[] { false, true })
+                {
+                    Action action = () =>
+                    {
+                        if (inverse)
+                        {
+                            Assert.AreNotEquivalent(expected, actual, strict: true, "dictionary context");
+                        }
+                        else
+                        {
+                            Assert.AreEquivalent(expected, actual, strict: true, "dictionary context");
+                        }
+                    };
+                    string summary = inverse
+                        ? "Could not complete structural comparison (strict mode)."
+                        : "Expected values to be structurally equivalent (strict mode).";
+                    string assertion = inverse ? "Assert.AreNotEquivalent" : "Assert.AreEquivalent";
+                    string message = $"""
+                        Assertion failed. {summary}
+                        Mismatch at '<root>': reading the {side} dictionary threw InvalidOperationException: dictionary enumeration boom.
+                        dictionary context
+
+                        {assertion}(expected, actual)
+                        """;
+                    AssertFailedException failure = action.Should().ThrowExactly<AssertFailedException>().Which;
+                    failure.Message.Replace("\r\n", "\n").Should().Be(message.Replace("\r\n", "\n"));
+                    failure.ExpectedText.Should().BeNull();
+                    failure.ActualText.Should().BeNull();
+                }
+            }
+        }
+    }
+
+    public void AreEquivalent_DictionaryLookupFailure_ReportsOriginalExceptionAndKey()
+    {
+        foreach (bool wrapped in new[] { false, true })
+        {
+            Exception original = new InvalidOperationException("dictionary lookup boom");
+            Exception error = wrapped ? new TargetInvocationException(original) : original;
+            IDictionary expected = new Hashtable { ["key"] = 7 };
+            IDictionary actual = new FaultingHashtable("lookup", error) { ["key"] = 7 };
+            Action action = () => Assert.AreEquivalent(expected, actual, "lookup context");
+            action.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                """
+                Assertion failed. Expected values to be structurally equivalent.
+                Mismatch at '["key"]': reading the actual dictionary threw InvalidOperationException: dictionary lookup boom.
+                lookup context
+
+                Assert.AreEquivalent(expected, actual)
+                """);
+        }
+    }
+
+    public void AreEquivalent_DictionaryAssertionFailure_IsNotConvertedToMismatch()
+    {
+        foreach (string stage in new[] { "enumeration", "lookup" })
+        {
+            UnitTestAssertException[] errors = [new AssertFailedException("nested failure"), new AssertInconclusiveException("nested inconclusive")];
+            foreach (UnitTestAssertException original in errors)
+            {
+                foreach (bool wrapped in new[] { false, true })
+                {
+                    Exception error = wrapped ? new TargetInvocationException(original) : original;
+                    IDictionary expected = new Hashtable { ["key"] = 7 };
+                    IDictionary actual = new FaultingHashtable(stage, error) { ["key"] = 7 };
+                    Action equal = () => Assert.AreEquivalent(expected, actual, strict: true);
+                    Action notEqual = () => Assert.AreNotEquivalent(expected, actual, strict: true);
+                    equal.Should().Throw<UnitTestAssertException>().Which.Should().BeSameAs(original);
+                    notEqual.Should().Throw<UnitTestAssertException>().Which.Should().BeSameAs(original);
+                }
+            }
+        }
+    }
+
+    private sealed class FaultingHashtable(string stage, Exception error) : Hashtable
+    {
+        public override IDictionaryEnumerator GetEnumerator()
+            => stage == "enumeration" ? throw error : base.GetEnumerator();
+
+        public override bool Contains(object key)
+            => stage == "lookup" ? throw error : base.Contains(key);
+    }
 }

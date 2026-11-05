@@ -1,0 +1,477 @@
+# GitHub Actions test attachments: research and decisions
+
+## Problem and contract
+
+[Issue #12131](https://github.com/microsoft/testfx/issues/12131) requests automatic
+publication of failed-test attachments and links from the test report. This is a
+new reporting feature, not a regression in an existing upload implementation.
+
+The producer is `Microsoft.Testing.Extensions.GitHubActionsReport`, developed on
+`main` for the issue's next open milestone, MSTest 5.0 / MTP 3.0. The current
+checkout's build versions remain MSTest 4.6 / MTP 2.6 and are identified
+separately in the validation evidence below. MSTest and VSTestBridge already
+publish `FileArtifactProperty` values on test nodes. The consumer is the official
+GitHub Actions artifact uploader, followed by a workflow-owned summary step.
+No new public core MTP API, transport protocol, GitHub token in the test process,
+companion action, or service dependency is required.
+
+The opt-in contract is `--report-gh --report-gh-attachments <absolute-directory>`.
+Without the attachment option, existing report behavior remains unchanged.
+Only terminal failed tests are collected, including error and timeout outcomes;
+superseded retry results and session-level artifacts such as dumps are excluded.
+Each process/session owns a unique subdirectory and a versioned manifest mapping
+test UID, names, module, target framework, architecture, and retry attempt to
+staged files. Attachments are copied as the failed result is consumed, rather
+than waiting for session-end rendering. The producer must keep the original
+available until consumption; a file removed earlier is reported unavailable.
+Once copied, later cleanup cannot remove the staged copy. Files and retained
+metadata are bounded.
+
+The extension stages only explicitly declared regular files using generated,
+artifact-safe destination names. Missing, unreadable, or over-budget attachments
+produce warnings and manifest status entries, not successful file paths. These
+failures do not change the test-process verdict. Cancellation propagates and
+must not leave a success entry for a partial copy. The workflow owns retention
+and removal of its staging directory.
+
+The ordinary test summary remains available even when upload is skipped or
+fails. Failure details list archive-relative paths, not fabricated download URLs.
+The workflow publishes a real artifact URL in supplementary per-test details
+only after a successful upload. The documented post-upload script is exercised
+verbatim by the hosted smoke workflow; no separately shipped action is needed. One
+archive contains all modules' attachments and their manifests. GitHub does not
+provide supported links to individual files inside that archive.
+
+## Research and experiments
+
+### 2026-10-29: feasibility investigation
+
+- At `8d3c9e82aca134b6d85ad583cc618c71dbc2af6e`, traced MSTest and VSTestBridge
+  attachment production, GitHub Actions summary rendering, TRX consumption, and
+  Azure DevOps publishing. Attachment data exists but GitHubActionsReport does
+  not retain or publish it.
+- The [artifact REST API](https://docs.github.com/en/rest/actions/artifacts)
+  provides list/get/download/delete, not an upload endpoint.
+- The [official artifact toolkit](https://github.com/actions/toolkit/tree/main/packages/artifact)
+  uses `ACTIONS_RUNTIME_TOKEN` and `ACTIONS_RESULTS_URL`. The runner injects these
+  for JavaScript actions, not ordinary shell steps.
+- [Completed step summaries cannot be modified by later steps](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#removing-job-summaries).
+  Deferred rendering was initially proposed to acquire URLs before rendering.
+
+### 2026-11-03: multi-model plan review
+
+- Updated the clean task branch to `3a95626573dd6932505a860cbd059dae4f79a81d`.
+- GPT-6.1 Sol and independent Claude Opus 5.5 reviewed the plan. Both support
+  opt-in staging and workflow-owned upload. The independent review recommended
+  preserving the existing summary and dropping a companion action.
+- Adopted that simpler design: a later supplementary summary holds the real
+  download link. Losing an upload must not hide the original failure diagnostics.
+- A companion action was considered but not implemented: it would add release,
+  pinning, Node-runtime, and GHES ownership without being needed for the upload.
+- Initial baseline attempts exposed a local missing `powershell` launcher in
+  `PATH`, before product compilation. These are tooling failures, not red-phase
+  evidence for the feature.
+- Independent code-review round 1 found a failure-isolation bug: unexpected
+  collector errors could discard a result before it reached the summary. Capture
+  now has its own logged failure boundary, retaining the underlying result.
+- Required absolute staging paths so separate test-host working directories
+  cannot scatter an invocation's attachments. Expanded the smoke workflow's
+  triggers to its producer and build inputs, and removed unnecessary Actions
+  permission.
+- Confirmed consumer serialization in `AsyncConsumerDataProcessor.net.cs` and
+  `BlockingConsumerDataProcessor.cs`; `CommonTestHost.SessionNotifications.cs`
+  drains consumption before consumer session-finish callbacks. No additional
+  collector lock is required. This is source-backed ordering evidence, not a
+  concurrency stress-test result.
+- Independent code-review round 2 found that the smoke script's package-prefix
+  glob also matched sibling packages. Selection now requires the exact package
+  ID followed by a numeric version and excludes symbol packages.
+- Retained manifest associations before copying so a warning-delivery failure
+  cannot orphan an earlier staged file. Unexpected attachment failures also
+  attempt a guarded user-visible warning, without discarding test results.
+- The post-upload sample now reports truncated manifests as well as truncated
+  display groups. Its workflow also watches the MSBuild and TRX consumers.
+- Independent round 3 was clean at
+  `6b9bbb4b0f956a32f1920e2b8e53410fa85e8da2`.
+- The first executable ablation exposed nullable test inputs being dereferenced
+  before an assertion. Those exceptions were not counted as sensitivity proof.
+  Added explicit non-null contract assertions, retained them in both variants,
+  and repeated the same two tests green/red/green successfully.
+- Real native `dotnet test` produced two module TRX files plus one merged TRX.
+  The smoke originally counted the merged report as a third module. Corrected
+  the harness to validate each module separately and validate optional merged
+  totals without double-counting executions. The repeated composed smoke passed.
+- While implementation was running, the 4.6 / 2.6 milestone was closed and the
+  issue was advanced to MSTest 5.0 / MTP 3.0. Read back the live issue and preserved
+  that concurrent maintainer decision rather than restoring the obsolete target.
+
+## Alternatives and decision
+
+### Linux FIFO follow-up
+
+A declared Linux FIFO with no writer can block the synchronous source open before
+size checks or cancellation are reached. Exception isolation cannot recover from
+an open that never returns.
+
+The collector now asks the existing filesystem abstraction whether the source is
+a regular file before requesting its read stream. On Unix this uses the
+[runtime's normalized stat ABI](https://github.com/dotnet/runtime/blob/v8.0.0/src/native/libs/System.Native/pal_io.h),
+whose fixed-width `FileStatus` avoids architecture-specific libc `stat` layouts.
+`File.Exists`, `FileAttributes` and size-zero checks were rejected: FIFOs can
+appear as existing ordinary files and empty regular files must remain supported.
+Metadata failures retain the existing unavailable-file warning behavior;
+non-regular entries get `non-regular`, no path and zero staged bytes.
+
+The Linux regression creates actual no-writer FIFOs, including a symlink case,
+and forwards the metadata probe to the real filesystem. Its stream-open trap
+fails immediately if a source open is attempted, rather than allowing the old
+code to hang the test runner. It checks normal session completion, original
+failure/totals/history, the primary summary, warning and manifest. Positive
+regular-file tests continue to exercise real copying, including Unicode names.
+That first fix established a metadata classification contract only; concurrent
+pathname replacement remained unprotected. The source replacement follow-up
+below supersedes that limitation with acquisition and validation on one handle.
+
+Executed evidence for this follow-up:
+
+- Pinned SDK `12.0.100-alpha.1.26509.101` compiled the net8.0 guard/tests and
+  netstandard2.0 fallback with warnings treated as errors: exit 0.
+- Pinned Linux .NET `8.0.33` executed all 272 focused attachment cases:
+  272 passed, zero failed/skipped. Both real FIFO cases completed and preserved
+  the primary summary, failed verdict, history and manifest.
+- Windows executed 270 passed cases; the two explicitly Linux-only FIFO cases
+  were skipped there and are not counted as Linux proof.
+- With only the collector's regular-file guard removed in an owned comparison,
+  both unchanged Linux FIFO cases executed and failed the `Times.Never`
+  source-open assertion (one forbidden open per case), exit 2. Rebuilt restored
+  production libraries were hash-verified and both cases passed, exit 0. No
+  blocked FIFO worker, writer, or timeout was used to manufacture the red phase.
+- The dedicated hosted workflow now explicitly selects both Linux FIFO cases
+  after packing and retains their TRX.
+- A separate optional NativeAOT probe was not executed: package restore hit
+  shared-drive exhaustion. Only the task-owned optional SDK was removed to
+  recover space; no global caches were cleared. The import uses
+  `libSystem.Native`, matching the runtime's NativeAOT direct-P/Invoke library
+  name. This source compatibility check is not a claimed NativeAOT execution.
+
+1. **No change / upload the whole results directory:** preserves today's report,
+   but loses per-test association and may miss attachments outside that directory.
+2. **Upload in the test process:** rejected because it needs artifact-service
+   credentials and backend integration unavailable in a normal `run:` step.
+3. **Companion action and deferred primary summary:** rejected because it adds a
+   shipping component and makes existing failure diagnostics depend on upload.
+4. **Chosen: bounded staging, manifest, and official workflow upload:** preserves
+   the existing summary, requires no additional credentials, and supports all
+   existing extension target frameworks. Workflow configuration is required;
+   this is not a promise of zero-configuration upload.
+
+Attachment metadata in summary fragments is additive and optional so older
+fragments remain readable. The shared summary models also compile into the
+Azure DevOps extension; they must remain inert there. Retry final-failure
+selection and multi-module aggregation must retain the association.
+
+## Validation and demonstration
+
+The first implementation compiles on `netstandard2.0`, its oldest supported
+target, using the repository-bootstrapped SDK `12.0.100-alpha.1.26509.101`:
+
+```powershell
+.\.dotnet\dotnet.exe build src\Platform\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj -f netstandard2.0 -p:TreatWarningsAsErrors=true -p:UseSharedCompilation=false -nodeReuse:false -bl:artifacts\log\Debug\attachments-netstandard.binlog -v:quiet
+```
+
+Result: exit 0, zero warnings and errors. Resources were regenerated using the
+owning project's `UpdateXlf` target. `check_localization.py` and
+`check_source_bom.py` passed. These checks do not prove staging or upload.
+
+The shipping smoke script and workflow exercise freshly packed MSTest and
+reporting packages through direct test-host execution and real multi-module
+`dotnet test`, then download the uploaded artifact and compare its files and
+association manifests. Until those commands execute, they are proposed
+validation, not evidence. Focused test, counterfactual, package-provenance, and
+hosted-run results will be added as obtained.
+
+| Requirement | Evidence |
+| --- | --- |
+| Collection, limits, missing input, cancellation | Executed: `CaptureAsync_StagesExactBytesAndWritesManifest`, size/count boundary cases, `CaptureAsync_CanceledDuringCopy_PropagatesTokenAndDeletesPartialFile`, and warning-failure association cases. |
+| Direct and aggregate failure details | Executed: `BuildMarkdown_WithAttachments_RendersExactArchiveRelativePaths`, `CreateModule_FragmentRoundTrip_PreservesAttachmentsOnlyOnFailures`, legacy-fragment and retry cases. |
+| Packed consumer and real framework attachment | Executed shipping smoke: four direct host runs plus real multi-module `dotnet test`, 12 executions and five intentionally failed results, parent smoke exit 0. All eight packed acceptance cases and three net8 help/info cases passed (11/11, no skips). |
+| Real GitHub Actions archive and download link | Executed: [hosted run 41629546864](https://github.com/microsoft/testfx/actions/runs/41629546864) passed at `dd69b2f47dc2ab1f4b9df23c8d2d3451f21ec1cd`; actual archive uploaded, downloaded and verified. |
+
+Focused unit validation compiled current production and test sources with the
+pinned SDK, `net8.0`, code coverage disabled, and warnings treated as errors.
+Selection:
+
+```text
+FullyQualifiedName~GitHubActionsAttachmentCollectorTests|FullyQualifiedName~GitHubActionsSummaryReporterTests|FullyQualifiedName~GitHubActionsCommandLineProviderTests
+```
+
+Result: **269 passed, 0 failed, 0 skipped; exit 0**, including all **70 added
+cases**. TRX, JUnit and CTRF exports were parsed and reconciled. This is executed
+unit evidence. The same selection also passed **269/269** on the `net462`
+target, running on the installed `net481` runtime and exercising the extension's
+`netstandard2.0` implementation on Windows.
+
+### Executed feature-ablation evidence
+
+Base implementation: `6b9bbb4b0f956a32f1920e2b8e53410fa85e8da2`, with the two
+explicit non-null test assertions retained in both variants. The support patch's
+SHA-256 is `2DF6A32E9C2267B4B1B60A0C9265070280AB88AD375655F47F7F91E1C0A620C5`.
+The buildable production ablation replaces only attachment extraction with an
+empty array:
+
+```diff
+- FileArtifactProperty[] files = [.. testNode.Properties.OfType<FileArtifactProperty>().Take(MaxFilesPerTest + 1)];
++ FileArtifactProperty[] files = [];
+```
+
+The production-only patch SHA-256 is
+`95A07BC3991A486811747B55BFBD51A89074FCB107C78DECA3E74F0224EA470B`.
+An isolated task-owned worktree and its own outputs were used; no primary
+checkout, other session, or shared package cache was reverted or cleared.
+
+| Contract / test case | Without collection | Correct implementation |
+| --- | --- | --- |
+| `CaptureAsync_StagesExactBytesAndWritesManifest` | Executed: assertion failed, `A declared attachment must produce staged metadata.` | Executed: passed before and after ablation. |
+| `SessionFinishing_DeferredFragment_RetainsAttachmentsForAggregateRendering` | Executed: assertion failed, `Deferred failure fragments must retain attachment metadata.` | Executed: passed before and after ablation. |
+
+Each run selected/executed exactly two tests, with no skips. Green exits were 0
+(2 passed); the ablated exit was 2 (2 intended assertion failures). The same
+source test bytes were verified by SHA-256 in the primary and comparison
+worktrees. All variants were rebuilt with the pinned SDK, Debug/net8.0,
+`EnableCodeCoverage=false`, `UseSharedCompilation=false`, and
+`TreatWarningsAsErrors=true`.
+
+The identical selector was:
+
+```text
+FullyQualifiedName~GitHubActionsAttachmentCollectorTests.CaptureAsync_StagesExactBytesAndWritesManifest|FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_DeferredFragment_RetainsAttachmentsForAggregateRendering
+```
+
+### Executed packed-product smoke
+
+```powershell
+.\.github\scripts\test-gh-attachments.ps1 -WorkDirectory <fresh-task-owned-directory>
+```
+
+Executed on Windows with freshly packed `MSTest.TestFramework` and
+`MSTest.TestAdapter` **4.6.0-dev**, and `Microsoft.Testing.Platform`,
+`Microsoft.Testing.Platform.MSBuild`, `Microsoft.Testing.Extensions.TrxReport`
+and `Microsoft.Testing.Extensions.GitHubActionsReport` **2.6.0-dev**.
+The script checked each restored package's SHA-256 against its packed nupkg,
+checked the selected runtime DLLs against the executable layout, and used a
+fresh isolated NuGet cache.
+
+Observed: opt-out and passing runs created no attachment staging; intentional
+failed hosts exited 2, the passing host exited 0, and native multi-module
+`dotnet test` exited 2 with exactly four executions (2 passed/2 failed).
+All four session manifests retained the right module/test/file association and
+actual bytes. Both module reports and the authoritative 4-result merged TRX
+were checked. The outer smoke exited 0.
+
+**Local packaging limitation:** the Release build produced 32 shipping packages
+and compiled all selected source targets with zero warnings. The Windows-only
+post-pack verifier expects legacy UAP payloads omitted by the required local
+`SkipUapTargetFramework=true` dotnet build (MSTest/adapter/framework counts).
+That full verifier exited 1; it was not weakened or called successful. The
+Linux hosted workflow runs the repository's standard `build.sh -pack` path.
+
+### Executed hosted upload/download
+
+[Run 41629546864](https://github.com/microsoft/testfx/actions/runs/41629546864)
+passed at `dd69b2f47dc2ab1f4b9df23c8d2d3451f21ec1cd` on ubuntu-latest.
+The standard `./build.sh -pack -c Release -bl` step passed, followed by the
+12-execution composed smoke, official upload, the exact documented post-upload
+script, real archive download, and byte/association verification.
+
+- [Failed-test attachments](https://github.com/microsoft/testfx/actions/runs/41629546864/artifacts/13227777694):
+  four staged files and four manifests, all eight downloaded files verified.
+- [Reproducible validation evidence](https://github.com/microsoft/testfx/actions/runs/41629546864/artifacts/13226914918):
+  binlogs, actual package versions/hashes, TRX, source-resolved assets and summary
+  transcripts.
+- Artifact digest:
+  `sha256:48579a59a0b7a0ae7c46596aca5982b220c20e9a53e8d9b31d6f8fe5fbfdddeb`.
+- The verifier matched all four supplementary test-details blocks to their
+  module/test/file and the actual returned archive URL. This proves generated
+  output and real download behavior, not authenticated browser rendering.
+
+The public browser showed the successful job and both artifacts. The available
+browser is signed out and GitHub requires sign-in for job logs/summaries, so the
+expanded per-test hosted UI, wrapping and controls were not visually inspected.
+No substitute rendering or fabricated screenshot is claimed. The actual saved
+Markdown and console transcript are the accessible demonstration.
+
+The additional acceptance run compiled the Release/net12.0 outer host with
+warnings treated as errors and executed net8.0 consumers. It selected exactly
+eight `GitHubActionsAttachmentTests` cases plus the net8 rows of
+`Help_WithAllExtensionsRegistered_OutputFullHelpContent`,
+`HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent`, and
+`Info_WithAllExtensionsRegistered_OutputFullInfoContent`. Exit 0: 11 passed,
+zero failed/skipped. TRX/JUnit/CTRF counts agreed. Restored package SHA-512 and
+deployed net8 DLL SHA-256 values matched the freshly packed artifacts.
+
+## CI runtime alignment (November 4, 2026)
+
+Upstream change #12185 narrows the MTP 3.0 supported frameworks to .NET 10 and
+.NET 11. The PR's CI merge uses that policy even before the feature branch is
+updated. Requesting a .NET 8 FIFO host therefore fails with `NETSDK1005`; its
+restore assets contain only .NET 10/11.
+
+The FIFO selection and packed-package smoke consumers now target .NET 10, the
+oldest supported framework. Runtime-payload checks and collected evidence paths
+use the same framework. The two-test FIFO gate, direct and multi-module smoke
+assertions, and upload/download checks remain unchanged. Earlier .NET 8 results
+above describe their original revisions and are not relabeled as .NET 10 proof.
+
+Local validation rebuilt the Release .NET 10 FIFO host and ran both real Linux
+cases on the pinned .NET 10.0.14 runtime: two passed, none failed or skipped.
+The updated smoke script also passed with portable MSTest 5.0.0-dev / MTP
+3.0.0-dev package payloads: twelve executed tests, five intentional failures,
+four staged attachments with preserved module/test associations, and matching
+restored/deployed package hashes. The local Windows full-package inventory
+check failed because legacy UWP payloads were omitted; targeted portable
+composition does not establish a successful full Windows pack.
+The subsequent [.NET 10 hosted run](https://github.com/microsoft/testfx/actions/runs/41770265895)
+passed pack, FIFO regression, composed-product smoke, upload, download and
+integrity checks at `b485c8b0653c7807712d40b6b2284eceabf377ec`. That result
+predates the source-replacement correction below and is not current-fix CI proof.
+
+## Source replacement follow-up (November 4, 2026)
+
+A pathname metadata check does not protect the subsequent open: a regular file
+or symlink can be replaced with a no-writer FIFO between the two operations.
+The source must be acquired without a FIFO rendezvous and its type validated on
+the acquired handle before constructing a read stream. The stream must retain
+that handle rather than reopen the pathname. Stable non-regular sources retain
+their early rejection, and failures still preserve the original test result,
+primary summary, zero staged bytes and manifest status.
+
+The existing runtime-normalized `FileStatus` ABI is reused for descriptor-based
+`SystemNative_FStat`. The runtime's `SystemNative_Open` flag set does not include
+`O_NONBLOCK`, so Unix acquisition uses libc `open` with the platform's
+`O_NONBLOCK`, `O_CLOEXEC` and `O_NOCTTY` flags. A `SafeFileHandle` owns the acquired
+descriptor until it is transferred to the file stream; rejected handles and
+exception paths close it. Native declarations and flags are checked against
+[the runtime header](https://github.com/dotnet/runtime/blob/v10.0.14/src/native/libs/System.Native/pal_io.h),
+[Linux](https://github.com/torvalds/linux/blob/v6.12/include/uapi/asm-generic/fcntl.h),
+[Darwin](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/fcntl.h)
+and [FreeBSD](https://github.com/freebsd/freebsd-src/blob/releng/14.3/sys/sys/fcntl.h).
+Windows keeps its ordinary shared-read open and checks the opened stream's
+disk-handle type through `CanSeek`; no pathname is reopened after validation.
+
+Wrapping the old blocking open in a task or cancellation timeout was rejected:
+it would leave a blocked worker behind and would not establish handle ownership.
+Planned validation covers regular-file replacement, symlink retargeting both
+before and after handle acquisition, stable FIFOs, exact copied bytes, rejected
+handle cleanup and primary-summary preservation, with bounded counterfactual
+comparisons that never attempt a blocking FIFO open.
+
+### Executed source-acquisition evidence
+
+The tested source state is base
+`b485c8b0653c7807712d40b6b2284eceabf377ec` plus the retained source/test/workflow
+patch with SHA-256
+`EAAFCFD86CFEC597ECFF652BCB166B8EB7625FE523D4B845EA8C3625210F5850`.
+The comparison replaces only the collector's new acquisition call with its old
+pathname-based `NewFileStream` call, retaining the new API and all test
+assertions so both states compile. Its patch SHA-256 is
+`A17275F4C0C1058A9EFEDB761C288703CCE3E66E5C337DA321FC91E56422E345`.
+This is a compiling targeted counterfactual, not a pristine-base execution.
+Correct source/test/workflow bytes were hash-verified unchanged afterward.
+
+| Requirement | Exact regression and observed result |
+| --- | --- |
+| Stable FIFO and symlink rejection | `SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary`: both stable cases passed in both states. |
+| File replacement or symlink retargeting after metadata | The same method's two replacement cases: counterfactual failed the forbidden pathname-open assertions; correct implementation passed and preserved exit 2, original failure, totals/history, primary summary, warning and zero-byte/pathless manifest entries. |
+| Retain the acquired regular file after pathname changes | `SessionFinishing_LinuxSourceRetargeting_ReadsAcquiredRegularFile`: both cases detected the counterfactual's missing acquisition; correct implementation copied the original three bytes, not the four replacement bytes, and verified descriptor disposal and manifest association. |
+
+Pinned SDK `12.0.100-alpha.1.26509.101`, Release/net10.0, built the correct unit
+host with zero warnings/errors. The real Linux .NET `10.0.14` runtime executed
+all six regressions: six passed, zero skipped, exit 0. The isolated counterfactual
+compiled, then executed the identical six cases: four failed at the intended
+acquisition/forbidden-open assertions, two stable cases passed, zero skipped,
+exit 2. A correct-output rebuild and post-comparison run again passed all six,
+exit 0; `verify_execution.py` reconciled the six source-declared display names,
+fresh TRX, executed counts and process exit. No FIFO writer or blocked worker
+was used to manufacture the failures.
+
+The broader collector/reporter/CLI selection passed 278/278 on Linux, without
+skips. Windows net10.0 passed 272 cases with six Linux-only skips; the net462
+consumer running on installed .NET Framework 4.8.1 passed all 272 applicable
+cases against the netstandard2.0 implementation. TRX/JUnit/CTRF exports were
+parsed and their counts reconciled. Scheduling remained method-parallel with
+CPU-count workers (32 on Linux); fixtures own GUID directories, mocks and
+cancellation state. Descriptor observation is filtered to each fixture's exact
+source paths. No process-global environment mutation or serialization was added.
+
+Commands used for the broader Windows selection (change `--framework` to
+`net462` and the result/binlog names for its legacy run):
+
+```powershell
+$env:MSBUILDDISABLENODEREUSE = '1'
+.\.dotnet\dotnet.exe test --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests\Microsoft.Testing.Extensions.UnitTests.csproj --configuration Release --framework net10.0 -p:EnableCodeCoverage=false -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-unit-ready-{}.binlog --filter 'FullyQualifiedName~GitHubActionsAttachmentCollectorTests|FullyQualifiedName~GitHubActionsSummaryReporterTests|FullyQualifiedName~GitHubActionsCommandLineProviderTests' --report-trx --report-trx-filename attachment-open-unit.trx --results-directory artifacts\TestResults\attachment-open-unit
+```
+
+The six-case Linux command, with the freshly built host and a fresh results
+directory mounted read-only and read-write respectively:
+
+```powershell
+$bin = (Resolve-Path artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Release\net10.0).Path
+$results = Join-Path (Get-Location).Path 'artifacts\TestResults\attachment-open-linux'
+$selection = 'FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxFifo_RejectsBeforeOpenAndPreservesPrimarySummary|FullyQualifiedName~GitHubActionsSummaryReporterTests.SessionFinishing_LinuxSourceRetargeting_ReadsAcquiredRegularFile'
+docker run --rm --name testfx-attachment-open-green --mount "type=bind,source=$bin,target=/tests,readonly" --mount "type=bind,source=$results,target=/results" mcr.microsoft.com/dotnet/runtime:10.0.14 timeout 180s dotnet /tests/Microsoft.Testing.Extensions.UnitTests.dll --filter $selection --minimum-expected-tests 6 --report-trx --report-trx-filename attachment-open-linux.trx --results-directory /results
+```
+
+The dedicated workflow now selects all six cases on .NET 10. Comparison outputs
+are separate under `artifacts\obj\attachment-open-red` and
+`artifacts\bin\attachment-open-red`; only a task-owned collector copy is replaced
+through an experiment-only `BeforeTargets="CoreCompile"` import. Comparison
+builds emitted duplicate-import `MSB4011` warnings but completed successfully;
+they were not counted as behavioral failures. Reports and retained patches are
+under `artifacts\TestResults\attachment-open-*` and
+`artifacts\obj\attachment-open-counterfactual`, not committed product files.
+
+Both changed shipping products were repacked across all five local target
+frameworks, including netstandard2.0, with the pinned SDK and warnings enforced:
+
+```powershell
+.\.dotnet\dotnet.exe pack src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj --configuration Release -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-core-project-pack-{}.binlog --verbosity quiet
+.\.dotnet\dotnet.exe pack src\Platform\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj --configuration Release -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-report-project-pack-{}.binlog --verbosity quiet
+```
+
+Both commands exited 0. Core `3.0.0-dev` nupkg SHA-256:
+`E2CB91DCF8D3AC585C032C4FAF8F60E7D63717D1FCDA6EEE779E4CE1F1724F95`;
+GitHubActionsReport `3.0.0-dev`:
+`D2ACDE07243E7080BBB0CD638E8C44879DEC6481952A566E109785DBB1E107B1`.
+The existing smoke script, invoked with a fresh task-owned `-WorkDirectory`,
+restored aligned MSTest `5.0.0-dev` / MTP `3.0.0-dev` consumers in an isolated
+cache and verified package and deployed-DLL hashes. Exit 0: twelve consumer
+executions, five intentional failures, four staged files with correct
+module/test associations, and preserved disabled/passing behavior. The same
+two real shipping layouts also ran on Linux .NET `10.0.14`: four executions,
+two intentional failures, two manifests, exact file bytes/sizes and both primary
+summaries verified; each failed module retained exit 2.
+
+The repository `build.cmd -pack` attempt produced Core but failed the existing
+whole-repository inventory check for absent legacy/other product payloads.
+That check was not weakened; the successful targeted packs and portable smoke
+do not establish a successful full Windows pack. Initial restore/style/test
+compilation failures were corrected and are not red-phase proof. New native
+acquisition was not executed on macOS, FreeBSD or NativeAOT; these are validation
+gaps, not inferred passes. Nonblocking acquisition prevents FIFO rendezvous,
+not arbitrary network-filesystem syscall stalls. The correction changes no
+rendered layout, so its demonstration is the real summary/manifest and execution
+transcripts, not a fabricated hosted screenshot.
+
+## Open questions
+
+- This feature targets the next open version, MSTest 5.0 / MTP 3.0. No servicing
+  backport is planned: existing behavior is not a regression.
+- `upload-artifact` v4+ does not support GitHub Enterprise Server. There the
+  workflow must choose a supported uploader; staging and failure paths remain
+  useful without claiming a downloadable URL.
+- Attachments can contain sensitive test data and are readable by people with
+  repository read access. Collection is opt-in; callers must review their
+  artifacts and retention policy.
+- The implementing owner retains responsibility through package release and
+  workflow rollout. CI/local evidence must distinguish upload success from
+  staging success and explicitly identify unavailable hosted-UI checks.

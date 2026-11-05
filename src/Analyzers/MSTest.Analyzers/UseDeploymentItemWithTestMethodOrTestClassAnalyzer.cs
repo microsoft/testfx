@@ -32,7 +32,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(UseDeploymentItemWithTestMethodOrTestClassRule);
+        = [UseDeploymentItemWithTestMethodOrTestClassRule];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
