@@ -1735,6 +1735,262 @@ public class TestMethodInfoTests : TestContainer
         result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
+    public Task GlobalCleanupAfterLocalCancellationRunsAndPreservesFailure()
+        => VerifyGlobalCleanupAfterLocalCancellationAsync(throwCancellation: false);
+
+    public Task GlobalCleanupAfterLocalCancellationExceptionRunsAndPreservesFailure()
+        => VerifyGlobalCleanupAfterLocalCancellationAsync(throwCancellation: true);
+
+    public Task GlobalCleanupAfterLocalCancellationKeepsOriginalUnrelatedFailure()
+        => VerifyGlobalCleanupAfterLocalCancellationAsync(throwCancellation: false, throwUnrelatedFailure: true);
+
+    public Task GlobalCleanupFailureDoesNotMaskLocalCancellation()
+        => VerifyGlobalCleanupAfterLocalCancellationAsync(throwCancellation: true, throwGlobalFailure: true);
+
+    public Task GlobalCleanupAfterLocalCancellationKeepsInheritedCleanupFailFast()
+        => VerifyGlobalCleanupAfterLocalCancellationAsync(throwCancellation: true, hasBaseCleanup: true);
+
+    public async Task GlobalCleanupDoesNotRefreshHealthyToken()
+    {
+        CancellationTokenSource originalSource = _testContextImplementation.CancellationTokenSource;
+        CancellationTokenSource? globalSource = null;
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = context =>
+        {
+            globalSource = context.CancellationTokenSource;
+            return Task.CompletedTask;
+        };
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        globalSource.Should().BeSameAs(originalSource);
+        originalSource.IsCancellationRequested.Should().BeFalse();
+    }
+
+    public async Task GlobalCleanupRetainsActiveTestDeadlineAfterLocalCancellation()
+    {
+        using CancellationTokenSource deadline = new();
+        CancellationToken globalToken = default;
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            _testContextImplementation.CancellationTokenSource.Cancel();
+            _testContextImplementation.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = context =>
+        {
+            globalToken = context.CancellationToken;
+            deadline.Cancel();
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+
+        TestResult result = await InvokeWithTestDeadlineAsync(deadline);
+
+        globalToken.CanBeCanceled.Should().BeTrue();
+        globalToken.IsCancellationRequested.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.ExceptionMessage.Should().Contain(nameof(DummyTestClass.DummyTestCleanupMethod));
+    }
+
+    public async Task GlobalCleanupDoesNotRestartExpiredTestDeadline()
+    {
+        using CancellationTokenSource deadline = new();
+        CancellationTokenSource originalSource = _testContextImplementation.CancellationTokenSource;
+        bool globalEntered = false;
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            deadline.Cancel();
+            _testContextImplementation.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            globalEntered = true;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+
+        TestResult result = await InvokeWithTestDeadlineAsync(deadline);
+
+        globalEntered.Should().BeFalse();
+        _testContextImplementation.CancellationTokenSource.Should().BeSameAs(originalSource);
+        originalSource.IsCancellationRequested.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+    }
+
+    public async Task GlobalCleanupAfterLocalCancellationIgnoresAlreadyExpiredTestDeadline()
+    {
+        using CancellationTokenSource deadline = new();
+        CancellationTokenSource? localSource = null;
+        CancellationTokenSource? globalSource = null;
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            deadline.Cancel();
+            _testContextImplementation.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            localSource = _testContextImplementation.CancellationTokenSource;
+            localSource.Cancel();
+            _testContextImplementation.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = context =>
+        {
+            globalSource = context.CancellationTokenSource;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+
+        TestResult result = await InvokeWithTestDeadlineAsync(deadline);
+
+        globalSource.Should().NotBeNull().And.NotBeSameAs(localSource);
+        globalSource!.IsCancellationRequested.Should().BeFalse();
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.TestFailureException.Should().BeOfType<AggregateException>().Which.InnerExceptions.Should().HaveCount(2);
+    }
+
+    public async Task GlobalCleanupDoesNotRestartRunCancellation()
+    {
+        var runCancellation = new TestRunCancellationToken();
+        IPlatformServiceProvider services = PlatformServiceProvider.Instance;
+        TestRunCancellationToken? previousRunCancellation = services.TestRunCancellationToken;
+        using var context = new TestContextImplementation(null, typeof(DummyTestClass).FullName, new Dictionary<string, object?>(), null, runCancellation);
+        _testMethodInfo.TestContext = context;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        CancellationTokenSource originalSource = context.CancellationTokenSource;
+        bool globalEntered = false;
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            runCancellation.Cancel();
+            context.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            globalEntered = true;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        services.TestRunCancellationToken = runCancellation;
+        try
+        {
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+            globalEntered.Should().BeFalse();
+            context.CancellationTokenSource.Should().BeSameAs(originalSource);
+            originalSource.IsCancellationRequested.Should().BeTrue();
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        }
+        finally
+        {
+            services.TestRunCancellationToken = previousRunCancellation;
+        }
+    }
+
+    public async Task GlobalCleanupRetainsRunCancellationAfterLocalCancellation()
+    {
+        var runCancellation = new TestRunCancellationToken();
+        IPlatformServiceProvider services = PlatformServiceProvider.Instance;
+        TestRunCancellationToken? previousRunCancellation = services.TestRunCancellationToken;
+        using var context = new TestContextImplementation(null, typeof(DummyTestClass).FullName, new Dictionary<string, object?>(), null, runCancellation);
+        _testMethodInfo.TestContext = context;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        CancellationToken globalToken = default;
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            context.CancellationTokenSource.Cancel();
+            context.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = globalContext =>
+        {
+            globalToken = globalContext.CancellationToken;
+            runCancellation.Cancel();
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        services.TestRunCancellationToken = runCancellation;
+        try
+        {
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+            globalToken.CanBeCanceled.Should().BeTrue();
+            globalToken.IsCancellationRequested.Should().BeTrue();
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        }
+        finally
+        {
+            services.TestRunCancellationToken = previousRunCancellation;
+        }
+    }
+
+    public async Task GlobalCleanupAfterLocalCancellationIgnoresPreviouslyRequestedRunCancellation()
+    {
+        var runCancellation = new TestRunCancellationToken();
+        IPlatformServiceProvider services = PlatformServiceProvider.Instance;
+        TestRunCancellationToken? previousRunCancellation = services.TestRunCancellationToken;
+        using var context = new TestContextImplementation(null, typeof(DummyTestClass).FullName, new Dictionary<string, object?>(), null, runCancellation);
+        _testMethodInfo.TestContext = context;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        CancellationTokenSource? globalSource = null;
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            runCancellation.Cancel();
+            context.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            context.CancellationTokenSource.Cancel();
+            context.CancellationToken.ThrowIfCancellationRequested();
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = globalContext =>
+        {
+            globalSource = globalContext.CancellationTokenSource;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        services.TestRunCancellationToken = runCancellation;
+        try
+        {
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+            globalSource.Should().NotBeNull();
+            globalSource!.IsCancellationRequested.Should().BeFalse();
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        }
+        finally
+        {
+            services.TestRunCancellationToken = previousRunCancellation;
+        }
+    }
+
+    public async Task GlobalCleanupCancellationKeepsMultipleGlobalCleanupFailFast()
+    {
+        int globalCalls = 0;
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = context =>
+        {
+            globalCalls++;
+            context.CancellationTokenSource.Cancel();
+            context.CancellationToken.ThrowIfCancellationRequested();
+            return Task.CompletedTask;
+        };
+        MethodInfo firstCleanup = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((firstCleanup, null));
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummySecondGlobalTestCleanupMethod))!, null));
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        globalCalls.Should().Be(1);
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.ExceptionMessage.Should().Contain(firstCleanup.Name);
+    }
+
     public async Task TestMethodInfoInvokeShouldPreserveTimeoutOutcomeForGlobalTestCleanup()
     {
         DummyTestClass.GlobalTestCleanupMethodBodyAsync = async testContext =>
@@ -2358,6 +2614,72 @@ public class TestMethodInfoTests : TestContainer
 
     #region helper methods
 
+    private async Task VerifyGlobalCleanupAfterLocalCancellationAsync(
+        bool throwCancellation,
+        bool throwUnrelatedFailure = false,
+        bool throwGlobalFailure = false,
+        bool hasBaseCleanup = false)
+    {
+        List<string> events = [];
+        CancellationTokenSource originalSource = _testContextImplementation.CancellationTokenSource;
+        CancellationTokenSource? globalSource = null;
+        var localFailure = new InvalidOperationException("local cleanup failed after cancellation");
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            events.Add("local");
+            originalSource.Cancel();
+            if (throwUnrelatedFailure)
+            {
+                throw localFailure;
+            }
+
+            if (throwCancellation)
+            {
+                originalSource.Token.ThrowIfCancellationRequested();
+            }
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = context =>
+        {
+            events.Add("global");
+            globalSource = context.CancellationTokenSource;
+            return throwGlobalFailure
+                ? throw new InvalidOperationException("global cleanup also failed")
+                : Task.CompletedTask;
+        };
+        MethodInfo localCleanup = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testClassInfo.TestCleanupMethod = localCleanup;
+        if (hasBaseCleanup)
+        {
+            _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummySecondTestCleanupMethod))!);
+        }
+
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        events.Should().Equal("local", "global");
+        originalSource.IsCancellationRequested.Should().BeTrue();
+        globalSource.Should().NotBeNull().And.NotBeSameAs(originalSource);
+        globalSource!.IsCancellationRequested.Should().BeFalse();
+        result.Outcome.Should().Be(throwUnrelatedFailure ? UnitTestOutcome.Failed : UnitTestOutcome.Timeout);
+        TestFailedException failure = result.TestFailureException.Should().BeOfType<TestFailedException>().Subject;
+        failure.Message.Should().Contain(localCleanup.Name);
+        if (throwUnrelatedFailure)
+        {
+            failure.InnerException.Should().BeSameAs(localFailure);
+        }
+    }
+
+    private async Task<TestResult> InvokeWithTestDeadlineAsync(CancellationTokenSource deadline)
+    {
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(10_000) { CooperativeCancellation = true });
+        using CancellationTokenRegistration registration = deadline.Token.Register(_testMethodInfo.TestContext.Context.CancellationTokenSource.Cancel);
+        MethodInfo execute = typeof(TestMethodInfo).GetMethod("ExecuteInternalAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        return await (Task<TestResult>)execute.Invoke(_testMethodInfo, [null, deadline, null])!;
+    }
+
     private static async Task RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Func<Task> action)
     {
         try
@@ -2610,6 +2932,8 @@ public class TestMethodInfoTests : TestContainer
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
+        public void DummySecondTestCleanupMethod() => TestCleanupMethodBody(this);
+
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public async Task DummyTestCleanupMethodAsync() => await TestCleanupMethodBodyAsync(this);
 
@@ -2635,6 +2959,8 @@ public class TestMethodInfoTests : TestContainer
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static async Task DummyGlobalTestCleanupMethod(TestContext testContext) => await GlobalTestCleanupMethodBodyAsync(testContext);
+
+        public static async Task DummySecondGlobalTestCleanupMethod(TestContext testContext) => await GlobalTestCleanupMethodBodyAsync(testContext);
     }
 
     public class DummyTestClassWithRetryAttributeMethods
