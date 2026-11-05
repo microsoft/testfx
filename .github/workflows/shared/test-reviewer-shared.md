@@ -880,7 +880,15 @@ comment before the parallel-safety result has been considered.
 
 Use **exactly one** `submit-pull-request-review` call with
 `event: "COMMENT"`. The inline comments published in this step are bundled into this
-review. Structure the body as follows:
+review.
+
+Use **GitHub-flavored Markdown pipe tables** for every table in the review,
+including test-value evidence, parallel-safety assemblies, and the per-test
+scorecard. The pinned safe-output renderer recognizes Markdown tables but
+escapes raw HTML table markup. Do not use `<table>`, HTML `<code>` spans, or
+`<br>` tags, and do not wrap a published table in a code fence.
+
+Structure the body as follows:
 Replace `<pr_number>`, `<merge_base>`, and `<head_sha>` below with the exact
 manifest values; never publish the placeholders.
 
@@ -931,34 +939,11 @@ Pseudo-mutation evidence below consists of static predictions, not executed muta
 No new or modified test methods were identified in the changed regions.
 Do not emit an empty table. Otherwise emit the table below. -->
 
-<table>
-  <thead>
-    <tr><th>Result</th><th>Quality</th><th>Test</th><th>Notes</th><th>How to improve</th></tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Pass</td>
-      <td>B (80–89)</td>
-      <td>new <code>ClassName.<br>Method_<br>WhenSomething_<br>ReturnsValue</code></td>
-      <td>One exact assertion protects the claimed result.</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>Failed</td>
-      <td>C (70–79)</td>
-      <td>mod <code>ClassName.<br>OtherMethod</code></td>
-      <td>The test only checks non-null, not the claimed order total.</td>
-      <td>Assert Total is 10 for the arranged 50-unit order.</td>
-    </tr>
-    <tr>
-      <td>Uncertain</td>
-      <td>—</td>
-      <td>mod <code>ClassName.<br>MissingMethod</code></td>
-      <td>The requested method body could not be resolved.</td>
-      <td>Supply the method body and its referenced fixture.</td>
-    </tr>
-  </tbody>
-</table>
+| Result | Quality | Test | Notes | How to improve |
+| --- | --- | --- | --- | --- |
+| Pass | B (80–89) | new `ClassName.Method_WhenSomething_ReturnsValue` | One exact assertion protects the claimed result. | None |
+| Failed | C (70–79) | mod `ClassName.OtherMethod` | The test only checks non-null, not the claimed order total. | Assert Total is 10 for the arranged 50-unit order. |
+| Uncertain | — | mod `ClassName.MissingMethod` | The requested method body could not be resolved. | Supply the method body and its referenced fixture. |
 
 <!-- When it explains a finding or detail was requested, add a compact
 Pseudo-mutation evidence block keyed by test: exact change, witness,
@@ -999,15 +984,15 @@ Per-test table rules:
   F → D → C → B → A, then fully-qualified name. Unresolved quality is `—`.
 - If there are more than 50 rows, show Failed and Uncertain rows first, sample
   Pass rows, and collapse overflow into `<details>`.
-- Use raw HTML `<table>`, not a Markdown pipe table. The sanitizer allows
-  `table`, `thead`, `tbody`, `tr`, `th`, `td`, `code`, `span`, `sub`, `sup`,
-  `br`, `details`, and `summary`. Do not use `<colgroup>`, `<col>`, `<wbr>`, or
-  invisible Unicode wrap characters.
+- Keep each row on one physical line with the same five columns as the header.
+  Escape literal `|` characters inside cells as `\|`, including inside inline
+  code. Serialize the completed Markdown body normally in the safe-output JSON.
+  Leave a blank line before and after each table, including inside `<details>`.
 - Render quality and score band together, for example `B (80–89)`; use `—`
   for unresolved tests and never emit a fake-precise numeric score.
-- In the Test column, prefix `new` or `mod` outside the `<code>` span when known,
-  drop the namespace, and insert `<br>` after the class separator and each `_`
-  so long MSTest names wrap without changing their copyable text.
+- In the Test column, prefix `new` or `mod` outside the Markdown code span when
+  known and drop the namespace. Keep the complete `ClassName.MethodName` in
+  backticks without HTML tags or invisible Unicode wrap characters.
 - Keep Notes and How to improve separate. Actions follow the result, not the
   letter grade: Failed requires an evidence-backed correction, Pass uses
   `None`, and Uncertain names the evidence needed.
