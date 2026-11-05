@@ -1991,6 +1991,7 @@ Only documentation was updated after that source state. This is a validated
 shared compilation/identity checkpoint, not a claim that the signed ten-package
 SDK or Windows-controller composition has already run; their owners must repack
 and execute those consumers against this checkpoint.
+
 ## 2026-11-03: completed compatibility validation
 
 ### Complete compatibility source matrix
@@ -3102,6 +3103,7 @@ their own final checks. This checkpoint does not include the full MTP suite's
 two known host failures, the remaining analyzer suite, Windows-controller
 integration, CI execution, or official release/servicing certification. The
 separate lane records bind each package/SDK result to its actual source state.
+
 ## Signed compatibility validation (2026-11-03)
 
 ### Public-signing checkpoint validation
