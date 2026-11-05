@@ -1,1 +1,6 @@
 #nullable enable
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetActivitySignalInterval(System.TimeSpan hangTimeout) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetInactivityTimerDueTime(System.TimeSpan hangTimeout) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetTimeout(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetTimerPeriod(System.TimeSpan dueTime, out System.TimeSpan remainingDueTime) -> System.TimeSpan
+static readonly Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.MaxTimerPeriod -> System.TimeSpan
