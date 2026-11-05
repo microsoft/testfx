@@ -86,6 +86,11 @@ try {
             Expected = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026)"
         },
         @{
+            Name = "ModuleOutputDoesNotRepeatRuntimeAndRidForBracketedAssembly"
+            Line = "[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0"
+        },
+        @{
             Name = "ModuleOutputPreservesDifferentChildRuntime"
             Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]"
             Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]"
@@ -104,6 +109,11 @@ try {
             Name = "ModuleOutputPreservesRuntimeAndRidWithoutFullContext"
             Line = "[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
             Expected = "[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesEmbeddedBannerAfterShortContext"
+            Line = "[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
         },
         @{
             Name = "ModuleOutputPreservesNonBannerRuntimeAndRid"

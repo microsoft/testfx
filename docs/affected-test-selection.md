@@ -261,8 +261,10 @@ Assembly names may contain balanced bracketed text, but recognition cannot cross
 `[warning]` to treat a later `[a | b]` as the leading context. Suffix cleanup runs only after this scope check.
 The trailing `[RID - runtime]` on a `Test-map collection child failed: MSTest v...` banner is also omitted when
 both values exactly match the full leading context. Different child runtime/RID values, banners without that
-context, other diagnostic text and additional failure details are preserved. This keeps runtime/RID details
-once, including when the assembly name differs from the project/output directory. Removing every pool label
+context, other diagnostic text and additional failure details are preserved. All four fields must belong to
+that same leading context; a short `[assembly | framework]` label followed by an embedded banner keeps the
+banner's runtime/RID suffix. This keeps runtime/RID details once, including when the assembly name differs
+from the project/output directory. Removing every pool label
 would make interleaved unscoped messages ambiguous; stripping the provider's label would discard useful runtime
 information. Only the console presentation changes:
 per-module `collection.log` files retain the original output, and scheduling, collection failures, exit codes,
@@ -302,6 +304,21 @@ both streams (exit 1, four assertion failures). The unchanged command
 with the correction (PowerShell 7.6.9, exit 0). Bracketed assembly names and raw logs remain preserved.
 The red comparison stops before the existing process-lifecycle checks; the complete green run includes them.
 Linux/macOS execution of this correction remains unverified.
+
+**Short-context regression evidence (2026-11-05):** the correction is based on
+`56f2bfb33922a592a51b4f2c1035423006a7018b`; its source/test patch SHA-256, excluding this document, is
+`5B196AC8CE47A9126169426FC27144343CFF22162024C3D596FDE3DAEBF24B96`.
+The same validator and inputs are retained with the pre-fix reader in an isolated comparison.
+`ModuleOutputPreservesEmbeddedBannerAfterShortContext` fails its exact console-output assertion on stdout
+and stderr (exit 1, two assertion failures); the fixed reader passes all 34 Windows checks (exit 0).
+`ModuleOutputDoesNotRepeatRuntimeAndRidForBracketedAssembly` passes in both states, confirming that genuine
+duplicate suffixes are still removed for bracketed assembly names. Raw-log preservation also passes.
+Both runs use PowerShell 7.6.9 and `pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1`,
+with process-scoped `TEMP` and `TMP` set to the same task-owned directory under `artifacts\tmp`.
+An initial inherited-temp run failed during cleanup and is not counted as behavioral proof.
+The red comparison stops before the existing process-lifecycle checks; the complete green run includes them.
+Actual before/after reader output was inspected in an 80-column, 24-row terminal. SDK collection,
+hosted Azure DevOps rendering and Linux/macOS execution of this correction remain unverified.
 
 Execution feedback must identify the protocol version, module/run/batch and planned/executed identity set.
 Atomic, task-owned feedback is preferable to parsing localized console text or coupling the extension to the

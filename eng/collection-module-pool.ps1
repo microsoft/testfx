@@ -65,7 +65,7 @@ function Read-CollectionModuleOutput {
             $State.Writer.WriteLine($line)
             if ($line -cnotmatch '^\[affected-tests\] \[(?:[^|\[\]]|\[[^|\[\]]*\])+ \| [^\[\]]+\] ') {
                 $line = "[$($State.Module.Project) | $($State.Module.Framework)] $line"
-            } elseif ($line -cmatch '^\[affected-tests\] \[[^|]+ \| [^|]+ \| (?<runtime>[^|]+) \| (?<rid>[^\]]+)\] Test-map collection child failed: MSTest v') {
+            } elseif ($line -cmatch '^\[affected-tests\] \[(?:[^|\[\]]|\[[^|\[\]]*\])+ \| [^|\[\]]+ \| (?<runtime>[^|\[\]]+) \| (?<rid>[^|\[\]]+)\] Test-map collection child failed: MSTest v') {
                 $suffix = " [$($Matches.rid) - $($Matches.runtime)]"
                 if ($line.EndsWith($suffix, [StringComparison]::Ordinal)) {
                     $line = $line.Substring(0, $line.Length - $suffix.Length)
