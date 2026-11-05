@@ -90,7 +90,7 @@ change; the implementing contributor owns the package-consumer checks.
 
 The pinned SDK is `12.0.100-alpha.1.26509.101`. Unit evidence uses Debug builds
 and the unchanged selector `/*/*/AssertTests/*IsNotNull*`.
-The final reviewed validation base is
+The initial reviewed validation base is
 `6876cf113dce6e1db55092779e73840697a0af73`; the earlier baseline entry above
 records the original starting point.
 
@@ -135,12 +135,12 @@ The retained production/API/test patch for the paired comparison has SHA-256
 `98BF6C9FD3E7316AFC73B274140B3328CFD468C6CDA22933D31EA5C59B9A3583`.
 The isolated behavior-only mutation patch has SHA-256
 `08373505424D107614A964D4EC0D3DA0F27F5B51027AA46A599475D7F353A8E6`.
-The final code/test patch, excluding this decision record, has SHA-256
+The initial reviewed code/test patch, excluding this decision record, has SHA-256
 `ADA786C6210A00CE218BDADFCC938C016AD38E019DF4E653EBE98A5069E482E9`.
 Exact commands, binary logs, reports, and a revision-bound evidence manifest are
 retained in task-owned session artifacts.
 
-Final Release execution selected and passed 61 cases: 14 framework cases on each
+Initial reviewed Release execution selected and passed 61 cases: 14 framework cases on each
 of .NET Framework 4.8, .NET 10, and .NET 11; 11 analyzer cases; and eight acceptance
 cases. There were no skips. The repository execution verifier reconciled all
 eight planned acceptance identities with a fresh TRX and exit 0; configured
@@ -180,6 +180,48 @@ Reproducible source, package artifacts, patches, binary logs, result reports,
 and provenance/cleanup manifests remain available locally. Publication is limited
 to the explicitly requested pull request; no external-service result is used as
 local validation evidence.
+
+## PR feedback: retain code-fix target typing
+
+The review of the initial head
+`13fac566b11e8de037ece87887a83a1df5ae01c2` identified an in-scope consumer
+regression: MSTEST0037 rewrote `Assert.AreNotEqual<object>(null, new())` to
+`Assert.IsNotNull(new())`, discarding the type that target-typed `new()` needs.
+The same defect applies to target-typed `default`, collection and conditional
+expressions, including calls with a message.
+
+The fixer now retains existing explicit type arguments when the target
+`IsNotNull` API is generic. It detects the API in the consumer compilation so
+MSTest 4's nongeneric `IsNotNull` fix remains valid. The assertion API and
+diagnostic behavior are otherwise unchanged.
+
+`WhenAssertAreNotEqualAndExpectedIsNull_PreservesExplicitTypeArgument` executed
+five C# rows with the same expected fixed source before and after the correction.
+Before the fix, all five failed at the code-fix verifier's exact output
+assertion because the generated invocation omitted its required type argument
+(exit 2). After the correction, the complete MSTEST0037 class passed 139 cases
+on .NET 10; seven relevant cases also passed on each of .NET 11 and .NET
+Framework 4.7.2, including
+`WhenAssertAreNotEqualAndExpectedIsNull_MSTestV4RemovesTypeArgument`.
+All runs retained method-level parallelism; there were no skips. TRX and JUnit
+reports were parsed and checked against the selected cases.
+
+The correction is bound to the initial PR head plus code/test patch SHA-256
+`BAA630CF848B95B2B4F8BC6C0CE057C454ECBD083833A1CB5A16707A4670A668`.
+The rebuilt `MSTest.Analyzers.5.0.0-dev.nupkg` has SHA-256
+`52745219DC4B5263416557C433573505556406B1B073BD827510204C7A4A85C1`;
+its code-fix DLL was verified against the fixed build. Project build and pack
+completed with zero warnings/errors; the existing complete Windows package set
+was retained for the repository's package-validation hook.
+
+```powershell
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~UseProperAssertMethodsAnalyzerTests" --report-trx --report-trx-filename mstest0037-green.trx --report-junit --report-junit-filename mstest0037-green.xml --results-directory artifacts\TestResults\Release\IsNotNullMstest0037Final --show-test-results failed
+```
+
+The complete command exited 0 with 139 passes. The two other runtime checks
+used `FullyQualifiedName~UseProperAssertMethodsAnalyzerTests.WhenAssertAreNotEqualAndExpectedIsNull`
+and exited 0 with seven passes each. This follow-up evidence does not relabel
+the initial head's CI result as verification of the follow-up commit.
 
 ## Open questions
 
