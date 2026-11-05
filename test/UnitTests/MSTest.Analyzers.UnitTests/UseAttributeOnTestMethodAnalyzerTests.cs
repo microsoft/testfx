@@ -258,7 +258,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]

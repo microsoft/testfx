@@ -575,8 +575,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     [TestMethod]
     public async Task WhenDerivedDoNotParallelizeOnClass_NoDiagnostic()
     {
-        // A user attribute deriving from DoNotParallelizeAttribute must be honored the same way the adapter
-        // honors it (it matches derived attributes), so the mutation stays silent.
+        // v4 consumers can derive from DoNotParallelizeAttribute. Preserve their opt-out even though v5 seals it.
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -599,7 +598,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]

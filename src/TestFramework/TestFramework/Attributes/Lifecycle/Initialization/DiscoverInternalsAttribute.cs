@@ -10,4 +10,4 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// present in a test assembly the tests in such classes will not be discovered.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
-public class DiscoverInternalsAttribute : Attribute;
+public sealed class DiscoverInternalsAttribute : Attribute;

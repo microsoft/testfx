@@ -13,6 +13,54 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
 public sealed class MetadataAttributePolicyTests : TestContainer
 {
+    public void DiscoverInternalsAttribute_IsSealed()
+        => typeof(DiscoverInternalsAttribute).IsSealed.Should().BeTrue("internal discovery is a concrete policy, not an extension point");
+
+    public void DoNotParallelizeAttribute_IsSealed()
+        => typeof(DoNotParallelizeAttribute).IsSealed.Should().BeTrue("the parallelization opt-out is a concrete policy");
+
+    public void ParallelizeAttribute_IsSealed()
+        => typeof(ParallelizeAttribute).IsSealed.Should().BeTrue("parallelization settings are configured without attribute inheritance");
+
+    public void TestDataSourceDiscoveryAttribute_IsSealed()
+        => typeof(TestDataSourceDiscoveryAttribute).IsSealed.Should().BeTrue("data-source discovery is a concrete policy");
+
+    public void STATestClassAttribute_IsSealed()
+        => typeof(STATestClassAttribute).IsSealed.Should().BeTrue("custom class execution extends TestClassAttribute instead");
+
+    public void DataRowAttribute_RemainsExtensible()
+        => typeof(DataRowAttribute).IsSealed.Should().BeFalse("custom data rows can override their display names");
+
+#if WIN_UI
+    public void WinUITestTargetAttribute_IsSealed()
+        => typeof(Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.WinUITestTargetAttribute).IsSealed.Should()
+            .BeTrue("the WinUI application target is a concrete policy");
+
+    public void UITestMethodAttribute_IsSealed()
+        => typeof(Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute).IsSealed.Should()
+            .BeTrue("custom method execution extends TestMethodAttribute instead");
+#endif
+
+    public void DataTestMethodAttribute_IsAbsentFromFrameworkAssembly()
+        => typeof(TestMethodAttribute).Assembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute")
+            .Should().BeNull("MSTest 5 uses TestMethodAttribute for both ordinary and data-driven tests");
+
+    public void TestClassAttribute_RemainsExtensible()
+    {
+        typeof(TestClassAttribute).IsSealed.Should().BeFalse("custom test classes remain supported");
+        MethodInfo selectionHook = typeof(TestClassAttribute).GetMethod(nameof(TestClassAttribute.GetTestMethodAttribute))!;
+        selectionHook.IsVirtual.Should().BeTrue();
+        selectionHook.IsFinal.Should().BeFalse();
+    }
+
+    public void TestMethodAttribute_RemainsExtensible()
+    {
+        typeof(TestMethodAttribute).IsSealed.Should().BeFalse("custom test methods remain supported");
+        MethodInfo executionHook = typeof(TestMethodAttribute).GetMethod(nameof(TestMethodAttribute.ExecuteAsync))!;
+        executionHook.IsVirtual.Should().BeTrue();
+        executionHook.IsFinal.Should().BeFalse();
+    }
+
     public void LifecyclePolicies_PreserveInheritanceFixtureAndParallelSelection()
     {
         new ClassInitializeAttribute().InheritanceBehavior.Should().Be(InheritanceBehavior.None);

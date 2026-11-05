@@ -74,4 +74,4 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)]
-public class DoNotParallelizeAttribute : Attribute;
+public sealed class DoNotParallelizeAttribute : Attribute;

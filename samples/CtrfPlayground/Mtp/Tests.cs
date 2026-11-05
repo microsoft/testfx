@@ -26,7 +26,7 @@ public class SampleTests
     public void ThrowingTest()
         => throw new InvalidOperationException("intentional exception to exercise CTRF error fields");
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(1, 1, 2)]
     [DataRow(2, 3, 5)]
     [DataRow(2, 2, 5)] // intentional failure
