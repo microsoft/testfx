@@ -84,21 +84,19 @@ internal partial class TestMethodInfo
         Exception? globalTestCleanupException = null;
         MethodInfo? globalTestCleanupFailingMethod = null;
         MethodInfo? currentGlobalTestCleanupMethod = null;
-        CancellationToken? cleanupTimeoutToken = null;
+        // Retain only deadlines still active when cleanup starts; an already-expired test gets fresh teardown.
+        CancellationToken? cleanupTimeoutToken = timeoutTokenSource is { IsCancellationRequested: false }
+            ? timeoutTokenSource.Token
+            : null;
         using CancellationTokenRegistration? cleanupRunRegistration = shouldResetCancellationTokenSource
             ? cleanupRunCancellationToken?.Register(TestContext.Context.CancellationTokenSource.Cancel)
             : null;
+        using CancellationTokenRegistration? cleanupTimeoutRegistration =
+            cleanupTimeoutToken?.Register(TestContext.Context.CancellationTokenSource.Cancel);
         try
         {
             try
             {
-                // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
-                if (timeoutTokenSource is { IsCancellationRequested: false })
-                {
-                    cleanupTimeoutToken = timeoutTokenSource.Token;
-                    timeoutTokenSource.Token.Register(TestContext.Context.CancellationTokenSource.Cancel);
-                }
-
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
@@ -147,6 +145,7 @@ internal partial class TestMethodInfo
                     }
 
                     // A local fixture timeout must not cancel independent global teardown or restart an active test/run deadline.
+                    // Keep the context-owned source usable after cleanup; only its deadline/run registrations are scoped.
                     TestContext.Context.CancellationTokenSource = globalCleanupSource = new CancellationTokenSource();
                 }
 
@@ -207,31 +206,45 @@ internal partial class TestMethodInfo
             return;
         }
 
-        Exception realException = testCleanupException.GetRealException();
+        TestFailedException cleanupFailure = CreateCleanupFailureException(testCleanupException, testCleanupMethod);
+        result.Outcome = result.Outcome.GetMoreImportantOutcome(cleanupFailure.Outcome);
+        result.TestFailureException = cleanupFailure;
+        if (globalTestCleanupException is not null && !ReferenceEquals(testCleanupException, globalTestCleanupException))
+        {
+            TestFailedException globalFailure = CreateCleanupFailureException(globalTestCleanupException, globalTestCleanupFailingMethod);
+            // Preserve the local timeout classification, but do not hide an independent global cleanup failure.
+            if (cleanupFailure.Outcome != UnitTestOutcome.Timeout)
+            {
+                result.Outcome = result.Outcome.GetMoreImportantOutcome(globalFailure.Outcome);
+            }
 
-        // Check `realException` (not `testCleanupException`) so that a `TestFailedException` wrapped in
-        // a `TargetInvocationException` / `TypeInitializationException` still preserves its Outcome
-        // (for example a Timeout outcome must not be silently downgraded to Failed).
-        UnitTestOutcome outcomeFromRealException = realException is TestFailedException testFailedException
-            ? testFailedException.Outcome
-            : realException is AssertInconclusiveException
-                ? UnitTestOutcome.Inconclusive
-                : UnitTestOutcome.Failed;
-        result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
+            result.TestFailureException = globalFailure;
+        }
 
-        realException = testCleanupMethod is not null
-            ? new TestFailedException(
-                outcomeFromRealException,
-                string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrows, TestClassName, testCleanupMethod.Name, realException.GetFormattedExceptionMessage()),
-                realException.TryGetStackTraceInformation(),
-                realException)
-            : new TestFailedException(
-                outcomeFromRealException,
-                string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrowsGeneralError, TestClassName, realException.GetFormattedExceptionMessage()),
-                realException.TryGetStackTraceInformation(),
-                realException);
+        TestFailedException CreateCleanupFailureException(Exception exception, MethodInfo? method)
+        {
+            Exception realException = exception.GetRealException();
+            UnitTestOutcome outcome = realException is TestFailedException testFailedException
+                ? testFailedException.Outcome
+                : realException is AssertInconclusiveException
+                    ? UnitTestOutcome.Inconclusive
+                    : UnitTestOutcome.Failed;
+            string cleanupClassName = method is not null && method == globalTestCleanupFailingMethod
+                ? method.DeclaringType!.FullName!
+                : TestClassName;
 
-        result.TestFailureException = realException;
+            return method is not null
+                ? new TestFailedException(
+                    outcome,
+                    string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrows, cleanupClassName, method.Name, realException.GetFormattedExceptionMessage()),
+                    realException.TryGetStackTraceInformation(),
+                    realException)
+                : new TestFailedException(
+                    outcome,
+                    string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrowsGeneralError, TestClassName, realException.GetFormattedExceptionMessage()),
+                    realException.TryGetStackTraceInformation(),
+                    realException);
+        }
     }
 
     private bool HasCleanupsToInvoke(ITestClassInstanceLease? classInstanceLease) =>

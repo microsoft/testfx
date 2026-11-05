@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -14,26 +16,49 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
 {
     private static string ConsumerTargetFramework => TargetFrameworks.Net[^1];
 
+    public static IEnumerable<TestDataRow<(string Scenario, MetadataMode MetadataMode, bool NonCooperativeTimeout)>> CleanupCases
+    {
+        get
+        {
+            yield return new(("normal", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_Normal" };
+            yield return new(("error", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_UnrelatedLocalFailure" };
+            yield return new(("cancel-return", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_LocalCancellationWithoutException" };
+            yield return new(("cancel-throw", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_LocalCancellationException" };
+            yield return new(("cancel-unrelated", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_CancellationWithUnrelatedLocalFailure" };
+            yield return new(("timeout", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout" };
+            yield return new(("timeout-global-throw", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_PreservesLocalTimeoutWhenGlobalCleanupThrows" };
+            yield return new(("timeout", MetadataMode.Reflection, true)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout_NonCooperativeTest" };
+            if (!AcceptanceSourceGen.IsGloballyDisabled)
+            {
+                yield return new(("timeout", MetadataMode.SourceGeneration, false)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout_SourceGeneration" };
+                yield return new(("timeout", MetadataMode.SourceGeneration, true)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout_NonCooperativeTest_SourceGeneration" };
+            }
+        }
+    }
+
     [TestMethod]
-    [DataRow("normal", MetadataMode.Reflection, DisplayName = "GlobalCleanup_Normal")]
-    [DataRow("error", MetadataMode.Reflection, DisplayName = "GlobalCleanup_UnrelatedLocalFailure")]
-    [DataRow("cancel-return", MetadataMode.Reflection, DisplayName = "GlobalCleanup_LocalCancellationWithoutException")]
-    [DataRow("cancel-throw", MetadataMode.Reflection, DisplayName = "GlobalCleanup_LocalCancellationException")]
-    [DataRow("cancel-unrelated", MetadataMode.Reflection, DisplayName = "GlobalCleanup_CancellationWithUnrelatedLocalFailure")]
-    [DataRow("timeout", MetadataMode.Reflection, DisplayName = "GlobalCleanup_LocalCooperativeTimeout")]
-    [DataRow("timeout-global-throw", MetadataMode.Reflection, DisplayName = "GlobalCleanup_PreservesLocalTimeoutWhenGlobalCleanupThrows")]
-    [DataRow("timeout", MetadataMode.SourceGeneration, DisplayName = "GlobalCleanup_LocalCooperativeTimeout_SourceGeneration")]
-    public async Task GlobalCleanupAfterLocalCancellationReleasesOwnedResource(string scenario, MetadataMode metadataMode)
+    [DynamicData(nameof(CleanupCases))]
+    public async Task GlobalCleanupAfterLocalCancellationReleasesOwnedResource(string scenario, MetadataMode metadataMode, bool nonCooperativeTimeout)
     {
         using TempDirectory results = new();
         string evidenceDirectory = Path.Combine(results.Path, "evidence");
+        using ZipArchive package = ZipFile.OpenRead(Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestAdapter.{MSTestVersion}.nupkg"));
+        ZipArchiveEntry? adapterPayload = package.GetEntry($"buildTransitive/{ConsumerTargetFramework}/MSTestAdapter.PlatformServices.dll");
+        Assert.IsNotNull(adapterPayload);
+        using Stream adapterStream = adapterPayload.Open();
+        string expectedAdapterHash = Convert.ToHexString(SHA256.HashData(adapterStream));
+        string filter = nonCooperativeTimeout
+            ? "Name=NoBaseTestNonCooperative|Name=WithBaseTestNonCooperative"
+            : "Name=NoBaseTest|Name=WithBaseTest";
         var host = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, ConsumerTargetFramework, metadataMode: metadataMode);
         TestHostResult result = await host.ExecuteAsync(
-            $"--report-trx --report-trx-filename cleanup.trx --results-directory \"{results.Path}\"",
+            $"--filter \"{filter}\" --report-trx --report-trx-filename cleanup.trx --results-directory \"{results.Path}\"",
             environmentVariables: new()
             {
                 ["LOCAL_CLEANUP_SCENARIO"] = scenario,
                 ["CLEANUP_EVIDENCE_DIRECTORY"] = evidenceDirectory,
+                ["NONCOOPERATIVE_TEST_TIMEOUT"] = nonCooperativeTimeout.ToString(),
+                ["DOTNET_CLI_UI_LANGUAGE"] = "en-US",
             },
             cancellationToken: TestContext.CancellationToken);
 
@@ -46,8 +71,11 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
         XElement[] testResults = report.Descendants(ns + "UnitTestResult")
             .Where(testResult => !testResult.Descendants(ns + "UnitTestResult").Any())
             .ToArray();
+        string[] expectedNames = nonCooperativeTimeout
+            ? ["NoBaseTestNonCooperative", "WithBaseTestNonCooperative"]
+            : ["NoBaseTest", "WithBaseTest"];
         Assert.AreSequenceEqual(
-            ["NoBaseTest", "WithBaseTest"],
+            expectedNames,
             testResults.Select(testResult => (string?)testResult.Attribute("testName")).OrderBy(name => name, StringComparer.Ordinal).ToArray());
         Assert.AreEqual(2, testResults.Select(testResult => (string?)testResult.Attribute("executionId")).Distinct().Count());
         var classes = report.Descendants(ns + "UnitTest")
@@ -59,11 +87,17 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
         foreach (XElement testResult in testResults)
         {
             string testName = (string)testResult.Attribute("testName")!;
-            string className = testName == "NoBaseTest" ? "NoBaseCleanup" : "WithBaseCleanup";
+            string className = testName == expectedNames[0] ? "NoBaseCleanup" : "WithBaseCleanup";
             Assert.AreEqual(className, classes[(string)testResult.Attribute("testId")!]);
             Assert.AreEqual(passed ? "Passed" : "Failed", (string?)testResult.Attribute("outcome"), testName);
 
             string directory = Path.Combine(evidenceDirectory, className);
+            string[] provenance = File.ReadAllLines(Path.Combine(directory, "product-provenance.txt"));
+            Assert.HasCount(3, provenance);
+            Assert.AreEqual("MSTestAdapter.PlatformServices.dll", Path.GetFileName(provenance[0]));
+            Assert.Contains(MSTestVersion, provenance[1]);
+            Assert.AreEqual(expectedAdapterHash, provenance[2], $"Loaded adapter does not match the current package for {className}.");
+            TestContext.WriteLine($"Loaded adapter for {className}: {string.Join(" | ", provenance)}");
             Assert.IsFalse(File.Exists(Path.Combine(directory, "owned-resource.txt")), $"Global cleanup did not release {className}'s resource in {scenario}.");
             string expectedTrace = passed && className == "WithBaseCleanup"
                 ? """
@@ -93,6 +127,11 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
                 string error = testResult.Descendants(ns + "Message").Single().Value;
                 Assert.Contains($"{className}.Cleanup", error);
                 Assert.Contains("timed out after 1000ms", error);
+                if (scenario == "timeout-global-throw")
+                {
+                    Assert.Contains("global cleanup also failed", error);
+                    Assert.Contains("GlobalFixtures.Cleanup", error);
+                }
             }
             else if (scenario is "error" or "cancel-unrelated")
             {
@@ -148,8 +187,15 @@ public sealed class GlobalFixtures
         Directory.CreateDirectory(Probe.DirectoryFor(context));
         File.WriteAllText(Probe.ResourceFor(context), "resource owned by global initialization");
         Probe.Record(context, "global-initialize");
-        Assembly adapter = AppDomain.CurrentDomain.GetAssemblies()
-            .Single(assembly => assembly.GetName().Name == "MSTestAdapter.PlatformServices");
+        Assembly[] adapters = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(assembly => assembly.GetName().Name == "MSTestAdapter.PlatformServices")
+            .ToArray();
+        if (adapters.Length != 1)
+        {
+            throw new InvalidOperationException($"Expected one loaded MSTestAdapter.PlatformServices assembly, found {adapters.Length}.");
+        }
+
+        Assembly adapter = adapters[0];
         File.WriteAllLines(Path.Combine(Probe.DirectoryFor(context), "product-provenance.txt"),
         [
             adapter.Location,
@@ -159,9 +205,14 @@ public sealed class GlobalFixtures
     }
 
     [GlobalTestCleanup]
-    public static void Cleanup(TestContext context)
+    public static async Task Cleanup(TestContext context)
     {
         Probe.Record(context, "global-cleanup");
+        if (Environment.GetEnvironmentVariable("NONCOOPERATIVE_TEST_TIMEOUT") == "True")
+        {
+            await Task.Delay(500, context.CancellationToken);
+        }
+
         File.Delete(Probe.ResourceFor(context));
         if (Probe.Scenario == "timeout-global-throw")
         {
@@ -191,6 +242,10 @@ public sealed class NoBaseCleanup : ProbeBase
     [TestMethod]
     public void NoBaseTest() => Probe.Record(TestContext, "test-body");
 
+    [TestMethod]
+    [Timeout(10000)]
+    public void NoBaseTestNonCooperative() => Probe.Record(TestContext, "test-body");
+
     [TestCleanup]
     [Timeout(1000, CooperativeCancellation = true)]
     public async Task Cleanup() => await Probe.CleanupAsync(TestContext);
@@ -201,6 +256,10 @@ public sealed class WithBaseCleanup : InheritedCleanup
 {
     [TestMethod]
     public void WithBaseTest() => Probe.Record(TestContext, "test-body");
+
+    [TestMethod]
+    [Timeout(10000)]
+    public void WithBaseTestNonCooperative() => Probe.Record(TestContext, "test-body");
 
     [TestCleanup]
     [Timeout(1000, CooperativeCancellation = true)]
