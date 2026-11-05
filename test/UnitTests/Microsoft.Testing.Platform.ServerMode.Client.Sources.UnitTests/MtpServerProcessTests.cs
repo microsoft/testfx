@@ -50,8 +50,13 @@ public sealed class MtpServerProcessTests
         using Process process = CreateFixtureProcess();
         process.StartInfo.EnvironmentVariables[fixtureVariable] = "1";
         process.Start();
+#if NETCOREAPP
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.CancellationToken);
+#else
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
+#endif
         try
         {
             // This bounds profiled child startup, not the product's connection timeout.

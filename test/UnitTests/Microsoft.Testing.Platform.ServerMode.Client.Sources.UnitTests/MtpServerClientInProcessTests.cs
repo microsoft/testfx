@@ -49,7 +49,7 @@ public sealed class MtpServerClientInProcessTests
         var server = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var cancellation = new CancellationTokenSource();
         using var releaseCallback = new ManualResetEventSlim();
-        using CancellationTokenRegistration registration = cancellation.Token.Register(() => releaseCallback.Wait());
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() => releaseCallback.Wait(TestContext.CancellationToken));
         var timing = new ControlledShutdownTiming(server, TimeSpan.FromSeconds(elapsedSeconds));
         Task<bool> shutdown = MtpServerInProcessHost.ShutdownServerCoreAsync(
             server.Task,
@@ -93,7 +93,7 @@ public sealed class MtpServerClientInProcessTests
         var server = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var cancellation = new CancellationTokenSource();
         using var releaseCallback = new ManualResetEventSlim();
-        using CancellationTokenRegistration registration = cancellation.Token.Register(() => releaseCallback.Wait());
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() => releaseCallback.Wait(TestContext.CancellationToken));
         var timing = new ControlledShutdownTiming(server, TimeSpan.FromSeconds(3));
         Task<bool> shutdown = InvokeWithSynchronizationContext(
             () => MtpServerInProcessHost.ShutdownServerCoreAsync(

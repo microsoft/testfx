@@ -171,7 +171,7 @@ public sealed class SerializationMutationTests
             Assert.HasCount(3, serialized);
             Assert.AreEqual("client", serialized["name"]);
             Assert.AreEqual("1", serialized["version"]);
-            Assert.AreEqual(true, serialized["published"]);
+            Assert.IsTrue(Assert.IsInstanceOfType<bool>(serialized["published"]));
         }
         finally
         {
@@ -268,13 +268,13 @@ public sealed class SerializationMutationTests
         Assert.HasCount(1, capabilities);
         IDictionary<string, object?> testing = Assert.IsInstanceOfType<IDictionary<string, object?>>(capabilities[JsonRpcStrings.Testing]);
         Assert.HasCount(7, testing);
-        Assert.AreEqual(true, testing[JsonRpcStrings.SupportsDiscovery]);
-        Assert.AreEqual(false, testing[JsonRpcStrings.MultiRequestSupport]);
-        Assert.AreEqual(true, testing[JsonRpcStrings.VSTestProviderSupport]);
-        Assert.AreEqual(false, testing[JsonRpcStrings.AttachmentsSupport]);
-        Assert.AreEqual(true, testing[JsonRpcStrings.MultiConnectionProvider]);
-        Assert.AreEqual(false, testing[JsonRpcStrings.SupportsTestCoverageMessages]);
-        Assert.AreEqual(false, testing[JsonRpcStrings.ShowMessage]);
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.SupportsDiscovery]));
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.MultiRequestSupport]));
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.VSTestProviderSupport]));
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.AttachmentsSupport]));
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.MultiConnectionProvider]));
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.SupportsTestCoverageMessages]));
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(testing[JsonRpcStrings.ShowMessage]));
         if (protocolVersion is null)
         {
             Assert.HasCount(3, serialized);
@@ -1411,14 +1411,14 @@ public sealed class SerializationMutationTests
         Assert.AreEqual(9223372036854775808UL, Assert.IsInstanceOfType<ulong>(values[3]));
         Assert.AreEqual(decimal.MaxValue, Assert.IsInstanceOfType<decimal>(values[4]));
         Assert.AreEqual(1e100, Assert.IsInstanceOfType<double>(values[5]));
-        Assert.AreEqual(true, values[6]);
-        Assert.AreEqual(false, values[7]);
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(values[6]));
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(values[7]));
         Assert.IsNull(values[8]);
         object[] inner = Assert.IsInstanceOfType<object[]>(values[9]);
         Assert.AreSequenceEqual<object>(["inner", false], inner);
         IDictionary<string, object?> properties = Assert.IsInstanceOfType<IDictionary<string, object?>>(values[10]);
         Assert.HasCount(1, properties);
-        Assert.AreEqual(true, properties["flag"]);
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(properties["flag"]));
     }
 
     [TestMethod]

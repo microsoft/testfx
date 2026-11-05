@@ -136,14 +136,22 @@ public sealed class MessageModelMutationTests
         const string spanText = "LinePositionSpan { Start = LinePosition { Line = 2, Column = 3 }, End = LinePosition { Line = 5, Column = 7 } }";
         AssertValueSemantics(start, new ClientMessages.LinePosition(2, 3), startText, new ClientMessages.LinePosition(4, 3), new ClientMessages.LinePosition(2, 4));
         AssertValueSemantics(span, new ClientMessages.LinePositionSpan(start, end), spanText, new ClientMessages.LinePositionSpan(end, end), new ClientMessages.LinePositionSpan(start, start));
-        Assert.IsTrue(start == new ClientMessages.LinePosition(2, 3));
-        Assert.IsFalse(start != new ClientMessages.LinePosition(2, 3));
-        Assert.IsFalse(start == end);
-        Assert.IsTrue(start != end);
-        Assert.IsTrue(span == new ClientMessages.LinePositionSpan(start, end));
-        Assert.IsFalse(span != new ClientMessages.LinePositionSpan(start, end));
-        Assert.IsFalse(span == new ClientMessages.LinePositionSpan(end, start));
-        Assert.IsTrue(span != new ClientMessages.LinePositionSpan(end, start));
+        bool equalPositionsCompareEqual = start == new ClientMessages.LinePosition(2, 3);
+        bool equalPositionsCompareUnequal = start != new ClientMessages.LinePosition(2, 3);
+        bool differentPositionsCompareEqual = start == end;
+        bool differentPositionsCompareUnequal = start != end;
+        bool equalSpansCompareEqual = span == new ClientMessages.LinePositionSpan(start, end);
+        bool equalSpansCompareUnequal = span != new ClientMessages.LinePositionSpan(start, end);
+        bool differentSpansCompareEqual = span == new ClientMessages.LinePositionSpan(end, start);
+        bool differentSpansCompareUnequal = span != new ClientMessages.LinePositionSpan(end, start);
+        Assert.IsTrue(equalPositionsCompareEqual);
+        Assert.IsFalse(equalPositionsCompareUnequal);
+        Assert.IsFalse(differentPositionsCompareEqual);
+        Assert.IsTrue(differentPositionsCompareUnequal);
+        Assert.IsTrue(equalSpansCompareEqual);
+        Assert.IsFalse(equalSpansCompareUnequal);
+        Assert.IsFalse(differentSpansCompareEqual);
+        Assert.IsTrue(differentSpansCompareUnequal);
 
         var location = new ClientMessages.TestFileLocationProperty("source.cs", span);
         var equal = new ClientMessages.TestFileLocationProperty("source.cs", span);
@@ -289,10 +297,14 @@ public sealed class MessageModelMutationTests
             new ClientMessages.TimingInfo(start.AddSeconds(1), end, duration),
             new ClientMessages.TimingInfo(start, end.AddSeconds(1), duration),
             new ClientMessages.TimingInfo(start, end, duration.Add(TimeSpan.FromSeconds(1))));
-        Assert.IsTrue(timing == new ClientMessages.TimingInfo(start, end, duration));
-        Assert.IsFalse(timing != new ClientMessages.TimingInfo(start, end, duration));
-        Assert.IsFalse(timing == default);
-        Assert.IsTrue(timing != default);
+        bool equalTimingsCompareEqual = timing == new ClientMessages.TimingInfo(start, end, duration);
+        bool equalTimingsCompareUnequal = timing != new ClientMessages.TimingInfo(start, end, duration);
+        bool differentTimingsCompareEqual = timing == default;
+        bool differentTimingsCompareUnequal = timing != default;
+        Assert.IsTrue(equalTimingsCompareEqual);
+        Assert.IsFalse(equalTimingsCompareUnequal);
+        Assert.IsFalse(differentTimingsCompareEqual);
+        Assert.IsTrue(differentTimingsCompareUnequal);
         var step = new ClientMessages.StepTimingInfo("setup", "prepare", timing);
         AssertValueSemantics(step, new ClientMessages.StepTimingInfo("setup", "prepare", timing),
             $"StepTimingInfo {{ Id = setup, Description = prepare, Timing = {TimingText} }}",
@@ -432,10 +444,14 @@ public sealed class MessageModelMutationTests
         var output = new ClientMessages.StandardOutputProperty("output");
         var second = new ClientMessages.TestMetadataProperty("second", "two");
         var list = new ClientMessages.PropertyBag.Property(second, new ClientMessages.PropertyBag.Property(output, new ClientMessages.PropertyBag.Property(first)));
-        Assert.AreEqual(3, list.Count);
-        Assert.IsTrue(list.Contains(second));
-        Assert.IsTrue(list.Contains(first));
-        Assert.IsFalse(list.Contains(new ClientMessages.TestMetadataProperty("first", "one")));
+        int count = list.Count;
+        bool containsSecond = list.Contains(second);
+        bool containsFirst = list.Contains(first);
+        bool containsDifferent = list.Contains(new ClientMessages.TestMetadataProperty("first", "one"));
+        Assert.AreEqual(3, count);
+        Assert.IsTrue(containsSecond);
+        Assert.IsTrue(containsFirst);
+        Assert.IsFalse(containsDifferent);
         Assert.IsTrue(list.Any<ClientMessages.TestMetadataProperty>());
         Assert.IsTrue(list.Any<ClientMessages.StandardOutputProperty>());
         Assert.IsFalse(list.Any<ClientMessages.StandardErrorProperty>());
@@ -514,8 +530,10 @@ public sealed class MessageModelMutationTests
         AssertValueSemantics(
             new ClientMessages.TestNodeUid("node"), new ClientMessages.TestNodeUid("node"),
             "TestNodeUid { Value = node }", new ClientMessages.TestNodeUid("other"));
-        Assert.IsTrue(new ClientMessages.TestNodeUid("node") != new ClientMessages.TestNodeUid("other"));
-        Assert.IsFalse(new ClientMessages.TestNodeUid("node") != new ClientMessages.TestNodeUid("node"));
+        bool differentUidsCompareUnequal = new ClientMessages.TestNodeUid("node") != new ClientMessages.TestNodeUid("other");
+        bool equalUidsCompareUnequal = new ClientMessages.TestNodeUid("node") != new ClientMessages.TestNodeUid("node");
+        Assert.IsTrue(differentUidsCompareUnequal);
+        Assert.IsFalse(equalUidsCompareUnequal);
         ClientMessages.TestNodeUid? absent = null;
         Assert.IsFalse(new ClientMessages.TestNodeUid("node").Equals(absent));
         Assert.AreEqual("value", Assert.ThrowsExactly<ArgumentNullException>(() => new ClientMessages.TestNodeUid(null!)).ParamName);
@@ -721,7 +739,8 @@ public sealed class MessageModelMutationTests
             Assert.IsFalse(value.Equals(other));
             Assert.IsFalse(boxedValue.Equals(other));
             Assert.IsFalse(other.Equals(value));
-            Assert.IsFalse(set.Contains(other));
+            bool containsDifferent = set.Contains(other);
+            Assert.IsFalse(containsDifferent);
         }
     }
 

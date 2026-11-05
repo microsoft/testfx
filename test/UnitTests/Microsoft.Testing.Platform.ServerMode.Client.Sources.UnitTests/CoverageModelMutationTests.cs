@@ -192,15 +192,19 @@ public sealed class CoverageModelMutationTests
         Assert.AreEqual("first", scope.ContainerHint);
         Assert.IsTrue(scope.Equals(equal));
         Assert.IsTrue(scope.Equals((object)equal));
-        Assert.IsTrue(scope == equal);
-        Assert.IsFalse(scope != equal);
+        bool equalScopesCompareEqual = scope == equal;
+        bool equalScopesCompareUnequal = scope != equal;
+        Assert.IsTrue(equalScopesCompareEqual);
+        Assert.IsFalse(equalScopesCompareUnequal);
         Assert.AreEqual(scope.GetHashCode(), equal.GetHashCode());
         foreach (ClientMessages.CoverageScope different in new[] { differentCase, differentLevel, ClientMessages.CoverageScope.Overall })
         {
             Assert.IsFalse(scope.Equals(different));
             Assert.IsFalse(scope.Equals((object)different));
-            Assert.IsFalse(scope == different);
-            Assert.IsTrue(scope != different);
+            bool differentScopesCompareEqual = scope == different;
+            bool differentScopesCompareUnequal = scope != different;
+            Assert.IsFalse(differentScopesCompareEqual);
+            Assert.IsTrue(differentScopesCompareUnequal);
         }
 
         Assert.IsFalse(scope.Equals(null));

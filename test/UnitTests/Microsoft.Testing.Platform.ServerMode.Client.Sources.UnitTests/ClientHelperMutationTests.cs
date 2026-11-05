@@ -29,8 +29,13 @@ public sealed class ClientHelperMutationTests
         using Process process = MtpServerProcessTests.CreateFixtureProcess();
         process.StartInfo.EnvironmentVariables[LateFaultFixtureEnvironmentVariable] = operation;
         process.Start();
+#if NETCOREAPP
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.CancellationToken);
+#else
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
+#endif
         try
         {
             // Each of the two collections has a 30-second watchdog; allow profiled child startup as well.
@@ -61,8 +66,13 @@ public sealed class ClientHelperMutationTests
         using Process process = MtpServerProcessTests.CreateFixtureProcess();
         process.StartInfo.EnvironmentVariables[LateFaultFixtureEnvironmentVariable] = operation;
         process.Start();
+#if NETCOREAPP
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.CancellationToken);
+#else
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
+#endif
         try
         {
             // The probe uses a five-second child deadline; leave room for profiled process startup.
@@ -309,9 +319,11 @@ public sealed class ClientHelperMutationTests
         Assert.AreEqual(42, await ClientTasks.WaitAsync(Task.FromResult(42), cancellation.Token));
         Assert.AreEqual(43, await ClientTasks.WaitAsync(Task.FromResult(43), TimeSpan.Zero));
         await ClientTasks.WaitAsync(Task.CompletedTask, cancellation.Token);
-        await ClientTasks.WaitAsync(Task.CompletedTask, TimeSpan.Zero);
+        // Bind the no-token wrapper explicitly rather than testing a different, cancellable overload.
+        Func<Task, TimeSpan, Task> waitWithoutCancellation = ClientTasks.WaitAsync;
+        await waitWithoutCancellation(Task.CompletedTask, TimeSpan.Zero);
         var source = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Task<int> wait = ClientTasks.WaitAsync(source.Task, Timeout.InfiniteTimeSpan);
+        Task<int> wait = ClientTasks.WaitAsync(source.Task, Timeout.InfiniteTimeSpan, TestContext.CancellationToken);
         source.SetResult(37);
         Assert.AreEqual(37, await wait);
     }
