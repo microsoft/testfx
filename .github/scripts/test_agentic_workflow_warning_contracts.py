@@ -258,6 +258,40 @@ exec /usr/bin/mv "$@"
 
 
 class CompiledWarningContractTests(unittest.TestCase):
+    def test_pipeline_triage_detection_skips_noop_only_runs(self) -> None:
+        source, _ = authored("pipeline-test-triage.md")
+        jobs = compiled("pipeline-test-triage.lock.yml")["jobs"]
+        gate = ("(needs.agent.outputs.output_types != '' && "
+                "needs.agent.outputs.output_types != 'noop') || "
+                "needs.agent.outputs.has_patch == 'true'")
+        for label, expected, actual in (
+            ("authored", "${{ " + gate + " }}",
+             source["safe-outputs"]["threat-detection"]["enabled"]),
+            ("compiled", "always() && needs.agent.result != 'skipped' && (" + gate + ")",
+             " ".join(jobs["detection"]["if"].split())),
+        ):
+            with self.subTest(case=label):
+                self.assertEqual(expected, actual,
+                                 "Skip only empty/noop outputs without a patch; retain real-output and patch detection")
+
+    def test_pipeline_triage_noop_skip_preserves_detection_security_controls(self) -> None:
+        source, _ = authored("pipeline-test-triage.md")
+        jobs = compiled("pipeline-test-triage.lock.yml")["jobs"]
+        detection = source["safe-outputs"]["threat-detection"]
+        self.assertEqual("detection", detection["model"])
+        self.assertEqual({"id": "copilot"}, detection["engine"])
+        self.assertEqual({"contents": "read", "copilot-requests": "write"},
+                         jobs["detection"]["permissions"])
+        execution = step_with_id(jobs["detection"]["steps"], "detection_agentic_execution")
+        self.assertEqual("detection", execution["env"]["COPILOT_MODEL"])
+        self.assertIn("steps.detection_setup.outputs.ready == 'true'", execution["if"])
+        self.assertIn("steps.threat_detect_install.outcome == 'success'", execution["if"])
+        self.assertEqual(
+            "always() && (!cancelled()) && needs.agent.result != 'skipped' && "
+            "(needs.detection.result == 'success' || needs.detection.result == 'skipped')",
+            " ".join(jobs["safe_outputs"]["if"].split()),
+        )
+
     def test_build_publisher_checkouts_have_direct_identity_dependency(self) -> None:
         jobs = compiled("build-failure-analysis.lock.yml")["jobs"]
         output = jobs["safe_outputs"]

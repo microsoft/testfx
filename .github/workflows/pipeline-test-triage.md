@@ -737,8 +737,8 @@ safe-outputs:
   report-incomplete:
     create-issue: false
   threat-detection:
-    # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).
-    enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
+    # No publishable output exists for noop-only runs without a patch (#12224).
+    enabled: ${{ (needs.agent.outputs.output_types != '' && needs.agent.outputs.output_types != 'noop') || needs.agent.outputs.has_patch == 'true' }}
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
       is trusted redaction metadata added by gh-aw. Workflow-authored task, tool,
