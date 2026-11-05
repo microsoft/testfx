@@ -45,6 +45,12 @@ internal partial class TestMethodInfo
             return;
         }
 
+        CancellationToken? cleanupRunCancellationToken = PlatformServiceProvider.Instance.TestRunCancellationToken?.CancellationToken;
+        if (cleanupRunCancellationToken is { IsCancellationRequested: true })
+        {
+            cleanupRunCancellationToken = null;
+        }
+
         if (shouldResetCancellationTokenSource)
         {
             TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
@@ -74,10 +80,14 @@ internal partial class TestMethodInfo
         }
 
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
-        Exception? testCleanupException;
-        TestFailedException? globalTestCleanupException = null;
+        Exception? testCleanupException = null;
+        Exception? globalTestCleanupException = null;
         MethodInfo? globalTestCleanupFailingMethod = null;
         MethodInfo? currentGlobalTestCleanupMethod = null;
+        CancellationToken? cleanupTimeoutToken = null;
+        using CancellationTokenRegistration? cleanupRunRegistration = shouldResetCancellationTokenSource
+            ? cleanupRunCancellationToken?.Register(TestContext.Context.CancellationTokenSource.Cancel)
+            : null;
         try
         {
             try
@@ -85,7 +95,8 @@ internal partial class TestMethodInfo
                 // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
                 if (timeoutTokenSource is { IsCancellationRequested: false })
                 {
-                    timeoutTokenSource?.Token.Register(TestContext.Context.CancellationTokenSource.Cancel);
+                    cleanupTimeoutToken = timeoutTokenSource.Token;
+                    timeoutTokenSource.Token.Register(TestContext.Context.CancellationTokenSource.Cancel);
                 }
 
                 // Test cleanups are called in the order of discovery
@@ -106,6 +117,10 @@ internal partial class TestMethodInfo
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                testCleanupException = ex;
+            }
             finally
             {
                 if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
@@ -113,10 +128,45 @@ internal partial class TestMethodInfo
                     await classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
 
+                CancellationTokenSource? globalCleanupSource = null;
+                if (Parent.Parent.GlobalTestCleanups.Count > 0
+                    && TestContext.Context.CancellationTokenSource.IsCancellationRequested
+                    && cleanupTimeoutToken?.IsCancellationRequested != true
+                    && cleanupRunCancellationToken?.IsCancellationRequested != true)
+                {
+                    if (testCleanupException is null)
+                    {
+                        MethodInfo canceledMethod = testCleanupMethod ?? Parent.Parent.GlobalTestCleanups[0].Method;
+                        string canceledMessage = testCleanupMethod is null
+                            ? Resource.GlobalTestCleanupWasCancelled
+                            : Resource.TestCleanupWasCancelled;
+                        testCleanupMethod = canceledMethod;
+                        testCleanupException = new TestFailedException(
+                            UnitTestOutcome.Timeout,
+                            string.Format(CultureInfo.InvariantCulture, canceledMessage, canceledMethod.DeclaringType!.FullName, canceledMethod.Name));
+                    }
+
+                    // A local fixture timeout must not cancel independent global teardown or restart an active test/run deadline.
+                    TestContext.Context.CancellationTokenSource = globalCleanupSource = new CancellationTokenSource();
+                }
+
+                using CancellationTokenRegistration? globalTimeoutRegistration = globalCleanupSource is null
+                    ? null
+                    : cleanupTimeoutToken?.Register(globalCleanupSource.Cancel);
+                using CancellationTokenRegistration? globalRunRegistration = globalCleanupSource is null
+                    ? null
+                    : cleanupRunCancellationToken?.Register(globalCleanupSource.Cancel);
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
                 {
                     currentGlobalTestCleanupMethod = method;
-                    globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    try
+                    {
+                        globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        globalTestCleanupException = ex;
+                    }
 
                     if (globalTestCleanupException is not null)
                     {
