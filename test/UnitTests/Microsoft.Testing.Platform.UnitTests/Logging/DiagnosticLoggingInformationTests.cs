@@ -24,7 +24,8 @@ public sealed class DiagnosticLoggingInformationTests
         FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, "diagnostics", syncFlush: true);
         ILogger logger = provider.CreateLogger("test");
 
-        var logTask = Task.Run(
+        // A queued thread-pool task can exceed the deadline before logging starts on a busy .NET Framework host.
+        Task logTask = Task.Factory.StartNew(
             async () =>
             {
                 if (useAsync)
@@ -36,7 +37,9 @@ public sealed class DiagnosticLoggingInformationTests
                     logger.Log(LogLevel.Debug, "outer", null, FormatAndLogNested);
                 }
             },
-            TestContext.CancellationToken);
+            TestContext.CancellationToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default).Unwrap();
         Task completedTask = await Task.WhenAny(logTask, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
 
         Assert.AreSame(logTask, completedTask, "Recursive logging from a formatter deadlocked.");
