@@ -20,6 +20,8 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         string? childDirectory = Environment.GetEnvironmentVariable(ChildDirectoryVariable);
         if (childDirectory is not null)
         {
+            Environment.GetEnvironmentVariable("MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH").Should().BeNull(
+                "the isolated host must not overwrite its parent's collection-batch feedback");
             string requestedLog = Path.Combine(childDirectory, "eqt.log");
             EqtTrace.DoNotInitailize = false;
             EqtTrace.InitializeTrace(requestedLog, PlatformTraceLevel.Verbose).Should().BeTrue();
@@ -81,6 +83,12 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
             Arguments = $"test --project \"{project}\" --framework \"{framework}\" --configuration \"{configuration}\" --no-build --no-restore -p:BuildProjectReferences=false -p:UsingDotNetTest=true \"-p:ArtifactsTestResultsDir={childResults}\" --no-progress --no-ansi --treenode-filter \"/*/*/EqtTraceLoggerContinuationTests/*\"",
         };
         startInfo.EnvironmentVariables[ChildDirectoryVariable] = childResults;
+        // The nested SDK invocation must not join its parent's affected-test collection session.
+        startInfo.EnvironmentVariables.Remove("DOTNET_CLI_ENABLE_AFFECTED_TESTS");
+        startInfo.EnvironmentVariables.Remove("DOTNET_CLI_TEST_AFFECTED_TESTS_MODE");
+        startInfo.EnvironmentVariables.Remove("MTP_AFFECTED_TESTS_CHILD_PROCESS");
+        startInfo.EnvironmentVariables.Remove("MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID");
+        startInfo.EnvironmentVariables.Remove("MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH");
         using Process child = Process.Start(startInfo)!;
         Task<string> standardOutput = child.StandardOutput.ReadToEndAsync();
         Task<string> standardError = child.StandardError.ReadToEndAsync();

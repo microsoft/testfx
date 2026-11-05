@@ -116,6 +116,8 @@ builds that contain only the no-handshake fix.
   `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
   test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
+  The adapter trace-bridge test also removes collection-child and batch-feedback context from its isolated SDK
+  invocation, preventing the nested host from overwriting the outer collection batch's final test inventory.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
   nested-process isolation, command names, and fallbacks. Its `-SelfTest` mode, run by `DetectChanges`, also rejects
   shared collection/validation jobs, regressed collection budgets, bypassed rollout gates, ignored collection
