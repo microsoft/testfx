@@ -28,6 +28,14 @@ Supported platforms:
 
 ## Documentation
 
+### Deployment items
+
+Starting with MSTest 5, `DeploymentItemAttribute` is not included in the .NET
+Standard 2.0 assembly. It remains available for supported .NET Framework and .NET
+targets, but is not supported for UWP or WinUI. Test projects that use
+`[DeploymentItem]` must target a supported .NET Framework or .NET version rather
+than .NET Standard.
+
 ### Naming data-driven test cases
 
 Use `ArgumentsDisplayName` to label a data row while retaining the test method's

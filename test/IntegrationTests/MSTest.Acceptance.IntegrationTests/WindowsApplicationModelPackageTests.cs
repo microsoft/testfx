@@ -156,6 +156,22 @@ public sealed class WindowsApplicationModelPackageTests
     }
 
     [TestMethod]
+    [DataRow("lib/netstandard2.0/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_NetStandard20_IsUnavailable")]
+    [DataRow("buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll", true, DisplayName = "DeploymentItem_Net10_IsAvailable")]
+    [DataRow("buildTransitive/net11.0/MSTest.TestFramework.Extensions.dll", true, DisplayName = "DeploymentItem_Net11_IsAvailable")]
+    public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesTargetFramework(string assemblyPath, bool expectedAvailable)
+        => AssertDeploymentItemAvailability(assemblyPath, expectedAvailable);
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows-specific framework assets are produced only by Windows packs.")]
+    [DataRow("lib/net462/MSTest.TestFramework.Extensions.dll", true, DisplayName = "DeploymentItem_Net462_IsAvailable")]
+    [DataRow("lib/uap10.0/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_ClassicUwp_IsUnavailable")]
+    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_ModernUwp_IsUnavailable")]
+    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_WinUI_IsUnavailable")]
+    public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesWindowsTargetFramework(string assemblyPath, bool expectedAvailable)
+        => AssertDeploymentItemAvailability(assemblyPath, expectedAvailable);
+
+    [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     [DataRow("lib/uap10.0/MSTest.TestFramework.Extensions.dll", false)]
     [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll", false)]
@@ -385,6 +401,17 @@ public sealed class WindowsApplicationModelPackageTests
             $"The only '{packageId}' package does not match the exact locally packed MSTest version '{expectedVersion}'.");
         Assert.IsTrue(File.Exists(expectedPath), $"The expected current packed package '{expectedPath}' does not exist.");
         return expectedPath;
+    }
+
+    private static void AssertDeploymentItemAvailability(string assemblyPath, bool expectedAvailable)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
+        Dictionary<string, TypeAttributes> types = ReadPublicTypeAttributes(archive, assemblyPath);
+
+        Assert.AreEqual(
+            expectedAvailable,
+            types.ContainsKey("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"),
+            assemblyPath);
     }
 
     private static Dictionary<string, TypeAttributes> ReadPublicTypeAttributes(ZipArchive archive, string assemblyPath)

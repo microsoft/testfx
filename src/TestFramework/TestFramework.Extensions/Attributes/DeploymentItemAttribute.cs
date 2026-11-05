@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if !WINDOWS_UWP && !WIN_UI
+#if !NETSTANDARD2_0 && !WINDOWS_UWP && !WIN_UI
 
 /// <summary>
 /// Used to specify a deployment item (file or directory) for per-test deployment. The specified files
@@ -28,8 +28,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-// This API should not exist in the netstandard2.0 build, because it's not available in UWP/WinUI.
-// This is a binary breaking change, however.
 public sealed class DeploymentItemAttribute : Attribute
 {
     /// <summary>
