@@ -35,7 +35,7 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
     {
         TestHost testHost = AssetFixture.GetTestHost(GraphProjectName, tfm);
 
-        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed --show-stdout all", cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
         Assert.Contains("succeeded: 4", result.StandardOutput);

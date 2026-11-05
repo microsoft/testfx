@@ -552,15 +552,15 @@ Passing the option without a value turns it on.</source>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
+        <target state="needs-review-translation">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
 有効な値は 'All'、'Failed'、'None' です。既定値は 'All' (LLM/AI エージェント環境が検出された場合は 'Failed') です。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
+        <target state="needs-review-translation">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
 有効な値は 'All'、'Failed'、'None' です。既定値は 'All' (LLM/AI エージェント環境が検出された場合は 'Failed') です。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>

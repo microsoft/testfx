@@ -255,6 +255,8 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
 
             // Like --no-ansi in commandline, should disable ANSI altogether.
             AnsiMode = AnsiMode.NoAnsi,
@@ -408,6 +410,8 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
 
             // Like if we autodetect that we are in CI (e.g. by looking at TF_BUILD, and we don't disable ANSI.
             AnsiMode = AnsiMode.SimpleAnsi,
@@ -504,6 +508,9 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
+
             // Like if we autodetect that we are in ANSI capable terminal.
             AnsiMode = AnsiMode.ForceAnsi,
 
@@ -633,6 +640,9 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowTestResults = TestResultVisibility.All,
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
+
             // Like if we autodetect that we are in ANSI capable terminal.
             AnsiMode = AnsiMode.ForceAnsi,
 
@@ -1025,6 +1035,15 @@ public sealed class TerminalTestReporterTests
         Assert.AreSame(logAttempted.Task, completedTask, "Expected the render failure to be logged.");
         progressAwareTerminal.StopShowingProgress();
         Assert.Contains("EraseProgress", terminal.Events);
+    }
+
+    [TestMethod]
+    public void TerminalTestReporterOptions_Default_ShowsOutputOnlyForFailedTests()
+    {
+        var options = new TerminalTestReporterOptions();
+
+        Assert.AreEqual(OutputShowMode.Failed, options.ShowStdout);
+        Assert.AreEqual(OutputShowMode.Failed, options.ShowStderr);
     }
 
     [TestMethod]
