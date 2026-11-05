@@ -54,6 +54,34 @@ public sealed class ClientHelperMutationTests
     }
 
     [TestMethod]
+    [DataRow("watchdog-helper", "Blocked helper wait.")]
+    [DataRow("watchdog-finalizer", "Blocked finalizer.")]
+    public async Task LateFaultFixture_WatchdogTerminatesBlockedChild(string operation, string expectedOutput)
+    {
+        using Process process = MtpServerProcessTests.CreateFixtureProcess();
+        process.StartInfo.EnvironmentVariables[LateFaultFixtureEnvironmentVariable] = operation;
+        process.Start();
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+        try
+        {
+            // The probe uses a five-second child deadline; leave room for profiled process startup.
+            const int FixtureExitLimitMilliseconds = 30_000;
+            Assert.IsTrue(
+                await Task.Run(() => process.WaitForExit(FixtureExitLimitMilliseconds), TestContext.CancellationToken),
+                "The child-owned watchdog must terminate the blocked fixture without parent cleanup.");
+            Assert.AreNotEqual(0, process.ExitCode);
+            Assert.AreEqual($"{expectedOutput}{Environment.NewLine}", await output);
+            Assert.AreEqual($"The late-fault fixture exceeded its independent lifetime.{Environment.NewLine}", await error);
+        }
+        finally
+        {
+            MtpServerProcessTests.KillProcessIfRunning(process);
+            await Task.WhenAll(output, error);
+        }
+    }
+
+    [TestMethod]
     public void StateGuard_OnlyFailedConditionsThrowAndPreserveDiagnostics()
     {
         InvokeGuard("Ensure", true, "explicit failure");
@@ -291,6 +319,53 @@ public sealed class ClientHelperMutationTests
 
     internal static int RunLateFaultFixture(string operation)
     {
+        using var completed = new ManualResetEvent(false);
+        var lifetime = TimeSpan.FromSeconds(operation is "watchdog-helper" or "watchdog-finalizer" ? 5 : 90);
+        // A mutated helper or finalizer can block before collection checks, even with a starved pool.
+        var watchdog = new Thread(() =>
+        {
+            if (!completed.WaitOne(lifetime))
+            {
+                // Environment.Exit can itself wait for a blocked finalizer.
+                using var process = Process.GetCurrentProcess();
+                Console.Error.WriteLine("The late-fault fixture exceeded its independent lifetime.");
+                process.Kill();
+            }
+        })
+        {
+            IsBackground = true,
+        };
+        watchdog.Start();
+        try
+        {
+            return RunLateFaultFixtureCore(operation);
+        }
+        finally
+        {
+            completed.Set();
+            watchdog.Join();
+        }
+    }
+
+    private static int RunLateFaultFixtureCore(string operation)
+    {
+        if (operation == "watchdog-helper")
+        {
+            var source = new TaskCompletionSource<int>();
+            Task wait = ClientTasks.WithCancellationAsync(source.Task, CancellationToken.None);
+            Console.WriteLine("Blocked helper wait.");
+            wait.GetAwaiter().GetResult();
+            throw new InvalidOperationException("The pending helper unexpectedly completed.");
+        }
+
+        if (operation == "watchdog-finalizer")
+        {
+            QueueBlockedFinalizer();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            throw new InvalidOperationException("The blocked finalizer unexpectedly completed.");
+        }
+
         var observed = new ConcurrentDictionary<string, int>();
         int unrelated = 0;
         EventHandler<UnobservedTaskExceptionEventArgs> handler = (_, arguments) =>
@@ -389,6 +464,9 @@ public sealed class ClientHelperMutationTests
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool IsAlive(WeakReference reference) => reference.IsAlive;
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void QueueBlockedFinalizer() => GC.KeepAlive(new BlockedFinalizer());
+
     private static object? InvokeGuard(string name, params object?[] arguments)
     {
         // [Embedded] hides this linked type from C# reference symbols, including friend assemblies.
@@ -419,4 +497,13 @@ public sealed class ClientHelperMutationTests
     }
 
     private sealed class LateFaultException(string marker) : Exception(marker);
+
+    private sealed class BlockedFinalizer
+    {
+        ~BlockedFinalizer()
+        {
+            Console.WriteLine("Blocked finalizer.");
+            Thread.Sleep(Timeout.Infinite);
+        }
+    }
 }
