@@ -1,0 +1,29 @@
+<Project>
+
+  <PropertyGroup>
+    <Net8RuntimeVersion Condition=" '$(Net8RuntimeVersion)' == '' ">8.0.33</Net8RuntimeVersion>
+    <Net9RuntimeVersion Condition=" '$(Net9RuntimeVersion)' == '' ">9.0.22</Net9RuntimeVersion>
+    <Net10RuntimeVersion Condition=" '$(Net10RuntimeVersion)' == '' ">10.0.14</Net10RuntimeVersion>
+  </PropertyGroup>
+
+  <!-- Match global.json's servicing runtimes without changing ordinary runtime or reference-pack selection. -->
+  <Target Name="_UseServicedNativeAotCompilerPacks"
+          BeforeTargets="ProcessFrameworkReferences"
+          Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
+    <ItemGroup>
+      <KnownILCompilerPack Update="@(KnownILCompilerPack)"
+                           Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net8.0' ">
+        <ILCompilerPackVersion>$(Net8RuntimeVersion)</ILCompilerPackVersion>
+      </KnownILCompilerPack>
+      <KnownILCompilerPack Update="@(KnownILCompilerPack)"
+                           Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net9.0' ">
+        <ILCompilerPackVersion>$(Net9RuntimeVersion)</ILCompilerPackVersion>
+      </KnownILCompilerPack>
+      <KnownILCompilerPack Update="@(KnownILCompilerPack)"
+                           Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net10.0' ">
+        <ILCompilerPackVersion>$(Net10RuntimeVersion)</ILCompilerPackVersion>
+      </KnownILCompilerPack>
+    </ItemGroup>
+  </Target>
+
+</Project>

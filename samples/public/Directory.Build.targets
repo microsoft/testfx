@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="..\..\eng\NativeAotCompilerPacks.targets" />
+
   <ItemGroup Condition="'$(UsingMSTestSdk)' == 'true' AND '$(PublishAot)' == 'true'">
     <!-- Keep implicit Native AOT dependencies on versions available from the validated public mirror. -->
     <PackageReference Update="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />

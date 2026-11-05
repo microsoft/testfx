@@ -43,6 +43,12 @@ To keep technical debt visible and tracked, the project enforces the following p
 
 Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.
 
+When updating the bootstrapped runtimes in [`global.json`](./global.json), keep the corresponding compiler versions in
+[`eng/NativeAotCompilerPacks.targets`](./eng/NativeAotCompilerPacks.targets) aligned. This shared hook covers repository
+projects, generated acceptance assets, and public samples. Updating installed runtimes alone does not change the pinned
+SDK's implicit Native AOT compiler packages. The `NativeAotCompilerPack_MatchesBootstrappedRuntime` acceptance cases verify
+the SDK-selected versions.
+
 ## Agentic Workflows
 
 This repository ships a large number of AI-powered GitHub Actions workflows authored with [GitHub Agentic Workflows (`gh aw`)](https://github.com/github/gh-aw). The full catalog, conventions, and quick-start commands live in [`.github/workflows/README.md`](./.github/workflows/README.md).
