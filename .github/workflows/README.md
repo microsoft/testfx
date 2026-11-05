@@ -93,6 +93,54 @@ inside the agent-visible tree. The agent reads this manifest after extraction.
 Do not interpolate custom-step outputs into the prompt: gh-aw renders it before
 those steps run. Missing inputs are incomplete analysis, not an empty scope.
 
+#### Safe-output review tables
+
+[The review on PR #12204](https://github.com/microsoft/testfx/pull/12204#pullrequestreview-5783835641)
+displayed escaped `<table>`, `<code>`, and `<br>` markup instead of a scorecard.
+The pinned gh-aw v1.0.1 report parser imports Markdown pipe tables as typed
+tables; raw HTML table markup is literal text, not an allowed table element.
+Both reviewers therefore use Markdown pipe tables, including evidence and
+parallel-safety tables, without changing the renderer or weakening sanitization.
+
+Keep each row on one physical line, escape literal pipes as `\|` even in inline
+code, and leave blank lines around tables, including inside `<details>`.
+Use backticks for complete test names instead of HTML spans or forced breaks.
+Empty grading scopes still omit the table.
+
+`test_authored_test_review_scorecard_publishes_as_markdown_table` extracts the
+shared prompt's actual scorecard example and checks the final GitHub review
+request through the unchanged pinned parser, renderer, and review buffer for
+both consumers. `test_review_table_preserves_escaped_cells_and_collapsed_rows`
+also checks long generic names, literal pipes, quotes, and `<details>` overflow.
+The existing offline runtime suite runs both without posting a review. Set
+`$actions` to the unmodified scripts installed by the pinned setup action and
+`$baseline` to an isolated archive's `.github\workflows` directory:
+
+```powershell
+$cases = @(
+  'GhAwRuntimeContractTests.test_authored_test_review_scorecard_publishes_as_markdown_table'
+  'GhAwRuntimeContractTests.test_review_table_preserves_escaped_cells_and_collapsed_rows'
+)
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions --workflow-root $baseline @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions @cases -v
+```
+
+Local evidence (November 5, 2026) retains these same tests against base
+`6876cf113dce6e1db55092779e73840697a0af73`: the scorecard case fails for both
+consumers because the final request starts with `&lt;table&gt;`, while the
+escaped-cell case passes (two methods executed, exit 1). The corrected selection
+passes both methods with no skips (exit 0), and the complete runtime suite
+passes all 15 methods. Strict compilation with ShellCheck passes both consumers
+with zero warnings; only their generated body hashes change.
+
+The GitHub Markdown API rendered the actual emitted fixture payload into two
+five-column tables. A local-only browser preview in the original review layout
+(1280 × 721 viewport, 800- and 480-pixel review widths) preserved test/result
+associations and escaped text, with working collapsed/expanded overflow and no
+overlapping cells. Narrow columns wrap heavily at 480 pixels. This is rendering
+and component evidence, not a live model run or review publication; neither
+workflow was dispatched and the existing review was not edited.
+
 #### Typed safe-output footer templates
 
 [Run 41640057298](https://github.com/microsoft/testfx/actions/runs/41640057298/job/125933099017?pr=12185)
