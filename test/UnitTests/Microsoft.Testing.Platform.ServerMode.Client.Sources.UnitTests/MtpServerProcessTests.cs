@@ -42,6 +42,40 @@ public sealed class MtpServerProcessTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow(StandardOutputFloodEnvironmentVariable)]
+    [DataRow(StartupStandardErrorEnvironmentVariable)]
+    [DataRow(NaturalExitReleaseFileEnvironmentVariable)]
+    public async Task ProcessFixture_MissingServerArguments_ExitsWithoutRecursivelyRunningTests(string fixtureVariable)
+    {
+        using Process process = CreateFixtureProcess();
+        process.StartInfo.EnvironmentVariables[fixtureVariable] = "1";
+        process.Start();
+#if NETCOREAPP
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.CancellationToken);
+#else
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+#endif
+        try
+        {
+            // This bounds profiled child startup, not the product's connection timeout.
+            const int FixtureExitLimitMilliseconds = 60_000;
+            Assert.IsTrue(
+                await Task.Run(() => process.WaitForExit(FixtureExitLimitMilliseconds), TestContext.CancellationToken),
+                "A fixture without server arguments must terminate instead of launching another test suite.");
+            Assert.AreEqual(17, process.ExitCode);
+            Assert.AreEqual(string.Empty, await output);
+            Assert.AreEqual($"The process fixture requires the complete server-mode arguments.{Environment.NewLine}", await error);
+        }
+        finally
+        {
+            KillProcessIfRunning(process);
+            await Task.WhenAll(output, error);
+        }
+    }
+
+    [TestMethod]
     public async Task StartAsync_NullSource_RejectsBeforeLaunching()
     {
         ArgumentNullException asynchronous = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
@@ -67,6 +101,25 @@ public sealed class MtpServerProcessTests
         owner.Dispose();
         Assert.AreEqual(0, owner.ProcessId);
         Assert.IsNull(owner.ExitCode);
+    }
+
+    [TestMethod]
+    public async Task ShutdownAsync_UnexpectedProcessDisposalFailure_IsLoggedOnceWithoutEscaping()
+    {
+        var process = new ThrowingDisposeProcess();
+        var entries = new List<(MtpClientLogLevel Level, string Message)>();
+        var logger = new DelegateMtpClientLogger((level, message) => entries.Add((level, message)));
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        using MtpJsonRpcConnection connection = new(new EmptyMessageHandler());
+        ConstructorInfo constructor = typeof(MtpServerProcess).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
+        using var owner = (MtpServerProcess)constructor.Invoke([listener, process, connection, new StringBuilder(), logger]);
+
+        await owner.ShutdownAsync();
+        owner.Dispose();
+
+        Assert.AreEqual(1, process.DisposeCount);
+        (MtpClientLogLevel Level, string Message) diagnostic = Assert.ContainsSingle(entry => entry.Level == MtpClientLogLevel.Error, entries);
+        Assert.StartsWith("Tearing down the MTP server process threw: System.IO.IOException: process dispose failure", diagnostic.Message);
     }
 
     [TestMethod]
@@ -107,11 +160,11 @@ public sealed class MtpServerProcessTests
             "@echo off\r\n"
             // Keep the launched batch process alive until the test releases it. This avoids racing a delayed
             // timeout probe with natural process exit, while the marker verifies that teardown killed the process.
-            + ":wait\r\n"
-            + $"if exist \"{releaseFile}\" echo survived>\"{survivedFile}\"\r\n"
-            + $"if exist \"{releaseFile}\" exit /b 0\r\n"
-            + "ping 127.0.0.1 -n 2 > nul\r\n"
-            + "goto wait\r\n");
+            + "for /l %%i in (1,1,120) do (\r\n"
+            + $"  if exist \"{releaseFile}\" echo survived>\"{survivedFile}\"\r\n"
+            + $"  if exist \"{releaseFile}\" exit /b 0\r\n"
+            + "  ping 127.0.0.1 -n 2 > nul\r\n"
+            + ")\r\n");
         var log = new List<string>();
         var options = new MtpServerClientOptions
         {
@@ -802,10 +855,10 @@ public sealed class MtpServerProcessTests
         string source = temp.CreateFile(
             "ProcessTree.cmd",
             "@echo off\r\n"
-            + $"start \"\" /min powershell.exe -NoProfile -NonInteractive -Command \"[IO.File]::WriteAllText('{escapedChildIdFile}', $PID.ToString()); $ready = [Threading.EventWaitHandle]::OpenExisting('{readyEventName}'); $release = [Threading.EventWaitHandle]::OpenExisting('{releaseEventName}'); $null = $ready.Set(); $null = $release.WaitOne(); [IO.File]::WriteAllText('{escapedSurvivedFile}', 'survived')\"\r\n"
-            + ":wait\r\n"
-            + "ping 127.0.0.1 -n 2 > nul\r\n"
-            + "goto wait\r\n");
+            // Mutation runners can terminate the test host before finally executes. Bound both fixtures
+            // independently so a broken product kill cannot leave an orphaned process tree indefinitely.
+            + $"start \"\" /min powershell.exe -NoProfile -NonInteractive -Command \"[IO.File]::WriteAllText('{escapedChildIdFile}', $PID.ToString()); $ready = [Threading.EventWaitHandle]::OpenExisting('{readyEventName}'); $release = [Threading.EventWaitHandle]::OpenExisting('{releaseEventName}'); $null = $ready.Set(); if ($release.WaitOne([TimeSpan]::FromMinutes(2))) {{ [IO.File]::WriteAllText('{escapedSurvivedFile}', 'survived') }}\"\r\n"
+            + "for /l %%i in (1,1,120) do ping 127.0.0.1 -n 2 > nul\r\n");
         using Process process = Process.Start(new ProcessStartInfo
         {
             FileName = source,
@@ -1013,7 +1066,45 @@ public sealed class MtpServerProcessTests
         }
     }
 
-    private static void KillProcessIfRunning(Process process)
+    private sealed class ThrowingDisposeProcess : Process
+    {
+        public int DisposeCount { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                DisposeCount++;
+                throw new IOException("process dispose failure");
+            }
+        }
+    }
+
+    internal static Process CreateFixtureProcess()
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+#if NETCOREAPP
+                FileName = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet",
+#else
+                FileName = typeof(MtpServerProcessTests).Assembly.Location,
+#endif
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            },
+        };
+#if NETCOREAPP
+        process.StartInfo.ArgumentList.Add(typeof(MtpServerProcessTests).Assembly.Location);
+#endif
+        return process;
+    }
+
+    internal static void KillProcessIfRunning(Process process)
     {
         try
         {
@@ -1024,7 +1115,7 @@ public sealed class MtpServerProcessTests
 #else
                 process.Kill();
 #endif
-                process.WaitForExit();
+                Assert.IsTrue(process.WaitForExit(30_000), "The test-owned process did not terminate after fixture cleanup killed it.");
             }
         }
         catch (InvalidOperationException)

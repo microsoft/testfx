@@ -14,8 +14,26 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
+if (Environment.GetEnvironmentVariable(ClientHelperMutationTests.LateFaultFixtureEnvironmentVariable) is { } operation)
+{
+    return ClientHelperMutationTests.RunLateFaultFixture(operation);
+}
+
+bool isProcessFixture = Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is not null
+    || Environment.GetEnvironmentVariable(MtpServerProcessTests.StandardOutputFloodEnvironmentVariable) == "1"
+    || Environment.GetEnvironmentVariable(MtpServerProcessTests.StartupStandardErrorEnvironmentVariable) == "1";
+if (isProcessFixture && args is not ["--server", "--client-port", _, "--no-banner"])
+{
+    Console.Error.WriteLine("The process fixture requires the complete server-mode arguments.");
+    return 17;
+}
+
 if (args is ["--server", "--client-port", string port, "--no-banner"])
 {
+    // A mutation runner may kill the owning test host before its finally block executes.
+    // The fixture must not run tests recursively or keep an orphaned child alive indefinitely.
+    using var fixtureLifetime = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+
     // Child fixture for MtpServerProcessTests.ShutdownPreservesNaturalExitCodeAfterDisposingProcess:
     // connect without running tests, then exit naturally with code 23 when the parent releases us.
     if (Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is { } releaseFile)
@@ -23,7 +41,7 @@ if (args is ["--server", "--client-port", string port, "--no-banner"])
         using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
         while (!File.Exists(releaseFile))
         {
-            await Task.Delay(10);
+            await Task.Delay(10, fixtureLifetime.Token);
         }
 
         return 23;
@@ -34,7 +52,7 @@ if (args is ["--server", "--client-port", string port, "--no-banner"])
         // Fill the redirected pipe before connecting, without shell overhead or a descendant that can outlive shutdown.
         Console.WriteLine(new string('x', 1024 * 1024));
         using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
-        await Task.Delay(Timeout.InfiniteTimeSpan);
+        await Task.Delay(Timeout.InfiniteTimeSpan, fixtureLifetime.Token);
         return 0;
     }
 

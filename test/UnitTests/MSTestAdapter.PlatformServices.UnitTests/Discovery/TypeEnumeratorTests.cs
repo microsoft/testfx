@@ -636,7 +636,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, classDisablesParallelization: false, _warnings);
 
-        testElement.Should().NotBeNull();
+        testElement.TestMethod.DisplayName.Should().Be(nameof(DummyTestClass.MethodWithVoidReturnType));
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromTestMethodAttribute()
@@ -648,24 +648,32 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, classDisablesParallelization: false, _warnings);
 
-        testElement.Should().NotBeNull();
+        testElement.TestMethod.DisplayName.Should().Be("Test method display name.");
     }
 
-    public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
+    public void GetTestFromMethodShouldSetDisplayNameFromDerivedTestMethodAttribute()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType))!;
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DataTestMethodAttribute() { DisplayName = "Test method display name." });
+        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new CustomDisplayNameTestMethodAttribute() { DisplayName = "Derived test method display name." });
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, classDisablesParallelization: false, _warnings);
 
-        testElement.Should().NotBeNull();
+        testElement.TestMethod.DisplayName.Should().Be("Derived test method display name.");
     }
 
     #endregion
 
     #region private methods
+
+    private sealed class CustomDisplayNameTestMethodAttribute : TestMethodAttribute
+    {
+        public CustomDisplayNameTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+            : base(callerFilePath, callerLineNumber)
+        {
+        }
+    }
 
     private void SetupTestClassAndTestMethods(bool isValidTestClass, bool isValidTestMethod)
     {

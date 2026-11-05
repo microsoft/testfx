@@ -230,10 +230,6 @@ public class LifeCycleTestClassWithLastTestSkipped : IDisposable
     }
 }
 
-public class DerivedSTATestClass : STATestClassAttribute
-{
-}
-
 public static class ThreadAssert
 {
     public static void AssertApartmentStateIsMTA()

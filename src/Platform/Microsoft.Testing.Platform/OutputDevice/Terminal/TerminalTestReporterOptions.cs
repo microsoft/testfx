@@ -69,12 +69,12 @@ internal sealed class TerminalTestReporterOptions
     /// <summary>
     /// Gets a value indicating when to show standard output.
     /// </summary>
-    public OutputShowMode ShowStdout { get; init; } = OutputShowMode.All;
+    public OutputShowMode ShowStdout { get; init; } = OutputShowMode.Failed;
 
     /// <summary>
     /// Gets a value indicating when to show standard error output.
     /// </summary>
-    public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
+    public OutputShowMode ShowStderr { get; init; } = OutputShowMode.Failed;
 
     /// <summary>
     /// Gets the visible-output silence threshold for the non-cursor heartbeat renderer (E1). Hidden test

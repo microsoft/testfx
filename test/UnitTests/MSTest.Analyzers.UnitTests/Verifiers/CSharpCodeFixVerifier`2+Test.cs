@@ -18,14 +18,25 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     public class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
     {
         public Test()
+            : this(useMSTestV4: false)
         {
-            ReferenceAssemblies = AnalyzerTestReferenceAssemblies.Default;
+        }
+
+        public Test(bool useMSTestV4)
+        {
+            ReferenceAssemblies = useMSTestV4
+                ? AnalyzerTestReferenceAssemblies.MSTestV4
+                : AnalyzerTestReferenceAssemblies.Default;
 #if NET462
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ValueTask<>).Assembly.Location));
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(IAsyncDisposable).Assembly.Location));
 #endif
-            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
-            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));
+            if (!useMSTestV4)
+            {
+                TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
+                TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));
+            }
+
             SolutionTransforms.Add((solution, projectId) =>
             {
                 CompilationOptions compilationOptions = solution.GetProject(projectId)!.CompilationOptions!;

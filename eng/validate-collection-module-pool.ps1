@@ -64,6 +64,146 @@ try {
     }
     Write-Output "PASS ModulePoolStartsLargestKnownWorkloadsFirst"
 
+    $outputCases = @(
+        @{
+            Name = "ModuleOutputDoesNotRepeatAffectedTestContext"
+            Line = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4"
+            Expected = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4"
+        },
+        @{
+            Name = "ModuleOutputPreservesAlternateAssemblyContext"
+            Line = "[affected-tests] [Shared.TestAssembly | .NETFramework,Version=v4.6.2 | .NET Framework 4.8 | win-x64] Discovered 2 tests."
+            Expected = "[affected-tests] [Shared.TestAssembly | .NETFramework,Version=v4.6.2 | .NET Framework 4.8 | win-x64] Discovered 2 tests."
+        },
+        @{
+            Name = "ModuleOutputPreservesBracketedModuleContext"
+            Line = '[affected-tests] [Sample.Tests[Rows](Debug)+Long.Component.Name | net12.0 | .NET 12.0 | win-x64] Child failed: "quoted <value> & details".'
+            Expected = '[affected-tests] [Sample.Tests[Rows](Debug)+Long.Component.Name | net12.0 | .NET 12.0 | win-x64] Child failed: "quoted <value> & details".'
+        },
+        @{
+            Name = "ModuleOutputDoesNotRepeatRuntimeAndRid"
+            Line = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026) [win-x64 - .NET 12.0.0-alpha.1.26509.101]"
+            Expected = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026)"
+        },
+        @{
+            Name = "ModuleOutputDoesNotRepeatRuntimeAndRidForBracketedAssembly"
+            Line = "[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0"
+        },
+        @{
+            Name = "ModuleOutputPreservesDifferentChildRuntime"
+            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]"
+            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesDifferentChildRid"
+            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-arm64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-arm64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesUnscopedRuntimeAndRid"
+            Line = "Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesRuntimeAndRidWithoutFullContext"
+            Line = "[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesEmbeddedBannerAfterShortContext"
+            Line = "[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesNonBannerRuntimeAndRid"
+            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: Assertion expected [win-x64 - .NET 12.0]"
+            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: Assertion expected [win-x64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPreservesBannerFollowedByDiagnostics"
+            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0] Additional failure details."
+            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0] Additional failure details."
+        },
+        @{
+            Name = "ModuleOutputPrefixesUnscopedDiagnostics"
+            Line = "Test run failed with exit code 37."
+            Expected = "[Sample.Tests | net12.0] Test run failed with exit code 37."
+        },
+        @{
+            Name = "ModuleOutputPrefixesUnscopedAffectedTestDiagnostics"
+            Line = "[affected-tests] Resolving test-map storage."
+            Expected = "[Sample.Tests | net12.0] [affected-tests] Resolving test-map storage."
+        },
+        @{
+            Name = "ModuleOutputPrefixesBracketedNonModuleDiagnostics"
+            Line = "[affected-tests] [warning] No test map is available."
+            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] No test map is available."
+        },
+        @{
+            Name = "ModuleOutputPrefixesDiagnosticsContainingBracketedText"
+            Line = "[affected-tests] [warning] saw [a | b] in output"
+            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] saw [a | b] in output"
+        },
+        @{
+            Name = "ModuleOutputPreservesEmbeddedBannerInUnscopedDiagnostic"
+            Line = "[affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+        },
+        @{
+            Name = "ModuleOutputPrefixesIncompleteModuleContext"
+            Line = "[affected-tests] [Sample.Tests | net12.0"
+            Expected = "[Sample.Tests | net12.0] [affected-tests] [Sample.Tests | net12.0"
+        },
+        @{
+            Name = "ModuleOutputPrefixesEmbeddedModuleContext"
+            Line = "Child output: [affected-tests] [Sample.Tests | net12.0] Failed."
+            Expected = "[Sample.Tests | net12.0] Child output: [affected-tests] [Sample.Tests | net12.0] Failed."
+        },
+        @{
+            Name = "ModuleOutputPrefixesBlankLines"
+            Line = ""
+            Expected = "[Sample.Tests | net12.0] "
+        }
+    )
+    $outputFailures = [System.Collections.Generic.List[string]]::new()
+    foreach ($case in $outputCases) {
+        $previousFailureCount = $outputFailures.Count
+        foreach ($stream in @("Output", "Error")) {
+            $reader = [System.IO.StringReader]::new($case.Line + [Environment]::NewLine)
+            $writer = [System.IO.StringWriter]::new()
+            try {
+                $state = [pscustomobject]@{
+                    Module = [pscustomobject]@{ Project = "Sample.Tests"; Framework = "net12.0" }
+                    Writer = $writer
+                    OutputReader = $null
+                    ErrorReader = $null
+                    OutputTask = $null
+                    ErrorTask = $null
+                }
+                $state."${stream}Reader" = $reader
+                $state."${stream}Task" = $reader.ReadLineAsync()
+                $output = @(Read-CollectionModuleOutput -State $state 6>&1)
+                if ($output.Count -ne 1 -or $output[0].ToString() -cne $case.Expected) {
+                    $outputFailures.Add("$($case.Name) ($stream): expected '$($case.Expected)', got '$($output -join " | ")'.")
+                }
+                if ($writer.ToString() -cne ($case.Line + [Environment]::NewLine) -or
+                    $null -ne $state.OutputTask -or $null -ne $state.ErrorTask) {
+                    $outputFailures.Add("$($case.Name) ($stream): the original log line must be preserved and the stream drained.")
+                }
+            } finally {
+                $reader.Dispose()
+                $writer.Dispose()
+            }
+        }
+        if ($outputFailures.Count -eq $previousFailureCount) {
+            Write-Output "PASS $($case.Name)"
+        }
+    }
+    if ($outputFailures.Count -gt 0) {
+        throw ($outputFailures -join [Environment]::NewLine)
+    }
+
     $worker = Join-Path $fixture "worker.ps1"
     @'
 $ErrorActionPreference = "Stop"
@@ -470,7 +610,8 @@ slow started
     if ($orphanFailures.Count -gt 0) {
         throw ($orphanFailures -join [Environment]::NewLine)
     }
-    Write-Output "Collection module-pool self-tests: $(if ($IsWindows) { 14 } else { 12 }) passed."
+    $passedCount = $(if ($IsWindows) { 14 } else { 12 }) + $outputCases.Count
+    Write-Output "Collection module-pool self-tests: $passedCount passed."
 } finally {
     Remove-Item -LiteralPath $fixture -Recurse -Force
 }

@@ -120,6 +120,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
+            useMSTestV4: true,
             VerifyCS.Diagnostic(TestMethodShouldNotBeIgnoredAnalyzer.TestMethodShouldNotBeIgnoredRule)
                 .WithLocation(0)
                 .WithArguments("MyTestMethod"));

@@ -392,31 +392,34 @@ public class DynamicDataAttributeTests : TestContainer
     public void DynamicDataSource_WithTuple_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple))!;
+        object[][] expectedRows = [[Tuple.Create(0, "0")], [Tuple.Create(1, "1")]];
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData));
-        dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo).Should().BeEquivalentTo(expectedRows, options => options.WithStrictOrdering());
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo).Should().BeEquivalentTo(expectedRows, options => options.WithStrictOrdering());
     }
 
     public void DynamicDataSource_WithValueTuple_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple))!;
+        object[][] expectedRows = [[(0, "0")], [(1, "1")]];
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData));
-        dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo).Should().BeEquivalentTo(expectedRows, options => options.WithStrictOrdering());
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo).Should().BeEquivalentTo(expectedRows, options => options.WithStrictOrdering());
     }
 
     public void DynamicDataSource_WithValueTupleWithTupleSyntax_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple))!;
+        object[][] expectedRows = [[(0, "0")], [(1, "1")]];
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData));
-        dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo).Should().BeEquivalentTo(expectedRows, options => options.WithStrictOrdering());
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo).Should().BeEquivalentTo(expectedRows, options => options.WithStrictOrdering());
     }
 
     public void GetDataShouldReadDataFromField()
@@ -781,7 +784,7 @@ public class DynamicDataAttributeTests : TestContainer
             }
         }
 
-        [DataTestMethod]
+        [TestMethod]
         public void DynamicDataTestWithTuple(int value, string integerAsString)
         {
         }

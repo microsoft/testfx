@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias serverclient;
+
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -9,6 +11,8 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Client;
+
+using ClientStopwatch = serverclient::Microsoft.Testing.Platform.Helpers.IStopwatch;
 
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
@@ -35,6 +39,95 @@ public sealed class MtpServerClientInProcessTests
     private static readonly int CurrentProcessId = GetCurrentProcessId();
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(3, 2)]
+    [DataRow(5, 0)]
+    [DataRow(6, -1)]
+    public async Task ShutdownServer_CancellationRegistration_UsesOnlyTheRemainingVirtualGrace(int elapsedSeconds, int remainingSeconds)
+    {
+        var server = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var cancellation = new CancellationTokenSource();
+        using var releaseCallback = new ManualResetEventSlim();
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() => releaseCallback.Wait(TestContext.CancellationToken));
+        var timing = new ControlledShutdownTiming(server, TimeSpan.FromSeconds(elapsedSeconds));
+        Task<bool> shutdown = MtpServerInProcessHost.ShutdownServerCoreAsync(
+            server.Task,
+            cancellation,
+            TimeSpan.Zero,
+            NullMtpClientLogger.Instance,
+            timing.StartNew,
+            timing.WaitBoundedAsync);
+        try
+        {
+            await WithTimeoutAsync(timing.WaitStarted);
+            Assert.AreEqual(TimeSpan.FromSeconds(remainingSeconds), timing.CancellationWaitTimeout);
+            Assert.AreEqual(1, timing.StartCount);
+            Assert.AreEqual(3, timing.WaitCount);
+            if (remainingSeconds > 0)
+            {
+                timing.AdvanceTo(TimeSpan.FromSeconds(5) - TimeSpan.FromTicks(1));
+                Assert.IsFalse(shutdown.IsCompleted, "The single cancellation grace must remain available immediately before its deadline.");
+                timing.AdvanceTo(TimeSpan.FromSeconds(5));
+            }
+
+            Assert.IsFalse(await WithTimeoutAsync(shutdown), "An executing cancellation registration must keep the source alive once its shared grace expires.");
+            Assert.IsNotNull(timing.CancellationTask);
+        }
+        finally
+        {
+            releaseCallback.Set();
+            timing.ReleaseWait();
+            if (timing.CancellationTask is { } cancelling)
+            {
+                await WithTimeoutAsync(cancelling);
+            }
+
+            await WithTimeoutAsync(shutdown);
+        }
+    }
+
+    [TestMethod]
+    public async Task ShutdownServer_PendingCancellationRegistration_DoesNotCaptureTheCallingContext()
+    {
+        var server = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var cancellation = new CancellationTokenSource();
+        using var releaseCallback = new ManualResetEventSlim();
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() => releaseCallback.Wait(TestContext.CancellationToken));
+        var timing = new ControlledShutdownTiming(server, TimeSpan.FromSeconds(3));
+        Task<bool> shutdown = InvokeWithSynchronizationContext(
+            () => MtpServerInProcessHost.ShutdownServerCoreAsync(
+                server.Task,
+                cancellation,
+                TimeSpan.Zero,
+                NullMtpClientLogger.Instance,
+                timing.StartNew,
+                timing.WaitBoundedAsync),
+            out QueueingSynchronizationContext context);
+        try
+        {
+            await WithTimeoutAsync(timing.WaitStarted);
+            Assert.IsFalse(shutdown.IsCompleted);
+            timing.AdvanceTo(TimeSpan.FromSeconds(5));
+            bool completedWithoutPumping = await CompletesWithoutPumpingAsync(shutdown, context);
+
+            Assert.IsFalse(await WithTimeoutAsync(shutdown));
+            Assert.IsTrue(completedWithoutPumping, "The pending cancellation-registration wait must not capture the caller's context.");
+            Assert.AreEqual(0, context.PostCount);
+        }
+        finally
+        {
+            releaseCallback.Set();
+            timing.ReleaseWait();
+            DrainContextUntilCompleted(context, shutdown);
+            if (timing.CancellationTask is { } cancelling)
+            {
+                await WithTimeoutAsync(cancelling);
+            }
+
+            await WithTimeoutAsync(shutdown);
+        }
+    }
 
     [TestMethod]
     public async Task LaunchInProcessAsync_PassesCompleteServerModeArguments()
@@ -290,26 +383,20 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
-    public async Task LaunchInProcessAsync_CallbackExitsBeforeConnecting_StopsListenerAndDisposesCancellationSource()
+    public async Task LaunchInProcessAsync_CallbackExitsBeforeConnecting_DisposesCancellationSource()
     {
-        string[]? arguments = null;
         CancellationToken serverToken = default;
 
         _ = await AssertThrowsAsync<MtpServerConnectionClosedException>(
             () => MtpServerClient.LaunchInProcessAsync(
-                (serverArguments, cancellationToken) =>
+                (_, cancellationToken) =>
                 {
-                    arguments = serverArguments;
                     serverToken = cancellationToken;
                     return Task.FromResult(7);
                 },
                 CreateOptions(),
                 TestContext.CancellationToken));
 
-        Assert.IsNotNull(arguments);
-        int port = int.Parse(ReadArgument(arguments, "--client-port"), CultureInfo.InvariantCulture);
-        using var listener = new DisposableTcpListener(IPAddress.Loopback, port);
-        listener.Start();
         Assert.ThrowsExactly<ObjectDisposedException>(() => _ = serverToken.WaitHandle);
     }
 
@@ -320,7 +407,6 @@ public sealed class MtpServerClientInProcessTests
         var logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message)));
         using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         var client = new ThrowingTcpClient();
         var cancellation = new ThrowingCancellationTokenSource();
 
@@ -344,8 +430,7 @@ public sealed class MtpServerClientInProcessTests
                 && entry.Message.Contains("cancellation dispose failure", StringComparison.Ordinal),
             log);
 
-        using var replacement = new DisposableTcpListener(IPAddress.Loopback, port);
-        replacement.Start();
+        Assert.IsFalse(listener.IsListening, "Cleanup must stop this exact owned listener, independent of OS port reuse.");
     }
 
     [TestMethod]
@@ -396,6 +481,51 @@ public sealed class MtpServerClientInProcessTests
             () => MtpServerClient.LaunchInProcessAsync(null!, CreateOptions(), TestContext.CancellationToken));
 
         Assert.DoesNotContain(nameof(MtpServerInProcessHost), exception.StackTrace ?? string.Empty);
+    }
+
+    [TestMethod]
+    public async Task InProcessHost_NullInputs_AreRejectedBeforeSchedulingTheCallback()
+    {
+        ArgumentNullException callback = await Assert.ThrowsExactlyAsync<ArgumentNullException>(() =>
+            MtpServerInProcessHost.StartAsync(null!, CreateOptions(), TestContext.CancellationToken));
+        ArgumentNullException options = await Assert.ThrowsExactlyAsync<ArgumentNullException>(() =>
+            MtpServerInProcessHost.StartAsync((_, _) => Task.FromResult(0), null!, TestContext.CancellationToken));
+
+        Assert.AreEqual("serverEntryPoint", callback.ParamName);
+        Assert.AreEqual("options", options.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void SafeCancel_DisposedSourceAndThrowingCallbacks_PreserveTeardownAndLogTheCause(bool disposed)
+    {
+        using var cancellation = new CancellationTokenSource();
+        using CancellationTokenRegistration registration = disposed
+            ? default
+            : cancellation.Token.Register(() => throw new IOException("cancellation callback failed"));
+        if (disposed)
+        {
+            cancellation.Dispose();
+        }
+
+        var entries = new List<(MtpClientLogLevel Level, string Message)>();
+        var logger = new DelegateMtpClientLogger((level, message) => entries.Add((level, message)));
+        MethodInfo cancel = typeof(MtpServerInProcessHost).GetMethod("SafeCancel", BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        cancel.Invoke(null, [cancellation, logger]);
+
+        (MtpClientLogLevel Level, string Message) diagnostic = Assert.ContainsSingle(entries);
+        Assert.AreEqual(MtpClientLogLevel.Debug, diagnostic.Level);
+        Assert.StartsWith(
+            disposed
+            ? "Canceling the in-process MTP application threw: System.ObjectDisposedException:"
+            : "Canceling the in-process MTP application threw: System.AggregateException:", diagnostic.Message);
+        if (!disposed)
+        {
+            Assert.IsTrue(cancellation.IsCancellationRequested);
+            Assert.Contains("cancellation callback failed", diagnostic.Message);
+        }
     }
 
     [TestMethod]
@@ -606,7 +736,6 @@ public sealed class MtpServerClientInProcessTests
         var logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message)));
         using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         var client = new ThrowingTcpClient();
         var cancellation = new ThrowingCancellationTokenSource();
         using var handler = new TrackingMessageHandler();
@@ -636,8 +765,28 @@ public sealed class MtpServerClientInProcessTests
                 && entry.Message.Contains("cancellation dispose failure", StringComparison.Ordinal),
             log);
 
-        using var replacement = new DisposableTcpListener(IPAddress.Loopback, port);
-        replacement.Start();
+        Assert.IsFalse(listener.IsListening, "Shutdown must stop this exact owned listener, independent of OS port reuse.");
+    }
+
+    [TestMethod]
+    public async Task ShutdownAsync_UnexpectedResourceFailure_IsLoggedWithoutReplacingTeardown()
+    {
+        var entries = new List<(MtpClientLogLevel Level, string Message)>();
+        var logger = new DelegateMtpClientLogger((level, message) => entries.Add((level, message)));
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
+        var client = new ThrowingTcpClient { DisposalFailure = new InvalidOperationException("unexpected client disposal") };
+        using var cancellation = new CancellationTokenSource();
+        using var connection = new MtpJsonRpcConnection(new TrackingMessageHandler());
+        MtpServerInProcessHost host = CreateHost(listener, client, connection, Task.FromResult(0), cancellation, TimeSpan.Zero, logger);
+
+        await host.ShutdownAsync();
+        host.Dispose();
+
+        Assert.AreEqual(1, client.DisposeCount);
+        (MtpClientLogLevel Level, string Message) diagnostic = Assert.ContainsSingle(entry => entry.Level == MtpClientLogLevel.Error, entries);
+        Assert.StartsWith(
+            "Tearing down the in-process MTP application threw: System.InvalidOperationException: unexpected client disposal",
+            diagnostic.Message);
     }
 
     [TestMethod]
@@ -1683,6 +1832,8 @@ public sealed class MtpServerClientInProcessTests
 
     private sealed class DisposableTcpListener(IPAddress localaddr, int port) : TcpListener(localaddr, port), IDisposable
     {
+        public bool IsListening => Active;
+
         void IDisposable.Dispose()
             => Stop();
     }
@@ -1903,17 +2054,102 @@ public sealed class MtpServerClientInProcessTests
         }
     }
 
+    private sealed class ControlledShutdownTiming(TaskCompletionSource<int> server, TimeSpan elapsedAtCancellation) : ClientStopwatch
+    {
+        private readonly TaskCompletionSource<bool> _waitStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> _waitCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private long _elapsedTicks;
+        private TimeSpan _deadline;
+
+        public TimeSpan Elapsed => TimeSpan.FromTicks(Interlocked.Read(ref _elapsedTicks));
+
+        public int StartCount { get; private set; }
+
+        public int WaitCount { get; private set; }
+
+        public TimeSpan CancellationWaitTimeout { get; private set; }
+
+        public Task? CancellationTask { get; private set; }
+
+        public Task WaitStarted => _waitStarted.Task;
+
+        public ClientStopwatch StartNew()
+        {
+            Start();
+            server.SetResult(0);
+            return this;
+        }
+
+        public void Start()
+        {
+            StartCount++;
+            Interlocked.Exchange(ref _elapsedTicks, elapsedAtCancellation.Ticks);
+        }
+
+        public void Stop()
+        {
+        }
+
+        public Task<bool> WaitBoundedAsync(Task task, TimeSpan timeout)
+        {
+            WaitCount++;
+            if (WaitCount == 1)
+            {
+                Assert.AreSame(server.Task, task);
+                Assert.AreEqual(TimeSpan.Zero, timeout);
+                Assert.IsFalse(task.IsCompleted);
+                return Task.FromResult(false);
+            }
+
+            if (WaitCount == 2)
+            {
+                Assert.AreSame(server.Task, task);
+                Assert.AreEqual(TimeSpan.FromSeconds(5), timeout);
+                Assert.IsTrue(task.IsCompleted);
+                return Task.FromResult(true);
+            }
+
+            Assert.AreEqual(3, WaitCount);
+            CancellationTask = task;
+            CancellationWaitTimeout = timeout;
+            _deadline = Elapsed + timeout;
+            if (timeout <= TimeSpan.Zero)
+            {
+                _waitCompleted.TrySetResult(false);
+            }
+
+            _waitStarted.TrySetResult(true);
+            return _waitCompleted.Task;
+        }
+
+        public void AdvanceTo(TimeSpan elapsed)
+        {
+            Interlocked.Exchange(ref _elapsedTicks, elapsed.Ticks);
+            if (elapsed >= _deadline)
+            {
+                _waitCompleted.TrySetResult(false);
+            }
+        }
+
+        public void ReleaseWait() => _waitCompleted.TrySetResult(false);
+    }
+
     private sealed class ThrowingTcpClient : TcpClient
     {
         private int _disposeCount;
 
         public int DisposeCount => Volatile.Read(ref _disposeCount);
 
+        public Exception DisposalFailure { get; init; } = new IOException("client dispose failure");
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            _ = Interlocked.Increment(ref _disposeCount);
-            throw new IOException("client dispose failure");
+            if (disposing)
+            {
+                _ = Interlocked.Increment(ref _disposeCount);
+                throw DisposalFailure;
+            }
         }
     }
 

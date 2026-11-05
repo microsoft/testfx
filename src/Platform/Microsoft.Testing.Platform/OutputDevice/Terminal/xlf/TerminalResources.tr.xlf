@@ -552,16 +552,16 @@ Seçenek bir değer olmadan geçerse etkinleşir.</target>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">Testte yakalanan hata çıktısının ne zaman gösterileceğini belirler.
-Geçerli değerler: 'All', 'Failed', 'None'. Varsayılan değer 'All' (veya bir LLM/AI destekli aracı ortamı algılandığında 'Failed').</target>
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">Testte yakalanan standart çıktının ne zaman gösterileceğini belirler. 
-Geçerli değerler: 'All', 'Failed', 'None'. Varsayılan değer 'All' (veya bir LLM/AI destekli aracı ortamı algılandığında 'Failed').</target>
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">

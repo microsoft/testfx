@@ -89,7 +89,9 @@ Things to know:
   5 seconds. A callback still running after that is abandoned rather than hanging your app; its failure
   is reported through `MtpServerClientOptions.Logger`. A *failed launch* skips the graceful wait
   entirely — the callback's token is canceled immediately and only the fixed 5-second grace applies —
-  so an unwinding caller never waits for `ServerShutdownTimeout`.
+  so an unwinding caller never waits for `ServerShutdownTimeout`. Callback completion and cancellation
+  registrations share that one grace period; time already spent waiting for the callback is deducted
+  before waiting for a still-executing cancellation registration.
 - **Cancellation.** The `cancellationToken` passed to `LaunchInProcessAsync` scopes the *launch* only.
   Once the client exists, canceling it no longer affects the hosted application. Cancellation is bounded
   rather than immediate: the unwind waits up to 5 seconds for the callback to stop before abandoning it.

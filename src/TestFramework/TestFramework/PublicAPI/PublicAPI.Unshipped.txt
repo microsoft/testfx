@@ -1,1 +1,3 @@
 #nullable enable
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void

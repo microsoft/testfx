@@ -144,11 +144,16 @@ public sealed class ConflictingDataRowDisplayNamesAnalyzerTests
     public async Task CustomDataRowAttributeAndUnrelatedTypes_NoDiagnostic()
     {
         string code = """
+            using System;
+            using System.Collections.Generic;
             using System.Reflection;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            public class CustomDataRowAttribute : DataRowAttribute
+            public class CustomDataRowAttribute : Attribute, ITestDataSource
             {
-                public override string GetDisplayName(MethodInfo method, object[] data)
+                public string DisplayName { get; set; }
+                public string ArgumentsDisplayName { get; set; }
+                public IEnumerable<object[]> GetData(MethodInfo method) => new[] { new object[] { 1 } };
+                public string GetDisplayName(MethodInfo method, object[] data)
                     => DisplayName + ArgumentsDisplayName;
             }
             public class OtherRow
@@ -169,6 +174,54 @@ public sealed class ConflictingDataRowDisplayNamesAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task DerivedDataRowAttributeWithDisplayNameOverride_NoDiagnostic()
+    {
+        string code = """
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomDataRowAttribute : DataRowAttribute
+            {
+                public override string GetDisplayName(MethodInfo method, object[] data)
+                    => DisplayName + ArgumentsDisplayName;
+            }
+            public class MyClass
+            {
+                [CustomDataRow(DisplayName = "full", ArgumentsDisplayName = "label")]
+                public void Test() { }
+                public object Create()
+                    => new CustomDataRowAttribute { DisplayName = "full", ArgumentsDisplayName = "label" };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task LegacyDerivedDataRowAttribute_NoDiagnostic()
+    {
+        string code = """
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomDataRowAttribute : DataRowAttribute
+            {
+                // Argument labels are not part of v4 DataRowAttribute; this custom attribute owns the property.
+                public string ArgumentsDisplayName { get; set; }
+                public override string GetDisplayName(MethodInfo method, object[] data)
+                    => DisplayName + ArgumentsDisplayName;
+            }
+            public class MyClass
+            {
+                [CustomDataRow(DisplayName = "full", ArgumentsDisplayName = "label")]
+                public void Test() { }
+                public object Create()
+                    => new CustomDataRowAttribute { DisplayName = "full", ArgumentsDisplayName = "label" };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]

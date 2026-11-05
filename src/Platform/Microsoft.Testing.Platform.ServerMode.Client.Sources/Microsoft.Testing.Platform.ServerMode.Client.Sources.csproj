@@ -191,6 +191,8 @@
     <Compile Include="$(MTPDir)Helpers\RoslynString.cs" Link="Linked\Helpers\RoslynString.cs" />
     <Compile Include="$(MTPDir)Helpers\RoslynHashCode.cs" Link="Linked\Helpers\RoslynHashCode.cs" />
     <Compile Include="$(MTPDir)Helpers\RoslynDebug.cs" Link="Linked\Helpers\RoslynDebug.cs" />
+    <Compile Include="$(MTPDir)Helpers\System\IStopwatch.cs" Link="Linked\Helpers\System\IStopwatch.cs" />
+    <Compile Include="$(MTPDir)Helpers\System\SystemStopwatch.cs" Link="Linked\Helpers\System\SystemStopwatch.cs" />
     <!-- Task cancellation helpers used by TcpMessageHandler on the non-.NET (Jsonite) path. -->
     <Compile Include="$(MTPDir)Helpers\TaskExtensions.cs" Link="Linked\Helpers\TaskExtensions.cs" />
   </ItemGroup>

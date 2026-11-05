@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public class TestDataSourceDiscoveryAttribute : Attribute
+public sealed class TestDataSourceDiscoveryAttribute : Attribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDataSourceDiscoveryAttribute"/> class.

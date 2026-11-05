@@ -22,6 +22,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
         testHostResult.AssertOutputDoesNotContain("Standard output");
         testHostResult.AssertOutputDoesNotContain("stdout from failing test");
         testHostResult.AssertOutputDoesNotContain("stdout from passing test");
+        testHostResult.AssertOutputDoesNotContain("stdout from skipped test");
     }
 
     [TestMethod]
@@ -35,6 +36,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stdout from failing test");
         testHostResult.AssertOutputDoesNotContain("stdout from passing test");
+        testHostResult.AssertOutputDoesNotContain("stdout from skipped test");
     }
 
     [TestMethod]
@@ -48,19 +50,26 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stdout from failing test");
         testHostResult.AssertOutputContains("stdout from passing test");
+        testHostResult.AssertOutputContains("stdout from skipped test");
     }
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task ShowStdout_Default_ShowsStandardOutputForAllTests(string tfm)
+    public async Task ShowStdout_Default_ShowsStandardOutputOnlyForFailedTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--output detailed",
             cancellationToken: TestContext.CancellationToken);
 
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("stdout from failing test");
-        testHostResult.AssertOutputContains("stdout from passing test");
+        testHostResult.AssertOutputDoesNotContain("stdout from passing test");
+        testHostResult.AssertOutputDoesNotContain("stdout from skipped test");
+        testHostResult.AssertOutputContains("total: 3");
+        testHostResult.AssertOutputContains("failed: 1");
+        testHostResult.AssertOutputContains("succeeded: 1");
+        testHostResult.AssertOutputContains("skipped: 1");
     }
 
     [TestMethod]
@@ -78,6 +87,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stdout from failing test");
         testHostResult.AssertOutputDoesNotContain("stdout from passing test");
+        testHostResult.AssertOutputDoesNotContain("stdout from skipped test");
     }
 
     [TestMethod]
@@ -95,6 +105,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stdout from failing test");
         testHostResult.AssertOutputContains("stdout from passing test");
+        testHostResult.AssertOutputContains("stdout from skipped test");
     }
 
     [TestMethod]
@@ -122,6 +133,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
         testHostResult.AssertOutputDoesNotContain("Error output");
         testHostResult.AssertOutputDoesNotContain("stderr from failing test");
         testHostResult.AssertOutputDoesNotContain("stderr from passing test");
+        testHostResult.AssertOutputDoesNotContain("stderr from skipped test");
     }
 
     [TestMethod]
@@ -135,6 +147,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stderr from failing test");
         testHostResult.AssertOutputDoesNotContain("stderr from passing test");
+        testHostResult.AssertOutputDoesNotContain("stderr from skipped test");
     }
 
     [TestMethod]
@@ -148,19 +161,26 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stderr from failing test");
         testHostResult.AssertOutputContains("stderr from passing test");
+        testHostResult.AssertOutputContains("stderr from skipped test");
     }
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task ShowStderr_Default_ShowsErrorOutputForAllTests(string tfm)
+    public async Task ShowStderr_Default_ShowsErrorOutputOnlyForFailedTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--output detailed",
             cancellationToken: TestContext.CancellationToken);
 
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("stderr from failing test");
-        testHostResult.AssertOutputContains("stderr from passing test");
+        testHostResult.AssertOutputDoesNotContain("stderr from passing test");
+        testHostResult.AssertOutputDoesNotContain("stderr from skipped test");
+        testHostResult.AssertOutputContains("total: 3");
+        testHostResult.AssertOutputContains("failed: 1");
+        testHostResult.AssertOutputContains("succeeded: 1");
+        testHostResult.AssertOutputContains("skipped: 1");
     }
 
     [TestMethod]
@@ -178,6 +198,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stderr from failing test");
         testHostResult.AssertOutputDoesNotContain("stderr from passing test");
+        testHostResult.AssertOutputDoesNotContain("stderr from skipped test");
     }
 
     [TestMethod]
@@ -195,6 +216,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stderr from failing test");
         testHostResult.AssertOutputContains("stderr from passing test");
+        testHostResult.AssertOutputContains("stderr from skipped test");
     }
 
     [TestMethod]
@@ -258,6 +280,14 @@ public class UnitTest1
     {
         Console.WriteLine("stdout from passing test");
         Console.Error.WriteLine("stderr from passing test");
+    }
+
+    [TestMethod]
+    public void SkippedTest()
+    {
+        Console.WriteLine("stdout from skipped test");
+        Console.Error.WriteLine("stderr from skipped test");
+        Assert.Inconclusive("intentional skip");
     }
 }
 """;

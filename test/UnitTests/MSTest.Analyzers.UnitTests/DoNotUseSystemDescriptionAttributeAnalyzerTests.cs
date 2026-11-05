@@ -201,7 +201,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]

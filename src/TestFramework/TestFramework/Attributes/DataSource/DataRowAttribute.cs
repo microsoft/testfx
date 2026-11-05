@@ -8,6 +8,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Attribute to define in-line data for a test method.
 /// </summary>
+/// <remarks>
+/// Override <see cref="GetDisplayName"/> in a derived attribute to customize the display name of its test cases.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnoreCapability
 {

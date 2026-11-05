@@ -205,12 +205,23 @@ public class DataRowAttributeTests : TestContainer
         attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod ( {m} {a} \"label\" )");
     }
 
+    public void GetDisplayNameArgumentsDisplayNameWorksThroughTestDataSource()
+    {
+        var attribute = new DataRowAttribute(7) { ArgumentsDisplayName = "label" };
+        ITestDataSource dataSource = attribute;
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        dataSource.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod (label)");
+        dataSource.GetData(methodInfo).Should().ContainSingle().Which.Should().Equal(7);
+    }
+
     public void GetDisplayNameArgumentsDisplayNameHonorsOverride()
     {
         var attribute = new DummyDataRowAttribute { ArgumentsDisplayName = "label" };
+        ITestDataSource dataSource = attribute;
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
 
-        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
+        dataSource.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
     }
 
     public void GetDisplayNameArgumentsDisplayNameRefreshesLocalizedFormat()
@@ -249,15 +260,10 @@ public class DataRowAttributeTests : TestContainer
 
     public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
-        // Arrange
-        var dataRow = new DummyDataRowAttribute();
-        var methodInfoMock = new Mock<MethodInfo>();
+        var attribute = new DummyDataRowAttribute();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
 
-        // Act
-        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
-
-        // Assert
-        displayName.Should().Be("Overridden DisplayName");
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()
@@ -428,7 +434,7 @@ public class DataRowAttributeTests : TestContainer
         }
     }
 
-    private class DummyDataRowAttribute : DataRowAttribute
+    private sealed class DummyDataRowAttribute : DataRowAttribute
     {
         public override string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }

@@ -143,7 +143,7 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -268,6 +268,6 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode, useMSTestV4: true);
     }
 }
