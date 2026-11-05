@@ -650,6 +650,18 @@ that binary before honoring the skipped result and reports its expected absence 
 failure. Superseded runs can produce the same warning when their agent job is cancelled before
 emitting an output.
 
+The same eligibility mistake can also expose no-op runs to unrelated installation failures.
+In [run 42041693908](https://github.com/microsoft/testfx/actions/runs/42041693908), tracked by
+[#12224](https://github.com/microsoft/testfx/issues/12224), Pipeline Test Triage emitted only
+`noop` with `has_patch=false`, but its non-empty-output guard still started detection setup.
+The pinned threat-detect v0.5.3 download then returned HTTP 504 on all six attempts and exited
+22. The detector never started; this was neither a threat finding nor an invalid model verdict.
+Pipeline Test Triage now uses the no-op exclusion below. This avoids unnecessary detector
+installation without changing the model, verified downloads, credentials, permissions,
+firewall, or failure policy for runs that have real outputs or patches. A download outage on
+such a run still needs infrastructure investigation; do not suppress its warning or disable
+detection.
+
 **What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
 on the presence of an actual safe output or patch:
 
@@ -663,6 +675,27 @@ The collector reports an intentional no-op as `output_types=noop`, so the explic
 needed to skip the broken no-content conclude path while preserving detection for every
 publishable output and patch. Remove the workaround after gh-aw fixes the external detector's
 skipped conclusion behavior.
+
+The offline `CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs`
+case checks both the authored guard and the generated job condition.
+`test_pipeline_triage_noop_skip_preserves_detection_security_controls` keeps the detector
+and safe-output gates intact. On November 5, 2026, the same two retained tests ran against
+an isolated workflow archive of base `88a31ec394abe9f5c5dcf596f0a150ff998d3a0e`: the eligibility
+case failed both guard assertions and the security-controls case passed (exit 1).
+Both cases passed against the corrected source and regenerated lock (exit 0, no skips).
+Strict compilation with ShellCheck passed with zero warnings, and the action-pin audit passed
+all 2,763 references across 59 files. These are configuration-contract checks, not a hosted
+detector replay or proof of GitHub release-CDN availability. Set `$baseline` to the isolated
+archive's `.github\workflows` directory to reproduce the paired selection:
+
+```powershell
+$cases = @(
+  'CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs'
+  'CompiledWarningContractTests.test_pipeline_triage_noop_skip_preserves_detection_security_controls'
+)
+python .github\scripts\test_agentic_workflow_warning_contracts.py --workflow-root $baseline @cases -v
+python .github\scripts\test_agentic_workflow_warning_contracts.py @cases -v
+```
 
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
