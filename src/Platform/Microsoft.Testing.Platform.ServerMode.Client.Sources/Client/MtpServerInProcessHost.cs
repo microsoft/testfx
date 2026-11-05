@@ -3,6 +3,8 @@
 
 using System.Net.Sockets;
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.ServerMode.Client;
 
 /// <summary>
@@ -404,14 +406,23 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// <c>CancellationTokenSource.CreateLinkedTokenSource(token)</c> throw
     /// <see cref="ObjectDisposedException"/> inside the caller's own code.
     /// </returns>
-    private static async Task<bool> ShutdownServerAsync(
+    private static Task<bool> ShutdownServerAsync(
         Task<int> serverTask,
         CancellationTokenSource serverCancellation,
         TimeSpan gracefulTimeout,
         IMtpClientLogger logger)
+        => ShutdownServerCoreAsync(serverTask, serverCancellation, gracefulTimeout, logger, SystemStopwatch.StartNew, MtpServerConnector.WaitBoundedAsync);
+
+    internal static async Task<bool> ShutdownServerCoreAsync(
+        Task<int> serverTask,
+        CancellationTokenSource serverCancellation,
+        TimeSpan gracefulTimeout,
+        IMtpClientLogger logger,
+        Func<IStopwatch> startCancellationStopwatch,
+        Func<Task, TimeSpan, Task<bool>> waitBoundedAsync)
     {
         bool stopped = true;
-        if (!await MtpServerConnector.WaitBoundedAsync(serverTask, gracefulTimeout).ConfigureAwait(false))
+        if (!await waitBoundedAsync(serverTask, gracefulTimeout).ConfigureAwait(false))
         {
             if (gracefulTimeout > TimeSpan.Zero)
             {
@@ -423,18 +434,18 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             // Cancel() runs registrations synchronously on the calling thread, so a caller registration that
             // blocks would stop the grace below from ever starting and make this "bounded" wait unbounded.
             // Kick it off separately and start the grace regardless.
-            var cancellationGrace = Stopwatch.StartNew();
+            IStopwatch cancellationGrace = startCancellationStopwatch();
             var cancelling = Task.Run(() => SafeCancel(serverCancellation, logger));
             MtpServerConnector.ObserveFailure(cancelling, logger, "Canceling the in-process MTP application failed");
 
-            if (!await MtpServerConnector.WaitBoundedAsync(serverTask, CancellationGrace).ConfigureAwait(false))
+            if (!await waitBoundedAsync(serverTask, CancellationGrace).ConfigureAwait(false))
             {
                 stopped = false;
                 logger.SafeLog(
                     MtpClientLogLevel.Warning,
                     $"The in-process MTP application is still running {CancellationGrace.TotalSeconds:N0}s after cancellation was requested; abandoning it.");
             }
-            else if (!await MtpServerConnector.WaitBoundedAsync(
+            else if (!await waitBoundedAsync(
                 cancelling,
                 CancellationGrace - cancellationGrace.Elapsed).ConfigureAwait(false))
             {

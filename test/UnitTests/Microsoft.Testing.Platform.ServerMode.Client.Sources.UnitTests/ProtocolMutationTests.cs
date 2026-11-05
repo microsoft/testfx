@@ -27,6 +27,28 @@ public sealed class ProtocolMutationTests
 
 #if NETCOREAPP
     [TestMethod]
+    [DataRow("null", "1.0.0")]
+    [DataRow("empty", "1.0.0")]
+    [DataRow("supported", "1.0.0")]
+    [DataRow("mixed", "1.0.0")]
+    [DataRow("unsupported", null)]
+    public void ProtocolNegotiation_UsesLegacyDefaultOrAnExactSupportedVersion(string scenario, string? expected)
+    {
+        IReadOnlyCollection<string>? versions = scenario switch
+        {
+            "null" => null,
+            "empty" => [],
+            "supported" => ["1.0.0"],
+            "mixed" => ["unsupported", "1.0.0", "future"],
+            _ => ["future", "1.0"],
+        };
+
+        Assert.AreEqual(expected, JsonRpcProtocolVersions.Negotiate(versions));
+        Assert.AreEqual("1.0.0", JsonRpcProtocolVersions.Current);
+        Assert.AreSequenceEqual(["1.0.0"], JsonRpcProtocolVersions.Supported);
+    }
+
+    [TestMethod]
     public void PlatformResourceLabels_AreStable()
     {
         Assert.AreEqual(
@@ -113,6 +135,7 @@ public sealed class ProtocolMutationTests
     [TestMethod]
     [DataRow("2147483648")]
     [DataRow("-2147483649")]
+    [DataRow("9223372036854775808")]
     [DataRow("1.1")]
     [DataRow(".1")]
     [DataRow("1.5e0")]
@@ -260,6 +283,34 @@ public sealed class ProtocolMutationTests
 
         Assert.IsNotNull(message);
         Assert.AreEqual("x", formatter.DeserializedText);
+    }
+
+    [TestMethod]
+    public async Task TcpRead_LongHeader_PreservesTheFrameWhenTheHeaderBufferGrows()
+    {
+        var formatter = new CapturingFormatter();
+        byte[] frame = BuildFrame("payload", leadingHeaders: $"X-Large: {new string('x', 8192)}\r\n", newline: "\r\n");
+        using TcpMessageHandler handler = CreateHandler(new MemoryStream(frame), new MemoryStream(), formatter);
+
+        RpcMessage? message = await handler.ReadAsync(TestContext.CancellationToken);
+
+        Assert.IsNotNull(message);
+        Assert.AreEqual(1, formatter.DeserializeCalls);
+        Assert.AreEqual("payload", formatter.DeserializedText);
+    }
+
+    [TestMethod]
+    public async Task TcpRead_LongContentLengthHeader_PreservesItsPrefixWhenTheBufferGrows()
+    {
+        var formatter = new CapturingFormatter();
+        byte[] frame = Encoding.ASCII.GetBytes($"Content-Length: {new string('0', 8192)}7\r\n\r\npayload");
+        using TcpMessageHandler handler = CreateHandler(new MemoryStream(frame), new MemoryStream(), formatter);
+
+        RpcMessage? message = await handler.ReadAsync(TestContext.CancellationToken);
+
+        Assert.IsNotNull(message);
+        Assert.AreEqual(1, formatter.DeserializeCalls);
+        Assert.AreEqual("payload", formatter.DeserializedText);
     }
 
     [TestMethod]
