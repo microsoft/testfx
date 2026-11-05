@@ -14,6 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
+. (Join-Path $PSScriptRoot 'console-output.ps1') -SelfTest
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
@@ -42,7 +43,7 @@ function Invoke-Step([string] $Name, [string] $Executable, [string[]] $Arguments
         throw "$Name returned $code, expected $ExpectedExit. See $log"
     }
     Write-Host "$Name`: exit $code"
-    return Get-Content -LiteralPath $log -Raw
+    return Read-BazelPlainLog $log
 }
 
 function Assert-SinglePassingTest([string] $Path) {
@@ -213,7 +214,7 @@ try {
         throw 'The consumer did not report the expected runtime and native package provenance.'
     }
     Assert-SinglePassingTest (Join-Path $results 'consumer.trx')
-    $failure = Invoke-Step 'consumer-failure' $dotnet @($assembly, '--filter-uid', 'TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2') 2
+    $failure = Invoke-Step 'consumer-failure' $dotnet @($assembly, '--filter-uid', 'TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2', '--ansi', 'on') 2
     if ($failure -notmatch 'failed TestMethod2') { throw 'The packaged failing test did not execute.' }
     $empty = Invoke-Step 'consumer-empty' $dotnet @($assembly, '--filter-uid', 'NoMatchingTest', '--minimum-expected-tests', '1') 9
     if ($empty -notmatch 'tests ran 0, minimum expected 1') { throw 'The packaged zero-result policy did not execute.' }
@@ -246,7 +247,7 @@ try {
             throw "The $framework host did not load CoreLib from its staged shipping layout."
         }
         Assert-SinglePassingTest (Join-Path $runtimeResults 'tests.trx')
-        $runtimeFailure = Invoke-Step "runtime-failure-$framework" $executable @('--filter-uid', 'TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2') 2
+        $runtimeFailure = Invoke-Step "runtime-failure-$framework" $executable @('--filter-uid', 'TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2', '--ansi', 'on') 2
         if ($runtimeFailure -notmatch 'failed TestMethod2') { throw "The $framework failing test did not execute." }
         $runtimeEmpty = Invoke-Step "runtime-empty-$framework" $executable @('--filter-uid', 'NoMatchingTest', '--minimum-expected-tests', '1') 9
         if ($runtimeEmpty -notmatch 'tests ran 0, minimum expected 1') { throw "The $framework zero-result policy did not execute." }

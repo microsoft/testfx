@@ -14,6 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 & (Join-Path $PSScriptRoot 'verify-roslyn-dependencies.ps1') -SelfTest
+. (Join-Path $PSScriptRoot 'console-output.ps1') -SelfTest
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
@@ -36,7 +37,7 @@ function Invoke-BazelStep([string] $Name, [string[]] $Arguments, [int] $Expected
     }
 
     Write-Host "$Name`: exit $code"
-    return Get-Content -LiteralPath $log -Raw
+    return Read-BazelPlainLog $log
 }
 
 function Assert-Trx([string] $Path, [int] $ExpectedCount = 0) {
@@ -110,7 +111,7 @@ try {
 
     $failure = Invoke-BazelStep 'failed-test' @(
         'run', '//:explorer', '--noshow_progress', '--show_result=0', '--',
-        '--filter-uid', 'TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2'
+        '--filter-uid', 'TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2', '--ansi', 'on'
     ) 2
     if ($failure -notmatch 'failed TestMethod2') {
         throw 'The expected failing sample did not execute.'

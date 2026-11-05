@@ -144,6 +144,9 @@ The native Roslyn producer/test pins must match `Directory.Packages.props`.
 locks before workflow compilation; regenerate them with the existing dependency
 updaters when the central analyzer baseline changes. Analyzer package validation
 uses that supported baseline rather than assuming an older compiler host.
+Workflow text assertions remove ANSI styling from their in-memory view only;
+raw command logs remain unchanged. Intentional failure probes force ANSI output
+so hosted-console formatting is covered even during plain-console local runs.
 Ordinary test launches use the selected SDK's .NET 11 runtime; the separate
 self-contained publisher checks prove execution on each actual runtime.
 

@@ -3631,3 +3631,29 @@ after repacking; its evidence is `analyzers/20261105-094003-959ed79c`.
 The Linux container and its owned Bazel server exited; no shared host policy,
 cache, or service was changed. Hosted GitHub validation is still a separate
 gate, not inferred from these local runs.
+
+### Hosted console-output follow-up
+
+Hosted run `42008183305` at
+`037269f4416f784c4f96b6d2afe1ccd0f542f00a` compiled and passed the selected
+Windows and Ubuntu suites, then both validators rejected the intentional failing
+sample after its correct exit 2. Their raw artifacts contain
+`ESC[31mfailedESC[m TestMethod2`, so a literal plain-text predicate incorrectly
+reported that the test had not executed.
+
+Both workflow scripts now use the same ANSI-CSI normalization when reading a
+command log for assertions, while retaining the original bytes for evidence.
+Seven focused cases cover plain/colored failure text, mixed outcomes,
+zero-result messages, significant content/newlines, incomplete escapes and
+empty logs. Both downloaded hosted failure logs reproduce the old false
+negative and satisfy the corrected predicate. Removing only normalization in
+an isolated copy causes `ColoredFailure` to fail (exit 1); restoring it returns
+seven passes (exit 0). Mutation SHA-256:
+`FED1041321DC357D8918F3E1B7CB17CFFC5C07C8B5D5618D1DEF7CCFFFAB4CCC`.
+
+The intentional failure probes now explicitly pass `--ansi on`, so this path
+is exercised even when an LLM environment requests plain output. Both complete
+Windows workflow scripts passed again, preserving exit 2 and the actual colored
+raw log. Console fixtures are retained under the existing workflow evidence
+directory, not deleted from the host's protected system temporary directory.
+The hosted rerun remains the final verification of this follow-up.
