@@ -567,10 +567,10 @@ module Marker =
     let append name line =
         lock syncRoot (fun () -> File.AppendAllText(path name, line + "\n"))
     let current line =
-        Assert.IsNotNull(TestContext.Current)
+        Assert.IsNotNull(TestContext.Current) |> ignore
         append TestContext.Current.TestName line
     let assertFreshCleanupToken () =
-        Assert.IsNotNull(TestContext.Current)
+        Assert.IsNotNull(TestContext.Current) |> ignore
         Assert.IsFalse(TestContext.Current.CancellationToken.IsCancellationRequested)
 
 // These fixtures intentionally have no TestClass and no test methods.
@@ -661,7 +661,7 @@ type CustomModuleClassAttribute () =
 module CustomModule =
     [<TestMethod; TestCategory("basic")>]
     let CustomModuleTest () =
-        Assert.IsNotNull(TestContext.Current)
+        Assert.IsNotNull(TestContext.Current) |> ignore
         Assert.AreEqual("custom-before\n", File.ReadAllText(Marker.path "custom"))
         Marker.append "custom" "custom-body"
 

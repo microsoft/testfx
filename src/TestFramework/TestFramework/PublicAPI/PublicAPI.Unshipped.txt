@@ -1,3 +1,7 @@
 #nullable enable
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler message, string! valueExpression = "") -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, string? message = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull<T>(T? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler message, string! valueExpression = "") -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull<T>(T? value, string? message = "", string! valueExpression = "") -> T
