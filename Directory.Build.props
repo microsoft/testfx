@@ -52,7 +52,8 @@
 
   <!-- Build config -->
   <PropertyGroup>
-    <EnableProjectDataOnBuild>true</EnableProjectDataOnBuild>
+    <!-- The SDK's project-data tasks require .NET MSBuild; desktop MSBuild emits task-host fallback warnings. -->
+    <EnableProjectDataOnBuild Condition=" '$(MSBuildRuntimeType)' != 'Full' ">true</EnableProjectDataOnBuild>
     <!-- Prevent warning about deprecated target frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <!-- PDB -->

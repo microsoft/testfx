@@ -18,6 +18,22 @@
     </ItemGroup>
   </Target>
 
+  <!-- Keep NativeAOT linker and runtime packs on the same runtime as the compiler. -->
+  <Target Name="_UseNet10NativeAotCompatibilityPacks"
+          BeforeTargets="ProcessFrameworkReferences"
+          Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' == 'v10.0' AND '$(PublishAot)' == 'true' ">
+    <ItemGroup>
+      <KnownRuntimePack Update="@(KnownRuntimePack)"
+                        Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net10.0' AND '%(KnownRuntimePack.RuntimePackLabels)' == 'NativeAOT' ">
+        <LatestRuntimeFrameworkVersion>$(Net10RuntimeVersion)</LatestRuntimeFrameworkVersion>
+      </KnownRuntimePack>
+      <KnownILLinkPack Update="@(KnownILLinkPack)"
+                      Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net10.0' ">
+        <ILLinkPackVersion>$(Net10RuntimeVersion)</ILLinkPackVersion>
+      </KnownILLinkPack>
+    </ItemGroup>
+  </Target>
+
   <Target Name="_UseNet11CompatibilityPacks"
           BeforeTargets="ProcessFrameworkReferences"
           Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' == 'v11.0' ">

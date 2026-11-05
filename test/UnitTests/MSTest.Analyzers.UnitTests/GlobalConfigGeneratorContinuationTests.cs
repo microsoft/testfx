@@ -244,7 +244,8 @@ public sealed class GlobalConfigGeneratorContinuationTests
 
     private static async Task EmitAssemblyAsync(string directory, string source)
     {
-        ImmutableArray<MetadataReference> references = await AnalyzerTestReferenceAssemblies.Default.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);
+        // Fixtures run in the modern generator process, even when the test host targets .NET Framework.
+        ImmutableArray<MetadataReference> references = await AnalyzerTestReferenceAssemblies.Net100OrLater.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);
         references = references.Add(MetadataReference.CreateFromFile(
             System.IO.Path.Combine(System.IO.Path.GetDirectoryName(GetToolPath())!, "Microsoft.CodeAnalysis.dll")));
         if (!references.Any(reference => System.IO.Path.GetFileName(reference.Display) == "System.Collections.Immutable.dll"))

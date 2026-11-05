@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class GitHubActionsAttachmentTests : AcceptanceTestBase<GitHubActionsAttachmentTests.TestAssetFixture>
 {
     private const string AssetName = "GitHubActionsAttachmentBehavior";
-    private const string AttachmentTargetFramework = "net8.0";
+    private static readonly string AttachmentTargetFramework = TargetFrameworks.NetCurrent;
 
     public TestContext TestContext { get; set; } = null!;
 
