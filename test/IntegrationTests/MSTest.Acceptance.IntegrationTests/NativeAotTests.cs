@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -181,6 +183,45 @@ public sealed class AsyncVoidTests
 #pragma warning restore MSTEST0003
 }
 """;
+
+    [TestMethod]
+    [DataRow("net8.0", 8)]
+    [DataRow("net9.0", 9)]
+    [DataRow("net10.0", 10)]
+    public async Task NativeAotCompilerPack_MatchesBootstrappedRuntime(string targetFramework, int runtimeMajor)
+    {
+        using TestAsset asset = await TestAsset.GenerateAssetAsync(
+            "NativeAotCompilerPack",
+            $$"""
+            #file NativeAotCompilerPack.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>{{targetFramework}}</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <PublishAot>true</PublishAot>
+              </PropertyGroup>
+            </Project>
+            """);
+
+        string projectPath = Path.Combine(asset.TargetAssetPath, "NativeAotCompilerPack.csproj");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{projectPath}\" -t:ProcessFrameworkReferences -getItem:PackageReference",
+            environmentVariables: new() { ["DOTNET_CLI_CONTEXT_VERBOSE"] = "false" },
+            cancellationToken: TestContext.CancellationToken);
+
+        using var bootstrap = JsonDocument.Parse(File.ReadAllText(Path.Combine(Constants.Root, "global.json")));
+        string? expectedVersion = bootstrap.RootElement.GetProperty("tools").GetProperty("runtimes").GetProperty("dotnet")
+            .EnumerateArray()
+            .Select(version => version.GetString())
+            .Single(version => version is not null && version.StartsWith($"{runtimeMajor}.", StringComparison.Ordinal));
+
+        using var evaluation = JsonDocument.Parse(result.StandardOutput);
+        JsonElement compiler = Assert.ContainsSingle(evaluation.RootElement.GetProperty("Items").GetProperty("PackageReference")
+            .EnumerateArray()
+            .Where(package => package.GetProperty("Identity").GetString() == "Microsoft.DotNet.ILCompiler"));
+
+        Assert.AreEqual(expectedVersion, compiler.GetProperty("Version").GetString());
+    }
 
     [TestMethod]
     // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
