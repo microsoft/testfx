@@ -18,14 +18,30 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 // Keep the existing self-host fixtures ahead of Bazel's results-directory arguments.
+if (Environment.GetEnvironmentVariable(ClientHelperMutationTests.LateFaultFixtureEnvironmentVariable) is { } operation)
+{
+    return ClientHelperMutationTests.RunLateFaultFixture(operation);
+}
+
+bool isProcessFixture = Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is not null
+    || Environment.GetEnvironmentVariable(MtpServerProcessTests.StandardOutputFloodEnvironmentVariable) == "1"
+    || Environment.GetEnvironmentVariable(MtpServerProcessTests.StartupStandardErrorEnvironmentVariable) == "1";
+if (isProcessFixture && args is not ["--server", "--client-port", _, "--no-banner"])
+{
+    Console.Error.WriteLine("The process fixture requires the complete server-mode arguments.");
+    return 17;
+}
+
 if (args is ["--server", "--client-port", string port, "--no-banner"])
 {
+    using var fixtureLifetime = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+
     if (Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is { } releaseFile)
     {
         using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
         while (!File.Exists(releaseFile))
         {
-            await Task.Delay(10);
+            await Task.Delay(10, fixtureLifetime.Token);
         }
 
         return 23;
@@ -35,7 +51,7 @@ if (args is ["--server", "--client-port", string port, "--no-banner"])
     {
         Console.WriteLine(new string('x', 1024 * 1024));
         using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
-        await Task.Delay(Timeout.InfiniteTimeSpan);
+        await Task.Delay(Timeout.InfiniteTimeSpan, fixtureLifetime.Token);
         return 0;
     }
 

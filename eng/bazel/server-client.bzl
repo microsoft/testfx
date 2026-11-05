@@ -16,6 +16,8 @@ def server_client_library():
         linked_srcs = [
             "src/Polyfills/Ensure.cs",
             "src/Polyfills/EmbeddedAttribute.cs",
+            _PLATFORM + "/Helpers/System/IStopwatch.cs",
+            _PLATFORM + "/Helpers/System/SystemStopwatch.cs",
             _PLATFORM + "/OutputDevice/Terminal/ExceptionFlattener.cs",
             _PLATFORM + "/TestHost/SessionUid.cs",
         ] + [

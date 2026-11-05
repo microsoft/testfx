@@ -3678,3 +3678,91 @@ builds passed; the same selected test then passed with both relative and
 absolute result directories (four runs, each exit 0 and exactly one pass).
 Commands, binary hashes, binlogs and TRXs are retained under
 `artifacts/pr-review/relative-trace-12204`.
+
+### Server-client source-link follow-up
+
+The next PR-merge run (`42014900952`, head
+`3504d985dd3483c2bd25c4ddc440bb71f23ccc8c`) failed compiling
+`MtpServerInProcessHost`: main's
+`e7e3cd922964fa20ace264d20f1065d0577051b0` introduced injectable stopwatch
+helpers and added their two source links to the source-client project, but the
+independent native declaration still omitted them. NuGet metadata-probe 404
+warnings were not the failure: graph analysis completed before CS0246.
+
+Main was merged as `dbcd61c4cd0422ca608bfbb385d375bb4d757cf8` to validate the
+actual new client and its regression cases locally. The native source list now
+includes exactly `IStopwatch.cs` and `SystemStopwatch.cs`, matching the project;
+no production client behavior, timeout or test assertion is changed by this correction.
+The prior green hosted run remains evidence for its own revision, not this
+later PR merge.
+
+The modern managed matrix and the `netstandard2.0` client then compiled
+successfully. Running the new upstream client tests exposed a second missing
+piece of native parity: the custom test entry point had not adopted the upstream
+late-fault dispatcher, missing-server-arguments rejection, or bounded fixture
+lifetime. Without the early dispatcher, fixture children started more test
+suites instead of executing their isolated operation. That run was interrupted;
+only processes belonging to the task-owned Bazel output root were stopped, and
+zero remaining task-root executable processes were confirmed. This interrupted
+run is not claimed as a completed regression-sensitivity result.
+
+The native entry point now follows those same upstream fixture branches before
+adding Bazel report arguments. Normal execution retains method-level,
+CPU-count parallelism; environment overrides remain child-process-local, and
+the upstream tests still own their child handles and bounded cleanup. No
+serialization, fixture assertion, or product timeout was relaxed.
+
+Validation used SDK `11.0.100-rc.3.26522.148` and the merged source above, with
+the two native-file changes:
+
+| Command | Result |
+| --- | --- |
+| `.\eng\bazel.ps1 build //:managed_all //:server_client_netstandard2_0 --jobs=8 --keep_going --noshow_progress --show_result=0` | Exit 0; modern matrix and legacy client compile. |
+| `.\eng\bazel.ps1 test //:server_client_tests --jobs=8 --nocache_test_results --test_output=errors --test_timeout=300 --noshow_progress --show_result=0` | Exit 0; 600 selected, 592 passed, eight original skips, zero failures. |
+| `.\eng\bazel\validate.ps1 -EvidenceRoot (Join-Path $PWD 'artifacts\bazel-client-stopwatch\native')` | All nine steps passed, including expected negative exits 2/9/3; all ten Bazel test targets passed, with 3,776 passing cases in the eight TRX-reporting modules. |
+| `.\eng\bazel\validate-packages.ps1 -EvidenceRoot (Join-Path $PWD 'artifacts\bazel-client-stopwatch\packages')` | All 22 native package/consumer/copied-runtime steps passed. |
+
+The client TRX confirms all nine directly relevant upstream data cases passed:
+`ProcessFixture_MissingServerArguments_ExitsWithoutRecursivelyRunningTests`
+(three), `TaskWaits_LateFaultObservation_ControlsUnobservedTaskException` (four),
+and `LateFaultFixture_WatchdogTerminatesBlockedChild` (two). An attempted
+combined VSTest filter encountered Windows batch interpretation of `|` before
+tests ran; the successful command above runs the whole suite instead, without
+changing filtering infrastructure or counting that launch error as a test.
+
+**Test-value evidence:** a subsequent safe, isolated comparison used the same
+published net10.0/win-x64 layout and original test sources, recompiling only the
+entry point from pre-fix blob
+`06665c485246ed7801ea9729f31fd0fef3c7598e`. It invoked
+`dotnet exec <variant>\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests.dll --help`
+with each of the same nine fixture environment values. `--help` deliberately
+makes the old fall-through bounded: a broken dispatcher prints help rather
+than recursively executing tests. The assertions were unchanged across variants.
+
+| Probe contract | Old entry point | Correct entry point, before/after |
+| --- | --- | --- |
+| `RejectHelp_*`: three server-fixture gates reject incomplete arguments with exit 17 and the exact diagnostic | Three failures: exit 0 and help output instead. | Three passes in each run. |
+| `DispatchLateFault_*`: four operations emit the exact two-case GC-observation summary | Four failures: help output instead of the operation summary. | Four passes in each run. |
+| `DispatchWatchdog_*`: two blocked operations terminate nonzero with their exact output/diagnostic | Two failures: exit 0 and help output instead. | Two passes in each run. |
+
+Each comparison run selected and executed nine probes with no skips:
+**9 passed / 9 failed / 9 passed**. The comparison harness exited 0 after
+checking those expected outcomes; this is a targeted old-bootstrap comparison,
+not a pristine-base build or a claim that the original nine MSTest cases ran
+in the red variant. The two-minute server-fixture lifetime is aligned with
+upstream and exercised through normal child cleanup, but its expiry was not
+separately fault-injected. The missing-source CS0246 is build-reproduction
+evidence, not a behavioral red test.
+
+Retained evidence is under `artifacts/bazel-client-stopwatch`: the two hosted
+compiler failures, client TRX and fixture identities, native run
+`20261105-112239-6c2c5784`, package run `20261105-112441-f31ade2e`, and
+`comparison-3de5b36f23a24869aec2f5364a558734/evidence.json` with the exact compiler
+response, binary/source hashes, and per-probe expected/actual output. Replay
+setup initially encountered an absent optional published PDB and pruned
+execution-root dependency links; materializing `//:server_client_tests` restored
+the latter. Neither setup failure is counted as a failing behavioral assertion.
+The checked bootstrap SHA-256 is
+`5CDA88211A9E8FC506E86C1D85347D20C5E391745BC36D158B9DA7D198A16705`;
+the comparison response SHA-256 is
+`A95ED4BA29C31F70FCC0F9D6BECE474262F73CDF81915FD485A7DA6667C13ABA`.
