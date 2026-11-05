@@ -165,11 +165,12 @@ public partial class AssertTests
     public void Scope_AssertIsNotNull_IsSoftFailure()
     {
         object? value = null;
+        object? result = new();
         Action action = () =>
         {
             using (Assert.Scope())
             {
-                Assert.IsNotNull(value);
+                result = Assert.IsNotNull(value);
                 Assert.AreEqual(1, 2);
             }
         };
@@ -190,6 +191,41 @@ public partial class AssertTests
             Assert.IsNotNull(value)
             """);
         innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
+        result.Should().BeNull();
+    }
+
+    public void Scope_AssertIsNotNull_InterpolatedString_IsSoftFailure()
+    {
+        object? value = null;
+        object? result = new();
+        DummyClassTrackingToStringCalls messageValue = new();
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                result = Assert.IsNotNull(value, $"scope message {messageValue}");
+                Assert.AreEqual(1, 2);
+            }
+        };
+
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected value to not be null.
+            scope message DummyClassTrackingToStringCalls
+
+            actual: null
+
+            Assert.IsNotNull(value)
+            """);
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
+        result.Should().BeNull();
+        messageValue.WasToStringCalled.Should().BeTrue();
     }
 
     public void Scope_AssertIsInstanceOfType_IsSoftFailure()

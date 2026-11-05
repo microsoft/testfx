@@ -13,7 +13,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAssetFixture>
 {
-    private const string AssetName = "AssertSourceCompatibility";
+    private const string AssetName = "AssertSourceCompatibility consumer";
 
     private const string ConsumerSource = """
         #file AssertSourceCompatibility.csproj
@@ -45,9 +45,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
 
         namespace AssertSourceCompatibility;
 
-        // This code is compiled but never executed. Except for ExplicitGenericArrayCalls, keep the calls
-        // implicit: casts or explicit type arguments would hide the overload-resolution regressions this
-        // asset is intended to catch.
+        // This code is compiled but never executed. Keep calls implicit except when deliberately testing
+        // explicit generic calls: casts or type arguments would hide overload-resolution regressions.
         internal static class AssertCallShapes
         {
             internal static void ArrayAndEnumerableCalls(
@@ -643,6 +642,48 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.DoesNotMatchRegex(new Regex("z"), "abc");
             }
 
+            internal static void IsNotNullCalls(
+                string? text,
+                object? value,
+                int number,
+                int? nullableNumber,
+                int[]? array,
+                IEnumerable<int>? sequence)
+            {
+                string result = Assert.IsNotNull(text);
+                result = Assert.IsNotNull(text, "message");
+                result = Assert.IsNotNull(text, $"message {text}");
+                result = Assert.IsNotNull(text, message: null);
+                _ = result.Length;
+                _ = text.Length;
+
+                object objectResult = Assert.IsNotNull(value);
+                int numberResult = Assert.IsNotNull(number);
+                int? nullableResult = Assert.IsNotNull(nullableNumber);
+                _ = nullableResult.Value;
+                int[] arrayResult = Assert.IsNotNull(array);
+                IEnumerable<int> sequenceResult = Assert.IsNotNull(sequence);
+
+                string explicitNullableResult = Assert.IsNotNull<string?>(text);
+                explicitNullableResult = Assert.IsNotNull<string?>(text, "message");
+                explicitNullableResult = Assert.IsNotNull<string?>(text, $"message {text}");
+                _ = Assert.IsNotNull<object>(null);
+                _ = Assert.IsNotNull<object>(default);
+
+                Func<string?, string?, string, string> callback = Assert.IsNotNull;
+                _ = callback(text, null, "text");
+                Action action = () => Assert.IsNotNull(value);
+                action();
+            }
+
+            internal static T IsNotNullGenericCalls<T>(T? value)
+            {
+                T result = Assert.IsNotNull(value);
+                result = Assert.IsNotNull(value, "message");
+                result = Assert.IsNotNull(value, $"message {value}");
+                return result;
+            }
+
             internal static async Task ExceptionCallsAsync()
             {
                 _ = Assert.Throws<InvalidOperationException>(() => Throw());
@@ -704,6 +745,56 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         }
         """;
 
+    private const string FSharpConsumerSource = """
+        #file IsNotNullFSharp.fsproj
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>$TargetFrameworks$</TargetFramework>
+            <OutputType>Exe</OutputType>
+            <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+            <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+            <Compile Include="Program.fs" />
+          </ItemGroup>
+        </Project>
+
+        #file Program.fs
+        open System
+        open Microsoft.VisualStudio.TestTools.UnitTesting
+
+        let mutable evaluations = 0
+        let checkedValue = obj()
+        let getValue () =
+            evaluations <- evaluations + 1
+            checkedValue
+
+        let result: obj = Assert.IsNotNull(getValue())
+        if not (Object.ReferenceEquals(checkedValue, result)) || evaluations <> 1 then
+            failwith "IsNotNull must return the original value after one evaluation."
+
+        let text: string = Assert.IsNotNull("checked value", "message")
+        if text <> "checked value" then
+            failwith "IsNotNull must preserve the inferred string type and value."
+
+        let number: int = Assert.IsNotNull(42)
+        let nullableNumber: Nullable<int> = Assert.IsNotNull(Nullable<int>(42))
+        if number <> 42 || nullableNumber.Value <> 42 then
+            failwith "IsNotNull must preserve value types."
+
+        Assert.IsNotNull(checkedValue) |> ignore
+        Assert.IsNotNull(checkedValue, $"message {number}") |> ignore
+
+        try
+            Assert.IsNotNull<string>(null) |> ignore
+            failwith "IsNotNull must reject null."
+        with :? AssertFailedException -> ()
+
+        Console.WriteLine(typeof<Assert>.Assembly.Location)
+        Console.WriteLine("IsNotNull F# consumer passed.")
+        """;
+
     private static readonly Regex PublicAssertMethodRegex = new(
         @"^(?:\[[^\]]+\])*\s*static Microsoft\.VisualStudio\.TestTools\.UnitTesting\.Assert\.(?<name>[A-Za-z0-9]+)(?:<|\()",
         RegexOptions.CultureInvariant);
@@ -732,12 +823,50 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         };
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"build -c Release {testAsset.TargetAssetPath}",
+            "build -c Release",
             environmentVariables: environmentVariables,
             workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetSourceCompatibilityTargetFrameworks))]
+    public async Task IsNotNullCallShapes_CompileAndRunWithFSharp(string targetFramework)
+    {
+        string source = FSharpConsumerSource
+            .PatchTargetFrameworks(targetFramework)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("IsNotNull FSharp consumer", source);
+
+        var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["NUGET_PACKAGES"] = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages"),
+        };
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            "build -c Release",
+            environmentVariables: environmentVariables,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string consumerDll = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "IsNotNullFSharp.dll");
+        using DotnetMuxer muxer = new(environmentVariables);
+        int exitCode = await muxer.ExecuteAsync(
+            $"\"{consumerDll}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exitCode, $"{muxer.StandardOutput}{muxer.StandardError}");
+        Assert.AreEqual(
+            $"""
+            {Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll")}
+            IsNotNull F# consumer passed.
+            """.ReplaceLineEndings(),
+            muxer.StandardOutput.ReplaceLineEndings());
+        TestContext.WriteLine(muxer.StandardOutput);
     }
 
     private static IEnumerable<object[]> GetSourceCompatibilityTargetFrameworks()
