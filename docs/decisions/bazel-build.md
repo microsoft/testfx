@@ -3657,3 +3657,24 @@ Windows workflow scripts passed again, preserving exit 2 and the actual colored
 raw log. Console fixtures are retained under the existing workflow evidence
 directory, not deleted from the host's protected system temporary directory.
 The hosted rerun remains the final verification of this follow-up.
+
+### Review follow-up: trigger and relative child paths
+
+Review of head `03e3d3503573ab52dd7b97e2a6f6f3b9d929d21b` identified two
+bounded defects. The workflow path list did not include the central
+`Directory.Packages.props` input of the drift guard; it now does. A direct
+before/after path-filter check rejects the old omission and accepts a
+package-only change with read-only workflow permissions unchanged.
+
+The trace fixture also passed a relative results path to a child with a
+different working directory. Running
+`TraceBridgePersistsEverySeverityInAnIsolatedHost` from the repository root with
+`--results-directory artifacts\pr-review\relative-trace-12204\red` reproduced
+one executed failure on net462: the child succeeded, but its TRX was not in the
+directory the parent read. Resolving the complete child directory with
+`Path.GetFullPath` before creating/passing it fixes that contract without
+changing any trace, exit or result-count assertion. Fresh net462 and net10.0
+builds passed; the same selected test then passed with both relative and
+absolute result directories (four runs, each exit 0 and exactly one pass).
+Commands, binary hashes, binlogs and TRXs are retained under
+`artifacts/pr-review/relative-trace-12204`.

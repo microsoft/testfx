@@ -6,6 +6,7 @@ on:
       - '.bazel*'
       - 'BUILD.bazel'
       - 'MODULE.bazel*'
+      - 'Directory.Packages.props'
       - 'eng/bazel.ps1'
       - 'eng/bazel/**'
       - 'eng/Versions.props'
