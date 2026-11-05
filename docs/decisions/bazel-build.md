@@ -3514,3 +3514,120 @@ Evidence for these implementation experiments is retained under
 restore and comparison attempts remain separate from successful samples.
 The source state is the original local head plus the recorded working patch;
 none of this is published or live-pipeline verification yet.
+
+## 2026-11-05: repair the native Windows/Linux CI graph
+
+The user explicitly requested fixing the previously optional Bazel workflow.
+Run `41840481157` on head
+`9a3d23a4cc29a8054b38be531e1e775059119c34` failed on both Windows and Ubuntu
+before test execution. Both logs identify the same cause: the PR merge contains
+`MSTestHostInjectionMetadataGenerator`, but the independent native analyzer
+lock still supplies Roslyn 3.11, which has no `IIncrementalGenerator` or
+`IncrementalGeneratorInitializationContext`. The repository now explicitly
+requires Roslyn 4.14 for analyzer production and tests. The NuGet preview-feed
+404 warnings are not the cause; graph analysis completed before compilation.
+
+The current `main` source was merged locally as
+`325689026465371ec95dd3caa5b22c59d9e15805` so local validation exercises the
+same product graph as the PR merge, including the already-landed main CI fixes.
+No upstream assertion is weakened or test case removed for this repair. The bounded fix is
+to align native producer/test declarations and regenerate their lock metadata,
+then address any subsequent concrete native wiring errors exposed by the real
+workflow. Updating only the compiler SDK cannot supply missing Roslyn API
+references, and excluding the new generator would lose production behavior.
+The analyzer package host probe must follow the now-supported Roslyn baseline,
+not continue claiming the superseded 3.11 compatibility contract.
+
+Planned evidence: an executable dependency-drift guard with a detected old-pin
+counterfactual, the existing Windows native validation and package-consumer
+commands, and an isolated Linux execution of the same workflow. Preserve failed
+attempts separately. CI run artifacts were downloaded under
+`artifacts/bazel-ci-repair/41840481157`; no new outcome is claimed yet.
+
+### Executed repair and validation
+
+After the Roslyn fix, the complete graph exposed stale links to the split
+`BaseSerializer*.cs` files and `DiagnosticAssertionObserver`, an absent runtime
+reference for assertion-generator tests, and an adapter-test global using.
+The native declarations now match those source/project contracts. The generator
+has distinct compiler-plugin and runtime-test-subject providers so an
+analyzer-only import cannot shadow the executable test dependency.
+
+New platform-services fixtures copy their own binary and launch Debug assertion
+children. Bazel outputs are read-only and its ordinary runfiles are not a
+standalone runtime layout. The native test now uses a framework-dependent
+publication copied into its own `TEST_TMPDIR`, clears only the copy's read-only
+attributes, supplies the declared SDK under the fixture's `.dotnet` contract,
+and removes its own copy after joining the child. Linux apphosts retain their
+full dotted basename; only Windows `.exe` is removed when finding the DLL.
+The native entry point retains the original child-probe dispatch and markers.
+
+The adapter trace test now relaunches the already-built host rather than
+evaluating an MSBuild project simply to run the same single test. Its child
+selection, exit, one-result TRX, and ordered trace-message assertions are
+unchanged. This is the one original test fixture modified by the repair.
+All 184 MSBuild-built net10 adapter cases passed, and the same trace test passed
+on the original net462 host after a successful zero-warning build.
+
+Linux execution then demonstrated that the platform-services suite contains
+25 Windows path, invalid-character, newline and filesystem assumptions; it is
+already excluded by `NonWindowsTests.slnf`. Porting that entire suite is not
+part of this pipeline fix. The native target is explicitly Windows-compatible,
+and a separate nine-target non-Windows suite retains the other tests. The
+Windows suite still runs all 1,399 platform-services cases. The validator
+reports the supported selection and unsupported suite explicitly; there is no
+per-test filtering, assertion change or manufactured skip/pass.
+
+The complete Windows `validate.ps1 -Jobs 8` command passed all ten targets:
+1,732 framework, 184 adapter, 1,399 platform-services, 13 build-tool, 197
+source-generation, 210 VSTestBridge, 27 protocol, one Simple1 and two explorer
+cases (3,765 total). Discovery, reports, intentional exits 2/9 and mixed-module
+exit 3 passed. `validate-packages.ps1` passed the real package consumers and
+copied self-contained net8/net9/net10/net11 layouts. The analyzer gate passed
+all 15 cases, including real C#/VB diagnostics, code fixes and French satellites
+against the central Roslyn 4.14 host.
+
+`verify-roslyn-dependencies.ps1 -SelfTest` passes eight cases. Removing only its
+version-mismatch guard in an isolated copy makes
+`RejectsOldProducerDeclaration` fail at the intended assertion (exit 1);
+restoring the guard returns eight passes (exit 0). The mutation script SHA-256
+is `1843CA0ED30E94B5516435ED251E35725ED336BC83994A12F0DA1BA73ADD9D09`.
+
+Local Linux runs use a disposable PowerShell 7.4 Ubuntu container with its
+own Bazel volume. Missing Git/C++/`file` prerequisites were installed only
+inside that container. Early Windows-origin archive and bind-mount failures
+were validation-environment issues: the final harness uses Git's canonical LF
+checkout and a native Linux evidence directory, then exports an archive.
+These failures are retained, not counted as successful pipeline runs.
+Exact commands, source snapshots, logs and reports are under
+`artifacts/bazel-ci-repair`.
+
+The final Linux container run completed both workflow commands with exit 0.
+Its nine supported targets executed 2,366 passing cases, with the unsupported
+Windows suite explicitly recorded rather than counted as passing. Discovery,
+all report formats, exits 2/9/3, and all 22 package/consumer/runtime steps passed.
+The exported record is `linux-run5/native/20261105-100310-5441ee47/validation.json`
+and `linux-run5/packages/20261105-100417-aeb3a585/validation.json`; the incoming
+source archive SHA-256 is
+`76ccf8719c9fc58710e2cd4810ca21c6451e3ba282c5f4049c4fa317748d0b6d`.
+The original Windows checkout was canonicalized through Git before Linux
+execution; no assertions or test source were patched inside the container.
+
+The Windows and Linux workflow commands were, respectively:
+
+```powershell
+.\eng\bazel\validate.ps1 -Jobs 8 -EvidenceRoot (Join-Path $PWD 'artifacts\bazel-ci-repair\windows-final')
+.\eng\bazel\validate-packages.ps1
+```
+
+```sh
+pwsh -NoProfile -File ./eng/bazel/validate.ps1 -Jobs 8 -EvidenceRoot /evidence/native
+pwsh -NoProfile -File ./eng/bazel/validate-packages.ps1 -Jobs 8 -EvidenceRoot /evidence/packages
+```
+
+Both use native Bazel production and the same compiler/toolchain declarations.
+The additional `validate-analyzers-package.ps1 -Jobs 8` run passed 15/15 cases
+after repacking; its evidence is `analyzers/20261105-094003-959ed79c`.
+The Linux container and its owned Bazel server exited; no shared host policy,
+cache, or service was changed. Hosted GitHub validation is still a separate
+gate, not inferred from these local runs.

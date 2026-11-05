@@ -202,15 +202,20 @@ testfx_binary(
     defines = ["TESTFX_INTERNAL_TESTS"],
     exclude = ["test/UnitTests/TestFramework.UnitTests/Program.cs"],
     generate_documentation_file = False,
-    linked_srcs = ["//eng/bazel:TestMain.cs"],
+    linked_srcs = [
+        "//eng/bazel:TestMain.cs",
+        "test/Utilities/DiagnosticAssertionObserver.cs",
+    ],
     project = "test/UnitTests/TestFramework.UnitTests",
     deps = [
+        ":assert_generator",
         ":framework",
         ":framework_extensions",
         ":internal_test_framework",
         ":trx",
         "@paket.source//awesomeassertions",
         "@paket.source//moq",
+        "@paket.generator//microsoft.codeanalysis.csharp",
     ],
 )
 
@@ -235,27 +240,34 @@ testfx_test(
     tags = ["manual"],
 )
 
+_PORTABLE_BASELINE_TESTS = [
+    ":adapter_tests",
+    ":build_tools_tests",
+    ":explorer_released_test",
+    ":explorer_test",
+    ":framework_tests",
+    ":simple1_test",
+]
+
+_PORTABLE_CONTRACT_TESTS = [
+    ":protocol_contract_tests",
+    ":source_generation_tests",
+    ":vstest_bridge_tests",
+]
+
 test_suite(
     name = "baseline_tests",
-    tests = [
-        ":adapter_tests",
-        ":build_tools_tests",
-        ":explorer_released_test",
-        ":explorer_test",
-        ":framework_tests",
-        ":platform_services_tests",
-        ":simple1_test",
-    ],
+    tests = _PORTABLE_BASELINE_TESTS + [":platform_services_tests"],
 )
 
 test_suite(
     name = "portable_tests",
-    tests = [
-        ":baseline_tests",
-        ":protocol_contract_tests",
-        ":source_generation_tests",
-        ":vstest_bridge_tests",
-    ],
+    tests = [":baseline_tests"] + _PORTABLE_CONTRACT_TESTS,
+)
+
+test_suite(
+    name = "portable_non_windows_tests",
+    tests = _PORTABLE_BASELINE_TESTS + _PORTABLE_CONTRACT_TESTS,
 )
 
 test_suite(

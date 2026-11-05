@@ -53,6 +53,18 @@ csharp_binary(
     treat_warnings_as_errors = True,
 )
 
+csharp_binary(
+    name = "writable_test_launcher",
+    srcs = [
+        "GlobalUsings.cs",
+        "WritableTestLauncher.cs",
+    ],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)
+
 dotnet_tool(
     name = "paket",
     entrypoint = {"net10.0": "paket.dll"},

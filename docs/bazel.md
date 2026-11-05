@@ -93,12 +93,13 @@ runfiles settings.
 | `//:explorer_released` | Existing platform explorer compiled against its released MTP 2.5.2 packages. |
 | `//:explorer` | The same sample compiled against this checkout's MTP and TRX assemblies. |
 | `//:simple1` | Existing `samples/public/mstest-runner/Simple1`, using the source-built MSTest runner and reporters. |
-| `//:baseline_tests` | Seven test targets: the three sample smoke runs, existing framework/adapter/platform-services suites, and build-tool regression cases. |
-| `//:portable_tests` | The baseline plus protocol-contract, source-generation, and VSTestBridge suites: 3,443 cases across ten targets. |
+| `//:baseline_tests` | Seven Windows test targets: the three sample smoke runs, existing framework/adapter/platform-services suites, and build-tool regression cases. |
+| `//:portable_tests` | The Windows baseline plus protocol-contract, source-generation, and VSTestBridge suites: ten targets. |
+| `//:portable_non_windows_tests` | The same portable contracts without the Windows-filesystem platform-services suite: nine targets. |
 | `//:all_unit_tests` | All thirteen original unit-test projects, including the full MTP suite and its known Windows host failures. No cases or original skips are filtered out. |
-| `//:framework_tests` | All 1,634 existing framework tests, using the existing sequential `TestContainer` engine. |
-| `//:adapter_tests` | All 152 existing adapter tests, using `TestContainer`. |
-| `//:platform_services_tests` | All 1,215 existing platform-services tests, using `TestContainer`. |
+| `//:framework_tests` | Existing framework tests, including the assertion-generator tests, using the existing sequential `TestContainer` engine. |
+| `//:adapter_tests` | Existing adapter tests, using `TestContainer` and a framework-dependent layout for child-process tests. |
+| `//:platform_services_tests` | Windows-only platform-services tests, using `TestContainer` and an isolated writable layout for filesystem/child-process fixtures. |
 | `//:build_tools_tests` | Thirteen cases for RESX/XLF handling, version/build-stamp generation, and experimental package-version validation. |
 | `//:reference_alias_tests` | Nine cases for aliases, signed friend access, emitted public keys, and satellite identity. |
 | `//:sdk_package_tests` | Twelve cases for native SDK/meta-package generation and dependency/asset flow. |
@@ -131,6 +132,18 @@ the server-client's default validation assembly retains `net8.0`.
 project variants rather than relying on compatible-framework fallback.
 Windows-qualified targets are opt-in; full workload/runtime parity remains a
 separate gate.
+`validate.ps1` selects the ten-target suite on Windows and the nine-target suite
+elsewhere, and records the selected suite and unsupported targets in its result.
+`MSTestAdapter.PlatformServices.UnitTests` has Windows path/filename semantics
+and is also absent from the repository's `NonWindowsTests.slnf`; an explicit
+request for its Bazel target on another OS fails compatibility analysis rather
+than reporting those tests as passed. Windows still executes its full suite.
+
+The native Roslyn producer/test pins must match `Directory.Packages.props`.
+`verify-roslyn-dependencies.ps1 -SelfTest` checks both Paket declarations and
+locks before workflow compilation; regenerate them with the existing dependency
+updaters when the central analyzer baseline changes. Analyzer package validation
+uses that supported baseline rather than assuming an older compiler host.
 Ordinary test launches use the selected SDK's .NET 11 runtime; the separate
 self-contained publisher checks prove execution on each actual runtime.
 

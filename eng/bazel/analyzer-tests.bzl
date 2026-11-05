@@ -34,6 +34,7 @@ def analyzer_unit_tests():
             "//eng/bazel:PortableTestFrameworkMetadata.cs",
             "//eng/bazel:AnalyzerReferencePackMetadata.cs",
             "test/Utilities/Microsoft.Testing.TestInfrastructure/RootFinder.cs",
+            "test/Utilities/DiagnosticAssertionObserver.cs",
         ],
         defines = ["TESTFX_ISOLATED_NUGET"],
         usings = ["Microsoft.Testing.TestInfrastructure", "Polyfills"],

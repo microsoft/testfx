@@ -1,6 +1,8 @@
 """Native targets for existing tests; test bodies and scheduling are unchanged."""
 
-load(":defs.bzl", "testfx_analyzer", "testfx_binary", "testfx_library", "testfx_test")
+load("@rules_dotnet//dotnet:defs.bzl", "publish_binary")
+load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_analyzer", "testfx_binary", "testfx_library", "testfx_test")
+load(":test-assets.bzl", "testfx_published_test")
 load(":platform.bzl", "ipc_sources")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
@@ -222,9 +224,9 @@ def unit_tests():
             linked_srcs = ["//eng/bazel:TestMain.cs"] + ([
                 "test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/TestableImplementations/MockableReflectionOperations.cs",
                 "test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/TestableImplementations/TestablePlatformServiceProvider.cs",
-            ] if name == "adapter_tests" else []),
-            defines = ["TESTFX_INTERNAL_TESTS"],
-            usings = ["ExecutionScope=Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope"] if name == "adapter_tests" else [],
+            ] if name == "adapter_tests" else ["test/Utilities/DiagnosticAssertionObserver.cs"]),
+            defines = ["TESTFX_INTERNAL_TESTS"] + (["TESTFX_PLATFORM_SERVICES_PROBES"] if name == "platform_services_tests" else []),
+            usings = ["Microsoft.Testing.Platform.Extensions", "ExecutionScope=Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope"] if name == "adapter_tests" else [],
             appsetting_files = ["test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/DataTestSourceFile.xml"] if name == "platform_services_tests" else [],
             generate_documentation_file = False,
             deps = [
@@ -240,11 +242,34 @@ def unit_tests():
                 "@paket.source//moq",
             ],
         )
-        testfx_test(
+        applications = {}
+        for framework in PORTABLE_FRAMEWORKS:
+            suffix = framework.replace(".", "_")
+            configuration = name + "_" + suffix + "_configuration"
+            application = name + "_" + suffix
+            native.config_setting(
+                name = configuration,
+                flag_values = {"@rules_dotnet//dotnet:target_framework": framework},
+            )
+            publish_binary(
+                name = application,
+                binary = ":" + name + "_app",
+                target_framework = framework,
+                self_contained = False,
+                roll_forward_behavior = "LatestMajor",
+            )
+            applications[":" + configuration] = ":" + application
+        native.alias(name = name + "_layout", actual = select(applications))
+        testfx_published_test(
             name = name,
-            binary = ":" + name + "_app",
+            binary = ":" + name + "_layout",
+            writable_layout = name == "platform_services_tests",
             args = ["--minimum-expected-tests", "1"],
             size = "medium",
+            target_compatible_with = select({
+                "@platforms//os:windows": [],
+                "//conditions:default": ["@platforms//:incompatible"],
+            }) if name == "platform_services_tests" else [],
         )
 
     testfx_library(
@@ -259,7 +284,10 @@ def unit_tests():
         name = "platform_tests_app",
         project = "test/UnitTests/Microsoft.Testing.Platform.UnitTests",
         exclude = ["test/UnitTests/Microsoft.Testing.Platform.UnitTests/Program.cs"],
-        linked_srcs = ["//eng/bazel:TestMain.cs"] + ipc_sources() + [
+        linked_srcs = [
+            "//eng/bazel:TestMain.cs",
+            "test/Utilities/DiagnosticAssertionObserver.cs",
+        ] + ipc_sources() + [
             _PLATFORM + "/ServerMode/DotnetTest/Transport/DotnetTestHttpClient.cs",
             _PLATFORM + "/IPC/Models/TestHostCompletedRequest.cs",
             _PLATFORM + "/IPC/Serializers/TestHostCompletedRequestSerializer.cs",

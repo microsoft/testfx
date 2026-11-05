@@ -55,6 +55,6 @@ group analyzers
     storage: none
     strategy: min
 
-    nuget Microsoft.CodeAnalysis.Common == 3.11.0
-    nuget Microsoft.CodeAnalysis.CSharp.Workspaces == 3.11.0
+    nuget Microsoft.CodeAnalysis.Common == 4.14.0
+    nuget Microsoft.CodeAnalysis.CSharp.Workspaces == 4.14.0
     nuget Microsoft.CodeAnalysis.Analyzers == 5.6.0

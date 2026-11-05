@@ -1,6 +1,6 @@
 """Native MSTest source assemblies and their compiler generator."""
 
-load(":defs.bzl", "DESKTOP_FRAMEWORKS", "STANDARD_FRAMEWORKS", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
+load(":defs.bzl", "DESKTOP_FRAMEWORKS", "STANDARD_FRAMEWORKS", "testfx_analyzer", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 _SHARED = "src/Platform/SharedExtensionHelpers"
@@ -12,9 +12,14 @@ def mstest_libraries():
         project = "src/TestFramework/TestFramework.SourceGeneration",
         target_frameworks = ["netstandard2.0"],
         polyfills = False,
-        is_analyzer = True,
         analyzer_configs = ["//eng/bazel:analyzers.globalconfig"],
         deps = ["@paket.generator//microsoft.codeanalysis.csharp"],
+    )
+    testfx_analyzer(
+        name = "assert_generator_plugin",
+        assembly = ":assert_generator",
+        # Keep the analyzer-only provider distinct from the runtime test subject.
+        library_name = "TestFramework.SourceGeneration.Analyzer",
     )
     testfx_library(
         name = "framework",
@@ -38,7 +43,7 @@ def mstest_libraries():
             "MSTestAdapter.PlatformServices.UnitTests",
             "MSTest.Performance.Benchmarks",
         ],
-        deps = [":assert_generator"],
+        deps = [":assert_generator_plugin"],
     )
     testfx_library(
         name = "framework_extensions",

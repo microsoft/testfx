@@ -80,13 +80,24 @@ def _published_test_impl(ctx):
         fixtures.append(output)
     is_windows = application.extension == "exe"
     launcher = ctx.actions.declare_file(ctx.label.name + (".bat" if is_windows else ".sh"))
+    runner = runfile
+    arguments = ""
+    extra_runfiles = ctx.runfiles()
+    if ctx.attr.writable_layout:
+        tool = ctx.attr._writable_launcher[DefaultInfo]
+        tool_path = tool.files_to_run.executable.short_path
+        runner = tool_path[3:] if tool_path.startswith("../") else ctx.workspace_name + "/" + tool_path
+        extra_runfiles = tool.default_runfiles.merge(ctx.runfiles(transitive_files = tool.files))
+        arguments = (' "%TEST_SRCDIR%\\' + runtime_directory.replace("/", "\\") + '" "' + runtime.sdk_version + '" "%TEST_SRCDIR%\\' + runfile.replace("/", "\\") + '"') if is_windows else (
+            ' "${TEST_SRCDIR}/' + runtime_directory + '" "' + runtime.sdk_version + '" "${TEST_SRCDIR}/' + runfile + '"'
+        )
     if is_windows:
         content = "\r\n".join([
             "@echo off",
             "setlocal DisableDelayedExpansion",
             'set "DOTNET_ROOT=%TEST_SRCDIR%\\' + runtime_directory.replace("/", "\\") + '"',
             'set "PATH=%DOTNET_ROOT%;%PATH%"',
-            '"%TEST_SRCDIR%\\' + runfile.replace("/", "\\") + '" %*',
+            ('call ' if ctx.attr.writable_layout else "") + '"%TEST_SRCDIR%\\' + runner.replace("/", "\\") + '"' + arguments + ' %*',
             "exit /b %ERRORLEVEL%",
             "",
         ])
@@ -96,14 +107,14 @@ def _published_test_impl(ctx):
             "set -euo pipefail",
             'export DOTNET_ROOT="${TEST_SRCDIR}/' + runtime_directory + '"',
             'export PATH="${DOTNET_ROOT}:${PATH}"',
-            'exec "${TEST_SRCDIR}/' + runfile + '" "$@"',
+            'exec "${TEST_SRCDIR}/' + runner + '"' + arguments + ' "$@"',
             "",
         ])
     ctx.actions.write(launcher, content, is_executable = True)
     return [
         DefaultInfo(
             executable = launcher,
-            runfiles = info.default_runfiles.merge(ctx.runfiles(files = fixtures, transitive_files = depset(transitive = [info.files, runtime.runtime_files]))),
+            runfiles = info.default_runfiles.merge(extra_runfiles).merge(ctx.runfiles(files = fixtures, transitive_files = depset(transitive = [info.files, runtime.runtime_files]))),
         ),
         RunEnvironmentInfo(environment = {}, inherited_environment = ctx.attr.env_inherit),
     ]
@@ -117,5 +128,7 @@ testfx_published_test = rule(
         "files": attr.label_keyed_string_dict(allow_files = True),
         "repository_marker": attr.bool(default = False),
         "env_inherit": attr.string_list(),
+        "writable_layout": attr.bool(default = False),
+        "_writable_launcher": attr.label(default = "//eng/bazel:writable_test_launcher", executable = True, cfg = "exec"),
     },
 )

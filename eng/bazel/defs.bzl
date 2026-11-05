@@ -325,12 +325,12 @@ _assembly_dll = rule(
     attrs = {"assembly": attr.label(mandatory = True)},
 )
 
-def testfx_analyzer(name, assembly):
+def testfx_analyzer(name, assembly, library_name = "MSTest.Analyzers"):
     """Use a compiled analyzer both as a normal test dependency and a compiler plugin."""
     _assembly_dll(name = name + "_dll", assembly = assembly)
     import_library(
         name = name,
-        library_name = "MSTest.Analyzers",
+        library_name = library_name,
         version = "1.0.0",
         analyzers = [":" + name + "_dll"],
     )

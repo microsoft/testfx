@@ -14,6 +14,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+& (Join-Path $PSScriptRoot 'verify-roslyn-dependencies.ps1')
+[xml]$centralPackages = Get-Content -LiteralPath (Join-Path $root 'Directory.Packages.props') -Raw
+$roslynVersion = $centralPackages.SelectSingleNode('/Project/PropertyGroup/MicrosoftCodeAnalysisVersion').InnerText
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 if ($EvidenceRoot -and -not [IO.Path]::IsPathFullyQualified($EvidenceRoot)) {
@@ -306,7 +309,7 @@ End Class
         Invoke-CompilerCase $language 'Default' -Disabled $true
     }
 
-    Invoke-Case 'roslyn-3.11-codefix-and-satellites' {
+    Invoke-Case "roslyn-$roslynVersion-codefix-and-satellites" {
         $projectDirectory = Join-Path $consumer 'legacy'
         New-Item -ItemType Directory -Path $projectDirectory | Out-Null
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'AnalyzerPackageConsumer.cs') -Destination $projectDirectory
@@ -325,7 +328,7 @@ End Class
   <ItemGroup>
     <PackageReference Include="MSTest.Analyzers" Version="$expectedVersion" />
     <PackageReference Include="MSTest.TestFramework" Version="4.5.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$roslynVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath $project -Encoding utf8
@@ -335,14 +338,14 @@ End Class
         )
         Assert-Restore $projectDirectory -AllowsRoslyn $true
         $packageDirectory = Join-Path $cache "mstest.analyzers\$expectedVersion"
-        $output = Invoke-Step 'legacy-host-run' $dotnet @((Join-Path $projectDirectory "bin\Release\$framework\LegacyHost.dll"), $packageDirectory, $csharpInput)
+        $output = Invoke-Step 'legacy-host-run' $dotnet @((Join-Path $projectDirectory "bin\Release\$framework\LegacyHost.dll"), $packageDirectory, $csharpInput, "$roslynVersion.0")
         $script:legacyRecord = $output | ConvertFrom-Json
         [xml]$catalog = Get-Content -LiteralPath (Join-Path $root 'src\Analyzers\MSTest.Analyzers\xlf\Resources.fr.xlf') -Raw
         $expectedTitle = $catalog.SelectSingleNode('//*[local-name()="trans-unit" and @id="TypeContainingTestMethodShouldBeATestClassTitle"]/*[local-name()="target"]').InnerText
         [xml]$fixCatalog = Get-Content -LiteralPath (Join-Path $root 'src\Analyzers\MSTest.Analyzers.CodeFixes\xlf\CodeFixResources.fr.xlf') -Raw
         $expectedFix = $fixCatalog.SelectSingleNode('//*[local-name()="trans-unit" and @id="AddTestClassFix"]/*[local-name()="target"]').InnerText
         if ($legacyRecord.AnalyzerVersion -cne $expectedVersion -or $legacyRecord.CodeFixVersion -cne $expectedVersion -or
-            $legacyRecord.RoslynVersion -cne '3.11.0.0' -or $legacyRecord.DiagnosticId -cne 'MSTEST0030' -or
+            $legacyRecord.RoslynVersion -cne "$roslynVersion.0" -or $legacyRecord.DiagnosticId -cne 'MSTEST0030' -or
             $legacyRecord.FrenchTitle -cne $expectedTitle -or $legacyRecord.FrenchCodeFix -cne $expectedFix) {
             throw 'The packaged assemblies failed the Roslyn API or localized resource contract.'
         }

@@ -22,13 +22,13 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-if (args.Length != 2)
+if (args.Length != 3)
 {
-    throw new ArgumentException("Expected the extracted analyzer package and the C# consumer source.");
+    throw new ArgumentException("Expected the extracted analyzer package, C# consumer source, and supported Roslyn assembly version.");
 }
 
 string packageDirectory = Path.GetFullPath(args[0]);
-Version expectedApi = new(3, 11, 0, 0);
+Version expectedApi = Version.Parse(args[2]);
 Assert.AreEqual(expectedApi, typeof(Compilation).Assembly.GetName().Version);
 Assert.AreEqual(expectedApi, typeof(CSharpCompilation).Assembly.GetName().Version);
 Assert.AreEqual(expectedApi, typeof(Workspace).Assembly.GetName().Version);

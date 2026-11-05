@@ -13,11 +13,15 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+& (Join-Path $PSScriptRoot 'verify-roslyn-dependencies.ps1') -SelfTest
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 $run = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $directory = if ($EvidenceRoot) { Join-Path $EvidenceRoot $run } else { Join-Path $root "artifacts\bazel-validation\$run" }
 $reports = Join-Path $directory 'reports with spaces!'
+$testSuite = if ($IsWindows) { '//:portable_tests' } else { '//:portable_non_windows_tests' }
+$unsupportedSuites = @(if (-not $IsWindows) { '//:platform_services_tests (Windows filesystem contract; also excluded by NonWindowsTests.slnf)' })
+if ($unsupportedSuites.Count) { Write-Host "Unsupported on this host: $($unsupportedSuites -join ', ')" }
 New-Item -ItemType Directory -Path $reports -Force | Out-Null
 $steps = [System.Collections.Generic.List[object]]::new()
 
@@ -53,7 +57,7 @@ Push-Location $root
 try {
     $null = Invoke-BazelStep 'managed-build' @('build', '//:managed_all', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
     $null = Invoke-BazelStep 'cached-build' @('build', '//:managed_all', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
-    $null = Invoke-BazelStep 'portable-tests' @('test', '//:portable_tests', "--jobs=$Jobs", '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'portable-tests' @('test', $testSuite, "--jobs=$Jobs", '--nocache_test_results', '--noshow_progress', '--show_result=0')
 
     $testLogs = & $bazel info bazel-testlogs
     if ($LASTEXITCODE -ne 0) {
@@ -61,7 +65,9 @@ try {
     }
 
     $counts = [ordered]@{}
-    foreach ($target in @('framework_tests', 'adapter_tests', 'platform_services_tests', 'build_tools_tests', 'simple1_test', 'protocol_contract_tests', 'source_generation_tests', 'vstest_bridge_tests')) {
+    $reportTargets = @('framework_tests', 'adapter_tests', 'build_tools_tests', 'simple1_test', 'protocol_contract_tests', 'source_generation_tests', 'vstest_bridge_tests')
+    if ($IsWindows) { $reportTargets += 'platform_services_tests' }
+    foreach ($target in $reportTargets) {
         $path = Join-Path $testLogs "$target\test.outputs\tests.trx"
         $counts[$target] = Assert-Trx $path
         Copy-Item -LiteralPath $path -Destination (Join-Path $directory "$target.trx")
@@ -170,6 +176,8 @@ try {
         Runtime = $toolchain.Groups[2].Value
         TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
         TestCounts = $counts
+        TestSuite = $testSuite
+        UnsupportedSuites = @($unsupportedSuites)
         DeclaredCompilerActions = $compilerActions.Count
         Steps = $steps
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8

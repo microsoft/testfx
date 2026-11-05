@@ -28,8 +28,10 @@ def modern_json_sources():
     ], allow_empty = True)
 
 def ipc_sources():
-    return native.glob([_PLATFORM + "/IPC/*.cs"]) + [
-        _PLATFORM + "/IPC/Serializers/BaseSerializer.cs",
+    return native.glob([
+        _PLATFORM + "/IPC/*.cs",
+        _PLATFORM + "/IPC/Serializers/BaseSerializer*.cs",
+    ]) + [
         _PLATFORM + "/IPC/Serializers/NamedPipeSerializer.cs",
         _PLATFORM + "/IPC/Serializers/VoidResponseSerializer.cs",
         _PLATFORM + "/IPC/Models/VoidResponse.cs",
@@ -112,13 +114,7 @@ def platform_libraries():
         target_frameworks = STANDARD_FRAMEWORKS,
         allow_unsafe_blocks = True,
         defines = ["USE_TRX_NAMESPACE"],
-        linked_srcs = native.glob([_PLATFORM + "/IPC/*.cs"]) + [
-            _PLATFORM + "/IPC/Serializers/BaseSerializer.cs",
-            _PLATFORM + "/IPC/Serializers/NamedPipeSerializer.cs",
-            _PLATFORM + "/IPC/Serializers/VoidResponseSerializer.cs",
-            _PLATFORM + "/IPC/Models/VoidResponse.cs",
-            _PLATFORM + "/ServerMode/DotnetTest/IPC/ObjectFieldIds.cs",
-            _PLATFORM + "/Resources/PlatformResources.cs",
+        linked_srcs = ipc_sources() + [
             _PLATFORM + "/Helpers/RoslynString.cs",
             _PLATFORM + "/Helpers/RuntimeFeatureHelper.cs",
             _PLATFORM + "/Helpers/ApplicationStateGuard.cs",
