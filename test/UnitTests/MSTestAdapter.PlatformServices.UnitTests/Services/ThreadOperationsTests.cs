@@ -11,29 +11,45 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class ThreadOperationsTests : TestContainer
 {
+    private const int CompletionTimeoutMilliseconds = 30_000;
+
     private readonly ThreadOperations _asyncOperations;
 
     public ThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
-#pragma warning disable IDE0051 // Remove unused private members - test is failing in CI.
-#if NETFRAMEWORK
-    private void ExecuteShouldStartTheActionOnANewThread()
+    public void ExecuteShouldStartTheActionOnANewThread()
     {
-        int actionThreadID = 0;
-        void Action() => actionThreadID = Environment.CurrentManagedThreadId;
+        int callingThreadId = Environment.CurrentManagedThreadId;
+        int actionThreadId = callingThreadId;
+        void Action() => actionThreadId = Environment.CurrentManagedThreadId;
 
-        CancellationTokenSource tokenSource = new();
-        _asyncOperations.Execute(Action, 10000, tokenSource.Token).Should().BeTrue();
-        Environment.CurrentManagedThreadId.Should().NotBe(actionThreadID);
+        _asyncOperations.Execute(Action, CompletionTimeoutMilliseconds, CancellationToken.None).Should().BeTrue();
+        actionThreadId.Should().NotBe(callingThreadId);
     }
-#endif
 
-    private void ExecuteShouldReturnFalseIfTheActionTimesOut()
+    public void ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
-        static void Action() => Task.Delay(1000).Wait();
+        using ManualResetEventSlim actionStarted = new();
+        using ManualResetEventSlim releaseAction = new();
+        using Task action = new(() =>
+        {
+            actionStarted.Set();
+            releaseAction.Wait();
+        });
 
-        CancellationTokenSource tokenSource = new();
-        _asyncOperations.Execute(Action, 1, tokenSource.Token).Should().BeFalse();
+        Task<bool> execution = Task.Run(() => _asyncOperations.Execute(
+            () => action.RunSynchronously(TaskScheduler.Default), 1, CancellationToken.None));
+
+        try
+        {
+            actionStarted.Wait(CompletionTimeoutMilliseconds).Should().BeTrue("the action must start before its timeout result is checked");
+            execution.Wait(CompletionTimeoutMilliseconds).Should().BeTrue("Execute must return while the action is blocked");
+            execution.GetAwaiter().GetResult().Should().BeFalse();
+        }
+        finally
+        {
+            releaseAction.Set();
+            Task.WhenAll(execution, action).Wait(CompletionTimeoutMilliseconds).Should().BeTrue("all workers must finish before the synchronization gates are disposed");
+        }
     }
-#pragma warning restore IDE0051 // Remove unused private members
 }
