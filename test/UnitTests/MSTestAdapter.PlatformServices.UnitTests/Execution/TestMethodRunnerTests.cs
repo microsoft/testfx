@@ -1005,7 +1005,12 @@ public class TestMethodRunnerTests : TestContainer
 
     public async Task ExecuteExpectedDuration_UsesStrictReportedDurationBoundary()
     {
-        foreach (int budget in new[] { 1, 100 })
+        (int Budget, string Warning)[] cases =
+        [
+            (100, "Test 'dummyClassName.dummyTestName (above budget)' took 100.0001 ms, exceeding its expected maximum duration of 100 ms."),
+            (1, "Test 'dummyClassName.dummyTestName (above budget)' took 1.0001 ms, exceeding its expected maximum duration of 1 ms."),
+        ];
+        foreach ((int budget, string warning) in cases)
         {
             long budgetTicks = budget * TimeSpan.TicksPerMillisecond;
             TestResult[] reported =
@@ -1017,7 +1022,6 @@ public class TestMethodRunnerTests : TestContainer
 
             (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported, budget: budget);
 
-            string warning = ExpectedDurationMessage("dummyClassName.dummyTestName (above budget)", budget + 0.0001, budget);
             messages.Should().Equal((MessageLevel.Warning, warning));
             results.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Passed, UnitTestOutcome.Passed, UnitTestOutcome.Passed);
             results.Select(result => result.Duration).Should().Equal(TimeSpan.FromTicks(budgetTicks - 1), TimeSpan.FromTicks(budgetTicks), TimeSpan.FromTicks(budgetTicks + 1));
@@ -1092,9 +1096,9 @@ public class TestMethodRunnerTests : TestContainer
         (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(
             reported, initializationTestContextMessages: "fixture:");
 
-        string passedWarning = ExpectedDurationMessage("dummyClassName.dummyTestName", 150.125);
-        string failedWarning = ExpectedDurationMessage("dummyClassName.dummyTestName (failure row)", 200.5);
-        messages.Should().Equal((MessageLevel.Warning, passedWarning), (MessageLevel.Warning, failedWarning));
+        const string PassedWarning = "Test 'dummyClassName.dummyTestName' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+        const string FailedWarning = "Test 'dummyClassName.dummyTestName (failure row)' took 200.5000 ms, exceeding its expected maximum duration of 100 ms.";
+        messages.Should().Equal((MessageLevel.Warning, PassedWarning), (MessageLevel.Warning, FailedWarning));
         results.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Passed, UnitTestOutcome.Failed);
         results[0].TestFailureException.Should().BeNull();
         results[1].TestFailureException.Should().BeSameAs(failure);
@@ -1112,7 +1116,7 @@ public class TestMethodRunnerTests : TestContainer
             NormalizeExpectedDurationOutput(
                 $"""
                 fixture:authored pass
-                {passedWarning}
+                {PassedWarning}
 
                 """));
         NormalizeExpectedDurationOutput(results[1].TestContextMessages!).Should().Be(
@@ -1120,7 +1124,7 @@ public class TestMethodRunnerTests : TestContainer
                 $"""
                 authored failure
 
-                {failedWarning}
+                {FailedWarning}
 
                 """));
     }
@@ -1201,13 +1205,13 @@ public class TestMethodRunnerTests : TestContainer
             }
             else
             {
-                string warning = ExpectedDurationMessage("dummyClassName.dummyTestName", 150.125);
-                messages.Should().Equal((MessageLevel.Warning, warning));
+                const string Warning = "Test 'dummyClassName.dummyTestName' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+                messages.Should().Equal((MessageLevel.Warning, Warning));
                 NormalizeExpectedDurationOutput(results[2].TestContextMessages!).Should().Be(
                     NormalizeExpectedDurationOutput(
                         $"""
                         final output
-                        {warning}
+                        {Warning}
 
                         """));
             }
@@ -1224,14 +1228,14 @@ public class TestMethodRunnerTests : TestContainer
             CultureInfo.CurrentUICulture = new CultureInfo("en-US");
             TestResult[] reported = [new() { Outcome = UnitTestOutcome.Passed, Duration = TimeSpan.FromTicks(1_234_560) }];
 
-            (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported);
+            (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported, cultureName: "fr-FR");
 
-            const string Warning = "Test 'dummyClassName.dummyTestName' took 123,456 ms, exceeding its expected maximum duration of 100 ms.";
+            const string Warning = "Test 'dummyClassName.dummyTestName' took 123,4560 ms, exceeding its expected maximum duration of 100 ms.";
             messages.Should().Equal((MessageLevel.Warning, Warning));
             NormalizeExpectedDurationOutput(results[0].TestContextMessages!).Should().Be(
                 NormalizeExpectedDurationOutput(
                     """
-                    Test 'dummyClassName.dummyTestName' took 123,456 ms, exceeding its expected maximum duration of 100 ms.
+                    Test 'dummyClassName.dummyTestName' took 123,4560 ms, exceeding its expected maximum duration of 100 ms.
 
                     """));
         }
@@ -1246,7 +1250,8 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] reported,
         bool optIn = true,
         string? initializationTestContextMessages = null,
-        int budget = 100)
+        int budget = 100,
+        string cultureName = "en-US")
     {
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(operations => operations.GetCustomAttributes(_methodInfo))
             .Returns(optIn ? [new ExpectedDurationAttribute(budget)] : []);
@@ -1258,9 +1263,11 @@ public class TestMethodRunnerTests : TestContainer
             .Callback<MessageLevel, string>((level, message) => messages.Add((level, message)));
         var context = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), logger.Object, null);
         string?[] originalContextMessages = reported.Select(result => result.TestContextMessages).ToArray();
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
         CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
         try
         {
+            CultureInfo.CurrentCulture = new CultureInfo(cultureName);
             CultureInfo.CurrentUICulture = new CultureInfo("en-US");
             var runner = new TestMethodRunner(info, _testMethod, context);
             TestResult[] results = await runner.ExecuteAsync(null, null, null, initializationTestContextMessages);
@@ -1276,18 +1283,11 @@ public class TestMethodRunnerTests : TestContainer
         }
         finally
         {
+            CultureInfo.CurrentCulture = previousCulture;
             CultureInfo.CurrentUICulture = previousUICulture;
             context.Dispose();
         }
     }
-
-    private static string ExpectedDurationMessage(string identity, double milliseconds, int budget = 100)
-        => string.Format(
-            CultureInfo.CurrentCulture,
-            "Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.",
-            identity,
-            milliseconds,
-            budget);
 
     private static string NormalizeExpectedDurationOutput(string output) => output.Replace("\r\n", "\n");
 

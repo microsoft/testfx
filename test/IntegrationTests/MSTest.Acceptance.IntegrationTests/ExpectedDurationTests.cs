@@ -15,11 +15,11 @@ public sealed class ExpectedDurationTests : AcceptanceTestBase<ExpectedDurationT
 {
     private const string AssetName = "ExpectedDurationConsumer";
     private const string ProvenanceEnvironmentVariable = "EXPECTED_DURATION_BINARY_PROVENANCE";
-    private const string PassedWarning = "Test 'DurationFeature.DurationTests.OverBudgetPass' took 150.125 ms, exceeding its expected maximum duration of 100 ms.";
-    private const string FailedWarning = "Test 'DurationFeature.DurationTests.OverBudgetFail' took 200.500 ms, exceeding its expected maximum duration of 100 ms.";
-    private const string UnfoldedWarning = "Test 'DurationFeature.DurationTests.UnfoldedRows (Unfolded above)' took 150.125 ms, exceeding its expected maximum duration of 100 ms.";
-    private const string FoldedWarning = "Test 'DurationFeature.DurationTests.FoldedRows (Folded above)' took 150.125 ms, exceeding its expected maximum duration of 100 ms.";
-    private const string RetryWarning = "Test 'DurationFeature.DurationTests.RetryFinishesOverBudget' took 150.125 ms, exceeding its expected maximum duration of 100 ms.";
+    private const string PassedWarning = "Test 'DurationFeature.DurationTests.OverBudgetPass' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+    private const string FailedWarning = "Test 'DurationFeature.DurationTests.OverBudgetFail' took 200.5000 ms, exceeding its expected maximum duration of 100 ms.";
+    private const string UnfoldedWarning = "Test 'DurationFeature.DurationTests.UnfoldedRows (Unfolded above)' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+    private const string FoldedWarning = "Test 'DurationFeature.DurationTests.FoldedRows (Folded above)' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+    private const string RetryWarning = "Test 'DurationFeature.DurationTests.RetryFinishesOverBudget' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
 
     private static readonly ExpectedRow[] ExpectedRows =
     [

@@ -25,6 +25,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// for controlled performance benchmarks. Matching framework and adapter versions that support this
 /// attribute are required.
 /// </para>
+/// <para>
+/// Warning-delivery failures do not replace completed test results or prevent cleanup. The warning and
+/// delivery-failure details remain in the result's test-context output if live reporting is unavailable.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class ExpectedDurationAttribute : Attribute

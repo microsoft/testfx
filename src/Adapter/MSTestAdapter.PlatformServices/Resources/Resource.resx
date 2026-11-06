@@ -669,7 +669,15 @@ but received {4} argument(s), with types '{5}'.</value>
     <comment>{0} is the attribute type name.</comment>
   </data>
   <data name="UTA_TestDurationExceeded" xml:space="preserve">
-    <value>Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.</value>
+    <value>Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</value>
     <comment>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</comment>
+  </data>
+  <data name="UTA_TestDurationWarningDeliveryFailed" xml:space="preserve">
+    <value>Failed to display the expected-duration warning for test '{0}': {1}</value>
+    <comment>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the formatted exception detail from the warning transport.</comment>
+  </data>
+  <data name="UTA_TestDurationWarningTraceFailed" xml:space="preserve">
+    <value>Failed to trace the expected-duration warning delivery failure: {0}</value>
+    <comment>{0} is the formatted exception detail from the diagnostic trace transport.</comment>
   </data>
 </root>

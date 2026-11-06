@@ -168,6 +168,7 @@ internal sealed partial class TestMethodRunner
         return result;
     }
 
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Advisory warning and trace delivery failures must not alter completed test results or cleanup.")]
     internal void ReportExpectedDurationWarnings(TestResult[] results)
     {
         ExpectedDurationAttribute? expectedDuration = ReflectHelper.Instance.GetFirstAttributeOrDefault<ExpectedDurationAttribute>(_testMethodInfo.MethodInfo);
@@ -202,7 +203,31 @@ internal sealed partial class TestMethodRunner
             result.TestContextMessages = string.IsNullOrEmpty(result.TestContextMessages)
                 ? message + Environment.NewLine
                 : result.TestContextMessages + Environment.NewLine + message + Environment.NewLine;
-            _testContext.DisplayMessage(MessageLevel.Warning, message);
+            try
+            {
+                _testContext.DisplayMessage(MessageLevel.Warning, message);
+            }
+            catch (Exception exception)
+            {
+                string deliveryFailure = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_TestDurationWarningDeliveryFailed,
+                    testName,
+                    exception.GetFormattedExceptionMessage());
+                result.TestContextMessages += deliveryFailure + Environment.NewLine;
+
+                try
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(deliveryFailure);
+                }
+                catch (Exception traceException)
+                {
+                    result.TestContextMessages += string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_TestDurationWarningTraceFailed,
+                        traceException.GetFormattedExceptionMessage()) + Environment.NewLine;
+                }
+            }
         }
     }
 

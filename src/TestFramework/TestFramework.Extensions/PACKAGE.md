@@ -42,6 +42,11 @@ results are evaluated; skipped, inconclusive, timed-out, aborted, and
 infrastructure-error results do not receive an additional budget warning.
 Equality is within budget.
 
+Warnings retain four fractional millisecond digits so even a one-tick overrun
+is distinguishable from equality. If live warning delivery fails, the warning
+and failure details remain in the matching result's test-context output;
+completed outcomes and cleanup are preserved.
+
 The comparison uses the reported test duration. Ordinary execution includes
 per-test initialization, construction, the test body, cleanup, and disposal,
 but excludes assembly/class initialization and cleanup. Custom test-method
