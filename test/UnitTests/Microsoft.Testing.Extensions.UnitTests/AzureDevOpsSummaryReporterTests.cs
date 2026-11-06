@@ -1349,7 +1349,7 @@ public sealed class AzureDevOpsSummaryReporterTests
             - **1 skipped** — Awaiting &lt;package&gt; &amp; &quot;native&quot; support \| see https://example.test/issues/314
 
 
-            """.ReplaceLineEndings("\n"),
+            """.Replace("\r\n", "\n"),
             GetSection(markdown, "### Skipped tests by reason"));
     }
 
