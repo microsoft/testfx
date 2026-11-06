@@ -153,6 +153,103 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
 
     public TestContext TestContext { get; set; } = null!;
 
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Requires .NET Framework.")]
+    public async Task NetFrameworkCleanupFailureMessagesRetainBothMethodIdentities()
+    {
+        using TempDirectory directory = new();
+        using TestAsset asset = await TestAsset.GenerateAssetAsync(
+            "NetFrameworkCleanupFailureMessages",
+            NetFrameworkSourceCode
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion),
+            directory);
+        _ = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -c Release",
+            cancellationToken: TestContext.CancellationToken);
+        string provenancePath = Path.Combine(directory.Path, "framework-provenance.txt");
+        var host = TestHost.LocateFrom(asset.TargetAssetPath, "NetFrameworkCleanupFailureMessages", "net462");
+        TestHostResult result = await host.ExecuteAsync(
+            $"--report-trx --report-trx-filename cleanup-netfx.trx --results-directory \"{directory.Path}\"",
+            environmentVariables: new()
+            {
+                ["FRAMEWORK_PROVENANCE"] = provenancePath,
+                ["DOTNET_CLI_UI_LANGUAGE"] = "en-US",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        string[] provenance = File.ReadAllLines(provenancePath);
+        Assert.HasCount(2, provenance);
+        using ZipArchive package = ZipFile.OpenRead(Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg"));
+        ZipArchiveEntry? payload = package.GetEntry("lib/net462/MSTest.TestFramework.dll");
+        Assert.IsNotNull(payload);
+        using Stream stream = payload.Open();
+        Assert.AreEqual(Convert.ToHexString(SHA256.HashData(stream)), provenance[1]);
+        TestContext.WriteLine($"Loaded framework: {string.Join(" | ", provenance)}");
+        result.AssertExitCodeIs(2);
+        result.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
+
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var report = XDocument.Load(Path.Combine(directory.Path, "cleanup-netfx.trx"));
+        XElement testResult = Assert.ContainsSingle(report.Descendants(ns + "UnitTestResult"));
+        Assert.AreEqual("SampleTest", (string?)testResult.Attribute("testName"));
+        Assert.AreEqual("Failed", (string?)testResult.Attribute("outcome"));
+        string message = Assert.ContainsSingle(testResult.Descendants(ns + "Message")).Value;
+        Assert.Contains("FailingCleanupTests.LocalCleanup", message);
+        Assert.Contains("local cleanup failed", message);
+        Assert.Contains("GlobalCleanupFixtures.GlobalCleanup", message);
+        Assert.Contains("global cleanup failed", message);
+    }
+
+    private const string NetFrameworkSourceCode = """
+#file NetFrameworkCleanupFailureMessages.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFramework>net462</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Tests.cs
+using System.Security.Cryptography;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class GlobalCleanupFixtures
+{
+    [GlobalTestCleanup]
+    public static void GlobalCleanup(TestContext context) => throw new InvalidOperationException("global cleanup failed");
+}
+
+[TestClass]
+public sealed class FailingCleanupTests
+{
+    [TestMethod]
+    public void SampleTest()
+    {
+        string location = typeof(Assert).Assembly.Location;
+        using SHA256 algorithm = SHA256.Create();
+        File.WriteAllLines(Environment.GetEnvironmentVariable("FRAMEWORK_PROVENANCE")!,
+        [
+            location,
+            BitConverter.ToString(algorithm.ComputeHash(File.ReadAllBytes(location))).Replace("-", string.Empty),
+        ]);
+    }
+
+    [TestCleanup]
+    public void LocalCleanup() => throw new InvalidOperationException("local cleanup failed");
+}
+""";
+
     public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "CleanupCancellationIsolation";
