@@ -161,13 +161,18 @@ try {
                 }
 
                 if ($probe.Name -eq 'retry') {
-                    $attempts = @(Get-ChildItem -LiteralPath (Join-Path $directory 'Retries') -Filter retry.trx -Recurse | Sort-Object FullName)
-                    if ($attempts.Count -ne 2) {
-                        throw 'Expected exactly two retry attempts.'
+                    $attempts = @(Get-ChildItem -LiteralPath (Join-Path $directory 'Retries') -Filter retry.trx -File -Recurse)
+                    if ($attempts.Count -ne 1 -or $attempts[0].Directory.Name -cne '1') {
+                        throw 'Expected exactly one retained first-attempt TRX under Retries.'
+                    }
+
+                    $finalAttemptTrx = Join-Path $attempts[0].Directory.Parent.FullName '2\retry.trx'
+                    $reports = @(Get-ChildItem -LiteralPath $directory -Filter '*.trx' -File -Recurse)
+                    if ($reports.Count -ne 2 -or (Test-Path -LiteralPath $finalAttemptTrx -PathType Leaf)) {
+                        throw 'Expected exactly two TRX reports with no duplicate final-attempt report under Retries.'
                     }
 
                     Assert-SelectedTrx -Path $attempts[0].FullName -TestName $testName -Outcome 'Failed'
-                    Assert-SelectedTrx -Path $attempts[1].FullName -TestName $testName
                 }
 
                 $status = 'Verified'
