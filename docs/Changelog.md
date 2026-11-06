@@ -6,12 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="5.0.0" />[5.0.0] - Unreleased
 
+See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5.2...main)
+
+For the Microsoft.Testing.Platform changes included with this release, see [3.0.0](Changelog-Platform.md#3.0.0).
+
 ### Breaking changes
 
-* Seal `DiscoverInternalsAttribute`, `DoNotParallelizeAttribute`, `ParallelizeAttribute`, `TestDataSourceDiscoveryAttribute`, `STATestClassAttribute`, `WinUITestTargetAttribute`, and the UWP/WinUI `UITestMethodAttribute` implementations. Use `TestClassAttribute` or `TestMethodAttribute` for custom execution attributes. `DataRowAttribute` remains extensible, including its `GetDisplayName` override point. See [#7374](https://github.com/microsoft/testfx/issues/7374).
-* Remove `DataTestMethodAttribute`. Replace `[DataTestMethod]` with `[TestMethod]` for data-driven tests. Unlike `DataTestMethodAttribute`, `TestMethodAttribute` is not inherited: explicitly apply `[TestMethod]` to overrides that previously inherited `[DataTestMethod]` from a virtual base method, or those overrides will no longer be discovered. See [#7374](https://github.com/microsoft/testfx/issues/7374).
-* Raise the minimum compiler host for `MSTest.Analyzers` and its code fixes to Roslyn 4.14: Visual Studio 2022 17.14 or .NET SDK 9.0.300 or newer. Roslyn is supplied by the host, not bundled with the package; older hosts can continue using `MSTest.Analyzers` 4.x. See [#10446](https://github.com/microsoft/testfx/issues/10446).
+* Seal `DiscoverInternalsAttribute`, `DoNotParallelizeAttribute`, `ParallelizeAttribute`, `TestDataSourceDiscoveryAttribute`, `STATestClassAttribute`, `WinUITestTargetAttribute`, and the UWP/WinUI `UITestMethodAttribute` implementations. Use `TestClassAttribute` or `TestMethodAttribute` for custom execution attributes. `DataRowAttribute` remains extensible, including its `GetDisplayName` override point. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
+* Remove `DataTestMethodAttribute`. Replace `[DataTestMethod]` with `[TestMethod]` for data-driven tests. Unlike `DataTestMethodAttribute`, `TestMethodAttribute` is not inherited: explicitly apply `[TestMethod]` to overrides that previously inherited `[DataTestMethod]` from a virtual base method, or those overrides will no longer be discovered. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
+* Raise the minimum compiler host for `MSTest.Analyzers` and its code fixes to Roslyn 4.14: Visual Studio 2022 17.14 or .NET SDK 9.0.300 or newer. Roslyn is supplied by the host, not bundled with the package; older hosts can continue using `MSTest.Analyzers` 4.x. See [#10446](https://github.com/microsoft/testfx/issues/10446) and [#12201](https://github.com/microsoft/testfx/pull/12201).
 * Drop .NET 8 and .NET 9 support from MSTest, including the framework, adapter, SDK, hosting and UI Automation packages, and the modern UWP/WinUI assets. The supported modern .NET targets are .NET 10 and .NET 11; .NET Framework, .NET Standard and classic UWP assets remain where previously provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
+* Replace the `void Assert.IsNotNull(object?, ...)` overloads with generic `Assert.IsNotNull<T>(T?, ...)` overloads that return the checked value with its original type. Recompile consumers, provide a type argument or typed value for untyped `null`/`default` calls, adapt delegates targeting the old `void` signature, and use `|> ignore` for F# statement calls when needed, in [#12219](https://github.com/microsoft/testfx/pull/12219).
+* Remove `DeploymentItemAttribute` from the .NET Standard 2.0 assembly. Projects using `[DeploymentItem]` must target a supported .NET Framework or .NET version; deployment remains unsupported for UWP and WinUI, in [#12223](https://github.com/microsoft/testfx/pull/12223).
+
+### Added
+
+* Discover annotated F# module functions without requiring `[<TestClass>]`, with module-level attributes and lifecycle functions for reflection-based execution on both test hosts, by @Evangelink in [#11830](https://github.com/microsoft/testfx/pull/11830)
+* Add opt-in experimental reflection-metadata reuse for eligible repeated MSTest JSON-RPC server-mode selections through `MSTEST_EXPERIMENTAL_DISCOVERY_CACHE=1`, without caching test instances or data-source results, by @Evangelink in [#11853](https://github.com/microsoft/testfx/pull/11853)
+* Add MSTEST0090 to flag count and existence assertions that enumerate `IQueryable` instead of keeping those operations on the query provider. The rule is advisory and does not provide an automatic fix, by @Evangelink in [#11892](https://github.com/microsoft/testfx/pull/11892)
+* Allow test methods to declare a trailing `CancellationToken` that MSTest supplies from the current `TestContext.CancellationToken` when it is omitted from the test data, including data-driven and source-generated execution while preserving explicitly supplied tokens, by @Evangelink in [#11991](https://github.com/microsoft/testfx/pull/11991)
+
+### Fixed
+
+* Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12121](https://github.com/microsoft/testfx/pull/12121)
+* Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12134](https://github.com/microsoft/testfx/pull/12134)
+
+## <a name="4.5.3" />[4.5.3] - Unreleased
+
+See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v4.5.2...rel/4.5)
+
+For the Microsoft.Testing.Platform changes included with this release, see [2.5.3](Changelog-Platform.md#2.5.3).
+
+### Fixed
+
+* Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12128](https://github.com/microsoft/testfx/pull/12128)
+* Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12145](https://github.com/microsoft/testfx/pull/12145)
+* Preserve global test cleanup after a locally canceled or timed-out test cleanup, without restarting an active test or run deadline or losing the original cleanup failure, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220)
 
 ## <a name="4.5.2" />[4.5.2] - 2026-10-27
 

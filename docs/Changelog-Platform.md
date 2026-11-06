@@ -6,17 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="3.0.0" />[3.0.0] - Unreleased
 
+See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5.2...main)
+
 ### Breaking changes
 
 * Drop the dedicated .NET 8 and .NET 9 assets from Microsoft.Testing.Platform and its extensions, including the packaged-app controllers. The supported modern .NET targets are .NET 10 and .NET 11; existing .NET Standard and .NET Framework assets remain where provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
 * Retarget the modern `Microsoft.Testing.Platform.ServerMode.Client.Sources` source slice to .NET 10. Consumers below .NET 10, including .NET 8 and .NET 9, now select the preserved Jsonite fallback instead of the in-box System.Text.Json source slice; legacy source compilation remains covered, in [#12185](https://github.com/microsoft/testfx/pull/12185).
 * Default `--show-stdout` and `--show-stderr` to `Failed` in all environments, instead of `All` outside AI-agent environments. To keep captured output for visible passing and skipped test results, pass `--show-stdout all --show-stderr all`, in [#12206](https://github.com/microsoft/testfx/pull/12206).
+* Remove the obsolete `ITestHostManager.AddTestSessionLifetimeHandle` registration aliases. Use the existing `AddTestSessionLifetimeHandler` overloads instead, in [#12200](https://github.com/microsoft/testfx/pull/12200).
+* Remove the legacy `TestRequestExecutionTimeInfo` compatibility shim used by `Microsoft.Testing.Platform.MSBuild` 2.2.x and earlier. Update older MSBuild integrations alongside the platform, in [#12189](https://github.com/microsoft/testfx/pull/12189).
+
+### Added
+
+* Add `--coverage-threshold-line` and `--coverage-threshold-branch` to require minimum overall coverage per test application using collector-provided measurements. Missing or ambiguous measurements fail the requirement; violations return exit code 14 when the run would otherwise succeed, by @Evangelink in [#11814](https://github.com/microsoft/testfx/pull/11814)
+* Forward collector-provided coverage summaries and validated artifact post-processing measurements through native `dotnet test` when both peers negotiate support, preserving artifact and exit-code behavior with older SDKs rather than inventing solution-wide totals, by @Evangelink in [#12114](https://github.com/microsoft/testfx/pull/12114)
+* Negotiate JSON-RPC `client/showMessage` user output between the server and source-only client, retaining `client/log` for legacy or unacknowledged peers, by @drognanar in [#11712](https://github.com/microsoft/testfx/pull/11712)
+* Include available UTC start and stop timestamps alongside test durations in JSON-RPC results, consistently across the System.Text.Json and legacy Jsonite serializers while omitting unknown endpoints, by @Evangelink in [#12191](https://github.com/microsoft/testfx/pull/12191)
+* Add `--report-gh-attachments <directory>` to stage failed-test attachments and per-test association manifests for workflow-managed upload and download links. The option requires an absolute directory and does not authenticate to GitHub or upload files from the test process, by @Evangelink in [#12184](https://github.com/microsoft/testfx/pull/12184)
 
 ### Changed
 
-* Align the CTRF reporter with specification 0.2.0 by emitting native final-attempt identities, retaining legacy retry identity support, and keeping compatible mixed-version merges correctly versioned and identified.
-* Graduate `Microsoft.Testing.Extensions.CtrfReport` to stable, align its package version with Microsoft.Testing.Platform, and remove the experimental registration API warning. The producer remains pinned to CTRF 0.2.0 and stays opt-in in MSTest.Sdk.
-* Increase the default non-cursor progress heartbeat silence threshold from 30 to 60 seconds and measure it from visible reporter output, so hidden test results no longer postpone heartbeats. `MTP_PROGRESS_SILENCE_SECONDS` still overrides the interval, and `0` disables the heartbeat.
+* Align the CTRF reporter with specification 0.2.0 by emitting native final-attempt identities, retaining legacy retry identity support, and keeping compatible mixed-version merges correctly versioned and identified, by @Evangelink in [#11953](https://github.com/microsoft/testfx/pull/11953)
+* Graduate `Microsoft.Testing.Extensions.CtrfReport` to stable, align its package version with Microsoft.Testing.Platform, and remove the experimental registration API warning. The producer remains pinned to CTRF 0.2.0 and stays opt-in in MSTest.Sdk, by @Evangelink in [#11958](https://github.com/microsoft/testfx/pull/11958)
+* Increase the default non-cursor progress heartbeat silence threshold from 30 to 60 seconds and measure it from visible reporter output, so hidden test results no longer postpone heartbeats. `MTP_PROGRESS_SILENCE_SECONDS` still overrides the interval, and `0` disables the heartbeat, by @Evangelink in [#12141](https://github.com/microsoft/testfx/pull/12141)
+* Put non-cursor terminal verdicts and failing-module diagnostics before optional slow-test lists and artifacts, while retaining interactive summary ordering, by @Evangelink in [#12141](https://github.com/microsoft/testfx/pull/12141)
+* Distinguish elapsed time from cumulative test time in CI summaries, explain runner-policy exits separately from failed test results, and group Azure DevOps skips by reason and execution platform without inferring missing history, by @Evangelink in [#11970](https://github.com/microsoft/testfx/pull/11970) and [#12142](https://github.com/microsoft/testfx/pull/12142)
+* Render Azure DevOps skip-reason groups as wrapping list entries rather than tables, and show shared module and platform context once for single-module summaries, by @Evangelink in [#12236](https://github.com/microsoft/testfx/pull/12236)
+* Coalesce HangDump activity notifications instead of performing one IPC round trip per test result, while ensuring a dump is never triggered before the configured inactivity timeout, by @thomhurst in [#12167](https://github.com/microsoft/testfx/pull/12167)
+* Update the MessagePack dependency to 3.1.12 in [#12039](https://github.com/microsoft/testfx/pull/12039)
+
+### Fixed
+
+* Include data-row arguments and custom display names in GitHub Actions failure, flaky-test and slowest-test summaries while retaining fully qualified method names, by @Evangelink in [#12139](https://github.com/microsoft/testfx/pull/12139)
+* Preserve Azure DevOps data-row display names and their associated durations while retaining canonical method identities for history. Retry interrupted result-metadata updates without republishing accepted test results, by @Evangelink in [#12150](https://github.com/microsoft/testfx/pull/12150)
+* Detect OpenCode through its `OPENCODE` environment variable so AI-agent terminal defaults apply correctly, by @Evangelink in [#12174](https://github.com/microsoft/testfx/pull/12174)
+
+## <a name="2.5.3" />[2.5.3] - Unreleased
+
+See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v4.5.2...rel/4.5)
+
+### Changed
+
+* Coalesce HangDump activity notifications instead of performing one IPC round trip per test result, while ensuring a dump is never triggered before the configured inactivity timeout, by @thomhurst and @Evangelink in [#12231](https://github.com/microsoft/testfx/pull/12231)
+* Distinguish elapsed time from cumulative test time in CI summaries, show bounded Azure DevOps skip-reason groups with platform context, and report authoritative runner-policy exits separately from failed test results, by @Evangelink in [#12149](https://github.com/microsoft/testfx/pull/12149)
+* Localize Azure DevOps live-publishing and history diagnostics, by @Evangelink in [#12209](https://github.com/microsoft/testfx/pull/12209)
+
+### Fixed
+
+* Include data-row arguments and custom display names in GitHub Actions failure, flaky-test and slowest-test summaries while retaining fully qualified method names, by @Evangelink in [#12144](https://github.com/microsoft/testfx/pull/12144)
+* Preserve Azure DevOps data-row display names and their associated durations while retaining canonical method identities for history. Retry interrupted result-metadata updates without republishing accepted test results, by @Evangelink in [#12163](https://github.com/microsoft/testfx/pull/12163)
+* Detect OpenCode through its `OPENCODE` environment variable so AI-agent terminal defaults apply correctly, by @Evangelink in [#12178](https://github.com/microsoft/testfx/pull/12178)
 
 ## <a name="2.5.2" />[2.5.2] - 2026-10-27
 
