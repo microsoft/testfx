@@ -226,10 +226,13 @@ public sealed class DiagnosticLoggingInformationTests
         using FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         ILogger logger = provider.CreateLogger("test");
 
-        var relocationTask = Task.Run(
+        Task relocationTask = Task.Factory.StartNew(
             () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory),
-            CancellationToken.None);
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default).Unwrap();
         Task logTask = Task.CompletedTask;
+        bool completedBeforeReplacement;
 
         try
         {
@@ -248,16 +251,29 @@ public sealed class DiagnosticLoggingInformationTests
                 Assert.AreSame(synchronousWaitAttempted.Task, first, "Synchronous logging did not attempt the held relocation gate.");
             }
 
-            Assert.IsFalse(logTask.IsCompleted, "Logging completed before relocation installed the replacement logger.");
+            completedBeforeReplacement = logTask.IsCompleted;
         }
         finally
         {
             allowDispose.TrySetResult(true);
+            // Cleanup must join the workers even when the test's cancellation token has been canceled.
             await Task.WhenAll(relocationTask, logTask).WaitAsync(CleanupLimit, CancellationToken.None);
         }
 
+        Assert.IsFalse(completedBeforeReplacement, "Logging completed before relocation installed the replacement logger.");
         Assert.IsNotNull(replacementStream);
-        Assert.Contains(Message, Encoding.UTF8.GetString(replacementStream.ToArray()));
+        string expected = useAsync
+            ? """
+              0001-01-01T00:00:00.0000000+00:00 test DEBUG Written during relocation.
+
+              """
+            : """
+              [00:00:00.000 test - DEBUG] Written during relocation.
+
+              """;
+        Assert.AreEqual(
+            expected.Replace("\r\n", "\n"),
+            Encoding.UTF8.GetString(replacementStream.ToArray()).Replace("\r\n", "\n"));
 
 #pragma warning disable CA1416 // Thread interruption is unavailable on browser, but this test runs on desktop test hosts.
         void LogSynchronouslyAfterWaitProbe()
