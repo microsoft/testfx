@@ -26,7 +26,58 @@ Supported platforms:
 - .NET 8.0+
 - .NET 8.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
+<<<<<<< HEAD
 - UWP 10.0.17763 with .NET 9+
+=======
+- UWP 10.0.17763 with .NET 10+
+
+## Classic UWP dependencies
+
+The classic UWP adapter payload contains the adapter and its platform-services
+assembly. Microsoft.Testing.Platform and its extensions are restored from their
+own NuGet packages rather than duplicated inside this package. The classic UWP
+bootstrap also depends on the TRX reporting and Retry packages. The adapter's
+build targets include the resolved runtime assemblies in the AppX deployment.
+
+## F# modules
+
+F# modules can contain test functions without a `[<TestClass>]` attribute:
+
+```fsharp
+namespace MyTests
+
+open Microsoft.VisualStudio.TestTools.UnitTesting
+
+[<TestCategory("Integration"); DoNotParallelize>]
+module CalculatorTests =
+    [<TestMethod>]
+    let ``addition works`` () =
+        Assert.AreEqual(4, 2 + 2)
+```
+
+Attributes that support classes, such as `TestCategory`, `Ignore`, `TestProperty`,
+`Retry`, and `DoNotParallelize`, also support F# module declarations. Nested modules
+are separate test containers; outer-module attributes do not apply to them.
+An explicit or custom `[<TestClass>]` attribute is optional and is honored when present.
+C#, Visual Basic, and F# test classes still require `[TestClass]`.
+Upgrading the adapter can discover annotated F# module functions that older
+adapter versions ignored.
+
+Module functions support the same test data and return types as class-based tests:
+`void`, `Task`, and non-generic `ValueTask` at the CLR level. F# `Async<unit>`
+workflows must be converted to a supported task return type.
+
+Module lifecycle functions use `[<ClassInitialize>]` and `[<ClassCleanup>]` for
+once-per-module fixtures, and `[<TestInitialize>]` and `[<TestCleanup>]` for
+per-test fixtures. Their parameters and return types follow the existing fixture
+rules, but per-test module fixtures are static. Assembly and global fixtures can
+also be declared in modules without `[<TestClass>]`.
+
+There is no per-test module instance, constructor injection, or instance disposal.
+Use `TestContext.Current` to access the current test context. Mutable module state
+is shared by tests and retries; use the existing parallelization controls when needed.
+Module support uses runtime reflection, not the C# source generator.
+>>>>>>> Use NuGet runtime dependencies for the classic UWP adapter
 
 ## Runsettings on Microsoft.Testing.Platform
 
