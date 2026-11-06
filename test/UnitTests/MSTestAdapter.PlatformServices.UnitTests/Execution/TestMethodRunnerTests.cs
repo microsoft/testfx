@@ -1003,6 +1003,293 @@ public class TestMethodRunnerTests : TestContainer
         failed[0].ParentExecId.Should().NotBe(Guid.Empty);
     }
 
+    public async Task ExecuteExpectedDuration_UsesStrictReportedDurationBoundary()
+    {
+        (int Budget, string Warning)[] cases =
+        [
+            (100, "Test 'dummyClassName.dummyTestName (above budget)' took 100.0001 ms, exceeding its expected maximum duration of 100 ms."),
+            (1, "Test 'dummyClassName.dummyTestName (above budget)' took 1.0001 ms, exceeding its expected maximum duration of 1 ms."),
+        ];
+        foreach ((int budget, string warning) in cases)
+        {
+            long budgetTicks = budget * TimeSpan.TicksPerMillisecond;
+            TestResult[] reported =
+            [
+                new() { Outcome = UnitTestOutcome.Passed, DisplayName = "below budget", Duration = TimeSpan.FromTicks(budgetTicks - 1), TestContextMessages = "below output" },
+                new() { Outcome = UnitTestOutcome.Passed, DisplayName = "at budget", Duration = TimeSpan.FromTicks(budgetTicks), TestContextMessages = "equal output" },
+                new() { Outcome = UnitTestOutcome.Passed, DisplayName = "above budget", Duration = TimeSpan.FromTicks(budgetTicks + 1) },
+            ];
+
+            (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported, budget: budget);
+
+            messages.Should().Equal((MessageLevel.Warning, warning));
+            results.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Passed, UnitTestOutcome.Passed, UnitTestOutcome.Passed);
+            results.Select(result => result.Duration).Should().Equal(TimeSpan.FromTicks(budgetTicks - 1), TimeSpan.FromTicks(budgetTicks), TimeSpan.FromTicks(budgetTicks + 1));
+            results.Select(result => result.DisplayName).Should().Equal("below budget", "at budget", "above budget");
+            results[0].TestContextMessages.Should().Be("below output");
+            results[1].TestContextMessages.Should().Be("equal output");
+            NormalizeExpectedDurationOutput(results[2].TestContextMessages!).Should().Be(
+                NormalizeExpectedDurationOutput(
+                    $"""
+                    {warning}
+
+                    """));
+        }
+    }
+
+    public async Task ExecuteExpectedDuration_WithoutAttributeDoesNotWarnOrChangeOutput()
+    {
+        TestResult[] reported =
+        [
+            new() { Outcome = UnitTestOutcome.Passed, Duration = TimeSpan.FromSeconds(1), TestContextMessages = "unannotated output" },
+        ];
+
+        (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported, optIn: false);
+
+        messages.Should().BeEmpty();
+        results.Should().ContainSingle();
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        results[0].Duration.Should().Be(TimeSpan.FromSeconds(1));
+        results[0].TestContextMessages.Should().Be("unannotated output");
+    }
+
+    public async Task ExecuteExpectedDuration_PreservesOutcomesExceptionsAndAuthoredOutput()
+    {
+        var failure = new InvalidOperationException("original failure");
+        var passedId = new Guid("11111111-1111-1111-1111-111111111111");
+        var failedId = new Guid("22222222-2222-2222-2222-222222222222");
+        var parentId = new Guid("33333333-3333-3333-3333-333333333333");
+        TestResult[] reported =
+        [
+            new()
+            {
+                Outcome = UnitTestOutcome.Passed,
+                DisplayName = "dummyTestName",
+                Duration = TimeSpan.FromTicks(1_501_250),
+                TestContextMessages = "authored pass",
+                LogOutput = "passing stdout",
+                LogError = "passing stderr",
+                DebugTrace = "passing trace",
+                ExecutionId = passedId,
+                ParentExecId = parentId,
+                RetryAttemptNumber = 2,
+            },
+            new()
+            {
+                Outcome = UnitTestOutcome.Failed,
+                DisplayName = "failure row",
+                Duration = TimeSpan.FromTicks(2_005_000),
+                TestFailureException = failure,
+                TestContextMessages = """
+                    authored failure
+
+                    """,
+                LogOutput = "failing stdout",
+                LogError = "failing stderr",
+                DebugTrace = "failing trace",
+                ExecutionId = failedId,
+                ParentExecId = parentId,
+                RetryAttemptNumber = 3,
+            },
+        ];
+
+        (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(
+            reported, initializationTestContextMessages: "fixture:");
+
+        const string PassedWarning = "Test 'dummyClassName.dummyTestName' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+        const string FailedWarning = "Test 'dummyClassName.dummyTestName (failure row)' took 200.5000 ms, exceeding its expected maximum duration of 100 ms.";
+        messages.Should().Equal((MessageLevel.Warning, PassedWarning), (MessageLevel.Warning, FailedWarning));
+        results.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Passed, UnitTestOutcome.Failed);
+        results[0].TestFailureException.Should().BeNull();
+        results[1].TestFailureException.Should().BeSameAs(failure);
+        results[1].ExceptionMessage.Should().Be("original failure");
+        results.Select(result => result.Duration).Should().Equal(TimeSpan.FromTicks(1_501_250), TimeSpan.FromTicks(2_005_000));
+        results.Select(result => result.DisplayName).Should().Equal("dummyTestName", "failure row");
+        results.Select(result => result.ExecutionId).Should().Equal(passedId, failedId);
+        results.Select(result => result.ParentExecId).Should().Equal(parentId, parentId);
+        results.Select(result => result.RetryAttemptNumber).Should().Equal(2, 3);
+        results.Select(result => result.IsSupersededRetryAttempt).Should().Equal(false, false);
+        results.Select(result => result.LogOutput).Should().Equal("passing stdout", "failing stdout");
+        results.Select(result => result.LogError).Should().Equal("passing stderr", "failing stderr");
+        results.Select(result => result.DebugTrace).Should().Equal("passing trace", "failing trace");
+        NormalizeExpectedDurationOutput(results[0].TestContextMessages!).Should().Be(
+            NormalizeExpectedDurationOutput(
+                $"""
+                fixture:authored pass
+                {PassedWarning}
+
+                """));
+        NormalizeExpectedDurationOutput(results[1].TestContextMessages!).Should().Be(
+            NormalizeExpectedDurationOutput(
+                $"""
+                authored failure
+
+                {FailedWarning}
+
+                """));
+    }
+
+    public async Task ExecuteExpectedDuration_DoesNotWarnForSkippedTimeoutOrInfrastructureResults()
+    {
+        UnitTestOutcome[] outcomes =
+        [
+            UnitTestOutcome.Inconclusive,
+            UnitTestOutcome.InProgress,
+            UnitTestOutcome.Error,
+            UnitTestOutcome.Timeout,
+            UnitTestOutcome.Aborted,
+            UnitTestOutcome.Unknown,
+            UnitTestOutcome.NotRunnable,
+            UnitTestOutcome.NotFound,
+            UnitTestOutcome.Ignored,
+        ];
+        TestResult[] reported = outcomes.Select(outcome => new TestResult
+        {
+            Outcome = outcome,
+            Duration = TimeSpan.FromMilliseconds(250),
+            DisplayName = outcome.ToString(),
+            TestContextMessages = $"original {outcome}",
+        }).ToArray();
+
+        (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported);
+
+        messages.Should().BeEmpty();
+        results.Select(result => result.Outcome).Should().Equal(outcomes);
+        results.Select(result => result.TestContextMessages).Should().Equal(outcomes.Select(outcome => $"original {outcome}"));
+        results.Select(result => result.Duration).Should().OnlyContain(duration => duration == TimeSpan.FromMilliseconds(250));
+    }
+
+    public async Task ExecuteExpectedDuration_DoesNotWarnForSupersededAttempts()
+    {
+        foreach (long finalTicks in new[] { 500_000L, 1_501_250L })
+        {
+            TestResult[] reported =
+            [
+                new()
+                {
+                    Outcome = UnitTestOutcome.Failed,
+                    Duration = TimeSpan.FromMilliseconds(250),
+                    TestContextMessages = "superseded output",
+                    RetryAttemptNumber = 1,
+                    IsSupersededRetryAttempt = true,
+                },
+                new()
+                {
+                    Outcome = UnitTestOutcome.Passed,
+                    Duration = TimeSpan.FromMilliseconds(250),
+                    TestContextMessages = "superseded passing output",
+                    RetryAttemptNumber = 1,
+                    IsSupersededRetryAttempt = true,
+                },
+                new()
+                {
+                    Outcome = UnitTestOutcome.Passed,
+                    Duration = TimeSpan.FromTicks(finalTicks),
+                    TestContextMessages = "final output",
+                    RetryAttemptNumber = 2,
+                },
+            ];
+
+            (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported);
+
+            results.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Failed, UnitTestOutcome.Passed, UnitTestOutcome.Passed);
+            results.Select(result => result.Duration).Should().Equal(TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(250), TimeSpan.FromTicks(finalTicks));
+            results.Select(result => result.RetryAttemptNumber).Should().Equal(1, 1, 2);
+            results.Select(result => result.IsSupersededRetryAttempt).Should().Equal(true, true, false);
+            results[0].TestContextMessages.Should().Be("superseded output");
+            results[1].TestContextMessages.Should().Be("superseded passing output");
+            if (finalTicks == 500_000)
+            {
+                messages.Should().BeEmpty();
+                results[2].TestContextMessages.Should().Be("final output");
+            }
+            else
+            {
+                const string Warning = "Test 'dummyClassName.dummyTestName' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+                messages.Should().Equal((MessageLevel.Warning, Warning));
+                NormalizeExpectedDurationOutput(results[2].TestContextMessages!).Should().Be(
+                    NormalizeExpectedDurationOutput(
+                        $"""
+                        final output
+                        {Warning}
+
+                        """));
+            }
+        }
+    }
+
+    public async Task ExecuteExpectedDuration_FormatsFractionalMillisecondsWithCurrentCulture()
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            TestResult[] reported = [new() { Outcome = UnitTestOutcome.Passed, Duration = TimeSpan.FromTicks(1_234_560) }];
+
+            (TestResult[] results, (MessageLevel Level, string Message)[] messages) = await ExecuteWithExpectedDurationAsync(reported, cultureName: "fr-FR");
+
+            const string Warning = "Test 'dummyClassName.dummyTestName' took 123,4560 ms, exceeding its expected maximum duration of 100 ms.";
+            messages.Should().Equal((MessageLevel.Warning, Warning));
+            NormalizeExpectedDurationOutput(results[0].TestContextMessages!).Should().Be(
+                NormalizeExpectedDurationOutput(
+                    """
+                    Test 'dummyClassName.dummyTestName' took 123,4560 ms, exceeding its expected maximum duration of 100 ms.
+
+                    """));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    private async Task<(TestResult[] Results, (MessageLevel Level, string Message)[] Messages)> ExecuteWithExpectedDurationAsync(
+        TestResult[] reported,
+        bool optIn = true,
+        string? initializationTestContextMessages = null,
+        int budget = 100,
+        string cultureName = "en-US")
+    {
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(operations => operations.GetCustomAttributes(_methodInfo))
+            .Returns(optIn ? [new ExpectedDurationAttribute(budget)] : []);
+        var executor = new ContinuationExecutor(() => reported);
+        var info = new TestableTestMethodInfo(_methodInfo, _testClassInfo, new TestMethodOptions(TimeoutInfo.FromTimeout(0), executor), null!);
+        List<(MessageLevel Level, string Message)> messages = [];
+        var logger = new Mock<IAdapterMessageLogger>();
+        logger.Setup(value => value.SendMessage(It.IsAny<MessageLevel>(), It.IsAny<string>()))
+            .Callback<MessageLevel, string>((level, message) => messages.Add((level, message)));
+        using var context = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), logger.Object, null);
+        string?[] originalContextMessages = reported.Select(result => result.TestContextMessages).ToArray();
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo(cultureName);
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            var runner = new TestMethodRunner(info, _testMethod, context);
+            TestResult[] results = await runner.ExecuteAsync(null, null, null, initializationTestContextMessages);
+
+            messages.Should().BeEmpty("duration warnings must wait until final retry results are selected");
+            results.Select(result => result.TestContextMessages).Should().Equal(
+                originalContextMessages.Select((message, index) => index == 0 ? initializationTestContextMessages + message : message));
+
+            // These deterministic results already carry their final-attempt tags.
+            // Packaged [Retry] cases protect the real UnitTestRunner orchestration.
+            runner.ReportExpectedDurationWarnings(results);
+            return (results, messages.ToArray());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    private static string NormalizeExpectedDurationOutput(string output) => output.Replace("\r\n", "\n");
+
     private sealed class ContinuationExecutor(Func<TestResult[]> execute) : TestMethodAttribute
     {
         internal int Calls { get; private set; }
