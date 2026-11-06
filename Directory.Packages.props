@@ -18,7 +18,8 @@
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
     <AspireHostingTestingVersion>13.5.3</AspireHostingTestingVersion>
-    <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
+    <!-- MSBuild 18.10+ requires .NET 11; keep the latest version that supports our .NET 10 targets. -->
+    <MicrosoftBuildVersion>18.9.6</MicrosoftBuildVersion>
     <!-- Roslyn is supplied by the analyzer host: Visual Studio 2022 17.14 / .NET SDK 9.0.300 or newer. -->
     <MicrosoftCodeAnalysisVersion>4.14.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.14.0</MicrosoftCodeAnalysisVersionForTests>
