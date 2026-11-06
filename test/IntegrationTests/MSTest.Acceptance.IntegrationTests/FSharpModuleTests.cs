@@ -273,7 +273,14 @@ public sealed class FSharpModuleTests : AcceptanceTestBase<FSharpModuleTests.Tes
 
         XElement attachment = Assert.ContainsSingle(trx.Descendants(TrxNamespace + "ResultFile"));
         Assert.EndsWith("module-result.txt", attachment.Attribute("path")!.Value);
-        string copiedAttachment = Assert.ContainsSingle(Directory.GetFiles(Results(run), "module-result.txt", SearchOption.AllDirectories));
+        XElement testResult = Assert.ContainsSingle(trx.Descendants(TrxNamespace + "UnitTestResult"));
+        string deploymentRoot = trx.Descendants(TrxNamespace + "Deployment").Single().Attribute("runDeploymentRoot")!.Value;
+        string copiedAttachment = Path.Combine(
+            Results(run),
+            deploymentRoot,
+            "In",
+            testResult.Attribute("relativeResultsDirectory")!.Value,
+            attachment.Attribute("path")!.Value.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar));
         Assert.AreEqual("module attachment", File.ReadAllText(copiedAttachment));
     }
 
