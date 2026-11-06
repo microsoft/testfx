@@ -1,0 +1,133 @@
+# Register this as a separate, non-required pipeline. The shipping/required pipelines
+# deliberately do not import it, consume its outputs, or depend on its result.
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - docs/**
+    - .github/**
+    - '**/*.md'
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - docs/**
+    - .github/**
+    - '**/*.md'
+
+schedules:
+- cron: 0 5 * * *
+  displayName: Bazel cache controls
+  branches:
+    include:
+    - main
+  always: true
+
+parameters:
+- name: runBenchmarks
+  displayName: Run the cold, forced-test and matched MSBuild controls
+  type: boolean
+  default: false
+
+variables:
+- name: _TeamName
+  value: MSTest
+- name: _RunAsPublic
+  value: true
+- name: _RunAsInternal
+  value: false
+
+jobs:
+- template: eng/pipelines/jobs/bazel-dogfood.yml
+  parameters:
+    jobName: BazelCached
+    mode: Cached
+
+- template: eng/pipelines/jobs/bazel-dogfood.yml
+  parameters:
+    jobName: BazelCold
+    mode: Cold
+    condition: and(succeeded(), or(eq('${{ parameters.runBenchmarks }}', 'True'), eq(variables['Build.Reason'], 'Schedule')))
+
+- template: eng/pipelines/jobs/bazel-dogfood.yml
+  parameters:
+    jobName: BazelBuildCache
+    mode: BuildCache
+    condition: and(succeeded(), or(eq('${{ parameters.runBenchmarks }}', 'True'), eq(variables['Build.Reason'], 'Schedule')))
+
+- template: eng/pipelines/jobs/bazel-dogfood.yml
+  parameters:
+    jobName: MSBuildReference
+    mode: MSBuild
+    condition: and(succeeded(), or(eq('${{ parameters.runBenchmarks }}', 'True'), eq(variables['Build.Reason'], 'Schedule')))
+
+- job: DogfoodSummary
+  displayName: Compare dogfood evidence
+  dependsOn:
+  - BazelCached
+  - BazelCold
+  - BazelBuildCache
+  - MSBuildReference
+  condition: always()
+  timeoutInMinutes: 15
+  pool:
+    name: NetCore-Public
+    demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+  variables:
+    DogfoodEvidenceRoot: $(Agent.TempDirectory)\bd-evidence-$(Build.BuildId)-$(System.JobAttempt)
+    DogfoodHistoryRoot: $(Agent.TempDirectory)\bd-history-$(Build.BuildId)-$(System.JobAttempt)
+    DogfoodSummaryRoot: $(Agent.TempDirectory)\bd-summary-$(Build.BuildId)-$(System.JobAttempt)
+  steps:
+  - checkout: self
+    fetchDepth: 1
+    persistCredentials: false
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download dogfood evidence
+    inputs:
+      buildType: current
+      itemPattern: dogfood-*/**
+      targetPath: $(DogfoodEvidenceRoot)
+
+  - pwsh: New-Item -ItemType Directory -Path '$(DogfoodHistoryRoot)' -Force | Out-Null
+    displayName: Prepare performance history
+    condition: always()
+
+  - task: Cache@2
+    displayName: Cache dogfood timing history
+    condition: always()
+    inputs:
+      key: '"bazel-dogfood-history-v1" | "$(Build.BuildId)" | "$(System.JobAttempt)"'
+      restoreKeys: |
+        "bazel-dogfood-history-v1"
+      path: $(DogfoodHistoryRoot)
+
+  - pwsh: |
+      .\eng\bazel\summarize-dogfood.ps1 `
+        -InputRoot '$(DogfoodEvidenceRoot)' `
+        -OutputRoot '$(DogfoodSummaryRoot)' `
+        -HistoryRoot '$(DogfoodHistoryRoot)' `
+        -CollectionUri '$(System.CollectionUri)' `
+        -Project '$(System.TeamProject)' `
+        -BuildId '$(Build.BuildId)' `
+        -RequireControls:([bool]::Parse('${{ parameters.runBenchmarks }}') -or '$(Build.Reason)' -eq 'Schedule')
+    displayName: Reconcile results and cache transfer time
+    condition: always()
+    env:
+      # Only the summary needs build-timeline read access. Build/test processes
+      # receive no token; forks without it retain explicit missing-timing evidence.
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish dogfood comparison
+    condition: always()
+    inputs:
+      targetPath: $(DogfoodSummaryRoot)
+      artifact: dogfood-summary

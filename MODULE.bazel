@@ -1,0 +1,81 @@
+module(name = "testfx")
+
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_dotnet", version = "0.0.0")
+archive_override(
+    module_name = "rules_dotnet",
+    integrity = "sha256-oY8nQGMi4sCTuvtO3Cr3Djw5vaxu8ggOHSJEoX3rN/s=",
+    patch_strip = 1,
+    patches = [
+        "//eng/bazel/patches:testfx-compatibility.patch",
+        "//eng/bazel/patches:windows-targeting.patch",
+        "//eng/bazel/patches:compatibility-package-references.patch",
+        "//eng/bazel/patches:reference-aliases.patch",
+        "//eng/bazel/patches:public-signing.patch",
+        "//eng/bazel/patches:testfx-tests-paket-integrity.patch",
+        "//eng/bazel/patches:testfx-source-pathmap.patch",
+    ],
+    strip_prefix = "rules_dotnet-add5c92b30888a70aa951de1744a770b8f8ef436",
+    urls = ["https://github.com/bazel-contrib/rules_dotnet/archive/add5c92b30888a70aa951de1744a770b8f8ef436.zip"],
+)
+
+dotnet = use_extension("@rules_dotnet//dotnet:extensions.bzl", "dotnet")
+dotnet.toolchain(dotnet_version = "11.0.100-rc.3.26522.148")
+use_repo(dotnet, "dotnet_toolchains")
+
+register_toolchains("@dotnet_toolchains//:all")
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "testfx_public_key",
+    downloaded_file_path = "MSFT.snk",
+    sha256 = "933598639cbaa1de502f80d2fd1db78f13c8d7bb64a5fdc1bc73ac0b5ce4f5ca",
+    urls = ["https://raw.githubusercontent.com/dotnet/arcade/4163bf82769cbb7f0a6e1e02f85090d30b53e988/src/Microsoft.DotNet.Arcade.Sdk/tools/snk/MSFT.snk"],
+)
+
+# Opt-in exact global.json compiler and execution runtime; the published SDK above
+# still owns target/RID packs. No fabricated release metadata or SDK substitution.
+# Select with --extra_toolchains=@dotnet_engineering_toolchains//:all.
+engineering = use_extension("//eng/bazel:engineering-sdk.bzl", "engineering_sdk")
+use_repo(engineering, "dotnet_engineering_toolchains")
+
+# Bootstrap the resolver without requiring dotnet tool restore or a machine SDK.
+nuget_archive = use_repo_rule("@rules_dotnet//dotnet:defs.bzl", "nuget_archive")
+
+nuget_archive(
+    name = "paket_cli",
+    id = "paket",
+    sha512 = "sha512-i6fCViUL3/f8FaHPMknsee2UL67PGMmYKKalq6qNd2k6CG4DbzFtG6bSGlAWkFRx4/92U/NRNgxEYFPSasVWsQ==",
+    sources = ["https://api.nuget.org/v3/index.json"],
+    version = "11.0.1",
+)
+
+paket = use_extension("@rules_dotnet//dotnet:paket.bzl", "paket")
+paket.parse(
+    dependencies = "//eng/bazel:paket.dependencies",
+    lock = "//eng/bazel:paket.lock",
+)
+use_repo(paket, "paket.analyzers", "paket.generator", "paket.main", "paket.source")
+
+paket.parse(
+    dependencies = "//eng/bazel/compatibility:paket.dependencies",
+    groups = [
+        "compatibility",
+        "compatibility_extensions",
+        "compatibility_hosting",
+        "compatibility_mstest",
+    ],
+    lock = "//eng/bazel/compatibility:paket.lock",
+)
+use_repo(paket, "paket.compatibility", "paket.compatibility_extensions", "paket.compatibility_hosting", "paket.compatibility_mstest")
+
+paket.parse(
+    dependencies = "//eng/bazel/tests-support:paket.dependencies",
+    integrity_file = "//eng/bazel/tests-support:package-integrity.json",
+    lock = "//eng/bazel/tests-support:paket.lock",
+    repo_prefix = "testsupport.",
+)
+use_repo(paket, "testsupport.analyzers", "testsupport.benchmarks", "testsupport.main")
+
+include("//eng/bazel/windows:windows.MODULE.bazel")

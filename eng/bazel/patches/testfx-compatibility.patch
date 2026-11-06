@@ -1,0 +1,253 @@
+diff --git a/dotnet/private/common.bzl b/dotnet/private/common.bzl
+index 929810e..c8a8cbd 100644
+--- a/dotnet/private/common.bzl
++++ b/dotnet/private/common.bzl
+@@ -314,6 +314,19 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+ 
+         direct_compile_data.extend(targeting_pack_info.compile_data)
+ 
++    transitive_versions = {}
++    if not strict_deps:
++        runtime_dependencies = depset(
++            direct = [dep[DotnetAssemblyRuntimeInfo] for dep in deps],
++            transitive = [dep[DotnetAssemblyRuntimeInfo].deps for dep in deps],
++        )
++        for runtime_dependency in runtime_dependencies.to_list():
++            version = semver.to_comparable(runtime_dependency.version)
++            for lib in runtime_dependency.libs:
++                lib_name = lib.basename.removesuffix(".dll").lower()
++                if lib_name not in transitive_versions or version > transitive_versions[lib_name]:
++                    transitive_versions[lib_name] = version
++
+     for dep in deps:
+         assembly = dep[DotnetAssemblyCompileInfo]
+         dep_name = assembly.name.lower()
+@@ -356,16 +369,22 @@ def collect_compile_info(name, deps, targeting_pack, exports, strict_deps):
+         # to the direct refs.
+         direct_iref.extend(assembly.exports)
+ 
+-        # This is not a complete solution since we are not comparing assembly versions
+-        # Transitive dependency resolution is very complicated.
+         if not strict_deps:
+-            # The compiler must not be handed an assembly that this target's
+-            # targeting pack already provides, so filter the closure down to the
+-            # reference arguments of this compilation.
++            # Apply the same package-version precedence to transitive references
++            # as direct ones; a newer package must supersede an older framework.
+             for transitive_assembly in assembly.transitive_refs.to_list():
+                 transitive_name = transitive_assembly.basename.replace(".dll", "").lower()
+-                if transitive_name not in targeting_pack_overrides and transitive_name not in framework_list:
++                minimum = targeting_pack_overrides.get(transitive_name)
++                if minimum == None and transitive_name in framework_list:
++                    minimum = framework_list[transitive_name]["version"]
++                version = transitive_versions.get(transitive_name)
++                if minimum == None or (version != None and version > semver.to_comparable(minimum, relaxed = True)):
+                     transitive_ref.append(transitive_assembly)
++                    if transitive_name in framework_list:
++                        if not narrowed:
++                            framework_list = dict(framework_list)
++                            narrowed = True
++                        framework_list.pop(transitive_name)
+ 
+             # The provider keeps the deps' depsets, so every consumer shares one
+             # copy of the closure and filters it against its own targeting pack.
+@@ -428,7 +447,7 @@ def collect_transitive_runfiles(ctx, assembly_runtime_info, deps):
+ 
+     # XML documentation is a build output, not a runtime input: nothing loads it
+     # and a publish does not ship it, so it stays out of the runfiles tree.
+-    runfiles = ctx.runfiles(files = assembly_runtime_info.data + assembly_runtime_info.native + assembly_runtime_info.libs + assembly_runtime_info.resource_assemblies)
++    runfiles = ctx.runfiles(files = assembly_runtime_info.data + assembly_runtime_info.native + assembly_runtime_info.libs + assembly_runtime_info.resource_assemblies + assembly_runtime_info.pdbs)
+ 
+     transitive_runfiles = [dep[DefaultInfo].default_runfiles for dep in deps]
+     transitive_runfiles.extend([
+@@ -1225,6 +1244,9 @@ def _resource_arg_format(file, target_label, out_dll, language):
+     else:
+         fail("Unsupported language: {}".format(language))
+ 
++    if not file.is_source:
++        return base_resource_fmt + "," + file.basename.replace("%", "%%")
++
+     # We can only determine the embedded resource's name if we have a DLL to embed it in.
+     if out_dll == None or not out_dll.endswith(".dll"):
+         return base_resource_fmt
+diff --git a/dotnet/private/launcher.bat.tpl b/dotnet/private/launcher.bat.tpl
+index 91cde86..7c0c22f 100644
+--- a/dotnet/private/launcher.bat.tpl
++++ b/dotnet/private/launcher.bat.tpl
+@@ -34,8 +34,9 @@ if not exist "%MF%" (
+   exit 1
+ )
+ set runfile_path=%~1
+-for /F "tokens=2* usebackq" %%i in (`%SYSTEMROOT%\system32\findstr.exe /l /c:"!runfile_path! " "%MF%"`) do (
+-  set abs_path=%%i
++set abs_path=
++for /F "tokens=1,* usebackq" %%i in (`%SYSTEMROOT%\system32\findstr.exe /b /l /c:"!runfile_path! " "%MF%"`) do (
++  set abs_path=%%j
+ )
+ if "!abs_path!" equ "" (
+   echo>&2 ERROR: !runfile_path! not found in runfiles manifest
+@@ -47,20 +48,15 @@ exit /b 0
+ :: End of rlocation
+ 
+ set RUNFILES_MANIFEST_ONLY=1
+-set DOTNET_MULTILEVEL_LOOKUP="false"
+-set DOTNET_NOLOGO="1"
+-set DOTNET_CLI_TELEMETRY_OPTOUT="1"
++set DOTNET_MULTILEVEL_LOOKUP=0
++set DOTNET_NOLOGO=1
++set DOTNET_CLI_TELEMETRY_OPTOUT=1
+ TEMPLATED_environment
+ 
+ set dotnet_executable="TEMPLATED_dotnet"
+ call :rlocation "TEMPLATED_dotnet" dotnet_executable
+-for %%F in (%dotnet_executable%) do set DOTNET_ROOT=%%~dpF
++for %%F in ("%dotnet_executable%") do set DOTNET_ROOT=%%~dpF
+ 
+ call :rlocation "TEMPLATED_executable" run_script
+-set args=%*
+-rem Escape \ and * in args before passsing it with double quote
+-if defined args (
+-  set args=!args:\=\\\\!
+-  set args=!args:"=\"!
+-)
+-"!dotnet_executable!" exec "!run_script!" !args!
++setlocal DisableDelayedExpansion
++"%dotnet_executable%" exec "%run_script%" %*
+diff --git a/dotnet/private/rules/common/attrs.bzl b/dotnet/private/rules/common/attrs.bzl
+index f498c4e..ce3ba13 100644
+--- a/dotnet/private/rules/common/attrs.bzl
++++ b/dotnet/private/rules/common/attrs.bzl
+@@ -12,6 +12,10 @@ load("//dotnet/private/transitions:default_transition.bzl", "default_transition"
+ 
+ # These are attributes that are common across all the binary/library/test .Net rules
+ COMMON_ATTRS = {
++    "resource_assemblies": attr.label_list(
++        doc = "Satellite assemblies, with the locale as their parent directory.",
++        allow_files = [".dll"],
++    ),
+     "embed_sources": attr.bool(
+         doc = """Whether the compiler embeds its sources in the PDB.""",
+         mandatory = False,
+diff --git a/dotnet/private/rules/common/binary.bzl b/dotnet/private/rules/common/binary.bzl
+index 0a01c40..283b4c5 100644
+--- a/dotnet/private/rules/common/binary.bzl
++++ b/dotnet/private/rules/common/binary.bzl
+@@ -55,7 +55,7 @@ def _collect_native_dlls(assembly_runtime_info, deps):
+ 
+ def _create_launcher(ctx, executable, toolchain):
+     is_windows = ctx.target_platform_has_constraint(ctx.attr._windows_constraint[platform_common.ConstraintValueInfo])
+-    launcher = ctx.actions.declare_file("{}.{}".format(executable.basename, "bat" if is_windows else "sh"), sibling = executable)
++    launcher = ctx.actions.declare_file("{}.{}".format(ctx.label.name, "bat" if is_windows else "sh"))
+ 
+     ctx.actions.expand_template(
+         template = ctx.file._launcher_bat if is_windows else ctx.file._launcher_sh,
+diff --git a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+index 26e6f53..f8c7f40 100644
+--- a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
++++ b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+@@ -158,7 +158,8 @@ def AssemblyAction(
+         analyzer_configs,
+         compiler_options,
+         interceptors_namespaces,
+-        is_windows):
++        is_windows,
++        resource_assemblies = []):
+     """Creates an action that runs the CSharp compiler with the specified inputs.
+ 
+     This macro aims to match the [C# compiler](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/listed-alphabetically), with the inputs mapping to compiler options.
+@@ -502,7 +503,7 @@ def AssemblyAction(
+         name = assembly_name,
+         version = version or DEFAULT_ASSEMBLY_VERSION,
+         libs = [out_dll] if not (is_analyzer or is_language_specific_analyzer) else [],
+-        resource_assemblies = [],
++        resource_assemblies = resource_assemblies,
+         pdbs = [out_pdb] if out_pdb else [],
+         xml_docs = [out_xml] if out_xml else [],
+         data = data,
+@@ -628,6 +629,9 @@ def _compile(
+         args.add(out_pdb, format = "/pdb:%s")
+         outputs = [out_dll, out_ref, out_pdb]
+     else:
++        # Diagnostics run in the implementation pass. Avoid Roslyn's crash when
++        # rerunning diagnostic analyzers in the extra reference-only compile.
++        args.add("/skipanalyzers+")
+         args.add("/refonly")
+         args.add(out_ref, format = "/out:%s")
+         outputs = [out_ref]
+@@ -647,6 +651,11 @@ def _compile(
+     # assembly references
+     # csc resolves a duplicate assembly identity by order, so refs must come
+     # before the framework files.
++    if target_framework.startswith("netstandard"):
++        # NETStandard.Library's canonical facades must replace legacy System.*
++        # package references that would otherwise define the same core types.
++        framework_names = {file.basename.lower(): True for file in framework_files.to_list()}
++        refs = depset([file for file in refs.to_list() if file.basename.lower() not in framework_names])
+     format_ref_arg(args, depset(transitive = [refs, framework_files]))
+ 
+     # A source generator rather than an analyzer, so it runs even when analyzers
+@@ -665,7 +674,7 @@ def _compile(
+         args.add_all(analyzer_configs, format_each = "/analyzerconfig:%s")
+ 
+     # .cs files
+-    args.add_all(srcs)
++    args.add_all(srcs, format_each = "\"%s\"")
+ 
+     # resources
+     add_resource_args(args, resources, label, out_dll.basename if out_dll != None else None, "csharp")
+diff --git a/dotnet/private/rules/csharp/binary.bzl b/dotnet/private/rules/csharp/binary.bzl
+index 1e007ea..fae0aee 100644
+--- a/dotnet/private/rules/csharp/binary.bzl
++++ b/dotnet/private/rules/csharp/binary.bzl
+@@ -39,6 +39,7 @@ def _compile_action(ctx, tfm, toolchain):
+         keyfile = ctx.file.keyfile,
+         langversion = ctx.attr.langversion if ctx.attr.langversion != "" else default_csharp_lang_version(tfm, toolchain.dotnetinfo.csharp_default_version),
+         resources = ctx.files.resources,
++        resource_assemblies = ctx.files.resource_assemblies,
+         srcs = ctx.files.srcs,
+         data = ctx.files.data,
+         appsetting_files = ctx.files.appsetting_files,
+diff --git a/dotnet/private/rules/csharp/library.bzl b/dotnet/private/rules/csharp/library.bzl
+index 5fdf025..77437bd 100644
+--- a/dotnet/private/rules/csharp/library.bzl
++++ b/dotnet/private/rules/csharp/library.bzl
+@@ -34,6 +34,7 @@ def _compile_action(ctx, tfm, toolchain):
+         keyfile = ctx.file.keyfile,
+         langversion = ctx.attr.langversion if ctx.attr.langversion != "" else default_csharp_lang_version(tfm, toolchain.dotnetinfo.csharp_default_version),
+         resources = ctx.files.resources,
++        resource_assemblies = ctx.files.resource_assemblies,
+         srcs = ctx.files.srcs,
+         data = ctx.files.data,
+         appsetting_files = [],
+diff --git a/dotnet/private/rules/csharp/test.bzl b/dotnet/private/rules/csharp/test.bzl
+index 8a57024..eff6619 100644
+--- a/dotnet/private/rules/csharp/test.bzl
++++ b/dotnet/private/rules/csharp/test.bzl
+@@ -37,6 +37,7 @@ def _compile_action(ctx, tfm, toolchain):
+         keyfile = ctx.file.keyfile,
+         langversion = ctx.attr.langversion if ctx.attr.langversion != "" else default_csharp_lang_version(tfm, toolchain.dotnetinfo.csharp_default_version),
+         resources = ctx.files.resources,
++        resource_assemblies = ctx.files.resource_assemblies,
+         srcs = ctx.files.srcs,
+         data = ctx.files.data,
+         appsetting_files = ctx.files.appsetting_files,
+diff --git a/dotnet/private/rules/nuget_pack/nuget_pack.bzl b/dotnet/private/rules/nuget_pack/nuget_pack.bzl
+index 8e012ea..93aeccd 100644
+--- a/dotnet/private/rules/nuget_pack/nuget_pack.bzl
++++ b/dotnet/private/rules/nuget_pack/nuget_pack.bzl
+@@ -570,7 +570,6 @@ travel with it, so only the packages listed in `deps` are declared.
+             analyzer that needs an assembly out of a NuGet package ships it this way,
+             under `analyzers/dotnet/cs/`.""",
+             allow_files = True,
+-            cfg = default_transition,
+         ),
+         "content_files": attr.label_keyed_string_dict(
+             doc = """Files a consuming project gets, keyed by target and valued by their
+@@ -578,7 +577,6 @@ travel with it, so only the packages listed in `deps` are declared.
+             `any/any/settings.json`. The path may end in `/` like in `files`. The
+             `content_files_*` attributes say what a consumer does with them.""",
+             allow_files = True,
+-            cfg = default_transition,
+         ),
+         "content_files_build_action": attr.string(
+             doc = "The build action a consuming project gives the content files.",

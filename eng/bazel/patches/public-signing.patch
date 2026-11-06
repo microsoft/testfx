@@ -1,0 +1,26 @@
+diff --git a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+index 00be67b23aca306a6a5fca51f5d629a1fbfba141..dca1d50e55a305fc70fbac186734909d68b79b8f 100644
+--- a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
++++ b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+@@ -495,7 +495,7 @@ def AssemblyAction(
+         analyzers_csharp = ([out_dll] + analyzer_dlls) if is_language_specific_analyzer else [],
+         analyzers_fsharp = [],
+         analyzers_vb = [],
+-        internals_visible_to = internals_visible_to or [],
++        internals_visible_to = [friend.split(",")[0].strip() for friend in internals_visible_to],
+         compile_data = compile_data,
+         exports = exports_files,
+         transitive_refs = prefs if not (is_analyzer or is_language_specific_analyzer) else depset(),
+diff --git a/tools/runfiles/BUILD.bazel b/tools/runfiles/BUILD.bazel
+index 2eabfd02fda785fe90b471e246ec577a27413a91..0227b9196739750caf131ff246a44a930363ee33 100644
+--- a/tools/runfiles/BUILD.bazel
++++ b/tools/runfiles/BUILD.bazel
+@@ -3,6 +3,8 @@ load(
+     "csharp_library",
+ )
+ 
++exports_files(["Runfiles.cs"])
++
+ csharp_library(
+     name = "runfiles",
+     srcs = ["Runfiles.cs"],

@@ -1,0 +1,19 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "sources",
+    srcs = glob(
+        ["**/*.cs"],
+        exclude = [
+            "bin/**",
+            "obj/**",
+        ],
+    ) + ["//eng/bazel:GlobalUsings.cs"],
+)
+
+exports_files(["TestingPlatformExplorer.testingplatformconfig.json"])
+
+filegroup(
+    name = "framework_sources",
+    srcs = glob(["TestingFramework/*.cs"]) + ["UnitTests.cs"],
+)

@@ -88,6 +88,10 @@ ehthumbs.db
 /.dotnet/
 /TestAssets/
 
+# Bazel output symlinks/junctions and local overrides
+/bazel-*/
+/.bazelrc.local
+
 # Lean build artifacts
 .lake/
 

@@ -1,0 +1,11 @@
+{
+  "microsoft.codeanalysis.analyzer.testing/1.1.3-beta1.26255.1": "sha512-m73wX0jh+DcegJi6ZnOaipsOPfStG+awLWGUZ/6f3Tju7w0ucl6o5BkFYxzjf98mAPh1/6gYdBnXUqCQ2H4rjQ==",
+  "microsoft.codeanalysis.codefix.testing/1.1.3-beta1.26255.1": "sha512-ZqZj4NKb24MAUBNwiZB+NfCqjfnysnNmrqS3QPGC20NzGD9nb+3tXxHYVEh9TxzUDlsin0+uKP5cbTKfppo9ow==",
+  "microsoft.codeanalysis.coderefactoring.testing/1.1.3-beta1.26255.1": "sha512-fJIT6SSvKGU1ECakq2oZor8Yo6B3O0S8feSBFdWnL2dp9EErwAcpxHmlxHkh4vkT1Mq38uBYpoiZ46GHoJin4Q==",
+  "microsoft.codeanalysis.csharp.analyzer.testing/1.1.3-beta1.26255.1": "sha512-bvK19LZ4vnml2i60dHZo/AzS7ga8NqDbValVfLr301FJBC9AIrV3Ns+udYCpjcSmsgZAQYHooZGEi8PuMsZ06g==",
+  "microsoft.codeanalysis.csharp.codefix.testing/1.1.3-beta1.26255.1": "sha512-77KgmGFTV762oms3rRruJfSpaHGpm/pAQort5SP9o9rkEepnesh9ByOtkGg0OtSnXqHmWaFv3cvmniJu0Ud8+w==",
+  "microsoft.codeanalysis.csharp.coderefactoring.testing/1.1.3-beta1.26255.1": "sha512-yyvFmNamRl36xLCLibsio/MMguaseL7dqK9Y6Bb/8Kntx4odFCCH7zkzdQHCX9wkLAze3EzO4g3sTQ5LiX16aw==",
+  "microsoft.codeanalysis.visualbasic.analyzer.testing/1.1.3-beta1.26255.1": "sha512-4xqHHBRNaLuWk2QW5+d4+Yj+lwaUQL9p7PSsx5iNr1VouYPfa0SafYCtRMxNput0kKpxTsOvIoM3Fj1dU/U24g==",
+  "microsoft.codeanalysis.visualbasic.codefix.testing/1.1.3-beta1.26255.1": "sha512-Pe84iZObeQ8Ljq8ekzVaGCVtzggyn7IZJOZrj2AbJ8K/pJQZ+O3h/BH8T+N3CCG3h5ysbQ6dm3TYCRdXnIfpzA==",
+  "microsoft.codeanalysis.visualbasic.coderefactoring.testing/1.1.3-beta1.26255.1": "sha512-FDxrR67nkmvpC3rfeUzy6wnNEIaY/QD/DwZ+sArEYyzyEvowrFHLrADwjqW8EhChLJrBJbN7UrsyJnwN1/r3vQ=="
+}

@@ -1,0 +1,290 @@
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary")
+load("//eng/bazel:analyzer-packages.bzl", "analyzer_packages")
+load("//eng/bazel:analyzer-tests.bzl", "analyzer_unit_tests")
+load("//eng/bazel:analyzers.bzl", "analyzer_libraries")
+load("//eng/bazel:compatibility-tests.bzl", "compatibility_reference_tests")
+load("//eng/bazel:compatibility.bzl", "compatibility_libraries")
+load("//eng/bazel:defs.bzl", "testfx_binary", "testfx_matrix", "testfx_test")
+load("//eng/bazel:extension-tests.bzl", "extension_unit_tests")
+load("//eng/bazel:extensions.bzl", "extension_libraries")
+load("//eng/bazel:extra-tests.bzl", "extra_unit_tests")
+load("//eng/bazel:mstest-packages.bzl", "native_mstest_packages")
+load("//eng/bazel:mstest.bzl", "mstest_libraries")
+load("//eng/bazel:packages.bzl", "native_packages")
+load("//eng/bazel:platform.bzl", "platform_libraries")
+load("//eng/bazel:reference-alias-tests.bzl", "reference_alias_tests")
+load("//eng/bazel:sdk-packages.bzl", "sdk_packages")
+load("//eng/bazel:server-client.bzl", "server_client_library")
+load("//eng/bazel:samples.bzl", "portable_samples")
+load("//eng/bazel:tests.bzl", "unit_tests")
+load("//eng/bazel:windows.bzl", "windows_libraries")
+load("//eng/bazel/windows:asset_selection_tests.bzl", "windows_asset_selection_tests")
+load("//eng/bazel/windows:targeting_tests.bzl", "windows_targeting_test")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["LICENSE"])
+
+platform_libraries()
+
+mstest_libraries()
+
+extension_libraries()
+
+analyzer_libraries()
+
+analyzer_packages()
+
+server_client_library()
+
+compatibility_libraries()
+
+compatibility_reference_tests()
+
+unit_tests()
+
+extra_unit_tests()
+
+extension_unit_tests()
+
+analyzer_unit_tests()
+
+native_packages()
+
+portable_samples()
+
+reference_alias_tests()
+
+native_mstest_packages()
+
+sdk_packages()
+
+windows_libraries()
+
+windows_asset_selection_tests()
+
+windows_targeting_test(
+    name = "windows_targeting_test",
+    size = "small",
+)
+
+filegroup(
+    name = "managed",
+    srcs = [
+        ":adapter",
+        ":ai",
+        ":analyzers",
+        ":assert_generator",
+        ":azdo_report",
+        ":azure_foundry",
+        ":codefixes",
+        ":configuration",
+        ":crashdump",
+        ":ctrf",
+        ":framework",
+        ":framework_extensions",
+        ":github_report",
+        ":globalconfigs_generator",
+        ":hangdump",
+        ":hosting",
+        ":hotreload",
+        ":html",
+        ":junit",
+        ":logging",
+        ":msbuild_extension",
+        ":mstest_generator",
+        ":mstest_hosting",
+        ":opentelemetry",
+        ":packaged_app",
+        ":platform",
+        ":platform_msbuild",
+        ":platform_services",
+        ":retry",
+        ":server_client",
+        ":telemetry",
+        ":trx",
+        ":trx_abstractions",
+        ":video",
+        ":vstest_bridge",
+    ],
+)
+
+testfx_matrix(
+    name = "managed_all",
+    target = ":managed",
+)
+
+# Short executable labels avoid Windows' doubled runfiles batch-file paths.
+# The other explorer cases intentionally demonstrate failures and skips.
+csharp_binary(
+    name = "explorer_released",
+    srcs = ["//samples/public/TestingPlatformExamples/TestingPlatformExplorer:sources"],
+    out = "TestingPlatformExplorer",
+    appsetting_files = ["//samples/public/TestingPlatformExamples/TestingPlatformExplorer:TestingPlatformExplorer.testingplatformconfig.json"],
+    generate_documentation_file = False,
+    langversion = "preview",
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    deps = [
+        "@paket.main//microsoft.testing.extensions.trxreport",
+        "@paket.main//microsoft.testing.extensions.trxreport.abstractions",
+        "@paket.main//microsoft.testing.platform",
+    ],
+)
+
+csharp_binary(
+    name = "explorer",
+    srcs = ["//samples/public/TestingPlatformExamples/TestingPlatformExplorer:sources"],
+    out = "TestingPlatformExplorer",
+    appsetting_files = ["//samples/public/TestingPlatformExamples/TestingPlatformExplorer:TestingPlatformExplorer.testingplatformconfig.json"],
+    generate_documentation_file = False,
+    langversion = "preview",
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    deps = [
+        ":platform",
+        ":trx",
+        ":trx_abstractions",
+    ],
+)
+
+testfx_test(
+    name = "explorer_test",
+    size = "small",
+    args = [
+        "--filter-uid",
+        "TestingPlatformExplorer.UnitTests.SomeTests.TestMethod1",
+    ],
+    binary = ":explorer",
+)
+
+testfx_test(
+    name = "explorer_released_test",
+    size = "small",
+    args = [
+        "--filter-uid",
+        "TestingPlatformExplorer.UnitTests.SomeTests.TestMethod1",
+    ],
+    binary = ":explorer_released",
+)
+
+testfx_binary(
+    name = "simple1",
+    defines = ["TESTFX_REPORTS"],
+    generate_documentation_file = False,
+    linked_srcs = ["//eng/bazel:TestMain.cs"],
+    polyfills = False,
+    project = "samples/public/mstest-runner/Simple1",
+    deps = [
+        ":adapter",
+        ":ctrf",
+        ":framework",
+        ":framework_extensions",
+        ":html",
+        ":junit",
+        ":trx",
+    ],
+)
+
+testfx_test(
+    name = "simple1_test",
+    size = "small",
+    args = [
+        "--minimum-expected-tests",
+        "1",
+    ],
+    binary = ":simple1",
+)
+
+testfx_binary(
+    name = "framework_tests_app",
+    assembly_name = "Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests",
+    defines = ["TESTFX_INTERNAL_TESTS"],
+    exclude = ["test/UnitTests/TestFramework.UnitTests/Program.cs"],
+    generate_documentation_file = False,
+    linked_srcs = [
+        "//eng/bazel:TestMain.cs",
+        "test/Utilities/DiagnosticAssertionObserver.cs",
+    ],
+    project = "test/UnitTests/TestFramework.UnitTests",
+    deps = [
+        ":assert_generator",
+        ":framework",
+        ":framework_extensions",
+        ":internal_test_framework",
+        ":trx",
+        "@paket.source//awesomeassertions",
+        "@paket.source//moq",
+        "@paket.generator//microsoft.codeanalysis.csharp",
+    ],
+)
+
+testfx_test(
+    name = "framework_tests",
+    size = "medium",
+    args = [
+        "--minimum-expected-tests",
+        "1",
+    ],
+    binary = ":framework_tests_app",
+)
+
+testfx_test(
+    name = "explorer_failure_probe",
+    size = "small",
+    args = [
+        "--filter-uid",
+        "TestingPlatformExplorer.UnitTests.SomeTests.TestMethod2",
+    ],
+    binary = ":explorer",
+    tags = ["manual"],
+)
+
+_PORTABLE_BASELINE_TESTS = [
+    ":adapter_tests",
+    ":build_tools_tests",
+    ":explorer_released_test",
+    ":explorer_test",
+    ":framework_tests",
+    ":simple1_test",
+]
+
+_PORTABLE_CONTRACT_TESTS = [
+    ":protocol_contract_tests",
+    ":source_generation_tests",
+    ":vstest_bridge_tests",
+]
+
+test_suite(
+    name = "baseline_tests",
+    tests = _PORTABLE_BASELINE_TESTS + [":platform_services_tests"],
+)
+
+test_suite(
+    name = "portable_tests",
+    tests = [":baseline_tests"] + _PORTABLE_CONTRACT_TESTS,
+)
+
+test_suite(
+    name = "portable_non_windows_tests",
+    tests = _PORTABLE_BASELINE_TESTS + _PORTABLE_CONTRACT_TESTS,
+)
+
+test_suite(
+    name = "all_unit_tests",
+    tests = [
+        ":adapter_tests",
+        ":analyzer_tests",
+        ":extension_tests",
+        ":framework_tests",
+        ":msbuild_tests",
+        ":platform_services_tests",
+        ":platform_tests",
+        ":protocol_contract_tests",
+        ":self_real_tests",
+        ":server_client_tests",
+        ":source_generation_tests",
+        ":terminal_contract_tests",
+        ":vstest_bridge_tests",
+    ],
+)

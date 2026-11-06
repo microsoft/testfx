@@ -1,0 +1,110 @@
+STORAGE: NONE
+STRATEGY: MIN
+RESTRICTION: >= net8.0
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Web.WebView2 (1.0.3179.45)
+    Microsoft.Windows.SDK.BuildTools (10.0.26100.4654)
+    Microsoft.Windows.SDK.BuildTools.MSIX (1.7.20250829.1)
+    Microsoft.WindowsAppSDK (1.8.251003001)
+      Microsoft.WindowsAppSDK.AI (1.8.38)
+      Microsoft.WindowsAppSDK.Base (1.8.250831001)
+      Microsoft.WindowsAppSDK.DWrite (1.8.25090401)
+      Microsoft.WindowsAppSDK.Foundation (1.8.250906002)
+      Microsoft.WindowsAppSDK.InteractiveExperiences (1.8.250906004)
+      Microsoft.WindowsAppSDK.ML (1.8.2095)
+      Microsoft.WindowsAppSDK.Runtime (1.8.251003001)
+      Microsoft.WindowsAppSDK.Widgets (1.8.250904007)
+      Microsoft.WindowsAppSDK.WinUI (1.8.250906003)
+    Microsoft.WindowsAppSDK.AI (1.8.38)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+      Microsoft.WindowsAppSDK.Foundation (>= 1.8.250906002)
+    Microsoft.WindowsAppSDK.Base (1.8.250831001)
+      Microsoft.Windows.SDK.BuildTools (>= 10.0.26100.4654)
+      Microsoft.Windows.SDK.BuildTools.MSIX (>= 1.7.20250829.1)
+    Microsoft.WindowsAppSDK.DWrite (1.8.25090401)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+    Microsoft.WindowsAppSDK.Foundation (1.8.250906002)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+      Microsoft.WindowsAppSDK.InteractiveExperiences (>= 1.8.250906004)
+    Microsoft.WindowsAppSDK.InteractiveExperiences (1.8.250906004)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+    Microsoft.WindowsAppSDK.ML (1.8.2095)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+      Microsoft.WindowsAppSDK.Foundation (>= 1.8.250906002)
+    Microsoft.WindowsAppSDK.Runtime (1.8.251003001)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+    Microsoft.WindowsAppSDK.Widgets (1.8.250904007)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+    Microsoft.WindowsAppSDK.WinUI (1.8.250906003)
+      Microsoft.Web.WebView2 (>= 1.0.3179.45)
+      Microsoft.WindowsAppSDK.Base (>= 1.8.250831001)
+      Microsoft.WindowsAppSDK.Foundation (>= 1.8.250906002)
+      Microsoft.WindowsAppSDK.InteractiveExperiences (>= 1.8.250906004)
+
+GROUP coverage
+STORAGE: NONE
+STRATEGY: MIN
+RESTRICTION: >= net8.0
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Bcl.AsyncInterfaces (10.0.10) - restriction: && (< net10.0) (>= net8.0)
+    Microsoft.DiaSymReader (2.2.10)
+    Microsoft.Extensions.DependencyModel (10.0.10)
+      System.Text.Encodings.Web (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      System.Text.Json (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+    Mono.Cecil (0.11.6)
+    System.Buffers (4.6.1) - restriction: && (< net10.0) (>= net8.0)
+    System.IO.Pipelines (10.0.10) - restriction: && (< net10.0) (>= net8.0)
+    System.Memory (4.6.3) - restriction: && (< net10.0) (>= net8.0)
+    System.Reflection.Metadata (8.0.1) - restriction: && (< net10.0) (>= net8.0)
+    System.Runtime.CompilerServices.Unsafe (6.1.2) - restriction: && (< net10.0) (>= net8.0)
+    System.Text.Encodings.Web (10.0.10) - restriction: && (< net10.0) (>= net8.0)
+    System.Text.Json (10.0.10) - restriction: && (< net10.0) (>= net8.0)
+      System.IO.Pipelines (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      System.Text.Encodings.Web (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+    System.Threading.Tasks.Extensions (4.6.3) - restriction: && (< net10.0) (>= net8.0)
+  remote: https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json
+    Microsoft.Testing.Extensions.CodeCoverage (18.13.0-preview.26527.4)
+      Microsoft.Bcl.AsyncInterfaces (>= 10.0.10) - restriction: && (< net10.0) (>= net8.0)
+      Microsoft.DiaSymReader (>= 2.2.10)
+      Microsoft.Extensions.DependencyModel (>= 10.0.10)
+      Microsoft.Testing.Platform (>= 2.6.0-preview.26526.14)
+      Mono.Cecil (>= 0.11.6)
+      System.Buffers (>= 4.6.1) - restriction: && (< net10.0) (>= net8.0)
+      System.IO.Pipelines (>= 10.0.10) - restriction: && (< net10.0) (>= net8.0)
+      System.Memory (>= 4.6.3) - restriction: && (< net10.0) (>= net8.0)
+      System.Reflection.Metadata (>= 8.0.1) - restriction: && (< net10.0) (>= net8.0)
+      System.Runtime.CompilerServices.Unsafe (>= 6.1.2) - restriction: && (< net10.0) (>= net8.0)
+      System.Text.Encodings.Web (>= 10.0.10) - restriction: && (< net10.0) (>= net8.0)
+      System.Text.Json (>= 10.0.10) - restriction: && (< net10.0) (>= net8.0)
+      System.Threading.Tasks.Extensions (>= 4.6.3) - restriction: && (< net10.0) (>= net8.0)
+    Microsoft.Testing.Platform (2.6.0-preview.26526.14)
+
+GROUP sdk17763
+STORAGE: NONE
+STRATEGY: MIN
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Windows.SDK.NET.Ref (10.0.17763.57)
+
+GROUP sdk18362
+STORAGE: NONE
+STRATEGY: MIN
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Windows.SDK.NET.Ref (10.0.18362.57)
+
+GROUP sdk19041
+STORAGE: NONE
+STRATEGY: MIN
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Windows.SDK.NET.Ref (10.0.19041.57)
+
+GROUP sdk19041net10
+STORAGE: NONE
+STRATEGY: MIN
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Microsoft.Windows.SDK.NET.Ref (10.0.19041.87)

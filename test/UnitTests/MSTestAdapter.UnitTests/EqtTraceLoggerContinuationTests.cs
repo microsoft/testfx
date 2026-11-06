@@ -55,33 +55,40 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         }
 
         string assemblyPath = typeof(EqtTraceLoggerContinuationTests).Assembly.Location;
-        DirectoryInfo? directory = new(Path.GetDirectoryName(assemblyPath)!);
-        string framework = directory.Name;
-        string configuration = directory.Parent!.Name;
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "global.json")))
-        {
-            directory = directory.Parent;
-        }
-
-        directory.Should().NotBeNull("the owned compiled test module must remain under its repository");
-        string root = directory!.FullName;
-        string dotnet = Path.Combine(root, ".dotnet", RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet");
-        File.Exists(dotnet).Should().BeTrue();
         string[] commandLine = Environment.GetCommandLineArgs();
         int resultsIndex = Array.IndexOf(commandLine, "--results-directory");
-        resultsIndex.Should().BeGreaterThanOrEqualTo(0);
-        string childResults = Path.Combine(commandLine[resultsIndex + 1], "eqt-child-" + Guid.NewGuid().ToString("N"));
+        string? resultsDirectory = resultsIndex >= 0
+            ? commandLine[resultsIndex + 1]
+            : Environment.GetEnvironmentVariable("TEST_UNDECLARED_OUTPUTS_DIR");
+        resultsDirectory.Should().NotBeNullOrEmpty("the test host must supply an isolated result directory");
+        string childResults = Path.GetFullPath(Path.Combine(resultsDirectory!, "eqt-child-" + Guid.NewGuid().ToString("N")));
         Directory.Exists(childResults).Should().BeFalse("each child invocation owns an isolated result directory");
         Directory.CreateDirectory(childResults);
-        string project = Path.Combine(root, "test", "UnitTests", "MSTestAdapter.UnitTests", "MSTestAdapter.UnitTests.csproj");
-        var startInfo = new ProcessStartInfo(dotnet)
+#if NETCOREAPP
+        string host = Environment.ProcessPath!;
+#else
+        string host = assemblyPath;
+#endif
+        var startInfo = new ProcessStartInfo(host)
         {
-            WorkingDirectory = root,
+            WorkingDirectory = AppContext.BaseDirectory,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            Arguments = $"test --project \"{project}\" --framework \"{framework}\" --configuration \"{configuration}\" --no-build --no-restore -p:BuildProjectReferences=false -p:UsingDotNetTest=true \"-p:ArtifactsTestResultsDir={childResults}\" --no-progress --no-ansi --treenode-filter \"/*/*/EqtTraceLoggerContinuationTests/*\"",
         };
+#if NETCOREAPP
+        if (Path.GetFileNameWithoutExtension(host).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo.ArgumentList.Add(assemblyPath);
+        }
+
+        foreach (string argument in new[] { "--results-directory", childResults, "--report-trx", "--report-trx-filename", "child.trx", "--treenode-filter", "/*/*/EqtTraceLoggerContinuationTests/*" })
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+#else
+        startInfo.Arguments = $"--results-directory \"{childResults}\" --report-trx --report-trx-filename child.trx --treenode-filter \"/*/*/EqtTraceLoggerContinuationTests/*\"";
+#endif
         startInfo.EnvironmentVariables[ChildDirectoryVariable] = childResults;
         // The nested SDK invocation must not join its parent's affected-test collection session.
         startInfo.EnvironmentVariables.Remove("DOTNET_CLI_ENABLE_AFFECTED_TESTS");
@@ -95,7 +102,12 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         await Task.Run(child.WaitForExit);
         string output = await standardOutput;
         string error = await standardError;
-        File.WriteAllText(Path.Combine(childResults, "child-command.txt"), dotnet + " " + startInfo.Arguments);
+#if NETCOREAPP
+        string arguments = string.Join(" ", startInfo.ArgumentList.Select(argument => $"\"{argument}\""));
+#else
+        string arguments = startInfo.Arguments;
+#endif
+        File.WriteAllText(Path.Combine(childResults, "child-command.txt"), host + " " + arguments);
         File.WriteAllText(Path.Combine(childResults, "child-console.txt"), output + Environment.NewLine + error);
         child.ExitCode.Should().Be(0, "the isolated owned test host must pass, output: {0}", output + error);
 
