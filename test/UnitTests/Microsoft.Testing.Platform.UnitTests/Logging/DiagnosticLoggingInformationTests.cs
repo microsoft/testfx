@@ -202,7 +202,7 @@ public sealed class DiagnosticLoggingInformationTests
 
         var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var logStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var synchronousWaitAttempted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         Mock<IFileSystem> fileSystem = CreateFileSystemMock();
 
@@ -235,15 +235,18 @@ public sealed class DiagnosticLoggingInformationTests
         {
             await disposeStarted.Task.WaitAsync(CompletionLimit, TestContext.CancellationToken);
 
-            // Observe the logging call itself, not the runtime's diagnostic ThreadState.
             logTask = useAsync
-                ? logger.LogAsync(LogLevel.Debug, Message, null, FormatAndSignalLoggingStarted)
+                ? logger.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter)
                 : Task.Factory.StartNew(
-                    () => logger.Log(LogLevel.Debug, Message, null, FormatAndSignalLoggingStarted),
+                    LogSynchronouslyAfterWaitProbe,
                     CancellationToken.None,
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default);
-            await logStarted.Task.WaitAsync(CompletionLimit, TestContext.CancellationToken);
+            if (!useAsync)
+            {
+                Task first = await Task.WhenAny(synchronousWaitAttempted.Task, logTask).WaitAsync(CompletionLimit, TestContext.CancellationToken);
+                Assert.AreSame(synchronousWaitAttempted.Task, first, "Synchronous logging did not attempt the held relocation gate.");
+            }
 
             Assert.IsFalse(logTask.IsCompleted, "Logging completed before relocation installed the replacement logger.");
         }
@@ -256,11 +259,38 @@ public sealed class DiagnosticLoggingInformationTests
         Assert.IsNotNull(replacementStream);
         Assert.Contains(Message, Encoding.UTF8.GetString(replacementStream.ToArray()));
 
-        string FormatAndSignalLoggingStarted(string state, Exception? exception)
+#pragma warning disable CA1416 // Thread interruption is unavailable on browser, but this test runs on desktop test hosts.
+        void LogSynchronouslyAfterWaitProbe()
         {
-            logStarted.TrySetResult(true);
+            Assert.IsFalse(Thread.CurrentThread.IsThreadPoolThread, "The wait probe must not interrupt a thread-pool worker.");
+            try
+            {
+                Assert.ThrowsExactly<ThreadInterruptedException>(
+                    () => logger.Log(LogLevel.Debug, Message, null, InterruptOnNextWait));
+            }
+            finally
+            {
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Clear this probe's pending interrupt if logging failed before it could block.
+                }
+            }
+
+            synchronousWaitAttempted.TrySetResult(true);
+            logger.LogDebug(Message);
+        }
+
+        static string InterruptOnNextWait(string state, Exception? exception)
+        {
+            // Returning from this formatter enters the relocation wait; only blocking consumes the interrupt.
+            Thread.CurrentThread.Interrupt();
             return state;
         }
+#pragma warning restore CA1416
 
         async Task BlockFirstStreamDisposalAsync()
         {
