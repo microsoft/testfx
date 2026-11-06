@@ -186,8 +186,11 @@ public sealed class ExpectedDurationTests : AcceptanceTestBase<ExpectedDurationT
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var document = XDocument.Load(path);
         XElement[] rootResults = [.. document.Root!.Element(ns + "Results")!.Elements(ns + "UnitTestResult")];
-        XElement[] results = [.. document.Descendants(ns + "UnitTestResult")
-            .Where(result => !result.Descendants(ns + "UnitTestResult").Any())];
+        XElement[] results =
+        [
+            .. document.Descendants(ns + "UnitTestResult")
+                .Where(result => !result.Descendants(ns + "UnitTestResult").Any()),
+        ];
         var definitions = document.Descendants(ns + "UnitTest").ToDictionary(test => test.Attribute("id")!.Value);
 
         Assert.AreSequenceEqual(
