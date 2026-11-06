@@ -112,15 +112,17 @@ public sealed class AzureDevOpsSummaryAcceptanceTests
             $"""
             ## ❌ AzureDevOpsSummaryBehavior (net10.0)
 
-            **4 tests** · ✅ **1 passed** · ❌ **1 failed** · ⏭ **2 skipped** · ⏱ Test time: **17.50s** · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
+            **6 tests** · ✅ **1 passed** · ❌ **1 failed** · ⏭ **4 skipped** · ⏱ Test time: **17.50s** · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
 
             > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
 
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 2 | Known issue https://example.test/issues/42 | {operatingSystem} | AzureDevOpsSummaryBehavior (net10.0, {architecture}) |
+            **Test module:** AzureDevOpsSummaryBehavior (net10.0, {architecture}) · **Platform:** {operatingSystem}
+
+            - **2 skipped** — Known issue https://example.test/issues/42
+            - **1 skipped** — Awaiting &lt;package&gt; &amp; &quot;native&quot; support \| see https://example.test/issues/314
+            - **1 skipped** — Packaged Windows apps are a Windows-only scenario; the launcher is intentionally disabled on other platforms so that unsupported activation is not attempted.
 
             ### Top failing classes
 
@@ -202,6 +204,12 @@ public sealed class AzureDevOpsSummaryAcceptanceTests
                         new SkippedTestNodeStateProperty(" Known issue\nhttps://example.test/issues/42 "), TimeSpan.Zero);
                     await PublishAsync(context, "PrivateSkippedName2",
                         new SkippedTestNodeStateProperty("Known issue https://example.test/issues/42"), TimeSpan.Zero);
+                    await PublishAsync(context, "PrivateSkippedName3",
+                        new SkippedTestNodeStateProperty("Awaiting <package> & \"native\" support | see https://example.test/issues/314"),
+                        TimeSpan.Zero);
+                    await PublishAsync(context, "PrivateSkippedName4",
+                        new SkippedTestNodeStateProperty("Packaged Windows apps are a Windows-only scenario; the launcher is intentionally disabled on other platforms so that unsupported activation is not attempted."),
+                        TimeSpan.Zero);
                     context.Complete();
                 }
 
