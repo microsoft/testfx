@@ -164,6 +164,8 @@ public sealed class HangDumpActivityIndicatorMutationTests
         sessionContext.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
 
         await indicator.OnTestSessionFinishingAsync(sessionContext.Object);
+
+        Assert.IsNull(GetPrivateField<Task?>(indicator, "_activitySignalTask"));
     }
 
 #if NETCOREAPP
