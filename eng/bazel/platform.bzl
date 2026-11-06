@@ -132,6 +132,7 @@ def platform_libraries():
             _SHARED + "/ReportFileNameValidator.cs",
             _SHARED + "/MergeOutputFileHelper.cs",
             _SHARED + "/ArtifactPostProcessingHelper.cs",
+            _SHARED + "/RetryArtifactManifest.cs",
             _SHARED + "/ReportFileWriterHelper.cs",
             _SHARED + "/TargetFrameworkMonikerHelper.cs",
             _SHARED + "/NamedPipeServerFactory.cs",
