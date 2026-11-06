@@ -1,8 +1,9 @@
 # Test partitioning: research and decisions
 
-Status: design proposal, revision D2, 2026-11-06. Two cross-model review rounds
-have changed and tightened the design; final confirmation is pending. No
-product implementation, shipping compatibility, or speedup is claimed.
+Status: converged design, revision D2, 2026-11-06. Claude Opus 5.5 and Gemini
+4 Argon accepted the plan after three review rounds, including adversarial
+counterexamples. No product implementation, shipping compatibility, or speedup
+is claimed; the release gates below remain mandatory.
 
 ## Problem and contract
 
@@ -307,7 +308,7 @@ the deployment filename; paths, row/display labels, and randomized
 `GetHashCode` never participate.
 
 ```text
-partition(component, n) = 1 + UInt64BE(SHA256(encodedFields)[0..8]) mod n
+partition(component, n) = 1 + (UInt64BE(SHA256(encodedFields)[0..8]) mod n)
 ```
 
 Examples from the design experiment (the domain field is implicit here):
@@ -782,8 +783,60 @@ unproven native-SDK empty claim; Gemini conditionally accepted pending D2.
 | A passing Retry subset can replace partial initial coverage. | Mandatory negotiated control receipt verification, immutable Initial coverage and restricted RetrySubset updates; no warning-only report reducer. |
 | Inherited ignore policy can conceal a worker failure. | Strip every child option source and the verified `TESTINGPLATFORM_EXITCODE_IGNORE`; validate provider-finalized environment and preserve raw verdict. |
 
-D2 is submitted for a final targeted confirmation of these contracts. No
-implementation validation or claimed performance result is added by agreement.
+### Round 3: D2 accepted by both reviewers
+
+Both reviewers read the complete technical snapshot at commit
+`5a0dd5c32c6c48976611e519ae59c9ddf69ded18`, Git blob
+`89af230b73c5cd55c92d76815ea23d31b9fd2dd8`, raw Git-blob SHA-256
+`46e0d993a6f9a8e907f1575816dfef1a1c72ce7e63d54e5b5d83696a22146dba`.
+Git-blob identity, rather than checkout line endings, binds this final review.
+
+| Reviewer / perspective | Final verdict | Remaining work |
+| --- | --- | --- |
+| Claude Opus 5.5 (`claude-opus-5.5`), independent architecture challenger | **ACCEPT**, no remaining design blockers. Retracted its post-filter placement recommendation after the counterexample. | Implementation/release gates and nonblocking clarity notes. |
+| Gemini 4 Argon (`gemini-4-argon`), independent adversarial reviewer | **ACCEPT**; all six round-2 blockers closed after new failure probes. | Implementation/release gates; preserve dependency-filter diagnostics and per-module empty rendering. |
+| GPT-6.1 Sol (`gpt-6.1-sol`), coordinator | Adopt native selection, reject speculative generic replay, and retain the documented safety limits and negotiated SDK dependency. | No claim that review agreement proves the unimplemented feature works. |
+
+Convergence required architecture changes, not majority voting. The SDK
+whole-command zero-test issue, retry-narrowing placement shift, and count-only
+coverage hole each changed the plan. No model executed product builds/tests.
+An independent Node.js BigInt implementation also reproduced the PowerShell
+experiment's five hash vectors and all 10,000 synthetic assignments; that is
+algorithm-only evidence, not MTP/MSTest validation.
+
+This final status/review record and the following nonblocking clarifications
+were appended after approval; the reviewed technical snapshot is identified
+above. No product code or GitHub publication is part of this design change.
+
+### Final implementation clarifications
+
+- Probe the loaded MTP's internal partition-context/token-consumer capability
+  through an existing compatible metadata/service surface before activating
+  partitioning. An absent consumer must produce an upgrade error naming the
+  minimum compatible MTP, not a missing-method/type-load surprise or silent
+  fallback. NuGet minimums alone do not prove the actual loaded assembly.
+- A discovery implementation without the complete-topology seam rejects the
+  option before invoking discovery-time data factories, fixtures, or tests.
+  Arbitrary code in the application's own entry point remains outside that
+  framework pre-execution guarantee.
+- `--help`/`--info` are informational and exempt from execution negotiation.
+  `--list-tests --partition i/n` remains discovery-context selection, not a
+  Run receipt or intentional-empty execution. Under native SDK execution it
+  requires acknowledged partition support, but uses the existing discovery
+  zero-test policy: a zero-listed bucket may return `8`. Never emit a sealed
+  Run-completion summary for listing or use it as CI execution evidence.
+- Reject all partitioned **runs** on an unaware SDK, including nonempty ones:
+  bucket-dependent compatibility would change with `n`, filters and modules.
+  Direct executable execution is the supported path until the SDK contract
+  ships; do not recommend ignoring `8` as a compatibility workaround.
+- Preserve the executor's distinction between host-filter exclusion and
+  nonexistent prerequisites. Partition exclusion is placement, not an extra
+  user filter; pre-partition declaration validation must not manufacture new
+  warnings. No particular unverified helper signature is prescribed.
+- In a mixed invocation with a populated module and an intentional-empty
+  module, render the latter's deliberate selection at module level while the
+  overall verdict uses the invocation's real nonzero result count. Do not
+  require the whole invocation to be empty before explaining an empty module.
 
 ## Implementation gates
 
