@@ -3944,3 +3944,93 @@ output/cache roots, snapshot archive, comparison checkout and bulk generated
 consumer/runtime trees were removed. Runtime TRXs were copied out before
 cleanup; the small result, command, package, profile and provenance artifacts
 remain available in session storage.
+
+### Review follow-up: bounded snapshots and validator-trigger coverage
+
+Review of `6009d9c8a955d168f4e04b46d2718c9e122dd7ad` identified an unbounded
+accumulation path: every main snapshot inherits obsolete content-addressed
+files from prior revisions. The recorded 1.4 GB uncompressed / 1.16 GB archive
+measurement is for both stores combined, not for each store.
+
+The bounded correction will trim oldest files by modification time only in the two
+dedicated stores, after the owning server has stopped and before main saves.
+Keep download payloads at most 1,536 MiB and action payloads at most 512 MiB:
+at most 2 GiB uncompressed per platform for each new snapshot pair. These
+ceilings accommodate the measured initial workload while preventing monotonic
+growth across revisions. Missing entries remain ordinary Bazel cache misses,
+not reasons to skip builds or tests. Archive metadata/compression overhead and
+multiple immutable snapshot generations still consume GitHub quota; this is
+not repository-wide quota isolation or a new cache-retention service.
+
+The pinned Bazel 9.1.1 collector uses per-file modification times for LRU and
+can evict AC/CAS files independently, breaking equal-time ties by path.
+Its `--experimental_disk_cache_gc_*` options run only as idle tasks, with a
+five-minute default delay. Relying on that background task immediately before
+our explicit shutdown does not establish a deterministic pre-save bound.
+Use the same file-eviction principle in the existing workflow lifecycle,
+without introducing a service, new permissions or waiting for idle work.
+
+The exact workflow path expressions were executed in a network-disabled
+Ubuntu PowerShell 7.4.6 container. `Join-Path` normalized the backslashes to
+`/tmp/checkout with spaces!/artifacts/bazel-cache` and the corresponding profile
+directory before any launcher rewrite; native directory checks passed. The
+separator finding is therefore inapplicable, and no path rewrite is needed.
+The earlier named Linux check was an ad-hoc session fixture, not a checked-in
+repository test.
+
+A separate concrete guard gap exists: `check-action-pins.yml` already covers
+`bazel.yml` through `.github/workflows/**`, but does not trigger on the validator
+read by the new forced-execution contract. Add that exact input to both path
+filters and test the complete inspected-input mapping.
+
+Planned proof is bounded to these corrections: filesystem fixtures for no-op,
+LRU and oversized-entry eviction; a retained-test counterfactual for missing
+eviction/trigger behavior; and a real pinned-Bazel partial-cache rebuild.
+Do not change original test bodies, suppress cleanup errors, alter test-result
+caching, or claim hosted authorization/transfer evidence from these local runs.
+
+The correction was executed on the parent revision above plus these local
+source bindings:
+
+| File | SHA-256 |
+| --- | --- |
+| `.github/workflows/bazel.yml` | `6064087E765B54CBA725662F81651A39A670C9625FFEB48A44D7B9000AD8D5F5` |
+| `.github/workflows/check-action-pins.yml` | `D0DF9CF81ACFD5677169671A25EB8A5261BD495F11DD65D9A42C24B2FE0835F3` |
+| `.github/scripts/test_bazel_cache.py` | `28D3AF7E4A55ABD742FC9B414D122B13F1D6FD847C8B26F600E0BF950DD1DAA7` |
+
+`python .github\scripts\test_bazel_cache.py` exited 0 with all 13 methods passing.
+`SnapshotPruningTests.test_snapshot_limit_keeps_newest_files_and_bounds_payload`
+covers an already-fitting store, older-object eviction, equal-time AC-before-CAS
+ordering, an oversized single entry and an empty store. Missing stores, invalid
+budgets and linked roots/entries fail explicitly without touching link targets.
+The workflow contracts assert the fixed budgets and stop/prune/save ordering.
+`test_guard_runs_when_each_inspected_input_changes` covers both event filters
+and every source read by the cache suite.
+
+With the same 13-method suite retained in isolated copies, deleting only the
+eviction call produced the three intended `lru`, `tie` and `oversized`
+assertion failures (exit 1). Restoring it returned 13 passes, exit 0.
+Separately, removing only the two validator path-filter entries produced the
+two intended push/PR subcase failures; restoring them returned 13 passes.
+These are executed targeted counterfactuals, not compilation/setup failures.
+
+The real pinned-Bazel check used two independently asserted output payloads
+in a task-owned minimal native-action workspace, not a mock cache. After the
+first build and server shutdown, the production limiter reduced 25,925 bytes
+to the configured 9,541-byte fixture budget by removing exactly one old
+16,384-byte CAS blob. A second build in a new output root exited 0 with
+**one disk-cache hit and one local rebuild**; both final payload hashes matched
+the independent expected bytes. The local harness command was
+`& (Join-Path $e 'cache-probe.ps1')`, with `$e` the retained
+`bazel-review-d9e8c1dc` evidence directory and `BAZEL_PRUNE_SCRIPT` bound to the
+actual workflow step. Its first `cmd.exe` copy fixture failed before cache
+population; the successful direct PowerShell output actions replaced that
+fixture. That setup failure is not counted as behavioral red evidence.
+
+The action-pin audit and whitespace checks passed. No product source, public
+API, original test scheduling or forced-execution option changed, so the
+previous complete native/package runs remain historical evidence for their
+recorded source, not a new full-product rerun of this lifecycle correction.
+Hosted cache authorization, transfer costs and main-seed behavior still require
+CI. Local logs, BEP, policy/source hashes and counterfactual records are retained
+under the session's `bazel-review-d9e8c1dc` evidence.

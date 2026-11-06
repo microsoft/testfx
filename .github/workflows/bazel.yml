@@ -96,6 +96,35 @@ jobs:
         if: always()
         shell: pwsh
         run: .\eng\bazel.ps1 shutdown
+      - name: Bound Bazel cache snapshots
+        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Limit-BazelCacheStore([string] $Path, [long] $MaximumBytes) {
+            if ($MaximumBytes -le 0) { throw 'The cache budget must be positive.' }
+            $root = Get-Item -LiteralPath $Path -Force
+            if ($root.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+              throw "Persistent cache store contains a link: $Path"
+            }
+            $entries = @(Get-ChildItem -LiteralPath $Path -Recurse -Force)
+            if (@($entries | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }).Count) {
+              throw "Persistent cache store contains a link: $Path"
+            }
+            $files = @($entries | Where-Object { -not $_.PSIsContainer } | Sort-Object LastWriteTimeUtc, FullName)
+            $before = [long]($files | Measure-Object Length -Sum).Sum
+            $after = $before
+            $removed = 0
+            foreach ($file in $files) {
+              if ($after -le $MaximumBytes) { break }
+              Remove-Item -LiteralPath $file.FullName -Force
+              $after -= $file.Length
+              $removed++
+            }
+            [pscustomobject]@{ Store = $Path; BytesBefore = $before; BytesAfter = $after; Limit = $MaximumBytes; Removed = $removed }
+          }
+          Limit-BazelCacheStore (Join-Path $env:TESTFX_BAZEL_CACHE_ROOT 'downloads') 1536MB
+          Limit-BazelCacheStore (Join-Path $env:TESTFX_BAZEL_CACHE_ROOT 'actions') 512MB
       # PRs only restore; only successful main runs publish trusted snapshots.
       - name: Save Bazel downloads
         if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

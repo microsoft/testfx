@@ -436,6 +436,13 @@ checks each action's declared inputs. A cache miss or eviction runs the same
 full validation rather than skipping work.
 PRs remain cold until the first successful compatible `main` seed is available.
 
+Before a successful main save, the stopped job trims oldest cache files to
+1,536 MiB of download payload and 512 MiB of action payload: at most 2 GiB
+uncompressed per platform for a new snapshot pair. Missing blobs are ordinary
+cache misses and are downloaded/rebuilt when needed. This bounds accumulated
+store contents, not repository-wide archive history: multiple immutable
+generations, archive overhead and other workflows still share GitHub's quota.
+
 The output base, server state and extracted repositories are **not** cached.
 In particular, Bazel 9's repository-content cache is redirected to
 `<output-root>/repositories`, outside both the source checkout and the download
