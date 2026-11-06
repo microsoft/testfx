@@ -277,11 +277,13 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, bool builtInOnly = false)
         {
             CommandLineOption[] options =
-                [.. optionProviders
+                [
+                    .. optionProviders
                .SelectMany(provider => provider.GetCommandLineOptions())
                .Where(option => !option.IsHidden && option.IsBuiltIn == builtInOnly)
                // See DisplayOptionsAsync for the rationale behind using StringComparer.Ordinal.
-               .OrderBy(option => option.Name, StringComparer.Ordinal)];
+               .OrderBy(option => option.Name, StringComparer.Ordinal),
+                ];
 
             if (options.Length == 0)
             {

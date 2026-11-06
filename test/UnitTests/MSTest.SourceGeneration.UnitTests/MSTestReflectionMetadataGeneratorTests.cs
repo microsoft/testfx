@@ -2717,7 +2717,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .. Enumerable.Range(0, 64)
             .Select(_ => new string(Enumerable.Range(0, random.Next(0, 24))
                 .Select(_ => (char)random.Next(char.MinValue, char.MaxValue + 1))
-                .ToArray()))
+                .ToArray())),
         ];
         string dataRows = string.Join(
             Environment.NewLine,

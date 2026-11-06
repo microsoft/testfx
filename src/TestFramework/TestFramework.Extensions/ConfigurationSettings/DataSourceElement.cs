@@ -22,7 +22,7 @@ public sealed class DataSourceElement : ConfigurationElement
         NameValue,
         ConnectionStringValue,
         DataAccessMethodValue,
-        DataTableNameValue
+        DataTableNameValue,
     ];
 
     /// <summary>

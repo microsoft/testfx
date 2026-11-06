@@ -23,7 +23,7 @@ public sealed class LoggerFactoryTests
 
         _loggerProviders =
         [
-            _mockLoggerProvider.Object
+            _mockLoggerProvider.Object,
         ];
     }
 

@@ -115,7 +115,7 @@ public class DesktopTestDeploymentTests : TestContainer
         [
             new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory)
+                        DefaultDeploymentItemOutputDirectory),
         ];
         testCase.DeploymentItems = kvpArray;
 

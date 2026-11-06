@@ -65,7 +65,7 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : D
             if (arg is
                 {
                     ArgumentKind: ArgumentKind.Explicit,
-                    Parameter: { IsOptional: true, Type.SpecialType: SpecialType.System_String }
+                    Parameter: { IsOptional: true, Type.SpecialType: SpecialType.System_String },
                 }
 
                 && arg.Parameter.GetAttributes().Any(attr => callerFilePathAttributeSymbol.Equals(attr.AttributeClass, SymbolEqualityComparer.Default))

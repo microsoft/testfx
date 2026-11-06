@@ -51,7 +51,7 @@ public class DeploymentItemUtilityTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests), kvpArray);
 
@@ -74,7 +74,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
 
@@ -105,7 +105,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
 
@@ -118,7 +118,7 @@ public class DeploymentItemUtilityTests : TestContainer
         [
             new DeploymentItem(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
 
         expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()).Should().BeTrue();
@@ -133,7 +133,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 null!,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
 
@@ -173,7 +173,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         MethodInfo memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
@@ -217,7 +217,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
 
         expectedDeploymentItems.SequenceEqual(deploymentItems).Should().BeTrue();
@@ -230,7 +230,7 @@ public class DeploymentItemUtilityTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         MethodInfo memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
@@ -241,7 +241,7 @@ public class DeploymentItemUtilityTests : TestContainer
         [
             new DeploymentItem(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
 
         // Act.
@@ -274,7 +274,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         MethodInfo memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
@@ -399,7 +399,7 @@ public class DeploymentItemUtilityTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         ];
         testCase.DeploymentItems = kvpArray;
 

@@ -48,13 +48,15 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
             result.NegotiatedProtocolVersion,
             "When both sides advertise 1.3.0, negotiation should select 1.3.0 to enable DisplayMessage forwarding.");
 
-        (string? InstanceId, byte? Level, string? Text)[] forwarded = [..
+        (string? InstanceId, byte? Level, string? Text)[] forwarded = [
+            ..
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
                 .Select(m =>
                 {
                     (string? _, string? instanceId, byte? level, string? text) = DotnetTestPipeProtocol.DecodeDisplayMessageBody(m.Body);
                     return (instanceId, level, text);
-                })];
+                }),
+        ];
 
         Assert.Contains(
             m => m.Level == DotnetTestPipeProtocol.DisplayMessageLevels.Error && m.Text == ErrorText,
@@ -74,12 +76,14 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
                 && m.InstanceId == handshakeInstanceId,
             forwarded,
             $"Expected a correlated session DisplayMessage. Forwarded: [{string.Join(" | ", forwarded.Select(m => $"{m.InstanceId}:{m.Level}:{m.Text}"))}].");
-        string[] forwardedInstanceIds = [..
+        string[] forwardedInstanceIds = [
+            ..
             forwarded
                 .Select(m => m.InstanceId)
                 .Where(id => id is not null)
                 .Select(id => id!)
-                .Distinct()];
+                .Distinct(),
+        ];
         string onlyInstanceId = Assert.ContainsSingle(forwardedInstanceIds);
         Assert.AreEqual(handshakeInstanceId, onlyInstanceId);
         Assert.AreEqual(string.Empty, result.TestHostResult.StandardOutput);

@@ -1189,7 +1189,7 @@ public sealed class FormatterUtilitiesTests
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    }
+                    },
                 ],
                 null);
         }
@@ -1204,7 +1204,7 @@ public sealed class FormatterUtilitiesTests
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    }
+                    },
                 ],
                 null);
         }

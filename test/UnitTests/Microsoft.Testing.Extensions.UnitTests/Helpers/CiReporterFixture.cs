@@ -113,9 +113,11 @@ internal sealed class CiReporterFixture : IDisposable
             {
                 string prefix = pattern.Split('*')[0];
                 string suffix = pattern.Split('*').Last();
-                return [.. Files.Keys.Where(path => Path.GetDirectoryName(path) == directory
+                return [
+                    .. Files.Keys.Where(path => Path.GetDirectoryName(path) == directory
                     && Path.GetFileName(path).StartsWith(prefix, StringComparison.Ordinal)
-                    && Path.GetFileName(path).EndsWith(suffix, StringComparison.Ordinal))];
+                    && Path.GetFileName(path).EndsWith(suffix, StringComparison.Ordinal)),
+                ];
             });
         TaskService.Setup(value => value.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Callback<Func<Task>, string, CancellationToken>((action, name, token) =>
@@ -139,8 +141,10 @@ internal sealed class CiReporterFixture : IDisposable
         Client.Setup(value => value.UpdateTestResultsWithSubResultsAsync(
                 It.IsAny<AzureDevOpsPublishConfiguration>(), It.IsAny<int>(), It.IsAny<IReadOnlyList<AzureDevOpsTestCaseResult>>(), It.IsAny<CancellationToken>()))
             .Returns<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken>((_, _, results, _) =>
-                Task.FromResult<IReadOnlyList<AzureDevOpsPublishedTestResult>?>([.. results.Select(result => new AzureDevOpsPublishedTestResult(
-                    result.Id!.Value, (result.SubResults ?? []).ToDictionary(attempt => attempt.SequenceId, attempt => 1000 + attempt.SequenceId)))]));
+                Task.FromResult<IReadOnlyList<AzureDevOpsPublishedTestResult>?>([
+                    .. results.Select(result => new AzureDevOpsPublishedTestResult(
+                    result.Id!.Value, (result.SubResults ?? []).ToDictionary(attempt => attempt.SequenceId, attempt => 1000 + attempt.SequenceId))),
+                ]));
         Client.Setup(value => value.UpdateTestRunStateAsync(It.IsAny<AzureDevOpsPublishConfiguration>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         Client.Setup(value => value.UploadTestResultAttachmentAsync(

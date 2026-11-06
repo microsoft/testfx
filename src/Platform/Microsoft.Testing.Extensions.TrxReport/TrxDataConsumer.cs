@@ -88,7 +88,7 @@ internal sealed class TrxReportGenerator :
     public Type[] DataTypesConsumed { get; } =
     [
         typeof(TestNodeUpdateMessage),
-        typeof(SessionFileArtifact)
+        typeof(SessionFileArtifact),
     ];
 
     public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];

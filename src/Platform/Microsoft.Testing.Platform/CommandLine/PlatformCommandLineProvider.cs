@@ -98,7 +98,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(DotNetTestHttpTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestTransportOptionKey, PlatformResources.PlatformCommandLineDotnetTestTransportOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-        new(EnableDynamicExtensionsOptionKey, PlatformResources.PlatformCommandLineEnableDynamicExtensionsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true)
+        new(EnableDynamicExtensionsOptionKey, PlatformResources.PlatformCommandLineEnableDynamicExtensionsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
     ];
 
     public PlatformCommandLineProvider()

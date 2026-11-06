@@ -134,9 +134,11 @@ internal abstract partial class ReportGeneratorBase<TGenerator, TCapturedTestRes
             {
                 ApplicationStateGuard.Ensure(_completedReportFileName is not null);
                 await WriteJournalBatchAsync(
-                    [ReportJournalRecord<TCapturedTestResult>.CreateCompletion(
+                    [
+                        ReportJournalRecord<TCapturedTestResult>.CreateCompletion(
                         _completedReportFileName,
-                        Volatile.Read(ref _droppedJournalRecords))],
+                        Volatile.Read(ref _droppedJournalRecords)),
+                    ],
                     isCompletion: true).ConfigureAwait(false);
             }
         }
@@ -234,9 +236,11 @@ internal abstract partial class ReportGeneratorBase<TGenerator, TCapturedTestRes
             {
                 ApplicationStateGuard.Ensure(reportFileName is not null);
                 TryWriteJournalBatch(
-                    [ReportJournalRecord<TCapturedTestResult>.CreateCompletion(
+                    [
+                        ReportJournalRecord<TCapturedTestResult>.CreateCompletion(
                         reportFileName,
-                        Volatile.Read(ref _droppedJournalRecords))],
+                        Volatile.Read(ref _droppedJournalRecords)),
+                    ],
                     isCompletion: true);
             }
 

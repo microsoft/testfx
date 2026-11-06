@@ -78,7 +78,7 @@ public class TrxTests
 
         TrxTestResult[] messages = [
             CreateTestNodeUpdate("1", "Test1", new PropertyBag(new FailedTestNodeStateProperty())),
-            CreateTestNodeUpdate("2", "Test2", new PropertyBag(SkippedTestNodeStateProperty.CachedInstance))
+            CreateTestNodeUpdate("2", "Test2", new PropertyBag(SkippedTestNodeStateProperty.CachedInstance)),
         ];
 
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);

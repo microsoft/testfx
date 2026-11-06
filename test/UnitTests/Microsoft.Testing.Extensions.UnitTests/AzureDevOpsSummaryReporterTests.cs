@@ -1100,8 +1100,10 @@ public sealed class AzureDevOpsSummaryReporterTests
     [TestMethod]
     public void BuildAggregateMarkdown_RendersOneGlobalTopTenWithOutcomesAndElapsedTime()
     {
-        TestRecord[] alphaRecords = [.. Enumerable.Range(1, 6).Select(index =>
-            new TestRecord($"Alpha{index}", $"Alpha.Test{index}", TerminalKind.Passed, TimeSpan.FromSeconds(index)))];
+        TestRecord[] alphaRecords = [
+            .. Enumerable.Range(1, 6).Select(index =>
+            new TestRecord($"Alpha{index}", $"Alpha.Test{index}", TerminalKind.Passed, TimeSpan.FromSeconds(index))),
+        ];
         TestRecord[] betaRecords =
         [
             new("BetaTie", "Beta.Suite.Tie", TerminalKind.Passed, TimeSpan.FromSeconds(6)),
@@ -1447,8 +1449,10 @@ public sealed class AzureDevOpsSummaryReporterTests
             OperatingSystem = "Windows",
             TotalTests = 25,
             SkippedTests = 25,
-            SkipReasons = [.. Enumerable.Range(0, 10).Reverse().Select(index =>
-                new CiRunSummarySkipReason { Reason = index == 9 ? "alpha" : $"Reason{index}", Count = 2 })],
+            SkipReasons = [
+                .. Enumerable.Range(0, 10).Reverse().Select(index =>
+                new CiRunSummarySkipReason { Reason = index == 9 ? "alpha" : $"Reason{index}", Count = 2 }),
+            ],
         };
         var beta = new CiRunSummaryModule
         {

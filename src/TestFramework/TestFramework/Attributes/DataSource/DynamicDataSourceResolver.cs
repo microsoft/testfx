@@ -180,7 +180,7 @@ public static class DynamicDataSourceResolver
             => obj is DataSourceKey other && Equals(other);
 
         public override int GetHashCode()
-            => ((_declaringType.GetHashCode() * 397) ^ _sourceName.GetHashCode()) * 397 ^ (int)_sourceType;
+            => (((_declaringType.GetHashCode() * 397) ^ _sourceName.GetHashCode()) * 397) ^ (int)_sourceType;
     }
 
     private readonly struct DisplayNameKey : IEquatable<DisplayNameKey>

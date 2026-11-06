@@ -247,9 +247,11 @@ public sealed class TestHostBuilderTests
         => new(new CommandLineParseResult(
             null,
             testHostControllerPid.HasValue
-                ? [new CommandLineParseOption(
+                ? [
+                    new CommandLineParseOption(
                     PlatformCommandLineProvider.TestHostControllerPIDOptionKey,
-                    [testHostControllerPid.Value.ToString(CultureInfo.InvariantCulture)])]
+                    [testHostControllerPid.Value.ToString(CultureInfo.InvariantCulture)]),
+                ]
                 : [],
             []));
 

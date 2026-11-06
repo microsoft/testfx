@@ -26,7 +26,7 @@ public class ClassCleanupManagerTests : TestContainer
         List<UnitTestElement> testsToRun =
         [
             new(testMethod),
-            new(testMethod)
+            new(testMethod),
         ];
 
         var classCleanupManager = new ClassCleanupManager(testsToRun);

@@ -81,7 +81,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                     testMethodIdentifierProperty?.TypeName,
                                     testMethodIdentifierProperty?.MethodName,
                                     testMethodIdentifierProperty?.ParameterTypeFullNames,
-                                    traits)
+                                    traits),
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);
@@ -104,7 +104,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value,
                                    testNodeDetails.RetryAttemptNumber,
-                                   testNodeDetails.IsSuperseded)
+                                   testNodeDetails.IsSuperseded),
                             ],
                             []);
 
@@ -148,7 +148,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Expected,
                                    testNodeDetails.Actual,
                                    testNodeDetails.RetryAttemptNumber,
-                                   testNodeDetails.IsSuperseded)
+                                   testNodeDetails.IsSuperseded),
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
@@ -168,7 +168,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 testNodeUpdateMessage.TestNode.Uid.Value,
                                 testNodeUpdateMessage.TestNode.DisplayName,
                                 testNodeUpdateMessage.SessionUid.Value,
-                                null)
+                                null),
                         ]);
 
                     await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
@@ -222,7 +222,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     string.Empty,
                     string.Empty,
                     sessionFileArtifact.SessionUid.Value,
-                    sessionFileArtifact.Kind)
+                    sessionFileArtifact.Kind),
             ]);
 
     // Maps a (non session-scoped) artifact to its wire message. See the SessionFileArtifact overload.
@@ -238,7 +238,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     string.Empty,
                     string.Empty,
                     string.Empty,
-                    fileArtifact.Kind)
+                    fileArtifact.Kind),
             ]);
 
     private static TestNodeDetails? GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)

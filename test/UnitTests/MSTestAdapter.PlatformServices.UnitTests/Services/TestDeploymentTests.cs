@@ -59,13 +59,13 @@ public class TestDeploymentTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         ];
         KeyValuePair<string, string>[] classLevelDeploymentItems =
         [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath + "\\temp2",
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         ];
         MethodInfo memberInfo = typeof(TestDeploymentTests).GetMethod("GetDeploymentItemsReturnsDeploymentItems")!;
         SetupDeploymentItems(memberInfo, methodLevelDeploymentItems);
@@ -167,7 +167,7 @@ public class TestDeploymentTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         ];
         testCase.DeploymentItems = kvpArray;
 
@@ -251,7 +251,7 @@ public class TestDeploymentTests : TestContainer
         UnitTestElement testCase = CreateTestElement(source);
         testCase.DeploymentItems =
         [
-            new KeyValuePair<string, string>(deploymentItem, DefaultDeploymentItemOutputDirectory)
+            new KeyValuePair<string, string>(deploymentItem, DefaultDeploymentItemOutputDirectory),
         ];
 
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
@@ -380,7 +380,7 @@ public class TestDeploymentTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         ];
         testCase.DeploymentItems = kvpArray;
 

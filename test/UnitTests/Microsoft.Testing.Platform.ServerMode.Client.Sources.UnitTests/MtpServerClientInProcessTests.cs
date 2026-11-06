@@ -1691,8 +1691,10 @@ public sealed class MtpServerClientInProcessTests
         => (MtpServerInProcessHost)typeof(MtpServerInProcessHost).GetConstructor(
             BindingFlags.Instance | BindingFlags.NonPublic,
             binder: null,
-            [typeof(TcpListener), typeof(TcpClient), typeof(MtpJsonRpcConnection), typeof(Task<int>),
-             typeof(CancellationTokenSource), typeof(TimeSpan), typeof(IMtpClientLogger)],
+            [
+                typeof(TcpListener), typeof(TcpClient), typeof(MtpJsonRpcConnection), typeof(Task<int>),
+                typeof(CancellationTokenSource), typeof(TimeSpan), typeof(IMtpClientLogger),
+            ],
             modifiers: null)!.Invoke(
             [listener, client, connection, serverTask, cancellation, shutdownTimeout, logger]);
 

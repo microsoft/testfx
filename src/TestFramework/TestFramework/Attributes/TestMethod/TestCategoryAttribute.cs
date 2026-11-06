@@ -20,7 +20,7 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     {
         List<string> categories =
         [
-            testCategory
+            testCategory,
         ];
         TestCategories = categories;
     }

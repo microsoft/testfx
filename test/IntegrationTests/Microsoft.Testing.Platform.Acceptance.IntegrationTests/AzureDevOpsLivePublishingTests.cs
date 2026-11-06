@@ -203,10 +203,12 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 TestContext.WriteLine($"Module {module}: {result.TestHostResult}");
                 result.TestHostResult.AssertExitCodeIs(expectedExitCode);
                 Assert.AreEqual(protocolVersion, result.NegotiatedProtocolVersion);
-                string?[] warnings = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
+                string?[] warnings = [
+                    .. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
                     .Select(message => DotnetTestPipeProtocol.DecodeDisplayMessageBody(message.Body))
                     .Where(message => message.Level == DotnetTestPipeProtocol.DisplayMessageLevels.Warning)
-                    .Select(message => message.Text)];
+                    .Select(message => message.Text),
+                ];
                 if (protocolVersion == "1.0.0")
                 {
                     Assert.IsEmpty(warnings, "Legacy SDKs must not receive unsupported display messages.");

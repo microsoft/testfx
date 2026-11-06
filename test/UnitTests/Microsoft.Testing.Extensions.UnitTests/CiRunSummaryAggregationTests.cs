@@ -1426,8 +1426,10 @@ public sealed class CiRunSummaryAggregationTests
                     case "tooManyReasons":
                         json["totalTests"] = 13;
                         json["skippedTests"] = 11;
-                        json["skipReasons"] = new JsonArray([.. Enumerable.Range(0, 11)
-                            .Select(index => (JsonNode)new JsonObject { ["reason"] = $"Reason{index}", ["count"] = 1 })]);
+                        json["skipReasons"] = new JsonArray([
+                            .. Enumerable.Range(0, 11)
+                            .Select(index => (JsonNode)new JsonObject { ["reason"] = $"Reason{index}", ["count"] = 1 }),
+                        ]);
                         break;
                     case "nullReasonEntry": json["skipReasons"]![0] = null; break;
                     case "nullReasonText": firstReason["reason"] = null; break;
@@ -1490,11 +1492,13 @@ public sealed class CiRunSummaryAggregationTests
             module.OperatingSystem = new string('x', 64);
             module.TotalTests = skipped;
             module.SkippedTests = skipped;
-            module.SkipReasons = [.. Enumerable.Range(0, reasonCount).Select(index => new CiRunSummarySkipReason
+            module.SkipReasons = [
+                .. Enumerable.Range(0, reasonCount).Select(index => new CiRunSummarySkipReason
             {
                 Reason = new string('x', 511) + (char)('A' + index),
                 Count = reasonCount == 1 ? skipped : 1,
-            })];
+            }),
+            ];
             foreach (bool github in new[] { false, true })
             {
                 string provider = github ? "github-actions" : "azure-devops";

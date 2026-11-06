@@ -147,7 +147,7 @@ internal sealed class TcpMessageHandler(
                  SocketException { SocketErrorCode: SocketError.ConnectionReset } or
                  IOException
                  {
-                     InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset }
+                     InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset },
                  })
         {
             await TryLogDebugBoundedAsync($"TCP connection reset while reading; treating as client disconnect: {ex}").ConfigureAwait(false);

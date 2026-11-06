@@ -24,7 +24,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
         "AreEqual",
         "AreNotEqual",
         "AreSame",
-        "AreNotSame"
+        "AreNotSame",
     ]);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldBePassedInCorrectOrderTitle), Resources.ResourceManager, typeof(Resources));

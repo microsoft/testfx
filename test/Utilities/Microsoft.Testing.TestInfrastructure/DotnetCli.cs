@@ -66,7 +66,7 @@ public static class DotnetCli
         "CODE_COVERAGE_PIPE_PATH",
         "MicrosoftInstrumentationEngine_LogLevel",
         "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
-        "MicrosoftInstrumentationEngine_FileLogPath"
+        "MicrosoftInstrumentationEngine_FileLogPath",
     ];
 
     [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]

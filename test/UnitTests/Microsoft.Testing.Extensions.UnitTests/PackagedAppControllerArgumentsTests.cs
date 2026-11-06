@@ -19,8 +19,10 @@ public sealed class PackagedAppControllerArgumentsTests
         string[] before = ["--results-directory", @"C:\results with spaces\", "--filter", """Name="a b"|Name=c""", string.Empty];
         string[] after = ["--diagnostic", "--report-trx-filename", "quoted report.trx"];
         string[] result = Configure(
-            [PackagedAppControllerArguments.Prefix, Target, "msbuild;packagedapp;trx", .. before,
-                "--server", "dotnettestcli", "--dotnet-test-pipe", "sdk-pipe", .. after],
+            [
+                PackagedAppControllerArguments.Prefix, Target, "msbuild;packagedapp;trx", .. before,
+                "--server", "dotnettestcli", "--dotnet-test-pipe", "sdk-pipe", .. after,
+            ],
             environment);
 
         Assert.AreSequenceEqual([.. before, .. after], result);
@@ -38,8 +40,10 @@ public sealed class PackagedAppControllerArgumentsTests
             [PackagedAppControllerArguments.ExecutionIdEnvironmentVariable] = "supplied-execution-id",
         };
         string[] result = Configure(
-            [PackagedAppControllerArguments.Prefix, Target, "packagedapp;retry",
-                "--retry-failed-tests", "2", "--server", "dotnettestcli", "--dotnet-test-pipe", "sdk-pipe"],
+            [
+                PackagedAppControllerArguments.Prefix, Target, "packagedapp;retry",
+                "--retry-failed-tests", "2", "--server", "dotnettestcli", "--dotnet-test-pipe", "sdk-pipe",
+            ],
             environment);
         string[] retry = Configure(result, environment);
 
@@ -160,8 +164,10 @@ public sealed class PackagedAppControllerArgumentsTests
     {
         Dictionary<string, string?> environment = [];
         (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
-            [PackagedAppControllerArguments.Prefix, Target, "packagedapp", option,
-                "--server", "dotnettestcli", "--dotnet-test-pipe", "pipe"],
+            [
+                PackagedAppControllerArguments.Prefix, Target, "packagedapp", option,
+                "--server", "dotnettestcli", "--dotnet-test-pipe", "pipe",
+            ],
             name => environment.GetValueOrDefault(name),
             (name, value) => environment[name] = value);
         Assert.IsTrue(informational);

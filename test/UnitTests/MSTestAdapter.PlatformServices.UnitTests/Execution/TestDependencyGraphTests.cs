@@ -255,9 +255,11 @@ public sealed class TestDependencyGraphTests : TestContainer
 
         string path = graph.Errors[0];
         int start = path.IndexOf(ClassA + ".", StringComparison.Ordinal);
-        string[] hops = [.. path.Substring(start).Split([" > "], StringSplitOptions.None)
+        string[] hops = [
+            .. path.Substring(start).Split([" > "], StringSplitOptions.None)
             .Select(h => h.Trim().Replace(ClassA + ".", string.Empty))
-            .Select(h => new string([.. h.TakeWhile(char.IsLetterOrDigit)]))];
+            .Select(h => new string([.. h.TakeWhile(char.IsLetterOrDigit)])),
+        ];
 
         hops.Length.Should().BeGreaterThan(2, "a cycle path needs at least two hops plus the closing repeat");
         hops[0].Should().Be(hops[^1], "the path must close on the test it started from");

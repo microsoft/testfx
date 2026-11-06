@@ -148,7 +148,8 @@ internal class TypeEnumerator
             currentType = currentType.BaseType;
         }
 
-        return [.. tests.GroupBy(
+        return [
+            .. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
                 // Note: null suppression for MethodInfo here is safe.
@@ -157,7 +158,8 @@ internal class TypeEnumerator
                 // The GetTestFromMethod call above guarantees that it's non-null.
                 // The null suppression for DeclaringType is also safe, there is no reason for a test method to have null declaring type.
                 // FullName is also guaranteed to be non-null.
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.MethodInfo!.DeclaringType!.FullName!]).First())];
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.MethodInfo!.DeclaringType!.FullName!]).First()),
+        ];
     }
 
     /// <summary>

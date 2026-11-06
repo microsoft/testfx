@@ -38,8 +38,10 @@ public sealed class RetryArtifactRecoveryProtocolTests
         ArtifactProbe emptyKind = fixture.WatchKind(string.Empty);
         fixture.ChildBody = async attempt =>
         {
-            string[] names = ["live-first.old", "live-second.old", "case.case", "original.legacy", "empty-old.empty",
-                "recovered-first.typed", "recovered-final.typed", "recovered.extra", "empty-first.empty", "empty-final.empty"];
+            string[] names = [
+                "live-first.old", "live-second.old", "case.case", "original.legacy", "empty-old.empty",
+                "recovered-first.typed", "recovered-final.typed", "recovered.extra", "empty-first.empty", "empty-final.empty",
+            ];
             foreach (string name in names)
             {
                 attempt.AddArtifact(attempt.PathFor(name), $"attempt {attempt.Number}: {name} Ω 東京");
@@ -92,12 +94,14 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Assert.AreEqual(0L, summary.SkippedTests);
             Assert.AreEqual(0, summary.ExitCode);
             Assert.AreEqual(1, summary.TestModuleCount);
-            string[] text = [.. fixture.Displays.Select(value => value switch
+            string[] text = [
+                .. fixture.Displays.Select(value => value switch
             {
                 FormattedTextOutputDeviceData formatted => formatted.Text,
                 TextOutputDeviceData plain => plain.Text,
                 _ => string.Empty,
-            })];
+            }),
+            ];
             Assert.Contains("  total: 2", text);
             Assert.Contains("  retried: 1 test(s), 1 extra run(s)", text);
             Assert.Contains("  succeeded: 2", text);

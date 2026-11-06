@@ -59,12 +59,14 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
         // logging commands back to the originating assembly in a multi-assembly run.
         Assert.IsNotNull(result.ReceivedHandshake);
         Assert.IsTrue(result.ReceivedHandshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.InstanceId, out string? handshakeInstanceId));
-        string[] forwardedInstanceIds = [..
+        string[] forwardedInstanceIds = [
+            ..
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.AzureDevOpsLogMessage)
                 .Select(m => DotnetTestPipeProtocol.DecodeAzureDevOpsLogMessageBody(m.Body).InstanceId)
                 .Where(id => id is not null)
                 .Select(id => id!)
-                .Distinct()];
+                .Distinct(),
+        ];
         string onlyInstanceId = Assert.ContainsSingle(forwardedInstanceIds);
         Assert.AreEqual(handshakeInstanceId, onlyInstanceId);
     }
@@ -119,11 +121,13 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
     }
 
     private static string[] GetForwardedAzureDevOpsLines(FakeDotnetTestSdkResult result)
-        => [..
+        => [
+            ..
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.AzureDevOpsLogMessage)
                 .Select(m => DotnetTestPipeProtocol.DecodeAzureDevOpsLogMessageBody(m.Body).LogText)
                 .Where(text => text is not null)
-                .Select(text => text!)];
+                .Select(text => text!),
+        ];
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
