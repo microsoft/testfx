@@ -412,6 +412,30 @@ against that PR head has SHA-256
 These are compilation/formatting repairs, not new product behavior or a
 behavioral red/green claim. CI must still rerun on the pushed correction.
 
+### Base merge and validation blocker
+
+Merged main `0801b9574b165c714801ce56256f774c9619f9d7` in
+`9ade8703ec4a7a8f5614306664a89fc553329df5`. The two text conflicts were
+additive: retain both partition and expected-duration changelog entries, and
+both sets of internal API declarations. The automatic framework merge retains
+partition-aware manager creation/cache bypass and main's durable-result-file
+lifecycle changes.
+
+The API-owning PlatformServices project built successfully with warnings as
+errors on net462, net10.0, net11.0, modern UWP and WinUI, with classic UWP
+excluded by the existing local host limitation. Restoring the merged package
+versions succeeded, but the configuration-matched producer repack failed on
+SA1500/SA1413/SA1137 in
+`RetryOrchestrator.OrchestrationSupport.cs:213-228`. That file's blob is
+`59bf30fe55bae42a20871b115d3c83e03b9c5c0f` in both target main and the
+merged branch; this PR does not modify it.
+
+The unrelated upstream Retry formatting was not changed or suppressed.
+Post-merge package-consuming validation is blocked, and the partial pack
+outputs must not be used as if they were a complete aligned package set.
+Earlier acceptance results remain evidence for their recorded revisions,
+not executed proof of this merged revision.
+
 ### CI eligibility
 
 Static inspection finds the acceptance project in both `TestFx.slnx` and
