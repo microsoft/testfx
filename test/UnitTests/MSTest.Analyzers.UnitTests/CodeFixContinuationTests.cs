@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 
+using MSTest.Analyzers.CodeFixes;
+
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
@@ -59,6 +61,8 @@ public sealed class CodeFixContinuationTests
     [DataRow("delegate { GetTask().GetAwaiter().GetResult(); }")]
     [DataRow("new Action(() => GetTask().GetAwaiter().GetResult())")]
     [DataRow("(Action)new(() => GetTask().GetAwaiter().GetResult())")]
+    [DataRow("() => (GetTask().GetAwaiter()).GetResult()", DisplayName = "ParenthesizedAwaiter")]
+    [DataRow("() => ((GetTask())).GetAwaiter().GetResult()", DisplayName = "ParenthesizedTaskReceiver")]
     public async Task AsyncAssertion_ActionSyntaxVariants_PreservePayload(string action)
     {
         string source = $$"""
@@ -143,6 +147,60 @@ public sealed class CodeFixContinuationTests
             """;
         await VerifyFixAsync(source, expected, new PreferAsyncAssertionAnalyzer(), new PreferAsyncAssertionFixer(),
             "MSTEST0064", DiagnosticSeverity.Info, "Assert.Throws(() => Task.CompletedTask.GetAwaiter().GetResult())",
+            "Use 'Assert.ThrowsAsync' instead of blocking an async call in 'Assert.Throws'", includeMSTest: false);
+    }
+
+    [TestMethod]
+    [DataRow("value => Task.FromResult(value).GetAwaiter().GetResult()", DisplayName = "ExpressionLambda")]
+    [DataRow("value => { return ((Task.FromResult(value).GetAwaiter()).GetResult()); }", DisplayName = "BlockReturnLambda")]
+    public async Task AsyncAssertion_ValueReturningSimpleLambda_ProducesCompilableAwait(string action)
+    {
+        string source = $$"""
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestMethodAttribute : Attribute { }
+                public static class Assert
+                {
+                    public static void Throws(Func<int, int> action) { }
+                    public static Task ThrowsAsync(Func<int, Task<int>> action) => Task.CompletedTask;
+                }
+            }
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    Assert.Throws({{action}});
+                }
+            }
+            """;
+        const string expected = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestMethodAttribute : Attribute { }
+                public static class Assert
+                {
+                    public static void Throws(Func<int, int> action) { }
+                    public static Task ThrowsAsync(Func<int, Task<int>> action) => Task.CompletedTask;
+                }
+            }
+            public class Tests
+            {
+                [TestMethod]
+                public async Task Check()
+                {
+                    await Assert.ThrowsAsync(value => Task.FromResult(value));
+                }
+            }
+            """;
+        await VerifyFixAsync(source, expected, new PreferAsyncAssertionAnalyzer(), new PreferAsyncAssertionFixer(),
+            "MSTEST0064", DiagnosticSeverity.Info, $"Assert.Throws({action})",
             "Use 'Assert.ThrowsAsync' instead of blocking an async call in 'Assert.Throws'", includeMSTest: false);
     }
 
@@ -331,6 +389,8 @@ public sealed class CodeFixContinuationTests
     }
 
     [TestMethod]
+    [DataRow("Assert.IsTrue(0 < values.Count, \"context\")", "Assert.IsNotEmpty(values, \"context\")", "CodeFixModeSimple", "IsNotEmpty", "IsTrue", DisplayName = "ReversedListCount")]
+    [DataRow("Assert.IsTrue(0 < values.ToArray().Length, \"context\")", "Assert.IsNotEmpty(values.ToArray(), \"context\")", "CodeFixModeSimple", "IsNotEmpty", "IsTrue", DisplayName = "ReversedArrayLength")]
     [DataRow("Assert.IsTrue(item == null, \"context\")", "Assert.IsNull(item, \"context\")", "CodeFixModeSimple", "IsNull", "IsTrue")]
     [DataRow("Assert.IsTrue(values.Contains(\"needle\"), \"context\")", "Assert.Contains(\"needle\", values, \"context\")", "CodeFixModeAddArgument", "Contains", "IsTrue")]
     [DataRow("Assert.IsTrue(values.Contains(\"needle\", StringComparer.OrdinalIgnoreCase), \"context\")", "Assert.Contains(\"needle\", values, StringComparer.OrdinalIgnoreCase, \"context\")", "CodeFixModeAddTwoArguments", "Contains", "IsTrue")]
@@ -351,6 +411,205 @@ public sealed class CodeFixContinuationTests
         Assert.HasCount(1, actions);
         Document changed = await AnalyzerContinuationTestHelpers.ApplyAsync(document, actions[0]);
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(changed, ProperAssertSource(expectedInvocation));
+    }
+
+    [TestMethod]
+    [DataRow(FixAllScope.Document)]
+    [DataRow(FixAllScope.Project)]
+    [DataRow(FixAllScope.Solution)]
+    public async Task CancellationToken_FixAll_SkipsStaleLocationAndAddsOnlyOneContextProperty(FixAllScope scope)
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    Task.Delay(17);
+                    Task.Delay(29);
+                }
+            }
+            """;
+        const string expected = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    Task.Delay(17, TestContext.CancellationToken);
+                    Task.Delay(29, TestContext.CancellationToken);
+                }
+                public TestContext TestContext { get; set; }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new FlowTestContextCancellationTokenAnalyzer());
+        Assert.HasCount(2, diagnostics);
+        CollectionAssert.AreEqual(
+            new[] { "Task.Delay(17)", "Task.Delay(29)" },
+            diagnostics.Select(diagnostic => source.Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length)).ToArray());
+        Assert.IsTrue(diagnostics.All(diagnostic => diagnostic.Id == "MSTEST0049"
+            && diagnostic.Properties["TestContextState"] == "CouldBeInScopeAsProperty"));
+        SyntaxNode root = (await document.GetSyntaxRootAsync())!;
+        var stale = Diagnostic.Create(
+            diagnostics[0].Descriptor, root.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>().Single().GetLocation(),
+            properties: diagnostics[0].Properties);
+        var fixer = new FlowTestContextCancellationTokenFixer();
+        var context = new FixAllContext(document, fixer, scope, nameof(FlowTestContextCancellationTokenFixer), fixer.FixableDiagnosticIds,
+            new SnapshotDiagnosticProvider([stale, .. diagnostics]), CancellationToken.None);
+        CodeAction action = (await fixer.GetFixAllProvider().GetFixAsync(context))!;
+        Assert.AreEqual("Pass 'TestContext.CancellationToken' argument to method call", action.Title);
+        Assert.AreEqual(nameof(FlowTestContextCancellationTokenFixer), action.EquivalenceKey);
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(await AnalyzerContinuationTestHelpers.ApplyAsync(document, action), expected);
+    }
+
+    [TestMethod]
+    public async Task ConditionalAccess_FixAll_SkipsStaleDiagnosticAndSharesTheNullGuard()
+    {
+        const string source = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                public void Check(string? text)
+                {
+                    Assert.AreEqual(3, text?.Length);
+                    Assert.AreEqual('a', text?[0]);
+                }
+            }
+            """;
+        const string expected = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                public void Check(string? text)
+                {
+                    Assert.IsNotNull(text);
+                    Assert.AreEqual(3, text.Length);
+                    Assert.AreEqual('a', text[0]);
+                }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(
+            document, new AssertionArgsShouldAvoidConditionalAccessAnalyzer(), enableDisabledRules: true);
+        Assert.HasCount(2, diagnostics);
+        Assert.IsTrue(diagnostics.All(diagnostic => diagnostic.Id == "MSTEST0026" && diagnostic.AdditionalLocations.Count == 1));
+        SyntaxNode root = (await document.GetSyntaxRootAsync())!;
+        Location staleLocation = root.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>().Single().GetLocation();
+        var stale = Diagnostic.Create(diagnostics[0].Descriptor, staleLocation, additionalLocations: [staleLocation]);
+        var fixer = new AssertionArgsShouldAvoidConditionalAccessFixer();
+        List<CodeAction> singleActions = await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostics[0], fixer);
+        Assert.HasCount(1, singleActions);
+        Assert.AreEqual("Move conditional access in assertion to separate 'Assert.IsNotNull' check", singleActions[0].Title);
+        Assert.AreEqual(nameof(AssertionArgsShouldAvoidConditionalAccessFixer), singleActions[0].EquivalenceKey);
+        var context = new FixAllContext(document, fixer, FixAllScope.Document, nameof(AssertionArgsShouldAvoidConditionalAccessFixer), fixer.FixableDiagnosticIds,
+            new SnapshotDiagnosticProvider([stale, .. diagnostics]), CancellationToken.None);
+        CodeAction action = (await fixer.GetFixAllProvider().GetFixAsync(context))!;
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(await AnalyzerContinuationTestHelpers.ApplyAsync(document, action), expected);
+    }
+
+    [TestMethod]
+    public async Task CollectionMigration_ImplicitOptionalArgument_DoesNotPartiallyRewriteTheCall()
+    {
+        const string source = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public static class CollectionAssert
+                {
+                    public static void Contains(System.Collections.ICollection collection, object element, string message = "fallback") { }
+                }
+            }
+            public class Tests
+            {
+                public void Check()
+                {
+                    Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(new[] { 17, 29 }, 17);
+                }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, includeMSTest: false);
+        ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new CollectionAssertToAssertAnalyzer());
+        Diagnostic diagnostic = Assert.ContainsSingle(diagnostics);
+        AnalyzerContinuationTestHelpers.AssertDiagnostic(diagnostic, "MSTEST0068", DiagnosticSeverity.Info, source,
+            "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(new[] { 17, 29 }, 17)",
+            "Use 'Assert.Contains' instead of 'CollectionAssert.Contains'");
+        List<CodeAction> actions = await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, new CollectionAssertToAssertFixer());
+        Assert.HasCount(1, actions);
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(await AnalyzerContinuationTestHelpers.ApplyAsync(document, actions[0]), source);
+    }
+
+    [TestMethod]
+    public async Task CancellationToken_OutOfOrderNamedArguments_AppendsANamedTokenWithoutReordering()
+    {
+        const string source = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                public TestContext TestContext { get; set; }
+                [TestMethod]
+                public void Check() { Work(second: 29, first: 17); }
+                private void Work(int first, int second) { }
+                private void Work(int first, int second, CancellationToken token) { }
+            }
+            """;
+        const string expected = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                public TestContext TestContext { get; set; }
+                [TestMethod]
+                public void Check() { Work(second: 29, first: 17, token: TestContext.CancellationToken); }
+                private void Work(int first, int second) { }
+                private void Work(int first, int second, CancellationToken token) { }
+            }
+            """;
+        await VerifyFixAsync(source, expected, new FlowTestContextCancellationTokenAnalyzer(), new FlowTestContextCancellationTokenFixer(),
+            "MSTEST0049", DiagnosticSeverity.Info, "Work(second: 29, first: 17)",
+            "Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'");
+    }
+
+    [TestMethod]
+    public async Task ExecuteOverride_IncompleteReturn_PreservesTheIndependentCompilerError()
+    {
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomAttribute : TestMethodAttribute
+            {
+                public override TestResult[] Execute(ITestMethod testMethod) { return; }
+            }
+            """;
+        const string expected = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomAttribute : TestMethodAttribute
+            {
+                public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod) { return; }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Compilation compilation = (await document.Project.GetCompilationAsync())!;
+        AnalyzerContinuationTestHelpers.AssertCompilerErrors(compilation, "CS0115", "CS0126");
+        Diagnostic diagnostic = compilation.GetDiagnostics().Single(candidate => candidate.Id == "CS0115");
+        Assert.AreEqual("Execute", source.Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length));
+        List<CodeAction> actions = await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, new UseExecuteAsyncOverrideFixer());
+        Assert.HasCount(1, actions);
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(await AnalyzerContinuationTestHelpers.ApplyAsync(document, actions[0]), expected, "CS0126");
     }
 
     internal static string ProperAssertSource(string invocation) => $$"""
@@ -427,5 +686,17 @@ public sealed class CodeFixContinuationTests
         Assert.IsFalse(string.IsNullOrWhiteSpace(actions[0].Title));
         Document changed = await AnalyzerContinuationTestHelpers.ApplyAsync(document, actions[0]);
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(changed, expected, fixedCompilerErrors ?? []);
+    }
+
+    private sealed class SnapshotDiagnosticProvider(ImmutableArray<Diagnostic> diagnostics) : FixAllContext.DiagnosticProvider
+    {
+        public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
+            => Task.FromResult<IEnumerable<Diagnostic>>(diagnostics);
+
+        public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
+            => Task.FromResult<IEnumerable<Diagnostic>>([]);
+
+        public override Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
+            => Task.FromResult<IEnumerable<Diagnostic>>(diagnostics);
     }
 }

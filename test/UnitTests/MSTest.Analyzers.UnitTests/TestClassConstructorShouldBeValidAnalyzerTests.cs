@@ -13,6 +13,33 @@ namespace MSTest.Analyzers.Test;
 public sealed class TestClassConstructorShouldBeValidAnalyzerTests
 {
     [TestMethod]
+    [DataRow(false, DisplayName = "MetadataOnlyWithoutTestClass")]
+    [DataRow(true, DisplayName = "MetadataOnlyWithTestClass")]
+    public async Task ReferencedHostInjectionMetadata_UnsupportedMode_ReportsAtTheBestAvailableLocation(bool hasTestClass)
+    {
+        MetadataReference host = await AnalyzerContinuationTestHelpers.EmitReferenceAsync(
+            """
+            [assembly: System.Reflection.AssemblyMetadata("MSTestHostTestClassInjectionEnabled", "true")]
+            public class HostMarker { }
+            """, "HostMetadata");
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: System.Reflection.AssemblyMetadata("MSTestHostTestClassInjectionUnsupportedMode", "PublishAot")]
+            {{(hasTestClass ? "[TestClass]" : string.Empty)}}
+            public class {{(hasTestClass ? "{|#0:Tests|}" : "Tests")}}
+            {
+                public Tests(object service) { }
+            }
+            """;
+        var test = new VerifyCS.Test { TestCode = source };
+        test.TestState.AdditionalReferences.Add(host);
+        test.ExpectedDiagnostics.Add(hasTestClass
+            ? VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.MSTestHostTestClassInjectionNotSupportedRule).WithLocation(0).WithArguments("PublishAot")
+            : VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.MSTestHostTestClassInjectionNotSupportedRule).WithNoLocation().WithArguments("PublishAot"));
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasPublicParameterlessConstructor_NoDiagnostic()
     {
         string code = """

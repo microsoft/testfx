@@ -14,6 +14,78 @@ namespace MSTest.Analyzers.Test;
 public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzerTests
 {
     [TestMethod]
+    [DataRow("false == File.Exists(\"tools/my-tool\")", DisplayName = "FalseOnLeft")]
+    [DataRow("true != File.Exists(\"tools/my-tool\")", DisplayName = "TrueInequalityOnLeft")]
+    [DataRow("File.Exists(\"tools/my-tool\") != true", DisplayName = "TrueInequalityOnRight")]
+    public async Task EquivalentMissingFileComparisons_ProduceTheSameFullFix(string condition)
+    {
+        string source = $$"""
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    [|if ({{condition}})
+                    {
+                        return;
+                    }|]
+                    Process.Start("tools/my-tool");
+                }
+            }
+            """;
+        const string expected = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                [ExecutableCondition("tools/my-tool")]
+                public void Check()
+                {
+                    Process.Start("tools/my-tool");
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(source, expected);
+    }
+
+    [TestMethod]
+    [DataRow("File.Exists(\"tool\") == true", "Process.Start(\"tool\")", DisplayName = "ExistsRatherThanMissing")]
+    [DataRow("true == File.Exists(\"tool\")", "Process.Start(\"tool\")", DisplayName = "ReversedExistsComparison")]
+    [DataRow("File.Exists(\"tool\") == flag", "Process.Start(\"tool\")", DisplayName = "RuntimeBoolean")]
+    [DataRow("File.Exists(path) == false", "Process.Start(\"tool\")", DisplayName = "RuntimeCheckedPath")]
+    [DataRow("!File.Exists(\"\")", "Process.Start(\"tool\")", DisplayName = "EmptyCheckedPath")]
+    [DataRow("File.Exists(\"tool\")", "Process.Start(\"tool\")", DisplayName = "PositiveCheck")]
+    [DataRow("!File.Exists(\"tool\")", "Process.Start(info)", DisplayName = "RuntimeStartInfo")]
+    [DataRow("!File.Exists(\"tool\")", "Process.Start(new ProcessStartInfo())", DisplayName = "StartInfoWithoutFileName")]
+    [DataRow("!File.Exists(\"tool\")", "Process.Start(new ProcessStartInfo(path))", DisplayName = "RuntimeConstructorFileName")]
+    public async Task UnprovenMissingExecutableChecks_DoNotOfferAnAttribute(string condition, string start)
+    {
+        string source = $$"""
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check(bool flag, string path, ProcessStartInfo info)
+                {
+                    if ({{condition}})
+                    {
+                        return;
+                    }
+                    {{start}};
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task WhenMissingExecutableGuardPrecedesProcessStart_Diagnostic()
     {
         string code = """

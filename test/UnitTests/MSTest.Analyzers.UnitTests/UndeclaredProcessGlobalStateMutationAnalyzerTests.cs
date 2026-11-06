@@ -14,6 +14,50 @@ namespace MSTest.Analyzers.Test;
 public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
 {
     [TestMethod]
+    public async Task NestedLocalFunctionAndLambda_AreStillPartOfTheEnclosingTest()
+    {
+        const string source = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    void Local() { {|#0:Environment.SetEnvironmentVariable("fixture", "value")|}; }
+                    Action nested = () => { {|#1:Environment.SetEnvironmentVariable("fixture", "value")|}; };
+                    Local();
+                    nested();
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(
+            source,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(1).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task OlderFrameworkWithoutResourceLocks_StillReportsTheUncoordinatedMutation()
+    {
+        const string source = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { {|#0:Environment.SetEnvironmentVariable("fixture", "value")|}; }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, useMSTestV4: true,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule).WithLocation(0).WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodSetsEnvironmentVariable_Diagnostic()
     {
         string code = """

@@ -11,6 +11,64 @@ namespace MSTest.Analyzers.UnitTests;
 public sealed class UseExecuteAsyncOverrideFixerTests
 {
     [TestMethod]
+    public async Task NamespaceQualifiedSignature_IsRecognizedAndProducesACompilableAsyncOverride()
+    {
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomAttribute : TestMethodAttribute
+            {
+                public override Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] {|CS0115:Execute|}(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod testMethod)
+                    => new TestResult[0];
+            }
+            """;
+        const string expected = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomAttribute : TestMethodAttribute
+            {
+                public override Task<TestResult[]> ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod testMethod)
+                    => Task.FromResult(new TestResult[0]);
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(source, expected);
+    }
+
+    [TestMethod]
+    public async Task AliasQualifiedSignature_TransformsOuterReturnButPreservesAllNestedDelegateReturns()
+    {
+        const string source = """
+            using System;
+            using M = Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomAttribute : M::TestMethodAttribute
+            {
+                public override M::TestResult[] {|CS0115:Execute|}(M::ITestMethod testMethod)
+                {
+                    Func<int, M::TestResult[]> simple = value => { return new M::TestResult[0]; };
+                    Func<M::TestResult[]> parenthesized = () => { return new M::TestResult[0]; };
+                    Func<M::TestResult[]> anonymous = delegate { return new M::TestResult[0]; };
+                    return simple(17);
+                }
+            }
+            """;
+        const string expected = """
+            using System;
+            using System.Threading.Tasks;
+            using M = Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class CustomAttribute : M::TestMethodAttribute
+            {
+                public override Task<M::TestResult[]> ExecuteAsync(M::ITestMethod testMethod)
+                {
+                    Func<int, M::TestResult[]> simple = value => { return new M::TestResult[0]; };
+                    Func<M::TestResult[]> parenthesized = () => { return new M::TestResult[0]; };
+                    Func<M::TestResult[]> anonymous = delegate { return new M::TestResult[0]; };
+                    return Task.FromResult(simple(17));
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(source, expected);
+    }
+
+    [TestMethod]
     public async Task FixExecuteOverrideWithBlockBody_ShouldTransformToExecuteAsync()
     {
         string code = """
