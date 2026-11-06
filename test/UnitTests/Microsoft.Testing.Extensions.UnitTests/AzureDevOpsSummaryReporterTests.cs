@@ -930,6 +930,89 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_DuplicateTimingDropsUpdateBeforeQueryingHistoryAsync()
+    {
+        var historyService = new Mock<IAzureDevOpsHistoryService>();
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions(), historyService.Object);
+        _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+        using var stream = new MemoryStream();
+        _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read))
+            .Returns(new FakeFileStream(stream));
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        TestNodeUpdateMessage update = CreatePassed("duplicate");
+        update.TestNode.Properties.Add(new TimingProperty(new TimingInfo(now, now.AddSeconds(1), TimeSpan.FromSeconds(1))));
+        update.TestNode.Properties.Add(new TimingProperty(new TimingInfo(now, now.AddSeconds(2), TimeSpan.FromSeconds(2))));
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext());
+        await reporter.ConsumeAsync(CreateProducer(), update, CancellationToken.None);
+        await reporter.ConsumeAsync(CreateProducer(), CreatePassed("valid"), CancellationToken.None);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
+
+        string markdown = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        Assert.Contains("**1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped** · ⏱ Test time: **0ms**", markdown);
+        historyService.Verify(h => h.TryGetStats("valid", out It.Ref<FlakyStats>.IsAny), Times.Once);
+        historyService.Verify(h => h.TryGetDurationStats("valid", out It.Ref<DurationHistoryStats>.IsAny), Times.Once);
+        historyService.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ConsumeAsync_PreservesMalformedAndDuplicateDependencyHandlingAsync(bool includeValidDependencies)
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+        using var stream = new MemoryStream();
+        _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read))
+            .Returns(new FakeFileStream(stream));
+        TestNodeUpdateMessage update = CreatePassed("dependent");
+        update.TestNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "Tests.Dependent"));
+        foreach (string encoded in new[] { string.Empty, "S", "P ", new string('x', 1025) })
+        {
+            update.TestNode.Properties.Add(new SerializableKeyValuePairStringProperty("mstest.TestCase.Dependency", encoded));
+        }
+
+        if (includeValidDependencies)
+        {
+            foreach (string encoded in new[] { "SSetup\nInitialize", "PSetup\nInitialize", "SSetup\nInitialize", "Legacy", "SSetup\n", "P \n " })
+            {
+                update.TestNode.Properties.Add(new SerializableKeyValuePairStringProperty("mstest.TestCase.Dependency", encoded));
+            }
+        }
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext());
+        await reporter.ConsumeAsync(CreateProducer(), update, CancellationToken.None);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
+
+        string markdown = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        Assert.Contains("**1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped**", markdown);
+        if (includeValidDependencies)
+        {
+            Assert.AreEqual(
+                """
+                ### Test dependencies
+
+                | Test | Prerequisite | If prerequisite fails |
+                | --- | --- | --- |
+                | Tests.Dependent |  .  | Continue |
+                | Tests.Dependent | Legacy | Skip |
+                | Tests.Dependent | Setup.* | Skip |
+                | Tests.Dependent | Setup.Initialize | Skip |
+                | Tests.Dependent | Setup.Initialize | Continue |
+
+
+                """.Replace("\r\n", "\n"),
+                GetSection(markdown, "### Test dependencies"));
+        }
+        else
+        {
+            Assert.DoesNotContain("### Test dependencies", markdown);
+        }
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_ReportsRecoveredRetryAsFlakyAsync()
     {
         AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
