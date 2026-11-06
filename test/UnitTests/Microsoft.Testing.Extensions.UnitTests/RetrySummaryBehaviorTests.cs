@@ -4,8 +4,11 @@
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 
 using Moq;
 
@@ -293,6 +296,95 @@ public sealed class RetrySummaryBehaviorTests
 
         Assert.AreEqual((source, destination), Assert.ContainsSingle(moved));
         Assert.ContainsSingle(fixture.Displays);
+    }
+
+    [TestMethod]
+    [DataRow(false, false, DisplayName = "RetryArtifacts_CopyFailureReplaysOriginalPath")]
+    [DataRow(true, false, DisplayName = "RetryArtifacts_PartialMoveReplaysBothPaths")]
+    [DataRow(false, true, DisplayName = "RetryArtifacts_ReplayFailurePreservesCopyException")]
+    public async Task Artifacts_PublicationFailureReplaysPendingNotificationsAndPreservesOriginalException(bool partialMove, bool replayFails)
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string retryRoot = Path.Combine(fixture.Root, "Retries", "run");
+        string attempt = Path.Combine(retryRoot, "2");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            string first = Path.Combine(attempt, "first.trx");
+            string second = Path.Combine(attempt, "second.trx");
+            string attachment = Path.Combine(attempt, "attachment.txt");
+            File.WriteAllText(first, "first");
+            File.WriteAllText(second, "second");
+            File.WriteAllText(attachment, "attachment");
+            fixture.FileSystem.Setup(value => value.GetFiles(attempt, "*.*", SearchOption.AllDirectories))
+                .Returns(partialMove ? [first, second] : [first, attachment]);
+            var original = new IOException("artifact publication failed");
+            fixture.FileSystem.Setup(value => value.CopyFile(It.IsAny<string>(), It.IsAny<string>(), true))
+                .Callback<string, string, bool>((source, destination, _) =>
+                {
+                    if (!partialMove && source == attachment)
+                    {
+                        throw original;
+                    }
+
+                    File.Copy(source, destination, overwrite: true);
+                });
+            fixture.FileSystem.Setup(value => value.DeleteFile(It.IsAny<string>()))
+                .Callback<string>(path =>
+                {
+                    if (partialMove && path == second)
+                    {
+                        throw original;
+                    }
+
+                    File.Delete(path);
+                });
+            var protocol = new Mock<IPushOnlyProtocol>();
+            protocol.SetupGet(value => value.IsServerMode).Returns(true);
+            List<FileArtifactMessages> replayed = [];
+            protocol.Setup(value => value.SendMessageAsync(It.IsAny<FileArtifactMessages>()))
+                .Callback(new InvocationAction(call => replayed.Add((FileArtifactMessages)call.Arguments[0])))
+                .Returns(() => replayFails ? Task.FromException(new IOException("replay failed")) : Task.CompletedTask);
+            fixture.Services.AddService(protocol.Object);
+            string manifests = RetryArtifactProcessor.GetDeferredTrxArtifactDirectory(retryRoot);
+            foreach (string path in partialMove ? new[] { first, second } : [first])
+            {
+                Assert.IsTrue(DotnetTestDataConsumer.TryDeferTrxArtifacts(
+                    new FileArtifactMessages("execution", "instance", [new FileArtifactMessage(path, Path.GetFileName(path), null, null, null, "session", "microsoft.testing.trx")]),
+                    attempt,
+                    manifests));
+            }
+
+            var orchestrator = new RetryOrchestrator(fixture.Services);
+            System.Reflection.MethodInfo processArtifacts = typeof(RetryOrchestrator).GetMethod(
+                "ProcessArtifactsAsync",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+            IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => (Task)processArtifacts.Invoke(
+                orchestrator,
+                [
+                    fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object, new List<RetryAttemptArtifact>(),
+                    2, true, 2, 0, 1, false, TimeSpan.Zero, 2, attempt, fixture.Root, CancellationToken.None,
+                ])!);
+
+            Assert.AreSame(original, exception);
+            string[] expected = partialMove ? [Path.Combine(fixture.Root, "first.trx"), second] : [first];
+            Assert.AreSequenceEqual(
+                expected.OrderBy(path => path, StringComparer.Ordinal),
+                replayed.SelectMany(message => message.FileArtifacts).Select(artifact => artifact.FullPath!).OrderBy(path => path, StringComparer.Ordinal));
+            Assert.IsTrue(expected.All(File.Exists));
+            Assert.IsEmpty(fixture.Displays);
+            if (replayFails)
+            {
+                Assert.Contains(
+                    log => log.Level == Microsoft.Testing.Platform.Logging.LogLevel.Warning && log.Message.Contains("Failed to replay retry artifacts", StringComparison.Ordinal),
+                    fixture.Logs);
+            }
+        }
+        finally
+        {
+            Directory.Delete(fixture.Root, recursive: true);
+        }
     }
 
     [TestMethod]

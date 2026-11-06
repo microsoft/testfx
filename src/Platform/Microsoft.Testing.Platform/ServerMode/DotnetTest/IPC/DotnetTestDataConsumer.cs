@@ -15,6 +15,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     internal const string DeferredTrxRootEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_ROOT";
     internal const string DeferredTrxDirectoryEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_DIRECTORY";
+    internal const string ArtifactReplayPipeEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_ARTIFACT_REPLAY_PIPE";
 
     private readonly DotnetTestConnection _dotnetTestConnection;
     private readonly string? _executionId;

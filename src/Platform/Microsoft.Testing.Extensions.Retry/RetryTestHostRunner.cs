@@ -101,7 +101,8 @@ internal static class RetryTestHostRunner
         processStartInfo.EnvironmentVariables.Remove(DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable);
         processStartInfo.EnvironmentVariables.Remove(DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable);
         if (currentTryResultFolder is not null
-            && serviceProvider.GetServiceInternal<IPushOnlyProtocol>() is { IsServerMode: true })
+            && (serviceProvider.GetServiceInternal<IPushOnlyProtocol>() is { IsServerMode: true }
+                || serviceProvider.GetEnvironment().GetEnvironmentVariable(DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable) is { Length: > 0 }))
         {
             processStartInfo.EnvironmentVariables[DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable] = currentTryResultFolder;
             processStartInfo.EnvironmentVariables[DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable] =

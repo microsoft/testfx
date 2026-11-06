@@ -37,6 +37,7 @@ internal sealed partial class PackagedAppTestHostLauncher
         // recursively creating another controller/deployment layer when the parent was opted in with "always".
         startInfo.Environment[LauncherModeEnvironmentVariable] = NeverMode;
         startInfo.Environment.Remove(PackagedAppControllerArguments.NativePipeEnvironmentVariable);
+        startInfo.Environment.Remove(Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable);
 
         Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");

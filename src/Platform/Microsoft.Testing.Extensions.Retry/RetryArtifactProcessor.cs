@@ -2,6 +2,7 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
@@ -20,14 +21,18 @@ internal static class RetryArtifactProcessor
     public static string GetDeferredTrxArtifactDirectory(string retryRootDirectory)
         => Path.Combine(retryRootDirectory, "ArtifactMetadata");
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public static async Task PublishDeferredTrxArtifactsAsync(
         IServiceProvider serviceProvider,
         string retryRootDirectory,
         IReadOnlyDictionary<string, string> movedArtifacts)
     {
         IPushOnlyProtocol? protocol = serviceProvider.GetServiceInternal<IPushOnlyProtocol>();
+        IEnvironment environment = serviceProvider.GetEnvironment();
+        string? replayPipe = environment.GetEnvironmentVariable(DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable);
         string directory = GetDeferredTrxArtifactDirectory(retryRootDirectory);
-        if (protocol is not { IsServerMode: true } || !Directory.Exists(directory))
+        if ((protocol is not { IsServerMode: true } && replayPipe is not { Length: > 0 }) || !Directory.Exists(directory))
         {
             return;
         }
@@ -48,7 +53,20 @@ internal static class RetryArtifactProcessor
                         : artifact;
                 }),
             ];
-            await protocol.SendMessageAsync(message with { FileArtifacts = artifacts }).ConfigureAwait(false);
+            FileArtifactMessages updated = message with { FileArtifacts = artifacts };
+            if (protocol is { IsServerMode: true })
+            {
+                await protocol.SendMessageAsync(updated).ConfigureAwait(false);
+            }
+            else
+            {
+                await DotnetTestConnection.SendFileArtifactsToPipeAsync(
+                    replayPipe!,
+                    updated,
+                    environment,
+                    serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
+            }
+
             File.Delete(manifest);
         }
 
