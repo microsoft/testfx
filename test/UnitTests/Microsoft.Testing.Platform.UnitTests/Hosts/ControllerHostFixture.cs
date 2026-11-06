@@ -32,9 +32,10 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 internal sealed class ControllerHostFixture : IDisposable
 {
-    public static readonly TimeSpan OperationLimit = TimeSpan.FromSeconds(30);
+    public static readonly TimeSpan OperationLimit = TimeoutHelper.DefaultHangTimeSpanTimeout;
     private static readonly TimeSpan CleanupLimit = TimeSpan.FromSeconds(30);
-    private readonly CancellationTokenSource _peerLifetime = new(OperationLimit);
+    // The run guard owns the deadline; only teardown should cancel the protocol peer.
+    private readonly CancellationTokenSource _peerLifetime = new();
     private readonly TaskCompletionSource<bool> _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<bool> _exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly ConcurrentQueue<Task> _workers = new();

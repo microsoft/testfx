@@ -358,6 +358,11 @@ public sealed class IPCTests
             await requestReceived.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             Assert.AreEqual(new IntMessage(42), await requestReceived.Task);
             client.Dispose();
+
+            // Observe transport EOF while the reply is gated, rather than racing the peer's handle closure.
+            Task<int> disconnectTask = server.GetServerStream().ReadAsync(new byte[1], 0, 1, _testContext.CancellationToken);
+            await disconnectTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            Assert.AreEqual(0, await disconnectTask);
             releaseResponse.TrySetResult(true);
 
             await loggedMessage.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
