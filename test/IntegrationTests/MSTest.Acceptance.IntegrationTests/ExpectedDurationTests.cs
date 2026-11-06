@@ -57,14 +57,14 @@ public sealed class ExpectedDurationTests : AcceptanceTestBase<ExpectedDurationT
             new()
             {
                 ["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US",
-                [ProvenanceEnvironmentVariable] = Path.Combine(passingResults.Path, "loaded-assemblies.txt"),
+                [ProvenanceEnvironmentVariable] = Path.Join(passingResults.Path, "loaded-assemblies.txt"),
             },
             cancellationToken: TestContext.CancellationToken);
 
         await RecordConsumerRunAsync(host, metadataMode, passingResults.Path, "passing", passing.Command, passing.ExitCode, passing.StandardOutput, passing.StandardError);
         passing.AssertExitCodeIs(ExitCode.Success);
         passing.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        AssertReport(Path.Combine(passingResults.Path, "duration.trx"), [ExpectedRows[0]]);
+        AssertReport(Path.Join(passingResults.Path, "duration.trx"), [ExpectedRows[0]]);
         AssertDeliveredWarnings(passing.StandardOutputLines.Concat(passing.StandardErrorLines), [ExpectedRows[0]]);
 
         using TempDirectory mixedResults = new();
@@ -73,14 +73,14 @@ public sealed class ExpectedDurationTests : AcceptanceTestBase<ExpectedDurationT
             new()
             {
                 ["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US",
-                [ProvenanceEnvironmentVariable] = Path.Combine(mixedResults.Path, "loaded-assemblies.txt"),
+                [ProvenanceEnvironmentVariable] = Path.Join(mixedResults.Path, "loaded-assemblies.txt"),
             },
             cancellationToken: TestContext.CancellationToken);
 
         await RecordConsumerRunAsync(host, metadataMode, mixedResults.Path, "mixed", mixed.Command, mixed.ExitCode, mixed.StandardOutput, mixed.StandardError);
         mixed.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         mixed.AssertOutputContainsSummary(failed: 1, passed: 10, skipped: 2);
-        AssertReport(Path.Combine(mixedResults.Path, "duration.trx"), ExpectedRows);
+        AssertReport(Path.Join(mixedResults.Path, "duration.trx"), ExpectedRows);
         AssertDeliveredWarnings(mixed.StandardOutputLines.Concat(mixed.StandardErrorLines), ExpectedRows);
     }
 
@@ -90,7 +90,7 @@ public sealed class ExpectedDurationTests : AcceptanceTestBase<ExpectedDurationT
     {
         string projectPath = AssetFixture.GetAssetPath(AssetName);
         var host = TestHost.LocateFrom(projectPath, AssetName, TargetFrameworks.NetCurrent, metadataMode: metadataMode);
-        string assemblyPath = Path.Combine(host.DirectoryName, AssetName + ".dll");
+        string assemblyPath = Path.Join(host.DirectoryName, AssetName + ".dll");
         string dotnetRoot = Path.Combine(RootFinder.Find(), ".dotnet");
         string dotnetPath = Path.Combine(dotnetRoot, $"dotnet{Constants.ExecutableExtension}");
         Dictionary<string, string?> environmentVariables = new()

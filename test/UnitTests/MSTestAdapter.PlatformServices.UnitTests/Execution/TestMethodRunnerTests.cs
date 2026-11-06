@@ -1261,7 +1261,7 @@ public class TestMethodRunnerTests : TestContainer
         var logger = new Mock<IAdapterMessageLogger>();
         logger.Setup(value => value.SendMessage(It.IsAny<MessageLevel>(), It.IsAny<string>()))
             .Callback<MessageLevel, string>((level, message) => messages.Add((level, message)));
-        var context = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), logger.Object, null);
+        using var context = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), logger.Object, null);
         string?[] originalContextMessages = reported.Select(result => result.TestContextMessages).ToArray();
         CultureInfo previousCulture = CultureInfo.CurrentCulture;
         CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
@@ -1285,7 +1285,6 @@ public class TestMethodRunnerTests : TestContainer
         {
             CultureInfo.CurrentCulture = previousCulture;
             CultureInfo.CurrentUICulture = previousUICulture;
-            context.Dispose();
         }
     }
 
