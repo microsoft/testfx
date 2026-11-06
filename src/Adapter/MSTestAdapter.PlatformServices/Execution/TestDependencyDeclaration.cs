@@ -46,6 +46,31 @@ internal sealed class TestDependencyDeclaration
     public bool ProceedOnFailure { get; }
 
     /// <summary>
+    /// Resolves placement between classes without expanding configuration edges for every data row.
+    /// </summary>
+    public bool TryResolveClassDependency(
+        IReadOnlyDictionary<string, HashSet<string>> methodsByClass,
+        [NotNullWhen(true)] out string? dependentClassName,
+        [NotNullWhen(true)] out string? prerequisiteClassName)
+    {
+        dependentClassName = null;
+        prerequisiteClassName = null;
+        if (!TestReference.TryParse(Dependent, out TestReference? dependent)
+            || !TestReference.TryParse(Prerequisite, out TestReference? prerequisite)
+            || !methodsByClass.TryGetValue(dependent.ClassName, out HashSet<string>? dependentMethods)
+            || !methodsByClass.TryGetValue(prerequisite.ClassName, out HashSet<string>? prerequisiteMethods)
+            || (dependent.MethodName is { } dependentMethod && !dependentMethods.Contains(dependentMethod))
+            || (prerequisite.MethodName is { } prerequisiteMethod && !prerequisiteMethods.Contains(prerequisiteMethod)))
+        {
+            return false;
+        }
+
+        dependentClassName = dependent.ClassName;
+        prerequisiteClassName = prerequisite.ClassName;
+        return true;
+    }
+
+    /// <summary>
     /// Reports the declarations whose diagnostics can only be judged against the whole run: a malformed
     /// reference, and a dependent that matches no test anywhere. Kept separate from <see cref="ApplyAll"/>,
     /// which runs once per source and therefore cannot tell "this names a test in another assembly" from

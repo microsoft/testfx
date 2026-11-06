@@ -11,7 +11,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class UnitTestDiscoverer
 {
-    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler) => _testSource = testSourceHandler;
+    private readonly TestPartition? _partition;
+    private readonly Action<UnitTestElement>? _unpartitionedTestObserver;
+
+    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler)
+        : this(testSourceHandler, partition: null, unpartitionedTestObserver: null)
+    {
+    }
+
+    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler, TestPartition? partition, Action<UnitTestElement>? unpartitionedTestObserver = null)
+    {
+        _testSource = testSourceHandler;
+        _partition = partition;
+        _unpartitionedTestObserver = unpartitionedTestObserver;
+    }
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -100,7 +113,7 @@ internal class UnitTestDiscoverer
                 source);
         }
 
-        await SendTestCasesAsync(testElements, discoverySink, filterProvider, logger).ConfigureAwait(false);
+        await SendTestCasesAsync(testElements, discoverySink, filterProvider, logger, _partition, _unpartitionedTestObserver).ConfigureAwait(false);
     }
 
     private readonly ITestSourceHandler _testSource;
@@ -117,7 +130,16 @@ internal class UnitTestDiscoverer
         return elements;
     }
 
-    internal static async Task SendTestCasesAsync(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
+    internal static Task SendTestCasesAsync(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
+        => SendTestCasesAsync(testElements, discoverySink, filterProvider, logger, partition: null, unpartitionedTestObserver: null);
+
+    private static async Task SendTestCasesAsync(
+        IEnumerable<UnitTestElement> testElements,
+        IUnitTestElementSink discoverySink,
+        ITestElementFilterProvider? filterProvider,
+        IAdapterMessageLogger logger,
+        TestPartition? partition,
+        Action<UnitTestElement>? unpartitionedTestObserver)
     {
         // Get filter and skip discovery in case filter expression has parsing error.
         bool filterHasError = false;
@@ -127,10 +149,24 @@ internal class UnitTestDiscoverer
             return;
         }
 
+        HashSet<UnitTestElement>? partitionTests = null;
+        if (partition is not null)
+        {
+            ICollection<UnitTestElement> allTests = testElements as ICollection<UnitTestElement> ?? [.. testElements];
+            partitionTests = [.. partition.SelectTests(allTests, MSTestSettings.CurrentSettings.DeclaredDependencies)];
+            testElements = allTests;
+        }
+
         foreach (UnitTestElement testElement in testElements)
         {
             // Filter tests based on test case filters.
             if (filter is not null && !filter.Matches(testElement))
+            {
+                continue;
+            }
+
+            unpartitionedTestObserver?.Invoke(testElement);
+            if (partitionTests is not null && !partitionTests.Contains(testElement))
             {
                 continue;
             }

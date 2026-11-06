@@ -1,4 +1,14 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.TryResolveClassDependency(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.HashSet<string!>!>! methodsByClass, out string? dependentClassName, out string? prerequisiteClassName) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Count.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Index.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.SelectTests(System.Collections.Generic.ICollection<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! tests, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration![]? configuredDependencies) -> System.Collections.Generic.ICollection<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.TestPartition(int index, int count) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.TryParse(string! value, out Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition? partition) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer.UnitTestDiscoverer(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition? partition, System.Action<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>? unpartitionedTestObserver = null) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.Partition.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.Partition.set -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodRunner.ReportExpectedDurationWarnings(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.GetDataParameterCount(System.Reflection.ParameterInfo![]! parameters) -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerator.EnumerateAssembly(string! assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors, System.Type![]? types, System.Action<System.Type!, System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?>? typeObserver) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerationResult!

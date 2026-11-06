@@ -1,4 +1,9 @@
 #nullable enable
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.PartitionOptionName = "partition" -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.MSTestPartitionCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestPartitionCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.DisableEnvironmentVariable = "MSTEST_DISABLE_DISCOVERY_CACHE" -> string!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.EnableEnvironmentVariable = "MSTEST_EXPERIMENTAL_DISCOVERY_CACHE" -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache

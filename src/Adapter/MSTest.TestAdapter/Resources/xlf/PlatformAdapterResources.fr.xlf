@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../PlatformAdapterResources.resx">
     <body>
+      <trans-unit id="InvalidPartitionOptionArgument">
+        <source>The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</source>
+        <target state="new">The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</target>
+        <note>{Locked="--partition"}{Locked="index/count"}</note>
+      </trans-unit>
       <trans-unit id="MSTestExtensionDescription">
         <source>MSTest Framework for Microsoft Testing Platform.</source>
         <target state="translated">Framework MSTest pour Microsoft Testing Platform.</target>
@@ -11,6 +16,21 @@
         <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
         <target state="translated">Fichier .runsettings non valide, « &lt;RunSettings&gt; » attribut est manquant</target>
         <note>Do not localize file extension {Locked=".runsettings"} or element {Locked="&lt;RunSettings&gt;"}.</note>
+      </trans-unit>
+      <trans-unit id="PartitionNotSupportedInServerMode">
+        <source>The '--partition' option is not supported in JSON-RPC server mode.</source>
+        <target state="new">The '--partition' option is not supported in JSON-RPC server mode.</target>
+        <note>{Locked="--partition"}{Locked="JSON-RPC"}</note>
+      </trans-unit>
+      <trans-unit id="PartitionNotSupportedOnWebAssembly">
+        <source>The '--partition' option is not supported on WebAssembly.</source>
+        <target state="new">The '--partition' option is not supported on WebAssembly.</target>
+        <note>{Locked="--partition"}{Locked="WebAssembly"}</note>
+      </trans-unit>
+      <trans-unit id="PartitionOptionDescription">
+        <source>Run partition 'index/count' of the tests, keeping test classes and dependencies together.</source>
+        <target state="new">Run partition 'index/count' of the tests, keeping test classes and dependencies together.</target>
+        <note>{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
         <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>

@@ -164,7 +164,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         // Call the platform-agnostic engine directly with neutral inputs; the native MTP path no longer routes
         // through the VSTest MSTestDiscoverer class. The MTP-specific filter provider evaluates the filter from the
         // neutral UnitTestElement model so this path never materializes a vstest TestCase (see #9769).
-        var engine = new MSTestEngine(cancellationToken, CreateTelemetrySender())
+        var engine = new MSTestEngine(cancellationToken, CreateTelemetrySender(), CreateExecutionManager())
         {
             TestClassInstanceFactory = TestClassInstanceFactory,
         };
@@ -202,10 +202,11 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _gracefulStopCapability.NotifyTestExecutionStarting();
         try
         {
-            var executionManager = new TestExecutionManager();
+            TestExecutionManager executionManager = CreateExecutionManager();
             string? enableCache = Environment.GetEnvironmentVariable(MSTestDiscoveryCache.EnableEnvironmentVariable);
             string? disableCache = Environment.GetEnvironmentVariable(MSTestDiscoveryCache.DisableEnvironmentVariable);
-            if (enableCache is "1" or "true"
+            if (executionManager.Partition is null
+                && enableCache is "1" or "true"
                 && disableCache is not ("1" or "true")
                 && DiscoveryCache is { } cache
                 && TestClassInstanceFactory is null
@@ -247,6 +248,22 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         {
             _gracefulStopCapability.NotifyTestExecutionCompleted();
         }
+    }
+
+    private TestExecutionManager CreateExecutionManager()
+    {
+        var executionManager = new TestExecutionManager();
+        if (_serviceProvider.GetCommandLineOptions().TryGetOptionArgumentList(MSTestPartitionCommandLineOptionsProvider.PartitionOptionName, out string[]? arguments))
+        {
+            if (arguments is not [string value] || !TestPartition.TryParse(value, out TestPartition? partition))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            executionManager.Partition = partition;
+        }
+
+        return executionManager;
     }
 
     private MSTestRunSettings CreateRunSettings(MSTestFrameworkHandle handle)

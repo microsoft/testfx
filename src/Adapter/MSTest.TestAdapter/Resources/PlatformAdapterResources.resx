@@ -177,4 +177,20 @@
     <value>Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</value>
     <comment>{0} is the unsupported section name. Do not localize {Locked="Runsettings"}, {Locked="MSTest"}, {Locked="Microsoft.Testing.Platform"}, {Locked="VSTest"}, or {Locked="ISettingsProvider"}.</comment>
   </data>
+  <data name="PartitionOptionDescription" xml:space="preserve">
+    <value>Run partition 'index/count' of the tests, keeping test classes and dependencies together.</value>
+    <comment>{Locked="index/count"}</comment>
+  </data>
+  <data name="InvalidPartitionOptionArgument" xml:space="preserve">
+    <value>The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</value>
+    <comment>{Locked="--partition"}{Locked="index/count"}</comment>
+  </data>
+  <data name="PartitionNotSupportedInServerMode" xml:space="preserve">
+    <value>The '--partition' option is not supported in JSON-RPC server mode.</value>
+    <comment>{Locked="--partition"}{Locked="JSON-RPC"}</comment>
+  </data>
+  <data name="PartitionNotSupportedOnWebAssembly" xml:space="preserve">
+    <value>The '--partition' option is not supported on WebAssembly.</value>
+    <comment>{Locked="--partition"}{Locked="WebAssembly"}</comment>
+  </data>
 </root>

@@ -52,6 +52,7 @@ public static class TestApplicationBuilderExtensions
 
         testApplicationBuilder.CommandLine.AddProvider(() => new MSTestRunSettingsCommandLineOptionsProvider(extension));
         testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestCaseFilterCommandLineOptionsProvider(extension));
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestPartitionCommandLineOptionsProvider(extension));
         testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestRunParametersCommandLineOptionsProvider(extension));
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
 
