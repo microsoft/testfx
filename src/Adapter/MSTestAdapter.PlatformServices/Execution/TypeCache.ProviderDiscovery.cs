@@ -221,70 +221,80 @@ internal sealed partial class TypeCache
 
     private static IEnumerable<Assembly> EnumerateCandidateAssemblies(Assembly currentAssembly)
     {
-        // BFS over the consumer assembly's reference graph. This bounds the work to assemblies that
-        // are recorded in the metadata reference table (the runtime reference graph), instead of
-        // scanning the entire AppDomain. Note that a bare project / PackageReference is NOT
-        // sufficient: the C# compiler omits references that the compiled IL never uses, so a
-        // provider library only shows up here if its types are actually touched by the consumer
-        // (or a `[assembly: TypeForwardedTo]` / similar pulls the reference in). The acceptance
-        // asset for this feature accordingly calls into the provider library to materialize the
-        // reference.
-        //
-        // Dedup uses AssemblyName.FullName (name + version + culture + public-key-token) so multi-version
-        // / multi-token references with the same simple name are not collapsed.
         var visited = new HashSet<string>(StringComparer.Ordinal);
-        var queue = new Queue<Assembly>();
-
+        var queue = new Queue<ProviderDiscoveryNode>();
+        var metadataResolver = new ProviderDiscoveryMetadataResolver();
         visited.Add(currentAssembly.FullName ?? string.Empty);
 
-        // The consumer assembly itself is yielded first so users may also place the marker on the
-        // test project (handy escape hatch when the library author cannot ship the attribute themselves).
-        queue.Enqueue(currentAssembly);
+        // A consumer can register fixtures itself. For references, inspect PE metadata first:
+        // loading an unmarked library just to read its references changes user-visible runtime state.
+        yield return currentAssembly;
+        queue.Enqueue(new(currentAssembly, GetProviderDiscoveryReferences(currentAssembly)));
 
         while (queue.Count > 0)
         {
-            Assembly current = queue.Dequeue();
-            yield return current;
-
-            AssemblyName[] references;
-            try
-            {
-                references = current.GetReferencedAssemblies();
-            }
-            catch (Exception ex)
-            {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                        "TypeCache: Exception occurred while enumerating referenced assemblies of {0} for AssemblyFixtureProvider discovery. {1}",
-                        SafeGetAssemblyName(current),
-                        ex);
-                }
-
-                continue;
-            }
-
-            foreach (AssemblyName referenceName in references)
+            ProviderDiscoveryNode node = queue.Dequeue();
+            Assembly referrer = node.Referrer;
+            foreach (AssemblyName referenceName in node.References)
             {
                 string? name = referenceName.Name;
-                if (name is null || IsFrameworkAssemblyName(name))
+                if (name is null || IsFrameworkAssemblyName(name) || !visited.Add(referenceName.FullName))
                 {
                     continue;
                 }
 
-                if (!visited.Add(referenceName.FullName))
+                string? path = metadataResolver.Resolve(referrer, referenceName);
+                if (path is not null && TryReadProviderMetadata(path, out bool hasMarker, out AssemblyName[] metadataReferences) && !hasMarker)
                 {
+                    // Keep the nearest runtime referrer for eventual provider loading, but walk
+                    // unmarked intermediaries using only their metadata.
+                    queue.Enqueue(new(referrer, metadataReferences));
                     continue;
                 }
 
-                Assembly? referenced = TryLoadReferencedAssembly(current, referenceName);
+                if (path is null && PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
+                        "TypeCache: No metadata path for referenced assembly {0}; using runtime resolution for AssemblyFixtureProvider discovery.",
+                        referenceName.FullName);
+                }
+
+                Assembly? referenced = TryLoadReferencedAssembly(referrer, referenceName);
                 if (referenced is null || referenced.IsDynamic)
                 {
                     continue;
                 }
 
-                queue.Enqueue(referenced);
+                yield return referenced;
+                queue.Enqueue(new(referenced, GetProviderDiscoveryReferences(referenced)));
             }
+        }
+    }
+
+    private readonly struct ProviderDiscoveryNode(Assembly referrer, AssemblyName[] references)
+    {
+        public Assembly Referrer { get; } = referrer;
+
+        public AssemblyName[] References { get; } = references;
+    }
+
+    private static AssemblyName[] GetProviderDiscoveryReferences(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetReferencedAssemblies();
+        }
+        catch (Exception ex)
+        {
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "TypeCache: Exception occurred while enumerating referenced assemblies of {0} for AssemblyFixtureProvider discovery. {1}",
+                    SafeGetAssemblyName(assembly),
+                    ex);
+            }
+
+            return [];
         }
     }
 
