@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class DiagnosticLoggingInformationTests
 {
+    private static readonly TimeSpan CompletionLimit = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan CleanupLimit = TimeSpan.FromSeconds(30);
+
     public TestContext TestContext { get; set; } = null!;
 
     [DataRow(false)]
@@ -187,18 +190,19 @@ public sealed class DiagnosticLoggingInformationTests
 #endif
     }
 
+    [DataRow(false)]
+    [DataRow(true)]
     [TestMethod]
-    public async Task SynchronousLoggerCreatedBeforeRelocationWaitsForReplacement()
+    public async Task SynchronousLoggerCreatedBeforeRelocationWaitsForReplacement(bool useAsync)
     {
         string initialDirectory = Path.Combine("initial", "diagnostics");
         string resultsDirectory = Path.Combine("final", "results");
         const string FileName = "test.diag";
-        var rendezvousTimeout = TimeSpan.FromSeconds(30);
-        var cleanupTimeout = TimeSpan.FromSeconds(30);
+        const string Message = "Written during relocation.";
 
         var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var logStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var synchronousWaitAttempted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         Mock<IFileSystem> fileSystem = CreateFileSystemMock();
 
@@ -224,7 +228,7 @@ public sealed class DiagnosticLoggingInformationTests
 
         Task relocationTask = Task.Factory.StartNew(
             () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory),
-            TestContext.CancellationToken,
+            CancellationToken.None,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default).Unwrap();
         Task logTask = Task.CompletedTask;
@@ -232,41 +236,77 @@ public sealed class DiagnosticLoggingInformationTests
 
         try
         {
-            await disposeStarted.Task.WaitAsync(rendezvousTimeout, TestContext.CancellationToken);
+            await disposeStarted.Task.WaitAsync(CompletionLimit, TestContext.CancellationToken);
 
-            // ThreadState is a debugging snapshot, not a portable semaphore-wait notification.
-            logTask = Task.Factory.StartNew(
-                () => logger.Log(
-                    LogLevel.Debug,
-                    "Written during relocation.",
-                    null,
-                    (state, _) =>
-                    {
-                        logStarted.TrySetResult(true);
-                        return state;
-                    }),
-                TestContext.CancellationToken,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
+            logTask = useAsync
+                ? logger.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter)
+                : Task.Factory.StartNew(
+                    LogSynchronouslyAfterWaitProbe,
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default);
+            if (!useAsync)
+            {
+                Task first = await Task.WhenAny(synchronousWaitAttempted.Task, logTask).WaitAsync(CompletionLimit, TestContext.CancellationToken);
+                Assert.AreSame(synchronousWaitAttempted.Task, first, "Synchronous logging did not attempt the held relocation gate.");
+            }
 
-            await logStarted.Task.WaitAsync(rendezvousTimeout, TestContext.CancellationToken);
             completedBeforeReplacement = logTask.IsCompleted;
         }
         finally
         {
             allowDispose.TrySetResult(true);
             // Cleanup must join the workers even when the test's cancellation token has been canceled.
-            await Task.WhenAll(relocationTask, logTask).WaitAsync(cleanupTimeout, CancellationToken.None);
+            await Task.WhenAll(relocationTask, logTask).WaitAsync(CleanupLimit, CancellationToken.None);
         }
 
         Assert.IsFalse(completedBeforeReplacement, "Logging completed before relocation installed the replacement logger.");
         Assert.IsNotNull(replacementStream);
-        Assert.AreEqual(
-            """
-            [00:00:00.000 test - DEBUG] Written during relocation.
+        string expected = useAsync
+            ? """
+              0001-01-01T00:00:00.0000000+00:00 test DEBUG Written during relocation.
 
-            """.Replace("\r\n", "\n"),
+              """
+            : """
+              [00:00:00.000 test - DEBUG] Written during relocation.
+
+              """;
+        Assert.AreEqual(
+            expected.Replace("\r\n", "\n"),
             Encoding.UTF8.GetString(replacementStream.ToArray()).Replace("\r\n", "\n"));
+
+#pragma warning disable CA1416 // Thread interruption is unavailable on browser, but this test runs on desktop test hosts.
+        void LogSynchronouslyAfterWaitProbe()
+        {
+            Assert.IsFalse(Thread.CurrentThread.IsThreadPoolThread, "The wait probe must not interrupt a thread-pool worker.");
+            try
+            {
+                Assert.ThrowsExactly<ThreadInterruptedException>(
+                    () => logger.Log(LogLevel.Debug, Message, null, InterruptOnNextWait));
+            }
+            finally
+            {
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Clear this probe's pending interrupt if logging failed before it could block.
+                }
+            }
+
+            synchronousWaitAttempted.TrySetResult(true);
+            logger.LogDebug(Message);
+        }
+
+        static string InterruptOnNextWait(string state, Exception? exception)
+        {
+            // Returning from this formatter enters the relocation wait; only blocking consumes the interrupt.
+            Thread.CurrentThread.Interrupt();
+            return state;
+        }
+#pragma warning restore CA1416
 
         async Task BlockFirstStreamDisposalAsync()
         {
