@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.TryResolveClassDependency(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.HashSet<string!>!>! methodsByClass, out string? dependentClassName, out string? prerequisiteClassName) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Count.get -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Index.get -> int

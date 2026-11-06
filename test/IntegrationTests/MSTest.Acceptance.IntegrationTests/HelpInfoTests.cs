@@ -116,6 +116,8 @@ Extension options:
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
     --maximum-failed-tests
         Specifies a maximum number of test failures that, when exceeded, will abort the test run.
+    --partition
+        Run partition 'index/count' of the tests, keeping test classes and dependencies together.
     --settings
         The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.
     --test-parameter
@@ -148,6 +150,10 @@ Extension options:
         Arity: 1
         Hidden: False
         Description: Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+      --partition
+        Arity: 1
+        Hidden: False
+        Description: Run partition 'index/count' of the tests, keeping test classes and dependencies together.
       --test-parameter
         Arity: 1..N
         Hidden: False

@@ -189,6 +189,48 @@ counts, inner/outer exits and the intended counterfactual assertion failures.
 Do not treat build failures, skipped/zero tests or green CI alone as regression
 sensitivity.
 
-Implementation, executable evidence and code-review outcomes will be recorded
-as they occur. The previous standalone PowerShell/Node experiments confirmed
+### Implementation log
+
+- Implemented the parser/planner, pre-filter discovery selection, native option
+  registration, ordinary filter/Retry composition, and unchanged count policies.
+  The original constructor and static discovery-filter entry point remain
+  available to existing internal callers.
+- Source `net10.0` compilation succeeded with the pinned SDK. The owning
+  project's `UpdateXlf` generated all 13 catalogs; the localization regression
+  suite (41 tests) and the 364-catalog guard passed.
+- Independent code-review round 1 inspected
+  `4a42a14dc6fa12d0b47633cd03db9466d13e9ec9`: Claude Opus 5.5 and Gemini
+  4 Argon found no blocking correctness defects. Follow-up fixes clear stale
+  diagnostic state on manager reuse and guard deliberate cache/factory bypass.
+- Both reviewers noted unnecessary row-level cloning for configured placement.
+  The implementation now resolves class edges through the existing private
+  dependency-reference parser and a class/method index, without cloning
+  elements or expanding configuration arrays per data row. Attribute edges
+  are not discarded merely because methods have the same name: overloads can
+  declare different prerequisites.
+- Multi-target compilation covered `net462`, `net10.0`, `net11.0`, modern UWP
+  and WinUI. It caught an older-TFM style diagnostic in the SHA-256 fallback,
+  which was corrected. Classic UWP requires full Visual Studio MSBuild, absent
+  on this host; local packing uses the repository's supported
+  `SkipUapTargetFramework=true` build setting and must not be presented as a
+  complete classic-UWP shipping-package validation.
+  The full Windows file-count guard consequently reports omitted classic-UWP
+  payloads (`MSTest` 9/10, adapter 64/76, framework 88/105). This is an explicit
+  local validation gap, not a passed full-Windows package check; these partial
+  local test packages are not for publication.
+- This host cannot resolve bare `powershell` from the repository's cmd/Exec
+  wrappers, despite the full executable being present. SDK/runtimes were
+  initialized through the same repository scripts using native PowerShell.
+  Post-pack validation is invoked explicitly through its native entry point;
+  no repository build script or validation rule is weakened.
+
+The focused Release/net10 unit gate passed **34/34**: 21 parser/planner cases,
+12 native-option/discovery/factory cases and one manager-reuse regression.
+TRX, JUnit XML and CTRF JSON exports were parsed for all three scopes with no
+missing, duplicate, skipped or failed cases. The overload regression preserves
+both same-named methods' different dependency edges, rather than incorrectly
+deduplicating by method name.
+
+Packed acceptance, paired counterfactual results and final review outcomes are
+still pending. The earlier standalone PowerShell/Node experiments confirmed
 the hash vectors and ordering properties only; they are not product evidence.

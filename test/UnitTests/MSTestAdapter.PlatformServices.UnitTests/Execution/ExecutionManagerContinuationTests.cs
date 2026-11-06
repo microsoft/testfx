@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,6 +26,36 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
 public sealed class ExecutionManagerContinuationTests : TestContainer
 {
+    public async Task TestsBasedRunAfterPartitionedSourceRun_UsesCurrentDependencyDiagnosticSelection()
+    {
+        using var harness = new ManagerHarness(ExecutionScope.MethodLevel);
+        await harness.RunEmptyPartitionedSourceRequestAsync();
+        harness.Results.Should().BeEmpty();
+
+        UnitTestElement current = harness.Element<FixtureA>(nameof(FixtureA.A1));
+        string prerequisite = $"{typeof(FixtureA).FullName}.{nameof(FixtureA.A2)}";
+        var values = new Dictionary<string, string>
+        {
+            ["mstest"] = "configured",
+            ["mstest:execution:dependencies:nodes:0:test"] = current.TestMethod.FullyQualifiedName,
+            ["mstest:execution:dependencies:nodes:0:dependsOn:0"] = prerequisite,
+        };
+        var configuration = new Mock<IConfiguration>();
+        configuration.Setup(value => value[It.IsAny<string>()])
+            .Returns((string key) => values.TryGetValue(key, out string? value) ? value : null);
+        MSTestSettings.PopulateSettings(null, null, configuration.Object);
+
+        await harness.RunAsync([current]);
+
+        harness.Results.Should().Equal((nameof(FixtureA.A1), UnitTestOutcome.Passed));
+        harness.State.Sequence.Should().Equal(nameof(FixtureA.A1));
+        // The current dependent exists, unlike in the previous empty source request. Only its genuinely
+        // absent prerequisite should warn; retaining the old selection adds a false unmatched-dependent warning.
+        harness.Messages.Where(message => message.Level == MessageLevel.Warning).Should().ContainSingle()
+            .Which.Text.Should().Be(string.Format(
+                CultureInfo.CurrentCulture, Resource.DependsOnTargetNotFound, current.TestMethod.FullyQualifiedName, prerequisite));
+    }
+
     public async Task MethodAndClassScopesHaveDifferentChunkBoundaries()
     {
         foreach (ExecutionScope scope in new[] { ExecutionScope.MethodLevel, ExecutionScope.ClassLevel })
@@ -330,6 +361,15 @@ public sealed class ExecutionManagerContinuationTests : TestContainer
 
         internal Task RunAsync(UnitTestElement[] elements, string? xml = null, ITestElementFilterProvider? filter = null)
             => _manager.RunTestsAsync(elements, new DeploymentContext(null, xml), _logger.Object, Recorder.Object, filter, new TestRunCancellationToken());
+
+        internal Task RunEmptyPartitionedSourceRequestAsync()
+        {
+            _manager.Partition = new TestPartition(1, 1);
+            return _manager.RunTestsAsync(
+                Array.Empty<string>(), new DeploymentContext(null, null), _logger.Object, Recorder.Object,
+                filterProvider: null, testSourceHandler: Mock.Of<ITestSourceHandler>(), isMTP: true,
+                cancellationToken: new TestRunCancellationToken());
+        }
 
         public void Dispose()
         {

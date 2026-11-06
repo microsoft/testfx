@@ -56,15 +56,7 @@ internal sealed class TestPartition
             return tests;
         }
 
-        UnitTestElement[] groupingTests = configuredDependencies is { Length: > 0 }
-            ? [.. tests.Select(test => test.Clone())]
-            : [.. tests];
-        if (configuredDependencies is { Length: > 0 })
-        {
-            // Placement must not append configuration dependencies to the elements later executed.
-            TestDependencyDeclaration.ApplyAll(configuredDependencies, groupingTests, adapterMessageLogger: null);
-        }
-
+        UnitTestElement[] groupingTests = [.. tests];
         string[] classNames = [.. groupingTests.Select(test => test.TestMethod.FullClassName).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal)];
         var classIndices = new Dictionary<string, int>(StringComparer.Ordinal);
         int[] parents = new int[classNames.Length];
@@ -74,27 +66,51 @@ internal sealed class TestPartition
             parents[i] = i;
         }
 
-        var methods = new HashSet<(string ClassName, string MethodName)>(
-            groupingTests.Select(test => (test.TestMethod.FullClassName, test.TestMethod.Name)));
-        foreach (UnitTestElement test in groupingTests)
+        if (configuredDependencies is { Length: > 0 }
+            || groupingTests.Any(test => test.Dependencies is { Length: > 0 }))
         {
-            if (test.Dependencies is not { Length: > 0 } dependencies)
+            var methodsByClass = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            foreach (string className in classNames)
             {
-                continue;
+                methodsByClass.Add(className, []);
             }
 
-            int dependent = classIndices[test.TestMethod.FullClassName];
-            foreach (TestDependencyInfo dependency in dependencies)
+            foreach (UnitTestElement test in groupingTests)
             {
-                string targetClass = dependency.TargetClassFullName ?? test.TestMethod.FullClassName;
-                if (!classIndices.TryGetValue(targetClass, out int prerequisite)
-                    || (dependency.TargetMethodName is { } method && !methods.Contains((targetClass, method))))
+                methodsByClass[test.TestMethod.FullClassName].Add(test.TestMethod.Name);
+            }
+
+            foreach (UnitTestElement test in groupingTests)
+            {
+                if (test.Dependencies is not { Length: > 0 } dependencies)
                 {
-                    // The ordinary executor owns diagnostics for unresolved dependencies.
                     continue;
                 }
 
-                parents[Find(parents, prerequisite)] = Find(parents, dependent);
+                int dependent = classIndices[test.TestMethod.FullClassName];
+                foreach (TestDependencyInfo dependency in dependencies)
+                {
+                    string targetClass = dependency.TargetClassFullName ?? test.TestMethod.FullClassName;
+                    if (!classIndices.TryGetValue(targetClass, out int prerequisite)
+                        || (dependency.TargetMethodName is { } method && !methodsByClass[targetClass].Contains(method)))
+                    {
+                        // The ordinary executor owns diagnostics for unresolved dependencies.
+                        continue;
+                    }
+
+                    parents[Find(parents, prerequisite)] = Find(parents, dependent);
+                }
+            }
+
+            if (configuredDependencies is not null)
+            {
+                foreach (TestDependencyDeclaration declaration in configuredDependencies)
+                {
+                    if (declaration.TryResolveClassDependency(methodsByClass, out string? dependentClass, out string? prerequisiteClass))
+                    {
+                        parents[Find(parents, classIndices[prerequisiteClass])] = Find(parents, classIndices[dependentClass]);
+                    }
+                }
             }
         }
 
