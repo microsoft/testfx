@@ -368,6 +368,50 @@ and separate fresh results/binlogs. The environment value was set or removed
 only in the owning validation process. No assembly scheduling, assertions,
 production files or shared/global environment were changed.
 
+### CI compilation corrections
+
+[Azure build 1668030](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1668030)
+tested PR head `ef14255e79617000327243bd2421f320d1c9013b` through merge
+commit `e3add7f9ccaec3fcaf3410b2ff5719d971b5ee07`. All four failing build
+legs were traced to the new test files, not a transient service failure:
+
+- The Windows legs also compile net462/net48 tests. Three array
+  `Reverse().ToArray()` expressions bound to a void-returning extension on
+  those targets, producing CS0023/CS0030. Explicit
+  `Enumerable.Reverse(tests).ToArray()` preserves the intended non-mutating
+  reversed sequence on every target. A direct local net48 build reproduced
+  the failure; the previously green net10/net11 runs did not cover it.
+- Two multiline collection expressions in the discovery/TRX readers failed
+  SA1500/SA1413. Their opening/closing delimiters and trailing commas now follow
+  the repository format. The same six analyzer errors also caused the
+  [shipping-attachments workflow failure](https://github.com/microsoft/testfx/actions/runs/42261351459/job/128041798600).
+
+The earlier Azure build 1668021 was canceled, not a passing baseline; its merge
+commit was `4f898f42afcbe668aa811b95ee661adad3ec07c3`. The failed build above
+is the completed failure used for this correction.
+
+Validation used the pinned SDK and unchanged assertions:
+
+- A forced analyzer-enabled Rebuild of the owning acceptance project passed
+  with zero warnings/errors. Existing, already-built references were reused
+  with `BuildProjectReferences=false`; analyzers were not disabled.
+- `TestPartitionTests` passed **22/22 on each of net462, net48, net10.0 and
+  net11.0**. This includes
+  `SelectTests_ReorderedDiscoveryAndCheckoutPaths_PreserveClassPlacement`,
+  `SelectTests_TransitiveAndCyclicDependencies_UseOneSortedComponent` and
+  `SelectTests_SameNamedOverloadsWithDifferentDependencies_CoLocateEveryTargetClass`.
+- Packed `Partition_DiscoveryAndRun_SelectSameDisjointClasses` passed **1/1**
+  through the formatted discovery/TRX helpers, with the existing source-gen
+  opt-out set only for this process. Exact result identities, disjointness and
+  associated outcomes remained asserted.
+
+Each test invocation exited 0; TRX/JUnit/CTRF exports and exact source-planned
+counts were verified, with no failures or skips. The two-test-file correction
+against that PR head has SHA-256
+`2036D8E158D4AD16F0E7679C387C54F446266E1B339D3E81A472C5E19FF8EC72`.
+These are compilation/formatting repairs, not new product behavior or a
+behavioral red/green claim. CI must still rerun on the pushed correction.
+
 ### CI eligibility
 
 Static inspection finds the acceptance project in both `TestFx.slnx` and

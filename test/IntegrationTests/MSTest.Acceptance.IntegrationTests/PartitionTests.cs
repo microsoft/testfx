@@ -472,17 +472,20 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         result.AssertExitCodeIs(expectedExit);
         using var document = JsonDocument.Parse(result.StandardOutput);
         Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
-        DiscoveredNode[] nodes = [.. document.RootElement.GetProperty("tests").EnumerateArray().Select(test =>
-        {
-            JsonElement type = test.GetProperty("type");
-            string typeName = type.GetProperty("typeName").GetString()!;
-            string? typeNamespace = type.TryGetProperty("namespace", out JsonElement value) ? value.GetString() : null;
-            return new DiscoveredNode(
-                test.GetProperty("uid").GetString()!,
-                string.IsNullOrEmpty(typeNamespace) ? typeName : typeNamespace + "." + typeName,
-                type.GetProperty("methodName").GetString()!,
-                test.GetProperty("displayName").GetString()!);
-        })];
+        DiscoveredNode[] nodes =
+        [
+            .. document.RootElement.GetProperty("tests").EnumerateArray().Select(test =>
+            {
+                JsonElement type = test.GetProperty("type");
+                string typeName = type.GetProperty("typeName").GetString()!;
+                string? typeNamespace = type.TryGetProperty("namespace", out JsonElement value) ? value.GetString() : null;
+                return new DiscoveredNode(
+                    test.GetProperty("uid").GetString()!,
+                    string.IsNullOrEmpty(typeNamespace) ? typeName : typeNamespace + "." + typeName,
+                    type.GetProperty("methodName").GetString()!,
+                    test.GetProperty("displayName").GetString()!);
+            }),
+        ];
         Assert.AreEqual(nodes.Length, nodes.Select(node => node.Uid).Distinct(StringComparer.Ordinal).Count());
         Assert.IsFalse(File.Exists(ProbePath(run)), "Discovery must not execute the test bodies.");
         return nodes;
@@ -575,17 +578,20 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         var definitions = document.Descendants(ns + "UnitTest")
             .ToDictionary(test => test.Attribute("id")!.Value, test => test.Element(ns + "TestMethod")!);
         IEnumerable<XElement> results = document.Root.Element(ns + "Results")?.Elements(ns + "UnitTestResult") ?? [];
-        return [.. results.Select(result =>
-        {
-            string id = result.Attribute("testId")!.Value;
-            XElement method = definitions[id];
-            return new ReportResult(
-                id,
-                method.Attribute("className")!.Value,
-                method.Attribute("name")!.Value,
-                result.Attribute("testName")!.Value,
-                result.Attribute("outcome")!.Value);
-        })];
+        return
+        [
+            .. results.Select(result =>
+            {
+                string id = result.Attribute("testId")!.Value;
+                XElement method = definitions[id];
+                return new ReportResult(
+                    id,
+                    method.Attribute("className")!.Value,
+                    method.Attribute("name")!.Value,
+                    result.Attribute("testName")!.Value,
+                    result.Attribute("outcome")!.Value);
+            }),
+        ];
     }
 
     private static string ProbePath(TempDirectory run) => Path.Combine(run.Path, "bodies.txt");

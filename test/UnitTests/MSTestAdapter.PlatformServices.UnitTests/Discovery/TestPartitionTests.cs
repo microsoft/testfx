@@ -265,7 +265,7 @@ public sealed class TestPartitionTests : TestContainer
                 Element(Cart, "First", source),
                 Element(Checkout, "Second", source),
             ];
-            foreach (UnitTestElement[] ordered in new[] { tests, tests.Reverse().ToArray() })
+            foreach (UnitTestElement[] ordered in new[] { tests, Enumerable.Reverse(tests).ToArray() })
             {
                 AssertSelection(ordered, 1, 4, [.. ordered.Where(test => test.TestMethod.FullClassName == Checkout)]);
                 AssertSelection(ordered, 2, 4, [.. ordered.Where(test => test.TestMethod.FullClassName == Cart)]);
@@ -367,7 +367,7 @@ public sealed class TestPartitionTests : TestContainer
         AssertSelection(tests, 5, 7, []);
         shipping.Dependencies = [new(Cart, "Buy", false)];
         AssertSelection(tests, 2, 7, tests);
-        UnitTestElement[] reversed = tests.Reverse().ToArray();
+        UnitTestElement[] reversed = Enumerable.Reverse(tests).ToArray();
         AssertSelection(reversed, 2, 7, reversed);
         AssertSelection(reversed, 1341624019, int.MaxValue, reversed);
     }
@@ -386,7 +386,7 @@ public sealed class TestPartitionTests : TestContainer
 
         // The independent three-class oracle is bucket 2/7. Deduplicating Buy by method name loses
         // an edge and splits the component; reverse discovery order so neither overload can be discarded.
-        foreach (UnitTestElement[] ordered in new[] { tests, tests.Reverse().ToArray() })
+        foreach (UnitTestElement[] ordered in new[] { tests, Enumerable.Reverse(tests).ToArray() })
         {
             for (int index = 1; index <= 7; index++)
             {
