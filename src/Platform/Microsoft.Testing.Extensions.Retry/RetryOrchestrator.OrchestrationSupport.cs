@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
@@ -133,6 +135,7 @@ internal sealed partial class RetryOrchestrator
                 retryFailedTestsPipeServer,
                 executableInfo,
                 finalArguments,
+                currentTryResultFolder,
                 attemptCount,
                 userMaxRetryCount,
                 cancellationToken).ConfigureAwait(false);
@@ -207,20 +210,54 @@ internal sealed partial class RetryOrchestrator
                 postProcessingDirectory,
                 cancellationToken).ConfigureAwait(false);
 
-            await RetrySummaryReporter.MoveArtifactsAsync(
-                this,
-                outputDevice,
-                fileSystem,
-                logger,
-                currentTryResultFolder,
-                resultDirectory,
-                replacements,
-                cancellationToken).ConfigureAwait(false);
-            RetryArtifactProcessor.PublishExternalArtifacts(
-                fileSystem,
-                attemptArtifacts,
-                attemptCount,
-                replacements);
+            Dictionary<string, string> movedArtifacts = [with(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)];
+            ExceptionDispatchInfo? publicationFailure = null;
+            try
+            {
+                await RetrySummaryReporter.MoveArtifactsAsync(
+                    this,
+                    outputDevice,
+                    fileSystem,
+                    logger,
+                    currentTryResultFolder,
+                    resultDirectory,
+                    replacements,
+                    [.. attemptArtifacts
+                        .Where(artifact => artifact.Attempt == attemptCount && artifact.Kind == "microsoft.testing.trx")
+                        .Select(artifact => artifact.Path)],
+                    (source, destination) =>
+                    {
+                        movedArtifacts[Path.GetFullPath(source)] = destination;
+                        return Task.CompletedTask;
+                    },
+                    cancellationToken).ConfigureAwait(false);
+                RetryArtifactProcessor.PublishExternalArtifacts(
+                    fileSystem,
+                    attemptArtifacts,
+                    attemptCount,
+                    replacements);
+            }
+            catch (Exception ex)
+            {
+                publicationFailure = ExceptionDispatchInfo.Capture(ex);
+            }
+
+            try
+            {
+                await RetryArtifactProcessor.PublishDeferredTrxArtifactsAsync(
+                    _serviceProvider,
+                    Path.GetDirectoryName(currentTryResultFolder)!,
+                    movedArtifacts).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (publicationFailure is not null)
+            {
+                await logger.LogWarningAsync($"Failed to replay retry artifacts after publication failed: {ex}").ConfigureAwait(false);
+            }
+            finally
+            {
+                publicationFailure?.Throw();
+            }
         }
         finally
         {

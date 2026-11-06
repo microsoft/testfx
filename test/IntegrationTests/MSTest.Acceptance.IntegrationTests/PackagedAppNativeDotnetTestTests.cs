@@ -103,13 +103,27 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 {
                     string[] attempts = Directory.GetFiles(Path.Combine(results, "Retries"), "native_report.trx", SearchOption.AllDirectories)
                         .Order(StringComparer.Ordinal).ToArray();
-                    Assert.HasCount(2, attempts);
+                    string firstAttemptPath = Assert.ContainsSingle(attempts);
+                    Assert.AreEqual("1", Path.GetFileName(Path.GetDirectoryName(firstAttemptPath)));
                     XElement[] firstAttempt = XDocument.Load(attempts[0]).Descendants(ns + "UnitTestResult").ToArray();
-                    XElement[] secondAttempt = XDocument.Load(attempts[1]).Descendants(ns + "UnitTestResult").ToArray();
                     Assert.HasCount(2, firstAttempt);
                     Assert.HasCount(1, firstAttempt.Where(test => (string?)test.Attribute("outcome") == "Failed"));
-                    Assert.HasCount(1, secondAttempt);
-                    Assert.AreEqual("Passed", (string?)secondAttempt[0].Attribute("outcome"));
+                    string retryRoot = Path.GetDirectoryName(Path.GetDirectoryName(firstAttemptPath)!)!;
+                    Assert.IsFalse(File.Exists(Path.Combine(retryRoot, "2", "native_report.trx")));
+                    Assert.AreEqual("Outcome", (string?)Assert.ContainsSingle(tests).Attribute("testName"));
+                    Assert.AreEqual("Passed", (string?)tests[0].Attribute("outcome"));
+                    string[] reports = Directory.GetFiles(results, "*.trx", SearchOption.AllDirectories);
+                    Assert.HasCount(2, reports);
+                    string[] advertised =
+                    [
+                        .. Regex.Matches(NormalizeConsoleOutput(result.StandardOutput), @"(?m)^\s*-\s+(?<path>[^\r\n]+\.trx)\s*$")
+                            .Select(match => match.Groups["path"].Value.Trim()),
+                    ];
+                    Assert.AreSequenceEqual(
+                        reports.Order(StringComparer.Ordinal),
+                        advertised.Order(StringComparer.Ordinal),
+                        "The native packaged SDK must advertise only the retained and final published report paths.");
+                    Assert.IsTrue(advertised.All(File.Exists), result.StandardOutput + result.ErrorOutput);
                 }
             });
     }

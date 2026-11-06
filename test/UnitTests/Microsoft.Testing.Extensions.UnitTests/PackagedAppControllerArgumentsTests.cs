@@ -4,6 +4,7 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Platform.IPC;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -29,6 +30,7 @@ public sealed class PackagedAppControllerArgumentsTests
         Assert.AreEqual(Target, environment[PackagedAppControllerArguments.TargetEnvironmentVariable]);
         Assert.AreEqual("msbuild;packagedapp;trx", environment[PackagedAppControllerArguments.ExtensionsEnvironmentVariable]);
         Assert.AreEqual("sdk-pipe", environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        Assert.AreEqual("sdk-pipe", environment[DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable]);
         Assert.IsTrue(Guid.TryParseExact(environment[PackagedAppControllerArguments.ExecutionIdEnvironmentVariable], "N", out _));
     }
 
@@ -49,6 +51,7 @@ public sealed class PackagedAppControllerArgumentsTests
 
         Assert.AreSame(result, retry);
         Assert.AreEqual("supplied-execution-id", environment[PackagedAppControllerArguments.ExecutionIdEnvironmentVariable]);
+        Assert.AreEqual("sdk-pipe", environment[DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable]);
         Assert.AreSequenceEqual(
             ["--retry-failed-tests", "2", "--server", "dotnettestcli", "--dotnet-test-pipe", "sdk-pipe"],
             PackagedAppControllerArguments.AddNativeTransport(retry, environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]));
@@ -60,6 +63,7 @@ public sealed class PackagedAppControllerArgumentsTests
         Dictionary<string, string?> environment = new()
         {
             [PackagedAppControllerArguments.NativePipeEnvironmentVariable] = "stale-pipe",
+            [DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable] = "stale-replay-pipe",
         };
         string[] result = Configure(
             [PackagedAppControllerArguments.Prefix, Target, "packagedapp", "--report-trx", "--results-directory", "a b"],
@@ -67,6 +71,7 @@ public sealed class PackagedAppControllerArgumentsTests
 
         Assert.AreSequenceEqual(["--report-trx", "--results-directory", "a b"], result);
         Assert.IsNull(environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        Assert.IsNull(environment[DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable]);
         Assert.AreSame(result, PackagedAppControllerArguments.AddNativeTransport(result, null));
     }
 
@@ -131,6 +136,7 @@ public sealed class PackagedAppControllerArgumentsTests
         Dictionary<string, string?> environment = new()
         {
             [PackagedAppControllerArguments.NativePipeEnvironmentVariable] = "stale-sdk-pipe",
+            [DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable] = "stale-replay-pipe",
         };
         string[] bootstrap = [PackagedAppControllerArguments.Prefix, Target, "msbuild;packagedapp;mstest"];
         (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
@@ -144,6 +150,7 @@ public sealed class PackagedAppControllerArgumentsTests
         Assert.AreEqual(Target, environment[PackagedAppControllerArguments.TargetEnvironmentVariable]);
         Assert.AreEqual("msbuild;packagedapp;mstest", environment[PackagedAppControllerArguments.ExtensionsEnvironmentVariable]);
         Assert.IsNull(environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        Assert.IsNull(environment[DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable]);
         Assert.IsFalse(environment.ContainsKey(PackagedAppControllerArguments.ExecutionIdEnvironmentVariable));
     }
 
@@ -193,6 +200,7 @@ public sealed class PackagedAppControllerArgumentsTests
         Assert.AreSequenceEqual(["--retry-failed-tests", "2"], arguments);
         Assert.AreEqual(Target, environment[PackagedAppControllerArguments.TargetEnvironmentVariable]);
         Assert.AreEqual("pipe", environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        Assert.AreEqual("pipe", environment[DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable]);
         (arguments, informational) = PackagedAppControllerArguments.Configure(
             ["--internal-retry-pipename", "retry", "--results-directory", "a b"],
             name => environment.GetValueOrDefault(name),
@@ -201,6 +209,7 @@ public sealed class PackagedAppControllerArgumentsTests
         Assert.AreSequenceEqual(["--internal-retry-pipename", "retry", "--results-directory", "a b"], arguments);
         Assert.IsFalse(informational);
         Assert.AreEqual("pipe", environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        Assert.AreEqual("pipe", environment[DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable]);
     }
 
     [TestMethod]

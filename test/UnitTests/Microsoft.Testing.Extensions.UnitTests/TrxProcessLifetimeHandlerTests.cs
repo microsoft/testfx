@@ -230,6 +230,44 @@ public sealed class TrxProcessLifetimeHandlerTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task OnTestHostProcessExitedAsync_RegistersReportKindWithRetryOnlyWhenConfigured(bool retryEnabled)
+    {
+        string root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        string reportPath = Path.Combine(root, "report.trx");
+        string manifestPath = Path.Combine(root, "artifacts.manifest");
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(value => value.GetEnvironmentVariable("TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"))
+            .Returns(retryEnabled ? manifestPath : null);
+        using MemoryStream manifest = new();
+        var fileStream = new Mock<IFileStream>();
+        fileStream.SetupGet(value => value.Stream).Returns(manifest);
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.NewFileStream(manifestPath, FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(fileStream.Object);
+        (TrxProcessLifetimeHandler handler, _, _, _) = CreateHandler(fileSystem.Object, customEnvironment: environment.Object);
+        using (handler)
+        {
+            await DeliverRequestAsync(handler, "ReportFileNameRequest", [reportPath]);
+            await handler.OnTestHostProcessExitedAsync(Mock.Of<ITestHostProcessInformation>(), TestContext.CancellationToken);
+        }
+
+        if (retryEnabled)
+        {
+            string[] entry = Encoding.UTF8.GetString(manifest.ToArray()).TrimEnd('\r', '\n').Split('\t');
+            Assert.HasCount(2, entry);
+            Assert.AreEqual(reportPath, Encoding.UTF8.GetString(Convert.FromBase64String(entry[0])));
+            Assert.AreEqual(TrxReportEngine.TrxArtifactKind, Encoding.UTF8.GetString(Convert.FromBase64String(entry[1])));
+        }
+        else
+        {
+            Assert.AreEqual(0, manifest.Length);
+            fileSystem.Verify(value => value.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()), Times.Never);
+        }
+    }
+
+    [TestMethod]
     public async Task OnTestHostProcessExitedAsync_CancellationPreventsPublishingAndFileAccess()
     {
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);

@@ -58,6 +58,21 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
         => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
+    internal static async Task SendFileArtifactsToPipeAsync(
+        string pipeName,
+        FileArtifactMessages message,
+        IEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        // The activated host owns the SDK handshake; replay its envelopes without announcing the controller's runtime.
+        using var client = new NamedPipeClient(pipeName, environment);
+        client.RegisterAllSerializers();
+        await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        await client.RequestReplyAsync<FileArtifactMessages, VoidResponse>(message, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task AfterCommonServiceSetupAsync()
     {
         if (_commandLineHandler.HasDotnetTestServerOption()
