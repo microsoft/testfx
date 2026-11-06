@@ -11,11 +11,17 @@ public sealed class HangDumpActivityCoalescingTests : AcceptanceTestBase<HangDum
 
     public TestContext TestContext { get; set; } = null!;
 
+    internal static IEnumerable<(string Tfm, bool ReportTrx)> GetMatrix()
+    {
+        foreach (string tfm in TargetFrameworks.Net)
+        {
+            yield return (tfm, false);
+            yield return (tfm, true);
+        }
+    }
+
     [TestMethod]
-    [DataRow("net8.0", false, DisplayName = "net8.0: HangDump only")]
-    [DataRow("net8.0", true, DisplayName = "net8.0: HangDump with TRX")]
-    [DataRow("net10.0", false, DisplayName = "net10.0: HangDump only")]
-    [DataRow("net10.0", true, DisplayName = "net10.0: HangDump with TRX")]
+    [DynamicData(nameof(GetMatrix))]
     public async Task HangDump_BurstOfResults_CoalescesAcknowledgedActivityBeforeExit(string tfm, bool reportTrx)
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
