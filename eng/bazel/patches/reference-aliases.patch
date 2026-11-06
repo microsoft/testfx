@@ -1,0 +1,171 @@
+diff --git a/dotnet/private/common.bzl b/dotnet/private/common.bzl
+index c8a8cbd..b286991 100644
+--- a/dotnet/private/common.bzl
++++ b/dotnet/private/common.bzl
+@@ -229,17 +229,49 @@ def _format_ref_with_overrides(assembly):
+         return None
+     return "-r:" + assembly.path
+ 
+-def format_ref_arg(args, refs):
++def format_ref_arg(args, refs, reference_aliases = {}):
+     """Takes
+ 
+     Args:
+         args: The args object that will be sent into the compilation action
+         refs: List of all references that are being sent into the compilation action
++        reference_aliases: C# aliases by assembly simple name. Include "global"
++            explicitly when the reference must also be globally accessible.
+     Returns:
+         The updated args object
+     """
+ 
+-    args.add_all(refs, map_each = _format_ref_with_overrides)
++    if not reference_aliases:
++        args.add_all(refs, map_each = _format_ref_with_overrides)
++        return args
++
++    aliases_by_name = {}
++    for name, aliases in reference_aliases.items():
++        normalized = name.lower()
++        if not name or normalized in aliases_by_name:
++            fail("Reference alias assembly names must be nonempty and unique: " + name)
++        if not aliases or len({alias: True for alias in aliases}) != len(aliases):
++            fail("Reference aliases must be nonempty and unique for " + name)
++        for alias in aliases:
++            if not alias or any([character in alias for character in [" ", "\t", "\r", "\n", ",", "=", "\"", "%"]]):
++                fail("Invalid reference alias for {}: {}".format(name, repr(alias)))
++        aliases_by_name[normalized] = aliases
++
++    unmatched = dict(aliases_by_name)
++    ordinary = []
++    for assembly in refs.to_list():
++        if _format_ref_with_overrides(assembly) == None:
++            continue
++        name = assembly.basename.rsplit(".", 1)[0].lower()
++        if name in aliases_by_name:
++            for alias in aliases_by_name[name]:
++                args.add(assembly, format = "-r:" + alias + "=%s")
++            unmatched.pop(name, None)
++        else:
++            ordinary.append(assembly)
++    if unmatched:
++        fail("Reference aliases name assemblies absent from this compilation: " + ", ".join(sorted(unmatched.keys())))
++    args.add_all(ordinary, map_each = _format_ref_with_overrides)
+ 
+     return args
+ 
+diff --git a/dotnet/private/rules/common/attrs.bzl b/dotnet/private/rules/common/attrs.bzl
+index ce3ba13..d3ee15d 100644
+--- a/dotnet/private/rules/common/attrs.bzl
++++ b/dotnet/private/rules/common/attrs.bzl
+@@ -243,6 +243,11 @@ CSHARP_COMMON_ATTRS = dicts.add(
+     COMMON_ATTRS,
+     READY_TO_RUN_ATTRS,
+     {
++        "reference_aliases": attr.string_list_dict(
++            doc = """Reference aliases keyed by assembly simple name, without a file
++            extension. The aliases replace implicit global access; include "global"
++            explicitly when both global and named access are required.""",
++        ),
+         "srcs": attr.label_list(
+             doc = "The source files used in the compilation",
+             allow_files = [".cs", ".razor", ".cshtml", ".css"],
+diff --git a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+index f8c7f40..00be67b 100644
+--- a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
++++ b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+@@ -159,7 +159,8 @@ def AssemblyAction(
+         compiler_options,
+         interceptors_namespaces,
+         is_windows,
+-        resource_assemblies = []):
++        resource_assemblies = [],
++        reference_aliases = {}):
+     """Creates an action that runs the CSharp compiler with the specified inputs.
+ 
+     This macro aims to match the [C# compiler](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/listed-alphabetically), with the inputs mapping to compiler options.
+@@ -180,6 +181,7 @@ def AssemblyAction(
+         keyfile: Specifies a strong name key file of the assembly.
+         langversion: Specify language version: Default, ISO-1, ISO-2, 3, 4, 5, 6, 7, 7.1, 7.2, 7.3, or Latest
+         resources: The list of resouces to be embedded in the assembly.
++        reference_aliases: Reference aliases by assembly simple name, local to this compilation.
+         srcs: The source files that are processed to create the assembly.
+         data: List of files that are a direct runtime dependency
+         appsetting_files: List of appsettings files to include in the output.
+@@ -378,6 +380,7 @@ def AssemblyAction(
+             compiler_options,
+             interceptors_namespaces,
+             razor,
++            reference_aliases,
+             out_dll = out_dll,
+             out_ref = out_ref,
+             out_pdb = out_pdb,
+@@ -431,6 +434,7 @@ def AssemblyAction(
+             compiler_options,
+             interceptors_namespaces,
+             razor,
++            reference_aliases,
+             out_ref = out_iref,
+             out_dll = out_dll,
+             out_pdb = out_pdb,
+@@ -473,6 +477,7 @@ def AssemblyAction(
+             compiler_options,
+             interceptors_namespaces,
+             razor,
++            reference_aliases,
+             out_dll = None,
+             out_ref = out_ref,
+             out_pdb = None,
+@@ -555,6 +560,7 @@ def _compile(
+         compiler_options,
+         interceptors_namespaces,
+         razor,
++        reference_aliases,
+         out_dll = None,
+         out_ref = None,
+         out_pdb = None,
+@@ -656,7 +662,7 @@ def _compile(
+         # package references that would otherwise define the same core types.
+         framework_names = {file.basename.lower(): True for file in framework_files.to_list()}
+         refs = depset([file for file in refs.to_list() if file.basename.lower() not in framework_names])
+-    format_ref_arg(args, depset(transitive = [refs, framework_files]))
++    format_ref_arg(args, depset(transitive = [refs, framework_files]), reference_aliases)
+ 
+     # A source generator rather than an analyzer, so it runs even when analyzers
+     # are switched off: without it every component would be undefined rather
+diff --git a/dotnet/private/rules/csharp/binary.bzl b/dotnet/private/rules/csharp/binary.bzl
+index fae0aee..3fd01a4 100644
+--- a/dotnet/private/rules/csharp/binary.bzl
++++ b/dotnet/private/rules/csharp/binary.bzl
+@@ -40,6 +40,7 @@ def _compile_action(ctx, tfm, toolchain):
+         langversion = ctx.attr.langversion if ctx.attr.langversion != "" else default_csharp_lang_version(tfm, toolchain.dotnetinfo.csharp_default_version),
+         resources = ctx.files.resources,
+         resource_assemblies = ctx.files.resource_assemblies,
++        reference_aliases = ctx.attr.reference_aliases,
+         srcs = ctx.files.srcs,
+         data = ctx.files.data,
+         appsetting_files = ctx.files.appsetting_files,
+diff --git a/dotnet/private/rules/csharp/library.bzl b/dotnet/private/rules/csharp/library.bzl
+index 77437bd..86edb10 100644
+--- a/dotnet/private/rules/csharp/library.bzl
++++ b/dotnet/private/rules/csharp/library.bzl
+@@ -35,6 +35,7 @@ def _compile_action(ctx, tfm, toolchain):
+         langversion = ctx.attr.langversion if ctx.attr.langversion != "" else default_csharp_lang_version(tfm, toolchain.dotnetinfo.csharp_default_version),
+         resources = ctx.files.resources,
+         resource_assemblies = ctx.files.resource_assemblies,
++        reference_aliases = ctx.attr.reference_aliases,
+         srcs = ctx.files.srcs,
+         data = ctx.files.data,
+         appsetting_files = [],
+diff --git a/dotnet/private/rules/csharp/test.bzl b/dotnet/private/rules/csharp/test.bzl
+index eff6619..11446ac 100644
+--- a/dotnet/private/rules/csharp/test.bzl
++++ b/dotnet/private/rules/csharp/test.bzl
+@@ -38,6 +38,7 @@ def _compile_action(ctx, tfm, toolchain):
+         langversion = ctx.attr.langversion if ctx.attr.langversion != "" else default_csharp_lang_version(tfm, toolchain.dotnetinfo.csharp_default_version),
+         resources = ctx.files.resources,
+         resource_assemblies = ctx.files.resource_assemblies,
++        reference_aliases = ctx.attr.reference_aliases,
+         srcs = ctx.files.srcs,
+         data = ctx.files.data,
+         appsetting_files = ctx.files.appsetting_files,

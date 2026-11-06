@@ -29,6 +29,8 @@ When the SDK supplies an authoritative final invocation exit, the aggregate show
 
 Skipped tests are grouped by their reported reason and execution platform, with module/target-framework context and at most ten groups shown. Issue references in reasons are retained; skipped test names are not dumped into the summary. Omitted groups are accounted for by a skipped-test count. Older summary fragments remain supported and label unavailable outcomes, skip reasons, and platform metadata explicitly.
 
+Skip-reason groups use compact list entries so long explanations can wrap without competing with metadata columns. A single-module summary shows the shared module and platform once; multi-module summaries keep that context with each reason.
+
 ## Usage
 
 Enable Azure DevOps reporting with the `--report-azdo` command line option.

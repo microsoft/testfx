@@ -1,0 +1,40 @@
+// Windows-only build inputs, independently resolved from the portable graph.
+source https://api.nuget.org/v3/index.json
+framework: >= net8.0
+storage: none
+strategy: min
+
+nuget Microsoft.WindowsAppSDK == 1.8.251003001
+
+group sdk19041
+    source https://api.nuget.org/v3/index.json
+    storage: none
+    strategy: min
+    nuget Microsoft.Windows.SDK.NET.Ref == 10.0.19041.57
+
+group sdk19041net10
+    source https://api.nuget.org/v3/index.json
+    storage: none
+    strategy: min
+    nuget Microsoft.Windows.SDK.NET.Ref == 10.0.19041.87
+
+group sdk17763
+    source https://api.nuget.org/v3/index.json
+    storage: none
+    strategy: min
+    nuget Microsoft.Windows.SDK.NET.Ref == 10.0.17763.57
+
+group sdk18362
+    source https://api.nuget.org/v3/index.json
+    storage: none
+    strategy: min
+    nuget Microsoft.Windows.SDK.NET.Ref == 10.0.18362.57
+
+group coverage
+    source https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json
+    source https://api.nuget.org/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+    // The controller's externally shipped extension, not a substitute TestFx build.
+    nuget Microsoft.Testing.Extensions.CodeCoverage == 18.13.0-preview.26527.4

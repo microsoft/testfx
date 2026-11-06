@@ -1,0 +1,36 @@
+source https://api.nuget.org/v3/index.json
+framework: >= net8.0
+storage: none
+strategy: min
+
+// Align full test-host implementations with the source graph's shared abstractions.
+nuget Microsoft.Extensions.Configuration == 10.0.13
+nuget Microsoft.Extensions.Hosting == 10.0.13
+nuget OpenTelemetry.Exporter.Console == 1.13.1
+nuget OpenTelemetry.Extensions.Hosting == 1.13.1
+
+group analyzers
+    source https://api.nuget.org/v3/index.json
+    source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+
+    // Match MicrosoftCodeAnalysisVersionForTests and MicrosoftCodeAnalysisAnalyzerTestingVersion.
+    nuget Microsoft.CodeAnalysis == 4.14.0
+    nuget Microsoft.CodeAnalysis.Common == 4.14.0
+    nuget Microsoft.CodeAnalysis.CSharp.Workspaces == 4.14.0
+    nuget Microsoft.CodeAnalysis.CSharp.Analyzer.Testing == 1.1.3-beta1.26255.1
+    nuget Microsoft.CodeAnalysis.CSharp.CodeFix.Testing == 1.1.3-beta1.26255.1
+    nuget Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing == 1.1.3-beta1.26255.1
+    nuget Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing == 1.1.3-beta1.26255.1
+    nuget Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing == 1.1.3-beta1.26255.1
+    nuget Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing == 1.1.3-beta1.26255.1
+
+group benchmarks
+    source https://api.nuget.org/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+
+    nuget BenchmarkDotNet == 0.15.8

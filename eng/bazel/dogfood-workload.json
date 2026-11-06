@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "name": "windows-net10-unit",
+  "targetFramework": "net10.0",
+  "configuration": "Release",
+  "bazelConfiguration": "opt",
+  "identityPolicy": "TestFxDynamicTimingV1",
+  "selfContainedRuntime": "10.0.14",
+  "tests": [
+    {
+      "label": "//:adapter_tests",
+      "project": "MSTestAdapter.UnitTests",
+      "assembly": "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:analyzer_tests",
+      "project": "MSTest.Analyzers.UnitTests",
+      "assembly": "MSTest.Analyzers.UnitTests",
+      "runtime": "selfContained"
+    },
+    {
+      "label": "//:extension_tests",
+      "project": "Microsoft.Testing.Extensions.UnitTests",
+      "assembly": "Microsoft.Testing.Extensions.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:framework_tests",
+      "project": "TestFramework.UnitTests",
+      "assembly": "Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:msbuild_tests",
+      "project": "Microsoft.Testing.Platform.MSBuild.UnitTests",
+      "assembly": "Microsoft.Testing.Platform.MSBuild.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:platform_services_tests",
+      "project": "MSTestAdapter.PlatformServices.UnitTests",
+      "assembly": "MSTestAdapter.PlatformServices.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:platform_tests",
+      "project": "Microsoft.Testing.Platform.UnitTests",
+      "assembly": "Microsoft.Testing.Platform.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:protocol_contract_tests",
+      "project": "Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests",
+      "assembly": "Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:self_real_tests",
+      "project": "MSTest.SelfRealExamples.UnitTests",
+      "assembly": "MSTest.SelfRealExamples.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:server_client_tests",
+      "project": "Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests",
+      "assembly": "Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests",
+      "runtime": "selfContained"
+    },
+    {
+      "label": "//:source_generation_tests",
+      "project": "MSTest.SourceGeneration.UnitTests",
+      "assembly": "MSTest.SourceGeneration.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:terminal_contract_tests",
+      "project": "Microsoft.Testing.Platform.TerminalReporterContract.UnitTests",
+      "assembly": "Microsoft.Testing.Platform.TerminalReporterContract.UnitTests",
+      "runtime": "sdk"
+    },
+    {
+      "label": "//:vstest_bridge_tests",
+      "project": "Microsoft.Testing.Extensions.VSTestBridge.UnitTests",
+      "assembly": "Microsoft.Testing.Extensions.VSTestBridge.UnitTests",
+      "runtime": "sdk"
+    }
+  ]
+}

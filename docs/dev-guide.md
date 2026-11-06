@@ -50,6 +50,11 @@ This will update your fork with the latest from `microsoft/testfx` on your machi
 
 ## Building
 
+An [experimental native Bazel build](bazel.md) is available for the portable
+.NET 8-11 development graph, selected test suites, and native MTP/TRX package
+consumers. It does not replace the MSBuild/Arcade shipping build or its complete
+framework/workload and acceptance matrix.
+
 The easiest and recommended solution is to build the repository with the provided scripts at the repo root.
 
 For Windows:

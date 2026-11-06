@@ -28,6 +28,14 @@ Supported platforms:
 - UWP 10.0.16299
 - UWP 10.0.17763 with .NET 10+
 
+## Classic UWP dependencies
+
+The classic UWP adapter payload contains the adapter and its platform-services
+assembly. Microsoft.Testing.Platform and its extensions are restored from their
+own NuGet packages rather than duplicated inside this package. The classic UWP
+bootstrap also depends on the TRX reporting and Retry packages. The adapter's
+build targets include the resolved runtime assemblies in the AppX deployment.
+
 ## F# modules
 
 F# modules can contain test functions without a `[<TestClass>]` attribute:
@@ -77,6 +85,22 @@ VSTest `ISettingsProvider` extensions are not invoked. Other top-level sections,
 as `Playwright`, produce a warning and are not applied by MSTest. Use the extension's
 native Microsoft.Testing.Platform configuration when available. VSTest loggers,
 data collectors, and unsupported `RunConfiguration` entries retain their own warnings.
+
+## Result file attachments
+
+When running on Microsoft.Testing.Platform, `TestContext.AddResultFile` registers
+an existing file as a test attachment. MSTest preserves successfully copied
+attachments in visible `MSTest-<random-id>` folders under the configured results
+directory so the published paths remain readable after the test host exits.
+Original files are not moved or deleted by this copying step.
+
+These copies are final test results: apply your results-directory retention policy
+to remove them when they are no longer needed. TRX reporting can create an
+additional copy in its own attachment layout; follow the report's references
+rather than selecting a file by name from the entire results directory.
+Retry tooling can also publish additional copies from the final attempt.
+If an attachment cannot be copied, MSTest reports its original path so consumers
+can surface their usual missing-file or copy-failure diagnostics.
 
 ## Experimental repeated server-mode selections
 

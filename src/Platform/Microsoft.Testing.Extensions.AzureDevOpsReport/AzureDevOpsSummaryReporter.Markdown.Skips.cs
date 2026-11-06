@@ -34,19 +34,35 @@ internal sealed partial class AzureDevOpsSummaryReporter
         ];
 
         builder.Append(new string('#', headingLevel)).Append(" Skipped tests by reason\n\n");
-        builder.Append("| Skipped | Reason | Platform | Test module |\n");
-        builder.Append("| ---: | --- | --- | --- |\n");
-        foreach ((CiRunSummaryModule module, CiRunSummarySkipReason reason) in reasons)
+        bool hasSharedContext = modules.Count == 1;
+        if (hasSharedContext)
         {
-            builder.Append("| ").Append(reason.Count.ToString(CultureInfo.InvariantCulture))
-                .Append(" | ").Append(EscapeCell(reason.Reason))
-                .Append(" | ").Append(EscapeCell(module.OperatingSystem ?? "Unavailable"))
-                .Append(" | ");
+            CiRunSummaryModule module = modules[0];
+            builder.Append("**Test module:** ");
             AppendModuleIdentity(builder, modules, module);
-            builder.Append(" |\n");
+            builder.Append(" \u00b7 **Platform:** ").Append(EscapeCell(module.OperatingSystem ?? "Unavailable"))
+                .Append("\n\n");
         }
 
-        builder.Append('\n');
+        foreach ((CiRunSummaryModule module, CiRunSummarySkipReason reason) in reasons)
+        {
+            builder.Append("- **").Append(reason.Count.ToString(CultureInfo.InvariantCulture))
+                .Append(" skipped** \u2014 ").Append(EscapeCell(reason.Reason));
+            if (!hasSharedContext)
+            {
+                builder.Append("\n\n  **Test module:** ");
+                AppendModuleIdentity(builder, modules, module);
+                builder.Append(" \u00b7 **Platform:** ").Append(EscapeCell(module.OperatingSystem ?? "Unavailable"));
+            }
+
+            builder.Append(hasSharedContext ? "\n" : "\n\n");
+        }
+
+        if (hasSharedContext)
+        {
+            builder.Append('\n');
+        }
+
         long omittedTests = skippedTests - reasons.Sum(static item => item.Reason.Count);
         if (omittedTests > 0)
         {

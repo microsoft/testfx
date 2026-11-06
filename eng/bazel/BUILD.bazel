@@ -1,0 +1,83 @@
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "dotnet_tool")
+load(":defs.bzl", "TESTFX_PUBLIC_KEY_FILE")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "AnalyzerReferencePackMetadata.cs",
+    "CompatibilityConsumer.cs",
+    "CompatibilityFrameworkMetadata.cs",
+    "GlobalConfigsEnvironment.cs",
+    "GlobalUsings.cs",
+    "NativeUnitTestMain.cs",
+    "PortableTestFrameworkMetadata.cs",
+    "RuntimeProvenance.cs",
+    "ServerClientTestMain.cs",
+    "TestMain.cs",
+    "analyzers.globalconfig",
+    "paket.dependencies",
+    "paket.lock",
+    "reflection-free.globalconfig",
+])
+
+csharp_binary(
+    name = "build_tools",
+    srcs = [
+        "BuildTools.cs",
+        "GlobalUsings.cs",
+    ],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)
+
+csharp_library(
+    name = "runfiles",
+    srcs = ["@rules_dotnet//tools/runfiles:Runfiles.cs"],
+    out = "runfiles",
+    compiler_options = ["/publicsign+"],
+    keyfile = TESTFX_PUBLIC_KEY_FILE,
+    target_frameworks = ["netstandard2.0"],
+)
+
+csharp_binary(
+    name = "sdk_package_tool",
+    srcs = [
+        "GlobalUsings.cs",
+        "SdkPackageTool.cs",
+    ],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)
+
+csharp_binary(
+    name = "writable_test_launcher",
+    srcs = [
+        "GlobalUsings.cs",
+        "WritableTestLauncher.cs",
+    ],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)
+
+dotnet_tool(
+    name = "paket",
+    entrypoint = {"net10.0": "paket.dll"},
+    runner = {"net10.0": "dotnet"},
+    target_frameworks = ["net10.0"],
+    deps = "@paket_cli//:tools",
+)
+
+csharp_binary(
+    name = "mstest_package_version",
+    srcs = ["MSTestPackageVersion.cs"],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)
