@@ -17,38 +17,29 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll"
-             Link="Microsoft.Testing.Extensions.TrxReport.Abstractions.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.TrxReport.dll"
-             Link="Microsoft.Testing.Extensions.TrxReport.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.dll"
-             Link="Microsoft.Testing.Platform.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.ApplicationInsights.dll"
-             Link="Microsoft.ApplicationInsights.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.MSBuild.dll"
-             Link="Microsoft.Testing.Extensions.MSBuild.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.Retry.dll"
-             Link="Microsoft.Testing.Extensions.Retry.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.Telemetry.dll"
-             Link="Microsoft.Testing.Extensions.Telemetry.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.TestPlatform.CoreUtilities.dll"
-             Link="Microsoft.TestPlatform.CoreUtilities.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.TestPlatform.PlatformAbstractions.dll"
-             Link="Microsoft.TestPlatform.PlatformAbstractions.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.ObjectModel.dll"
-             Link="Microsoft.VisualStudio.TestPlatform.ObjectModel.dll"
-             CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  <!-- SDK-style UWP disables copying NuGet runtime assets by default. Deploy the adapter's
+       resolved dependencies as AppX content without duplicating them in this package.
+       Non-SDK UWP projects expose their package assemblies through ReferencePath. -->
+  <Target Name="_AddMSTestUwpRuntimeDependencies" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <_MSTestUwpRuntimeDependency Include="@(RuntimeCopyLocalItems)" Condition=" '$(UsingMicrosoftNETSdk)' == 'true' " />
+      <_MSTestUwpRuntimeDependency Include="@(ReferencePath)" Condition=" '$(UsingMicrosoftNETSdk)' != 'true' " />
+      <Content Include="@(_MSTestUwpRuntimeDependency)"
+               Condition=" '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.ApplicationInsights'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.MSBuild'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.Retry'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.Telemetry'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.TrxReport.Abstractions'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.TrxReport'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Platform'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.CoreUtilities'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.PlatformAbstractions'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.VisualStudio.TestPlatform.ObjectModel' ">
+        <Link>%(_MSTestUwpRuntimeDependency.Filename)%(_MSTestUwpRuntimeDependency.Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />

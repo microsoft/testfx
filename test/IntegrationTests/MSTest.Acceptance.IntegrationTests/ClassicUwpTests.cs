@@ -177,10 +177,25 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             (string?)identity.Attribute("Name"),
             $"Unexpected package identity in the tooling-generated manifest '{manifestPath}'.");
 
-        string retryExtensionPath = Path.Combine(build.PackageLayoutPath, "Microsoft.Testing.Extensions.Retry.dll");
-        Assert.IsTrue(
-            File.Exists(retryExtensionPath),
-            $"The classic UWP package layout does not contain the Retry runtime asset '{retryExtensionPath}'. " +
+        string[] runtimeAssemblies =
+        [
+            "Microsoft.ApplicationInsights.dll",
+            "Microsoft.Testing.Extensions.MSBuild.dll",
+            "Microsoft.Testing.Extensions.Retry.dll",
+            "Microsoft.Testing.Extensions.Telemetry.dll",
+            "Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+            "Microsoft.Testing.Extensions.TrxReport.dll",
+            "Microsoft.Testing.Platform.dll",
+            "Microsoft.TestPlatform.CoreUtilities.dll",
+            "Microsoft.TestPlatform.PlatformAbstractions.dll",
+            "Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+        ];
+        string[] missing = runtimeAssemblies
+            .Where(assembly => !File.Exists(Path.Combine(build.PackageLayoutPath, assembly)))
+            .ToArray();
+        Assert.IsEmpty(
+            missing,
+            $"The classic UWP package layout is missing runtime dependencies: {string.Join(", ", missing)}. " +
             $"Recipe: '{build.RecipePath}'. Binlog: '{build.BinlogPath}'.");
     }
 
