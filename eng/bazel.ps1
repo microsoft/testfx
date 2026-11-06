@@ -5,6 +5,38 @@
 
 # Quote '--' when calling this PowerShell script so PowerShell forwards the separator.
 $ErrorActionPreference = 'Stop'
+
+function New-BazelInvocationConfig([string] $OutputRoot, [string] $CacheRoot, [string] $ProfileRoot) {
+    foreach ($path in @($CacheRoot, $ProfileRoot)) {
+        if ($path -and (-not [IO.Path]::IsPathFullyQualified($path) -or $path -match '[\r\n]')) {
+            throw 'Bazel cache and profile roots must be absolute, single-line paths.'
+        }
+    }
+
+    $settings = [ordered]@{}
+    if ($CacheRoot) {
+        $settings['common --repository_cache'] = Join-Path $CacheRoot 'downloads'
+        $settings['common --repo_contents_cache'] = Join-Path $OutputRoot 'repositories'
+        $settings['build --disk_cache'] = Join-Path $CacheRoot 'actions'
+    }
+    if ($ProfileRoot) {
+        New-Item -ItemType Directory -Path $ProfileRoot -Force | Out-Null
+        $name = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N')
+        $settings['build --profile'] = Join-Path $ProfileRoot "$name.profile.gz"
+        $settings['build --build_event_json_file'] = Join-Path $ProfileRoot "$name.bep.jsonl"
+    }
+    if (-not $settings.Count) { return }
+
+    New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
+    $config = Join-Path $OutputRoot ("invocation-$([Guid]::NewGuid().ToString('N')).bazelrc")
+    $lines = foreach ($setting in $settings.GetEnumerator()) {
+        $value = $setting.Value.Replace('\', '/').Replace('"', '\"')
+        "$($setting.Key)=`"$value`""
+    }
+    $lines | Set-Content -LiteralPath $config -Encoding utf8
+    return $config
+}
+
 $root = Split-Path $PSScriptRoot -Parent
 $version = (Get-Content -LiteralPath (Join-Path $root '.bazelversion') -Raw).Trim()
 if ($version -ne '9.1.1') {
@@ -57,6 +89,7 @@ if (-not $IsWindows) {
     }
 }
 
+$invocationConfig = $null
 Push-Location $root
 try {
     # Windows cannot execute long .bat paths; isolate each worktree under a short root.
@@ -70,11 +103,15 @@ try {
     else {
         Join-Path ([System.IO.Path]::GetTempPath()) "tfb-$identity"
     }
-    & $executable "--output_user_root=$outputRoot" --max_idle_secs=120 @args
+    $invocationConfig = New-BazelInvocationConfig $outputRoot $env:TESTFX_BAZEL_CACHE_ROOT $env:TESTFX_BAZEL_PROFILE_ROOT
+    $startupOptions = @("--output_user_root=$outputRoot", '--max_idle_secs=120')
+    if ($invocationConfig) { $startupOptions += "--bazelrc=$invocationConfig" }
+    & $executable @startupOptions @args
     $exitCode = $LASTEXITCODE
 }
 finally {
     Pop-Location
+    if ($invocationConfig) { Remove-Item -LiteralPath $invocationConfig }
 }
 
 exit $exitCode
