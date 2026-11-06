@@ -344,6 +344,147 @@ public sealed class DotnetTestDataConsumerTests
     }
 
     [TestMethod]
+    [DataRow("report.trx", true, true, DisplayName = "RetryArtifactManifest_Trx")]
+    [DataRow("report.TRX", true, true, DisplayName = "RetryArtifactManifest_UppercaseTrx")]
+    [DataRow("nested/report.trx", true, true, DisplayName = "RetryArtifactManifest_NestedTrx")]
+    [DataRow("report.txt", true, false, DisplayName = "RetryArtifactManifest_OtherArtifact")]
+    [DataRow("../attempt-sibling/report.trx", true, false, DisplayName = "RetryArtifactManifest_SiblingDirectory")]
+    [DataRow("report.trx", false, false, DisplayName = "RetryArtifactManifest_NoOptIn")]
+    public void TryDeferTrxArtifacts_OnlyDefersOwnedTrxAndPreservesWireIdentity(string relativePath, bool enabled, bool expectedDeferred)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        string attempt = Path.Combine(directory, "attempt");
+        string manifests = Path.Combine(directory, "manifests");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            string path = Path.GetFullPath(Path.Combine(attempt, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+            var artifact = new FileArtifactMessage(path, "quoted \"report\"", "description", "test-uid", "test-name", "session", "microsoft.testing.trx");
+            var message = new FileArtifactMessages("execution", "instance", [artifact]);
+
+            bool deferred = DotnetTestDataConsumer.TryDeferTrxArtifacts(message, enabled ? attempt : null, manifests);
+
+            Assert.AreEqual(expectedDeferred, deferred);
+            if (!expectedDeferred)
+            {
+                Assert.IsFalse(Directory.Exists(manifests));
+                return;
+            }
+
+            string manifest = Assert.ContainsSingle(Directory.GetFiles(manifests, "*.bin"));
+            Assert.IsEmpty(Directory.GetFiles(manifests, "*.tmp"));
+            FileArtifactMessages restored = DotnetTestDataConsumer.ReadDeferredTrxArtifacts(manifest);
+            Assert.AreEqual("execution", restored.ExecutionId);
+            Assert.AreEqual("instance", restored.InstanceId);
+            Assert.AreEqual(artifact, Assert.ContainsSingle(restored.FileArtifacts));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "RetryArtifactManifest_ControllerArtifact")]
+    [DataRow(true, DisplayName = "RetryArtifactManifest_SessionArtifact")]
+    public async Task ConsumeAsync_DeferredTrxIsRecordedInsteadOfSent(bool sessionScoped)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        string attempt = Path.Combine(directory, "attempt");
+        string manifests = Path.Combine(directory, "manifests");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            fixture.Environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable)).Returns(attempt);
+            fixture.Environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable)).Returns(manifests);
+            List<FileArtifactMessages> sent = [];
+            fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, sent.Add);
+            var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+            var file = new FileInfo(Path.Combine(attempt, "report.trx"));
+            IData artifact = sessionScoped
+                ? new SessionFileArtifact(new SessionUid("session"), file, "report", "description", "microsoft.testing.trx")
+                : new FileArtifact(file, "report", "description", "microsoft.testing.trx");
+
+            await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), artifact, TestContext.CancellationToken);
+
+            Assert.IsEmpty(sent);
+            FileArtifactMessages recorded = DotnetTestDataConsumer.ReadDeferredTrxArtifacts(Assert.ContainsSingle(Directory.GetFiles(manifests, "*.bin")));
+            Assert.AreEqual("execution", recorded.ExecutionId);
+            Assert.AreEqual(DotnetTestConnection.InstanceId, recorded.InstanceId);
+            FileArtifactMessage result = Assert.ContainsSingle(recorded.FileArtifacts);
+            Assert.AreEqual(file.FullName, result.FullPath);
+            Assert.AreEqual(sessionScoped ? "session" : string.Empty, result.SessionUid);
+            Assert.AreEqual("report", result.DisplayName);
+            Assert.AreEqual("description", result.Description);
+            Assert.AreEqual("microsoft.testing.trx", result.Kind);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_DeferredTestAttachmentStillStreamsTheTestResult()
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        string attempt = Path.Combine(directory, "attempt");
+        string manifests = Path.Combine(directory, "manifests");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            fixture.Environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable)).Returns(attempt);
+            fixture.Environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable)).Returns(manifests);
+            List<TestResultMessages> results = [];
+            List<FileArtifactMessages> artifacts = [];
+            fixture.Client.RespondVoid<TestResultMessages>(TestContext.CancellationToken, results.Add);
+            fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, artifacts.Add);
+            var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+            var file = new FileInfo(Path.Combine(attempt, "attachment.trx"));
+
+            await consumer.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateUpdate(PassedTestNodeStateProperty.CachedInstance, new FileArtifactProperty(file, "attachment")),
+                TestContext.CancellationToken);
+
+            Assert.AreEqual("uid", Assert.ContainsSingle(Assert.ContainsSingle(results).SuccessfulTestMessages).Uid);
+            Assert.IsEmpty(artifacts);
+            FileArtifactMessage recorded = Assert.ContainsSingle(DotnetTestDataConsumer.ReadDeferredTrxArtifacts(
+                Assert.ContainsSingle(Directory.GetFiles(manifests, "*.bin"))).FileArtifacts);
+            Assert.AreEqual(file.FullName, recorded.FullPath);
+            Assert.AreEqual("uid", recorded.TestUid);
+            Assert.AreEqual("DisplayName", recorded.TestDisplayName);
+            Assert.AreEqual("session", recorded.SessionUid);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void TryDeferTrxArtifacts_WriteFailureIsNotReportedAsSuccess()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string blocked = Path.Combine(directory, "blocked");
+            File.WriteAllText(blocked, "not a directory");
+            var message = new FileArtifactMessages("execution", "instance",
+                [new FileArtifactMessage(Path.Combine(directory, "report.trx"), "report", null, null, null, null, null)]);
+
+            Assert.ThrowsExactly<IOException>(() => DotnetTestDataConsumer.TryDeferTrxArtifacts(message, directory, blocked));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task SessionCallbacks_SendStartAndEndWithOriginalApplicationToken()
     {
         using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);

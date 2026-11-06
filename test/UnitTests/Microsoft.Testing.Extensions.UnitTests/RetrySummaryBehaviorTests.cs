@@ -183,6 +183,119 @@ public sealed class RetrySummaryBehaviorTests
     }
 
     [TestMethod]
+    [DataRow("report.trx", true, DisplayName = "RetryArtifacts_FinalTrx")]
+    [DataRow("report.TRX", true, DisplayName = "RetryArtifacts_FinalTrxUppercase")]
+    [DataRow("report.xml", false, DisplayName = "RetryArtifacts_UnprocessedXml")]
+    [DataRow("report.ctrf.json", false, DisplayName = "RetryArtifacts_UnprocessedCtrf")]
+    [DataRow("report.html", false, DisplayName = "RetryArtifacts_UnprocessedHtml")]
+    [DataRow("trace.log", false, DisplayName = "RetryArtifacts_AttachmentLog")]
+    public async Task Artifacts_OnlyUnprocessedFinalTrxIsRemovedAfterAllCopies(string fileName, bool removeSource)
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string attempt = Path.Combine(fixture.Root, "Retries", "run", "2");
+        string report = Path.Combine(attempt, "nested", fileName);
+        string attachment = Path.Combine(attempt, "artifacts", "attachment.txt");
+        byte[] reportContents = Encoding.UTF8.GetBytes("report");
+        byte[] attachmentContents = Encoding.UTF8.GetBytes("attachment");
+        fixture.ExistingFiles[report] = reportContents;
+        fixture.ExistingFiles[attachment] = attachmentContents;
+        fixture.FileSystem.Setup(value => value.GetFiles(attempt, "*.*", SearchOption.AllDirectories)).Returns([report, attachment]);
+        fixture.FileSystem.Setup(value => value.CopyFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Callback<string, string, bool>((source, destination, _) =>
+            {
+                fixture.ExistingFiles[destination] = fixture.GetBytes(source);
+                fixture.Events.Add("copy:" + source);
+            });
+
+        await RetrySummaryReporter.MoveArtifactsAsync(
+            Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
+            attempt, fixture.Root, CancellationToken.None);
+
+        Assert.AreEqual(!removeSource, fixture.ExistingFiles.ContainsKey(report));
+        Assert.AreSequenceEqual(reportContents, fixture.GetBytes(Path.Combine(fixture.Root, "nested", fileName)));
+        Assert.AreSequenceEqual(attachmentContents, fixture.GetBytes(attachment));
+        Assert.AreSequenceEqual(attachmentContents, fixture.GetBytes(Path.Combine(fixture.Root, "artifacts", "attachment.txt")));
+        List<string> expectedEvents = ["copy:" + report, "copy:" + attachment];
+        if (removeSource)
+        {
+            expectedEvents.Add("delete:" + report);
+        }
+
+        expectedEvents.Add("display");
+        Assert.AreSequenceEqual(expectedEvents, fixture.Events);
+    }
+
+    [TestMethod]
+    public async Task Artifacts_LaterCopyFailurePreservesFinalTrx()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string attempt = Path.Combine(fixture.Root, "Retries", "run", "2");
+        string report = Path.Combine(attempt, "report.trx");
+        string attachment = Path.Combine(attempt, "attachment.txt");
+        fixture.FileSystem.Setup(value => value.GetFiles(attempt, "*.*", SearchOption.AllDirectories)).Returns([report, attachment]);
+        var original = new IOException("attachment copy denied");
+        fixture.FileSystem.Setup(value => value.CopyFile(attachment, Path.Combine(fixture.Root, "attachment.txt"), true)).Throws(original);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => RetrySummaryReporter.MoveArtifactsAsync(
+            Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
+            attempt, fixture.Root, CancellationToken.None));
+
+        Assert.AreSame(original, exception);
+        fixture.FileSystem.Verify(value => value.CopyFile(report, Path.Combine(fixture.Root, "report.trx"), true), Times.Once);
+        fixture.FileSystem.Verify(value => value.DeleteFile(It.IsAny<string>()), Times.Never);
+        Assert.IsEmpty(fixture.Displays);
+    }
+
+    [TestMethod]
+    public async Task Artifacts_DeleteFailureStopsBeforePublication()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string attempt = Path.Combine(fixture.Root, "Retries", "run", "2");
+        string report = Path.Combine(attempt, "report.trx");
+        fixture.FileSystem.Setup(value => value.GetFiles(attempt, "*.*", SearchOption.AllDirectories)).Returns([report]);
+        var original = new IOException("delete denied");
+        fixture.FileSystem.Setup(value => value.DeleteFile(report)).Throws(original);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => RetrySummaryReporter.MoveArtifactsAsync(
+            Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
+            attempt, fixture.Root, CancellationToken.None));
+
+        Assert.AreSame(original, exception);
+        fixture.FileSystem.Verify(value => value.CopyFile(report, Path.Combine(fixture.Root, "report.trx"), true), Times.Once);
+        Assert.IsEmpty(fixture.Displays);
+    }
+
+    [TestMethod]
+    public async Task Artifacts_MovedTrxIsReportedAfterDeletionAndBeforePublication()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string attempt = Path.Combine(fixture.Root, "Retries", "run", "2");
+        string source = Path.Combine(attempt, "report.trx");
+        string destination = Path.Combine(fixture.Root, "report.trx");
+        fixture.ExistingFiles[source] = Encoding.UTF8.GetBytes("report");
+        fixture.FileSystem.Setup(value => value.GetFiles(attempt, "*.*", SearchOption.AllDirectories)).Returns([source]);
+        fixture.FileSystem.Setup(value => value.CopyFile(source, destination, true))
+            .Callback(() => fixture.ExistingFiles[destination] = fixture.GetBytes(source));
+        List<(string Source, string Destination)> moved = [];
+
+        await RetrySummaryReporter.MoveArtifactsAsync(
+            Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
+            attempt, fixture.Root, new Dictionary<string, string>(),
+            (original, published) =>
+            {
+                Assert.IsFalse(fixture.ExistingFiles.ContainsKey(original));
+                Assert.IsTrue(fixture.ExistingFiles.ContainsKey(published));
+                Assert.IsEmpty(fixture.Displays);
+                moved.Add((original, published));
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual((source, destination), Assert.ContainsSingle(moved));
+        Assert.ContainsSingle(fixture.Displays);
+    }
+
+    [TestMethod]
     public async Task Artifacts_CopyFailureStopsBeforePublication()
     {
         using var fixture = new TrxBehaviorFixture();

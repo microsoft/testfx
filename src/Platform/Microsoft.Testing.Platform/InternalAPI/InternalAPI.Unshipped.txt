@@ -1,4 +1,8 @@
 #nullable enable
+const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_ROOT" -> string!
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TryDeferTrxArtifacts(Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages! message, string? attemptRoot, string? publicationDirectory) -> bool
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.ReadDeferredTrxArtifacts(string! manifestPath) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
 Microsoft.Testing.Platform.Helpers.IFileSystem.IsRegularFile(string! path) -> bool
 Microsoft.Testing.Platform.Helpers.IFileSystem.OpenReadRegularFile(string! path) -> Microsoft.Testing.Platform.Helpers.IFileStream?
 Microsoft.Testing.Platform.Helpers.SystemFileSystem.IsRegularFile(string! path) -> bool

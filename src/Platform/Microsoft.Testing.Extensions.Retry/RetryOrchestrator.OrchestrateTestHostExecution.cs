@@ -234,6 +234,10 @@ internal sealed partial class RetryOrchestrator
                 bool willRetry = attemptCount < userMaxRetryCount + 1;
                 if (willRetry)
                 {
+                    await RetryArtifactProcessor.PublishDeferredTrxArtifactsAsync(
+                        _serviceProvider,
+                        retryRootFolder,
+                        new Dictionary<string, string>()).ConfigureAwait(false);
                     await outputDevice.DisplayAsync(
                         this,
                         new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryAttemptFailedWillRetry, attemptCount, userMaxRetryCount + 1, failedThisAttempt))

@@ -234,7 +234,7 @@ internal static class RetrySummaryReporter
             new Dictionary<string, string>(),
             cancellationToken);
 
-    public static async Task MoveArtifactsAsync(
+    public static Task MoveArtifactsAsync(
         IOutputDeviceDataProducer producer,
         IOutputDevice outputDevice,
         IFileSystem fileSystem,
@@ -243,6 +243,27 @@ internal static class RetrySummaryReporter
         string resultDirectory,
         IReadOnlyDictionary<string, string> replacements,
         CancellationToken cancellationToken)
+        => MoveArtifactsAsync(
+            producer,
+            outputDevice,
+            fileSystem,
+            logger,
+            currentTryResultFolder,
+            resultDirectory,
+            replacements,
+            onTrxMoved: null,
+            cancellationToken);
+
+    public static async Task MoveArtifactsAsync(
+        IOutputDeviceDataProducer producer,
+        IOutputDevice outputDevice,
+        IFileSystem fileSystem,
+        ILogger logger,
+        string currentTryResultFolder,
+        string resultDirectory,
+        IReadOnlyDictionary<string, string> replacements,
+        Func<string, string, Task>? onTrxMoved,
+        CancellationToken cancellationToken)
     {
         string[] filesToMove = fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
         if (filesToMove.Length == 0)
@@ -250,8 +271,8 @@ internal static class RetrySummaryReporter
             return;
         }
 
-        // Preserve the final attempt under Retries like every earlier attempt, and publish copies at the top level.
-        // A retry-aware post-processor can replace a final-attempt report with one describing the logical run.
+        // Post-processed reports retain their inputs; raw TRX reports must have only one publishable copy.
+        List<(string Source, string Destination)> copiedTrxFiles = [];
         foreach (string file in filesToMove)
         {
             string relativePath = file.Substring(currentTryResultFolder.Length)
@@ -260,7 +281,19 @@ internal static class RetrySummaryReporter
                 resultDirectory,
                 relativePath);
             string normalizedFile = Path.GetFullPath(file);
-            string sourceFile = replacements.TryGetValue(normalizedFile, out string? replacement) ? replacement : file;
+            string sourceFile;
+            if (replacements.TryGetValue(normalizedFile, out string? replacement))
+            {
+                sourceFile = replacement;
+            }
+            else
+            {
+                sourceFile = file;
+                if (Path.GetExtension(file).Equals(".trx", StringComparison.OrdinalIgnoreCase))
+                {
+                    copiedTrxFiles.Add((file, finalFileLocation));
+                }
+            }
 
             // Create the directory if missing
             fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
@@ -268,6 +301,16 @@ internal static class RetrySummaryReporter
             // Stryker disable once Boolean: continuation scheduling does not change the copy diagnostic.
             await logger.LogDebugAsync($"Copying file '{sourceFile}' to '{finalFileLocation}'").ConfigureAwait(false);
             fileSystem.CopyFile(sourceFile, finalFileLocation, overwrite: true);
+        }
+
+        // Keep the original reports if copying any artifact fails.
+        foreach ((string source, string destination) in copiedTrxFiles)
+        {
+            fileSystem.DeleteFile(source);
+            if (onTrxMoved is not null)
+            {
+                await onTrxMoved(source, destination).ConfigureAwait(false);
+            }
         }
 
         Task displayTask = outputDevice.DisplayAsync(

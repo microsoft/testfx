@@ -133,6 +133,7 @@ internal sealed partial class RetryOrchestrator
                 retryFailedTestsPipeServer,
                 executableInfo,
                 finalArguments,
+                currentTryResultFolder,
                 attemptCount,
                 userMaxRetryCount,
                 cancellationToken).ConfigureAwait(false);
@@ -207,6 +208,8 @@ internal sealed partial class RetryOrchestrator
                 postProcessingDirectory,
                 cancellationToken).ConfigureAwait(false);
 
+            Dictionary<string, string> movedArtifacts = [with(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)];
             await RetrySummaryReporter.MoveArtifactsAsync(
                 this,
                 outputDevice,
@@ -215,12 +218,21 @@ internal sealed partial class RetryOrchestrator
                 currentTryResultFolder,
                 resultDirectory,
                 replacements,
+                (source, destination) =>
+                {
+                    movedArtifacts[Path.GetFullPath(source)] = destination;
+                    return Task.CompletedTask;
+                },
                 cancellationToken).ConfigureAwait(false);
             RetryArtifactProcessor.PublishExternalArtifacts(
                 fileSystem,
                 attemptArtifacts,
                 attemptCount,
                 replacements);
+            await RetryArtifactProcessor.PublishDeferredTrxArtifactsAsync(
+                _serviceProvider,
+                Path.GetDirectoryName(currentTryResultFolder)!,
+                movedArtifacts).ConfigureAwait(false);
         }
         finally
         {
