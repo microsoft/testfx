@@ -1,6 +1,24 @@
 name: Experimental Bazel build
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.bazel*'
+      - 'BUILD.bazel'
+      - 'MODULE.bazel*'
+      - 'Directory.Packages.props'
+      - 'eng/bazel.ps1'
+      - 'eng/bazel/**'
+      - 'eng/Versions.props'
+      - '.editorconfig'
+      - 'src/**'
+      - 'test/**'
+      - 'samples/public/mstest-runner/Simple1/**'
+      - 'samples/public/TestingPlatformExamples/TestingPlatformExplorer/**'
+      - '.github/workflows/bazel.yml'
+      - '.github/scripts/test_bazel_cache.py'
   pull_request:
     paths:
       - '.bazel*'
@@ -16,6 +34,7 @@ on:
       - 'samples/public/mstest-runner/Simple1/**'
       - 'samples/public/TestingPlatformExamples/TestingPlatformExplorer/**'
       - '.github/workflows/bazel.yml'
+      - '.github/scripts/test_bazel_cache.py'
   workflow_dispatch:
 
 permissions:
@@ -38,12 +57,58 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Configure Bazel caches and profiles
+        shell: pwsh
+        run: |
+          $cache = Join-Path $env:GITHUB_WORKSPACE 'artifacts\bazel-cache'
+          $profiles = Join-Path $env:GITHUB_WORKSPACE 'artifacts\bazel-profiles'
+          "TESTFX_BAZEL_CACHE_ROOT=$cache" | Add-Content -LiteralPath $env:GITHUB_ENV
+          "TESTFX_BAZEL_PROFILE_ROOT=$profiles" | Add-Content -LiteralPath $env:GITHUB_ENV
+      # Only content-addressed archives and action outputs cross job boundaries.
+      # Fresh output/server trees must not bypass the cache's branch isolation.
+      - name: Restore Bazel downloads
+        id: downloads
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2
+        with:
+          path: artifacts/bazel-cache/downloads
+          key: bazel-downloads-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            bazel-downloads-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion') }}-
+      - name: Restore Bazel actions
+        id: actions
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2
+        with:
+          path: artifacts/bazel-cache/actions
+          key: bazel-actions-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion', 'MODULE.bazel', '.bazelrc', 'eng/bazel/patches/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            bazel-actions-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion', 'MODULE.bazel', '.bazelrc', 'eng/bazel/patches/**') }}-
       - name: Build, test, and validate native consumers
         shell: pwsh
         run: .\eng\bazel\validate.ps1
       - name: Validate native packages and self-contained runtimes
         shell: pwsh
         run: .\eng\bazel\validate-packages.ps1
+      - name: Stop the worktree's Bazel server
+        if: always()
+        shell: pwsh
+        run: .\eng\bazel.ps1 shutdown
+      # PRs only restore; only successful main runs publish trusted snapshots.
+      - name: Save Bazel downloads
+        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: artifacts/bazel-cache/downloads
+          key: ${{ steps.downloads.outputs.cache-primary-key }}
+      - name: Save Bazel actions
+        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: artifacts/bazel-cache/actions
+          key: ${{ steps.actions.outputs.cache-primary-key }}
       - name: Preserve native build evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -56,8 +121,5 @@ jobs:
             artifacts/bazel-package-validation/**/*.binlog
             artifacts/bazel-package-validation/**/*.trx
             artifacts/bazel-package-validation/**/feed/*.nupkg
+            artifacts/bazel-profiles/
           if-no-files-found: warn
-      - name: Stop the worktree's Bazel server
-        if: always()
-        shell: pwsh
-        run: .\eng\bazel.ps1 shutdown
