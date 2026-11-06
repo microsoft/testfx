@@ -4,6 +4,7 @@
 using System.Reflection.Emit;
 
 using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -11,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1098,6 +1100,207 @@ public sealed class UnitTestRunnerTests : TestContainer
         {
             PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
         }
+    }
+
+    public Task RunSingleTestExpectedDuration_IOExceptionPreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new IOException("warning transport failed"),
+            "System.IO.IOException: warning transport failed");
+
+    public Task RunSingleTestExpectedDuration_OperationCanceledExceptionPreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new OperationCanceledException("warning transport cancelled"),
+            "System.OperationCanceledException: warning transport cancelled");
+
+    public Task RunSingleTestExpectedDuration_HostExceptionPreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new InvalidOperationException("warning host failed"),
+            "System.InvalidOperationException: warning host failed");
+
+    public Task RunSingleTestExpectedDuration_TraceFailurePreservesResultsAndCleanup()
+        => AssertExpectedDurationDeliveryFailureAsync(
+            new IOException("warning transport failed"),
+            "System.IO.IOException: warning transport failed",
+            new InvalidOperationException("trace transport failed"),
+            "System.InvalidOperationException: trace transport failed");
+
+    public Task RunSingleTestExpectedDuration_ThrowingExceptionMessagePreservesResultsAndCleanup()
+    {
+        string exceptionType = typeof(ThrowingWarningMessageException).FullName!;
+        return AssertExpectedDurationDeliveryFailureAsync(
+            new ThrowingWarningMessageException(),
+            $"{exceptionType}: (Failed to get the message for an exception of type {exceptionType} due to an exception.)");
+    }
+
+    private async Task AssertExpectedDurationDeliveryFailureAsync(
+        Exception deliveryException,
+        string formattedDeliveryFailure,
+        Exception? traceException = null,
+        string? formattedTraceFailure = null)
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            Type type = typeof(DummyTestClassWithCleanupMethods);
+            MethodInfo method = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod))!;
+            MethodInfo classCleanup = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.ClassCleanup))!;
+            MethodInfo assemblyCleanup = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.AssemblyCleanup))!;
+            List<string> cleanupEvents = [];
+            var originalFailure = new InvalidOperationException("completed failure sentinel");
+            var passedId = new Guid("10101010-1010-1010-1010-101010101010");
+            var failedId = new Guid("20202020-2020-2020-2020-202020202020");
+            var parentId = new Guid("30303030-3030-3030-3030-303030303030");
+            TestResult[] completed =
+            [
+                new()
+                {
+                    Outcome = UnitTestOutcome.Passed,
+                    DisplayName = "passing row",
+                    Duration = TimeSpan.FromTicks(1_501_250),
+                    ExecutionId = passedId,
+                    ParentExecId = parentId,
+                    TestContextMessages = "passing authored output",
+                    LogOutput = "passing stdout",
+                },
+                new()
+                {
+                    Outcome = UnitTestOutcome.Failed,
+                    DisplayName = "failing row",
+                    Duration = TimeSpan.FromTicks(2_005_000),
+                    ExecutionId = failedId,
+                    ParentExecId = parentId,
+                    TestFailureException = originalFailure,
+                    TestContextMessages = "failing authored output",
+                    LogError = "failing stderr",
+                },
+            ];
+            var executor = new CompletedDurationResultsAttribute(completed);
+            _testablePlatformServiceProvider.SetReflectionOperations(new SourceGeneratedReflectionOperations(
+                new SourceGeneratedReflectionDataProvider
+                {
+                    Assembly = type.Assembly,
+                    AssemblyName = type.Assembly.GetName().Name!,
+                    Types = [type],
+                    TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>
+                    {
+                        [method] = [executor, new ExpectedDurationAttribute(100)],
+                    },
+                    TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+                    {
+                        [classCleanup] = (_, _) =>
+                        {
+                            cleanupEvents.Add("class cleanup");
+                            return Task.CompletedTask;
+                        },
+                        [assemblyCleanup] = (_, _) =>
+                        {
+                            cleanupEvents.Add("assembly cleanup");
+                            return Task.CompletedTask;
+                        },
+                    },
+                }));
+            _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("duration-warning-source"))
+                .Returns(type.Assembly);
+            _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+            if (traceException is not null)
+            {
+                _testablePlatformServiceProvider.MockTraceLogger.Setup(value => value.Warning(It.IsAny<string>()))
+                    .Throws(traceException);
+            }
+
+            List<string> warningAttempts = [];
+            var logger = new Mock<IAdapterMessageLogger>();
+            logger.Setup(value => value.SendMessage(MessageLevel.Warning, It.IsAny<string>()))
+                .Callback<MessageLevel, string>((_, message) =>
+                {
+                    warningAttempts.Add(message);
+                    if (warningAttempts.Count == 1)
+                    {
+                        throw deliveryException;
+                    }
+                });
+            var element = new UnitTestElement(CreateTestMethod(method.Name, type.FullName!, "duration-warning-source", null));
+            UnitTestRunner runner = CreateUnitTestRunner([element]);
+            TestResult[] results = [];
+            Exception? escaped = null;
+            try
+            {
+                results = await runner.RunSingleTestAsync(element, _testRunParameters, logger.Object);
+            }
+            catch (Exception exception)
+            {
+                // A hostile virtual Message getter can also escape the outer runner's
+                // error-conversion path. Treat that as the regression, not a harness fault.
+                escaped = exception;
+            }
+
+            string identity = $"{type.FullName}.TestMethod";
+            string passedWarning = $"Test '{identity} (passing row)' took 150.1250 ms, exceeding its expected maximum duration of 100 ms.";
+            string failedWarning = $"Test '{identity} (failing row)' took 200.5000 ms, exceeding its expected maximum duration of 100 ms.";
+            string deliveryFailure = $"Failed to display the expected-duration warning for test '{identity} (passing row)': {formattedDeliveryFailure}";
+            using (new AssertionScope())
+            {
+                escaped.Should().BeNull("an advisory sink must not throw out of the test runner");
+                results.Select(result => result.Outcome).Should().Equal(
+                    [UnitTestOutcome.Passed, UnitTestOutcome.Failed],
+                    "advisory delivery failures must not replace completed results with Error");
+                cleanupEvents.Should().Equal("class cleanup", "assembly cleanup");
+                executor.Calls.Should().Be(1);
+                warningAttempts.Should().Equal(passedWarning, failedWarning);
+                _testablePlatformServiceProvider.MockTraceLogger.Invocations
+                    .Where(invocation => invocation.Method.Name == nameof(ITraceLogger.Warning) && invocation.Arguments.Count == 1)
+                    .Select(invocation => (string)invocation.Arguments[0])
+                    .Should().Equal(deliveryFailure);
+
+                if (results.Length == 2)
+                {
+                    results.Select(result => result.ExecutionId).Should().Equal(passedId, failedId);
+                    results.Select(result => result.ParentExecId).Should().Equal(parentId, parentId);
+                    results.Select(result => result.Duration).Should().Equal(TimeSpan.FromTicks(1_501_250), TimeSpan.FromTicks(2_005_000));
+                    results.Select(result => result.DisplayName).Should().Equal("passing row", "failing row");
+                    results[0].TestFailureException.Should().BeNull();
+                    results[1].TestFailureException.Should().BeSameAs(originalFailure);
+                    results[1].ExceptionMessage.Should().Be("completed failure sentinel");
+                    results[0].LogOutput.Should().Be("passing stdout");
+                    results[1].LogError.Should().Be("failing stderr");
+                    List<string> expectedPassingOutput = ["passing authored output", passedWarning, deliveryFailure];
+                    if (traceException is not null)
+                    {
+                        expectedPassingOutput.Add($"Failed to trace the expected-duration warning delivery failure: {formattedTraceFailure}");
+                    }
+
+                    DiagnosticLines(results[0].TestContextMessages).Should().Equal(expectedPassingOutput);
+                    DiagnosticLines(results[1].TestContextMessages).Should().Equal("failing authored output", failedWarning);
+                }
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    private static IEnumerable<string> DiagnosticLines(string? output)
+        => (output ?? string.Empty).Replace("\r\n", "\n").Split('\n').Where(line => line.Length != 0);
+
+    private sealed class CompletedDurationResultsAttribute(TestResult[] results) : TestMethodAttribute
+    {
+        internal int Calls { get; private set; }
+
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            Calls++;
+            return Task.FromResult(results);
+        }
+    }
+
+    private sealed class ThrowingWarningMessageException : Exception
+    {
+        public override string Message => throw new InvalidOperationException("warning Message getter failed");
     }
 
 #if WIN_UI || WINDOWS_UWP

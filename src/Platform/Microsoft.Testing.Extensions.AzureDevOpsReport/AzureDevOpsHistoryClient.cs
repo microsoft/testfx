@@ -245,9 +245,11 @@ internal sealed class AzureDevOpsHistoryClient : IAzureDevOpsHistoryClient
         return payload?.Value is null
             ? new AzureDevOpsTestRunsPage([], GetContinuationToken(response))
             : new AzureDevOpsTestRunsPage(
-                [.. payload.Value
+                [
+                    .. payload.Value
                     .Where(static run => !RoslynString.IsNullOrWhiteSpace(run.Url))
-                    .Select(static run => new AzureDevOpsTestRun(run.Url!))],
+                    .Select(static run => new AzureDevOpsTestRun(run.Url!)),
+                ],
                 GetContinuationToken(response));
     }
 
@@ -259,13 +261,15 @@ internal sealed class AzureDevOpsHistoryClient : IAzureDevOpsHistoryClient
         return payload?.Value is null
             ? new AzureDevOpsTestResultsPage([], continuationToken)
             : new AzureDevOpsTestResultsPage(
-                [.. payload.Value
+                [
+                    .. payload.Value
                     .Where(static result => !RoslynString.IsNullOrWhiteSpace(result.AutomatedTestName) && !RoslynString.IsNullOrWhiteSpace(result.Outcome))
                     .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!, result.DurationInMs)
                     {
                         TestCaseTitle = result.TestCaseTitle,
                         Comment = result.Comment,
-                    })],
+                    }),
+                ],
                 continuationToken);
     }
 

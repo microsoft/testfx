@@ -24,14 +24,18 @@ internal static class ResponseFileHelper
         var readContext = new ResponseFileReadContext(rspFilePath, diagnosticPath);
         try
         {
-            newArguments = [.. ExpandResponseFile(
+            newArguments = [
+                .. ExpandResponseFile(
                 rspFilePath,
                 diagnosticPath,
-                [with(
+                [
+                    with(
                     RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                         ? StringComparer.OrdinalIgnoreCase
-                        : StringComparer.Ordinal)],
-                readContext)];
+                        : StringComparer.Ordinal),
+                ],
+                readContext),
+            ];
             return true;
         }
         catch (FileNotFoundException)

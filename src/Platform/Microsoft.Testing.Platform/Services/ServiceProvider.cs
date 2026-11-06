@@ -31,7 +31,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
         // TestHostControllers
         typeof(ITestHostEnvironmentVariableProvider),
-        typeof(ITestHostProcessLifetimeHandler)
+        typeof(ITestHostProcessLifetimeHandler),
     ];
 #pragma warning restore CS0618 // Type or member is obsolete
 

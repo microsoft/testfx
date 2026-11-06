@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-public sealed record TestNodeUpdate
-(
+public sealed record TestNodeUpdate(
     [property: JsonProperty("node")]
     TestNode Node,
 
@@ -14,8 +14,7 @@ public sealed record TestNodeUpdate
     string ParentUid);
 
 // TODO: complete the object model
-public sealed record TestNode
-(
+public sealed record TestNode(
     [property: JsonProperty("uid")]
     string Uid,
 
@@ -26,4 +25,8 @@ public sealed record TestNode
     string NodeType,
 
     [property: JsonProperty("execution-state")]
-    string ExecutionState);
+    string ExecutionState)
+{
+    [JsonExtensionData]
+    public Dictionary<string, JToken> Properties { get; set; } = [];
+}

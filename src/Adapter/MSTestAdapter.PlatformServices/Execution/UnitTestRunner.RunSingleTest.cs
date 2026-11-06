@@ -249,6 +249,9 @@ internal sealed partial class UnitTestRunner
 
                             result = CombineRetryAttempts(result, retryResult);
                         }
+
+                        // Only the combined results identify which attempts cannot be superseded.
+                        testMethodRunner.ReportExpectedDurationWarnings(result);
                     }
                 }
             }
@@ -322,7 +325,7 @@ internal sealed partial class UnitTestRunner
                 {
                     Outcome = UnitTestOutcome.Error,
                     IgnoreReason = ex.Message,
-                }
+                },
             ];
         }
         finally

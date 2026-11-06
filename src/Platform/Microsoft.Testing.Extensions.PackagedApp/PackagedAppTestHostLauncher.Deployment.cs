@@ -100,13 +100,15 @@ internal sealed partial class PackagedAppTestHostLauncher
             Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName));
         if (targetPackagePath is null)
         {
-            string[] manifestTargetPackagePaths = [.. manifestInfo.Applications
+            string[] manifestTargetPackagePaths = [
+                .. manifestInfo.Applications
                 .Select(application => application.Executable?.Replace('\\', Path.DirectorySeparatorChar))
                 .Where(executable => executable is not null
                     && targetPackagePathCandidates.Any(candidate =>
                         string.Equals(candidate, executable, StringComparison.OrdinalIgnoreCase)))
                 .Cast<string>()
-                .Distinct(StringComparer.OrdinalIgnoreCase)];
+                .Distinct(StringComparer.OrdinalIgnoreCase),
+            ];
             if (manifestTargetPackagePaths.Length == 1)
             {
                 targetPackagePath = manifestTargetPackagePaths[0];

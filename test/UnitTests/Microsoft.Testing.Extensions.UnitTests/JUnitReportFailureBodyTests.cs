@@ -155,7 +155,7 @@ public sealed class JUnitReportFailureBodyTests
                     Skipped = result.Outcome == "skipped" ? 1 : 0,
                     TotalDuration = TimeSpan.Zero,
                     Timestamp = Timestamp,
-                }
+                },
             ],
             TotalTests = 1,
             TotalFailures = result.Outcome == "failed" ? 1 : 0,

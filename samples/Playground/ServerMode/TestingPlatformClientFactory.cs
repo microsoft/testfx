@@ -380,6 +380,6 @@ public static class WellKnownEnvironmentVariables
         "TESTINGPLATFORM_DIAGNOSTIC",
 
         // Isolate from the skip banner in case of parent, children tests
-        "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER"
+        "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER",
     ];
 }

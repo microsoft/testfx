@@ -38,7 +38,7 @@ internal sealed class CsvDataConnection : TestDataConnection
     {
         List<string> tableNames =
         [
-            TableName
+            TableName,
         ];
         return tableNames;
     }

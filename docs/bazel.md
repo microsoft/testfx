@@ -417,6 +417,59 @@ WinUI/XAML application pipeline. The bounded standalone XAML compiler
 experiments did not produce C# or XBF; no MSBuild hybrid bridge is presented
 as a native build. These Windows gates are separate from the portable CI job.
 
+## GitHub Actions build cache
+
+The experimental `.github/workflows/bazel.yml` workflow restores two separate
+GitHub Actions caches on Windows and Ubuntu:
+
+| Store | Contents |
+| --- | --- |
+| `artifacts/bazel-cache/downloads` | Content-addressed downloaded SDK, rules and NuGet archives (`--repository_cache`). |
+| `artifacts/bazel-cache/actions` | Compiled/generated action outputs (`--disk_cache`). |
+
+Successful non-PR runs on `main` save new immutable snapshots after stopping
+their Bazel server. The workflow now runs on relevant `main` pushes to seed
+these stores. PRs only restore; they do not run the save actions. OS/architecture
+and Bazel/toolchain settings partition compatible snapshots. Per-run keys with
+compatible restore prefixes allow reuse across commits, while Bazel still
+checks each action's declared inputs. A cache miss or eviction runs the same
+full validation rather than skipping work.
+PRs remain cold until the first successful compatible `main` seed is available.
+
+Before a successful main save, the stopped job trims oldest cache files to
+1,536 MiB of download payload and 512 MiB of action payload: at most 2 GiB
+uncompressed per platform for a new snapshot pair. Missing blobs are ordinary
+cache misses and are downloaded/rebuilt when needed. This bounds accumulated
+store contents, not repository-wide archive history: multiple immutable
+generations, archive overhead and other workflows still share GitHub's quota.
+
+The output base, server state and extracted repositories are **not** cached.
+In particular, Bazel 9's repository-content cache is redirected to
+`<output-root>/repositories`, outside both the source checkout and the download
+archive store. Consumer NuGet restores remain isolated, and both test commands
+retain `--nocache_test_results`; this enables build reuse, not cached test passes.
+
+For local use, the wrapper supports two independent, absolute single-line paths:
+
+```powershell
+$env:TESTFX_BAZEL_CACHE_ROOT = Join-Path $PWD 'artifacts\my-bazel-cache'
+$env:TESTFX_BAZEL_PROFILE_ROOT = Join-Path $PWD 'artifacts\my-bazel-profiles'
+.\eng\bazel.ps1 test //:protocol_contract_tests --nocache_test_results
+```
+
+Without these environment variables, existing local behavior is unchanged.
+Do not share an output root between concurrent invocations/worktrees or put
+credentials in either cache. The wrapper removes its per-invocation rc file;
+profiles and BEP records have distinct names and remain outside the stores.
+
+CI uploads `artifacts/bazel-profiles` with the existing evidence artifacts.
+The separately named restore/save steps expose cache-transfer durations,
+compressed sizes and matched keys in the GitHub job timeline/logs. Compare
+the **whole job**, including transfers and artifact handling, and inspect BEP
+cache-hit statistics before reporting a speedup. Whole-archive snapshots incur
+transfer/extraction overhead and GitHub cache quota/eviction; a remote action
+cache remains a possible later optimization, not part of this change.
+
 ## Build-and-test cache dogfood
 
 `azure-pipelines-bazel.yml` is an independent experimental pipeline. Register it

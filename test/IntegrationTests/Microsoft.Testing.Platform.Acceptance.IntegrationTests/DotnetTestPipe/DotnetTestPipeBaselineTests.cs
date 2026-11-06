@@ -120,7 +120,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             .. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestSessionEvent)
                 .Select(m => DotnetTestPipeProtocol.DecodeTestSessionEventBody(m.Body).SessionType)
                 .Where(t => t.HasValue)
-                .Select(t => t!.Value)
+                .Select(t => t!.Value),
         ];
 
         Assert.HasCount(2, sessionEventTypes, $"Expected exactly two session events; got [{string.Join(", ", sessionEventTypes)}].");

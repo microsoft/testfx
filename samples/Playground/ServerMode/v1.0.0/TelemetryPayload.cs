@@ -5,8 +5,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-public record TelemetryPayload
-(
+public record TelemetryPayload(
     [property: JsonProperty(nameof(TelemetryPayload.EventName))]
     string EventName,
 

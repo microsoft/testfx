@@ -28,8 +28,10 @@ internal static class CoverageThresholdPolicy
         List<TestCoverageThresholdMessage> thresholds = [];
         List<string> errors = [];
         CoverageScopeSummary[] overallScopes =
-            [.. scopes.Where(scope => scope.Scope.Level == CoverageScopeLevel.Overall
-                && (sessionUid is null || scope.SessionUid.Equals(sessionUid.Value)))];
+            [
+                .. scopes.Where(scope => scope.Scope.Level == CoverageScopeLevel.Overall
+                && (sessionUid is null || scope.SessionUid.Equals(sessionUid.Value))),
+            ];
         CoverageScopeSummary? overall = overallScopes.Length == 1 ? overallScopes[0] : null;
 
         EvaluateMetric(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, CoverageMetric.Line);

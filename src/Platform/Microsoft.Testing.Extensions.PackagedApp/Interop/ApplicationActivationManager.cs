@@ -59,13 +59,13 @@ internal static class ApplicationActivationManager
 
         void ActivateForFile(
             [In, MarshalAs(UnmanagedType.LPWStr)] string appUserModelId,
-            [In] IntPtr itemArray,
+            [In] nint itemArray,
             [In, MarshalAs(UnmanagedType.LPWStr)] string verb,
             [Out] out uint processId);
 
         void ActivateForProtocol(
             [In, MarshalAs(UnmanagedType.LPWStr)] string appUserModelId,
-            [In] IntPtr itemArray,
+            [In] nint itemArray,
             [Out] out uint processId);
     }
 }

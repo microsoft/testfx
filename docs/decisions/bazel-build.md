@@ -3768,3 +3768,269 @@ The checked bootstrap SHA-256 is
 `5CDA88211A9E8FC506E86C1D85347D20C5E391745BC36D158B9DA7D198A16705`;
 the comparison response SHA-256 is
 `A95ED4BA29C31F70FCC0F9D6BECE474262F73CDF81915FD485A7DA6667C13ABA`.
+
+## 2026-11-06: persist caches in the active GitHub workflow
+
+### Problem and approved contract
+
+The user approved persistent download and build-action caching in the existing
+experimental GitHub workflow, with successful `main` runs seeding the cache and
+PRs retaining forced test execution. This does not enable test-result reuse,
+change the required MSBuild pipeline, introduce a remote cache service, or
+authorize publication of this change.
+
+Hosted run `42217949361` spent 310.421 seconds on the Windows source matrix and
+219.899 seconds on its test command. The ten test-target runtimes sum to only
+72.7 seconds. An immediate source-matrix repeat took 2.623 seconds, but that
+in-process reuse is not a prediction of cross-agent savings. The workflow
+uploaded evidence without restoring reusable Bazel state. The preceding run
+`42216582861` executed the same build-action counts substantially faster; neither
+run retained profiles that could separate compilation, analysis, I/O and network.
+
+The producer is the successful `main` GitHub job on Windows x64 or Linux x64.
+The consumer is a fresh same-platform job using the pinned Bazel/rules/.NET
+toolchain in this branch. Persist only Bazel's downloaded archives and disk
+action store. Keep extracted repositories, execution/output/server trees,
+consumer NuGet restore caches and published result artifacts outside that store.
+No shipping package, product protocol, release branch or servicing behavior is
+changed; this remains a non-required development-build optimization.
+
+GitHub owns immutable archive snapshots and their branch/repository scope.
+Only successful non-PR runs on `refs/heads/main` may save through this workflow;
+PRs restore compatible snapshots without a save step. Per-run keys accumulate
+new entries, while compatibility prefixes allow reuse across source revisions.
+OS/architecture and Bazel/toolchain configuration partition action snapshots.
+Bazel's content/action keys, not the snapshot key alone, validate individual
+outputs. A missing or evicted snapshot falls back to the same full commands,
+and failures/cancellation must never publish a successful seed.
+
+### Research and alternatives
+
+- [GitHub cache contract](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching):
+  caches are immutable, default-branch caches are available to PRs, and PR
+  merge-ref caches cannot populate the base branch. Cache paths/compression
+  contribute to archive compatibility. Never store credentials.
+- [Pinned cache action](https://github.com/actions/cache/tree/55cc8345863c7cc4c66a329aec7e433d2d1c52a9):
+  separate restore/save actions expose the requested and matched keys. Reuse
+  the repository's existing v6.1.0 SHA rather than introducing a different pin.
+- [Bazel cache contract](https://bazel.build/remote/caching):
+  repository downloads and action outputs are different stores. Reusing the
+  disk action cache does not require persisting the output base.
+- No-change leaves every hosted runner cold. Caching the entire output base
+  would retain machine-specific paths and mutable server state. A remote
+  action/CAS service may reduce whole-archive transfer, but adds operations and
+  authorization; defer it until measured transfer overhead warrants it.
+
+### Planned validation and isolation
+
+Focused launcher/configuration tests will assert opt-in cache paths, distinct
+profile/BEP files, compatible snapshots, main-only saves and unconditional
+validation. Retain the same tests while disabling cache configuration in an
+isolated counterfactual, then restore it and demonstrate the intended assertion.
+Real Bazel checks will use task-owned fresh output roots and dedicated cache
+directories to cover a miss, a fresh-output hit, forced test execution, changed
+inputs and a nonzero test result. Existing test scheduling stays unchanged.
+
+Each invocation owns its temporary rc file and evidence names. Test processes
+receive environment overrides only in their child process; no user/global cache
+is cleared or redirected. The actual workflow will retain per-command profiles
+and BEP records; separately named restore/save steps expose transfer durations
+and compressed byte counts in GitHub's logs. Actual hosted transfer costs and
+Linux execution of the changed workflow remain unverified until authorized
+publication and CI execution.
+
+The first real Bazel 9.1.1 bootstrap rejected the cache path: setting
+`--repository_cache` also defaults the extracted repository-content cache to
+its `contents` subdirectory, which is forbidden inside the source checkout.
+The launcher now explicitly places `--repo_contents_cache` under the fresh
+output root instead. This preserves the intended archive-only persistence and
+avoids transferring machine-specific extracted repositories. The focused
+path contract also asserts this separation. The failed bootstrap is retained
+as setup evidence, not a behavioral red-phase or successful cache sample.
+
+### Executed cache and regression evidence
+
+The tested base is `df9b675dd7b49b6bbd18775d013e05bc5af8a89a` plus this local
+implementation. Its executable source bindings are:
+
+| File | SHA-256 |
+| --- | --- |
+| `eng/bazel.ps1` | `C598E8B0D9BB29F269E0B3E69EBE78B88926373E00DA9C2C922E6A542A82B304` |
+| `.github/scripts/test_bazel_cache.py` | `F48BA568207D2B14551385C92BCDF14AB1018DAF5508A9FC6868C0099E0EFEBA` |
+| `.github/workflows/bazel.yml` | `E29523ABDAEF0752E483B3402C1DFF19304831A547254657204FA40A336138E6` |
+
+`python .github\scripts\test_bazel_cache.py` exited 0 with eight executed tests.
+The same unchanged suite in an isolated copy, with only the `--disk_cache`
+setting removed, exited 1: seven passed and
+`test_only_downloads_and_actions_are_persistent_in_paths_with_spaces` failed
+on the missing setting. Restoring the correct wrapper returned eight passes,
+exit 0. The mutated wrapper SHA-256 was
+`68E802BA0D0756100A00569BFC9453E9EB06F33FA168C7C3487F5AF0D446A6B9`.
+This is executed feature-removal sensitivity, not a pristine-base comparison.
+
+The other contracts directly cover successful-main-only saves, compatible
+cross-revision snapshot prefixes, unconditional validation/forced test execution,
+server termination before save, and unique profile/BEP paths. An existing
+PowerShell 7.4.6 Ubuntu container, with network disabled and source read-only,
+also passed `LinuxCacheAndProfilePathsWithSpaces`. This tests Linux path/config
+generation, not full Linux Bazel execution.
+
+Real producer/consumer validation used the pinned Bazel 9.1.1 and SDK
+11.0.100-rc.3.26522.148, four build workers and unchanged test scheduling.
+The cold run used a new dedicated compiled/download store. After its server
+stopped, only `downloads` and `actions` were archived and restored elsewhere:
+5,788 files, no reparse points, 1,396,807,811 uncompressed bytes. The local gzip
+archive was 1,163,643,734 bytes; compression took 70.58 seconds and extraction
+13.38 seconds. Those local gzip timings are **not** GitHub's zstd/network costs.
+
+The second run used a separate checkout outside the repository and a new short
+Bazel output root. Selected source bytes and launcher hashes matched; extracted
+SDK/repository trees and prior server/output state were not copied.
+Let `$e` be the run-owned evidence root ending in `bazel-cache-4461d332`.
+The effective commands were:
+
+| Working directory and command | Result |
+| --- | --- |
+| Original worktree: `.\eng\bazel\validate.ps1 -Jobs 4 -EvidenceRoot (Join-Path $e 'cold-native')` | Exit 0; all ten targets passed, with 3,784 passing cases in eight TRXs plus two explorer smoke targets. Discovery/report checks and expected exits 2/9/3 passed. |
+| Original worktree: `.\eng\bazel\validate-packages.ps1 -Jobs 4 -EvidenceRoot (Join-Path $e 'cold-packages')` | Exit 0; all 22 steps, three packages and net8/net9/net10/net11 copied runtime layouts passed. |
+| Separate checkout: `.\eng\bazel\validate.ps1 -Jobs 4 -EvidenceRoot (Join-Path $e 'warm-native')` | Exit 0; the exact same TRX identities/outcomes and ten targets passed. BEP confirms all ten targets executed, zero cached test results. |
+| Separate checkout: `.\eng\bazel\validate-packages.ps1 -Jobs 4 -EvidenceRoot (Join-Path $e 'warm-packages')` | Exit 0; all 22 steps passed. Loaded net11 MTP/TRX implementation hashes match the cold run exactly. |
+
+Both runs set `TESTFX_BAZEL_CACHE_ROOT` to their dedicated original/restored
+store, `TESTFX_BAZEL_OUTPUT_ROOT` to distinct `Q:\tfbc\cache-4461d332-{cold,warm}`
+roots and `TESTFX_BAZEL_PROFILE_ROOT` to separate evidence directories.
+`ownership.json` records the exact paths. The verified bootstrap executable
+was already available in both checkouts. Local validation timings were:
+
+| Measurement | Cold | Restored |
+| --- | ---: | ---: |
+| Source-matrix Bazel command | 216.414 s | 167.793 s; 235 disk-cache hits, one local action |
+| Test-prerequisite/execution Bazel command | 228.277 s | 60.206 s; 634 disk-cache hits, 20 local actions |
+| Both validators, including harness and final shutdown | 630.55 s | 388.33 s, excluding the separately measured archive operations |
+
+This single sequential local pair proves cross-checkout cache reuse, not a
+representative CI percentage. Initial analysis/materialization still costs
+time, and whole-cache transfer is significant. The retained profiles/BEP now
+allow the remaining cost to be investigated instead of inferred from no-ops.
+
+Input invalidation was then exercised only in the comparison checkout.
+Changing `TestingPlatformExplorer.UnitTests.SomeTests.TestMethod1` from its
+passing body to a distinctive exception, while retaining the restored store,
+made this exact command rebuild and report the sentinel with Bazel exit 3
+(host exit 2, one executed failure):
+
+```powershell
+.\eng\bazel.ps1 test //:explorer_test --jobs=4 --nocache_test_results --test_output=all --noshow_progress --show_result=0
+```
+
+Restoring the original source bytes and rerunning the same command executed
+one pass, exit 0. Neither run reused a test result. Mutation-patch SHA-256:
+`46480C98EDE095FD153062F169E07BD7D664C7CD743453DBE53AAB0B43E8BCB6`.
+The original/restored source hashes match, and its UTF-8 BOM was preserved.
+No mutation is included in the delivered change.
+
+**Test-value evidence:** the missing-cache-setting fault is detected by the
+unchanged contract assertion; real restored-cache commands preserve selected
+test identities/outcomes, rebuild a changed test rather than reuse a stale
+pass, and retain negative exits. The regression and composed-product evidence
+is local. GitHub cache-service authorization, first-main-seed behavior, actual
+transfer costs and full Linux workflow execution remain explicit hosted gates.
+No cache-service percentage saving or shipping/servicing certification is
+claimed. Raw commands, logs, paired identities, profiles/BEP and patch/hash
+records are retained in the session's `bazel-cache-4461d332` evidence; they
+have not been uploaded or represented as publicly accessible CI artifacts.
+After verification, both owned Bazel servers were stopped and the dedicated
+output/cache roots, snapshot archive, comparison checkout and bulk generated
+consumer/runtime trees were removed. Runtime TRXs were copied out before
+cleanup; the small result, command, package, profile and provenance artifacts
+remain available in session storage.
+
+### Review follow-up: bounded snapshots and validator-trigger coverage
+
+Review of `6009d9c8a955d168f4e04b46d2718c9e122dd7ad` identified an unbounded
+accumulation path: every main snapshot inherits obsolete content-addressed
+files from prior revisions. The recorded 1.4 GB uncompressed / 1.16 GB archive
+measurement is for both stores combined, not for each store.
+
+The bounded correction will trim oldest files by modification time only in the two
+dedicated stores, after the owning server has stopped and before main saves.
+Keep download payloads at most 1,536 MiB and action payloads at most 512 MiB:
+at most 2 GiB uncompressed per platform for each new snapshot pair. These
+ceilings accommodate the measured initial workload while preventing monotonic
+growth across revisions. Missing entries remain ordinary Bazel cache misses,
+not reasons to skip builds or tests. Archive metadata/compression overhead and
+multiple immutable snapshot generations still consume GitHub quota; this is
+not repository-wide quota isolation or a new cache-retention service.
+
+The pinned Bazel 9.1.1 collector uses per-file modification times for LRU and
+can evict AC/CAS files independently, breaking equal-time ties by path.
+Its `--experimental_disk_cache_gc_*` options run only as idle tasks, with a
+five-minute default delay. Relying on that background task immediately before
+our explicit shutdown does not establish a deterministic pre-save bound.
+Use the same file-eviction principle in the existing workflow lifecycle,
+without introducing a service, new permissions or waiting for idle work.
+
+The exact workflow path expressions were executed in a network-disabled
+Ubuntu PowerShell 7.4.6 container. `Join-Path` normalized the backslashes to
+`/tmp/checkout with spaces!/artifacts/bazel-cache` and the corresponding profile
+directory before any launcher rewrite; native directory checks passed. The
+separator finding is therefore inapplicable, and no path rewrite is needed.
+The earlier named Linux check was an ad-hoc session fixture, not a checked-in
+repository test.
+
+A separate concrete guard gap exists: `check-action-pins.yml` already covers
+`bazel.yml` through `.github/workflows/**`, but does not trigger on the validator
+read by the new forced-execution contract. Add that exact input to both path
+filters and test the complete inspected-input mapping.
+
+Planned proof is bounded to these corrections: filesystem fixtures for no-op,
+LRU and oversized-entry eviction; a retained-test counterfactual for missing
+eviction/trigger behavior; and a real pinned-Bazel partial-cache rebuild.
+Do not change original test bodies, suppress cleanup errors, alter test-result
+caching, or claim hosted authorization/transfer evidence from these local runs.
+
+The correction was executed on the parent revision above plus these local
+source bindings:
+
+| File | SHA-256 |
+| --- | --- |
+| `.github/workflows/bazel.yml` | `6064087E765B54CBA725662F81651A39A670C9625FFEB48A44D7B9000AD8D5F5` |
+| `.github/workflows/check-action-pins.yml` | `D0DF9CF81ACFD5677169671A25EB8A5261BD495F11DD65D9A42C24B2FE0835F3` |
+| `.github/scripts/test_bazel_cache.py` | `28D3AF7E4A55ABD742FC9B414D122B13F1D6FD847C8B26F600E0BF950DD1DAA7` |
+
+`python .github\scripts\test_bazel_cache.py` exited 0 with all 13 methods passing.
+`SnapshotPruningTests.test_snapshot_limit_keeps_newest_files_and_bounds_payload`
+covers an already-fitting store, older-object eviction, equal-time AC-before-CAS
+ordering, an oversized single entry and an empty store. Missing stores, invalid
+budgets and linked roots/entries fail explicitly without touching link targets.
+The workflow contracts assert the fixed budgets and stop/prune/save ordering.
+`test_guard_runs_when_each_inspected_input_changes` covers both event filters
+and every source read by the cache suite.
+
+With the same 13-method suite retained in isolated copies, deleting only the
+eviction call produced the three intended `lru`, `tie` and `oversized`
+assertion failures (exit 1). Restoring it returned 13 passes, exit 0.
+Separately, removing only the two validator path-filter entries produced the
+two intended push/PR subcase failures; restoring them returned 13 passes.
+These are executed targeted counterfactuals, not compilation/setup failures.
+
+The real pinned-Bazel check used two independently asserted output payloads
+in a task-owned minimal native-action workspace, not a mock cache. After the
+first build and server shutdown, the production limiter reduced 25,925 bytes
+to the configured 9,541-byte fixture budget by removing exactly one old
+16,384-byte CAS blob. A second build in a new output root exited 0 with
+**one disk-cache hit and one local rebuild**; both final payload hashes matched
+the independent expected bytes. The local harness command was
+`& (Join-Path $e 'cache-probe.ps1')`, with `$e` the retained
+`bazel-review-d9e8c1dc` evidence directory and `BAZEL_PRUNE_SCRIPT` bound to the
+actual workflow step. Its first `cmd.exe` copy fixture failed before cache
+population; the successful direct PowerShell output actions replaced that
+fixture. That setup failure is not counted as behavioral red evidence.
+
+The action-pin audit and whitespace checks passed. No product source, public
+API, original test scheduling or forced-execution option changed, so the
+previous complete native/package runs remain historical evidence for their
+recorded source, not a new full-product rerun of this lifecycle correction.
+Hosted cache authorization, transfer costs and main-seed behavior still require
+CI. Local logs, BEP, policy/source hashes and counterfactual records are retained
+under the session's `bazel-review-d9e8c1dc` evidence.

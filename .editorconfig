@@ -517,6 +517,9 @@ dotnet_diagnostic.SA1118.severity = none
 # SA1124: Do not use regions
 dotnet_diagnostic.SA1124.severity = none
 
+# SA1143: Conditional expressions must be formatted consistently
+dotnet_diagnostic.SA1143.severity = none
+
 # SA1201: Elements should appear in the correct order
 dotnet_diagnostic.SA1201.severity = none
 
@@ -535,8 +538,15 @@ dotnet_diagnostic.SA1309.severity = none
 # SA1313: Parameter names should begin with lower-case letter
 dotnet_diagnostic.SA1313.severity = none
 
+# SA1315: Parameter names should match base declaration
+dotnet_diagnostic.SA1315.severity = none
+
 # SA1402: File may only contain a single type
 dotnet_diagnostic.SA1402.severity = none
+
+# SA1504: All accessors should be single-line or multi-line
+# Preserve expression-bodied getters alongside block-bodied setters (IDE0027).
+dotnet_diagnostic.SA1504.severity = none
 
 # SA1515: Single-line comment should be preceded by blank line
 dotnet_diagnostic.SA1515.severity = none
@@ -552,6 +562,9 @@ dotnet_diagnostic.SA1633.severity = none
 
 # SA1649: File name should match first type name
 dotnet_diagnostic.SA1649.severity = none
+
+# SA1653: Multiple partial declarations should not contain the same documentation
+dotnet_diagnostic.SA1653.severity = none
 
 # VSTHRD002 Avoid problematic synchronous waits
 dotnet_diagnostic.VSTHRD002.severity = none

@@ -35,7 +35,7 @@ internal sealed partial class TestHostControllersTestHost
         [
             .. executableInfo.Arguments,
             $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
-            processIdString
+            processIdString,
         ];
 
 #if NET8_0_OR_GREATER

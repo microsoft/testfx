@@ -188,9 +188,11 @@ public sealed class RetryTrxRegistrationBehaviorTests
         var handler = new CommandLineHandler(
             new CommandLineParseResult(null, [], []), providers, [], fixture.Module.Object, Mock.Of<IRuntimeFeature>());
         await handler.PrintInfoAsync(fixture.Output.Object, registeredTools, CancellationToken.None);
-        string[] rendered = [.. fixture.Displays.Select(value => value.Data is FormattedTextOutputDeviceData formatted
+        string[] rendered = [
+            .. fixture.Displays.Select(value => value.Data is FormattedTextOutputDeviceData formatted
             ? new string(' ', formatted.Padding ?? 0) + formatted.Text
-            : Assert.IsInstanceOfType<TextOutputDeviceData>(value.Data).Text)];
+            : Assert.IsInstanceOfType<TextOutputDeviceData>(value.Data).Text),
+        ];
         int toolSection = Array.IndexOf(rendered, "Registered tools:");
         Assert.IsGreaterThanOrEqualTo(0, toolSection);
         Assert.AreSequenceEqual(

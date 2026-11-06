@@ -109,7 +109,7 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
         System.Text.Json.JsonElement root = htmlDocument.RootElement;
         System.Text.Json.JsonElement[] tests =
         [
-            .. root.GetProperty("tests").EnumerateArray()
+            .. root.GetProperty("tests").EnumerateArray(),
         ];
         DateTimeOffset[] testStartTimes = [.. tests.Select(test => test.GetProperty("startTime").GetDateTimeOffset())];
         DateTimeOffset[] testEndTimes = [.. tests.Select(test => test.GetProperty("endTime").GetDateTimeOffset())];

@@ -66,8 +66,8 @@ public sealed partial class Assert
     private static bool IsEmojiTag(int value) => value is >= 0xE0020 and <= 0xE007F;
 
     private static bool IsVariationSelector(int value)
-        => value is >= 0xFE00 and <= 0xFE0F
-            or >= 0xE0100 and <= 0xE01EF;
+        => value is (>= 0xFE00 and <= 0xFE0F)
+            or (>= 0xE0100 and <= 0xE01EF);
 
     private static bool IsRegionalIndicator(int value) => value is >= 0x1F1E6 and <= 0x1F1FF;
 

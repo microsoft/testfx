@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -12,13 +13,21 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
+    internal const string DeferredTrxRootEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_ROOT";
+    internal const string DeferredTrxDirectoryEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_DIRECTORY";
+    internal const string ArtifactReplayPipeEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_ARTIFACT_REPLAY_PIPE";
+
     private readonly DotnetTestConnection _dotnetTestConnection;
     private readonly string? _executionId;
+    private readonly string? _deferredTrxRoot;
+    private readonly string? _deferredTrxDirectory;
 
     public DotnetTestDataConsumer(DotnetTestConnection dotnetTestConnection, IEnvironment environment)
     {
         _dotnetTestConnection = dotnetTestConnection;
         _executionId = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+        _deferredTrxRoot = environment.GetEnvironmentVariable(DeferredTrxRootEnvironmentVariable);
+        _deferredTrxDirectory = environment.GetEnvironmentVariable(DeferredTrxDirectoryEnvironmentVariable);
     }
 
     public Type[] DataTypesConsumed =>
@@ -81,7 +90,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                     testMethodIdentifierProperty?.TypeName,
                                     testMethodIdentifierProperty?.MethodName,
                                     testMethodIdentifierProperty?.ParameterTypeFullNames,
-                                    traits)
+                                    traits),
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);
@@ -104,7 +113,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value,
                                    testNodeDetails.RetryAttemptNumber,
-                                   testNodeDetails.IsSuperseded)
+                                   testNodeDetails.IsSuperseded),
                             ],
                             []);
 
@@ -148,7 +157,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Expected,
                                    testNodeDetails.Actual,
                                    testNodeDetails.RetryAttemptNumber,
-                                   testNodeDetails.IsSuperseded)
+                                   testNodeDetails.IsSuperseded),
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
@@ -168,10 +177,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 testNodeUpdateMessage.TestNode.Uid.Value,
                                 testNodeUpdateMessage.TestNode.DisplayName,
                                 testNodeUpdateMessage.SessionUid.Value,
-                                null)
+                                null),
                         ]);
 
-                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
+                    if (!TryDeferTrxArtifacts(testFileArtifactMessages, _deferredTrxRoot, _deferredTrxDirectory))
+                    {
+                        await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
+                    }
                 }
 
                 break;
@@ -179,13 +191,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             case SessionFileArtifact sessionFileArtifact:
                 FileArtifactMessages fileArtifactMessages = CreateFileArtifactMessages(_executionId, sessionFileArtifact);
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
+                if (!TryDeferTrxArtifacts(fileArtifactMessages, _deferredTrxRoot, _deferredTrxDirectory))
+                {
+                    await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
+                }
+
                 break;
 
             case FileArtifact fileArtifact:
                 fileArtifactMessages = CreateFileArtifactMessages(_executionId, fileArtifact);
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
+                if (!TryDeferTrxArtifacts(fileArtifactMessages, _deferredTrxRoot, _deferredTrxDirectory))
+                {
+                    await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
+                }
+
                 break;
 
             case TestCoverageMessage coverage when _dotnetTestConnection.IsCoverageSummarySupported
@@ -208,6 +228,43 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
+    internal static bool TryDeferTrxArtifacts(FileArtifactMessages message, string? attemptRoot, string? publicationDirectory)
+    {
+        if (attemptRoot is null
+            || message.FileArtifacts is not [{ FullPath: { } path }]
+            || !Path.GetExtension(path).Equals(".trx", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string prefix = Path.GetFullPath(attemptRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        if (!Path.GetFullPath(path).StartsWith(prefix, comparison))
+        {
+            return false;
+        }
+
+        ApplicationStateGuard.Ensure(publicationDirectory is not null);
+        Directory.CreateDirectory(publicationDirectory);
+        string temporaryPath = Path.Combine(publicationDirectory, $"{Guid.NewGuid():N}.tmp");
+        using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+        {
+            new FileArtifactMessagesSerializer().Serialize(message, stream);
+        }
+
+        File.Move(temporaryPath, Path.ChangeExtension(temporaryPath, ".bin"));
+        return true;
+    }
+
+    internal static FileArtifactMessages ReadDeferredTrxArtifacts(string manifestPath)
+    {
+        using var stream = new FileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return new FileArtifactMessagesSerializer().Deserialize(stream);
+    }
+
     // Maps a session-scoped artifact to its wire message. Extracted so the producer-to-wire mapping
     // (in particular the Kind carried for post-processing grouping) is unit-testable without a live pipe.
     internal static FileArtifactMessages CreateFileArtifactMessages(string? executionId, SessionFileArtifact sessionFileArtifact)
@@ -222,7 +279,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     string.Empty,
                     string.Empty,
                     sessionFileArtifact.SessionUid.Value,
-                    sessionFileArtifact.Kind)
+                    sessionFileArtifact.Kind),
             ]);
 
     // Maps a (non session-scoped) artifact to its wire message. See the SessionFileArtifact overload.
@@ -238,7 +295,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     string.Empty,
                     string.Empty,
                     string.Empty,
-                    fileArtifact.Kind)
+                    fileArtifact.Kind),
             ]);
 
     private static TestNodeDetails? GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)

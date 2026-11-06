@@ -22,6 +22,7 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 ### Added
 
 * Add [`--partition index/count`](mstest-partitioning.md) to native MSTest applications on Microsoft.Testing.Platform for deterministic class-preserving CI selections, keeping declared dependency components together and preserving normal filtering, Retry, and zero-test policies. Relates to [#4068](https://github.com/microsoft/testfx/issues/4068).
+* Add method-level `[ExpectedDuration(milliseconds)]` budgets that warn on final passed or failed results exceeding their reported duration budget without changing outcomes, cancellation, or timeout behavior. See [#12245](https://github.com/microsoft/testfx/issues/12245).
 * Discover annotated F# module functions without requiring `[<TestClass>]`, with module-level attributes and lifecycle functions for reflection-based execution on both test hosts, by @Evangelink in [#11830](https://github.com/microsoft/testfx/pull/11830)
 * Add opt-in experimental reflection-metadata reuse for eligible repeated MSTest JSON-RPC server-mode selections through `MSTEST_EXPERIMENTAL_DISCOVERY_CACHE=1`, without caching test instances or data-source results, by @Evangelink in [#11853](https://github.com/microsoft/testfx/pull/11853)
 * Add MSTEST0090 to flag count and existence assertions that enumerate `IQueryable` instead of keeping those operations on the query provider. The rule is advisory and does not provide an automatic fix, by @Evangelink in [#11892](https://github.com/microsoft/testfx/pull/11892)

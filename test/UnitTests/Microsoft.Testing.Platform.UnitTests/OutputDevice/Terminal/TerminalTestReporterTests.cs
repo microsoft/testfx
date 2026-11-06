@@ -1563,12 +1563,14 @@ public sealed class TerminalTestReporterTests
         var summary = new CoverageScopeSummary(
             new SessionUid("session"),
             new CoverageScope(CoverageScopeLevel.Module, "Module\nName"),
-            [new CoverageMetricResult(
+            [
+                new CoverageMetricResult(
                 CoverageMetric.Custom,
                 coveredCount: 1,
                 coverableCount: 2,
                 producerId: "producer",
-                customMetricName: "MC/DC\tMetric")]);
+                customMetricName: "MC/DC\tMetric"),
+            ]);
 
         reporter.AppendCoverageSummary([summary], []);
 

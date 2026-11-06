@@ -51,10 +51,12 @@ internal sealed partial class TestProgressState
         {
             return count <= 0 || _testUidToDuration.Count == 0
                 ? []
-                : [.. _testUidToDuration.Values
+                : [
+                    .. _testUidToDuration.Values
                     .OrderByDescending(static entry => entry.Duration)
                     .ThenBy(static entry => entry.DisplayName, StringComparer.Ordinal)
-                    .Take(count)];
+                    .Take(count),
+                ];
         }
     }
 

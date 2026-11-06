@@ -6,8 +6,10 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
@@ -37,6 +39,30 @@ internal static class RetryTestHostRunner
 #pragma warning restore RS0051
     }
 
+    public static Task<AttemptResult> RunAttemptAsync(
+        IServiceProvider serviceProvider,
+        IOutputDeviceDataProducer producer,
+        IOutputDevice outputDevice,
+        ILogger logger,
+        RetryFailedTestsPipeServer retryFailedTestsPipeServer,
+        ExecutableInfo executableInfo,
+        List<string> finalArguments,
+        int attemptCount,
+        int userMaxRetryCount,
+        CancellationToken cancellationToken)
+        => RunAttemptAsync(
+            serviceProvider,
+            producer,
+            outputDevice,
+            logger,
+            retryFailedTestsPipeServer,
+            executableInfo,
+            finalArguments,
+            currentTryResultFolder: null,
+            attemptCount,
+            userMaxRetryCount,
+            cancellationToken);
+
     public static async Task<AttemptResult> RunAttemptAsync(
         IServiceProvider serviceProvider,
         IOutputDeviceDataProducer producer,
@@ -45,6 +71,7 @@ internal static class RetryTestHostRunner
         RetryFailedTestsPipeServer retryFailedTestsPipeServer,
         ExecutableInfo executableInfo,
         List<string> finalArguments,
+        string? currentTryResultFolder,
         int attemptCount,
         int userMaxRetryCount,
         CancellationToken cancellationToken)
@@ -71,6 +98,17 @@ internal static class RetryTestHostRunner
         {
             UseShellExecute = false,
         };
+        processStartInfo.EnvironmentVariables.Remove(DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable);
+        processStartInfo.EnvironmentVariables.Remove(DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable);
+        if (currentTryResultFolder is not null
+            && (serviceProvider.GetServiceInternal<IPushOnlyProtocol>() is { IsServerMode: true }
+                || serviceProvider.GetEnvironment().GetEnvironmentVariable(DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable) is { Length: > 0 }))
+        {
+            processStartInfo.EnvironmentVariables[DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable] = currentTryResultFolder;
+            processStartInfo.EnvironmentVariables[DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable] =
+                RetryArtifactProcessor.GetDeferredTrxArtifactDirectory(Path.GetDirectoryName(currentTryResultFolder)!);
+        }
+
         string recoveredArtifactManifestPath = Path.Combine(
             Path.GetTempPath(),
             $"testfx-retry-recovered-artifacts-{Guid.NewGuid():N}.txt");

@@ -27,7 +27,7 @@ internal sealed class MSTestDiscoveryCache : IDisposable
         typeof(TestClassAttribute), typeof(TestMethodAttribute), typeof(TestCategoryAttribute),
         typeof(PriorityAttribute), typeof(OwnerAttribute), typeof(DescriptionAttribute),
         typeof(WorkItemAttribute), typeof(TestPropertyAttribute), typeof(DoNotParallelizeAttribute),
-        typeof(ResourceLockAttribute), typeof(DependsOnAttribute), typeof(TimeoutAttribute),
+        typeof(ResourceLockAttribute), typeof(DependsOnAttribute), typeof(TimeoutAttribute), typeof(ExpectedDurationAttribute),
         typeof(IgnoreAttribute), typeof(AssemblyInitializeAttribute), typeof(AssemblyCleanupAttribute),
         typeof(ClassInitializeAttribute), typeof(ClassCleanupAttribute),
         typeof(TestInitializeAttribute), typeof(TestCleanupAttribute),

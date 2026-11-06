@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class DiagnosticLoggingInformationTests
 {
+    private static readonly TimeSpan CompletionLimit = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan CleanupLimit = TimeSpan.FromSeconds(30);
+
     public TestContext TestContext { get; set; } = null!;
 
     [DataRow(false)]
@@ -187,76 +190,123 @@ public sealed class DiagnosticLoggingInformationTests
 #endif
     }
 
+    [DataRow(false)]
+    [DataRow(true)]
     [TestMethod]
-    public async Task SynchronousLoggerCreatedBeforeRelocationWaitsForReplacement()
+    public async Task SynchronousLoggerCreatedBeforeRelocationWaitsForReplacement(bool useAsync)
     {
         string initialDirectory = Path.Combine("initial", "diagnostics");
         string resultsDirectory = Path.Combine("final", "results");
         const string FileName = "test.diag";
+        const string Message = "Written during relocation.";
 
         var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var logThreadStarted = new ManualResetEventSlim();
-        var logThreadCompleted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Exception? logException = null;
+        var synchronousWaitAttempted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         Mock<IFileSystem> fileSystem = CreateFileSystemMock();
 
         int streamIndex = 0;
+        MemoryStream? replacementStream = null;
         var fileStreamFactory = new Mock<IFileStreamFactory>();
         fileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
             .Returns((string path, FileMode _, FileAccess _, FileShare _) =>
-                CreateFileStream(path, Interlocked.Increment(ref streamIndex) == 1 ? BlockFirstStreamDisposalAsync : null));
+            {
+                var stream = new MemoryStream();
+                int currentStreamIndex = Interlocked.Increment(ref streamIndex);
+                if (currentStreamIndex == 2)
+                {
+                    replacementStream = stream;
+                }
+
+                return CreateFileStream(path, currentStreamIndex == 1 ? BlockFirstStreamDisposalAsync : null, stream);
+            });
 
         using FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         ILogger logger = provider.CreateLogger("test");
 
-        var relocationTask = Task.Run(
+        Task relocationTask = Task.Factory.StartNew(
             () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory),
-            TestContext.CancellationToken);
-        await disposeStarted.Task;
-
-        var logThread = new Thread(
-            () =>
-            {
-                logThreadStarted.Set();
-                try
-                {
-                    logger.LogDebug("Written during relocation.");
-                }
-                catch (Exception ex)
-                {
-                    logException = ex;
-                }
-                finally
-                {
-                    logThreadCompleted.TrySetResult(true);
-                }
-            });
-#pragma warning disable CA1416 // Threading is unavailable on browser, but this unit test runs on desktop test hosts.
-        logThread.Start();
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default).Unwrap();
+        Task logTask = Task.CompletedTask;
+        bool completedBeforeReplacement;
 
         try
         {
-            logThreadStarted.Wait(TestContext.CancellationToken);
-            bool reachedRelocationGate = SpinWait.SpinUntil(
-                () => (logThread.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0 || logThreadCompleted.Task.IsCompleted,
-                TimeSpan.FromSeconds(5));
-#pragma warning restore CA1416
+            await disposeStarted.Task.WaitAsync(CompletionLimit, TestContext.CancellationToken);
 
-            Assert.IsTrue(reachedRelocationGate, "The logging thread did not reach the relocation gate.");
-            Assert.IsFalse(logThreadCompleted.Task.IsCompleted, $"Logging completed before relocation installed the replacement logger: {logException}");
+            logTask = useAsync
+                ? logger.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter)
+                : Task.Factory.StartNew(
+                    LogSynchronouslyAfterWaitProbe,
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default);
+            if (!useAsync)
+            {
+                Task first = await Task.WhenAny(synchronousWaitAttempted.Task, logTask).WaitAsync(CompletionLimit, TestContext.CancellationToken);
+                Assert.AreSame(synchronousWaitAttempted.Task, first, "Synchronous logging did not attempt the held relocation gate.");
+            }
+
+            completedBeforeReplacement = logTask.IsCompleted;
         }
         finally
         {
             allowDispose.TrySetResult(true);
+            // Cleanup must join the workers even when the test's cancellation token has been canceled.
+            await Task.WhenAll(relocationTask, logTask).WaitAsync(CleanupLimit, CancellationToken.None);
         }
 
-        await relocationTask;
-        await logThreadCompleted.Task.WaitAsync(TestContext.CancellationToken);
-        logThread.Join();
-        Assert.IsNull(logException);
+        Assert.IsFalse(completedBeforeReplacement, "Logging completed before relocation installed the replacement logger.");
+        Assert.IsNotNull(replacementStream);
+        string expected = useAsync
+            ? """
+              0001-01-01T00:00:00.0000000+00:00 test DEBUG Written during relocation.
+
+              """
+            : """
+              [00:00:00.000 test - DEBUG] Written during relocation.
+
+              """;
+        Assert.AreEqual(
+            expected.Replace("\r\n", "\n"),
+            Encoding.UTF8.GetString(replacementStream.ToArray()).Replace("\r\n", "\n"));
+
+#pragma warning disable CA1416 // Thread interruption is unavailable on browser, but this test runs on desktop test hosts.
+        void LogSynchronouslyAfterWaitProbe()
+        {
+            Assert.IsFalse(Thread.CurrentThread.IsThreadPoolThread, "The wait probe must not interrupt a thread-pool worker.");
+            try
+            {
+                Assert.ThrowsExactly<ThreadInterruptedException>(
+                    () => logger.Log(LogLevel.Debug, Message, null, InterruptOnNextWait));
+            }
+            finally
+            {
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Clear this probe's pending interrupt if logging failed before it could block.
+                }
+            }
+
+            synchronousWaitAttempted.TrySetResult(true);
+            logger.LogDebug(Message);
+        }
+
+        static string InterruptOnNextWait(string state, Exception? exception)
+        {
+            // Returning from this formatter enters the relocation wait; only blocking consumes the interrupt.
+            Thread.CurrentThread.Interrupt();
+            return state;
+        }
+#pragma warning restore CA1416
 
         async Task BlockFirstStreamDisposalAsync()
         {

@@ -59,7 +59,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
         ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
         [
             new PlatformCommandLineProvider(),
-            new TerminalTestReporterCommandLineOptionsProvider()
+            new TerminalTestReporterCommandLineOptionsProvider(),
         ];
 
         return new CommandLineHandler(parseResult, commandLineOptionsProviders,

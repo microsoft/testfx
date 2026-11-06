@@ -131,7 +131,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
             [
             new PassedTestNodeStateProperty(), new RetryAttemptProperty(2, false), Timing(1),
             .. dependencies.Select(Dependency),
-        ]), CancellationToken.None);
+            ]), CancellationToken.None);
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Retry", new PassedTestNodeStateProperty(), Timing(1)), CancellationToken.None);
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Skipped", new SkippedTestNodeStateProperty("intentional"), Timing(1)), CancellationToken.None);
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Timeout", new TimeoutTestNodeStateProperty(new IOException("exception fallback"), " "), Timing(1)), CancellationToken.None);

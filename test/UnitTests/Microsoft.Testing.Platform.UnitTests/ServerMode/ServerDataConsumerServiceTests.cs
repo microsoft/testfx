@@ -42,7 +42,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
         List<Artifact> actual = _service.Artifacts;
         List<Artifact> expected =
         [
-            new("file", nameof(DataProducer), "file", "name", "description")
+            new("file", nameof(DataProducer), "file", "name", "description"),
         ];
 
         Uri actualUri = new(actual[0].Uri);

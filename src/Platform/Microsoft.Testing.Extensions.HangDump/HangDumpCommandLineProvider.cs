@@ -46,7 +46,7 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
             string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsFormatted),
             ArgumentArity.ExactlyOne,
             false),
-        new(HangDumpTypeIfSupportedOptionName, ExtensionResources.HangDumpTypeIfSupportedOptionDescription, ArgumentArity.ExactlyOne, false)
+        new(HangDumpTypeIfSupportedOptionName, ExtensionResources.HangDumpTypeIfSupportedOptionDescription, ArgumentArity.ExactlyOne, false),
     ];
 
     public HangDumpCommandLineProvider()

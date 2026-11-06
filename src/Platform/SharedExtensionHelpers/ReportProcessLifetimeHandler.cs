@@ -163,46 +163,12 @@ internal sealed partial class ReportProcessLifetimeHandler<TGenerator, TCaptured
         }
     }
 
-    private async Task WriteRetryArtifactManifestAsync(
+    private Task WriteRetryArtifactManifestAsync(
         string artifactPath,
         string? artifactKind,
         CancellationToken cancellationToken)
-    {
-        const string retryArtifactManifestEnvironmentVariable = "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST";
-        string? manifestPath = _environment.GetEnvironmentVariable(retryArtifactManifestEnvironmentVariable);
-        if (manifestPath is null || manifestPath.Length == 0)
-        {
-            return;
-        }
-
-        try
-        {
-            string? directory = Path.GetDirectoryName(manifestPath);
-            if (directory is not null && directory.Length > 0)
-            {
-                _fileSystem.CreateDirectory(directory);
-            }
-
-            string entry = RetryArtifactManifest.WriteEntry(artifactPath, artifactKind);
-            using IFileStream stream = _fileSystem.NewFileStream(
-                manifestPath,
-                FileMode.Append,
-                FileAccess.Write,
-                FileShare.Read);
-            using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-#if NETCOREAPP
-            await writer.WriteLineAsync(entry.AsMemory(), cancellationToken).ConfigureAwait(false);
-#else
-            cancellationToken.ThrowIfCancellationRequested();
-            await writer.WriteLineAsync(entry).ConfigureAwait(false);
-#endif
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            await _logger.LogWarningAsync(
-                $"Failed to register recovered report '{artifactPath}' with retry artifact consolidation: {ex.Message}").ConfigureAwait(false);
-        }
-    }
+        => RetryArtifactManifest.WriteArtifactAsync(
+            _environment, _fileSystem, _logger, artifactPath, artifactKind, cancellationToken);
 
     private void TryDeleteJournal(string path)
     {

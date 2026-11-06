@@ -194,9 +194,6 @@ public sealed class WindowsApplicationModelPackageTests
         // Classic UWP.
         "build/uap10.0/MSTest.TestAdapter.props",
         "build/uap10.0/MSTest.TestAdapter.targets",
-        "buildTransitive/uap10.0/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
-        "buildTransitive/uap10.0/Microsoft.Testing.Extensions.Retry.dll",
-        "buildTransitive/uap10.0/Microsoft.Testing.Platform.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
         "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.props",
@@ -242,6 +239,49 @@ public sealed class WindowsApplicationModelPackageTests
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestAdapter"),
             RequiredTestAdapterEntries);
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only by Windows packs.")]
+    public void PackedMSTestTestAdapter_ClassicUwpDoesNotDuplicateRuntimeDependencies()
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestAdapter"));
+        string[] assemblies = archive.Entries
+            .Select(entry => entry.FullName)
+            .Where(path => path.StartsWith("buildTransitive/uap10.0/", StringComparison.Ordinal)
+                && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.AreSequenceEqual(
+            [
+                "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
+                "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
+            ],
+            assemblies);
+    }
+
+    [TestMethod]
+    [DataRow("Microsoft.Testing.Extensions.TrxReport")]
+    [DataRow("Microsoft.Testing.Extensions.Retry")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only by Windows packs.")]
+    public void PackedMSTestTestAdapter_ClassicUwpDeclaresBootstrapDependencies(string packageId)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestAdapter"));
+        using var reader = new StreamReader(archive.GetEntry("MSTest.TestAdapter.nuspec")!.Open());
+        var nuspec = XDocument.Parse(reader.ReadToEnd());
+        XElement[] groups = nuspec.Descendants().Where(element => element.Name.LocalName == "group").ToArray();
+        XElement classicGroup = groups.Single(group => (string?)group.Attribute("targetFramework") == "UAP10.0.16299");
+        XElement dependency = Assert.ContainsSingle(
+            classicGroup.Elements().Where(element => (string?)element.Attribute("id") == packageId));
+
+        Assert.AreEqual(AcceptanceTestBase.MicrosoftTestingPlatformVersion, (string?)dependency.Attribute("version"));
+        Assert.IsEmpty(
+            groups.Where(group => group != classicGroup)
+                .SelectMany(group => group.Elements())
+                .Where(element => (string?)element.Attribute("id") == packageId)
+                .ToArray(),
+            $"The classic UWP bootstrap must not add '{packageId}' to other frameworks.");
+    }
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]

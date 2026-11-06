@@ -371,9 +371,11 @@ internal sealed class AppxManifestInfo
     public AppxApplicationInfo? ResolveApplication(string manifestDirectory, string executablePath)
     {
         string fullExecutablePath = Path.GetFullPath(executablePath);
-        AppxApplicationInfo[] exactMatches = [.. Applications.Where(application =>
+        AppxApplicationInfo[] exactMatches = [
+            .. Applications.Where(application =>
             application.Executable is not null
-            && string.Equals(ResolvePackageRelativePath(manifestDirectory, application.Executable), fullExecutablePath, StringComparison.OrdinalIgnoreCase))];
+            && string.Equals(ResolvePackageRelativePath(manifestDirectory, application.Executable), fullExecutablePath, StringComparison.OrdinalIgnoreCase)),
+        ];
 
         if (exactMatches.Length == 1)
         {
@@ -438,9 +440,11 @@ internal sealed class AppxManifestInfo
                 return Applications[0];
         }
 
-        AppxApplicationInfo[] matches = [.. Applications.Where(application =>
+        AppxApplicationInfo[] matches = [
+            .. Applications.Where(application =>
             application.Executable is not null
-            && string.Equals(GetExecutableFileName(application.Executable), executableFileName, StringComparison.OrdinalIgnoreCase))];
+            && string.Equals(GetExecutableFileName(application.Executable), executableFileName, StringComparison.OrdinalIgnoreCase)),
+        ];
 
         return matches.Length == 1
             ? matches[0]
