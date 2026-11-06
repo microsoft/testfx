@@ -1,8 +1,8 @@
 # Test partitioning: research and decisions
 
-Status: design proposal, revision D1, 2026-11-06. D0 was rejected by both
-independent reviewers; this revision changes the architecture. No product
-implementation, shipping compatibility, or speedup has been demonstrated.
+Status: design proposal, revision D2, 2026-11-06. Two cross-model review rounds
+have changed and tightened the design; final confirmation is pending. No
+product implementation, shipping compatibility, or speedup is claimed.
 
 ## Problem and contract
 
@@ -48,10 +48,11 @@ is nevertheless fully specified below rather than mistaken for a free extra.
 
 MSTest owns class/dependency topology, partition selection, and execution
 receipts. MTP owns normal process verdicts and its existing lifecycle/protocol.
-The small intentional-empty selection contract is initially internal, using the
-adapter's existing friend relationship with MTP. Generalize only after a second
-framework demonstrates the need; other frameworks must reject unknown options,
-not fall back to running everything.
+The in-process intentional-empty token is internal, using the adapter's existing
+friend relationship with MTP. Its meaning must also cross the SDK boundary via
+the negotiated completion contract below; an internal token alone is not enough.
+Generalize framework grouping only after a second framework demonstrates the
+need. Other frameworks reject unknown options, not fall back to running everything.
 
 ### Proposed CLI
 
@@ -71,13 +72,18 @@ dotnet test --project .\Tests\Tests.csproj --partition-count 4 --max-parallel-pa
 `--partition i/n` selects exactly one partition. `--partition-count n` schedules
 all partitions. They are mutually exclusive. `--max-parallel-partitions p` is
 valid only with local scheduling and defaults to `min(n, processor count)`.
+An explicit `p` is an upper bound; active partition trees never exceed
+`min(p, n)`, and no idle worker/process pool is eagerly allocated.
 All numbers are positive invariant-culture Int32 values, and `1 <= i <= n`.
 There is no arbitrary limit on partition count, and the planner must not
 allocate an array of size `n` for an almost-empty suite.
 
 These are test-application extension options, not a new SDK built-in `--shard`
-switch. Native .NET 10+ MTP forwarding is the first SDK surface. Legacy MSBuild
-forwarding is a separate, explicitly validated surface, not implied support.
+switch. Native MTP mode (available from .NET 10, selected through `global.json`)
+is the SDK surface, but partitioning requires an SDK with the new acknowledged
+completion contract; today's generic MTP support is not sufficient. Direct
+apphost/DLL execution can ship independently. Legacy MSBuild forwarding is
+explicitly unsupported in v1, not implied support.
 `--partition 1/1` selects the same work as an ordinary run.
 `--list-tests --partition i/n` lists discovery-context selection, which can differ
 from run-context provider selection; it is not execution evidence.
@@ -190,6 +196,29 @@ continues to honor the existing filtered-prerequisite semantics.
 Reproduction encoding and vectors are specified below; the scratch experiment
 is not a product test or a substitute for the planned package tests.
 
+### 2026-11-06: D1 review and second counterexamples
+
+Both reviewers accepted the native-selection direction but required targeted
+corrections. The coordinator independently traced the SDK's
+[whole-command policy](https://github.com/dotnet/sdk/blob/5245becf38b656f2a2e2bd49d99024ca03f7cf51/src/Cli/dotnet/Commands/Test/MTP/MicrosoftTestingPlatformTestCommand.cs):
+even a normal TestHost exiting `0` is insufficient when
+`ShouldFailForNoExecutedTests` sees zero invocation results. D1's internal token
+therefore did not establish native SDK empty-partition success. D2 introduces
+an explicit versioned completion message and acknowledged support, with no
+claim that existing SDKs already implement it.
+
+The design experiment also demonstrated a count-only coverage hole: universe
+`{A,B,C,D}`, worker 1 executing `{A,C}`, and worker 2 executing `{A,C}` have
+matching universe/count claims and sum to four executions, but miss `B,D`.
+D2 requires independently recomputed bucket ownership and actual settled-set
+verification, not only summed counts.
+
+Source verification corrected two review details: the inherited ignore variable
+is `TESTINGPLATFORM_EXITCODE_IGNORE`, not the review's guessed spelling; and
+the current narrowed discovery cache is JSON-RPC-only, already outside v1.
+The design still explicitly guards against any narrowed cache supplying
+placement topology. Neither correction changes non-partition execution.
+
 ### Alternatives and decision
 
 | Alternative | Benefit | Cost / disposition |
@@ -202,6 +231,7 @@ is not a product test or a substitute for the planned package tests.
 | MTP orchestrator plus generic grouping/replay capability | Potential shared planning across frameworks. | D0 direction, rejected in round 1. Discovery/run drift, replay semantics, and a speculative public API are unnecessary for the first supported framework. |
 | Sorted ordinal rank modulo `n` | Exactly balances group counts when group sizes are ignored. | Not chosen: adding/filtering another group can move existing assignments, particularly across retry narrowing. Hashing provides a stable predicate; neither method balances duration. |
 | Coalesce `ResourceLock` / all `[DoNotParallelize]` users | Appears more conservative. | Rejected as the default: strengthens process-scoped contracts and serializes the process-global-state suites this feature targets. Explicit cross-process locks are future work. |
+| Require every bucket to be nonempty, or ignore exit `8` | Avoids an SDK feature in a few simple suites. | Rejected: hashing can leave empty buckets even with many groups, filters/modules differ, and ignoring `8` can hide genuinely empty selection. Use direct execution until the SDK contract ships, not a success-shaped workaround. |
 | SDK-only scheduler with historical timings | Potential global balancing. | Cross-repository coordination and a larger shipping/deployment contract. Defer; do not require it for the first useful release. |
 
 ## Selection contract
@@ -218,7 +248,17 @@ attribute dependencies, and resolved `testconfig.json` dependency declarations.
 Use a non-mutating edge collector sharing the existing declaration resolver;
 do not apply declarations twice to the elements later executed. Do not execute
 assembly/class setup, test methods, or runtime data factories to build this
-class/dependency topology.
+class/dependency topology. Collect the catalog once during the same metadata
+walk; do not rediscover the assembly or repeat discovery-time factories or
+warnings to recover filtered-away metadata. Validate configuration declarations
+against the pre-partition catalog, so excluding a valid dependent by partition
+does not manufacture an unmatched-declaration warning.
+
+Never derive topology from a UID-narrowed discovery cache. The current native
+cache is enabled only for JSON-RPC, which v1 rejects; keep an explicit
+partition-mode guard rather than rely on that incidental limitation. A future
+cache must supply the complete topology or be bypassed for partitioned runs.
+The option-absent discovery/cache path must not change.
 
 Make each concrete class a vertex and each resolvable declared dependency an
 undirected edge for placement only. Its connected component is an indivisible
@@ -287,35 +327,57 @@ module, even when their class assignments happen to coincide.
 
 ### Execution receipts, not replay manifests
 
-Each ordinary partitioned request produces a versioned MSTest-owned receipt.
-Write the plan record before executing selected anchors and atomically seal
-completion only after normal framework completion and message-bus drain.
-`context.Complete()` in a `finally` block is not proof of successful execution.
+Each partitioned request produces a versioned MSTest-owned **catalog plus
+receipt**, used for verification only, never for UID replay. Catalog schema v1
+contains module/binary and selection-configuration fingerprints, all class keys,
+resolved dependency edges and their normalized configuration inputs, and the
+eligible class/method anchors under the normal host filter. Hash canonical
+ordered records with the same unambiguous length framing as above.
 
-Schema v1 contains: algorithm/schema version; module binary fingerprint and
-TFM/architecture; selection-configuration fingerprint; logical run ID when
-supplied; request/attempt identity;
-`i`, `n`; topology digest; effective-selection digest; eligible and assigned
-group/anchor counts; settled anchor dispositions; final result counts; raw
-verdict; and completion/truncation status. Hash ordered, length-framed records,
-not ambiguous joined strings. Effective-selection digest includes stable
-method/known-row anchors, not group count alone. Runtime-only rows use their
-method anchor; this does not assert a known row count before enumeration.
+Placement/coverage anchors are concrete class plus managed method signature,
+deduplicated across materialized data rows. All eligible rows of that method
+are assigned together. Do not compare unstable row-index UIDs or runtime-only
+row counts across processes. Within a worker retain its exact selected concrete
+elements and runtime enumeration lifecycle to prove their ordinary completion.
+The exported contract proves method-placement coverage, not deterministic
+runtime data or the correctness of a custom test-method implementation.
 
-An anchor settles by ordinary completion, skip, or an explicit legitimate
-programmatic drop. Superseded in-process retry outcomes are not final outcomes.
-Only the native executor can seal the receipt; missing receipt, early exit,
-unsettled scheduling anchors, or framework failure cannot become a complete
-successful receipt. This proves framework-owned scheduling completion, not
-that an arbitrary custom test method implementation produced every theoretical
-data row.
+Receipt schema v1 contains: schema/algorithm versions; catalog content hash;
+module, configuration, topology and eligible-anchor digests; logical run ID;
+request/attempt identity and Initial/RetrySubset role; `i`, `n`; eligible and
+assigned group/method counts; planned bucket-set digest; independently observed
+settled bucket-set digest; result counts; raw verdict; and complete/partial state.
+The role is validated against the Retry parent, not inferred only from an
+inherited attempt-number environment variable.
 
-Local coordination verifies one complete receipt for each index `1..n`, matching
-module/topology/effective-selection fingerprints and counts, and that assigned
-anchor/group counts sum to the common eligible counts. Do not compare only
-observed result count: folds, retries, drops, and dynamic rows use other units.
-Selection drift is a non-success partial-run diagnostic. Other workers may
-already have produced side effects; no distributed transaction is promised.
+Write the catalog/plan atomically before selected work. Seal a receipt only
+after a normal engine return, all scheduled element decisions and required
+class/assembly cleanup have finished, no cancellation/graceful/deadline/maximum
+stop is active, and framework/session messages have drained. A `finally` call
+to `context.Complete()` is never sufficient. Cleanup failure results must be
+included in result counts/raw verdict; a complete failed run is not successful.
+An escaped fault, unhandled background/session failure, crash, or unsettled
+element produces partial evidence, not an intentional-empty token.
+
+An element settles by normal completion, skip, or explicit programmatic drop.
+The executor separately checks all assigned concrete elements and that any
+runtime data enumeration finished normally before settling their method anchor.
+Superseded in-process retry results are not final outcomes. Multiple results
+for one UID are not treated as either duplication or proof of full completion.
+
+The local/CI verifier reads one common catalog, validates every receipt's
+catalog/fingerprint equality, independently rebuilds components and recomputes
+the specified SHA-256 assignment, and obtains the exact expected anchor set
+for each index. Require the planned **and independently settled** set digests
+and counts to equal that expected bucket, every index `1..n` exactly once,
+disjoint ownership, and exact union coverage. Do not accept a job's own claimed
+bucket hash as the reference. Store only nonempty bucket entries, not an
+Int32-sized array; empty buckets have the canonical empty-set digest.
+Catalog and verification cost is proportional to classes/methods, not `n`
+times an eager array or a cross-process per-row UID list.
+
+Selection/catalog drift is a non-success partial-run diagnostic. Other workers
+may already have produced side effects; no distributed transaction is promised.
 
 Independent CI jobs have no shared in-product coordinator. Ship a receipt
 verifier in the CI sample: require every index exactly once, equal `n`, common
@@ -344,9 +406,13 @@ by `TestApplicationResult` and normal summary formatting. Only native partition
 selection can issue it, and only completed execution can validate it. Do not
 inject `--ignore-exit-code 8`, report a fabricated passing test, or classify a
 zero-result worker by exit alone. An explicit minimum is **not** suppressed.
+`E` is measured after all ordinary host filters, including UID constraints,
+and before partition selection. RetrySubset requests must never issue an empty
+token: zero matched/assigned work in a retry is a missing-retry failure.
 
 In single-partition mode a test-application minimum/timeout/maximum-failure
-option retains its ordinary per-job meaning. SDK options before `--` retain
+option retains its ordinary per-job meaning: its minimum applies to that job's
+actual result count, not the whole eligible universe `E`. SDK options before `--` retain
 their documented whole-invocation meaning. In local fan-out, the coordinator
 owns module-wide minimum/zero/maximum/deadline policy: do not copy it to every
 worker. Its private worker context defers count policy to the coordinator;
@@ -381,11 +447,28 @@ automatically rerun partially completed partitions.
 `--partition i/n` does not occupy an orchestrator slot and must compose with
 process-level Retry: original partition arguments survive relaunch and stable
 pre-filter topology keeps failed tests in their partition. Retry integration
-must preserve the first full-selection coverage receipt and distinguish later
-UID-narrowed attempt receipts. The existing artifact post-processing hook can
-host a MSTest-owned retry receipt reducer; the final Retry/job exit remains
-authoritative for outcomes. Missing/partial initial coverage is not repaired
-by selecting a later attempt with fewer tests.
+must treat receipt validation as **mandatory control-plane work**, not a
+best-effort report post-processor whose failure only warns.
+
+Extend Retry's existing private parent/child channel with a versioned partition
+receipt capability and acknowledgement. A partition-aware child requires that
+acknowledgement before tests; an older Retry peer is rejected with upgrade
+guidance. Once acknowledged, missing/partial completion metadata from any
+scheduled attempt fails the Retry parent regardless of an OS exit of `0`.
+No new public grouping API or reverse Retry-to-MSTest package dependency is
+required; use the shared first-party wire contract.
+
+The reducer takes catalog, topology, effective initial selection, and eligible/
+assigned sets **only from the Initial attempt 1 receipt**. That receipt must be
+sealed and cover its complete assigned set even when tests failed. Later
+RetrySubset attempts must be sealed, share the same topology/partition, and
+settle only requested failing identities from that initial partition. They can
+update the latest outcome, not replace the original coverage universe. Reject
+an unrelated subset, zero-work retry, missing initial receipt, partial initial
+coverage, or an attempt-number-only artifact presented as a root receipt.
+The reduced receipt preserves raw failures/truncation independently of final
+exit-code ignores. The final Retry/job exit is authoritative for the result;
+CI verification also requires the valid reduced coverage evidence.
 
 Reject **local fan-out plus process-level Retry** before launching anything
 until explicit nested-orchestrator semantics are designed. In-process MSTest
@@ -394,8 +477,53 @@ retry is ordinary framework behavior in both modes.
 ### SDK and host modes
 
 Single-partition mode is a normal TestHost in direct execution and native
-`dotnet test`, even for intentional empty selection. It adds no orchestrator
-wire behavior or SDK no-handshake exception.
+`dotnet test`, even for intentional empty selection. No orchestrator
+no-handshake exception is used, but the SDK's own zero-test policy needs the
+following **new, additive wire contract**:
+
+1. The host offers partition-completion contract version `1` in its normal
+   handshake; the SDK acknowledges supported version `1`. Absent, explicit
+   false, unknown version, and acknowledged support are distinct states.
+   Partition execution under an unaware/incompatible SDK fails before tests
+   with upgrade/direct-executable guidance; never silently run unpartitioned
+   or inject `--ignore-exit-code 8`. Direct execution needs no SDK negotiation.
+2. Allocate a new optional `TestPartitionCompletionMessage` in the shared binary
+   protocol, sent only after acknowledgement and receipt sealing. Include
+   version, Execution/Instance/Session identity, attempt/Initial-or-RetrySubset
+   role, `i/n`, topology/selection digests, eligible/assigned method-anchor counts,
+   completion/selection reason, and raw verdict. Receive/acknowledge it before
+   process teardown. Missing, duplicate, inconsistent, truncated, or foreign
+   summaries cannot prove intentional emptiness. No fake test or normal test
+   result is added.
+3. SDK aggregation suppresses **only** implicit/default or strict zero-test
+   failure, and only if every targeted module completed successfully with a
+   valid Initial intentional-empty summary (`E>0`, `A_i=0`). A module with
+   truly empty selection, ordinary zero results/drop, partial/unknown metadata,
+   failed exit, or strict all-skipped work invalidates this exception.
+   An explicit global minimum is evaluated first and still fails with `9`.
+   Normal nonempty runs retain existing result/count policy; this exception
+   does not reinterpret skipped results as an empty bucket.
+4. SDK rendering must show deliberate partition selection, for example
+   `Partition 2/4: 0 methods assigned from 12 eligible methods`, without a red
+   failure, fabricated passing test, or misleading claim that 12 tests ran.
+   Update native MTP rendering independently. Keep result counts in their
+   existing units and planned method-anchor counts explicitly labeled.
+
+Implement both ends together: MTP models/serializers/field IDs and
+`DotnetTestProtocolContract.props`, the SDK's vendored-file inventory, handshake
+and message handling, `MicrosoftTestingPlatformTestCommand` zero-policy logic,
+terminal state, and protocol/real-product tests. Reserve identifiers against the
+live wire catalog during implementation; this proposal does not invent an
+already assigned message ID. Older peers never receive an unacknowledged
+message. General protocol compatibility is not evidence of this capability.
+
+Legacy MSBuild uses a different, positional `RunSummaryInfoRequest` channel and
+its own zero-result summary logic. V1 rejects partition options on that path
+before user execution. Later support requires its own negotiated summary
+extension and packed MSBuild proof; do not append positional fields and assume
+compatibility. The serializer is source-linked into both
+`Microsoft.Testing.Extensions.MSBuild` and `Microsoft.Testing.Platform.MSBuild`.
+Both assemblies/consumers would have to move together.
 
 Local mode handshakes once as an orchestrator; all workers use the existing SDK
 channel as TestHosts sharing the module's Execution ID, unique Instance IDs,
@@ -405,13 +533,21 @@ TestNodes or register a fake framework. Multiple modules/TFMs remain distinct.
 Standalone execution needs no SDK handshake but still requires child
 acknowledgement and completion receipts.
 
-Validate concurrent instances and the final module verdict with real shipping
-SDKs. Static source support is not compatibility evidence. If local fan-out
-requires an SDK addition, use presence-aware capability negotiation and reject
-undeclared/false/incompatible support before work, or defer that SDK surface.
+Validate single-partition completion and concurrent local instances with real
+shipping SDKs. Static source support is not compatibility evidence. Local
+fan-out requires both partition-completion version `1` and a separate
+SDK acknowledgement of local-partition-orchestration version `1` in the
+orchestrator handshake before any child starts. That handshake also declares
+the validated partition count `n`, allowing the SDK to require exactly the
+expected Initial indices and reject inconsistent child counts. The SDK tracks all expected
+instances and one final module verdict; local workers are not extra modules.
+Verify multiple-instance summaries and this final verdict, rather than assuming
+ordinary-host acknowledgement proves orchestration. Reject absent, explicit
+false or incompatible local support before work.
 Do not silently enable a path just because a generic orchestrator handshake
 was accepted. A local-mode preview may support direct executables first; the
-single-partition SDK surface must not wait for this gate.
+single-partition SDK surface waits only for its smaller completion-contract
+gate, not for local fan-out.
 
 V1 targets native MSTest/MTP desktop processes on Windows, Linux, and macOS.
 Reject JSON-RPC/IDE server requests and hot reload for partition options;
@@ -436,6 +572,11 @@ exit-code-ignore remains an explicit existing policy, applied once at the outer
 owner after raw verdict calculation; the receipt and ledger stay unsuccessful
 or partial and the CI coverage verifier rejects incomplete work. Do not forward
 ignore settings to workers and then infer success from their filtered exits.
+Remove `--ignore-exit-code` from every CLI/response/config source and clear the
+actual inherited variable `TESTINGPLATFORM_EXITCODE_IGNORE` in local children.
+Validate the finalized environment after providers; if a locked provider would
+reintroduce a child-local ignore override, reject the combination rather than
+break the lock. Keep the requested policy only at the coordinator.
 
 ### Files, reports, and presentation
 
@@ -489,28 +630,38 @@ it in this design-only session:
    collected before host filters, not only inside `SourceExecution`.
 2. **Single-partition product.** Register `--partition` in native
    `MSTest.TestAdapter/TestingPlatformAdapter`, add request selection and
-   receipts, expose partition context, and wire the internal intentional-empty
+   catalog/receipts, expose partition context, and wire the internal intentional-empty
    token into MTP result/summary handling. Update internal API baselines and
    resource accessors/catalogs through their generators; no new public grouping
-   API. Add the Retry receipt reducer before advertising Retry composition.
-3. **Ship the first useful slice.** Pack `MSTest.TestAdapter`,
+   API. Add versioned private Retry receipt acknowledgement and mandatory parent
+   validation before advertising that combination.
+3. **Direct-executable shipping slice.** Pack `MSTest.TestAdapter`,
    `MSTest.TestFramework`, and the aligned `Microsoft.Testing.Platform`;
    include `Microsoft.Testing.Extensions.Retry` in its composition cases.
-   Prove direct apphost/DLL and real native SDK `i/n` behavior, existing
-   reporters, help/info, and a local/CI receipt-verification sample.
+   Prove direct apphost/DLL `i/n`, existing reporters, help/info, and a CI sample
+   invoking built executables and independently verifying catalog/receipts.
    Document per-job count policy, repeated fixtures, resource scope, and limits.
-4. **Local orchestration.** Add `--partition-count` and
+4. **Coordinated native SDK slice.** Implement the additive completion protocol
+   in testfx and `dotnet/sdk/main`, vendor the exact shared sources, add the
+   acknowledged capability, SDK whole-run zero-policy correction and rendered
+   selection state. Prove real native `dotnet test` for a nonempty leg,
+   intentional empty leg, truly empty selection, explicit minimum, strict
+   skipped/drop cases, old/unaware SDK rejection and mixed modules/TFMs.
+   Advertise no SDK version until the actual released/pinned build passes.
+   Legacy MSBuild remains rejected until a separately scoped implementation.
+5. **Local orchestration.** Add `--partition-count` and
    `--max-parallel-partitions`, streaming scheduler, private receipts/progress,
    owned cancellation/teardown, module policy aggregation and output subtrees.
    Reuse MTP lifecycle helpers; reject unsupported launchers and simultaneous
    process Retry. Prove actual concurrent execution with isolated statics.
-5. **Local consuming surfaces.** Add and track the experimental
+6. **Local consuming surfaces.** Add and track the experimental
    `TestPartitions` post-processing mode and supported TRX/HTML processors.
    Complete single-owner CI publication, or reject unsupported reporters.
-   Validate real SDK concurrent instances/module aggregation on the exact
-   minimum supported versions; defer only that surface if not yet supported.
+   Implement SDK local-orchestration acknowledgement and validate concurrent
+   instances/module aggregation on the exact minimum supported versions.
+   Direct local fan-out can ship before its SDK surface.
    No fake server or ordinary unit test substitutes for this gate.
-6. **Preview and rollout.** A named delivery owner carries all dependency flow,
+7. **Preview and rollout.** A named delivery owner carries all dependency flow,
    release-branch proof/backport decisions and downstream enablement. Do not
    enable by default in `MSTest.Sdk`. Measure discovery/setup cost, memory,
    actual overlap, imbalance and wall time on real sequential suites. Reject
@@ -522,6 +673,10 @@ assumed. The internal MTP/adapter contract requires aligned package minimums;
 do not mix a new adapter with an older MTP and silently lose empty-selection
 behavior. The owner must record exact package IDs/versions, SDK versions,
 shipping branches and servicing decisions before enabling downstream use.
+Proposed initial branch decision: testfx mainline MSTest 5/MTP 3 and SDK
+`main`; no stable product or SDK backport is assumed. A servicing request for
+an older SDK is an explicit additional release decision and validation matrix,
+not an implied benefit of an additive wire format.
 Assignment of that named owner is an implementation handoff gate, not a design
 claim that a particular person has accepted the work.
 
@@ -536,13 +691,30 @@ All cases below are **planned**, not executed product evidence.
 | Real isolation benefit | Classes sharing a static can each run sequentially inside different PIDs; use rendezvous markers to prove overlap without wall-clock assertions. | Direct terminal and native SDK at normal/constrained widths. |
 | Fixtures, constraints, data | Classes/rows stay together; attribute/configuration dependencies co-locate, including filtered bridges; no filtered prerequisites are added; runtime/folded data complete. Test resource diagnostics, not invented cross-process locks. | Exact per-result identity/outcome associations, lifecycle markers and isolated resource names. |
 | Original filters preserved | Category/runsettings/UID/provider intersections; run-only providers; programmatic drop/skip; empty selection; Retry with only one failed member of a component. | Same work as ordinary filtering intersected with partition assignment, without UID replay. |
-| Receipts and drift | Same-count/different-anchor universes; changed topology/configuration; partial discovery; malformed/incompatible receipt; stale/duplicate/missing CI job; Retry narrowed receipt mistaken for full coverage. | Explicit failure/partial status and outer job exits; no full-suite fallback. |
-| No false green | Child exits zero before a completion seal, fails before handshake, or crashes after one folded row; `context.Complete` in a fault path is insufficient. Test legitimate drops separately. | Check scheduling-anchor dispositions and child/coordinator/SDK exits, not one result per UID. |
+| Receipts and drift | Duplicate `{A,C}` buckets summing to universe `{A,B,C,D}`; recomputed expected bucket vs planned/settled digests; changed dependency config; harmless row reordering; malformed receipt; stale/missing/duplicate job; retry subset masquerading as initial coverage. | Explicit failure/partial status, independent ownership verification and outer job exits. |
+| No false green | Throw, cancel, graceful/deadline/maximum stop, early zero exit, missing handshake, crash after one folded row, class/assembly cleanup failure and missing row completion; `context.Complete` in a fault path is insufficient. Test legitimate drops separately. | Required cleanup/element closure, unignored raw verdict, partial seal and parent exits, not one result per UID. |
 | Empty and aggregate policies | One group across many buckets; true empty filter; all skipped/drop; strict zero policy; explicit per-job minimum; local aggregate minimum; SDK global minimum; maximum failures and timeout. | Intentional-empty success only with proof; actual empty/default `8`, minimum `9`, strict all-skipped `8`. |
 | Process composition | Apphost, DLL host, response files, spaced paths, environment/config providers, launcher rejection, cancellation and nested module limits. | No orphan task-owned PIDs, shared-output collisions, or leaked temporary files. |
-| Native SDK identity | Ordinary/empty single-partition host; concurrent local Instance IDs in attempt 1; mixed-success modules/TFMs; supported/old SDKs; no-worker/incompatible/absent handshake and capability cases. | Real shipping SDK terminal, not only fake protocol fixtures. |
+| Native SDK identity | Acknowledged versioned completion; ordinary empty host that would previously trigger global `8`; minimum `9`; normal empty/strict skipped/drop not excused; foreign/duplicate/missing summary; local capability; mixed modules/TFMs and old SDK rejection. | Real SDK whole-command exit and deliberate-selection terminal state, not only fake protocol fixtures. |
 | Reports and publishing | Distinguishable pass/fail/skip rows with attachments; local TRX/HTML union and module count 1; explicit filename collisions; partial merge; CI identity/count association and unsupported combinations. | Open actual HTML and terminal; hosted CI UI remains a gap unless available and authorized. |
-| Feature interactions | Single-partition Retry preserves first coverage and narrowed attempts; local process Retry rejected; in-process retries, server/hot-reload/device exclusions and helper responses. | Exact errors and help/info availability; no change to default behavior. |
+| Feature interactions | Retry private acknowledgement, complete failed Initial plus passing subset, partial Initial plus passing subset remains failed, zero-work subset never empty-success; ignore policy via CLI/config/actual environment variable; JSON-RPC/cache/legacy/device exclusions. | Exact errors/help/info, raw and filtered exits, and unchanged option-absent behavior. |
+
+### Proposed executable case locations
+
+These are planned new files/case names, not claims that tests already exist.
+Keep adapter unit tests on the internal TestContainer framework and its allowed
+assertions; MTP/acceptance tests use MSTest and their project-specific assertion
+rules. Reuse existing help/info tests and package-consuming fixtures.
+
+| Planned location | Concrete cases and decisive assertions |
+| --- | --- |
+| `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/PartitionPlannerTests.cs` | `CanonicalHashMatchesVectors`, `DependencyTopologySurvivesUidNarrowing`, `ConfiguredDependencyCollectedBeforeHostFilter`, `UnrelatedComponentDoesNotMoveAssignment`: compare exact component membership/buckets, not only counts. |
+| `test/IntegrationTests/MSTest.Acceptance.IntegrationTests/PartitionSelectionTests.cs` | `FilteredPartitionsAreDisjointAndCoverBaseline`, `RuntimeRowsRemainWithTheirClass`, `RunOnlyProviderAndProgrammaticDropRetainSemantics`, `KnownEmptyDoesNotExcuseEmptyFilterOrExplicitMinimum`, `RetrySubsetCannotReplaceInitialCoverage`: inspect concrete result identities/outcomes, sealed method coverage and exact child exits. |
+| `test/IntegrationTests/MSTest.Acceptance.IntegrationTests/PartitionNativeDotnetTestTests.cs` | `NativeSdkKnownEmptySucceedsWithoutFakeResults`, `NativeSdkExplicitMinimumStillFails`, `NativeSdkMixedEmptyAndOrdinaryZeroIsNotExcused`, `NativeSdkOldCapabilityFailsBeforeUserCode`: real SDK command exit, normal handshake/session, result counts, and selection text. |
+| `test/IntegrationTests/MSTest.Acceptance.IntegrationTests/PartitionFanOutTests.cs` | `IsolatedStaticsOverlapWithBoundedWorkers`, `ZeroExitWithoutCompletionFails`, `CleanupFaultOrGracefulStopCannotSealSuccess`, `CancellationStopsOnlyOwnedTrees`, `InheritedIgnoreDoesNotHideWorkerFailure`: rendezvous/PID markers, raw receipts, process closure, and final coordinator/SDK exits. |
+| `test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/PartitionCompletionTests.cs` | `SummaryRequiresAcknowledgement`, `ForeignDuplicateOrUnsealedSummaryIsRejected`, `LocalModeRequiresSeparateCapabilityAndAllIndices`: wire-contract tests supplement, not replace, native SDK tests. |
+| Existing report acceptance tests plus `PartitionFanOutTests` | `PartitionReportsUnionResultsAndRelocateAttachments`, `UnsupportedPublisherOrAbsoluteOutputFailsBeforeLaunch`: parse per-result associations and inspect the actual rendered report/terminal. |
+| Planned CI sample verifier tests | `OverlappingBucketsWithCorrectTotalAreRejected`, `RetrySubsetOrStaleRunCannotMasqueradeAsRoot`, `MissingIndexAndChangedDependencyCatalogAreRejected`: use independent catalog recomputation, correct exits and mutation-sensitive negative inputs. |
 
 Implementation commands must use the pinned toolchain and pack after every
 producer change, for example `.\build.cmd -pack -c Release -bl`, followed by
@@ -551,6 +723,21 @@ Record exact SDK/package versions and hashes, loaded binaries, source revisions,
 commands, expected and executed identities/counts, artifacts, and parent/child
 exits. Real `dotnet test` SDK versions/branches need an explicit matrix rather
 than assuming the repository SDK is the shipping consumer.
+
+Focused implementation entry points, **not executed in this design session**:
+
+```powershell
+.\build.cmd -pack -c Release -bl
+.\.dotnet\dotnet.exe test --project .\test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~Partition" -p:UsingDotNetTest=true
+.\.dotnet\dotnet.exe test --project .\test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release --filter "FullyQualifiedName~PartitionCompletion" -p:UsingDotNetTest=true
+```
+
+Use the SDK installation selected by the repository build scripts if it reuses
+a matching `DOTNET_INSTALL_DIR` instead of `.dotnet`. Each native-SDK acceptance
+case must isolate its child SDK with the existing infrastructure helper and
+record the actual consumer version. Add unique binlog/result paths and verify
+selected/executed case identities when running these commands; no selection
+currently exists merely because a future command is documented.
 
 For new behavioral cases, retain tests while removing the relevant behavior in
 an isolated compiling comparison: grouping/selection, concurrency, missing-work
@@ -572,19 +759,41 @@ proposal. Standalone algorithm experiments establish only the stated algebra.
 | Both models: SDK empty orchestrator-only success is unsafe. | No orchestrator in CI mode; local mode launches normal hosts even for empty buckets. Real SDK verification remains required. |
 | Gemini: optimize the existing UID expression path. | Not needed by the selected architecture; defer this unrelated existing optimization rather than expand the feature. |
 
-D1 is being submitted to the same two independent models for a second,
+D1 was submitted to the same two independent models for a second,
 counterexample-driven review. Coordinator synthesis is GPT-6.1 Sol
 (`gpt-6.1-sol`). Review acceptance does not satisfy package/SDK release gates.
 
-## Open questions
+### Round 2: D1 direction accepted, six contracts tightened
+
+The same models reviewed
+`81d20b699fe92221416353c2ff2dd15fc37b4271`, Git blob
+`d6c484bbc6b7ba6b54f5e16c9758bf1da3613f67` (raw LF blob SHA-256
+`d18903ae3a0b1c274af73c56757de4db1a11da095ee9dfc4cdad2f363406668c`;
+the earlier `352B...` review identifier hashes the CRLF checkout).
+Claude conditionally accepted the direct-selector design and rejected its
+unproven native-SDK empty claim; Gemini conditionally accepted pending D2.
+
+| Remaining finding | D2 correction |
+| --- | --- |
+| SDK whole-command zero policy overrides host `0`. | Acknowledged completion metadata, exact all-module exception, explicit minimum precedence, deliberate-selection rendering, and separate direct/SDK ship gates. |
+| Counts and shared digests permit duplicate/missing work. | Independent recomputation from the canonical catalog and comparison of planned and observed settled bucket-set digests; no count-only proof. |
+| Context completion is not execution/cleanup success. | Normative normal-return, stop-state, element/enumeration closure, cleanup and bus-drain seal; failed cleanup retained in raw results. |
+| Narrowed cache / duplicate discovery / false declaration warnings. | One metadata walk, pre-partition declaration validation, complete-topology-only cache guard; note current JSON-RPC-only path is excluded. |
+| A passing Retry subset can replace partial initial coverage. | Mandatory negotiated control receipt verification, immutable Initial coverage and restricted RetrySubset updates; no warning-only report reducer. |
+| Inherited ignore policy can conceal a worker failure. | Strip every child option source and the verified `TESTINGPLATFORM_EXITCODE_IGNORE`; validate provider-finalized environment and preserve raw verdict. |
+
+D2 is submitted for a final targeted confirmation of these contracts. No
+implementation validation or claimed performance result is added by agreement.
+
+## Implementation gates
 
 1. Implementation must demonstrate the neutral metadata seam is available on
    every supported native discovery path, including any source-generated path,
    without executing runtime data to infer class topology. Unsupported variants
    must reject the option until they satisfy the same contract.
-2. The exact minimum shipping SDK versions for intentional-empty ordinary hosts
-   and concurrent local workers need real product runs. A required local-mode
-   SDK change is a separately owned dependency, not an assumption.
+2. The exact minimum shipping SDK versions for negotiated intentional-empty
+   completion and local-worker support need coordinated source flow and real
+   product runs. The SDK change is required, not an optional assumption.
 3. TRX/HTML local merge and each CI reporter require separate consumer evidence;
    unsupported local combinations must remain disabled/rejected.
 4. Assign the delivery owner, package versions, preview branch and explicit
