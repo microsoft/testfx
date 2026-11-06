@@ -436,6 +436,40 @@ outputs must not be used as if they were a complete aligned package set.
 Earlier acceptance results remain evidence for their recorded revisions,
 not executed proof of this merged revision.
 
+### Retry artifact-layout follow-up
+
+The external branch update
+`038bca74da5220ebd958efdf8c20176bab80b9b3` corrected the upstream Retry
+formatting. Both aligned source-package sets then packed successfully with
+warnings as errors; the earlier pack blocker no longer applies.
+
+[Azure build 1668369](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1668369)
+exposed a stale expectation in
+`Partition_RetryUidNarrowing_DoesNotMoveDependencyComponent` on Windows and
+Linux. Main's duplicate-TRX fix intentionally moves the final raw attempt
+report to the results root. Earlier attempts remain under `Retries`, so the
+test must assert one first-attempt report there and one final report at the
+root, not expect a duplicate final report inside `Retries`.
+
+The same focused packed test reproduced the failure locally: one executed
+case, expected two nested reports but observed one, exit 2. After correcting
+the locations, the same case passed 1/1 with exit 0 and no skips. It still
+checks the four first-attempt identities/outcomes, the final failed-UID
+selection, stable UIDs, all final logical outcomes, and the exact body-probe
+multiplicity. The final-result map is compared against the first attempt's
+failed identities with their expected Passed outcome, not against another
+parse of the same final report.
+
+The analyzer-enabled owning-project build passed with zero warnings/errors.
+TRX/JUnit/CTRF exports and resolved current adapter/platform/Retry package
+hashes were verified; physical reports were exactly `run.trx` and
+`Retries/<run>/1/run.trx`. Validation used Release/net12.0, fresh net11.0
+consumers and the existing process-local source-gen opt-out. The test-file
+patch against the external update has SHA-256
+`371760D9E3A6F39314D5E6C3BDC0245603CA878B40B5D0691902367801C6A454`.
+This is executed evidence for repairing the test's artifact contract, not a
+claim that product behavior was changed or the partition selector was mutated.
+
 ### CI eligibility
 
 Static inspection finds the acceptance project in both `TestFx.slnx` and

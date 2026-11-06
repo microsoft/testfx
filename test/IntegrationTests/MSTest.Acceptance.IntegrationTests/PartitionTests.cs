@@ -325,9 +325,12 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
 
         string retryRoot = Path.Combine(run.Path, "Retries");
         string[] reports = Directory.GetFiles(retryRoot, "*.trx", SearchOption.AllDirectories);
-        Assert.HasCount(2, reports);
+        Assert.HasCount(1, reports);
         ReportResult[] first = ReadResults(reports.Single(path => Path.GetFileName(Path.GetDirectoryName(path)) == "1"));
-        ReportResult[] second = ReadResults(reports.Single(path => Path.GetFileName(Path.GetDirectoryName(path)) == "2"));
+        // The final attempt is moved to the results root so it is published only once.
+        string[] finalReports = Directory.GetFiles(run.Path, "*.trx", SearchOption.TopDirectoryOnly);
+        Assert.HasCount(1, finalReports);
+        ReportResult[] second = ReadResults(finalReports.Single());
         Assert.AreSequenceEqual(
             DependencyTests.Select(name => name + (name == $"{Cart}.Buy" ? "|Failed" : "|Passed")),
             first.Select(test => test.FullyQualifiedName + "|" + test.Outcome),
@@ -335,7 +338,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         AssertResults(second, [$"{Cart}.Buy"]);
         Assert.AreEqual(first.Single(test => test.FullyQualifiedName == $"{Cart}.Buy").Id, second.Single().Id);
         Assert.AreSequenceEqual(
-            second.Select(test => test.Id + "|" + test.FullyQualifiedName + "|" + test.Outcome),
+            first.Where(test => test.Outcome == "Failed").Select(test => test.Id + "|" + test.FullyQualifiedName + "|Passed"),
             result.Results.Select(test => test.Id + "|" + test.FullyQualifiedName + "|" + test.Outcome));
         ReportResult[] logicalResults = [.. first.Concat(second).GroupBy(test => test.Id, StringComparer.Ordinal).Select(group => group.Last())];
         AssertResults(logicalResults, DependencyTests);
