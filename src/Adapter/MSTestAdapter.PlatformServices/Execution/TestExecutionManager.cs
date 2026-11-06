@@ -83,6 +83,9 @@ internal partial class TestExecutionManager
     /// timing) as before.
     /// </summary>
     private ITestElementFilterProvider? _testElementFilterProvider;
+    private List<UnitTestElement>? _unpartitionedTests;
+
+    internal TestPartition? Partition { get; set; }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
@@ -134,6 +137,7 @@ internal partial class TestExecutionManager
     {
         _testRunCancellationToken = cancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
+        _unpartitionedTests = Partition is null ? null : [];
 
         var discoverySink = new TestCaseDiscoverySink();
 
@@ -186,5 +190,13 @@ internal partial class TestExecutionManager
     internal Func<ITestSourceHandler, UnitTestDiscoverer>? UnitTestDiscovererFactory { get; set; }
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler)
-        => UnitTestDiscovererFactory?.Invoke(testSourceHandler) ?? new(testSourceHandler);
+    {
+        if (Partition is { } partition)
+        {
+            // A UID-narrowed discovery cache cannot define stable partition placement.
+            return new(testSourceHandler, partition, test => (_unpartitionedTests ??= []).Add(test));
+        }
+
+        return UnitTestDiscovererFactory?.Invoke(testSourceHandler) ?? new(testSourceHandler);
+    }
 }

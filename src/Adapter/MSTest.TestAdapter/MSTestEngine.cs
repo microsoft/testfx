@@ -84,7 +84,7 @@ internal sealed class MSTestEngine
         {
             if (MSTestDiscovererHelpers.InitializeDiscovery(sources, settingsXml, logger, configuration, testSourceHandler))
             {
-                await new UnitTestDiscoverer(testSourceHandler)
+                await new UnitTestDiscoverer(testSourceHandler, _testExecutionManager.Partition)
                     .DiscoverTestsAsync(sources, logger, elementSink, settingsXml, filterProvider, isMTP)
                     .ConfigureAwait(false);
             }

@@ -45,7 +45,8 @@ internal partial class TestExecutionManager
         // other assembly. Reported once here, against every test in the run.
         if (MSTestSettings.CurrentSettings.DeclaredDependencies is { Length: > 0 } declaredDependencies)
         {
-            TestDependencyDeclaration.ReportUnmatchedDeclarations(declaredDependencies, tests, messageLogger);
+            IEnumerable<UnitTestElement> validationTests = _unpartitionedTests is not null ? _unpartitionedTests : tests;
+            TestDependencyDeclaration.ReportUnmatchedDeclarations(declaredDependencies, validationTests, messageLogger);
         }
 
         foreach (var group in testsBySource)
