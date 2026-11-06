@@ -10,6 +10,20 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class TestContextShouldBeValidAnalyzerTests
 {
+    [TestMethod]
+    public async Task ThrowingReadOnlyGetter_IsNotMistakenForAnAssignedContext()
+    {
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                public TestContext {|#0:TestContext|} => throw new System.NotSupportedException();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, VerifyCS.Diagnostic().WithLocation(0));
+    }
+
     [DataRow("TestContext", "private")]
     [DataRow("TestContext", "public")]
     [DataRow("TestContext", "internal")]

@@ -11,6 +11,23 @@ namespace MSTest.Analyzers.Test;
 public sealed class TestMethodShouldBeValidAnalyzerTests
 {
     [TestMethod]
+    [DataRow("int", DisplayName = "UnrelatedScalar")]
+    [DataRow("System.Collections.Generic.List<int>", DisplayName = "UnrelatedConstructedGeneric")]
+    [DataRow("int[]", DisplayName = "UnrelatedArrayElement")]
+    public async Task GenericParameter_NotUsedByAnyDataParameter_ReportsTheMethod(string parameterType)
+    {
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void {|#0:Check|}<T>({{parameterType}} value) { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, VerifyCS.Diagnostic().WithLocation(0).WithArguments("Check"));
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodIsPublic_NoDiagnostic()
     {
         string code = """

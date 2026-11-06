@@ -14,6 +14,30 @@ namespace MSTest.Analyzers.Test;
 public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTests
 {
     [TestMethod]
+    [DataRow("Environment.GetEnvironmentVariable(\"TF_BUILD\") == \"false\"", DisplayName = "ValueComparison")]
+    [DataRow("Environment.GetEnvironmentVariable(\"TF_BUILD\") is \"true\"", DisplayName = "ValuePattern")]
+    [DataRow("Environment.GetEnvironmentVariable(\"TF_BUILD\") is not \"true\"", DisplayName = "NegatedValuePattern")]
+    public async Task ValueSensitiveEnvironmentChecks_AreNotEquivalentToTheSupportedNullCheck(string condition)
+    {
+        string source = $$"""
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    if ({{condition}})
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task WhenNoEnvironmentCheckUsed_NoDiagnostic()
     {
         string code = """

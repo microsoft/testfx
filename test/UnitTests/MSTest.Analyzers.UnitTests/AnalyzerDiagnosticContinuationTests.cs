@@ -13,6 +13,190 @@ namespace MSTest.Analyzers.Test;
 public sealed class AnalyzerDiagnosticContinuationTests
 {
     [TestMethod]
+    [DataRow("Nullable")]
+    [DataRow("Unused")]
+    [DataRow("AsyncMethod")]
+    [DataRow("AsyncFixture")]
+    public async Task Suppressors_MissingFramework_DoNotSuppressUnrelatedWarnings(string scenario)
+    {
+        DiagnosticSuppressor suppressor = scenario switch
+        {
+            "Nullable" => new NonNullableReferenceNotInitializedSuppressor(),
+            "Unused" => new UnusedParameterSuppressor(),
+            "AsyncMethod" => new UseAsyncSuffixTestMethodSuppressor(),
+            "AsyncFixture" => new UseAsyncSuffixTestFixtureMethodSuppressor(),
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
+        };
+        string source = scenario switch
+        {
+            "Nullable" => "#nullable enable\npublic class C { public string Value { get; set; } }",
+            "Unused" => "public class C { public void Check(int value) { } }",
+            _ => "public class C { public System.Threading.Tasks.Task Check() => System.Threading.Tasks.Task.CompletedTask; }",
+        };
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, includeMSTest: false);
+        Compilation compilation = (await document.Project.GetCompilationAsync())!;
+        AnalyzerContinuationTestHelpers.AssertCompilerErrors(compilation);
+        List<DiagnosticAnalyzer> analyzers = [suppressor];
+        if (scenario == "Unused")
+        {
+            analyzers.Add(new UnitTests.UnusedParameterSuppressorTests.WarnForUnusedParameters());
+        }
+        else if (scenario == "AsyncMethod")
+        {
+            analyzers.Add(new UnitTests.UseAsyncSuffixTestMethodSuppressorTests.WarnForMissingAsyncSuffix());
+        }
+        else if (scenario == "AsyncFixture")
+        {
+            analyzers.Add(new UnitTests.UseAsyncSuffixTestFixtureMethodSuppressorTests.WarnForMissingAsyncSuffix());
+        }
+
+        ImmutableArray<Diagnostic> diagnostics = await compilation.WithAnalyzers(
+            analyzers.ToImmutableArray(),
+            new CompilationWithAnalyzersOptions(new AnalyzerOptions([]), onAnalyzerException: null,
+                concurrentAnalysis: true, logAnalyzerExecutionTime: false, reportSuppressedDiagnostics: true)).GetAllDiagnosticsAsync();
+        Diagnostic warning = Assert.ContainsSingle(diagnostics);
+        Assert.AreEqual(suppressor.SupportedSuppressions[0].SuppressedDiagnosticId, warning.Id);
+        Assert.AreEqual(DiagnosticSeverity.Warning, warning.Severity);
+        Assert.IsFalse(warning.IsSuppressed);
+        Assert.IsTrue(warning.Location.IsInSource);
+    }
+
+    [TestMethod]
+    [DataRow("() => { int value = 17; System.GC.KeepAlive(value); System.Threading.Tasks.Task.CompletedTask.GetAwaiter().GetResult(); }", DisplayName = "MultipleStatements")]
+    [DataRow("() => { ; System.Threading.Tasks.Task.CompletedTask.GetAwaiter().GetResult(); }", DisplayName = "ExplicitEmptyStatement")]
+    [DataRow("() => new Awaitable().GetAwaiter().GetResult()", DisplayName = "NonTaskAwaitable")]
+    public async Task AsyncAssertion_UnsupportedDelegateBodies_DoNotChangeTheirSemantics(string action)
+    {
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Awaitable
+            {
+                public Awaiter GetAwaiter() => new Awaiter();
+            }
+            public class Awaiter
+            {
+                public void GetResult() { }
+            }
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { Assert.ThrowsExactly<System.Exception>({{action}}); }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new PreferAsyncAssertionAnalyzer()));
+    }
+
+    [TestMethod]
+    public async Task AsyncAssertion_UnknownActionParameterName_DoesNotGuessAnUnsafeRewrite()
+    {
+        const string source = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestMethodAttribute : Attribute { }
+                public static class Assert { public static void Throws(Action callback) { } }
+            }
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { Assert.Throws(() => Task.CompletedTask.GetAwaiter().GetResult()); }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, includeMSTest: false);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new PreferAsyncAssertionAnalyzer()));
+    }
+
+    [TestMethod]
+    public async Task ProperAssert_RuntimeCardinality_DoesNotReplaceWithAZeroOrOneAssertion()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                public void Check(int count, List<string> values) { Assert.HasCount(count, values); }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new UseProperAssertMethodsAnalyzer()));
+    }
+
+    [TestMethod]
+    [DataRow("Process")]
+    [DataRow("Directory")]
+    [DataRow("File")]
+    [DataRow("Culture")]
+    public async Task ParallelMutations_OutsideTestMethods_DoNotFlagHelpersOrFieldLambdas(string scenario)
+    {
+        (DiagnosticAnalyzer Analyzer, string Statement) setup = scenario switch
+        {
+            "Process" => (new UndeclaredProcessGlobalStateMutationAnalyzer(), "Environment.SetEnvironmentVariable(\"fixture\", \"value\")"),
+            "Directory" => (new CurrentDirectoryMutationUnderParallelizationAnalyzer(), "Directory.SetCurrentDirectory(\"fixture\")"),
+            "File" => (new SharedFileSystemPathInTestAnalyzer(), "File.WriteAllText(\"shared.txt\", \"value\")"),
+            "Culture" => (new CultureMutationUnderParallelizationAnalyzer(), "CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture"),
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
+        };
+        string source = $$"""
+            using System;
+            using System.Globalization;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                private static readonly Action Hook = () => { {{setup.Statement}}; };
+                public void Helper() { {{setup.Statement}}; }
+                [TestMethod]
+                public void Check() { }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, setup.Analyzer));
+    }
+
+    public static IEnumerable<object[]> MissingFrameworkCases
+        => typeof(DataRowShouldBeValidAnalyzer).Assembly.GetTypes()
+            .Where(type => type.IsPublic && !type.IsAbstract && typeof(DiagnosticAnalyzer).IsAssignableFrom(type))
+            .OrderBy(type => type.Name, StringComparer.Ordinal)
+            .SelectMany(type => new[] { new object[] { type.Name, type, false }, new object[] { type.Name, type, true } });
+
+    public static string MissingFrameworkDisplayName(MethodInfo method, object[] data)
+        => $"{method.Name}_{data[0]}_{((bool)data[2] ? "PartialFramework" : "NoFramework")}";
+
+    [TestMethod]
+    [DynamicData(nameof(MissingFrameworkCases), DynamicDataDisplayName = nameof(MissingFrameworkDisplayName))]
+    public async Task MissingMSTestSymbols_DoNotReportInUnrelatedCSharpCompilation(string analyzerName, Type analyzerType, bool partialFramework)
+    {
+        string source = partialFramework
+            ? """
+              namespace Microsoft.VisualStudio.TestTools.UnitTesting
+              {
+                  public class TestMethodAttribute : System.Attribute
+                  {
+                      public TestMethodAttribute(
+                          [System.Runtime.CompilerServices.CallerFilePath] string file = "",
+                          [System.Runtime.CompilerServices.CallerLineNumber] int line = 0) { }
+                  }
+              }
+              public class Unrelated { public void Check() { } }
+              """
+            : "public class Unrelated { public void Check() { } }";
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, includeMSTest: false);
+        var analyzer = (DiagnosticAnalyzer)Activator.CreateInstance(analyzerType)!;
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, analyzer), analyzerName);
+    }
+
+    [TestMethod]
     [DataRow(ReportDiagnostic.Error, ReportDiagnostic.Error, DiagnosticSeverity.Error, true)]
     [DataRow(ReportDiagnostic.Error, ReportDiagnostic.Warn, DiagnosticSeverity.Error, true)]
     [DataRow(ReportDiagnostic.Error, ReportDiagnostic.Hidden, DiagnosticSeverity.Error, true)]

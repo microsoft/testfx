@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 
 using Microsoft.Testing.TestInfrastructure;
@@ -17,6 +18,36 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
 {
+    [TestMethod]
+    [DataRow("10.0", false, DisplayName = "VersionWithoutFamily")]
+    [DataRow("windows10", false, DisplayName = "SingleVersionComponent")]
+    [DataRow("windows10.beta", false, DisplayName = "MalformedVersion")]
+    [DataRow("unknown", true, DisplayName = "UnsupportedContainingFamily")]
+    [DataRow("windows10.beta", true, DisplayName = "MalformedContainingVersion")]
+    public async Task UnmappablePlatformScopes_ReportDiagnosticWithoutInventingAnOSCondition(string platform, bool onContainingType)
+    {
+        string source = $$"""
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            {{(onContainingType ? $"[SupportedOSPlatform(\"{platform}\")]" : string.Empty)}}
+            public class Tests
+            {
+                [TestMethod]
+                [SupportedOSPlatform("{{(onContainingType ? "linux" : platform)}}")]
+                public void Check() { }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Diagnostic diagnostic = Assert.ContainsSingle(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new OSPlatformAttributesShouldBeConsistentAnalyzer()));
+        AnalyzerContinuationTestHelpers.AssertDiagnostic(diagnostic, "MSTEST0084", DiagnosticSeverity.Info, source,
+            $"SupportedOSPlatform(\"{(onContainingType ? "linux" : platform)}\")",
+            "Platform compatibility attributes on test 'Check' are not represented by a compatible '[OSCondition]' attribute");
+        Assert.IsEmpty(diagnostic.Properties);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, new OSPlatformAttributesShouldBeConsistentFixer()));
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
+    }
+
     [TestMethod]
     public async Task WhenSupportedPlatformHasNoOSCondition_AddsIncludeCondition()
     {

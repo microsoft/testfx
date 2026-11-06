@@ -11,6 +11,50 @@ namespace MSTest.Analyzers.Test;
 public sealed class MemberConditionShouldBeValidAnalyzerTests
 {
     [TestMethod]
+    [DataRow("null", "\"Ready\"", DisplayName = "MissingConditionType")]
+    [DataRow("typeof(Conditions)", "null", DisplayName = "MissingMemberName")]
+    public async Task NullConditionContract_DoesNotInventAMissingMember(string conditionType, string memberName)
+    {
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Conditions { public static bool Ready => true; }
+            public class Tests
+            {
+                [TestMethod]
+                [MemberCondition({{conditionType}}, {{memberName}})]
+                public void Check() { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    [DataRow("private static bool Hidden;", "Hidden", false, DisplayName = "PrivateField")]
+    [DataRow("private static bool Hidden() => true;", "Hidden", false, DisplayName = "PrivateMethod")]
+    [DataRow("public bool this[int index] => true;", "this[]", true, DisplayName = "Indexer")]
+    [DataRow("public static Conditions operator +(Conditions left, Conditions right) => left;", "op_Addition", true, DisplayName = "OperatorMethod")]
+    public async Task UnsupportedOrNonPublicMembers_ReportTheSpecificContract(string declaration, string member, bool wrongKind)
+    {
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Conditions
+            {
+                {{declaration}}
+            }
+            public class Tests
+            {
+                [TestMethod]
+                [{|#0:MemberCondition(typeof(Conditions), "{{member}}")|}]
+                public void Check() { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, VerifyCS.Diagnostic(wrongKind
+                ? MemberConditionShouldBeValidAnalyzer.MemberWrongKindRule
+                : MemberConditionShouldBeValidAnalyzer.MemberNotPublicRule)
+            .WithLocation(0).WithArguments("Conditions", member));
+    }
+
+    [TestMethod]
     public async Task WhenMemberIsValidPublicStaticBoolProperty_NoDiagnostic()
     {
         string code = """
