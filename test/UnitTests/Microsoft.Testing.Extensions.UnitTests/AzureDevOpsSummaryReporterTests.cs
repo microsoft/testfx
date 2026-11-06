@@ -97,9 +97,9 @@ public sealed class AzureDevOpsSummaryReporterTests
 
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 1 | Reason not provided | {GetOperatingSystem()} | MyAssembly (net8.0, unknown) |
+            **Test module:** MyAssembly (net8.0, unknown) · **Platform:** {GetOperatingSystem()}
+
+            - **1 skipped** — Reason not provided
 
             ### Top failing classes
 
@@ -1056,9 +1056,9 @@ public sealed class AzureDevOpsSummaryReporterTests
 
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 1 | Tracked issue | Linux | Beta (net8.0, x64) |
+            - **1 skipped** — Tracked issue
+
+              **Test module:** Beta (net8.0, x64) · **Platform:** Linux
 
             ### Test modules
 
@@ -1248,9 +1248,9 @@ public sealed class AzureDevOpsSummaryReporterTests
 
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 1 | Known issue | {GetOperatingSystem()} | Tests (net8.0, unknown) |
+            **Test module:** Tests (net8.0, unknown) · **Platform:** {GetOperatingSystem()}
+
+            - **1 skipped** — Known issue
 
             > Duration history unavailable for the observed tests; current timings are not a historical baseline.
 
@@ -1298,10 +1298,55 @@ public sealed class AzureDevOpsSummaryReporterTests
             """
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 3 | Skip reason unavailable (older fragment) | Unavailable | Legacy (net8.0, arm64) |
-            | 2 | https://example.test/issues/42 \| \`reason\` &lt;pending&gt;&amp;<br>next | Linux\|&lt;runner&gt; | A\|&lt;&amp;&gt; (net8.0, x64) |
+            - **3 skipped** — Skip reason unavailable (older fragment)
+
+              **Test module:** Legacy (net8.0, arm64) · **Platform:** Unavailable
+
+            - **2 skipped** — https://example.test/issues/42 \| \`reason\` &lt;pending&gt;&amp;<br>next
+
+              **Test module:** A\|&lt;&amp;&gt; (net8.0, x64) · **Platform:** Linux\|&lt;runner&gt;
+
+
+            """.Replace("\r\n", "\n"),
+            GetSection(markdown, "### Skipped tests by reason"));
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_SingleModuleSkipReasonsShareContext()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Microsoft.Testing.Extensions.UnitTests",
+            TargetFramework = "net10.0",
+            Architecture = "x64",
+            OperatingSystem = "Linux",
+            TotalTests = 3,
+            SkippedTests = 3,
+            SkipReasons =
+            [
+                new CiRunSummarySkipReason
+                {
+                    Reason = "Packaged Windows apps are a Windows-only scenario; the launcher is intentionally disabled elsewhere.",
+                    Count = 2,
+                },
+                new CiRunSummarySkipReason
+                {
+                    Reason = "Awaiting <package> & \"native\" support | see https://example.test/issues/314",
+                    Count = 1,
+                },
+            ],
+        };
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(CreateObservedAggregate(module));
+
+        Assert.AreEqual(
+            """
+            ### Skipped tests by reason
+
+            **Test module:** Microsoft.Testing.Extensions.UnitTests (net10.0, x64) · **Platform:** Linux
+
+            - **2 skipped** — Packaged Windows apps are a Windows-only scenario; the launcher is intentionally disabled elsewhere.
+            - **1 skipped** — Awaiting &lt;package&gt; &amp; &quot;native&quot; support \| see https://example.test/issues/314
 
 
             """.Replace("\r\n", "\n"),
@@ -1344,18 +1389,45 @@ public sealed class AzureDevOpsSummaryReporterTests
             """
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 3 | Primary | macOS | Beta (net9.0, arm64) |
-            | 2 | Reason0 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason1 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason2 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason3 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason4 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason5 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason6 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason7 | Windows | Alpha (net8.0, x64) |
-            | 2 | Reason8 | Windows | Alpha (net8.0, x64) |
+            - **3 skipped** — Primary
+
+              **Test module:** Beta (net9.0, arm64) · **Platform:** macOS
+
+            - **2 skipped** — Reason0
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason1
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason2
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason3
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason4
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason5
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason6
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason7
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
+
+            - **2 skipped** — Reason8
+
+              **Test module:** Alpha (net8.0, x64) · **Platform:** Windows
 
             > 9 additional skipped tests are not shown.
 
@@ -1388,12 +1460,21 @@ public sealed class AzureDevOpsSummaryReporterTests
             """
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 1 | Same reason | Windows | A (net8.0, x64) — attempt 1, session session-1 |
-            | 1 | Same reason | Windows | A (net8.0, x64) — attempt 2, session session-2 |
-            | 1 | Same reason | Windows | A (net9.0, x64) |
-            | 1 | Same reason | Windows | B (net8.0, x64) |
+            - **1 skipped** — Same reason
+
+              **Test module:** A (net8.0, x64) — attempt 1, session session-1 · **Platform:** Windows
+
+            - **1 skipped** — Same reason
+
+              **Test module:** A (net8.0, x64) — attempt 2, session session-2 · **Platform:** Windows
+
+            - **1 skipped** — Same reason
+
+              **Test module:** A (net9.0, x64) · **Platform:** Windows
+
+            - **1 skipped** — Same reason
+
+              **Test module:** B (net8.0, x64) · **Platform:** Windows
 
 
             """.Replace("\r\n", "\n"),
@@ -1432,10 +1513,10 @@ public sealed class AzureDevOpsSummaryReporterTests
 
             ### Skipped tests by reason
 
-            | Skipped | Reason | Platform | Test module |
-            | ---: | --- | --- | --- |
-            | 2 | Known issue | {GetOperatingSystem()} | MyAssembly ({targetFramework}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}) |
-            | 1 | Reason not provided | {GetOperatingSystem()} | MyAssembly ({targetFramework}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}) |
+            **Test module:** MyAssembly ({targetFramework}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}) · **Platform:** {GetOperatingSystem()}
+
+            - **2 skipped** — Known issue
+            - **1 skipped** — Reason not provided
 
             > Duration history unavailable for the observed tests; current timings are not a historical baseline.
 
