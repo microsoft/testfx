@@ -347,7 +347,7 @@ public sealed class AnalyzerRoslynHelperTests
             (SpecialType.System_Int16, typeof(short)),
             (SpecialType.System_Int32, typeof(int)),
             (SpecialType.System_Int64, typeof(long)),
-            (SpecialType.System_IntPtr, typeof(IntPtr)),
+            (SpecialType.System_IntPtr, typeof(nint)),
             (SpecialType.System_Object, typeof(object)),
             (SpecialType.System_SByte, typeof(sbyte)),
             (SpecialType.System_Single, typeof(float)),
@@ -355,7 +355,7 @@ public sealed class AnalyzerRoslynHelperTests
             (SpecialType.System_UInt16, typeof(ushort)),
             (SpecialType.System_UInt32, typeof(uint)),
             (SpecialType.System_UInt64, typeof(ulong)),
-            (SpecialType.System_UIntPtr, typeof(UIntPtr)),
+            (SpecialType.System_UIntPtr, typeof(nuint)),
         })
         {
             Assert.AreEqual(expected, ProductReflection.Call(typeof(DataRowShouldBeValidAnalyzer), null, "GetSystemType",

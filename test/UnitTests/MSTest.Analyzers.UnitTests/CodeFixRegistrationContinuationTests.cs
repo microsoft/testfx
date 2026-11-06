@@ -13,6 +13,7 @@ using Microsoft.Testing.TestInfrastructure;
 #endif
 
 using MSTest.Analyzers.CodeFixes;
+using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers.Test;
 
@@ -22,6 +23,8 @@ public sealed class CodeFixRegistrationContinuationTests
     public static IEnumerable<object[]> UnrelatedSyntaxCases
         => typeof(AddResourceLockFixer).Assembly.GetTypes()
             .Where(type => type.IsPublic && !type.IsAbstract && typeof(CodeFixProvider).IsAssignableFrom(type))
+            // Fixture-signature providers register unconditionally; their opt-out is tested separately.
+            .Where(type => !typeof(FixtureMethodSignatureFixerBase).IsAssignableFrom(type))
             // These providers require a diagnostic on a member and intentionally use First(), not a stale-node guard.
             .Where(type => type != typeof(PublicMethodShouldBeTestMethodFixer)
                 && type != typeof(PreferTestCleanupOverDisposeFixer)
@@ -29,6 +32,12 @@ public sealed class CodeFixRegistrationContinuationTests
                 && type != typeof(TestContextShouldBeValidFixer)
                 && type != typeof(TestMethodShouldBeValidFixer)
                 && type != typeof(UseAttributeOnTestMethodFixer))
+            .OrderBy(type => type.Name, StringComparer.Ordinal)
+            .Select(type => new object[] { type.Name, type });
+
+    public static IEnumerable<object[]> FixtureSignatureCases
+        => typeof(FixtureMethodSignatureFixerBase).Assembly.GetTypes()
+            .Where(type => type.IsPublic && !type.IsAbstract && typeof(FixtureMethodSignatureFixerBase).IsAssignableFrom(type))
             .OrderBy(type => type.Name, StringComparer.Ordinal)
             .Select(type => new object[] { type.Name, type });
 
@@ -52,7 +61,8 @@ public sealed class CodeFixRegistrationContinuationTests
         ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
             .Add("ReplacementKey", "AreEqual")
             .Add("ProperAssertMethodNameKey", "IsNull")
-            .Add("CodeFixModeKey", "Replace")
+            .Add("CodeFixModeKey", "CodeFixModeSimple")
+            .Add("FixKindKey", "Simple")
             .Add("IsNegatedKey", "True")
             .Add("OSPlatformKey", "Windows")
             .Add("ConditionModeKey", "Include")
@@ -60,14 +70,36 @@ public sealed class CodeFixRegistrationContinuationTests
             .Add("ArchitectureKey", "X64")
             .Add("ExecutableKey", "tool")
             .Add("ResourceMember", "EnvironmentVariables")
-            .Add("FixScope", "Method")
-            .Add("CannotFix", null);
+            .Add("FixScope", "method");
         var diagnostic = Diagnostic.Create(descriptor, unrelated, additionalLocations: [unrelated], properties: properties);
 #if DEBUG
         List<string?> assertions = [];
         using var observer = new DiagnosticAssertionObserver(assertions.Add);
 #endif
         Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, fixer), fixerName);
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(FixtureSignatureCases), DynamicDataDisplayName = nameof(UnrelatedSyntaxDisplayName))]
+    public async Task FixtureSignatureFixers_CannotFixMarker_SuppressesOnlyMarkedDiagnostics(string fixerName, Type fixerType)
+    {
+        const string source = "public class Fixtures { public void Setup() { } }";
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        SyntaxNode root = (await document.GetSyntaxRootAsync())!;
+        var fixer = (CodeFixProvider)Activator.CreateInstance(fixerType)!;
+        var descriptor = new DiagnosticDescriptor(fixer.FixableDiagnosticIds[0], "Signature", "Signature", "Test", DiagnosticSeverity.Warning, true);
+        var diagnostic = Diagnostic.Create(descriptor, root.DescendantNodes().OfType<MethodDeclarationSyntax>().Single().Identifier.GetLocation());
+        Assert.HasCount(1, await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, fixer), fixerName);
+        foreach (string? marker in new string?[] { null, "true" })
+        {
+            Diagnostic unfixable = CopyDiagnostic(
+                diagnostic,
+                properties: ImmutableDictionary<string, string?>.Empty.Add("CannotFix", marker));
+            Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, unfixable, fixer), fixerName);
+        }
+
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
     }
 
@@ -261,7 +293,28 @@ public sealed class CodeFixRegistrationContinuationTests
     [DataRow("Executable", "ExecutableKey", null, DisplayName = "ExecutableMissingName")]
     public async Task GuardFixers_InvalidMetadata_DoNotRegisterAnUnsafeAction(string scenario, string property, string? value)
     {
-        const string source = "public class Unrelated { public void Check() { } }";
+        string guard = scenario switch
+        {
+            "Architecture" => "if (RuntimeInformation.ProcessArchitecture != Architecture.X64) return;",
+            "CI" => "if (Environment.GetEnvironmentVariable(\"CI\") is null) return;",
+            "Executable" => "if (!File.Exists(\"tool\")) return;",
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
+        };
+        string source = $$"""
+            using System;
+            using System.IO;
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    {{guard}}
+                }
+            }
+            """;
         using var workspace = new AdhocWorkspace();
         Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
         SyntaxNode root = (await document.GetSyntaxRootAsync())!;
@@ -273,11 +326,12 @@ public sealed class CodeFixRegistrationContinuationTests
             _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
         };
         ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-            .Add("IsNegatedKey", "True").Add("ArchitectureKey", "X64").Add("ConditionModeKey", "Include").Add("ExecutableKey", "tool")
-            .SetItem(property, value);
-        var descriptor = new DiagnosticDescriptor(fixer.FixableDiagnosticIds[0], "Stale diagnostic", "Stale diagnostic", "Test", DiagnosticSeverity.Warning, true);
-        var diagnostic = Diagnostic.Create(descriptor, root.GetLocation(), properties: properties);
-        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, fixer));
+            .Add("IsNegatedKey", "True").Add("ArchitectureKey", "X64").Add("ConditionModeKey", "Include").Add("ExecutableKey", "tool");
+        var descriptor = new DiagnosticDescriptor(fixer.FixableDiagnosticIds[0], "Guard", "Guard", "Test", DiagnosticSeverity.Warning, true);
+        var diagnostic = Diagnostic.Create(descriptor, root.DescendantNodes().OfType<IfStatementSyntax>().Single().GetLocation(), properties: properties);
+        Assert.HasCount(1, await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, fixer), scenario);
+        Diagnostic invalid = CopyDiagnostic(diagnostic, properties: diagnostic.Properties.SetItem(property, value));
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, invalid, fixer));
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
     }
 

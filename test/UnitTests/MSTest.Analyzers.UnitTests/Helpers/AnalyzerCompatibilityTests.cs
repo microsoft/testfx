@@ -254,25 +254,35 @@ public sealed class AnalyzerCompatibilityTests
     [TestMethod]
     [DataRow(false, DisplayName = "AnalyzerWaitCancellation")]
     [DataRow(true, DisplayName = "CodeFixWaitCancellation")]
-    public async Task WaitForExit_CurrentProcessCancellation_CompletesAndReleasesItsWait(bool codeFix)
+    public async Task WaitForExit_OwnedChildCancellation_CompletesAndReleasesItsWait(bool codeFix)
     {
         Type type = ProductReflection.Type(codeFix, "Polyfills.Polyfill");
-        using var process = Process.GetCurrentProcess();
+        using Process process = AnalyzerProcessCompatibilityTests.CreateControlledChild();
         using var canceled = new CancellationTokenSource();
         canceled.Cancel();
-        var alreadyCanceled = (Task)ProductReflection.Call(type, null, "WaitForExitAsync",
-            [typeof(Process), typeof(CancellationToken)], process, canceled.Token)!;
-        OperationCanceledException immediate = await Assert.ThrowsAsync<OperationCanceledException>(() => alreadyCanceled);
-        Assert.AreEqual(canceled.Token, immediate.CancellationToken);
-
         using var cancellation = new CancellationTokenSource();
-        var waiting = (Task)ProductReflection.Call(type, null, "WaitForExitAsync",
-            [typeof(Process), typeof(CancellationToken)], process, cancellation.Token)!;
+        var operations = new List<Task>();
+        Assert.IsTrue(process.Start());
         try
         {
-            // This process cannot exit while the test is executing; no sleep or timing assumption is involved.
+            Task<string?> ready = process.StandardOutput.ReadLineAsync();
+            operations.Add(ready);
+            await AnalyzerProcessCompatibilityTests.WaitForCompletionAsync(ready, "child readiness");
+            Assert.AreEqual(AnalyzerProcessCompatibilityTests.ReadyMarker, await ready);
+
+            var alreadyCanceled = (Task)ProductReflection.Call(type, null, "WaitForExitAsync",
+                [typeof(Process), typeof(CancellationToken)], process, canceled.Token)!;
+            operations.Add(alreadyCanceled);
+            await AnalyzerProcessCompatibilityTests.WaitForCompletionAsync(alreadyCanceled, "pre-canceled process wait");
+            OperationCanceledException immediate = await Assert.ThrowsAsync<OperationCanceledException>(() => alreadyCanceled);
+            Assert.AreEqual(canceled.Token, immediate.CancellationToken);
+
+            var waiting = (Task)ProductReflection.Call(type, null, "WaitForExitAsync",
+                [typeof(Process), typeof(CancellationToken)], process, cancellation.Token)!;
+            operations.Add(waiting);
             Assert.IsFalse(waiting.IsCompleted);
             cancellation.Cancel();
+            await AnalyzerProcessCompatibilityTests.WaitForCompletionAsync(waiting, "deferred process cancellation");
             OperationCanceledException deferred = await Assert.ThrowsAsync<OperationCanceledException>(() => waiting);
             Assert.AreEqual(cancellation.Token, deferred.CancellationToken);
             Assert.IsTrue(waiting.IsCanceled);
@@ -281,18 +291,26 @@ public sealed class AnalyzerCompatibilityTests
         finally
         {
             cancellation.Cancel();
-            try
+            AnalyzerProcessCompatibilityTests.ReleaseAndJoin(process);
+            foreach (Task operation in operations)
             {
-                await waiting;
-            }
-            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-            {
+                await AnalyzerProcessCompatibilityTests.WaitForCompletionAsync(operation, "original process operation cleanup");
+                if (operation.IsCanceled)
+                {
+                    await Assert.ThrowsAsync<OperationCanceledException>(() => operation);
+                }
+                else
+                {
+                    await operation;
+                }
             }
         }
 
         using var unstarted = new Process();
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => (Task)ProductReflection.Call(type, null, "WaitForExitAsync",
-            [typeof(Process), typeof(CancellationToken)], unstarted, CancellationToken.None)!);
+        var invalid = (Task)ProductReflection.Call(type, null, "WaitForExitAsync",
+            [typeof(Process), typeof(CancellationToken)], unstarted, CancellationToken.None)!;
+        await AnalyzerProcessCompatibilityTests.WaitForCompletionAsync(invalid, "unstarted process rejection");
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => invalid);
     }
 
     private static void AssertAttribute(bool codeFix, string name, object[] arguments, string? expectedProperty, object? expectedValue, params (string Name, object Value)[] namedProperties)

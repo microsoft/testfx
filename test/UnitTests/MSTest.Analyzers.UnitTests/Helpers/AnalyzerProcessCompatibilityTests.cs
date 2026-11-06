@@ -6,6 +6,8 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class AnalyzerProcessCompatibilityTests
 {
+    internal const string ReadyMarker = "analyzer-wait-ready";
+
     // Allow process startup and teardown on loaded CI workers; successful completion uses a handshake, not elapsed time.
     private const int StageTimeoutMilliseconds = 60_000;
 
@@ -16,23 +18,7 @@ public sealed class AnalyzerProcessCompatibilityTests
     [DataRow(true, true, DisplayName = "CodeFixAlreadyExitedProcess")]
     public async Task WaitForExit_ReleasedOrAlreadyExitedChild_PreservesTheExitCode(bool codeFix, bool alreadyExited)
     {
-        bool windows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = windows ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe") : "/bin/sh",
-                Arguments = windows
-                    ? "/d /q /c \"echo analyzer-wait-ready& set /p input=& exit /b 17\""
-                    : "-c \"echo analyzer-wait-ready; read input; exit 17\"",
-                WorkingDirectory = AppContext.BaseDirectory,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            },
-        };
+        using Process process = CreateControlledChild();
         Assert.IsTrue(process.Start());
         Task<string?>? ready = null;
         Task? waiting = null;
@@ -40,7 +26,7 @@ public sealed class AnalyzerProcessCompatibilityTests
         {
             ready = process.StandardOutput.ReadLineAsync();
             await CompleteStageAsync(ready, "child readiness");
-            Assert.AreEqual("analyzer-wait-ready", await ready);
+            Assert.AreEqual(ReadyMarker, await ready);
             if (alreadyExited)
             {
                 process.StandardInput.Close();
@@ -62,12 +48,7 @@ public sealed class AnalyzerProcessCompatibilityTests
         }
         finally
         {
-            process.StandardInput.Close();
-            if (!process.WaitForExit(StageTimeoutMilliseconds))
-            {
-                process.Kill();
-                Assert.IsTrue(process.WaitForExit(StageTimeoutMilliseconds), "The owned child could not be terminated.");
-            }
+            ReleaseAndJoin(process);
 
             if (waiting is not null)
             {
@@ -81,13 +62,49 @@ public sealed class AnalyzerProcessCompatibilityTests
         }
     }
 
-    private static async Task CompleteStageAsync(Task original, string stage)
+    internal static Process CreateControlledChild()
+    {
+        bool windows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        return new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = windows ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe") : "/bin/sh",
+                Arguments = windows
+                    ? "/d /q /c \"echo analyzer-wait-ready& set /p input=& exit /b 17\""
+                    : "-c \"echo analyzer-wait-ready; read input; exit 17\"",
+                WorkingDirectory = AppContext.BaseDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            },
+        };
+    }
+
+    internal static void ReleaseAndJoin(Process process)
+    {
+        process.StandardInput.Close();
+        if (!process.WaitForExit(StageTimeoutMilliseconds))
+        {
+            process.Kill();
+            Assert.IsTrue(process.WaitForExit(StageTimeoutMilliseconds), "The owned child could not be terminated.");
+        }
+    }
+
+    internal static async Task WaitForCompletionAsync(Task original, string stage)
     {
         using var cancellation = new CancellationTokenSource();
         var timeout = Task.Delay(StageTimeoutMilliseconds, cancellation.Token);
         Task completed = await Task.WhenAny(original, timeout);
         cancellation.Cancel();
         Assert.AreSame(original, completed, $"Timed out waiting for {stage}.");
+    }
+
+    private static async Task CompleteStageAsync(Task original, string stage)
+    {
+        await WaitForCompletionAsync(original, stage);
         await original;
     }
 }
