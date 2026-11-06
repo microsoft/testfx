@@ -8,6 +8,10 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
+#if NET
+using Microsoft.Win32.SafeHandles;
+#endif
+
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
 /// <summary>
@@ -20,12 +24,11 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// can arrive without its execute bit. Launching either one aborts the run with <c>Permission denied</c>, so
 /// the launcher has to reject both and fall back to <c>dotnet &lt;dll&gt;</c>.
 /// <para>
-/// Only <see cref="FailedLaunchDisposesProcessHandles"/> carries a method-level
-/// <see cref="DoNotParallelizeAttribute"/>: it measures this ambient, process-wide
-/// <see cref="Process.HandleCount"/> delta on the current test-host process, a resource no other test in this
-/// class or project reads or writes, so no shared <see cref="ResourceLockAttribute"/> key can coordinate it with
-/// another declared observer. Isolating only that method keeps the remaining tests in the parallel set instead of
-/// deferring the whole class to the serial tail.
+/// <see cref="FailedLaunchDisposesProcessHandles"/> retains its method-level
+/// <see cref="DoNotParallelizeAttribute"/> for the repeated real-process teardown scenario. It observes each
+/// failed launch's own process and handle rather than an ambient handle-count delta on the test host.
+/// Isolating only that method keeps the remaining tests in the parallel set instead of deferring the whole class
+/// to the serial tail.
 /// </para>
 /// </remarks>
 [TestClass]
@@ -932,11 +935,8 @@ public sealed class MtpServerProcessTests
 
 #if NET
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses repeated Windows process launches and handle counts.")]
-    // Measures the ambient, process-wide Process.HandleCount delta on the current test-host process. No other
-    // test in this project opens/reads that same OS handle count, so isolation (not a shared ResourceLock key)
-    // is the correct declaration: concurrent handle-opening activity from any other test could otherwise widen
-    // the observed delta and make this assertion flaky.
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses repeated Windows batch-file process launches.")]
+    // Retain the existing scheduling exclusion, but observe only resources owned by each failed launch.
     [DoNotParallelize]
     public async Task FailedLaunchDisposesProcessHandles()
     {
@@ -947,26 +947,26 @@ public sealed class MtpServerProcessTests
             + "ping 127.0.0.1 -n 31 > nul\r\n");
         var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromMilliseconds(50) };
 
-        _ = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
-            () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-
-        using var currentProcess = Process.GetCurrentProcess();
-        int baselineHandleCount = currentProcess.HandleCount;
         for (int i = 0; i < 12; i++)
         {
-            _ = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
-                () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
-        }
+            var process = new DisposalTrackingProcess();
+            try
+            {
+                _ = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+                    () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken, () => process));
 
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-        currentProcess.Refresh();
-        int leakedHandleCount = currentProcess.HandleCount - baselineHandleCount;
-        Assert.IsLessThan(12, leakedHandleCount, $"Failed launches leaked {leakedHandleCount} process handles.");
+                Assert.AreEqual(1, process.DisposeCount, "Each failed launch must dispose its process exactly once before returning.");
+                SafeProcessHandle handle = Assert.IsInstanceOfType<SafeProcessHandle>(process.HandleAtDisposal);
+                Assert.IsFalse(handle.IsInvalid, "The failed launch must own a valid native process handle.");
+                Assert.IsTrue(handle.IsClosed, "The failed launch must close its own process handle before returning.");
+            }
+            finally
+            {
+                // Keep fixture cleanup independent of the product path, including when disposal regresses.
+                KillProcessIfRunning(process);
+                process.Dispose();
+            }
+        }
     }
 #endif
 
@@ -1080,6 +1080,26 @@ public sealed class MtpServerProcessTests
             }
         }
     }
+
+#if NET
+    private sealed class DisposalTrackingProcess : Process
+    {
+        public int DisposeCount { get; private set; }
+
+        public SafeProcessHandle? HandleAtDisposal { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DisposeCount++;
+                HandleAtDisposal ??= SafeHandle;
+            }
+
+            base.Dispose(disposing);
+        }
+    }
+#endif
 
     internal static Process CreateFixtureProcess()
     {
