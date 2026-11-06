@@ -115,7 +115,10 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
             Assert.HasCount(2, copiedResultFiles);
             Assert.AreSequenceEqual(["first attachment", "second attachment"], copiedResultFiles.Select(File.ReadAllText).Order(StringComparer.Ordinal).ToArray());
             Assert.AreSequenceEqual(["attachment.txt", "attachment_1.txt"], copiedResultFiles.Select(Path.GetFileName).Order(StringComparer.Ordinal).ToArray());
-            Assert.IsEmpty(Directory.GetDirectories(testResultsPath, ".mstest-*", SearchOption.TopDirectoryOnly));
+            string publishedResultDirectory = Assert.ContainsSingle(Directory.GetDirectories(testResultsPath, "MSTest-*", SearchOption.TopDirectoryOnly));
+            string[] publishedResultFiles = Directory.GetFiles(publishedResultDirectory, "*", SearchOption.AllDirectories);
+            Assert.HasCount(2, publishedResultFiles);
+            Assert.AreSequenceEqual(["first attachment", "second attachment"], publishedResultFiles.Select(File.ReadAllText).Order(StringComparer.Ordinal).ToArray());
         }
         finally
         {
@@ -152,7 +155,7 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
 
             XElement warningRunInfo = trxDocument.Descendants(ns + "RunInfo").Single(runInfo => runInfo.Attribute("outcome")?.Value == "Warning");
             Assert.Contains("missing-result-file.txt", warningRunInfo.Value);
-            Assert.IsEmpty(Directory.GetDirectories(testResultsPath, ".mstest-*", SearchOption.TopDirectoryOnly));
+            Assert.IsEmpty(Directory.GetDirectories(testResultsPath, "MSTest-*", SearchOption.TopDirectoryOnly));
         }
         finally
         {
