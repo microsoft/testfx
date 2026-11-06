@@ -104,7 +104,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net10.0-windows10.0.19041.0 and later. Target 'net10.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net10.0-windows10.0.19041.0 and later. Target 'net10.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">パッケージ化された Windows アプリ '{0}' を起動できません ('{1}' が見つかりました)。パッケージ化された (MSIX) アプリを登録してアクティブ化するには、この拡張機能の Windows ビルドが必要です。これは net10.0-windows10.0.19041.0 以降向けに提供されています。NuGet が該当するアセットを選択できるように、'net10.0-windows10.0.19041.0' (またはプラットフォーム バージョン 10.0.19041.0 以上の、より新しい net*-windows ターゲット フレームワーク モニカー) をターゲットに設定します。現在のビルドでは、パッケージ化されていない (ルース レイアウト) テスト ホストのみが起動されます。https://github.com/microsoft/testfx/issues/9933 を参照してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">

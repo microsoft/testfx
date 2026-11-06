@@ -14,52 +14,52 @@
       </trans-unit>
       <trans-unit id="AttachmentCleanupWarning">
         <source>Could not remove incomplete GitHub Actions attachment '{0}': {1}</source>
-        <target state="new">Could not remove incomplete GitHub Actions attachment '{0}': {1}</target>
+        <target state="translated">GitHub Actions の不完全な添付ファイル '{0}' を削除できませんでした: {1}</target>
         <note>{0} is the sanitized file name; {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
         <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
-        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <target state="translated">GitHub Actions の添付ファイル数の制限値に達しました。それ以上の添付ファイルはステージングされません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
         <source>Could not write the GitHub Actions attachment manifest: {0}</source>
-        <target state="new">Could not write the GitHub Actions attachment manifest: {0}</target>
+        <target state="translated">GitHub Actions の添付ファイル マニフェストを記述できませんでした: {0}</target>
         <note>{0} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
         <source>Attachments (paths inside the workflow artifact):</source>
-        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <target state="translated">添付ファイル (ワークフロー 成果物内のパス):</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentReportingWarning">
         <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
-        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <target state="translated">一部のテスト添付ファイルをステージングまたはインデックス化できませんでした。テスト結果には影響ありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
-        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <target state="translated">コピー中に、添付ファイルがステージング サイズの制限を超えました。</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
         <source>{0} bytes</source>
-        <target state="new">{0} bytes</target>
+        <target state="translated">{0} バイト</target>
         <note>{0} is the attachment size in bytes.</note>
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
         <source>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</source>
-        <target state="new">Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</target>
+        <target state="translated">GitHub Actions の添付ファイル '{0}' ({1}) をステージングできませんでした。状態については、添付ファイル マニフェストを参照してください。</target>
         <note>{0} is the sanitized file name; {1} is the invariant status code.</note>
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
         <source>not staged; see manifest.</source>
-        <target state="new">not staged; see manifest.</target>
+        <target state="translated">ステージングされていません。マニフェストを参照してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">指定した絶対ディレクトリ内に、失敗した添付ファイルとマニフェストをステージングします。このディレクトリをアップロードすることと、結果の成果物をリンクすることは、ワークフローで行ないます。'--report-gh' が必要です。</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">GitHub Actions の添付ファイル ディレクトリは、空でなく有効な、絶対ディレクトリ パスである必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">

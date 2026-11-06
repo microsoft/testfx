@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="AttachmentCleanupWarning">
         <source>Could not remove incomplete GitHub Actions attachment '{0}': {1}</source>
-        <target state="new">Could not remove incomplete GitHub Actions attachment '{0}': {1}</target>
+        <target state="translated">Não foi possível remover o anexo de GitHub Actions incompleto '{0}': {1}</target>
         <note>{0} is the sanitized file name; {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
         <source>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</source>
-        <target state="new">Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</target>
+        <target state="translated">Não foi possível preparar GitHub Actions anexo '{0}' ({1}). Consulte o manifesto do anexo para obter seu status.</target>
         <note>{0} is the sanitized file name; {1} is the invariant status code.</note>
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">Preparar anexos de teste com falha e um manifesto no diretório absoluto especificado. O fluxo de trabalho é responsável por carregar esse diretório e vincular o artefato resultante. Requer '--report-gh'.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">O diretório de anexo do GitHub Actions deve ser um caminho de diretório absoluto válido e não vazio.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">

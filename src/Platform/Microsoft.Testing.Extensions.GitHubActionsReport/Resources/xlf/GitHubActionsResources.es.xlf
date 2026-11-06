@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="AttachmentCleanupWarning">
         <source>Could not remove incomplete GitHub Actions attachment '{0}': {1}</source>
-        <target state="new">Could not remove incomplete GitHub Actions attachment '{0}': {1}</target>
+        <target state="translated">No se pudieron quitar los datos adjuntos de Acciones de GitHub incompletos '{0}': {1}</target>
         <note>{0} is the sanitized file name; {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
         <source>{0} bytes</source>
-        <target state="new">{0} bytes</target>
+        <target state="translated">{0} bytes</target>
         <note>{0} is the attachment size in bytes.</note>
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">El directorio de datos adjuntos de Acciones de GitHub debe ser una ruta de acceso de directorio absoluta válida y no vacía.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
