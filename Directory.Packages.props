@@ -99,7 +99,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftTestPlatformFilterSourceVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="1.8.250906003" />
     <PackageVersion Include="OpenTelemetry" Version="1.19.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
     <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
