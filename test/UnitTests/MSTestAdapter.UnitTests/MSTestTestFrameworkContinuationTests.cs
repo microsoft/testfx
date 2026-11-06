@@ -84,51 +84,57 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
         await harness.CloseAsync();
     }
 
-    public async Task AttachmentStagingPreservesBytesAndCleansUpDurableCopies()
+    public async Task PublishedResultFilesSurviveFrameworkAndServiceDisposal()
     {
-        using var harness = new NativeHarness();
-        string source = Path.Combine(harness.Directory, "original.bin");
-        string missing = Path.Combine(harness.Directory, "missing.bin");
-        byte[] bytes = [0, 17, 128, 255, 42];
-        File.WriteAllBytes(source, bytes);
-        harness.SetRunSettings(new XDocument(
-            new XElement(
-                "RunSettings",
-                new XElement("MSTest", new XElement("DeploymentEnabled", false)),
-                new XElement("RunConfiguration", new XElement("DisableAppDomain", true)),
-                new XElement(
-                    "TestRunParameters",
-                    new XElement("Parameter", new XAttribute("name", "attachment"), new XAttribute("value", source)),
-                    new XElement("Parameter", new XAttribute("name", "missing"), new XAttribute("value", missing))))).ToString());
-        await harness.OpenAsync();
-
-        await harness.RunAsync(harness.Filter(nameof(NativeCoverageFixture.AttachesFiles)));
-
-        TestNodeUpdateMessage result = harness.Messages.OfType<TestNodeUpdateMessage>()
-            .Single(message => !message.TestNode.Properties.Any<InProgressTestNodeStateProperty>());
-        result.TestNode.Properties.Any<PassedTestNodeStateProperty>().Should().BeTrue();
-        FileArtifactProperty[] artifacts = result.TestNode.Properties.OfType<FileArtifactProperty>().ToArray();
-        artifacts.Should().HaveCount(2);
-        string staged = artifacts.Single(artifact => artifact.FileInfo.Name == "original.bin").FileInfo.FullName;
-        staged.Should().NotBe(source);
-        Path.GetFileName(staged).Should().Be("original.bin");
-        File.ReadAllBytes(staged).Should().Equal(bytes);
-        FileArtifactProperty missingArtifact = artifacts.Single(artifact => artifact.FileInfo.Name == "missing.bin");
-        missingArtifact.FileInfo.FullName.Should().Be(missing);
-        missingArtifact.FileInfo.Exists.Should().BeFalse();
-
-        await harness.CloseAsync();
-        harness.Framework.Dispose();
-        harness.Framework.Dispose();
-        File.Exists(staged).Should().BeFalse();
-        File.ReadAllBytes(source).Should().Equal(bytes);
-        foreach (IDisposable cleanup in harness.Services.Services.OfType<IDisposable>())
+        foreach (bool missingFirst in new[] { false, true })
         {
-            cleanup.Dispose();
-            cleanup.Dispose();
-        }
+            using var harness = new NativeHarness();
+            string source = Path.Combine(harness.Directory, "original.bin");
+            string missing = Path.Combine(harness.Directory, "missing.bin");
+            byte[] bytes = [0, 17, 128, 255, 42];
+            File.WriteAllBytes(source, bytes);
+            harness.SetRunSettings(new XDocument(
+                new XElement(
+                    "RunSettings",
+                    new XElement("MSTest", new XElement("DeploymentEnabled", false)),
+                    new XElement("RunConfiguration", new XElement("DisableAppDomain", true)),
+                    new XElement(
+                        "TestRunParameters",
+                        new XElement("Parameter", new XAttribute("name", "attachment"), new XAttribute("value", missingFirst ? missing : source)),
+                        new XElement("Parameter", new XAttribute("name", "missing"), new XAttribute("value", missingFirst ? source : missing))))).ToString());
+            await harness.OpenAsync();
 
-        Directory.GetDirectories(harness.Directory, ".mstest-*").Should().BeEmpty();
+            await harness.RunAsync(harness.Filter(nameof(NativeCoverageFixture.AttachesFiles)));
+
+            TestNodeUpdateMessage result = harness.Messages.OfType<TestNodeUpdateMessage>()
+                .Single(message => !message.TestNode.Properties.Any<InProgressTestNodeStateProperty>());
+            result.TestNode.Properties.Any<PassedTestNodeStateProperty>().Should().BeTrue();
+            FileArtifactProperty[] artifacts = result.TestNode.Properties.OfType<FileArtifactProperty>().ToArray();
+            artifacts.Should().HaveCount(2);
+            string staged = artifacts.Single(artifact => artifact.FileInfo.Name == "original.bin").FileInfo.FullName;
+            staged.Should().NotBe(source);
+            Path.GetFileName(staged).Should().Be("original.bin");
+            File.ReadAllBytes(staged).Should().Equal(bytes);
+            FileArtifactProperty missingArtifact = artifacts.Single(artifact => artifact.FileInfo.Name == "missing.bin");
+            missingArtifact.FileInfo.FullName.Should().Be(missing);
+            missingArtifact.FileInfo.Exists.Should().BeFalse();
+
+            await harness.CloseAsync();
+            harness.Framework.Dispose();
+            harness.Framework.Dispose();
+            File.Exists(staged).Should().BeTrue("published result files outlive framework disposal");
+            File.ReadAllBytes(source).Should().Equal(bytes);
+            foreach (IDisposable cleanup in harness.Services.Services.OfType<IDisposable>())
+            {
+                cleanup.Dispose();
+                cleanup.Dispose();
+            }
+
+            File.Exists(staged).Should().BeTrue("published result files outlive service disposal");
+            File.ReadAllBytes(staged).Should().Equal(bytes);
+            string resultDirectory = Directory.GetDirectories(harness.Directory, "MSTest-*").Single();
+            Path.GetFileName(resultDirectory).Should().MatchRegex(@"^MSTest-[0-9a-f]{20}$");
+        }
     }
 
     public async Task ClosingSessionWaitsForTheOutstandingRequest()
@@ -179,7 +185,7 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
         unnamed.Notifier.Verify(value => value.Complete(), Times.Once);
     }
 
-    public async Task RootCleanupRecoversFromTheHostSpecificOpenAttachmentContract()
+    public async Task DisposalPreservesOpenPublishedAttachmentsWithoutWarnings()
     {
         using var harness = new NativeHarness();
         string source = Path.Combine(harness.Directory, "locked-source.bin");
@@ -205,31 +211,84 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
         string staged = harness.Messages.OfType<TestNodeUpdateMessage>()
             .SelectMany(message => message.TestNode.Properties.OfType<FileArtifactProperty>())
             .Single(artifact => artifact.FileInfo.Name == "locked-source.bin").FileInfo.FullName;
+        await harness.CloseAsync();
 
         using (var held = new FileStream(staged, FileMode.Open, FileAccess.Read, FileShare.Read))
         {
             harness.Framework.Dispose();
+            File.Exists(staged).Should().BeTrue();
+            warnings.Should().BeEmpty();
+
+            foreach (IDisposable cleanup in harness.Services.Services.OfType<IDisposable>())
+            {
+                cleanup.Dispose();
+                cleanup.Dispose();
+            }
+
+            File.Exists(staged).Should().BeTrue();
+            warnings.Should().BeEmpty();
+        }
+
+        File.ReadAllBytes(staged).Should().Equal(17, 23, 42);
+        File.ReadAllBytes(source).Should().Equal(17, 23, 42);
+    }
+
+    public async Task FailedResultFileCopiesRemainEligibleForCleanup()
+    {
+        using var harness = new NativeHarness();
+        string missing = Path.Combine(harness.Directory, "missing.bin");
+        harness.SetRunSettings(new XDocument(
+            new XElement(
+                "RunSettings",
+                new XElement("MSTest", new XElement("DeploymentEnabled", false)),
+                new XElement("RunConfiguration", new XElement("DisableAppDomain", true)),
+                new XElement(
+                    "TestRunParameters",
+                    new XElement("Parameter", new XAttribute("name", "attachment"), new XAttribute("value", missing)),
+                    new XElement("Parameter", new XAttribute("name", "missing"), new XAttribute("value", missing))))).ToString());
+        var logger = Mock.Get(harness.Services.Services.OfType<ILoggerFactory>().Single().CreateLogger("mstest-trace"));
+        List<string> warnings = [];
+        logger.Setup(value => value.Log(
+            LogLevel.Warning, It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>()))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>(
+                (_, state, exception, formatter) => warnings.Add(formatter(state, exception)));
+        await harness.OpenAsync();
+        await harness.RunAsync(harness.Filter(nameof(NativeCoverageFixture.AttachesFiles)));
+        await harness.CloseAsync();
+        FileArtifactProperty[] artifacts = harness.Messages.OfType<TestNodeUpdateMessage>()
+            .SelectMany(message => message.TestNode.Properties.OfType<FileArtifactProperty>())
+            .ToArray();
+        artifacts.Should().HaveCount(2);
+        artifacts.Should().OnlyContain(artifact => artifact.FileInfo.FullName == missing && !artifact.FileInfo.Exists);
+        string resultDirectory = Directory.GetDirectories(harness.Directory, "MSTest-*").Single();
+        string heldPath = Path.Combine(resultDirectory, "cleanup-lock.bin");
+        File.WriteAllBytes(heldPath, [17, 23, 42]);
+
+        using (var held = new FileStream(heldPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            foreach (IDisposable cleanup in harness.Services.Services.OfType<IDisposable>())
+            {
+                cleanup.Dispose();
+                cleanup.Dispose();
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                File.Exists(staged).Should().BeTrue();
+                File.Exists(heldPath).Should().BeTrue();
                 warnings.Should().ContainSingle();
                 warnings[0].Should().StartWith("Failed to delete result-file staging directory '").And.Contain("IOException");
             }
             else
             {
-                File.Exists(staged).Should().BeFalse();
+                File.Exists(heldPath).Should().BeFalse();
                 warnings.Should().BeEmpty();
             }
         }
 
-        foreach (IDisposable cleanup in harness.Services.Services.OfType<IDisposable>())
-        {
-            cleanup.Dispose();
-            cleanup.Dispose();
-        }
-
-        File.Exists(staged).Should().BeFalse();
-        File.ReadAllBytes(source).Should().Equal(17, 23, 42);
+        harness.Framework.Dispose();
+        harness.Framework.Dispose();
+        Directory.GetDirectories(harness.Directory, "MSTest-*").Should().BeEmpty();
+        File.Exists(missing).Should().BeFalse();
     }
 
     internal static NativeServiceProvider CreateServices(string resultsDirectory, ICommandLineOptions options, IFileSystem fileSystem)

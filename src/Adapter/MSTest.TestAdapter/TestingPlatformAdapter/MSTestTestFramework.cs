@@ -46,6 +46,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private int _nextResultFileStagingDirectory;
     private int _resultFilesStagingDirectoryCreated;
+    private int _hasDurableResultFiles;
     private bool? _isTrxEnabled;
     private bool _isDisposed;
     private SessionUid? _sessionUid;
@@ -60,9 +61,10 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _gracefulStopCapability = (MSTestGracefulStopTestExecutionCapability)capabilities.GetCapability<IGracefulStopTestExecutionCapability>()!;
+        // Retained roots need more entropy than a temporary cache without excessive legacy path growth.
         _resultFilesStagingDirectory = Path.Combine(
-            serviceProvider.GetConfiguration().GetTestResultDirectory(),
-            $".mstest-{Guid.NewGuid():N}"[..16]);
+            Path.GetFullPath(serviceProvider.GetConfiguration().GetTestResultDirectory()),
+            $"MSTest-{Guid.NewGuid().ToString("N")[..20]}");
         ((Microsoft.Testing.Platform.Services.ServiceProvider)serviceProvider)
             .AddService(new ResultFilesStagingDirectoryCleanup(CleanupResultFilesStagingDirectory));
         PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
@@ -309,6 +311,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                     GetPathForFileSystemAccess(stagedPath));
 
                 durableResultFiles.Add(stagedPath);
+                Volatile.Write(ref _hasDurableResultFiles, 1);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -378,7 +381,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
 
     private void CleanupResultFilesStagingDirectory()
     {
-        if (Volatile.Read(ref _resultFilesStagingDirectoryCreated) == 0)
+        // Published copies must outlive the host; only unsuccessful staging attempts can be removed.
+        if (Volatile.Read(ref _resultFilesStagingDirectoryCreated) == 0
+            || Volatile.Read(ref _hasDurableResultFiles) != 0)
         {
             return;
         }
