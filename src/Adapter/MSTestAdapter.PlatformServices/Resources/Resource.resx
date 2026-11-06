@@ -668,4 +668,8 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Only one attribute of type '{0}' is allowed, but multiple were found.</value>
     <comment>{0} is the attribute type name.</comment>
   </data>
+  <data name="UTA_TestDurationExceeded" xml:space="preserve">
+    <value>Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.</value>
+    <comment>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</comment>
+  </data>
 </root>

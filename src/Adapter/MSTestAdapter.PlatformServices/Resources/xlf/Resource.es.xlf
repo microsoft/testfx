@@ -620,6 +620,11 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Tipo {0}.TestContext no es correcto.</target>
         <note>{0} is the test class name. {Locked="TestContext"}</note>
       </trans-unit>
+      <trans-unit id="UTA_TestDurationExceeded">
+        <source>Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.</source>
+        <target state="new">Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.</target>
+        <note>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</note>
+      </trans-unit>
       <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
         <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
         <target state="translated">UTA077: No se pudo crear una instancia del tipo "{0}" al que hace referencia [TestFilterProvider]. El tipo debe declarar un constructor público sin parámetros. {1}</target>

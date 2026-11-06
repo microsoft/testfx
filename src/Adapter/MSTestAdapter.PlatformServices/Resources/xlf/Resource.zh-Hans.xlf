@@ -620,6 +620,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">{0}.TestContext 的类型不正确。</target>
         <note>{0} is the test class name. {Locked="TestContext"}</note>
       </trans-unit>
+      <trans-unit id="UTA_TestDurationExceeded">
+        <source>Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.</source>
+        <target state="new">Test '{0}' took {1:F3} ms, exceeding its expected maximum duration of {2} ms.</target>
+        <note>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</note>
+      </trans-unit>
       <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
         <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
         <target state="translated">UTA077: 未能实例化 [TestFilterProvider] 引用的类型“{0}”。该类型必须声明一个公共的无参数构造函数。{1}</target>

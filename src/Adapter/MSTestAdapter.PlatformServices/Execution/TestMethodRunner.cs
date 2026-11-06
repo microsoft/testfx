@@ -168,6 +168,44 @@ internal sealed partial class TestMethodRunner
         return result;
     }
 
+    internal void ReportExpectedDurationWarnings(TestResult[] results)
+    {
+        ExpectedDurationAttribute? expectedDuration = ReflectHelper.Instance.GetFirstAttributeOrDefault<ExpectedDurationAttribute>(_testMethodInfo.MethodInfo);
+        if (expectedDuration is null)
+        {
+            return;
+        }
+
+        var maximumDuration = TimeSpan.FromMilliseconds(expectedDuration.Milliseconds);
+        foreach (TestResult result in results)
+        {
+            if (result.IsSupersededRetryAttempt
+                || result.Outcome is not (UnitTestOutcome.Passed or UnitTestOutcome.Failed)
+                || result.Duration <= maximumDuration)
+            {
+                continue;
+            }
+
+            string testName = $"{_test.FullClassName}.{_test.Name}";
+            if (!StringEx.IsNullOrWhiteSpace(result.DisplayName)
+                && !string.Equals(result.DisplayName, _test.Name, StringComparison.Ordinal))
+            {
+                testName += $" ({result.DisplayName})";
+            }
+
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestDurationExceeded,
+                testName,
+                result.Duration.TotalMilliseconds,
+                expectedDuration.Milliseconds);
+            result.TestContextMessages = string.IsNullOrEmpty(result.TestContextMessages)
+                ? message + Environment.NewLine
+                : result.TestContextMessages + Environment.NewLine + message + Environment.NewLine;
+            _testContext.DisplayMessage(MessageLevel.Warning, message);
+        }
+    }
+
     /// <summary>
     /// Marks the span for a test whose failure was returned rather than thrown, preferring the recorded exception
     /// so the trace carries the assertion message.

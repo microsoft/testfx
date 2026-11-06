@@ -28,6 +28,29 @@ Supported platforms:
 
 ## Documentation
 
+### Expected duration warnings
+
+Use `[ExpectedDuration(2000)]` on a test method to warn when a completed result
+takes more than 2,000 milliseconds. The test is not interrupted and its original
+outcome, result counts, and exit code are unchanged. The warning is also retained
+in that result's test-context output for reports. Use matching framework and
+adapter versions that support this attribute.
+
+The budget applies independently to each data row and the final retry attempt.
+Superseded attempts and retry delays are not accumulated. Only passed and failed
+results are evaluated; skipped, inconclusive, timed-out, aborted, and
+infrastructure-error results do not receive an additional budget warning.
+Equality is within budget.
+
+The comparison uses the reported test duration. Ordinary execution includes
+per-test initialization, construction, the test body, cleanup, and disposal,
+but excludes assembly/class initialization and cleanup. Custom test-method
+executors control their reported result durations.
+
+Keep `[Timeout]` for execution-failure/cancellation limits. Expected durations are
+generous diagnostic budgets that should allow for machine load, debugging, and
+cold starts; they are not controlled performance benchmarks.
+
 ### Deployment items
 
 Starting with MSTest 5, `DeploymentItemAttribute` is not included in the .NET
