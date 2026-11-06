@@ -101,7 +101,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                 GitHubActionsFailureDetails.AppendFailuresSection(
                     builder,
                     "###",
-                    [.. failures.Select(static failure => new GitHubActionsFailureEntry(
+                    [
+                        .. failures.Select(static failure => new GitHubActionsFailureEntry(
                         TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName),
                         failure.Duration,
                         failure.Failure?.Message,
@@ -109,7 +110,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                         failure.Failure?.StackTrace,
                         failure.Failure?.FilePath,
                         failure.Failure?.LineNumber ?? 0,
-                        failure.Failure?.Attachments))],
+                        failure.Failure?.Attachments)),
+                    ],
                     failed,
                     includeFailureDetails,
                     budget);
@@ -228,7 +230,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                 omittedDetails = GitHubActionsFailureDetails.AppendFailuresSection(
                     builder,
                     heading + "#",
-                    [.. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
+                    [
+                        .. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
                         TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName),
                         TimeSpan.FromTicks(failure.DurationTicks),
                         failure.ErrorMessage,
@@ -236,7 +239,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                         failure.StackTrace,
                         failure.FilePath,
                         failure.LineNumber ?? 0,
-                        failure.Attachments))],
+                        failure.Attachments)),
+                    ],
                     module.FailedTests,
                     includeFailureDetails,
                     budget);

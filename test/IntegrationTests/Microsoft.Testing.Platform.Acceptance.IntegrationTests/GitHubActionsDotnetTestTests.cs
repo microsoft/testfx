@@ -146,12 +146,16 @@ public sealed class GitHubActionsDotnetTestTests : AcceptanceTestBase<NopAssetFi
     }
 
     private static string[] ExpectedCommandLines(string mode, string assemblyName = AssetName)
-        => [.. GitHubActionsReportTests.GetExpectedCommandPayloads(mode, assemblyName)
-            .SelectMany(payload => payload.ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries))];
+        => [
+            .. GitHubActionsReportTests.GetExpectedCommandPayloads(mode, assemblyName)
+            .SelectMany(payload => payload.ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries)),
+        ];
 
     private static string[] GetWorkflowLines(string output)
-        => [.. output.ReplaceLineEndings("\n").Split('\n')
-            .Where(line => line.StartsWith("::", StringComparison.Ordinal))];
+        => [
+            .. output.ReplaceLineEndings("\n").Split('\n')
+            .Where(line => line.StartsWith("::", StringComparison.Ordinal)),
+        ];
 
     private static Task<TestAsset> GenerateConsumerAsync(bool multipleModules)
     {

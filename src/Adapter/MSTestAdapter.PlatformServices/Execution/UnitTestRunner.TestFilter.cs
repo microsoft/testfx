@@ -60,7 +60,7 @@ internal sealed partial class UnitTestRunner
                 {
                     Outcome = UnitTestOutcome.Error,
                     TestFailureException = new TestFailedException(UnitTestOutcome.Error, message, ex.TryGetStackTraceInformation()),
-                }
+                },
             ];
         }
 

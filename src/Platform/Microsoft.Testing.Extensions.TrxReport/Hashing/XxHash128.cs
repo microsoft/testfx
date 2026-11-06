@@ -8,6 +8,7 @@ using System.Numerics;
 
 using static System.IO.Hashing.XxHashShared;
 
+#pragma warning disable SA1121 // Keep IntPtr for older target frameworks sharing this file.
 #pragma warning disable RS0030 // Do not use banned APIs - Debug is okay here. RoslynDebug isn't yet available in PlatformServices which links this file.
 
 namespace TestFx.Hashing;

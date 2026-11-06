@@ -239,7 +239,7 @@ internal sealed class GitHubActionsAttachmentCollector(
         for (int i = 0; i < characters.Length; i++)
         {
             char character = characters[i];
-            if (character is not (>= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '.' or '-' or '_'))
+            if (character is not ((>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '.' or '-' or '_'))
             {
                 characters[i] = '_';
             }

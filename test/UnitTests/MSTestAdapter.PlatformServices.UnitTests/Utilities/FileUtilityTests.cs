@@ -93,7 +93,7 @@ public class FileUtilityTests : TestContainer
             "MainClock\\Folder1\\tock.tick.txt",
             "MainClock\\Folder2\\newtick.log",
             "MainClock\\Folder2\\newtock.log",
-            "MainClock\\Folder2\\backup\\newtock.tick.txt"
+            "MainClock\\Folder2\\backup\\newtock.tick.txt",
         ];
 
         SetupMockFileAPIs(allFiles);
@@ -113,7 +113,7 @@ public class FileUtilityTests : TestContainer
             "MainClock\\Folder1\\tock.tick.txt",
             "MainClock\\Folder2\\newtick.log",
             "MainClock\\Folder2\\newtock.log",
-            "MainClock\\Folder2\\backup\\"
+            "MainClock\\Folder2\\backup\\",
         ];
 
         SetupMockFileAPIs(allFiles);
@@ -137,7 +137,7 @@ public class FileUtilityTests : TestContainer
             "c:\\MainClock\\tock.tick.txt",
             "c:\\MainClock\\Folder1\\tick.txt",
             "c:\\MainClock\\Folder1\\tock.tick.txt",
-            "c:\\MainClock\\Folder2\\backup\\Data.csv"
+            "c:\\MainClock\\Folder2\\backup\\Data.csv",
         ];
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
@@ -177,7 +177,7 @@ public class FileUtilityTests : TestContainer
             "c:\\MainClock\\tock.tick.txt",
             "c:\\MainClock\\Folder1\\tick.txt",
             "c:\\MainClock\\Folder1\\tock.tick.txt",
-            "c:\\MainClock\\Folder2\\backup\\Data.csv"
+            "c:\\MainClock\\Folder2\\backup\\Data.csv",
         ];
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
@@ -210,7 +210,8 @@ public class FileUtilityTests : TestContainer
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
 #pragma warning disable CA1865 // Use char overload
             [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))]);
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => [
+            .. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
 #pragma warning disable IDE0057 // Use range operator
@@ -220,7 +221,8 @@ public class FileUtilityTests : TestContainer
                         return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
 #pragma warning restore IDE0057 // Use range operator
                     })
-                    .Distinct()]);
+                    .Distinct(),
+        ]);
     }
 
     #endregion

@@ -34,7 +34,7 @@ internal sealed class RetryCommandLineOptionsProvider : CommandLineOptionsProvid
                 new(RetryFailedTestsDelayOptionName, ExtensionResources.RetryFailedTestsDelayOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
 
                 // Hidden internal args
-                new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
+                new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true),
             ])
     {
     }

@@ -58,13 +58,15 @@ internal sealed class ArtifactPostProcessingManifest(
             throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInputsMustBeArray);
         }
 
-        int[] inputIndices = [.. values.Keys
+        int[] inputIndices = [
+            .. values.Keys
             .Where(key => key.StartsWith("inputs:", StringComparison.Ordinal))
             .Select(key => key.Split(':'))
             .Where(parts => parts.Length >= 2 && int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out _))
             .Select(parts => int.Parse(parts[1], CultureInfo.InvariantCulture))
             .Distinct()
-            .OrderBy(index => index)];
+            .OrderBy(index => index),
+        ];
 
         List<InputArtifact> inputs = [];
         foreach (int index in inputIndices)

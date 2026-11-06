@@ -56,7 +56,7 @@ internal sealed class AzureDevOpsReporter :
 
     public Type[] DataTypesConsumed { get; } =
     [
-        typeof(TestNodeUpdateMessage)
+        typeof(TestNodeUpdateMessage),
     ];
 
     /// <inheritdoc />

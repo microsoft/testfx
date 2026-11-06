@@ -322,7 +322,7 @@ internal sealed partial class UnitTestRunner
                 {
                     Outcome = UnitTestOutcome.Error,
                     IgnoreReason = ex.Message,
-                }
+                },
             ];
         }
         finally

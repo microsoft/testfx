@@ -26,7 +26,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         ("AreEqual", 2),
         ("AreNotEqual", 2),
         ("AreSame", 2),
-        ("AreNotSame", 2)
+        ("AreNotSame", 2),
     ]);
 
     private static readonly ImmutableArray<(string MethodName, int ArgumentCountToCheck)> CollectionAssertSupportedMethodNames = ImmutableArray.Create([
@@ -43,7 +43,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         ("AllItemsAreUnique", 1),
         ("IsSubsetOf", 2),
         ("IsNotSubsetOf", 2),
-        ("AllItemsAreInstancesOfType", 2)
+        ("AllItemsAreInstancesOfType", 2),
     ]);
 
     private static readonly ImmutableArray<(string MethodName, int ArgumentCountToCheck)> StringAssertSupportedMethodNames = ImmutableArray.Create([
@@ -51,7 +51,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         ("StartsWith", 2),
         ("EndsWith", 2),
         ("Matches", 2),
-        ("DoesNotMatch", 2)
+        ("DoesNotMatch", 2),
     ]);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));

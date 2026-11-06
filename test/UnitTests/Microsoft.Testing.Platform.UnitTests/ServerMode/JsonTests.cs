@@ -119,7 +119,7 @@ public sealed class JsonTests
                 n =>
                 [
                     ("name", n.Name),
-                    ("children", n.Children)
+                    ("children", n.Children),
                 ]),
         };
 

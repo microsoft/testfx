@@ -109,10 +109,12 @@ public sealed class ResultFileTests : ServerModeTestsBase<ResultFileTests.TestAs
             result.AssertExitCodeIs(ExitCode.Success);
             result.AssertOutputContains("total: 2");
             result.AssertOutputContains("succeeded: 2");
-            (string TestName, string Path)[] attachments = [.. Regex.Matches(
+            (string TestName, string Path)[] attachments = [
+                .. Regex.Matches(
                     result.StandardOutput,
                     @"For test '(?<test>[^']+)': (?<path>[^\r\n]+)")
-                .Select(match => (match.Groups["test"].Value, Path.GetFullPath(match.Groups["path"].Value.Trim(), AssetFixture.TargetAssetPath)))];
+                .Select(match => (match.Groups["test"].Value, Path.GetFullPath(match.Groups["path"].Value.Trim(), AssetFixture.TargetAssetPath))),
+            ];
 
             AssertPublishedAttachments(attachments, resultsDirectory, longResultsDirectory, fileName);
             AssertOriginalAttachments(sourceDirectory, fileName);
@@ -163,10 +165,12 @@ public sealed class ResultFileTests : ServerModeTestsBase<ResultFileTests.TestAs
                 .ToArray();
             Assert.HasCount(ExpectedAttachments.Count, results);
             Assert.HasCount(ExpectedAttachments.Count, results.Select(node => node.Uid).Distinct(StringComparer.Ordinal));
-            (string TestName, string Path)[] attachments = [.. results.SelectMany(node => node.Properties
+            (string TestName, string Path)[] attachments = [
+                .. results.SelectMany(node => node.Properties
                 .Where(property => property.Key.StartsWith("attachments.", StringComparison.Ordinal)
                     && property.Key.EndsWith(".uri", StringComparison.Ordinal))
-                .Select(property => (node.DisplayName, property.Value.ToString())))];
+                .Select(property => (node.DisplayName, property.Value.ToString()))),
+            ];
 
             AssertPublishedAttachments(attachments, resultsDirectory);
             AssertOriginalAttachments(sourceDirectory);

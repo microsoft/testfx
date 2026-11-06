@@ -67,7 +67,7 @@ public sealed class AvoidOutParameterOnAssertIsInstanceOfTypeFixer : CodeFixProv
         {
             Name: GenericNameSyntax { Identifier.ValueText: "IsInstanceOfType" },
             Expression: IdentifierNameSyntax { Identifier.ValueText: "Assert" } or
-                        MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Assert" }
+                        MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Assert" },
         };
 
     private static (string? VariableName, TypeSyntax? TypeSyntax) ExtractVariableNameAndType(ArgumentSyntax outArgument)

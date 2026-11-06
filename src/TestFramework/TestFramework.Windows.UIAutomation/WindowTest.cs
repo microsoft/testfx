@@ -75,8 +75,8 @@ public abstract class WindowTest : ApplicationTest
         try
         {
             applicationProcess.Refresh();
-            IntPtr mainWindowHandle = applicationProcess.MainWindowHandle;
-            return mainWindowHandle == IntPtr.Zero
+            nint mainWindowHandle = applicationProcess.MainWindowHandle;
+            return mainWindowHandle == nint.Zero
                 ? null
                 : AutomationElement.FromHandle(mainWindowHandle);
         }

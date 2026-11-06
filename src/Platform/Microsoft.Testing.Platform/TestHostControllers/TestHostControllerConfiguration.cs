@@ -6,7 +6,8 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal sealed class TestHostControllerConfiguration(ITestHostEnvironmentVariableProvider[] environmentVariableProviders,
+internal sealed class TestHostControllerConfiguration(
+    ITestHostEnvironmentVariableProvider[] environmentVariableProviders,
     ITestHostProcessLifetimeHandler[] lifetimeHandlers,
     IDataConsumer[] dataConsumer,
     ITestHostLauncher? testHostLauncher,

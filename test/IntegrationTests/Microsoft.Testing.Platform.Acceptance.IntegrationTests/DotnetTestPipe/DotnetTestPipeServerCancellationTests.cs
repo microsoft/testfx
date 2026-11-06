@@ -51,7 +51,7 @@ public sealed class DotnetTestPipeServerCancellationTests : AcceptanceTestBase<D
             .. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestSessionEvent)
                 .Select(m => DotnetTestPipeProtocol.DecodeTestSessionEventBody(m.Body).SessionType)
                 .Where(t => t.HasValue)
-                .Select(t => t!.Value)
+                .Select(t => t!.Value),
         ];
 
         Assert.Contains(

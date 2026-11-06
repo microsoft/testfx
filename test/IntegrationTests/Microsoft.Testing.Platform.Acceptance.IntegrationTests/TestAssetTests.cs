@@ -19,8 +19,10 @@ public sealed class TestAssetTests
             asset
             """);
 
-        string[] preparedRoots = [.. Directory.EnumerateDirectories(TempDirectory.TestSuiteDirectory)
-            .Where(root => Directory.Exists(Path.Combine(root, assetName)))];
+        string[] preparedRoots = [
+            .. Directory.EnumerateDirectories(TempDirectory.TestSuiteDirectory)
+            .Where(root => Directory.Exists(Path.Combine(root, assetName))),
+        ];
 
         Assert.HasCount(1, preparedRoots);
         Assert.AreEqual(Path.GetDirectoryName(testAsset.TargetAssetPath), preparedRoots[0]);

@@ -102,7 +102,8 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
             XElement unitTestResult = trxDocument.Descendants(ns + "UnitTestResult").Single();
             string relativeResultsDirectory = unitTestResult.Attribute("relativeResultsDirectory")!.Value;
             string runDeploymentRoot = trxDocument.Descendants(ns + "Deployment").Single().Attribute("runDeploymentRoot")!.Value;
-            string[] copiedResultFiles = [.. unitTestResult
+            string[] copiedResultFiles = [
+                .. unitTestResult
                 .Descendants(ns + "ResultFile")
                 .Select(resultFile => resultFile.Attribute("path")!.Value)
                 .Select(path => Path.Combine(
@@ -110,7 +111,8 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
                     runDeploymentRoot,
                     "In",
                     relativeResultsDirectory,
-                    path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar)))];
+                    path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar))),
+            ];
 
             Assert.HasCount(2, copiedResultFiles);
             Assert.AreSequenceEqual(["first attachment", "second attachment"], copiedResultFiles.Select(File.ReadAllText).Order(StringComparer.Ordinal).ToArray());

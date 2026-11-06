@@ -88,8 +88,10 @@ internal sealed class MicrosoftExtensionsTestClassInstanceFactory(IServiceScopeF
         }
 
         ConstructorInfo[] preferredConstructors =
-            [.. constructors.Where(static constructor =>
-                constructor.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), inherit: false))];
+            [
+                .. constructors.Where(static constructor =>
+                constructor.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), inherit: false)),
+            ];
         if (preferredConstructors.Length > 1)
         {
             throw new InvalidOperationException(

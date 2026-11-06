@@ -1168,12 +1168,14 @@ public sealed class MtpServerClientTests
     {
         using FakeMtpServer server = new()
         {
-            RunResponse = new RunResponseArgs([new Artifact(
+            RunResponse = new RunResponseArgs([
+                new Artifact(
                 Uri: "file:///c:/artifacts/report.trx",
                 Producer: "TRX",
                 Type: "trx",
                 DisplayName: "Test Report",
-                Description: "The run's TRX report.")]),
+                Description: "The run's TRX report."),
+            ]),
         };
         using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
 

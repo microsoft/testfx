@@ -52,9 +52,11 @@ internal sealed partial class ServerTestHost
         private static TestNodeUpdateMessage[] FilterStateChanges(
             List<TestNodeUpdateMessage> stateChanges,
             HashSet<TestNodeUid> terminalTestNodeUids)
-            => [.. stateChanges.Where(stateChange =>
+            => [
+                .. stateChanges.Where(stateChange =>
                 stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not InProgressTestNodeStateProperty
-                || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid))];
+                || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid)),
+            ];
 
 #pragma warning disable CS0618, MTP0001
         private static bool IsTerminalState(TestNodeStateProperty? state)

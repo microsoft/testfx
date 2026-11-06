@@ -463,7 +463,7 @@ public class DeploymentUtilityTests : TestContainer
         [
             new KeyValuePair<string, string>(
                 deploymentItemPath,
-                defaultDeploymentItemOutputDirectoryOut)
+                defaultDeploymentItemOutputDirectoryOut),
         ];
         testCase.DeploymentItems = kvpArray;
         string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;

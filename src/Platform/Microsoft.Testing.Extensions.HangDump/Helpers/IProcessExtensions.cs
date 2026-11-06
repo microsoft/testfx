@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable SA1121 // Keep IntPtr for older target frameworks sharing this file.
+
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;

@@ -119,7 +119,7 @@ public class DebuggerUtility
             string dteSuffix = ":" + vs.Id;
 
             var moniker = new IMoniker[1];
-            while (enumMoniker.Next(1, moniker, IntPtr.Zero) == 0 && moniker[0] is not null)
+            while (enumMoniker.Next(1, moniker, nint.Zero) == 0 && moniker[0] is not null)
             {
                 moniker[0].GetDisplayName(bindCtx, null, out string dn);
 
@@ -281,7 +281,7 @@ public class DebuggerUtility
         {
             try
             {
-                IntPtr handle = process.Handle;
+                nint handle = process.Handle;
                 int res = NtQueryInformationProcess(handle, 0, out PROCESS_BASIC_INFORMATION pbi, Marshal.SizeOf<PROCESS_BASIC_INFORMATION>(), out int size);
 
                 int p = res != 0 ? -1 : pbi.InheritedFromUniqueProcessId.ToInt32();
@@ -306,17 +306,17 @@ public class DebuggerUtility
     [StructLayout(LayoutKind.Sequential)]
     private struct PROCESS_BASIC_INFORMATION
     {
-        public readonly IntPtr ExitStatus;
-        public readonly IntPtr PebBaseAddress;
-        public readonly IntPtr AffinityMask;
-        public readonly IntPtr BasePriority;
-        public readonly IntPtr UniqueProcessId;
-        public IntPtr InheritedFromUniqueProcessId;
+        public readonly nint ExitStatus;
+        public readonly nint PebBaseAddress;
+        public readonly nint AffinityMask;
+        public readonly nint BasePriority;
+        public readonly nint UniqueProcessId;
+        public nint InheritedFromUniqueProcessId;
     }
 
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern int NtQueryInformationProcess(
-        IntPtr processHandle,
+        nint processHandle,
         int processInformationClass,
         out PROCESS_BASIC_INFORMATION processInformation,
         int processInformationLength,

@@ -220,20 +220,24 @@ public sealed class CiReporterRegistrationBehaviorTests
         public Mock<IArtifactPostProcessingManager> Artifacts { get; } = new();
 
         public IDataConsumer[] Consumers(IServiceProvider services)
-            => [.. Host.Invocations.Where(invocation => invocation.Method.Name == nameof(ITestHostManager.AddDataConsumer)).Select(invocation => invocation.Arguments[0] switch
+            => [
+                .. Host.Invocations.Where(invocation => invocation.Method.Name == nameof(ITestHostManager.AddDataConsumer)).Select(invocation => invocation.Arguments[0] switch
             {
                 ICompositeExtensionFactory factory => (IDataConsumer)factory.GetInstance(services),
                 Func<IServiceProvider, IDataConsumer> factory => factory(services),
                 _ => throw new AssertFailedException("Unexpected consumer registration."),
-            })];
+            }),
+            ];
 
         public ITestSessionLifetimeHandler[] Sessions(IServiceProvider services)
-            => [.. Host.Invocations.Where(invocation => invocation.Method.Name == nameof(ITestHostManager.AddTestSessionLifetimeHandler)).Select(invocation => invocation.Arguments[0] switch
+            => [
+                .. Host.Invocations.Where(invocation => invocation.Method.Name == nameof(ITestHostManager.AddTestSessionLifetimeHandler)).Select(invocation => invocation.Arguments[0] switch
             {
                 ICompositeExtensionFactory factory => (ITestSessionLifetimeHandler)factory.GetInstance(services),
                 Func<IServiceProvider, ITestSessionLifetimeHandler> factory => factory(services),
                 _ => throw new AssertFailedException("Unexpected session registration."),
-            })];
+            }),
+            ];
 
         public ICommandLineOptionsProvider CommandLineProvider()
             => Assert.IsInstanceOfType<Func<ICommandLineOptionsProvider>>(Assert.ContainsSingle(CommandLine.Invocations).Arguments[0])();

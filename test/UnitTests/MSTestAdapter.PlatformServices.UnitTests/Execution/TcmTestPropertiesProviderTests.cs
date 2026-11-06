@@ -58,7 +58,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             0,
             54,
             "sample configuration name",
-            345
+            345,
         ];
         SetTestCaseProperties(testCase, propertiesValue);
 
@@ -85,7 +85,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1401,
             54,
             "sample configuration name",
-            345
+            345,
         ];
         SetTestCaseProperties(testCase, propertiesValue);
 
@@ -114,7 +114,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1401,
             54,
             "sample configuration name",
-            345
+            345,
         ];
         SetTestCaseProperties(testCase1, propertiesValue1);
         IReadOnlyDictionary<string, object?>? tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
@@ -138,7 +138,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1403,
             55,
             "sample configuration name 2",
-            346
+            346,
         ];
         SetTestCaseProperties(testCase2, propertiesValue2);
         IReadOnlyDictionary<string, object?>? tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
@@ -165,7 +165,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1401,
             54,
             "sample configuration name",
-            345
+            345,
         ];
         SetTestCaseProperties(testCase1, propertiesValue1);
         IReadOnlyDictionary<string, object?>? tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
@@ -189,7 +189,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1403,
             55,
             "sample configuration name 2",
-            346
+            346,
         ];
         SetTestCaseProperties(testCase2, propertiesValue2);
         IReadOnlyDictionary<string, object?>? tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
@@ -213,7 +213,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1404,
             55,
             "sample configuration name 3",
-            347
+            347,
         ];
         SetTestCaseProperties(testCase3, propertiesValue3);
         IReadOnlyDictionary<string, object?>? tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);

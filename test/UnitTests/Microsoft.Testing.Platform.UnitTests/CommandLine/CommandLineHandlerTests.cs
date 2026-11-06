@@ -23,7 +23,7 @@ public sealed class CommandLineHandlerTests
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
     [
-        new PlatformCommandLineProvider()
+        new PlatformCommandLineProvider(),
     ];
 
     private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders = [];
@@ -69,9 +69,11 @@ public sealed class CommandLineHandlerTests
         Assert.IsGreaterThanOrEqualTo(0, heading);
         Assert.IsGreaterThan(heading, registered);
         Assert.AreSequenceEqual(
-            ["Built-in command line providers:", "  system-provider", "    Name: system-provider display",
+            [
+                "Built-in command line providers:", "  system-provider", "    Name: system-provider display",
                 "    Version: 1.2.3", "    Description: system-provider description", "    Options:",
-                "      --system-option", "        Arity: 0", "        Hidden: False", "        Description: system description"],
+                "      --system-option", "        Arity: 0", "        Hidden: False", "        Description: system description",
+            ],
             output.Skip(heading).Take(registered - heading).Where(text => text.Length > 0));
         Assert.DoesNotContain("  There are no built-in command line providers.", output);
         Assert.Contains("  There are no registered command line providers.", output);
@@ -82,9 +84,11 @@ public sealed class CommandLineHandlerTests
     {
         ICommandLineOptionsProvider first = CreatePresentationProvider("provider", [
             new("z-hidden", "hidden description", ArgumentArity.ExactlyOne, true),
-            new("A-first", "first description", ArgumentArity.ZeroOrMore, false)]);
+            new("A-first", "first description", ArgumentArity.ZeroOrMore, false),
+        ]);
         ICommandLineOptionsProvider second = CreatePresentationProvider("provider", [
-            new("middle", "middle description", new ArgumentArity(1, 2), false)]);
+            new("middle", "middle description", new ArgumentArity(1, 2), false),
+        ]);
         List<string> output = [];
         CommandLineHandler handler = CreatePresentationHandler([], [first, second]);
 
@@ -145,11 +149,13 @@ public sealed class CommandLineHandlerTests
         ICommandLineOptionsProvider system = CreatePresentationProvider("system", [
             new("z-system", "z system", ArgumentArity.Zero, false, isBuiltIn: true),
             new("A-system", "a system", ArgumentArity.Zero, false, isBuiltIn: true),
-            new("hidden-system", "hidden", ArgumentArity.Zero, true, isBuiltIn: true)]);
+            new("hidden-system", "hidden", ArgumentArity.Zero, true, isBuiltIn: true),
+        ]);
         ICommandLineOptionsProvider extension = CreatePresentationProvider("extension", [
             new("z-extension", "z extension", ArgumentArity.Zero, false),
             new("a-extension", "a extension", ArgumentArity.Zero, false),
-            new("hidden-extension", "hidden", ArgumentArity.Zero, true)]);
+            new("hidden-extension", "hidden", ArgumentArity.Zero, true),
+        ]);
         var toolProvider = new Mock<IToolCommandLineOptionsProvider>();
         toolProvider.Setup(value => value.GetCommandLineOptions()).Returns([new("tool-only", "tool", ArgumentArity.Zero, false)]);
         var handler = new CommandLineHandler(new CommandLineParseResult(null, [], []), [extension, toolProvider.Object], [system], module.Object, Mock.Of<IRuntimeFeature>());
@@ -479,7 +485,7 @@ public sealed class CommandLineHandlerTests
         ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
         [
             new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
-            new ExtensionCommandLineProviderMockInvalidConfiguration("userOption")
+            new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
         ];
 
         // Act
@@ -654,7 +660,7 @@ public sealed class CommandLineHandlerTests
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         ICommandLineOptionsProvider[] extensionCommandLineProvider =
         [
-            new ExtensionCommandLineProviderMockReservedOptions()
+            new ExtensionCommandLineProviderMockReservedOptions(),
         ];
 
         // Act
@@ -674,7 +680,7 @@ public sealed class CommandLineHandlerTests
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         ICommandLineOptionsProvider[] extensionCommandLineProvider =
         [
-            new ExtensionCommandLineProviderMockInvalidConfiguration("--internal-customextension")
+            new ExtensionCommandLineProviderMockInvalidConfiguration("--internal-customextension"),
         ];
 
         // Act
@@ -695,7 +701,7 @@ public sealed class CommandLineHandlerTests
 
         ICommandLineOptionsProvider[] extensionCommandLineProvider =
         [
-            new ExtensionCommandLineProviderMockUnknownOption()
+            new ExtensionCommandLineProviderMockUnknownOption(),
         ];
 
         // Act
@@ -1074,7 +1080,7 @@ public sealed class CommandLineHandlerTests
 
         ICommandLineOptionsProvider[] extensionCommandLineProvider =
         [
-            new ExtensionCommandLineProviderMockUnknownOption()
+            new ExtensionCommandLineProviderMockUnknownOption(),
         ];
 
         // Act
@@ -1096,7 +1102,7 @@ public sealed class CommandLineHandlerTests
         ICommandLineOptionsProvider[] extensionCommandLineProvider =
         [
             new ExtensionCommandLineProviderMockReservedOptions(),
-            new ExtensionCommandLineProviderMockWithNamedOption("help", "Provider2")
+            new ExtensionCommandLineProviderMockWithNamedOption("help", "Provider2"),
         ];
 
         // Act
@@ -1118,7 +1124,7 @@ public sealed class CommandLineHandlerTests
         [
             new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderOne"),
             new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo"),
-            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderThree")
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderThree"),
         ];
 
         // Act
@@ -1139,7 +1145,7 @@ public sealed class CommandLineHandlerTests
         ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
         [
             new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderOne"),
-            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo")
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo"),
         ];
 
         // Act
@@ -1161,7 +1167,7 @@ public sealed class CommandLineHandlerTests
         [
             new ExtensionCommandLineProviderMockWithNamedOption("option1", "Provider1"),
             new ExtensionCommandLineProviderMockWithNamedOption("option2", "Provider2"),
-            new ExtensionCommandLineProviderMockWithNamedOption("option3", "Provider3")
+            new ExtensionCommandLineProviderMockWithNamedOption("option3", "Provider3"),
         ];
 
         // Act
@@ -1180,7 +1186,7 @@ public sealed class CommandLineHandlerTests
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         ICommandLineOptionsProvider[] extensionCommandLineProvider =
         [
-            new ExtensionCommandLineProviderMockInvalidConfiguration()
+            new ExtensionCommandLineProviderMockInvalidConfiguration(),
         ];
 
         // Act
@@ -1364,7 +1370,7 @@ public sealed class CommandLineHandlerTests
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
         [
-            new(HelpOption, "Show command line help.", ArgumentArity.ZeroOrOne, false)
+            new(HelpOption, "Show command line help.", ArgumentArity.ZeroOrOne, false),
         ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
@@ -1392,7 +1398,7 @@ public sealed class CommandLineHandlerTests
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
         [
-            new(Option, "Show command line option.", ArgumentArity.ZeroOrOne, false)
+            new(Option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
         ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
@@ -1517,7 +1523,7 @@ public sealed class CommandLineHandlerTests
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
         [
-            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false)
+            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
         ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.InvalidTask("Invalid configuration errorMessage");
@@ -1552,7 +1558,7 @@ public sealed class CommandLineHandlerTests
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
         [
-            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false)
+            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
         ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;

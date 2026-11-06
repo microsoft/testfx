@@ -44,9 +44,11 @@ internal sealed class CiCoverageSummaryControllerHandler(
 
     public async Task OnRunCompletedAsync(int exitCode, IReadOnlyList<SessionFileArtifact> artifacts, CancellationToken cancellationToken)
     {
-        InputArtifact[] inputs = [.. artifacts
+        InputArtifact[] inputs = [
+            .. artifacts
             .Where(artifact => string.Equals(artifact.Kind, fragmentKind, StringComparison.Ordinal))
-            .Select(artifact => new InputArtifact(artifact.FileInfo.FullName, fragmentKind, null, null, null, null))];
+            .Select(artifact => new InputArtifact(artifact.FileInfo.FullName, fragmentKind, null, null, null, null)),
+        ];
         if (inputs.Length == 0 || !coverageResult.Thresholds.Any(threshold => threshold.ProducerId == nameof(CoverageThresholdPolicy)))
         {
             return;

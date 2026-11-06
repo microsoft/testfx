@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable SA1121 // Keep IntPtr for older target frameworks sharing this file.
+
 using System.ComponentModel;
 using System.IO.Pipes;
 using System.Linq.Expressions;
@@ -932,11 +934,13 @@ internal static class RetryLinkedTypes
         BindingFlags bindingFlags,
         object?[] arguments)
     {
-        MethodInfo[] candidates = [.. type
+        MethodInfo[] candidates = [
+            .. type
             .GetMethods(bindingFlags)
             .Where(method => method.Name == methodName)
             .Where(method => ParametersMatch(method.GetParameters(), arguments))
-            .OrderByDescending(method => CompatibilityScore(method.GetParameters(), arguments))];
+            .OrderByDescending(method => CompatibilityScore(method.GetParameters(), arguments)),
+        ];
 
         return candidates.Length > 0
             ? candidates[0]

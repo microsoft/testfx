@@ -15,12 +15,12 @@ public sealed class ArgumentArityTests
 {
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
     [
-        new PlatformCommandLineProvider()
+        new PlatformCommandLineProvider(),
     ];
 
     private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders =
     [
-        new ExtensionCommandLineProviderMockOptionsWithDifferentArity()
+        new ExtensionCommandLineProviderMockOptionsWithDifferentArity(),
     ];
 
     [TestMethod]
@@ -204,7 +204,7 @@ public sealed class ArgumentArityTests
                 new("zeroOrOneArgumentsOption", "Show command line zeroOrOneArgumentsOption.", ArgumentArity.ZeroOrOne, false),
                 new("zeroOrMoreArgumentsOption", "Show command line zeroOrMoreArgumentsOption.", ArgumentArity.ZeroOrMore, false),
                 new("exactlyOneArgumentsOption", "Show command line exactlyOneArgumentsOption.", ArgumentArity.ExactlyOne, false),
-                new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false)
+                new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false),
             ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;

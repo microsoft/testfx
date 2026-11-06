@@ -105,7 +105,8 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
                         validatedOutput.Kind,
                         [.. matchingInputs.Select(input => input.Path)],
                         _protocol.IsCoverageSummarySupported && !manifest.Context.IsTruncated && validatedOutput.CoverageSummary is { } coverageSummary
-                            ? [.. coverageSummary.Select(metric => new CoverageSummaryMessage(
+                            ? [
+                                .. coverageSummary.Select(metric => new CoverageSummaryMessage(
                                 SessionUid: null,
                                 metric.ProducerId,
                                 (int)CoverageScopeLevel.Overall,
@@ -113,7 +114,8 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
                                 (int)metric.Metric,
                                 metric.CustomMetricName,
                                 metric.CoveredCount,
-                                metric.CoverableCount))]
+                                metric.CoverableCount)),
+                            ]
                             : null));
                 }
             }

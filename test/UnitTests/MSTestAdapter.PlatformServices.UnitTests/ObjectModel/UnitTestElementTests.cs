@@ -386,7 +386,7 @@ public class UnitTestElementTests : TestContainer
                     TestCaseIndex = 2,
                     DataType = DynamicDataType.ITestDataSource,
                 })
-            .ToTestCase()
+            .ToTestCase(),
         ];
 
         testCases.Select(tc => tc.Id.ToString()).Distinct().Count().Should().Be(testCases.Length);

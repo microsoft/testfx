@@ -290,10 +290,12 @@ public sealed class ArgumentsDisplayNameTests : AcceptanceTestBase<ArgumentsDisp
     {
         using var document = JsonDocument.Parse(output);
         JsonElement[] tests = [.. document.RootElement.GetProperty("tests").EnumerateArray()];
-        (string MethodName, string DisplayName)[] expected = [.. ExpectedReportRows
+        (string MethodName, string DisplayName)[] expected = [
+            .. ExpectedReportRows
             .Where(row => row.MethodName != "DynamicFolded")
             .Select(row => (row.MethodName, row.DisplayName))
-            .Append(("DynamicFolded", "Dynamic folded"))];
+            .Append(("DynamicFolded", "Dynamic folded")),
+        ];
 
         Assert.HasCount(18, tests);
         Assert.AreSequenceEqual(
@@ -316,9 +318,11 @@ public sealed class ArgumentsDisplayNameTests : AcceptanceTestBase<ArgumentsDisp
     {
         // Results can complete in any order. Ignore only the variable duration, not
         // the name, status, whitespace within the label, or duplicate full names.
-        string[] lines = [.. result.StandardOutputLines
+        string[] lines = [
+            .. result.StandardOutputLines
             .Where(line => line.StartsWith("passed ", StringComparison.Ordinal) || line.StartsWith("skipped ", StringComparison.Ordinal))
-            .Select(line => Regex.Replace(line, $" {AcceptanceAssert.DurationPattern}$", string.Empty))];
+            .Select(line => Regex.Replace(line, $" {AcceptanceAssert.DurationPattern}$", string.Empty)),
+        ];
         Assert.AreSequenceEqual(
             ExpectedReportRows.Select(row => $"{(row.IsIgnored ? "skipped" : "passed")} {row.DisplayName}"),
             lines,

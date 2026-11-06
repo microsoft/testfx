@@ -40,7 +40,7 @@ internal sealed class TrxCompareToolCommandLine : IToolCommandLineOptionsProvide
         =>
         [
             new(BaselineTrxOptionName, ExtensionResources.TrxComparerToolBaselineFileOptionDescription, ArgumentArity.ExactlyOne, false),
-            new(TrxToCompareOptionName, ExtensionResources.TrxComparerToolOtherFileOptionDescription, ArgumentArity.ExactlyOne, false)
+            new(TrxToCompareOptionName, ExtensionResources.TrxComparerToolOtherFileOptionDescription, ArgumentArity.ExactlyOne, false),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)

@@ -88,7 +88,7 @@ public sealed partial class TreeNodeFilter : ITestExecutionFilter
                 List<FilterExpression> subexprs =
                 [
                     expr.Pop(),
-                    expr.Pop()
+                    expr.Pop(),
                 ];
 
                 // Note: An OR/AND operator allow to pass it in a list of expressions.

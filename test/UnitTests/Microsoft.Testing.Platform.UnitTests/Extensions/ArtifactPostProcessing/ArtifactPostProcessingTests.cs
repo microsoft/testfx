@@ -609,9 +609,11 @@ public sealed class ArtifactPostProcessingTests
 
         // The production protocol's embedded IRequest/models have the same names as the linked
         // test copies but distinct assembly identities. Capture the actual invocation objects.
-        public object[] Published => [.. Protocol.Invocations
+        public object[] Published => [
+            .. Protocol.Invocations
             .Where(value => value.Method.Name == nameof(IPushOnlyProtocol.SendMessageAsync))
-            .Select(value => value.Arguments[0])];
+            .Select(value => value.Arguments[0]),
+        ];
 
         public List<IOutputDeviceData> Output { get; } = [];
 
