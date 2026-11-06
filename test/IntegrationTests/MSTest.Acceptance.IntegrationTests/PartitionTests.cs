@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -102,10 +103,8 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    [DataRow(MetadataMode.Reflection, DisplayName = "Partition metadata reflection")]
-    [DataRow(MetadataMode.SourceGeneration, DisplayName = "Partition metadata source generation")]
-    [DataRow(MetadataMode.AotSourceGeneration, DisplayName = "Partition metadata AOT source generation")]
-    public async Task Partition_MetadataModes_PreserveClassAndDependencyPlacement(MetadataMode metadataMode)
+    [CombinatorialData]
+    public async Task Partition_MetadataModes_PreserveClassAndDependencyPlacement([MetadataModeValues] MetadataMode metadataMode)
     {
         DiscoveredNode[] independent = await DiscoverAsync(Independent, "--partition 1/4", metadataMode: metadataMode);
         AssertDiscovery(independent, ExpectedBucket(1));
@@ -662,7 +661,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             TestAsset asset = await TestAsset.GenerateAssetAsync(name, source);
             _assets.Add(name, asset);
             MetadataMode[] modes = includeMetadataModes
-                ? [MetadataMode.Reflection, MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration]
+                ? MetadataModesToRun
                 : [MetadataMode.Reflection];
             foreach (MetadataMode mode in modes)
             {

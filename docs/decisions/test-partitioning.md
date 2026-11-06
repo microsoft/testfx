@@ -335,6 +335,39 @@ have not been completed. Classic-UWP/full-Windows package validation remains
 the host/CI gap described above. The earlier standalone PowerShell/Node
 experiments confirmed hash vectors and ordering only, not product execution.
 
+### Review correction: acceptance source-generation opt-out
+
+Review identified that the new fixture and its fixed metadata data rows ignored
+the existing `MSTEST_ACCEPTANCE_SKIP_SOURCEGEN=1` acceptance-harness policy.
+Both now reuse `MetadataModesToRun`: fixture builds consume that list, and
+`[CombinatorialData]` with `[MetadataModeValues]` selects matching test cases.
+This changes acceptance configuration only, not the product's partition UX.
+
+At `90c9d074cc49192c963a3661d51d2b7c46494a0d`, discovery with the opt-out set
+still selected all three modes. With the correction, the same discovery selects
+only Reflection. This is executed discovery/configuration evidence, not an
+old-revision failed-execution or mutation claim.
+
+The focused acceptance method
+`Partition_MetadataModes_PreserveClassAndDependencyPlacement` then passed
+**1/1 with the opt-out** and **3/3 with it unset**, with no failures or skips.
+Both runs used the pinned SDK, Release/net12.0 outer host and freshly generated
+net11.0 consumers. Each run's canonical execution gate reconciled exact
+source-planned mode names, unique execution IDs and exit 0.
+Retained build manifests confirm that both independent and dependency assets
+built only Reflection under the opt-out, with no `bin/SourceGen` or
+`bin/AotSourceGen` directory; the default run built and executed all three
+modes. Resolved adapter/framework/platform package hashes matched the current
+unchanged producer packages.
+
+The correction's test-file patch against that revision has SHA-256
+`D9C1D48C995E315D8CE2C60AF323AC64A97361790A3DFA433E51A120C21FFF98`.
+Both execution commands used the acceptance command above with
+`--filter 'FullyQualifiedName~Partition_MetadataModes_PreserveClassAndDependencyPlacement'`
+and separate fresh results/binlogs. The environment value was set or removed
+only in the owning validation process. No assembly scheduling, assertions,
+production files or shared/global environment were changed.
+
 ### CI eligibility
 
 Static inspection finds the acceptance project in both `TestFx.slnx` and
