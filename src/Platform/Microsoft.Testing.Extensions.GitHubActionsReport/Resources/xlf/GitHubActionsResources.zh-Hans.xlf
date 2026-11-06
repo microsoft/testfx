@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
         <source>{0} bytes</source>
-        <target state="new">{0} bytes</target>
+        <target state="translated">{0} 字节</target>
         <note>{0} is the attachment size in bytes.</note>
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">

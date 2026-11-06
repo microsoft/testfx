@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="AttachmentCleanupWarning">
         <source>Could not remove incomplete GitHub Actions attachment '{0}': {1}</source>
-        <target state="new">Could not remove incomplete GitHub Actions attachment '{0}': {1}</target>
+        <target state="translated">Impossible de supprimer la pièce jointe incomplète GitHub Actions '{0}' : {1}</target>
         <note>{0} is the sanitized file name; {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
         <source>Could not write the GitHub Actions attachment manifest: {0}</source>
-        <target state="new">Could not write the GitHub Actions attachment manifest: {0}</target>
+        <target state="translated">Impossible d’écrire le manifeste de pièce jointe GitHub Actions : {0}</target>
         <note>{0} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
         <source>{0} bytes</source>
-        <target state="new">{0} bytes</target>
+        <target state="translated">{0} octets</target>
         <note>{0} is the attachment size in bytes.</note>
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
         <source>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</source>
-        <target state="new">Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</target>
+        <target state="translated">Impossible d’indexer GitHub Actions '{0}' de pièce jointe ({1}). Consultez le manifeste de pièce jointe pour connaître son statut.</target>
         <note>{0} is the sanitized file name; {1} is the invariant status code.</note>
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">Le répertoire de pièces jointes de GitHub Actions doit être un chemin de répertoire absolu valide et non vide.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
