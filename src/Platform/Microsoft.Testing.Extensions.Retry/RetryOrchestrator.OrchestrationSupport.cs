@@ -210,8 +210,10 @@ internal sealed partial class RetryOrchestrator
                 postProcessingDirectory,
                 cancellationToken).ConfigureAwait(false);
 
-            Dictionary<string, string> movedArtifacts = [with(
-                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)];
+            Dictionary<string, string> movedArtifacts =
+            [
+                with(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal),
+            ];
             ExceptionDispatchInfo? publicationFailure = null;
             try
             {
@@ -223,9 +225,11 @@ internal sealed partial class RetryOrchestrator
                     currentTryResultFolder,
                     resultDirectory,
                     replacements,
-                    [.. attemptArtifacts
-                        .Where(artifact => artifact.Attempt == attemptCount && artifact.Kind == "microsoft.testing.trx")
-                        .Select(artifact => artifact.Path)],
+                    [
+                        .. attemptArtifacts
+                            .Where(artifact => artifact.Attempt == attemptCount && artifact.Kind == "microsoft.testing.trx")
+                            .Select(artifact => artifact.Path),
+                    ],
                     (source, destination) =>
                     {
                         movedArtifacts[Path.GetFullPath(source)] = destination;
