@@ -28,10 +28,12 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
             yield return new(("timeout", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout" };
             yield return new(("timeout-global-throw", MetadataMode.Reflection, false)) { DisplayName = "GlobalCleanup_PreservesLocalTimeoutWhenGlobalCleanupThrows" };
             yield return new(("timeout", MetadataMode.Reflection, true)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout_NonCooperativeTest" };
+            yield return new(("global-cancel-return", MetadataMode.Reflection, true)) { DisplayName = "GlobalCleanup_TerminalCancellation_NonCooperativeTest" };
             if (!AcceptanceSourceGen.IsGloballyDisabled)
             {
                 yield return new(("timeout", MetadataMode.SourceGeneration, false)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout_SourceGeneration" };
                 yield return new(("timeout", MetadataMode.SourceGeneration, true)) { DisplayName = "GlobalCleanup_LocalCooperativeTimeout_NonCooperativeTest_SourceGeneration" };
+                yield return new(("global-cancel-return", MetadataMode.SourceGeneration, true)) { DisplayName = "GlobalCleanup_TerminalCancellation_NonCooperativeTest_SourceGeneration" };
             }
         }
     }
@@ -62,6 +64,17 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
             },
             cancellationToken: TestContext.CancellationToken);
 
+        string[] expectedClasses = ["NoBaseCleanup", "WithBaseCleanup"];
+        foreach (string className in expectedClasses)
+        {
+            string[] provenance = File.ReadAllLines(Path.Combine(evidenceDirectory, className, "product-provenance.txt"));
+            Assert.HasCount(3, provenance);
+            Assert.AreEqual("MSTestAdapter.PlatformServices.dll", Path.GetFileName(provenance[0]));
+            Assert.Contains(MSTestVersion, provenance[1]);
+            Assert.AreEqual(expectedAdapterHash, provenance[2], $"Loaded adapter does not match the current package for {className}.");
+            TestContext.WriteLine($"Loaded adapter for {className}: {string.Join(" | ", provenance)}");
+        }
+
         bool passed = scenario == "normal";
         result.AssertExitCodeIs(passed ? 0 : 2);
         result.AssertOutputContainsSummary(failed: passed ? 0 : 2, passed: passed ? 2 : 0, skipped: 0);
@@ -87,19 +100,13 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
         foreach (XElement testResult in testResults)
         {
             string testName = (string)testResult.Attribute("testName")!;
-            string className = testName == expectedNames[0] ? "NoBaseCleanup" : "WithBaseCleanup";
+            string className = testName == expectedNames[0] ? expectedClasses[0] : expectedClasses[1];
             Assert.AreEqual(className, classes[(string)testResult.Attribute("testId")!]);
             Assert.AreEqual(passed ? "Passed" : "Failed", (string?)testResult.Attribute("outcome"), testName);
 
             string directory = Path.Combine(evidenceDirectory, className);
-            string[] provenance = File.ReadAllLines(Path.Combine(directory, "product-provenance.txt"));
-            Assert.HasCount(3, provenance);
-            Assert.AreEqual("MSTestAdapter.PlatformServices.dll", Path.GetFileName(provenance[0]));
-            Assert.Contains(MSTestVersion, provenance[1]);
-            Assert.AreEqual(expectedAdapterHash, provenance[2], $"Loaded adapter does not match the current package for {className}.");
-            TestContext.WriteLine($"Loaded adapter for {className}: {string.Join(" | ", provenance)}");
             Assert.IsFalse(File.Exists(Path.Combine(directory, "owned-resource.txt")), $"Global cleanup did not release {className}'s resource in {scenario}.");
-            string expectedTrace = passed && className == "WithBaseCleanup"
+            string expectedTrace = scenario is ("normal" or "global-cancel-return") && className == "WithBaseCleanup"
                 ? """
                   global-initialize
                   test-body
@@ -136,6 +143,10 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
             else if (scenario is "error" or "cancel-unrelated")
             {
                 Assert.Contains("local cleanup failed", testResult.Descendants(ns + "Message").Single().Value);
+            }
+            else if (scenario == "global-cancel-return")
+            {
+                Assert.AreEqual($"Test '{testName}' was canceled", testResult.Descendants(ns + "Message").Single().Value);
             }
         }
     }
@@ -214,6 +225,11 @@ public sealed class GlobalFixtures
         }
 
         File.Delete(Probe.ResourceFor(context));
+        if (Probe.Scenario == "global-cancel-return")
+        {
+            context.CancellationTokenSource.Cancel();
+        }
+
         if (Probe.Scenario == "timeout-global-throw")
         {
             throw new InvalidOperationException("global cleanup also failed");

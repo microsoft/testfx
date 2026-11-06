@@ -44,7 +44,9 @@ internal partial class TestMethodInfo
         TestResult? result = null;
         Exception? failure = null;
         var invocationState = new TestInvocationState();
+        var executionCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         CancellationTokenSource cancellationTokenSource = TestContext.Context.CancellationTokenSource;
+        CancellationToken? runCancellationToken = PlatformServiceProvider.Instance.TestRunCancellationToken?.CancellationToken;
         CancellationTokenSource timeoutTokenSource = new();
         int timeoutSourceOwners = 2;
         int executionState = 0;
@@ -58,13 +60,14 @@ internal partial class TestMethodInfo
             }
         });
         using CancellationTokenRegistration? runCancellationRegistration =
-            PlatformServiceProvider.Instance.TestRunCancellationToken?.CancellationToken.Register(monitorCancellationTokenSource.Cancel);
+            runCancellationToken?.Register(monitorCancellationTokenSource.Cancel);
         using CancellationTokenRegistration timeoutRegistration =
             timeoutTokenSource.Token.Register(() => TestContext.Context.CancellationTokenSource.Cancel());
         TaskScheduler? synchronizationContextScheduler = SynchronizationContext.Current is null
             ? null
             : TaskScheduler.FromCurrentSynchronizationContext();
         bool executionCompleted;
+        var executionTimer = Stopwatch.StartNew();
 
         try
         {
@@ -99,25 +102,50 @@ internal partial class TestMethodInfo
                 }
 
                 DebugEx.Assert(result is not null, "result is not null");
+                if (result.Outcome == UnitTestOutcome.Passed
+                    && (cancellationTokenSource.IsCancellationRequested || TestContext.Context.CancellationTokenSource.IsCancellationRequested))
+                {
+                    result.Outcome = UnitTestOutcome.Timeout;
+                    result.TestFailureException = new TestFailedException(
+                        UnitTestOutcome.Timeout,
+                        string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName));
+                }
+
                 return result;
             }
 
-            // Timed out or canceled. Cancel the current context source, including any renewed cleanup source.
-            string errorMessage = monitorCancellationTokenSource.IsCancellationRequested
-                ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName)
-                : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout);
+            int remainingTimeout = (int)Math.Max(0, TimeoutInfo.Timeout - executionTimer.ElapsedMilliseconds);
+            bool isTimeout = !monitorCancellationTokenSource.IsCancellationRequested || remainingTimeout == 0;
+            string errorMessage = isTimeout
+                ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)
+                : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName);
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - likely fine in this context. CancelAsync is .NET Core only. We prefer having the same behavior between .NET Core and .NET Framework.
-            timeoutTokenSource.Cancel();
+            if (isTimeout)
+            {
+                timeoutTokenSource.Cancel();
+            }
+            else
+            {
+                if (runCancellationToken?.IsCancellationRequested == true)
+                {
+                    TestContext.Context.CancellationTokenSource.Cancel();
+                }
+
+                // A body cancellation may already have been consumed by fresh cleanup; only the original deadline may cancel it again.
+                timeoutTokenSource.CancelAfter(remainingTimeout);
+            }
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 
             TestResult timeoutResult = new() { Outcome = UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
+            CancellationTokenSource? cleanupTimeoutSource = isTimeout ? null : timeoutTokenSource;
+            bool cleanupCompleted = false;
 
             // Execution context propagation here may still not be accurate.
             // if test init was successfully executed by ExecuteAsyncAction, but then the test itself timed out or cancelled,
             // then at this point we will run the cleanup on an execution context that doesn't have any state set by the test initialize.
             if (synchronizationContextScheduler is null)
             {
-                await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
+                cleanupCompleted = await RunTestCleanupMethodAsync(timeoutResult, cleanupTimeoutSource, invocationState).ConfigureAwait(false);
             }
             else if (!invocationState.IsCleanupStarted
                 && invocationState.TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot))
@@ -125,7 +153,7 @@ internal partial class TestMethodInfo
                 if (!HasCleanupsToInvoke(snapshot.ClassInstanceLease))
                 {
                     // Cancellation bookkeeping does not need a dispatcher blocked by synchronous user code.
-                    await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
+                    cleanupCompleted = await RunTestCleanupMethodAsync(timeoutResult, cleanupTimeoutSource, invocationState).ConfigureAwait(false);
                 }
                 else
                 {
@@ -137,7 +165,7 @@ internal partial class TestMethodInfo
                             // Either the dispatcher starts cleanup, or the monitor leaves it to the original invocation.
                             if (Interlocked.CompareExchange(ref cleanupDispatchClaimed, 1, 0) == 0)
                             {
-                                await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
+                                cleanupCompleted = await RunTestCleanupMethodAsync(timeoutResult, cleanupTimeoutSource, invocationState).ConfigureAwait(false);
                             }
                         },
                         CancellationToken.None,
@@ -162,6 +190,19 @@ internal partial class TestMethodInfo
                             CleanupDispatchTimeoutMilliseconds);
                     }
                 }
+            }
+
+            if (!cleanupCompleted && invocationState.IsCleanupStarted && !timeoutTokenSource.IsCancellationRequested)
+            {
+                using var cleanupWaitCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                    timeoutTokenSource.Token,
+                    runCancellationToken ?? CancellationToken.None);
+                await Task.WhenAny(
+                    executionCompletion.Task,
+                    Task.Delay(Timeout.Infinite, cleanupWaitCancellation.Token)).ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // CancelAsync is not available on all supported target frameworks.
+                cleanupWaitCancellation.Cancel();
+#pragma warning restore VSTHRD103 // CancelAsync is not available on all supported target frameworks.
             }
 
             return timeoutResult;
@@ -195,6 +236,7 @@ internal partial class TestMethodInfo
             finally
             {
                 ReleaseTimeoutSource();
+                executionCompletion.TrySetResult(true);
             }
         }
 
@@ -216,6 +258,7 @@ internal partial class TestMethodInfo
             finally
             {
                 ReleaseTimeoutSource();
+                executionCompletion.TrySetResult(true);
             }
         }
 

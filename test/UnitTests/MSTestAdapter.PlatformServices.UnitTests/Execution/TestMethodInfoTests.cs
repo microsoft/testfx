@@ -2181,6 +2181,30 @@ public class TestMethodInfoTests : TestContainer
     public Task NonCooperativeTimeoutCancelsRenewedGlobalCleanupAtOriginalDeadline()
         => VerifyNonCooperativeGlobalCleanupAsync(useSynchronizationContext: false, expireDeadline: true);
 
+    public Task NonCooperativeTimeoutReportsTerminalLocalCleanupCancellation()
+        => VerifyNonCooperativeTerminalCleanupCancellationAsync(globalCleanup: false, useSynchronizationContext: false);
+
+    public Task NonCooperativeTimeoutOnSynchronizationContextReportsTerminalLocalCleanupCancellation()
+        => VerifyNonCooperativeTerminalCleanupCancellationAsync(globalCleanup: false, useSynchronizationContext: true);
+
+    public Task NonCooperativeTimeoutReportsTerminalGlobalCleanupCancellation()
+        => VerifyNonCooperativeTerminalCleanupCancellationAsync(globalCleanup: true, useSynchronizationContext: false);
+
+    public Task NonCooperativeTimeoutOnSynchronizationContextReportsTerminalGlobalCleanupCancellation()
+        => VerifyNonCooperativeTerminalCleanupCancellationAsync(globalCleanup: true, useSynchronizationContext: true);
+
+    public Task NonCooperativeBodyCancellationDoesNotCancelRenewedCleanup()
+        => VerifyNonCooperativeBodyCancellationAsync(cancelRunDuringCleanup: false, expireDeadline: false);
+
+    public Task NonCooperativeBodyCancellationPreservesActiveRunCancellation()
+        => VerifyNonCooperativeBodyCancellationAsync(cancelRunDuringCleanup: true, expireDeadline: false);
+
+    public Task NonCooperativeBodyCancellationRetainsCleanupDeadline()
+        => VerifyNonCooperativeBodyCancellationAsync(cancelRunDuringCleanup: false, expireDeadline: true);
+
+    public Task NonCooperativeBodyCancellationDoesNotRestartElapsedCleanupDeadline()
+        => VerifyNonCooperativeBodyCancellationAsync(cancelRunDuringCleanup: false, expireDeadline: true, expireBeforeMonitorReturns: true);
+
     public async Task GlobalCleanupRenewedSourceRemainsUsableAfterInvocation()
     {
         DummyTestClass.TestCleanupMethodBody = _ => _testContextImplementation.CancellationTokenSource.Cancel();
@@ -3234,6 +3258,204 @@ public class TestMethodInfoTests : TestContainer
         _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(1_000) { CooperativeCancellation = true });
 
         return _testMethodInfo.InvokeAsync(null);
+    }
+
+    private async Task VerifyNonCooperativeTerminalCleanupCancellationAsync(bool globalCleanup, bool useSynchronizationContext)
+    {
+        var cleanupEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseCleanup = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var workerCompleted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool cleanupCompleted = false;
+        IPlatformServiceProvider previousServices = PlatformServiceProvider.Instance;
+        var services = new TestablePlatformServiceProvider();
+        services.MockThreadOperations
+            .Setup(operations => operations.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns((Action action, int timeout, CancellationToken token) => new ThreadOperations().Execute(
+                () =>
+                {
+                    try
+                    {
+                        action();
+                    }
+                    finally
+                    {
+                        workerCompleted.TrySetResult(true);
+                    }
+                },
+                timeout,
+                token));
+
+        async Task CancelDuringCleanupAsync()
+        {
+            _testContextImplementation.CancellationTokenSource.Cancel();
+            cleanupEntered.TrySetResult(true);
+            await releaseCleanup.Task;
+            cleanupCompleted = true;
+        }
+
+        if (globalCleanup)
+        {
+            DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => CancelDuringCleanupAsync();
+            _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        }
+        else
+        {
+            DummyTestClass.TestCleanupMethodBodyAsync = _ => CancelDuringCleanupAsync();
+            _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+        }
+
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(30_000);
+        using SingleThreadedSynchronizationContextForTesting? synchronizationContext = useSynchronizationContext ? new SingleThreadedSynchronizationContextForTesting() : null;
+        PlatformServiceProvider.Instance = services;
+        Task<TestResult> invocation = useSynchronizationContext
+            ? RunInvokeAsyncOnContextAsync(_testMethodInfo, synchronizationContext!)
+            : Task.Run(() => _testMethodInfo.InvokeAsync(null));
+        TestResult result;
+        try
+        {
+            await WaitForCompletionAsync(cleanupEntered.Task);
+            invocation.IsCompleted.Should().BeFalse("cancellation must not end the wait for an already-running cleanup");
+            releaseCleanup.TrySetResult(true);
+            await WaitForCompletionAsync(invocation);
+            result = await invocation;
+        }
+        finally
+        {
+            releaseCleanup.TrySetResult(true);
+            try
+            {
+                await WaitForCompletionAsync(Task.WhenAll(
+                    invocation,
+                    useSynchronizationContext ? Task.WhenAll(synchronizationContext!.DispatchedTasks) : workerCompleted.Task));
+            }
+            finally
+            {
+                PlatformServiceProvider.Instance = previousServices;
+            }
+        }
+
+        cleanupCompleted.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.TestFailureException.Should().BeOfType<TestFailedException>().Which.Message.Should().Be(string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.Execution_Test_Cancelled,
+            _testMethodInfo.TestMethodName));
+    }
+
+    private async Task VerifyNonCooperativeBodyCancellationAsync(
+        bool cancelRunDuringCleanup,
+        bool expireDeadline,
+        bool expireBeforeMonitorReturns = false)
+    {
+        const int CleanupDeadlineMilliseconds = 5_000;
+        const int DeadlineExpiryMarginMilliseconds = 100;
+        using ManualResetEventSlim cleanupEntered = new();
+        var releaseCleanup = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cleanupCanceled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runCancellation = new TestRunCancellationToken();
+        CancellationTokenSource? cleanupSource = null;
+        Task? worker = null;
+        Task<TestResult>? invocation = null;
+        int globalCalls = 0;
+        IPlatformServiceProvider previousServices = PlatformServiceProvider.Instance;
+        var services = new TestablePlatformServiceProvider { TestRunCancellationToken = runCancellation };
+        services.MockThreadOperations
+            .Setup(operations => operations.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns((Action action, int timeout, CancellationToken token) =>
+            {
+                worker = Task.Run(action, CancellationToken.None);
+                cleanupEntered.Wait(TimeSpan.FromSeconds(30), CancellationToken.None).Should().BeTrue();
+                token.IsCancellationRequested.Should().BeTrue();
+                if (expireBeforeMonitorReturns)
+                {
+                    // The margin avoids timer-tick rounding when proving that the original budget is exhausted.
+                    using var deadline = new CancellationTokenSource(timeout + DeadlineExpiryMarginMilliseconds);
+                    deadline.Token.WaitHandle.WaitOne(TimeSpan.FromSeconds(30)).Should().BeTrue();
+                }
+
+                return false;
+            });
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            _testContextImplementation.CancellationTokenSource.Cancel();
+            throw new InvalidOperationException("test body failed after cancellation");
+        };
+        DummyTestClass.TestCleanupMethodBodyAsync = async _ =>
+        {
+            cleanupSource = _testContextImplementation.CancellationTokenSource;
+            using CancellationTokenRegistration registration = cleanupSource.Token.Register(() => cleanupCanceled.TrySetResult(true));
+            cleanupEntered.Set();
+            await releaseCleanup.Task;
+        };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            globalCalls++;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(expireDeadline ? CleanupDeadlineMilliseconds : 30_000);
+        PlatformServiceProvider.Instance = services;
+        TestResult result;
+        try
+        {
+            // Execute returns only after the worker renewed its cleanup source, fixing the monitor/worker interleaving.
+            invocation = _testMethodInfo.InvokeAsync(null);
+            cleanupSource.Should().NotBeNull();
+            cleanupSource!.IsCancellationRequested.Should().Be(
+                expireBeforeMonitorReturns,
+                "only an elapsed whole-test deadline may cancel the renewed source at this point");
+            if (!expireBeforeMonitorReturns)
+            {
+                invocation.IsCompleted.Should().BeFalse("the original test budget still permits cleanup to finish");
+            }
+
+            if (cancelRunDuringCleanup)
+            {
+                runCancellation.Cancel();
+            }
+
+            if (cancelRunDuringCleanup || expireDeadline)
+            {
+                await WaitForCompletionAsync(cleanupCanceled.Task);
+            }
+
+            releaseCleanup.TrySetResult(true);
+            await WaitForCompletionAsync(invocation);
+            result = await invocation;
+        }
+        finally
+        {
+            releaseCleanup.TrySetResult(true);
+            try
+            {
+                try
+                {
+                    if (invocation is not null)
+                    {
+                        await WaitForCompletionAsync(invocation);
+                    }
+                }
+                finally
+                {
+                    if (worker is not null)
+                    {
+                        await WaitForCompletionAsync(worker);
+                    }
+                }
+            }
+            finally
+            {
+                PlatformServiceProvider.Instance = previousServices;
+            }
+        }
+
+        globalCalls.Should().Be(cancelRunDuringCleanup || expireDeadline ? 0 : 1);
+        cleanupSource!.IsCancellationRequested.Should().Be(cancelRunDuringCleanup || expireDeadline);
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.ExceptionMessage.Should().Be(expireBeforeMonitorReturns
+            ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, _testMethodInfo.TestMethodName, CleanupDeadlineMilliseconds)
+            : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, _testMethodInfo.TestMethodName));
     }
 
     private async Task VerifyNonCooperativeGlobalCleanupAsync(bool useSynchronizationContext, bool expireDeadline)

@@ -23,8 +23,9 @@ internal partial class TestMethodInfo
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <param name="invocationState">The activation and cleanup state for this invocation.</param>
+    /// <returns>Whether this caller claimed and completed cleanup.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(
+    private async SynchronizationContextPreservingTask<bool> RunTestCleanupMethodAsync(
         TestResult result,
         CancellationTokenSource? timeoutTokenSource,
         TestInvocationState invocationState)
@@ -33,7 +34,7 @@ internal partial class TestMethodInfo
 
         if (!invocationState.TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot))
         {
-            return;
+            return false;
         }
 
         bool hasCleanupsToInvoke = HasCleanupsToInvoke(snapshot.ClassInstanceLease);
@@ -42,7 +43,7 @@ internal partial class TestMethodInfo
         if ((!hasCleanupsToInvoke && !shouldResetCancellationTokenSource)
             || !invocationState.TryBeginCleanup())
         {
-            return;
+            return false;
         }
 
         CancellationToken? cleanupRunCancellationToken = PlatformServiceProvider.Instance.TestRunCancellationToken?.CancellationToken;
@@ -58,7 +59,7 @@ internal partial class TestMethodInfo
 
         if (!hasCleanupsToInvoke)
         {
-            return;
+            return true;
         }
 
         if (!snapshot.IsTestContextSet)
@@ -76,7 +77,7 @@ internal partial class TestMethodInfo
                 result.TestFailureException = exception;
             }
 
-            return;
+            return true;
         }
 
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
@@ -203,13 +204,13 @@ internal partial class TestMethodInfo
         // If testCleanup was successful, then don't do anything
         if (testCleanupException is null)
         {
-            return;
+            return true;
         }
 
         TestFailedException cleanupFailure = CreateCleanupFailureException(testCleanupException, testCleanupMethod);
         result.Outcome = result.Outcome.GetMoreImportantOutcome(cleanupFailure.Outcome);
         result.TestFailureException = cleanupFailure;
-        if (globalTestCleanupException is not null && !ReferenceEquals(testCleanupException, globalTestCleanupException))
+        if (globalTestCleanupException is not null && testCleanupException != globalTestCleanupException)
         {
             TestFailedException globalFailure = CreateCleanupFailureException(globalTestCleanupException, globalTestCleanupFailingMethod);
             // Preserve the local timeout classification, but do not hide an independent global cleanup failure.
@@ -220,6 +221,8 @@ internal partial class TestMethodInfo
 
             result.TestFailureException = globalFailure;
         }
+
+        return true;
 
         TestFailedException CreateCleanupFailureException(Exception exception, MethodInfo? method)
         {
