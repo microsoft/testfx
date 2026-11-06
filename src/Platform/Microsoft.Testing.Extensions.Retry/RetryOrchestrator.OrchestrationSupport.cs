@@ -223,6 +223,9 @@ internal sealed partial class RetryOrchestrator
                     currentTryResultFolder,
                     resultDirectory,
                     replacements,
+                    [.. attemptArtifacts
+                        .Where(artifact => artifact.Attempt == attemptCount && artifact.Kind == "microsoft.testing.trx")
+                        .Select(artifact => artifact.Path)],
                     (source, destination) =>
                     {
                         movedArtifacts[Path.GetFullPath(source)] = destination;

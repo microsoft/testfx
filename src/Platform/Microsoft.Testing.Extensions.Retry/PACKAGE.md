@@ -27,6 +27,8 @@ This extension restarts the test host for each retry. It is independent from MST
 
 When `--report-trx` uses its default filename or a relative `.trx` filename, earlier attempts' TRX reports remain under `Retries/<id>/<attempt>/`, and the final attempt's TRX report is moved to the configured results directory. Collect these attempt reports with `**/*.trx` recursively from that directory to include every physical attempt exactly once. The top-level TRX represents only the final attempt, which may contain just the tests selected for retry; publishing only that file can omit tests that passed earlier. An absolute report filename keeps its explicitly configured location.
 
+Only identified TRX report artifacts are moved. Test attachments remain at their recorded paths, even when their filenames end in `.trx`, so reports such as CTRF can still reference them.
+
 If the .NET SDK also performs artifact post-processing and writes an additional merged report, publish either that merged report or its input reports, not both.
 
 ## Documentation

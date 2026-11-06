@@ -208,6 +208,59 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     }
 
     [TestMethod]
+    [DataRow(false, DisplayName = "RetryTrxAttachment_CtrfOnly")]
+    [DataRow(true, DisplayName = "RetryTrxAttachment_CtrfAndTrx")]
+    public async Task RetryFailedTests_CtrfPreservesTrxNamedAttachments(bool reportTrx)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string trxArguments = reportTrx ? "--report-trx --report-trx-filename report.trx" : string.Empty;
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --report-ctrf {trxArguments} --results-directory \"{resultDirectory}\"",
+            new()
+            {
+                ["METHOD1"] = "1",
+                ["METHOD2"] = null,
+                ["METHOD3"] = null,
+                ["FAIL"] = "0",
+                ["CRASH"] = null,
+                ["CRASHONRETRY"] = null,
+                ["SKIPONRETRY"] = null,
+                ["TRX_ATTACHMENTS"] = null,
+                ["CTRF_TRX_ATTACHMENT"] = "1",
+                ["RESULTDIR"] = resultDirectory,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        string retryRoot = Assert.ContainsSingle(Directory.GetDirectories(Path.Combine(resultDirectory, "Retries")));
+        string[] reports = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories);
+        Assert.HasCount(3, reports);
+        foreach (string reportPath in reports)
+        {
+            using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(reportPath));
+            System.Text.Json.JsonElement test = report.RootElement.GetProperty("results").GetProperty("tests")
+                .EnumerateArray().Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+            string attempt = Path.GetDirectoryName(reportPath) == resultDirectory ? "2" : Path.GetFileName(Path.GetDirectoryName(reportPath))!;
+            Assert.AreEqual(attempt == "1" ? "failed" : "passed", test.GetProperty("status").GetString());
+            System.Text.Json.JsonElement attachment = Assert.ContainsSingle(test.GetProperty("attachments").EnumerateArray());
+            string path = attachment.GetProperty("path").GetString()!;
+            Assert.AreEqual(Path.Combine(retryRoot, attempt, "diagnostics.trx"), path);
+            Assert.IsTrue(File.Exists(path), "Every retained and consolidated CTRF attachment must still exist at its recorded path.");
+            Assert.AreEqual(attempt == "1" ? "initial diagnostics" : "retry diagnostics", File.ReadAllText(path));
+        }
+
+        string[] trxReports = Directory.GetFiles(resultDirectory, "report.trx", SearchOption.AllDirectories);
+        Assert.HasCount(reportTrx ? 2 : 0, trxReports);
+        if (reportTrx)
+        {
+            Assert.IsTrue(File.Exists(Path.Combine(resultDirectory, "report.trx")));
+            Assert.IsTrue(File.Exists(Path.Combine(retryRoot, "1", "report.trx")));
+            Assert.IsFalse(File.Exists(Path.Combine(retryRoot, "2", "report.trx")));
+        }
+    }
+
+    [TestMethod]
     [DataRow(true, DisplayName = "RetryTrx_NativePersistentFailure")]
     [DataRow(false, DisplayName = "RetryTrx_NativeRecovery")]
     public async Task RetryFailedTests_NativeSdkPublishesExistingTrxPaths(bool alwaysFail)
@@ -1186,6 +1239,7 @@ using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -1202,7 +1256,7 @@ public class Program
         TreeNodeFilterExtension treeNodeFilterExtension = new();
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(new TrxReportCapability()),
-            (_,__) => new DummyTestFramework());
+            (_,sp) => new DummyTestFramework((ICommandLineOptions)sp.GetService(typeof(ICommandLineOptions))!));
         builder.AddCrashDumpProvider();
         builder.AddTrxReportProvider();
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
@@ -1238,6 +1292,13 @@ public class TrxReportCapability : ITrxReportCapability
 
 public class DummyTestFramework : ITestFramework, IDataProducer
 {
+    private readonly ICommandLineOptions _commandLineOptions;
+
+    public DummyTestFramework(ICommandLineOptions commandLineOptions)
+    {
+        _commandLineOptions = commandLineOptions;
+    }
+
     public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
@@ -1312,6 +1373,19 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 string attachmentPath = Path.Combine(resultDir, uidFilter is null ? "initial-attachment.txt" : "retry-attachment.txt");
                 File.WriteAllText(attachmentPath, uidFilter is null ? "initial attachment" : "retry attachment");
                 properties.Add(new FileArtifactProperty(new FileInfo(attachmentPath), "Retry attachment", "Per-attempt attachment"));
+            }
+
+            if (Environment.GetEnvironmentVariable("CTRF_TRX_ATTACHMENT") == "1")
+            {
+                if (!_commandLineOptions.TryGetOptionArgumentList("results-directory", out string[]? resultDirectories))
+                {
+                    throw new InvalidOperationException("The attachment fixture requires a results directory.");
+                }
+
+                Directory.CreateDirectory(resultDirectories[0]);
+                string attachmentPath = Path.Combine(resultDirectories[0], "diagnostics.trx");
+                File.WriteAllText(attachmentPath, uidFilter is null ? "initial diagnostics" : "retry diagnostics");
+                properties.Add(new FileArtifactProperty(new FileInfo(attachmentPath), "TRX-named diagnostics"));
             }
 
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,

@@ -186,6 +186,28 @@ public sealed class RetrySummaryBehaviorTests
     }
 
     [TestMethod]
+    public async Task Artifacts_TrxNamedAttachmentIsPreservedWithoutReportRegistration()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string attempt = Path.Combine(fixture.Root, "Retries", "run", "2");
+        string attachment = Path.Combine(attempt, "diagnostics.trx");
+        byte[] content = Encoding.UTF8.GetBytes("retry diagnostics");
+        fixture.ExistingFiles[attachment] = content;
+        fixture.FileSystem.Setup(value => value.GetFiles(attempt, "*.*", SearchOption.AllDirectories)).Returns([attachment]);
+        fixture.FileSystem.Setup(value => value.CopyFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Callback<string, string, bool>((source, destination, _) => fixture.ExistingFiles[destination] = fixture.GetBytes(source));
+
+        await RetrySummaryReporter.MoveArtifactsAsync(
+            Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
+            attempt, fixture.Root, CancellationToken.None);
+
+        Assert.IsTrue(fixture.ExistingFiles.ContainsKey(attachment), "A TRX-named attachment must remain at its recorded path.");
+        Assert.AreSequenceEqual(content, fixture.GetBytes(attachment));
+        Assert.AreSequenceEqual(content, fixture.GetBytes(Path.Combine(fixture.Root, "diagnostics.trx")));
+        fixture.FileSystem.Verify(value => value.DeleteFile(It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
     [DataRow("report.trx", true, DisplayName = "RetryArtifacts_FinalTrx")]
     [DataRow("report.TRX", true, DisplayName = "RetryArtifacts_FinalTrxUppercase")]
     [DataRow("report.xml", false, DisplayName = "RetryArtifacts_UnprocessedXml")]
@@ -212,7 +234,7 @@ public sealed class RetrySummaryBehaviorTests
 
         await RetrySummaryReporter.MoveArtifactsAsync(
             Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
-            attempt, fixture.Root, CancellationToken.None);
+            attempt, fixture.Root, new Dictionary<string, string>(), [report], onTrxMoved: null, CancellationToken.None);
 
         Assert.AreEqual(!removeSource, fixture.ExistingFiles.ContainsKey(report));
         Assert.AreSequenceEqual(reportContents, fixture.GetBytes(Path.Combine(fixture.Root, "nested", fileName)));
@@ -241,7 +263,7 @@ public sealed class RetrySummaryBehaviorTests
 
         IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => RetrySummaryReporter.MoveArtifactsAsync(
             Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
-            attempt, fixture.Root, CancellationToken.None));
+            attempt, fixture.Root, new Dictionary<string, string>(), [report], onTrxMoved: null, CancellationToken.None));
 
         Assert.AreSame(original, exception);
         fixture.FileSystem.Verify(value => value.CopyFile(report, Path.Combine(fixture.Root, "report.trx"), true), Times.Once);
@@ -261,7 +283,7 @@ public sealed class RetrySummaryBehaviorTests
 
         IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => RetrySummaryReporter.MoveArtifactsAsync(
             Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
-            attempt, fixture.Root, CancellationToken.None));
+            attempt, fixture.Root, new Dictionary<string, string>(), [report], onTrxMoved: null, CancellationToken.None));
 
         Assert.AreSame(original, exception);
         fixture.FileSystem.Verify(value => value.CopyFile(report, Path.Combine(fixture.Root, "report.trx"), true), Times.Once);
@@ -283,7 +305,7 @@ public sealed class RetrySummaryBehaviorTests
 
         await RetrySummaryReporter.MoveArtifactsAsync(
             Mock.Of<IOutputDeviceDataProducer>(), fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object,
-            attempt, fixture.Root, new Dictionary<string, string>(),
+            attempt, fixture.Root, new Dictionary<string, string>(), [source],
             (original, published) =>
             {
                 Assert.IsFalse(fixture.ExistingFiles.ContainsKey(original));
@@ -347,8 +369,10 @@ public sealed class RetrySummaryBehaviorTests
                 .Returns(() => replayFails ? Task.FromException(new IOException("replay failed")) : Task.CompletedTask);
             fixture.Services.AddService(protocol.Object);
             string manifests = RetryArtifactProcessor.GetDeferredTrxArtifactDirectory(retryRoot);
+            List<RetryAttemptArtifact> artifacts = [];
             foreach (string path in partialMove ? new[] { first, second } : [first])
             {
+                artifacts.Add(new RetryAttemptArtifact(path, "microsoft.testing.trx", 2, destinationPath: null));
                 Assert.IsTrue(DotnetTestDataConsumer.TryDeferTrxArtifacts(
                     new FileArtifactMessages("execution", "instance", [new FileArtifactMessage(path, Path.GetFileName(path), null, null, null, "session", "microsoft.testing.trx")]),
                     attempt,
@@ -363,7 +387,7 @@ public sealed class RetrySummaryBehaviorTests
             IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => (Task)processArtifacts.Invoke(
                 orchestrator,
                 [
-                    fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object, new List<RetryAttemptArtifact>(),
+                    fixture.Output.Object, fixture.FileSystem.Object, fixture.Logger.Object, artifacts,
                     2, true, 2, 0, 1, false, TimeSpan.Zero, 2, attempt, fixture.Root, CancellationToken.None,
                 ])!);
 

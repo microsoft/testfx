@@ -251,6 +251,7 @@ internal static class RetrySummaryReporter
             currentTryResultFolder,
             resultDirectory,
             replacements,
+            trxReportPaths: [],
             onTrxMoved: null,
             cancellationToken);
 
@@ -262,6 +263,7 @@ internal static class RetrySummaryReporter
         string currentTryResultFolder,
         string resultDirectory,
         IReadOnlyDictionary<string, string> replacements,
+        IReadOnlyCollection<string> trxReportPaths,
         Func<string, string, Task>? onTrxMoved,
         CancellationToken cancellationToken)
     {
@@ -270,6 +272,10 @@ internal static class RetrySummaryReporter
         {
             return;
         }
+
+        HashSet<string> reportedTrxPaths = new(
+            trxReportPaths.Select(Path.GetFullPath),
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
         // Post-processed reports retain their inputs; raw TRX reports must have only one publishable copy.
         List<(string Source, string Destination)> copiedTrxFiles = [];
@@ -289,7 +295,8 @@ internal static class RetrySummaryReporter
             else
             {
                 sourceFile = file;
-                if (Path.GetExtension(file).Equals(".trx", StringComparison.OrdinalIgnoreCase))
+                if (reportedTrxPaths.Contains(normalizedFile)
+                    && Path.GetExtension(file).Equals(".trx", StringComparison.OrdinalIgnoreCase))
                 {
                     copiedTrxFiles.Add((file, finalFileLocation));
                 }
