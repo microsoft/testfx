@@ -1,6 +1,8 @@
 # MSTest partition selection: research and decisions
 
-Status: implementation in progress, 2026-11-06. The user narrowed the feature to
+Status: implemented; bounded local unit and packed acceptance gates passed,
+2026-11-06. Remaining evidence limits are recorded below.
+The user narrowed the feature to
 **only `--partition` at MSTest level**. This supersedes the earlier, broader D2
 proposal; it does not claim that its unimplemented orchestration/protocol work
 has shipped.
@@ -31,8 +33,11 @@ public grouping API, receipt/catalog format, or cross-job report aggregator.
 ### Input and compatibility
 
 - Syntax is `index/count`, with positive invariant decimal Int32 values and
-  `1 <= index <= count`; indexing is 1-based. Reject malformed, signed, spaced,
-  zero, out-of-range and overflowing values through normal CLI validation.
+  `1 <= index <= count`; indexing is 1-based. Reject malformed, signed,
+  embedded-whitespace, zero, out-of-range and overflowing values through normal
+  CLI validation. Only ASCII digits are accepted; leading zeros are allowed.
+  MTP's ordinary outer-whitespace argument normalization still applies before
+  provider validation.
 - `1/1` selects the same work as an ordinary run. Absence of the option keeps
   the existing discovery, execution and discovery-cache paths.
 - This is native MSTest's MTP integration, not a new VSTest command-line option.
@@ -231,6 +236,112 @@ missing, duplicate, skipped or failed cases. The overload regression preserves
 both same-named methods' different dependency edges, rather than incorrectly
 deduplicating by method name.
 
-Packed acceptance, paired counterfactual results and final review outcomes are
-still pending. The earlier standalone PowerShell/Node experiments confirmed
-the hash vectors and ordering properties only; they are not product evidence.
+Code-review round 2 inspected
+`3be09024cb5759473ecf2bb6cb8efb19a84ccab6` against the original production
+baseline `a8a62a02627b9e9d9c33949d06a1540f84b78bc4`. Claude Opus 5.5 and
+Gemini 4 Argon both approved with no remaining code/test findings. Those were
+read-only static reviews, not executed acceptance or mutation evidence.
+
+### Executed unit sensitivity
+
+The isolated comparison retains the tests from
+`3be09024cb5759473ecf2bb6cb8efb19a84ccab6`. These are compiling targeted
+counterfactuals, not tests run on the pristine production baseline.
+
+| Contract | Counterfactual | Without behavior | Restored implementation |
+| --- | --- | --- | --- |
+| `TestPartitionTests` selection contracts | Change the valid-input fast path from `Count == 1` to `Count > 0`, selecting all tests. Patch SHA-256 `419C6FB7065F97DC6E406718C7DF96FE64590D810C209208C84AAA61EA29A863`. | Executed: 21, passed 5, failed 16, skipped 0; exit 2. Golden-vector, affinity and disjointness assertions detect the missing selection. | Same 21 source-declared identities: passed 21, failed/skipped 0; exit 0. |
+| `TestsBasedRunAfterPartitionedSourceRun_UsesCurrentDependencyDiagnosticSelection` | Remove only the explicit-element entry point's `_unpartitionedTests = null` reset. Patch SHA-256 `70DD4A5358B3ED5E8AA9F1011FA02E7C24A5B24D6BE63F66520FA9FE955356A4`. | Executed: 1, failed 1, skipped 0; exit 2. The assertion expects one genuine missing-prerequisite warning but observes two, including a false unmatched-dependent warning from the previous request. | Same test: passed 1, failed/skipped 0; exit 0. |
+
+Both comparisons used Release/net10.0, the pinned
+`12.0.100-alpha.1.26509.101` SDK, fresh test-project builds, unique binlogs and
+separate TRX/JUnit/CTRF result directories. The selectors were respectively
+`--treenode-filter '/*/*/TestPartitionTests/*'` and
+`--treenode-filter '/*/*/ExecutionManagerContinuationTests/TestsBasedRunAfterPartitionedSourceRun_UsesCurrentDependencyDiagnosticSelection'`.
+TRX identities were reconciled with source declarations; there were no skips
+or duplicate execution IDs. Test assertions were not changed between states.
+The correct source was restored after each experiment.
+
+### Packaged-consumer execution gates
+
+The source-only producer pack passed with warnings treated as errors. The final
+bounded local gate passed **35 distinct unit tests and 34 packed acceptance
+cases**, with no failures or skips. Acceptance discovery selected exactly the
+same 34 source-planned identities: 28 partition cases and six existing help/info
+cases. The outer project used its declared net12.0; generated partition
+consumers used net11.0, with help/info additionally exercising net10.0 and
+net462. The real pinned SDK was `12.0.100-alpha.1.26509.101`.
+
+The producer remained
+`3be09024cb5759473ecf2bb6cb8efb19a84ccab6`. The validated test/support delta
+has SHA-256
+`50BF541DEA4243C0183C00A4EB8D2D7FE60F752DA06D86EAFA432735812A3FA7`;
+it changes only the two partition test files. The final selector container has
+22 passing methods, including independent 255/256/257-byte framing vectors
+and an unresolved-dependent-method case. These two additions received bounded
+static gap/assertion review and green execution, not new executed mutation
+proof. The 21-test paired selector evidence above remains bound to its
+original unchanged tests.
+
+| Requirement | Executed acceptance evidence |
+| --- | --- |
+| Complete, disjoint class selection and matching discovery/run identities | `Partition_DiscoveryAndRun_SelectSameDisjointClasses` and `Partition_AbsentAndOneOfOne_PreserveExactBaselineIdentitiesAndOutcomes`. |
+| Native SDK and reflection/generated metadata | `Partition_NativeDotnetTest_MatchesConsoleSelection` and `Partition_MetadataModes_PreserveClassAndDependencyPlacement`. |
+| Dependency affinity and UID-narrowed Retry | `Partition_AttributeAndConfiguredDependencies_KeepFullComponentTogether` and `Partition_RetryUidNarrowing_DoesNotMoveDependencyComponent`. |
+| Data rows and programmatic Run/Skip/Drop | `Partition_DataRows_RemainWithTheirConcreteClass` and `Partition_ProgrammaticDropAndSkip_AreNotBroadened`. |
+| Existing empty/minimum/override policy | `Partition_EmptyBucket_PreservesExitEight`, `Partition_MinimumExpectedTests_UsesSelectedCountAndExitNine` and `Partition_IgnoreExitCode_PreservesExistingPolicy`. |
+| CLI input and help/info | `Partition_CommandLineWhitespaceNormalization_PreservesExistingPolicy`, eleven invalid-option cases and the existing registered-extension help/info tests. |
+
+The common MTP parser trims outer argument whitespace before provider
+validation; the option preserves that policy. The direct partition parser
+still rejects raw whitespace, and embedded CLI whitespace remains invalid.
+The programmatic filter acts at invocation, so discovery can include a test
+that execution later drops. Retry's top-level TRX describes the final attempt;
+the acceptance test separately asserts both attempt maps, stable UIDs and all
+final logical outcomes. These are existing consumer contracts, not feature
+behavior changes made to obtain green tests.
+
+Fresh consumer resolution was checked against current package SHA-512 values
+in ten `project.assets.json` files. SHA-256 comparison matched 1,428 physical
+runtime-output DLL files to resolved package payloads. The 73 recorded
+partition child invocations returned `0` (48), `5` (11), `8` (11) and `9` (3);
+the negative child exits were asserted by passing outer tests. Output-bit
+agreement is not presented as an independent loaded-module inspection.
+TRX, JUnit and CTRF identities/outcomes were reconciled, and the repository's
+execution verifier confirmed planned/selected/executed/passed = 34, with
+unique execution IDs and outer exit 0.
+
+The decisive acceptance command was:
+
+```powershell
+# $results and $binlog name unique, retained artifact paths.
+& .\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -p:SkipUapTargetFramework=true -p:UsingDotNetTest=true -p:EnableCodeCoverage=false -p:TreatWarningsAsErrors=true -p:MSBuildTreatWarningsAsErrors=true "-p:ArtifactsTestResultsDir=$results\" "-bl:$binlog" --filter 'FullyQualifiedName~PartitionTests|FullyQualifiedName~HelpInfoTests' --no-ansi --no-progress --show-test-results all
+```
+
+Result: exit 0, 34 passed, zero failed/skipped. The matching independent
+discovery used `--list-tests text` with the same filter. Runtime package
+families were MSTest `5.0.0-dev` and MTP `3.0.0-dev`; eager fixture dependencies
+were packed from unchanged source rather than bypassing package lookups.
+
+Initial failed attempts exposed outer-TFM, eager-package, comparison-local
+toolchain-path and generated filter-type qualification problems. Those setup
+and compilation failures are not counted as behavioral red evidence. The
+corrections do not change production code, repository build policy, shared
+caches or assertions about the feature.
+
+**Remaining limits:** packed-consumer counterfactual red/green, independent
+loaded-module inspection and an interactive rendered-terminal demonstration
+have not been completed. Classic-UWP/full-Windows package validation remains
+the host/CI gap described above. The earlier standalone PowerShell/Node
+experiments confirmed hash vectors and ordering only, not product execution.
+
+### CI eligibility
+
+Static inspection finds the acceptance project in both `TestFx.slnx` and
+`NonWindowsTests.slnf`. Windows Release uses
+`eng/pipelines/steps/test-windows-configuration-tests.yml`; Linux/macOS Release
+use `eng/pipelines/steps/test-non-windows.yml`. Their normal full-test commands
+select the solution without excluding this class, and the calling jobs honor
+`SkipTests`. The shared environment pins `.dotnet`, the matching `.packages`
+cache and `DOTNET_CLI_CONTEXT_VERBOSE=1`. This establishes eligibility, not an
+executed CI result; no CI-verified claim is made before publication.

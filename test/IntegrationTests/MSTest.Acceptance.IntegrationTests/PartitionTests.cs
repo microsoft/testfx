@@ -53,7 +53,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     [TestMethod]
     public async Task Partition_DiscoveryAndRun_SelectSameDisjointClasses()
     {
-        var allUids = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<string> allUids = [];
         List<string> union = [];
         for (int index = 1; index <= 4; index++)
         {
@@ -83,14 +83,17 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         {
             DiscoveredNode[] discovered = await DiscoverAsync(Independent, $"--partition {index}/4");
             using var run = new TempDirectory("partition-dotnet-test");
+            string arguments = $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true --partition {index}/4"
+                + $" --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --no-ansi --progress off";
             DotnetMuxerResult result = await DotnetCli.RunAsync(
-                $"test --project \"{AssetFixture.ProjectPath(Independent)}\" -c Release --no-build -p:SkipUapTargetFramework=true --partition {index}/4"
-                + $" --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\" --no-ansi --progress off",
+                arguments,
                 workingDirectory: AssetFixture.AssetPath(Independent),
-                environmentVariables: AssetFixture.EnvironmentFor(Independent, run),
+                environmentVariables: AssetFixture.EnvironmentFor(Independent, run, forDotnetCli: true),
                 failIfReturnValueIsNotZero: false,
                 cancellationToken: TestContext.CancellationToken);
 
+            RecordChildRun(Independent, MetadataMode.Reflection, "dotnet-test", arguments, run,
+                result.ExitCode, result.StandardOutput, result.StandardError);
             Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.StandardError);
             ReportResult[] results = ReadResults(Path.Combine(run.Path, "run.trx"));
             AssertResults(results, ExpectedBucket(index));
@@ -99,9 +102,9 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
-    [DataRow(MetadataMode.Reflection)]
-    [DataRow(MetadataMode.SourceGeneration)]
-    [DataRow(MetadataMode.AotSourceGeneration)]
+    [DataRow(MetadataMode.Reflection, DisplayName = "Partition metadata reflection")]
+    [DataRow(MetadataMode.SourceGeneration, DisplayName = "Partition metadata source generation")]
+    [DataRow(MetadataMode.AotSourceGeneration, DisplayName = "Partition metadata AOT source generation")]
     public async Task Partition_MetadataModes_PreserveClassAndDependencyPlacement(MetadataMode metadataMode)
     {
         DiscoveredNode[] independent = await DiscoverAsync(Independent, "--partition 1/4", metadataMode: metadataMode);
@@ -235,7 +238,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         DiscoveredNode[] discovered = await DiscoverAsync(asset, "--partition 1/4");
         Assert.IsTrue(discovered.All(node => node.ClassName == Checkout));
         Assert.AreSequenceEqual(
-            new[] { "Expanded", "Folded", "RunTest", "RuntimeOnly", "SkippedTest" },
+            new[] { "DroppedTest", "Expanded", "Folded", "RunTest", "RuntimeOnly", "SkippedTest" },
             discovered.Select(node => node.MethodName).Distinct().Order(StringComparer.Ordinal));
         Assert.AreEqual(runtimeOnly ? 1 : 2, discovered.Count(node => node.MethodName == "Expanded"));
         Assert.AreEqual(1, discovered.Count(node => node.MethodName == "Folded"));
@@ -316,7 +319,9 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             Dependencies, "--partition 4/4 --retry-failed-tests 1", run,
             extraEnvironment: new Dictionary<string, string?> { [SentinelVariable] = sentinel });
         result.Host.AssertExitCodeIs(ExitCode.Success);
-        AssertResults(result.Results, DependencyTests);
+        // TRX publishes the final attempt at the top level; unlike a retry-aware consolidated reporter,
+        // it does not repeat the successful tests from attempt one.
+        AssertResults(result.Results, [$"{Cart}.Buy"]);
         Assert.IsTrue(File.Exists(sentinel), "The first attempt must actually have reached the deliberate failure.");
 
         string retryRoot = Path.Combine(run.Path, "Retries");
@@ -330,6 +335,11 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             SequenceOrder.InAnyOrder);
         AssertResults(second, [$"{Cart}.Buy"]);
         Assert.AreEqual(first.Single(test => test.FullyQualifiedName == $"{Cart}.Buy").Id, second.Single().Id);
+        Assert.AreSequenceEqual(
+            second.Select(test => test.Id + "|" + test.FullyQualifiedName + "|" + test.Outcome),
+            result.Results.Select(test => test.Id + "|" + test.FullyQualifiedName + "|" + test.Outcome));
+        ReportResult[] logicalResults = [.. first.Concat(second).GroupBy(test => test.Id, StringComparer.Ordinal).Select(group => group.Last())];
+        AssertResults(logicalResults, DependencyTests);
         Assert.AreSequenceEqual(
             new[] { "Checkout.Prepare", "Checkout.Other", "Cart.Other", "Cart.Buy", "Cart.Buy" },
             ReadProbe(run),
@@ -389,6 +399,20 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     }
 
     [TestMethod]
+    public async Task Partition_CommandLineWhitespaceNormalization_PreservesExistingPolicy()
+    {
+        // MTP's common argument parser trims outer whitespace before provider validation. Preserve
+        // that existing CLI policy; TestPartition.TryParse still rejects the same raw whitespace.
+        foreach (string arguments in new[] { "--partition=\"1/4 \"", "--partition=\" 1/4\"" })
+        {
+            using var run = new TempDirectory("partition-cli-normalization");
+            RunResult result = await RunAsync(Independent, arguments, run);
+            result.Host.AssertExitCodeIs(ExitCode.Success);
+            AssertResults(result.Results, ExpectedBucket(1));
+        }
+    }
+
+    [TestMethod]
     [DataRow("missing", DisplayName = "Partition invalid missing argument")]
     [DataRow("extra", DisplayName = "Partition invalid extra argument")]
     [DataRow("zero-index", DisplayName = "Partition invalid zero index")]
@@ -399,7 +423,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
     [DataRow("negative", DisplayName = "Partition invalid negative index")]
     [DataRow("malformed", DisplayName = "Partition invalid extra slash")]
     [DataRow("nondecimal", DisplayName = "Partition invalid nondecimal digits")]
-    [DataRow("whitespace", DisplayName = "Partition invalid trailing whitespace")]
+    [DataRow("whitespace", DisplayName = "Partition invalid embedded whitespace")]
     public async Task Partition_InvalidArgument_FailsBeforeRunningTests(string caseId)
     {
         string arguments = caseId switch
@@ -414,7 +438,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             "negative" => "--partition=-1/2",
             "malformed" => "--partition 1//2",
             "nondecimal" => "--partition one/two",
-            "whitespace" => "--partition=\"1/2 \"",
+            "whitespace" => "--partition=\"1/ 2\"",
             _ => throw new ArgumentOutOfRangeException(nameof(caseId)),
         };
         using var run = new TempDirectory("partition-invalid");
@@ -422,6 +446,8 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             arguments,
             environmentVariables: AssetFixture.EnvironmentFor(Independent, run),
             cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(Independent, MetadataMode.Reflection, "invalid-option", arguments, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         result.AssertOutputContains("--partition");
         if (caseId is not ("missing" or "extra"))
@@ -441,6 +467,9 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             $"{options} --list-tests json --results-directory \"{run.Path}\"",
             environmentVariables: AssetFixture.EnvironmentFor(asset, run),
             cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(asset, metadataMode, "discovery", options, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
+        File.WriteAllText(Path.Combine(run.Path, "discovery.json"), result.StandardOutput);
         result.AssertExitCodeIs(expectedExit);
         using var document = JsonDocument.Parse(result.StandardOutput);
         Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
@@ -480,9 +509,35 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             $"{options} --report-trx --report-trx-filename run.trx --results-directory \"{run.Path}\"",
             environmentVariables: environment,
             cancellationToken: TestContext.CancellationToken);
+        RecordChildRun(asset, metadataMode, "execution", options, run,
+            result.ExitCode, result.StandardOutput, result.StandardError);
         string report = Path.Combine(run.Path, "run.trx");
         Assert.IsTrue(File.Exists(report), result.StandardOutput + result.StandardError);
         return new RunResult(result, ReadResults(report));
+    }
+
+    private void RecordChildRun(
+        string asset, MetadataMode metadataMode, string route, string arguments, TempDirectory run,
+        int exitCode, string standardOutput, string standardError)
+    {
+        string manifest = Path.Combine(run.Path, "partition-child-evidence.json");
+        File.WriteAllText(manifest, JsonSerializer.Serialize(new
+        {
+            Asset = asset,
+            AssetPath = AssetFixture.AssetPath(asset),
+            Project = AssetFixture.ProjectPath(asset),
+            MetadataMode = metadataMode.ToString(),
+            Route = route,
+            Arguments = arguments,
+            ExitCode = exitCode,
+            Host = AssetFixture.Host(asset, metadataMode).FullName,
+            ExpectedSdkVersion = AssetFixture.SdkVersion,
+            NuGetPackages = Path.Combine(AssetFixture.AssetPath(asset), ".nuget-packages"),
+            ResultsDirectory = run.Path,
+        }));
+        File.WriteAllText(Path.Combine(run.Path, "stdout.txt"), standardOutput);
+        File.WriteAllText(Path.Combine(run.Path, "stderr.txt"), standardError);
+        TestContext.WriteLine($"PARTITION-EVIDENCE {manifest}");
     }
 
     private static string[] ExpectedBucket(int index) => index switch
@@ -552,7 +607,9 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
 
     public sealed class TestAssetFixture : ITestAssetFixture
     {
-        private readonly Dictionary<string, TestAsset> _assets = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, TestAsset> _assets = [];
+
+        internal string SdkVersion { get; private set; } = string.Empty;
 
         internal string AssetPath(string asset) => _assets[asset].TargetAssetPath;
 
@@ -561,7 +618,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         internal TestHost Host(string asset, MetadataMode metadataMode = MetadataMode.Reflection)
             => TestHost.LocateFrom(AssetPath(asset), "Acme.Tests", TargetFrameworks.NetCurrent, metadataMode: metadataMode);
 
-        internal Dictionary<string, string?> EnvironmentFor(string asset, TempDirectory? run = null)
+        internal Dictionary<string, string?> EnvironmentFor(string asset, TempDirectory? run = null, bool forDotnetCli = false)
         {
             var environment = new Dictionary<string, string?>
             {
@@ -573,6 +630,12 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 environment.Add(ProbeVariable, ProbePath(run));
             }
 
+            if (forDotnetCli)
+            {
+                string dotnet = Path.Combine(RootFinder.Find(), ".dotnet", "dotnet" + Constants.ExecutableExtension);
+                ConfigureDotnetSdkEnvironment(environment, dotnet, SdkVersion);
+            }
+
             return environment;
         }
 
@@ -580,6 +643,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
         {
             using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
             string sdkVersion = globalJson.RootElement.GetProperty("sdk").GetProperty("version").GetString()!;
+            SdkVersion = sdkVersion;
             await GenerateAsync(Independent, IndependentSource, sdkVersion, includeMetadataModes: true, cancellationToken);
             await GenerateAsync(Dependencies, DependencySource, sdkVersion, includeMetadataModes: true, cancellationToken);
             await GenerateAsync(Rows, RowsSource, sdkVersion, includeMetadataModes: false, cancellationToken);
@@ -611,10 +675,21 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
                 DotnetMuxerResult build = await DotnetCli.RunAsync(
                     $"build \"{ProjectPath(name)}\" -c Release -p:SkipUapTargetFramework=true -bl:\"{binlog}\" {metadataArguments}",
                     workingDirectory: asset.TargetAssetPath,
-                    environmentVariables: EnvironmentFor(name),
+                    environmentVariables: EnvironmentFor(name, forDotnetCli: true),
                     failIfReturnValueIsNotZero: false,
                     cancellationToken: cancellationToken);
                 Assert.AreEqual(0, build.ExitCode, $"{name}/{mode}: {build.StandardOutput}{build.StandardError}");
+                File.WriteAllText(Path.Combine(asset.TargetAssetPath, $"partition-build-{mode}.json"), JsonSerializer.Serialize(new
+                {
+                    Asset = name,
+                    Project = ProjectPath(name),
+                    MetadataMode = mode.ToString(),
+                    ExpectedSdkVersion = sdkVersion,
+                    build.ExitCode,
+                    Binlog = binlog,
+                    Host = Host(name, mode).FullName,
+                    NuGetPackages = Path.Combine(asset.TargetAssetPath, ".nuget-packages"),
+                }));
             }
         }
 
@@ -727,7 +802,7 @@ public sealed class PartitionTests : AcceptanceTestBase<PartitionTests.TestAsset
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             #pragma warning disable MSTESTEXP
             [assembly: DoNotParallelize]
-            [assembly: TestFilterProvider(typeof(SelectionFilter))]
+            [assembly: TestFilterProvider(typeof(Acme.SelectionFilter))]
             [assembly: TestDataSourceDiscovery(TestDataSourceDiscoveryOption.DuringDiscovery)]
             namespace Acme;
             public sealed class SelectionFilter : ITestFilter

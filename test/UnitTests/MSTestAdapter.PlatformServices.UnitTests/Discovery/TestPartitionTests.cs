@@ -222,6 +222,23 @@ public sealed class TestPartitionTests : TestContainer
         }
     }
 
+    public void SelectTests_LongUtf8Fields_UseUInt32BigEndianLengths()
+    {
+        // Independently framed SHA256 vectors for 255, 256, and 257 UTF-8 bytes. These distinguish
+        // a UInt32 length from a truncated one-byte length without duplicating production hashing.
+        foreach ((int suffixLength, int expectedIndex) in new[]
+        {
+            (250, 192630967),
+            (251, 550082359),
+            (252, 1876193806),
+        })
+        {
+            UnitTestElement element = Element("Acme." + new string('A', suffixLength), "Run");
+            AssertSelection([element], expectedIndex, int.MaxValue, [element]);
+            AssertSelection([element], expectedIndex - 1, int.MaxValue, []);
+        }
+    }
+
     public void SelectTests_RepeatedElements_PreservesMultiplicity()
     {
         UnitTestElement checkout = Element(Checkout, "Prepare");
@@ -445,6 +462,7 @@ public sealed class TestPartitionTests : TestContainer
                 new("malformed", $"{Checkout}.Prepare", false),
                 new($"{Cart}.Buy", "malformed", false),
                 new("Acme.MissingTests.Buy", $"{Checkout}.Prepare", false),
+                new($"{Cart}.MissingMethod", $"{Checkout}.Prepare", false),
                 new($"{Cart}.Buy", $"{Checkout}.MissingMethod", false),
             ];
             AssertSelection([cart, checkout], 1, 4, [checkout], configuration);

@@ -20,9 +20,11 @@ as described in the
 
 ## What the option does
 
-`index` and `count` are positive decimal integers, numbering partitions from
-`1` through `count`. For example, `2/4` runs only partition 2, not all four.
-`1/1` selects the same work as an ordinary run.
+`index` and `count` are positive decimal Int32 values using ASCII digits,
+numbering partitions from `1` through `count`. Leading zeros are allowed.
+For example, `2/4` runs only partition 2, not all four. `1/1` selects the same
+work as an ordinary run. Signs and embedded whitespace are invalid; MTP's
+ordinary outer-whitespace argument normalization is unchanged.
 
 The option **does not start extra processes or enable in-process parallelism**.
 To run partitions concurrently, configure separate CI jobs or use an external
