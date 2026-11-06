@@ -41,8 +41,8 @@
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" PrivateAssets="all" Condition=" '$(IsNetCoreApp)' == 'true' " />
-    <!-- Needed to execute the shipping WinUI Extensions assembly; its private SDK dependency does not flow here. -->
-    <PackageReference Include="Microsoft.WindowsAppSDK" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " PrivateAssets="all" />
+    <!-- Needed to execute the shipping WinUI Extensions assembly; its private WinUI dependency does not flow here. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
