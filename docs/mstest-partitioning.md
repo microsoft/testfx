@@ -49,6 +49,8 @@ Partition assignment is deterministic for the same module filename, concrete
 class names, dependency topology and count. Checkout paths and test discovery
 order do not change it. Changing the count, renaming a class/module, or changing
 dependencies can move work between partitions.
+Different modules with the same filename and class names can have correlated
+assignments; each module is still partitioned independently.
 
 A class and its data rows stay together, including folded and execution-time
 data. Classes connected by resolvable declared dependencies stay in the same

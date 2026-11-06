@@ -161,7 +161,7 @@ internal sealed class TestPartition
 #if NET8_0_OR_GREATER
         byte[] hash = SHA256.HashData(stream.GetBuffer().AsSpan(0, (int)stream.Length));
 #else
-        using SHA256 algorithm = SHA256.Create();
+        using var algorithm = SHA256.Create();
         byte[] hash = algorithm.ComputeHash(stream.ToArray());
 #endif
         ulong prefix = 0;

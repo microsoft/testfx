@@ -111,6 +111,7 @@ internal partial class TestExecutionManager
         DebugEx.Assert(runCancellationToken is not null, "runCancellationToken");
 
         _testRunCancellationToken = runCancellationToken;
+        _unpartitionedTests = null;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
 #if !WINDOWS_UWP && !WIN_UI
