@@ -7,9 +7,9 @@
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>12.0.0-beta.26553.8</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>18.13.0-preview.26554.4</MicrosoftTestingExtensionsCodeCoverageVersion>
-    <MicrosoftTestingExtensionsAffectedTestsVersion>18.13.0-preview.26554.4</MicrosoftTestingExtensionsAffectedTestsVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>12.0.0-beta.26556.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>18.13.0-preview.26556.6</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsAffectedTestsVersion>18.13.0-preview.26556.6</MicrosoftTestingExtensionsAffectedTestsVersion>
     <!-- empty line to avoid merge conflicts for darc PRs to update CC and MSTest+MTP -->
     <MSTestVersion>5.0.0-preview.26555.7</MSTestVersion>
     <MicrosoftTestingPlatformVersion>3.0.0-preview.26555.7</MicrosoftTestingPlatformVersion>
