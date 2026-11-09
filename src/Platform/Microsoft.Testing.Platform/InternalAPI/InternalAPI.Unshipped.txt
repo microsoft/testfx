@@ -1,4 +1,10 @@
 #nullable enable
+const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_ARTIFACT_REPLAY_PIPE" -> string!
+static Microsoft.Testing.Platform.DotnetTestConnection.SendFileArtifactsToPipeAsync(string! pipeName, Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages! message, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_ROOT" -> string!
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TryDeferTrxArtifacts(Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages! message, string? attemptRoot, string? publicationDirectory) -> bool
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.ReadDeferredTrxArtifacts(string! manifestPath) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
