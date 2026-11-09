@@ -414,7 +414,8 @@ public sealed class TestHostControllersTestHostFinalizationTests : IDisposable
                 unsupported,
                 Assert.ContainsSingle(diagnostics.Where(d => d.Message.StartsWith("[NamedPipeServer] Unhandled exception:", StringComparison.Ordinal))).Error);
             Assert.HasCount(2, diagnostics);
-            _ = Assert.IsNotNull(peer);
+            // This project consumes MSTest from NuGet; an object-valued check works with both API versions.
+            Assert.IsNotNull((object?)peer);
             await peer.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
         }
         finally

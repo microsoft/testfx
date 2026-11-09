@@ -1174,12 +1174,11 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    [DataRow("object", "new()", DisplayName = "IsNotNull target-typed new")]
-    [DataRow("object", "default", DisplayName = "IsNotNull target-typed default")]
-    [DataRow("int[]", "[]", DisplayName = "IsNotNull target-typed collection")]
-    [DataRow("object", "true ? new() : new()", DisplayName = "IsNotNull target-typed conditional")]
-    [DataRow("object", "new(), \"my message\"", DisplayName = "IsNotNull target-typed new with message")]
-    public async Task WhenAssertAreNotEqualAndExpectedIsNull_PreservesExplicitTypeArgument(string typeArgument, string arguments)
+    [DataRow("[]", "(int[])[]", DisplayName = "IsNotNull empty collection")]
+    [DataRow("[1, 2]", "(int[])[1, 2]", DisplayName = "IsNotNull populated collection")]
+    [DataRow("([])", "(int[])([])", DisplayName = "IsNotNull parenthesized collection")]
+    [DataRow("true ? [] : []", "(int[])(true ? [] : [])", DisplayName = "IsNotNull conditional collections")]
+    public async Task WhenAssertAreNotEqualAndExpectedIsNull_PreservesCollectionExpressionTargetType(string actual, string expected)
     {
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1190,7 +1189,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.AreNotEqual<{{typeArgument}}>(null, {{arguments}})|};
+                    {|#0:Assert.AreNotEqual<int[]>(null, {{actual}})|};
                 }
             }
             """;
@@ -1204,7 +1203,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    Assert.IsNotNull<{{typeArgument}}>({{arguments}});
+                    Assert.IsNotNull({{expected}});
                 }
             }
             """;
@@ -1213,44 +1212,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             code,
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotNull", "AreNotEqual"),
             fixedCode);
-    }
-
-    [TestMethod]
-    public async Task WhenAssertAreNotEqualAndExpectedIsNull_MSTestV4RemovesTypeArgument()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    {|#0:Assert.AreNotEqual<object>(null, new())|};
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    Assert.IsNotNull(new());
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotNull", "AreNotEqual"),
-            fixedCode,
-            useMSTestV4: true);
     }
 
     [TestMethod]

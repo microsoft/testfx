@@ -1324,7 +1324,7 @@ public sealed class CodeFixResidualCoverageTests
     [TestMethod]
     [DataRow(false, DisplayName = "InferredNullAssertion")]
     [DataRow(true, DisplayName = "ExplicitGenericNullAssertion")]
-    public async Task ProperAssert_IsNotNull_PreservesOnlyExplicitGenericTypeArguments(bool generic)
+    public async Task ProperAssert_IsNotNull_UsesNonGenericOverload(bool generic)
     {
         string typeArguments = generic ? "<string>" : string.Empty;
         string source = $$"""
@@ -1337,13 +1337,13 @@ public sealed class CodeFixResidualCoverageTests
                 }
             }
             """;
-        string expected = $$"""
+        string expected = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class Tests
             {
                 public void Check(string text)
                 {
-                    Assert.IsNotNull{{typeArguments}}(text, "context");
+                    Assert.IsNotNull(text, "context");
                 }
             }
             """;
