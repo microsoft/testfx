@@ -1,4 +1,10 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int Id, out int ErrorCode, out string! Message, out object? Data) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int Id, int ErrorCode, string! Message, object? Data) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int? Id, out int ErrorCode, out string! Message, out object? Data) -> void
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int? Id, int ErrorCode, string! Message, object? Data) -> void
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int?
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!

@@ -1,6 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+
+using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -28,7 +34,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>-pack</c>); otherwise the test fails with a hint.
 /// </summary>
 [TestClass]
-public sealed class MtpServerClientPackagedConsumerRunTests : AcceptanceTestBase<NopAssetFixture>
+public sealed class MtpServerClientPackagedConsumerRunTests : ServerModeTestsBase<NopAssetFixture>
 {
     private const string AssetName = "MtpServerClientPackagedRun";
     private const string PackageId = "Microsoft.Testing.Platform.ServerMode.Client.Sources";
@@ -62,10 +68,12 @@ public sealed class MtpServerClientPackagedConsumerRunTests : AcceptanceTestBase
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Testing.Platform.ServerMode.Client;
+using Microsoft.Testing.Platform.ServerMode.Client.Protocol.ServerMode;
 
 namespace PackagedConsumer;
 
@@ -92,6 +100,20 @@ internal static class Program
 
         try
         {
+            SerializerUtilities.RegisterClientSerializers();
+            IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
+            const string ErrorJson = "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32700,\"message\":\"JSON parse error\"}}";
+#if NETCOREAPP
+            ErrorMessage error = (ErrorMessage)formatter.Deserialize<RpcMessage>(Encoding.UTF8.GetBytes(ErrorJson));
+#else
+            ErrorMessage error = (ErrorMessage)formatter.Deserialize<RpcMessage>(ErrorJson);
+#endif
+            if (error.Id is not null || error.StringId is not null || error.ErrorCode != -32700 || error.Message != "JSON parse error")
+            {
+                throw new InvalidOperationException("The packed client did not preserve the uncorrelated error.");
+            }
+
+            Console.WriteLine("PACKAGEDCONSUMER: UNCORRELATED ERROR ACCEPTED");
             if (!await DiscoverAsync(source, cancellationToken))
             {
                 return 1;
@@ -251,6 +273,7 @@ internal sealed class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        Console.WriteLine("SERVER-ASSEMBLY:" + typeof(TestApplication).Assembly.Location);
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
@@ -305,6 +328,22 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     [TestMethod]
     public async Task PackagedConsumer_LaunchesRealServer_DiscoversAndRunsExpectedNode()
         => await RunPackagedConsumerAsync(Net8Tfm, useManagedChildPath: false, TestContext.CancellationToken);
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = ".NET Framework requires Windows.")]
+    public async Task PackagedFrameworkConsumer_NullIdErrorIsAcceptedAndRealServerRemainsUsable()
+        => await RunPackagedConsumerAsync("net48", useManagedChildPath: false, TestContext.CancellationToken);
+
+    [TestMethod]
+    [DataRow("net8.0")]
+    [DataRow("net9.0")]
+    public async Task PackagedServer_NullIdErrorsPreserveDiscoveryExecutionAndExit(string targetFramework)
+        => await RunPackagedServerWithNullIdErrorsAsync(targetFramework);
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = ".NET Framework requires Windows.")]
+    public async Task PackagedFrameworkServer_NullIdErrorsPreserveDiscoveryExecutionAndExit()
+        => await RunPackagedServerWithNullIdErrorsAsync("net48");
 
     [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Unix execute permission classes do not apply on Windows.")]
@@ -370,9 +409,9 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
         // full launch -> initialize -> discover, then a second launch -> initialize -> run through the packed
         // client and asserts the node internally; it exits 0 only when both halves matched exactly.
         using var command = new TestInfrastructure.CommandLine();
-        string consumerCommand = consumerTfm == Net8Tfm
-            ? $"\"{consumerExe}\""
-            : $"dotnet \"{Path.Combine(Path.GetDirectoryName(consumerExe)!, "PackagedConsumer.dll")}\"";
+        string consumerCommand = consumerTfm == Net6Tfm
+            ? $"dotnet \"{Path.Combine(Path.GetDirectoryName(consumerExe)!, "PackagedConsumer.dll")}\""
+            : $"\"{consumerExe}\"";
         int exitCode = await command.RunAsyncAndReturnExitCodeAsync(
             $"{consumerCommand} \"{childSource}\"",
             environmentVariables: CreateChildEnvironment(),
@@ -382,6 +421,7 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
             0,
             exitCode,
             $"The packaged consumer did not complete the end-to-end run.\nSTD:\n{command.StandardOutput}\nERR:\n{command.ErrorOutput}");
+        Assert.Contains("PACKAGEDCONSUMER: UNCORRELATED ERROR ACCEPTED", command.StandardOutput);
         Assert.Contains($"PACKAGEDCONSUMER: DISCOVERED {ExpectedTestDisplayName}", command.StandardOutput);
         Assert.Contains($"PACKAGEDCONSUMER: EXECUTED {ExpectedTestDisplayName}", command.StandardOutput);
         Assert.Contains("PACKAGEDCONSUMER: OK", command.StandardOutput);
@@ -392,6 +432,65 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
                 command.StandardOutput,
                 "The packaged net6.0 slice should recover from EACCES by launching the managed assembly through dotnet.");
         }
+    }
+
+    private async Task RunPackagedServerWithNullIdErrorsAsync(string targetFramework)
+    {
+        string patchedSources = Sources
+            .PatchCodeWithReplace("$ConsumerTfm$", Net8Tfm)
+            .PatchCodeWithReplace("$DummyTfm$", targetFramework)
+            .PatchCodeWithReplace("$ServerClientSourceVersion$", ResolveServerClientSourceVersion())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset asset = await TestAsset.GenerateAssetAsync($"{AssetName}-null-error-{targetFramework}", patchedSources);
+        string projectDirectory = Path.Combine(asset.TargetAssetPath, "DummyApp");
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{projectDirectory}\" -c {Constants.BuildConfiguration}",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, build.ExitCode);
+        var host = TestInfrastructure.TestHost.LocateFrom(
+            projectDirectory, "DummyApp", targetFramework,
+            buildConfiguration: Enum.Parse<BuildConfiguration>(Constants.BuildConfiguration));
+        string packagePath = Path.Combine(Constants.ArtifactsPackagesShipping, $"Microsoft.Testing.Platform.{MicrosoftTestingPlatformVersion}.nupkg");
+        using ZipArchive package = ZipFile.OpenRead(packagePath);
+        string assetFramework = targetFramework == "net48" ? "netstandard2.0" : targetFramework;
+        ZipArchiveEntry entry = package.GetEntry($"lib/{assetFramework}/Microsoft.Testing.Platform.dll")
+            ?? throw new InvalidOperationException($"Missing {assetFramework} platform asset in {packagePath}.");
+        using Stream packedDll = entry.Open();
+        using MemoryStream expectedDll = new();
+        await packedDll.CopyToAsync(expectedDll, TestContext.CancellationToken);
+        string dllPath = Path.Combine(Path.GetDirectoryName(host.FullName)!, "Microsoft.Testing.Platform.dll");
+        Assert.AreSequenceEqual(expectedDll.ToArray(), await File.ReadAllBytesAsync(dllPath, TestContext.CancellationToken));
+        TestContext.WriteLine($"Packed server provenance: {packagePath} -> {dllPath}; assets: {Path.Combine(projectDirectory, "obj", "project.assets.json")}");
+
+        using TestingPlatformClient client = await StartAsServerAndConnectToTheClientAsync(
+            host, CreateChildEnvironment(), workingDirectory: projectDirectory);
+        Assert.IsNotNull(await client.Initialize());
+        await client.SendUncorrelatedErrorAsync(TestContext.CancellationToken);
+        await client.SendUncorrelatedErrorAsync(TestContext.CancellationToken);
+
+        TestNodeUpdateCollector discovered = new();
+        ResponseListener discovery = await client.DiscoverTests(Guid.NewGuid(), discovered.CollectNodeUpdates);
+        await discovery.WaitCompletion();
+        TestNodeUpdate discoveredNode = Assert.ContainsSingle(discovered.TestNodeUpdates);
+        Assert.AreEqual("TestMethod1", discoveredNode.Node.Uid);
+        Assert.AreEqual(ExpectedTestDisplayName, discoveredNode.Node.DisplayName);
+        Assert.AreEqual("action", discoveredNode.Node.NodeType);
+        Assert.AreEqual("discovered", discoveredNode.Node.ExecutionState);
+
+        await client.SendUncorrelatedErrorAsync(TestContext.CancellationToken);
+        TestNodeUpdateCollector executed = new();
+        ResponseListener execution = await client.RunTests(Guid.NewGuid(), executed.CollectNodeUpdates);
+        await execution.WaitCompletion();
+        TestNodeUpdate executedNode = Assert.ContainsSingle(executed.TestNodeUpdates);
+        Assert.AreEqual(discoveredNode.Node.Uid, executedNode.Node.Uid);
+        Assert.AreEqual(ExpectedTestDisplayName, executedNode.Node.DisplayName);
+        Assert.AreEqual("action", executedNode.Node.NodeType);
+        Assert.AreEqual("passed", executedNode.Node.ExecutionState);
+        await client.Exit();
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        shutdown.CancelAfter(TimeSpan.FromSeconds(30));
+        Assert.AreEqual(0, await client.WaitServerProcessExit(shutdown.Token));
+        Assert.Contains($"SERVER-ASSEMBLY:{dllPath}", client.ProcessOutput);
     }
 
     private static Dictionary<string, string?> CreateChildEnvironment()
