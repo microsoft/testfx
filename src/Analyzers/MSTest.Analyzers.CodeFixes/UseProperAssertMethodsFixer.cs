@@ -462,12 +462,5 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         // This is not very common and is currently not handled properly.
         // If needed, we can adjust the codefix to account for that case and
         // produce a GenericNameSyntax (e.g, AreEqual<object>) instead of IdentifierNameSyntax (e.g, AreEqual).
-        => editor.ReplaceNode(
-            simpleNameSyntax,
-            properAssertMethodName == "IsNotNull" &&
-            simpleNameSyntax is GenericNameSyntax genericName &&
-            editor.SemanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert)?
-                .GetMembers(properAssertMethodName).OfType<IMethodSymbol>().Any(method => method.IsGenericMethod) == true
-                ? genericName.WithIdentifier(SyntaxFactory.Identifier(properAssertMethodName))
-                : SyntaxFactory.IdentifierName(properAssertMethodName));
+        => editor.ReplaceNode(simpleNameSyntax, SyntaxFactory.IdentifierName(properAssertMethodName));
 }

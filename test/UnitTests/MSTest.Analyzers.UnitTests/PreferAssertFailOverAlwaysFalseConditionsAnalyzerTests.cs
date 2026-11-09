@@ -665,7 +665,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    [|Assert.IsNotNull<object>(null)|];
+                    [|Assert.IsNotNull(null)|];
                 }
             }
             """;
@@ -698,7 +698,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    [|Assert.IsNotNull<object>(null, "message")|];
+                    [|Assert.IsNotNull(null, "message")|];
                 }
             }
             """;
@@ -731,7 +731,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    [|Assert.IsNotNull<object>(message: "message", value: null)|];
+                    [|Assert.IsNotNull(message: "message", value: null)|];
                 }
             }
             """;
@@ -750,28 +750,6 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
-    [DataRow("public void Test() { _ = [|Assert.IsNotNull<object>(null)|]; }", DisplayName = "IsNotNull discarded result")]
-    [DataRow("public void Test() { var result = [|Assert.IsNotNull<object>(null)|]; }", DisplayName = "IsNotNull assigned result")]
-    [DataRow("public object Test() => [|Assert.IsNotNull<object>(null)|];", DisplayName = "IsNotNull expression-bodied return")]
-    [DataRow("public object Test() { return [|Assert.IsNotNull<object>(null)|]; }", DisplayName = "IsNotNull returned result")]
-    [DataRow("public void Test() { Consume([|Assert.IsNotNull<object>(null)|]); }", DisplayName = "IsNotNull argument result")]
-    public async Task WhenAssertIsNotNullResultIsUsed_DiagnosticWithoutCodeFix(string member)
-    {
-        string code = $$"""
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            public class MyTestClass
-            {
-                {{member}}
-
-                private static void Consume(object value) { }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
