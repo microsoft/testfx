@@ -64,14 +64,14 @@
     {
       "id": "platform-file-utilities-case-sensitivity",
       "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/FileUtilities.cs",
-      "notes": "Originally copied lines 41-59 (GetIsFileSystemCaseSensitive) from the runtime probe. Upstream has since replaced the probe with an OS-based check (OperatingSystem.IsWindows/MacOS/IOS/TvOS); we intentionally keep the file-system probe locally because (a) the platform targets netstandard2.0 where those APIs are not first-class, and (b) the probe better reflects mount-level case sensitivity. Drift signal fires on the whole upstream file; reviewer should check whether any new change affects the historical copied region.",
+      "notes": "Originally copied lines 41-59 (GetIsFileSystemCaseSensitive) from the runtime probe. Upstream has since replaced the probe with an OS-based check (OperatingSystem.IsWindows/IsApplePlatform); we intentionally keep the file-system probe locally because (a) the platform targets netstandard2.0 where those APIs are not first-class, and (b) the probe better reflects mount-level case sensitivity. Upstream's consolidation of Apple-platform checks affects only the OS-based implementation and requires no port. Drift signal fires on the whole upstream file; reviewer should check whether any new change affects the historical copied region.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/Common/src/System/IO/PathInternal.CaseSensitivity.cs",
-          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
-          "baseline_blob_sha": "0e1278fd1a2cab8dcbcf860f9297cf4eecca4600",
+          "baseline_ref_sha": "6acf6b07abfca99f67de65ab97add9ed06ab1319",
+          "baseline_blob_sha": "b6961ccedbe7befc7d4feb7c3d4e68cf3dc4ca21",
           "scope": "originally lines 41-59 (GetIsFileSystemCaseSensitive); upstream has since rewritten the helper -- local copy intentionally diverges"
         }
       ]
@@ -267,14 +267,14 @@
     {
       "id": "platform-terminal-native-methods",
       "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/NativeMethods.cs",
-      "notes": "Only QueryIsScreenAndTryEnableAnsiColorCodes and its console-mode P/Invokes are copied from msbuild's Framework NativeMethods. Upstream OpenHarmony detection and CodeQL annotations in GetLastWriteFileUtcTime are outside the copied scope and require no port.",
+      "notes": "Only QueryIsScreenAndTryEnableAnsiColorCodes and its console-mode P/Invokes are copied from msbuild's Framework NativeMethods. Upstream's simplification of IsUnixLike and removal of Unix platform detection and file-system case-sensitivity helpers are outside the copied scope and require no port.",
       "sources": [
         {
           "repo": "dotnet/msbuild",
           "ref": "main",
           "path": "src/Framework/NativeMethods.cs",
-          "baseline_ref_sha": "86743d0545fba3d043d4e7aaa12891edb3fd56e6",
-          "baseline_blob_sha": "724a2e387da9a7295f4d519ce598e0c545910e3f",
+          "baseline_ref_sha": "3df416b193f07116290d6f39d4736c9f2d574f74",
+          "baseline_blob_sha": "8970896baa2b0d6d12495022a9198ea1eb94f4ef",
           "scope": "QueryIsScreenAndTryEnableAnsiColorCodes and supporting console-mode P/Invokes"
         }
       ]
