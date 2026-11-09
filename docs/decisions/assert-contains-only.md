@@ -20,11 +20,12 @@ The implementation follows the
   element. Built-in formatting must not enumerate nested lazy collections.
   Explicit user value formatters retain their existing guarded behavior.
 - Preserve existing `DoesNotContain` invalid-argument behavior. New
-  `ContainsOnly` argument failures use MSTest's parameter reporting and remain
-  safe inside `Assert.Scope`.
+  `ContainsOnly` argument failures use MSTest's immediate parameter reporting,
+  including inside `Assert.Scope`. Only valid predicate failures aggregate.
 - Extend MSTEST0037 for positive `Enumerable.All` checks only when the referenced
-  framework exposes the new API. Do not change `Queryable.All` or negative
-  `IsFalse(All)` checks.
+  framework exposes the new API and argument evaluation can be preserved.
+  Preserve explicit element type arguments. Do not change `Queryable.All`,
+  negative `IsFalse(All)` checks, or effectful factory/message calls.
 
 Exact failure totals, action inspectors, async assertions, query-provider
 execution, and changes to other assertions' rendering are outside this scope.
@@ -185,6 +186,80 @@ rendered-surface inspection are also unexecuted. These gaps must remain visible
 in the draft pull request; passing builds, packages, and other tests do not
 establish completion.
 
+### 2026-11-09: review and CI corrections
+
+The eight path-combination findings were checked against their inputs and
+resolved without speculative normalization: components are literals, fixed TFM
+rows, or NuGet-generated paths for the asserted package and runtime asset.
+
+Concrete corrections:
+
+- Bind LINQ operands by parameter ordinal, normalize named outer arguments in
+  the fixer, and retain messages regardless of their original argument position.
+- Retain explicit `All<Base>` type arguments in `ContainsOnly<Base>` so overload
+  resolution inside untyped predicates does not change.
+- Decline the automatic rewrite when collection/predicate factories or
+  nonconstant messages could move observable work across predicate execution.
+  Stable locals, parameters, lambdas, method groups, and constant messages remain
+  supported.
+- Preserve the shared `CheckParameterNotNull` contract. The original newly added
+  invalid-input test assumed soft parameter failures incorrectly; its replacement
+  requires immediate collection-first failure, zero predicate visits, and zero
+  enumeration. Valid scoped assertion aggregation remains covered separately.
+- Fix the three introduced IDE0007 errors. Compare the consumer transcript after
+  the process harness's existing blank-line filtering; full diagnostic spacing
+  remains asserted independently inside the packaged consumer.
+
+Current executed results:
+
+| Requirement | Evidence |
+| --- | --- |
+| Collection semantics, indexed evidence, lifecycle and formatting | 241/241 containment tests pass, exit 0. |
+| Valid scoped aggregation | `PredicateAssertions_ScopedFailures_AggregateAndContinue` passes, exit 0. |
+| Analyzer mapping and safe exclusions | 155/155 analyzer cases pass, exit 0, including explicit-base overload binding, named/message-first arguments, and effectful factory/message exclusions. |
+| Real packed consumers | All six `AssertSourceCompatibilityTests` rows pass on net10.0/net11.0, including C# 12 compilation/runtime and existing F# controls; the execution gate confirms planned/selected/executed/passed 6, zero skips, exit 0. |
+| CI compile/style errors | Framework, analyzer, and net12.0 acceptance builds pass with warnings treated as errors. |
+
+The complete 41-project production graph was packed to satisfy the acceptance
+fixture's declared package inventory; the first consumer attempt with only MSTest
+packages failed during fixture initialization, not at a feature assertion.
+Fresh package SHA-256 values are:
+
+- `MSTest.TestFramework.5.0.0-dev.nupkg`:
+  `A9AE56D8559E28F45648AD9E2A79964EF709863F593CBDF13AF35CBEA8D5A8BA`.
+- `MSTest.Analyzers.5.0.0-dev.nupkg`:
+  `2AE41405D63B65B323BF402FCE9CFA12177E188264AF1773980F072847237E56`.
+
+#### Executed test-value evidence
+
+Comparisons used the owned sibling worktree, isolated outputs, identical tests
+and selectors, and the pinned SDK. No compiler/setup failure is counted as red.
+
+| Contract | Counterfactual | Without behavior | Restored correct implementation |
+| --- | --- | --- | --- |
+| Analyzer type binding, argument order, static/named fixes | Restore the three analyzer/fixer files from actual pre-fix commit `f98cfe9c3afc1ba120a273de7e43170125316563`, retaining current tests. | 155 execute; the six corresponding cases fail at exact diagnostic/fixed-source assertions, exit 2. | Clean rebuild: the same 155 identities pass, zero skips, exit 0. |
+| Positive predicate checking and indexed counterexamples | Compiling mutation: invert the required predicate result in the new assertion and shift reported indices by one. | 241 execute; 19 fail, including `ContainsOnly_AllMatchingItems_EvaluatesEachItemOnce`, `ContainsOnly_FirstMismatch_ReportsIndexValueAndExpressions`, and DNC evidence cases, exit 2. | Clean rebuild: the same 241 identities pass, zero skips, exit 0. |
+
+The analyzer test-file SHA-256 was identical in the paired runs:
+`B4855B8708309AC09246AC2432282A5933F8EA9C11708C9B1F3DF07B6AA778B9`.
+An initial restoration reused timestamp-newer counterfactual outputs; it was
+rejected and repeated with `--no-incremental`. Only the clean restoration above
+is green evidence.
+
+Retained results include:
+
+- `artifacts\TestResults\Release\agent-merge-12278-77ecc24b47d34acc9302451265d76fee`
+  (framework and scope);
+- `artifacts\TestResults\Release\agent-merge-12278-final-5a851bcf42044bbb815ecb1b0fd8c714`
+  (analyzer and acceptance build);
+- `artifacts\TestResults\Release\agent-merge-12278-composed-51b331b56dd54f6e8e3b0dd1a13cc6b3`
+  (fresh pack and six consumers);
+- comparison-worktree `artifacts\TestResults\counterfactual`, `restored-clean`,
+  `feature-ablation`, and `feature-restored` (paired proof).
+
+CI on the eventual pushed head and actual rendered terminal/IDE layout inspection
+remain separate, unclaimed evidence.
+
 ## Alternatives and decision
 
 `ContainsAll` is already multiplicity-aware expected-item inclusion and permits
@@ -224,15 +299,13 @@ Planned evidence:
 - Inspection of actual built assertion output and neutral-resource/XLF
   validation.
 
-The existing-test baseline above is executed evidence, not proof of the new
-behavior. Red-phase results, package provenance, and CI execution are not claimed
-yet. Temporary logs and test-pipeline records belong in task-owned artifact
-storage, not this source document.
+The baseline, package consumers, and paired comparisons above are executed
+evidence. CI on the eventual pushed head and rendered-surface inspection are
+not claimed. Temporary logs and test-pipeline records belong in task-owned
+artifact storage, not this source document.
 
 ## Open questions
 
-- Record final test identities, commands, exits, package provenance, and
-  counterfactual patch identities after execution.
-- Inspect the final isolation contract for formatter registrations and assertion
-  scopes without changing assembly scheduling.
 - CI execution remains unproven until the eventual published revision runs.
+- Actual rendered terminal/IDE layout inspection remains unperformed; exact
+  packaged diagnostics and transcript content do not replace that surface check.

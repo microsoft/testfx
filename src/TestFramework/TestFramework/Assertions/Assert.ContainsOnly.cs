@@ -43,10 +43,6 @@ public sealed partial class Assert
         TelemetryCollector.TrackAssertionCall("Assert.ContainsOnly");
         CheckParameterNotNull(collection, "Assert.ContainsOnly", nameof(collection));
         CheckParameterNotNull(predicate, "Assert.ContainsOnly", nameof(predicate));
-        if (collection is null || predicate is null)
-        {
-            return;
-        }
 
         if (TryFindPredicateMismatch(collection.Cast<object?>(), predicate, expectedPredicateResult: true, out long index, out string? itemText))
         {
@@ -145,10 +141,6 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.ContainsOnly");
         CheckParameterNotNull(predicate, "Assert.ContainsOnly", nameof(predicate));
-        if (predicate is null)
-        {
-            return;
-        }
 
         if (TryFindPredicateMismatch(collection, predicate, expectedPredicateResult: true, out long index, out string? itemText))
         {
@@ -162,10 +154,6 @@ public sealed partial class Assert
         TelemetryCollector.TrackAssertionCall("Assert.ContainsOnly");
         CheckParameterNotNull(collection, "Assert.ContainsOnly", nameof(collection));
         CheckParameterNotNull(predicate, "Assert.ContainsOnly", nameof(predicate));
-        if (collection is null || predicate is null)
-        {
-            return;
-        }
 
         if (TryFindPredicateMismatch(collection, predicate, expectedPredicateResult: true, out long index, out string? itemText))
         {

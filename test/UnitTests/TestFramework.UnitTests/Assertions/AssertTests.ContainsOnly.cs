@@ -91,7 +91,7 @@ public partial class AssertTests : TestContainer
         }
     }
 
-    public void ContainsOnly_InvalidParameters_ScopedFailuresContinueSafely()
+    public void ContainsOnly_InvalidParameters_ScopedFailuresStopSafely()
     {
         foreach (bool nonGeneric in new[] { false, true })
         {
@@ -116,22 +116,9 @@ public partial class AssertTests : TestContainer
                 };
 
                 AssertFailedException failure = action.Should().ThrowExactly<AssertFailedException>().Which;
-                if (nullCollection && nullPredicate)
-                {
-                    failure.Message.Should().Be("2 assertion(s) failed within the assert scope.");
-                    AggregateException aggregate = failure.InnerException.Should().BeOfType<AggregateException>().Which;
-                    aggregate.InnerExceptions.Should().HaveCount(2);
-                    aggregate.InnerExceptions[0].Should().BeOfType<AssertFailedException>().Which.Message
-                        .Should().Be(PredicateParameterMessage("ContainsOnly", "collection"));
-                    aggregate.InnerExceptions[1].Should().BeOfType<AssertFailedException>().Which.Message
-                        .Should().Be(PredicateParameterMessage("ContainsOnly", "predicate"));
-                }
-                else
-                {
-                    failure.Message.Should().Be(PredicateParameterMessage("ContainsOnly", nullCollection ? "collection" : "predicate"));
-                }
+                failure.Message.Should().Be(PredicateParameterMessage("ContainsOnly", nullCollection ? "collection" : "predicate"));
 
-                continued.Should().Be(1);
+                continued.Should().Be(0);
                 visits.Should().Be(0);
                 if (collection is not null)
                 {

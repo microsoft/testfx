@@ -62,6 +62,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
         bool useContainsOnly = isTrueInvocation &&
             linqStatus == LinqPredicateCheckStatus.All &&
+            CanRewriteAllWithoutReorderingEffects((IInvocationOperation)context.Operation, conditionArgument) &&
             assertTypeSymbol.GetMembers("ContainsOnly").OfType<IMethodSymbol>().Any(method =>
                 method.IsStatic &&
                 method.DeclaredAccessibility == Accessibility.Public &&
@@ -300,4 +301,26 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
         }
     }
+
+    private static bool CanRewriteAllWithoutReorderingEffects(IInvocationOperation assertion, IOperation condition)
+        => condition is IInvocationOperation all &&
+            TryGetArgumentForParameterOrdinal(all, 0, out IArgumentOperation? collection) &&
+            TryGetArgumentForParameterOrdinal(all, 1, out IArgumentOperation? predicate) &&
+            IsStablePredicateAssertionInput(collection.Value) &&
+            IsStablePredicateAssertionInput(predicate.Value) &&
+            assertion.Arguments.All(argument =>
+                argument.Parameter?.Ordinal == 0 ||
+                argument.IsImplicit ||
+                argument.Value.ConstantValue.HasValue);
+
+    private static bool IsStablePredicateAssertionInput(IOperation operation)
+        => operation switch
+        {
+            IConversionOperation conversion => conversion.OperatorMethod is null && IsStablePredicateAssertionInput(conversion.Operand),
+            IDelegateCreationOperation creation => IsStablePredicateAssertionInput(creation.Target),
+            IAnonymousFunctionOperation or ILocalReferenceOperation or IParameterReferenceOperation or IInstanceReferenceOperation => true,
+            IMethodReferenceOperation method => method.Instance is null || IsStablePredicateAssertionInput(method.Instance),
+            IFieldReferenceOperation field => field.Field.IsReadOnly && (field.Instance is null || IsStablePredicateAssertionInput(field.Instance)),
+            _ => operation.ConstantValue.HasValue,
+        };
 }

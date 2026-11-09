@@ -1054,20 +1054,14 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             {Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll")}
             Assertion failed. Expected collection to contain only elements matching the predicate.
             consumer only
-
             index: 1
             item:  -2
-
             Assert.ContainsOnly(IsPositive, values)
-
             Assertion failed. Expected collection to not contain an element matching the predicate.
             consumer none
-
             index: 2
             item:  3
-
             Assert.DoesNotContain(IsPositive, values)
-
             ContainsOnly C# 12 consumer passed.
             """.ReplaceLineEndings(),
             muxer.StandardOutput.ReplaceLineEndings());
@@ -1115,7 +1109,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
     private void VerifyPackedPredicateConsumerProvenance(TestAsset asset, string targetFramework, string isolatedPackages, bool verifyRuntimeCopy)
     {
         string assetsPath = Path.Combine(asset.TargetAssetPath, "obj", "project.assets.json");
-        using JsonDocument assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
+        using var assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
         string packageIdentity = $"MSTest.TestFramework/{MSTestVersion}";
         JsonProperty target = assets.RootElement.GetProperty("targets").EnumerateObject().Single();
         JsonElement selection = target.Value.GetProperty(packageIdentity);
@@ -1149,7 +1143,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         }
 
         string nugetConfigPath = Path.Combine(asset.TargetAssetPath, "NuGet.config");
-        XDocument nugetConfig = XDocument.Load(nugetConfigPath);
+        var nugetConfig = XDocument.Load(nugetConfigPath);
         string sources = string.Join("; ", nugetConfig.Descendants("packageSources").Elements("add")
             .Select(element => $"{element.Attribute("key")?.Value}={element.Attribute("value")?.Value}"));
         TestContext.WriteLine($"Consumer assets: {assetsPath}; target: {target.Name}; package: {packageIdentity}; asset: {runtimeAsset}");
@@ -1160,7 +1154,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
 
     private static string GetPredicateConsumerAssetHash(Stream stream)
     {
-        using SHA256 hash = SHA256.Create();
+        using var hash = SHA256.Create();
         return Convert.ToHexString(hash.ComputeHash(stream));
     }
 

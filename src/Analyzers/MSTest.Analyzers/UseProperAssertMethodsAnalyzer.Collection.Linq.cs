@@ -202,10 +202,12 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, enumerableTypeSymbol))
         {
             // Extension method with predicate: Method(collection, predicate)
-            if (invocation.Arguments.Length == 2)
+            if (invocation.Arguments.Length == 2 &&
+                TryGetArgumentValueForParameterOrdinal(invocation, 0, out IOperation? collection) &&
+                TryGetArgumentValueForParameterOrdinal(invocation, 1, out IOperation? predicate))
             {
-                collectionExpression = invocation.Arguments[0].Value.Syntax;
-                predicateExpression = invocation.Arguments[1].Value.Syntax;
+                collectionExpression = collection.Syntax;
+                predicateExpression = predicate.Syntax;
                 return true;
             }
 

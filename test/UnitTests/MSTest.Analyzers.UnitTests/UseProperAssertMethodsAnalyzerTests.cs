@@ -5638,8 +5638,8 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
     [TestMethod]
     [DataRow("\"all positive\"", DisplayName = "ContainsOnlyLiteralMessage")]
-    [DataRow("detail", DisplayName = "ContainsOnlyMessageVariable")]
-    [DataRow("$\"minimum {threshold}\"", DisplayName = "ContainsOnlyInterpolatedMessage")]
+    [DataRow("detail", DisplayName = "ContainsOnlyConstantMessage")]
+    [DataRow("null", DisplayName = "ContainsOnlyNullMessage")]
     public async Task WhenUsingIsTrueAllWithMessage_PreservesMessageAndExpressions(string messageExpression)
     {
         string code = $$"""
@@ -5652,12 +5652,11 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    int threshold = 0;
-                    string detail = "all positive";
-                    {|#0:Assert.IsTrue(GetItems().All(item => item > threshold), {{messageExpression}})|};
+                    const int threshold = 0;
+                    const string detail = "all positive";
+                    int[] items = new[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(items.All(item => item > threshold), {{messageExpression}})|};
                 }
-
-                private static int[] GetItems() => new[] { 1, 2, 3 };
             }
             """;
         string fixedCode = $$"""
@@ -5670,12 +5669,11 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    int threshold = 0;
-                    string detail = "all positive";
-                    Assert.ContainsOnly(item => item > threshold, GetItems(), {{messageExpression}});
+                    const int threshold = 0;
+                    const string detail = "all positive";
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.ContainsOnly(item => item > threshold, items, {{messageExpression}});
                 }
-
-                private static int[] GetItems() => new[] { 1, 2, 3 };
             }
             """;
 
@@ -5756,7 +5754,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void TestMethod()
                 {
                     int[] items = new[] { 1, 2, 3 };
-                    Assert.ContainsOnly(static item => item > 0, items);
+                    Assert.ContainsOnly<int>(static item => item > 0, items);
                 }
             }
             """;
@@ -5810,7 +5808,9 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingIsTrueAllWithReorderedNamedArguments_PreservesArgumentMeaning()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task WhenUsingIsTrueAllWithReorderedNamedArguments_PreservesArgumentMeaning(bool messageFirst)
     {
         string code = """
             using System.Linq;
@@ -5847,10 +5847,136 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             }
             """;
 
+        if (messageFirst)
+        {
+            code = code.Replace(
+                """condition: Enumerable.All(predicate: IsPositive, source: items), message: "named detail" """.TrimEnd(),
+                """message: "named detail", condition: Enumerable.All(predicate: IsPositive, source: items)""",
+                StringComparison.Ordinal);
+        }
+
         await VerifyCS.VerifyCodeFixAsync(
             code,
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithExplicitBaseType_PreservesPredicateBinding()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base { public bool Enabled => true; }
+            public class Derived : Base { }
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Derived[] items = new Derived[] { new Derived() };
+                    {|#0:Assert.IsTrue(items.All<Base>(item => item.Enabled && Accept(item)))|};
+                }
+
+                private static bool Accept(Base item) => true;
+                private static bool Accept(Derived item) => false;
+            }
+            """;
+        string fixedCode = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base { public bool Enabled => true; }
+            public class Derived : Base { }
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Derived[] items = new Derived[] { new Derived() };
+                    Assert.ContainsOnly<Base>(item => item.Enabled && Accept(item), items);
+                }
+
+                private static bool Accept(Base item) => true;
+                private static bool Accept(Derived item) => false;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithEffectfulFactories_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                private static int limit;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.IsTrue(GetItems().All(GetPredicate()));
+                }
+
+                private static IEnumerable<int> GetItems()
+                {
+                    limit = 10;
+                    return new[] { 1 };
+                }
+
+                private static Func<int, bool> GetPredicate()
+                {
+                    int captured = limit;
+                    return item => item > captured;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithEffectfulMessage_NoDiagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int limit = 0;
+                    int[] items = new[] { 1 };
+                    Assert.IsTrue(items.All(item => item > limit), GetMessage());
+
+                    string GetMessage()
+                    {
+                        limit = 10;
+                        return "message";
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
