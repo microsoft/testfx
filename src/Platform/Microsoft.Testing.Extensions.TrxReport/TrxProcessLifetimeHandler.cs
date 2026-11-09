@@ -252,6 +252,8 @@ internal sealed class TrxProcessLifetimeHandler :
                     ExtensionResources.TrxReportArtifactDisplayName,
                     ExtensionResources.TrxReportArtifactDescription,
                     TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
+            await RetryArtifactManifest.WriteArtifactAsync(
+                _environment, _fileSystem, _logger, fileName, TrxReportEngine.TrxArtifactKind, cancellationToken).ConfigureAwait(false);
 
             TryDeleteStreamingSidecar();
             return;
@@ -289,6 +291,8 @@ internal sealed class TrxProcessLifetimeHandler :
         }
 
         await _messageBus.PublishAsync(this, new FileArtifact(trxFile, ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription, TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
+        await RetryArtifactManifest.WriteArtifactAsync(
+            _environment, _fileSystem, _logger, trxFile.FullName, TrxReportEngine.TrxArtifactKind, cancellationToken).ConfigureAwait(false);
 
         // Best-effort orphan cleanup. On the happy path the test host normally deletes its own
         // sidecar in TrxReportGenerator.GenerateReportAndCleanupAsync, but if its CompleteAsync timed

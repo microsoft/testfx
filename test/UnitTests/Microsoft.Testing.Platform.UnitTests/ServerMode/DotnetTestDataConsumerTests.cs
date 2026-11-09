@@ -3,10 +3,15 @@
 
 using System.Reflection;
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -14,6 +19,167 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class DotnetTestDataConsumerTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow("report.trx", true, true, DisplayName = "RetryArtifactManifest_Trx")]
+    [DataRow("report.TRX", true, true, DisplayName = "RetryArtifactManifest_UppercaseTrx")]
+    [DataRow("nested/report.trx", true, true, DisplayName = "RetryArtifactManifest_NestedTrx")]
+    [DataRow("report.txt", true, false, DisplayName = "RetryArtifactManifest_OtherArtifact")]
+    [DataRow("../attempt-sibling/report.trx", true, false, DisplayName = "RetryArtifactManifest_SiblingDirectory")]
+    [DataRow("report.trx", false, false, DisplayName = "RetryArtifactManifest_NoOptIn")]
+    public void TryDeferTrxArtifacts_OnlyDefersOwnedTrxAndPreservesWireIdentity(string relativePath, bool enabled, bool expectedDeferred)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        string attempt = Path.Combine(directory, "attempt");
+        string manifests = Path.Combine(directory, "manifests");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            string path = Path.GetFullPath(Path.Combine(attempt, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+            var artifact = new FileArtifactMessage(path, "quoted \"report\"", "description", "test-uid", "test-name", "session", "microsoft.testing.trx");
+            var message = new FileArtifactMessages("execution", "instance", [artifact]);
+
+            bool deferred = DotnetTestDataConsumer.TryDeferTrxArtifacts(message, enabled ? attempt : null, manifests);
+
+            Assert.AreEqual(expectedDeferred, deferred);
+            if (!expectedDeferred)
+            {
+                Assert.IsFalse(Directory.Exists(manifests));
+                return;
+            }
+
+            string manifest = Assert.ContainsSingle(Directory.GetFiles(manifests, "*.bin"));
+            Assert.IsEmpty(Directory.GetFiles(manifests, "*.tmp"));
+            FileArtifactMessages restored = DotnetTestDataConsumer.ReadDeferredTrxArtifacts(manifest);
+            Assert.AreEqual("execution", restored.ExecutionId);
+            Assert.AreEqual("instance", restored.InstanceId);
+            Assert.AreEqual(artifact, Assert.ContainsSingle(restored.FileArtifacts));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "RetryArtifactManifest_ControllerArtifact")]
+    [DataRow(true, DisplayName = "RetryArtifactManifest_SessionArtifact")]
+    public async Task ConsumeAsync_DeferredTrxIsRecordedInsteadOfSent(bool sessionScoped)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        string attempt = Path.Combine(directory, "attempt");
+        string manifests = Path.Combine(directory, "manifests");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(value => value.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)).Returns("execution");
+            environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable)).Returns(attempt);
+            environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable)).Returns(manifests);
+            (DotnetTestConnection connection, Mock client) = CreateConnection(environment.Object);
+            using DotnetTestConnection connectionOwnership = connection;
+            var consumer = new DotnetTestDataConsumer(connection, environment.Object);
+            var file = new FileInfo(Path.Combine(attempt, "report.trx"));
+            IData artifact = sessionScoped
+                ? new SessionFileArtifact(new SessionUid("session"), file, "report", "description", "microsoft.testing.trx")
+                : new FileArtifact(file, "report", "description", "microsoft.testing.trx");
+
+            await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), artifact, TestContext.CancellationToken);
+
+            Assert.IsEmpty(client.Invocations);
+            FileArtifactMessages recorded = DotnetTestDataConsumer.ReadDeferredTrxArtifacts(Assert.ContainsSingle(Directory.GetFiles(manifests, "*.bin")));
+            Assert.AreEqual("execution", recorded.ExecutionId);
+            Assert.AreEqual(DotnetTestConnection.InstanceId, recorded.InstanceId);
+            FileArtifactMessage result = Assert.ContainsSingle(recorded.FileArtifacts);
+            Assert.AreEqual(file.FullName, result.FullPath);
+            Assert.AreEqual(sessionScoped ? "session" : string.Empty, result.SessionUid);
+            Assert.AreEqual("report", result.DisplayName);
+            Assert.AreEqual("description", result.Description);
+            Assert.AreEqual("microsoft.testing.trx", result.Kind);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_DeferredTestAttachmentStillStreamsTheTestResult()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        string attempt = Path.Combine(directory, "attempt");
+        string manifests = Path.Combine(directory, "manifests");
+        Directory.CreateDirectory(attempt);
+        try
+        {
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(value => value.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)).Returns("execution");
+            environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable)).Returns(attempt);
+            environment.Setup(value => value.GetEnvironmentVariable(DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable)).Returns(manifests);
+            (DotnetTestConnection connection, Mock client) = CreateConnection(environment.Object);
+            using DotnetTestConnection connectionOwnership = connection;
+            var consumer = new DotnetTestDataConsumer(connection, environment.Object);
+            var file = new FileInfo(Path.Combine(attempt, "attachment.trx"));
+            var update = new TestNodeUpdateMessage(new SessionUid("session"), new TestNode
+            {
+                Uid = new TestNodeUid("uid"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, new FileArtifactProperty(file, "attachment")),
+            });
+
+            await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+
+            object request = Assert.ContainsSingle(client.Invocations).Arguments[0];
+            TestResultMessages results = Assert.IsInstanceOfType<TestResultMessages>(request);
+            Assert.AreEqual("uid", Assert.ContainsSingle(results.SuccessfulTestMessages).Uid);
+            FileArtifactMessage recorded = Assert.ContainsSingle(DotnetTestDataConsumer.ReadDeferredTrxArtifacts(
+                Assert.ContainsSingle(Directory.GetFiles(manifests, "*.bin"))).FileArtifacts);
+            Assert.AreEqual(file.FullName, recorded.FullPath);
+            Assert.AreEqual("uid", recorded.TestUid);
+            Assert.AreEqual("DisplayName", recorded.TestDisplayName);
+            Assert.AreEqual("session", recorded.SessionUid);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void TryDeferTrxArtifacts_WriteFailureIsNotReportedAsSuccess()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"deferred-trx-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string blocked = Path.Combine(directory, "blocked");
+            File.WriteAllText(blocked, "not a directory");
+            var message = new FileArtifactMessages("execution", "instance",
+                [new FileArtifactMessage(Path.Combine(directory, "report.trx"), "report", null, null, null, null, null)]);
+
+            Assert.ThrowsExactly<IOException>(() => DotnetTestDataConsumer.TryDeferTrxArtifacts(message, directory, blocked));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private (DotnetTestConnection Connection, Mock Client) CreateConnection(IEnvironment environment)
+    {
+        ITestApplicationModuleInfo module = Mock.Of<ITestApplicationModuleInfo>();
+        var commandLine = new CommandLineHandler(new CommandLineParseResult(null, [], []), [], [], module, Mock.Of<IRuntimeFeature>());
+        var cancellation = new Mock<ITestApplicationCancellationTokenSource>();
+        cancellation.SetupGet(value => value.CancellationToken).Returns(TestContext.CancellationToken);
+        var connection = new DotnetTestConnection(commandLine, environment, module, cancellation.Object);
+        // The core's embedded transport interface is distinct from this assembly's linked IPC copy.
+        FieldInfo transport = typeof(DotnetTestConnection).GetField("_transportClient", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var client = (Mock)Activator.CreateInstance(typeof(Mock<>).MakeGenericType(transport.FieldType))!;
+        transport.SetValue(connection, client.Object);
+        return (connection, client);
+    }
+
     [TestMethod]
     [DynamicData(nameof(DuplicateSingleOrDefaultProperties))]
     public void GetTestNodeDetails_WithDuplicateSingleOrDefaultProperty_ThrowsInvalidOperationException(Type propertyType, IProperty firstProperty, IProperty secondProperty)

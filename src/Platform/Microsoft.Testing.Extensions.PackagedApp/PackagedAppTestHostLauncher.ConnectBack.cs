@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.IPC;
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
@@ -30,6 +31,8 @@ internal sealed partial class PackagedAppTestHostLauncher
                 || string.Equals(environmentVariable.Key, JUnitReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, RetryAttemptEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, RetryRecoveredArtifactManifestEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, LogicalRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, AppModelControllerExtensionsEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, TrxTestRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)

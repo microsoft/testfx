@@ -9,6 +9,7 @@ using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -26,6 +27,47 @@ public sealed class TrxProcessLifetimeHandlerTests
     private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task OnTestHostProcessExitedAsync_RegistersReportKindWithRetryOnlyWhenConfigured(bool retryEnabled)
+    {
+        string root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        string reportPath = Path.Combine(root, "report.trx");
+        string manifestPath = Path.Combine(root, "artifacts.manifest");
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(value => value.GetEnvironmentVariable("TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"))
+            .Returns(retryEnabled ? manifestPath : null);
+        using MemoryStream manifest = new();
+        var fileStream = new Mock<IFileStream>();
+        fileStream.SetupGet(value => value.Stream).Returns(manifest);
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.NewFileStream(manifestPath, FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(fileStream.Object);
+        (TrxProcessLifetimeHandler handler, _, _, _) = CreateHandler(fileSystem.Object, environment.Object);
+        using (handler)
+        {
+            Type requestType = typeof(TrxProcessLifetimeHandler).Assembly.GetTypes().Single(type => type.Name == "ReportFileNameRequest");
+            object request = Activator.CreateInstance(requestType, [reportPath])!;
+            await (Task)typeof(TrxProcessLifetimeHandler).GetMethod("CallbackAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(handler, [request])!;
+            await handler.OnTestHostProcessExitedAsync(Mock.Of<ITestHostProcessInformation>(), TestContext.CancellationToken);
+        }
+
+        if (retryEnabled)
+        {
+            string[] entry = Encoding.UTF8.GetString(manifest.ToArray()).TrimEnd('\r', '\n').Split('\t');
+            Assert.HasCount(2, entry);
+            Assert.AreEqual(reportPath, Encoding.UTF8.GetString(Convert.FromBase64String(entry[0])));
+            Assert.AreEqual(TrxReportEngine.TrxArtifactKind, Encoding.UTF8.GetString(Convert.FromBase64String(entry[1])));
+        }
+        else
+        {
+            Assert.AreEqual(0, manifest.Length);
+            fileSystem.Verify(value => value.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()), Times.Never);
+        }
+    }
 
     [TestMethod]
     public async Task BeforeTestHostProcessStartAsync_CreatesPipeBeforeSchedulingConnectionWait()
@@ -58,7 +100,9 @@ public sealed class TrxProcessLifetimeHandlerTests
         }
     }
 
-    private static (TrxProcessLifetimeHandler Handler, NamedPipeServerEndpoint Endpoint, ServiceProvider ServiceProvider, DeferredTask Task) CreateHandler()
+    private static (TrxProcessLifetimeHandler Handler, NamedPipeServerEndpoint Endpoint, ServiceProvider ServiceProvider, DeferredTask Task) CreateHandler(
+        IFileSystem? customFileSystem = null,
+        IEnvironment? customEnvironment = null)
     {
         var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
         {
@@ -81,10 +125,10 @@ public sealed class TrxProcessLifetimeHandlerTests
 
         var handler = (TrxProcessLifetimeHandler)constructor.Invoke([
             commandLineOptions,
-            environment.Object,
+            customEnvironment ?? environment.Object,
             loggerFactory.Object,
             new Mock<IMessageBus>().Object,
-            new Mock<IFileSystem>().Object,
+            customFileSystem ?? new Mock<IFileSystem>().Object,
             new Mock<ITestApplicationModuleInfo>().Object,
             new Mock<IConfiguration>().Object,
             clock.Object,
