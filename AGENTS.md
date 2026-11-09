@@ -1,3 +1,7 @@
+For repository contributions, read [.github/copilot-instructions.md](.github/copilot-instructions.md)
+for build, test, encoding and delivery requirements. For applications consuming
+MTP from agents or CI tools, see [MTP for agents and CI tools](docs/mtp-for-agents.md).
+
 Excluded-from-upstream skills and helpers are repository-owned and are NOT checked by `gh copilot-curate verify`; compare them explicitly on refresh. Details: .agents/skills/CURATION.md
 
 Use [msbuild](.agents/skills/msbuild/SKILL.md) as the MSBuild entry point; nine legacy SKILL.md files are excluded from upstream curation. The grading rubric is not forked.

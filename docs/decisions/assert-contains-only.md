@@ -407,6 +407,88 @@ package-consuming results remain bound to their recorded revisions, not
 relabelled as fresh package evidence after the merge from main. Current-head CI
 and actual rendered terminal/IDE inspection remain separate, unclaimed checks.
 
+### 2026-11-09: reconcile the upstream IsNotNull revert
+
+The branch at `f6a745b3b8a3d54dadf7b90fd1ae46548f36dba5` merges main at
+`cb5805342d403ed9f7e7ddd116c81fee789ef7f9`. The two conflicts overlap the
+upstream return-value `IsNotNull` revert, not competing `ContainsOnly` designs.
+The resolution keeps the two common `ContainsOnly` API entries and the predicate
+consumer while honoring main's removal of the generic return-value API and its
+F# return-value asset. Main's replacement C# 12 pending-Task consumer remains.
+
+The predicate package-provenance helper now stores `GetEntry` before calling
+the void `Assert.IsNotNull`; it does not depend on the reverted return value.
+No predicate behavior, expected diagnostic, consumer package/cache isolation,
+or test scheduling change is intended. The protected `ContainsOnly` analyzer
+region matches the pre-merge source after newline normalization.
+
+The first desktop-pack attempt failed before compilation because the wrapper
+did not preserve the brace-based logger filename. It produced no valid binlog
+and is not test proof; the retry uses an explicitly checked unique filename.
+The successful command was:
+
+```powershell
+.\build.cmd -pack -rebuild -c Release -msbuildEngine vs -projects artifacts\validation\agent-merge-all-production.slnf /v:quiet /bl:$RESULTS\pack-main-merge-e751c624.binlog
+# Exit 0; all 41 source projects rebuilt and packed, zero warnings/errors.
+```
+
+`$RESULTS` denotes
+`artifacts\TestResults\Release\agent-merge-base-conflicts-e751c624`.
+The generated source-only filter was checked against the current solution.
+SDK `12.0.100-alpha.1.26556.115` remained pinned; framework net10.0, analyzer
+net10.0/net472, and acceptance net12.0 builds each used Release,
+`--no-restore --no-incremental --verbosity quiet -warnaserror` with a separate
+retained binlog. All four builds passed with zero warnings/errors.
+
+| Preserved contract | Executed post-merge evidence |
+| --- | --- |
+| Collection predicates and indexed diagnostics | `AssertTests` selector `/*/*/AssertTests/*Contain*`: 241/241 pass; valid scope aggregation: 1/1 pass. |
+| Analyzer/fixer binding and safe exclusions | `FullyQualifiedName~UseProperAssertMethodsAnalyzerTests`: 160/160 pass on net10.0, 151/151 on net472. All five protected explicit-type/static-field/instance-field cases execute and pass on both. |
+| C# 12 public call shapes | `PublicAssertCallShapes_CompileWithCSharp12` passes on net10.0 and net11.0. |
+| Real packaged predicate behavior | `ContainsOnlyAndDoesNotContain_ExecuteFromPackedFrameworkWithCSharp12` passes on net10.0 and net11.0, including exact output and cached/copied package payload hashes. |
+| Upstream void IsNotNull compatibility | `IsNotNullTaskStatements_CompileAndRunWithCSharp12` passes on net10.0 and net11.0, including pending-Task statements and absence of CS4014. |
+
+Every successful run exits 0 with zero skips. The lower analyzer totals reflect
+main's replacement/removal of two `IsNotNull` control rows, not a narrower
+selector or removal of any predicate regression. This is green-before/green-after
+preservation evidence for the merge; no new behavioral counterfactual is claimed.
+
+Independent discovery used `--list-tests text`: the pinned CLI rejected an
+omitted format when followed by `--filter`. The six discovered identities were
+reconciled with a source-declared JSON plan before execution. The first execution
+then failed in fixture construction because the old task-owned
+`Microsoft.Testing.Extensions.JUnitReport.1.0.0-dev.nupkg` remained beside the
+newly graduated `3.0.0-dev` package. Both package identities, hashes, and timestamps
+were inspected; only that exact obsolete output was moved to the evidence
+directory's `superseded-packages` folder. No global cache or fixture check was
+cleared or weakened, and these setup failures are not red-phase proof.
+
+The unchanged six-case execution was repeated through the native CLI:
+
+```powershell
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~AssertSourceCompatibilityTests" --report-trx --report-trx-filename acceptance.trx --results-directory "$RESULTS\acceptance-retry" --show-test-results failed /bl:$RESULTS\acceptance-retry.binlog
+# Exit 0; planned/discovered/selected/executed/passed 6, failed/skipped 0.
+```
+
+The existing execution gate independently verified that fresh report against
+`expected-tests.json`, including identities, counts, unique executions, start
+time, and outer exit 0. Inner consumers launched ten build/execution processes
+and verified the actual shipping framework, isolated package caches, selected
+TFM assets, and copied DLLs.
+
+Fresh shipping package SHA-256 values:
+
+- `MSTest.TestFramework.5.0.0-dev.nupkg`:
+  `6B5E6A1CA20DE8270F846470387A815EDC3D961BC0843A69E8C7C83D314A3A13`.
+- `Microsoft.Testing.Platform.3.0.0-dev.nupkg`:
+  `1AEDFF31F93243442F8D6C53DFA2308C70FFF175B1A345BE7A978BF06248A207`.
+
+The retained `package-provenance.json` also identifies the adapter and analyzer
+packages. All reports, discovery/console logs, and build/pack binlogs are under
+`$RESULTS`; they remain local evidence, not uploaded artifacts. Incoming main
+also includes the HangDump teardown correction, but a future CI pass and actual
+terminal/IDE rendering inspection are not inferred from these local results.
+
 ## Alternatives and decision
 
 `ContainsAll` is already multiplicity-aware expected-item inclusion and permits

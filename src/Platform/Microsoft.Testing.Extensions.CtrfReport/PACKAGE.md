@@ -43,6 +43,11 @@ When using MSTest.Sdk, the extension remains opt-in and is not enabled by any pr
 
 ## Logical runs and retries
 
+For exceptions with inner causes, the test's `trace` retains the full exception
+representation, including nested and aggregate-exception branches. The `message`
+continues to prefer the framework's explanation. Diagnostic text remains subject
+to the reporter's existing size limits.
+
 One coordinated invocation, including a multi-project `dotnet test` invocation, is one logical run. Its module reports, retry-attempt reports, and merged report should share a `runId`; each distinct report has its own `reportId`.
 
 An outer launcher or CI script can supply `TESTINGPLATFORM_LOGICAL_RUN_ID` before launching the modules. Generate a fresh value for each coordinated invocation and propagate it to all contributing processes. Do not reuse a CI job ID for separate test invocations. For example, in PowerShell:

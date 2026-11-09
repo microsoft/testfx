@@ -206,6 +206,9 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
         Assert.IsTrue(await Controller.IsEnabledAsync());
         await Controller.BeforeTestHostProcessStartAsync(Token);
 
+        // A canceled handshake only stops its wait, not this delegate. Join it before disposing its pipe.
+        _ = TrackOperation(Assert.ContainsSingle(_transportTasks));
+
         ITestHostEnvironmentVariableProvider provider = Assert.ContainsSingle(configuration.EnvironmentVariableProviders);
         Assert.IsTrue(await provider.IsEnabledAsync());
         var variables = new EnvironmentVariables(_controllerLoggerFactory.Object) { CurrentProvider = provider };

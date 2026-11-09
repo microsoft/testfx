@@ -19,6 +19,13 @@ internal static partial class SerializerUtilities
         {
             ValidateJsonRpcHeader(properties);
 
+            if (properties.ContainsKey(JsonRpcStrings.Error)
+                && properties.TryGetValue(JsonRpcStrings.Id, out object? errorId)
+                && errorId is null)
+            {
+                return Deserialize<ErrorMessage>(properties);
+            }
+
             if (properties.TryGetValue(JsonRpcStrings.Method, out object? methodObj) && methodObj is not null)
             {
                 string method = (string)methodObj;
@@ -296,7 +303,19 @@ internal static partial class SerializerUtilities
         Deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>
         {
             ValidateJsonRpcHeader(properties);
-            object idObj = GetRequiredPropertyFromJson<object>(properties, JsonRpcStrings.Id);
+            if (!properties.TryGetValue(JsonRpcStrings.Id, out object? idObj))
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.Id}' field is missing");
+            }
+
+            int? id = idObj is null
+                ? null
+                : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
+            if (id is null && (properties.ContainsKey(JsonRpcStrings.Method) || properties.ContainsKey(JsonRpcStrings.Result)))
+            {
+                throw new MessageFormatException("An uncorrelated error response cannot contain 'method' or 'result'");
+            }
+
             IDictionary<string, object> errorObj = GetRequiredPropertyFromJson<IDictionary<string, object>>(properties, JsonRpcStrings.Error);
 
 #if !NETCOREAPP
@@ -306,8 +325,6 @@ internal static partial class SerializerUtilities
                 errorObj[JsonRpcStrings.Data] = null!;
             }
 #endif
-            int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
-
             if (!errorObj.TryGetValue(JsonRpcStrings.Code, out object? codeObj) ||
                 codeObj is not int code)
             {

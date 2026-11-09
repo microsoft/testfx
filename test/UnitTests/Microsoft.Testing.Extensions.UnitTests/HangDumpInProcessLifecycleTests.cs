@@ -526,12 +526,24 @@ public sealed class HangDumpInProcessLifecycleTests
         const string RecoveryPrefix = "Test host handshake failed after the dump started; continuing so the dump can be published. ";
         var fixture = new HangDumpInProcessProtocolFixture(TestContext.CancellationToken);
         var diagnosticFailure = new IOException("The exit-gate recovery diagnostic failed.");
-        fixture.ControllerLogAsync = message => diagnosticFails && message.StartsWith(RecoveryPrefix, StringComparison.Ordinal)
-            ? Task.FromException(diagnosticFailure)
-            : Task.CompletedTask;
+        var acceptEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseAccept = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.ControllerLogAsync = message =>
+        {
+            if (message.StartsWith("Waiting for connection to ", StringComparison.Ordinal))
+            {
+                acceptEntered.TrySetResult(true);
+                return releaseAccept.Task;
+            }
+
+            return diagnosticFails && message.StartsWith(RecoveryPrefix, StringComparison.Ordinal)
+                ? Task.FromException(diagnosticFailure)
+                : Task.CompletedTask;
+        };
         try
         {
             await fixture.BindAsync();
+            await fixture.AwaitAsync(acceptEntered.Task);
             using var caller = CancellationTokenSource.CreateLinkedTokenSource(fixture.Token);
             Task pendingStart = fixture.StartControllerAsync(caller.Token);
             await fixture.AwaitAsync(fixture.ControllerWaitEntered.Task);
@@ -559,7 +571,10 @@ public sealed class HangDumpInProcessLifecycleTests
         }
         finally
         {
-            await fixture.CloseAsync();
+            // Start cleanup while the original accept is still blocked, then let it observe cancellation.
+            Task close = fixture.CloseAsync();
+            releaseAccept.TrySetResult(true);
+            await close;
         }
     }
 
