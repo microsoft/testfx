@@ -186,5 +186,4 @@ public sealed partial class InheritedMemberFromDifferentMSTestVersionAnalyzer : 
             }
         }
     }
-
 }
