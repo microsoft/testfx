@@ -327,7 +327,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             IDelegateCreationOperation creation => IsStablePredicateAssertionInput(creation.Target),
             IAnonymousFunctionOperation or ILocalReferenceOperation or IParameterReferenceOperation or IInstanceReferenceOperation => true,
             IMethodReferenceOperation method => method.Instance is null || IsStablePredicateAssertionInput(method.Instance),
-            IFieldReferenceOperation field => field.Field.IsReadOnly && (field.Instance is null || IsStablePredicateAssertionInput(field.Instance)),
+            IFieldReferenceOperation field => !field.Field.IsStatic && field.Field.IsReadOnly && (field.Instance is null || IsStablePredicateAssertionInput(field.Instance)),
             _ => operation.ConstantValue.HasValue,
         };
 }

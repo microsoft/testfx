@@ -5861,9 +5861,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingIsTrueAllWithExplicitBaseType_PreservesPredicateBinding()
+    [DataRow("items.All<Base>(item => item.Enabled && Accept(item))", DisplayName = "ContainsOnlyExplicitBaseType")]
+    [DataRow("(items.All<Base>(item => item.Enabled && Accept(item)))", DisplayName = "ContainsOnlyParenthesizedExplicitBaseType")]
+    [DataRow("(bool?)items.All<Base>(item => item.Enabled && Accept(item))", DisplayName = "ContainsOnlyNullableExplicitBaseType")]
+    public async Task WhenUsingIsTrueAllWithExplicitBaseType_PreservesPredicateBinding(string condition)
     {
-        string code = """
+        string code = $$"""
             using System.Linq;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -5877,7 +5880,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void TestMethod()
                 {
                     Derived[] items = new Derived[] { new Derived() };
-                    {|#0:Assert.IsTrue(items.All<Base>(item => item.Enabled && Accept(item)))|};
+                    {|#0:Assert.IsTrue({{condition}})|};
                 }
 
                 private static bool Accept(Base item) => true;
@@ -5903,6 +5906,101 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
                 private static bool Accept(Base item) => true;
                 private static bool Accept(Derived item) => false;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithStaticReadonlyFields_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.IsTrue(Source.Items.All(Filter.Predicate));
+                }
+
+                private static class State
+                {
+                    internal static int Limit;
+                }
+
+                private static class Source
+                {
+                    internal static readonly int[] Items;
+
+                    static Source()
+                    {
+                        State.Limit = 10;
+                        Items = new[] { 5 };
+                    }
+                }
+
+                private static class Filter
+                {
+                    internal static readonly Func<int, bool> Predicate;
+
+                    static Filter()
+                    {
+                        int captured = State.Limit;
+                        Predicate = item => item > captured;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithInstanceReadonlyFields_SuggestsContainsOnly()
+    {
+        string code = """
+            using System;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                private readonly int[] _items = new[] { 1 };
+                private readonly Func<int, bool> _predicate = item => item > 0;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    {|#0:Assert.IsTrue(_items.All(_predicate))|};
+                }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                private readonly int[] _items = new[] { 1 };
+                private readonly Func<int, bool> _predicate = item => item > 0;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.ContainsOnly(_predicate, _items);
+                }
             }
             """;
 

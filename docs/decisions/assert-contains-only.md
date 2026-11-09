@@ -312,6 +312,101 @@ contains the three unique build binlogs and the legacy/modern TRX reports.
 This is compilation compatibility evidence; the CI compiler error is not
 presented as a behavioral red-phase assertion.
 
+### 2026-11-09: wrapped conditions and static initialization
+
+Review against merged head `9355981614459aff8c398708ef6aeedddfed5be9`
+supplied two concrete counterexamples to the automatic `All` rewrite:
+
+- The analyzer already unwraps parenthesized and nullable-Boolean conditions,
+  but the fixer searches the outer argument expression for explicit `All<Base>`
+  type arguments. That loses the type arguments when the invocation is wrapped
+  and can select a different predicate overload.
+- Reading a static readonly field can execute a type initializer. Reversing
+  `Source.Items` and `Filter.Predicate` can therefore change the limit captured
+  by the predicate even though both fields are readonly.
+
+The bounded correction retrieves the invocation from the analyzer's
+unwrapped condition location and excludes static fields from reorder-safe
+inputs. Instance readonly fields remain supported. Focused cases extend the
+existing binding regression with both wrappers, assert no diagnostic for
+separate explicit static constructors, and retain an instance-field control.
+
+The comparison uses production head
+`9355981614459aff8c398708ef6aeedddfed5be9`, whose merge base is
+`19bfd517ba336e27bbeed4967fc5629e956ccc23`, plus the retained test-only patch
+SHA-256 `2A224AFA9903C0D2823215862D212CE866BF7BC5784FD02C633C8E8C729DACA9`.
+The corrected source/test patch SHA-256 is
+`72C9110D459095C448A97403B96E4828D24BDCBDA519D5988530DDD39F6249B4`.
+The test-file bytes are identical in both states, SHA-256
+`6D7ECC4478872D4A0ECF668C31984D5DB0ACA58FF66DC4E19EB7F4FEA36736A2`.
+
+#### Test-value evidence
+
+| Contract and exact case | Actual pre-fix implementation | Corrected implementation |
+| --- | --- | --- |
+| `WhenUsingIsTrueAllWithExplicitBaseType_PreservesPredicateBinding`: `ContainsOnlyParenthesizedExplicitBaseType` and `ContainsOnlyNullableExplicitBaseType` | Both execute and fail the fixed-source comparison: expected `ContainsOnly<Base>`, actual `ContainsOnly`. | Both execute and pass. |
+| `WhenUsingIsTrueAllWithStaticReadonlyFields_NoDiagnostic` | Executes and fails: expected zero diagnostics, actual one MSTEST0037 diagnostic. | Executes and passes with no diagnostic. |
+| Unwrapped `ContainsOnlyExplicitBaseType` and `WhenUsingIsTrueAllWithInstanceReadonlyFields_SuggestsContainsOnly` controls | Both execute and pass. | Both execute and pass. |
+
+The identical focused selection executes five cases: red has three intended
+failures and two passes, exit 2; green has five passes, exit 0. Both have zero
+skips. The whole related class passes 162/162 on net10.0 and 153/153 on net472,
+zero skips, exit 0. Release builds on both targets use SDK
+`12.0.100-alpha.1.26556.115`, treat warnings as errors, and finish with zero
+warnings/errors. TRX parsing independently verifies counts, outcomes, and the
+five paired identities.
+
+Both variants use the session's isolated checkout and separate bin/obj roots
+under `artifacts`; no production rollback or other checkout is changed.
+Assembly method-level scheduling remains enabled with 32 effective workers
+(`Workers = 0`). The static constructors exist only inside per-test Roslyn
+sample strings; no host-global static state or scheduling declaration changes.
+
+The following command arguments use `$ROOT` for the checkout root and `$RESULTS`
+for `artifacts\TestResults\Release\agent-merge-wrapped-static-49c19b2b`.
+Native commands were launched with the repo-local `.dotnet` and Windows
+PowerShell/System32 directories prepended to PATH in the same `cmd.exe` process.
+
+```powershell
+$project = 'test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj'
+$focus = 'FullyQualifiedName~WhenUsingIsTrueAllWithExplicitBaseType_PreservesPredicateBinding|FullyQualifiedName~WhenUsingIsTrueAllWithStaticReadonlyFields_NoDiagnostic|FullyQualifiedName~WhenUsingIsTrueAllWithInstanceReadonlyFields_SuggestsContainsOnly'
+$redOutputs = @("/p:ArtifactsBinDir=$ROOT\artifacts\bin\wrapped-static-red\", "/p:ArtifactsObjDir=$ROOT\artifacts\obj\wrapped-static-red\")
+$greenOutputs = @("/p:ArtifactsBinDir=$ROOT\artifacts\bin\wrapped-static-green\", "/p:ArtifactsObjDir=$ROOT\artifacts\obj\wrapped-static-green\")
+
+.\.dotnet\dotnet.exe restore $project --verbosity minimal "-bl:$RESULTS\restore-red-{}.binlog" @redOutputs
+# Exit 0; full project-reference graph, without a global TargetFramework override.
+.\.dotnet\dotnet.exe build $project -f net10.0 -c Release --no-restore --no-incremental --verbosity quiet /p:TreatWarningsAsErrors=true "-bl:$RESULTS\build-red-{}.binlog" @redOutputs
+# Exit 0; zero warnings/errors.
+.\.dotnet\dotnet.exe artifacts\bin\wrapped-static-red\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter $focus --report-trx --report-trx-filename red.trx --results-directory "$ROOT\$RESULTS\red" --progress off --no-ansi
+# Exit 2; five execute, three intended failures, two passes, zero skips.
+
+.\.dotnet\dotnet.exe restore $project --verbosity quiet "-bl:$RESULTS\restore-green-{}.binlog" @greenOutputs
+# Exit 0; separate corrected-implementation intermediates.
+.\.dotnet\dotnet.exe build $project -f net10.0 -c Release --no-restore --no-incremental --verbosity quiet /p:TreatWarningsAsErrors=true "-bl:$RESULTS\build-green-net10-{}.binlog" @greenOutputs
+.\.dotnet\dotnet.exe build $project -f net472 -c Release --no-restore --no-incremental --verbosity quiet /p:TreatWarningsAsErrors=true "-bl:$RESULTS\build-green-net472-{}.binlog" @greenOutputs
+# Both exit 0; zero warnings/errors.
+.\.dotnet\dotnet.exe artifacts\bin\wrapped-static-green\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter $focus --report-trx --report-trx-filename green-focused.trx --results-directory "$ROOT\$RESULTS\green-focused" --progress off --no-ansi
+# Exit 0; the same five cases pass, zero skips.
+.\.dotnet\dotnet.exe artifacts\bin\wrapped-static-green\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~UseProperAssertMethodsAnalyzerTests" --report-trx --report-trx-filename analyzers-net10.trx --results-directory "$ROOT\$RESULTS\net10" --progress off --no-ansi
+# Exit 0; 162/162 pass, zero skips.
+.\artifacts\bin\wrapped-static-green\MSTest.Analyzers.UnitTests\Release\net472\MSTest.Analyzers.UnitTests.exe --filter "FullyQualifiedName~UseProperAssertMethodsAnalyzerTests" --report-trx --report-trx-filename analyzers-net472.trx --results-directory "$ROOT\$RESULTS\net472" --progress off --no-ansi
+# Exit 0; 153/153 pass, zero skips.
+```
+
+Each MSBuild invocation produced a distinct retained binlog. Results and
+counterexample messages are in `red\red.trx`, `green-focused\green-focused.trx`,
+`net10\analyzers-net10.trx`, `net472\analyzers-net472.trx`, and the corresponding
+console logs below `$RESULTS`. These are local evidence, not uploaded artifacts.
+The first root-build attempt supplied a duplicate restore flag; a subsequent
+cached-toolset restore reached the workload hook before the updated SDK was
+initialized. Neither setup attempt counts as red proof. Explicit initialization
+through `eng\common\tools.ps1` installed the pinned SDK before the commands above.
+
+This correction does not change framework behavior or public overloads. Earlier
+package-consuming results remain bound to their recorded revisions, not
+relabelled as fresh package evidence after the merge from main. Current-head CI
+and actual rendered terminal/IDE inspection remain separate, unclaimed checks.
+
 ## Alternatives and decision
 
 `ContainsAll` is already multiplicity-aware expected-item inclusion and permits

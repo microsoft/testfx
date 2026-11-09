@@ -136,7 +136,8 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
     private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location conditionLocation, Location expectedLocation, Location actualLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
-        ArgumentSyntax? conditionNode = root.FindNode(conditionLocation.SourceSpan).FirstAncestorOrSelf<ArgumentSyntax>();
+        SyntaxNode conditionExpression = root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true);
+        ArgumentSyntax? conditionNode = conditionExpression.FirstAncestorOrSelf<ArgumentSyntax>();
         if (conditionNode?.Parent is not ArgumentListSyntax argumentList)
         {
             return document;
@@ -154,7 +155,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        GenericNameSyntax? explicitAllName = (conditionNode.Expression as InvocationExpressionSyntax)?.Expression switch
+        GenericNameSyntax? explicitAllName = (conditionExpression as InvocationExpressionSyntax)?.Expression switch
         {
             MemberAccessExpressionSyntax { Name: GenericNameSyntax name } => name,
             GenericNameSyntax name => name,
