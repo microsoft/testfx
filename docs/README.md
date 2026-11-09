@@ -51,6 +51,7 @@ For current MTP consumer guidance, see the [Microsoft.Testing.Platform overview]
 
 ## Guides
 
+- [MTP for agents and CI tools](mtp-for-agents.md): runner modes, version-aware output preferences, diagnostic retrieval and telemetry limits.
 - [Affected-test selection rollout](affected-test-selection.md): active CI layout, storage fallback, and rollback.
 - [Package README guidelines](package-readme-guidelines.md): required content and review checklist for NuGet package pages.
 - [Testing WinUI apps](winui-testing.md): packaged (MSIX) vs unpackaged WinUI, and how the test host is started for each.
