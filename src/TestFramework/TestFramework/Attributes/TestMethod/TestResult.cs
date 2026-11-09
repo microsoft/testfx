@@ -95,7 +95,11 @@ public class TestResult
                     ? new AggregateException(aggregateException.InnerExceptions.Concat([value]))
                     : new AggregateException(field, value);
 
+#if NETFRAMEWORK
+            ExceptionMessage = GetExceptionMessage(field);
+#else
             ExceptionMessage = field.Message;
+#endif
             ExceptionStackTrace = field.StackTrace;
 
             // Capture the structured assertion values as strings, for the same reason ExceptionMessage and
@@ -256,6 +260,25 @@ public class TestResult
             Outcome = UnitTestOutcome.Ignored,
             IgnoreReason = ignoreReason,
         };
+
+#if NETFRAMEWORK
+    private static string GetExceptionMessage(Exception exception)
+    {
+        if (exception is not AggregateException aggregate)
+        {
+            return exception.Message;
+        }
+
+        // Unlike modern .NET, .NET Framework omits inner messages from AggregateException.Message.
+        var message = new StringBuilder(aggregate.Message);
+        foreach (Exception innerException in aggregate.InnerExceptions)
+        {
+            message.Append(" (").Append(GetExceptionMessage(innerException)).Append(')');
+        }
+
+        return message.ToString();
+    }
+#endif
 
     /// <summary>
     /// Counts the assertion failures that carry comparison values (capped at 2) and reports the values of the
