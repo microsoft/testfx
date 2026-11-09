@@ -662,6 +662,26 @@ firewall, or failure policy for runs that have real outputs or patches. A downlo
 such a run still needs infrastructure investigation; do not suppress its warning or disable
 detection.
 
+ResourceLock refactoring encountered the same download failure in
+[run 42566204903](https://github.com/microsoft/testfx/actions/runs/42566204903),
+tracked by [#12263](https://github.com/microsoft/testfx/issues/12263), but its
+agent did **not** emit a successful no-op. It first called a nonexistent
+`safeoutputs` native tool, then the shell denied its
+`command -v safeoutputs && safeoutputs noop ...` fallback. The collector emitted
+`report_incomplete` with `missing_terminal_safe_output`; detection never started
+after the six HTTP 504 responses. Do not classify that incomplete report as a
+no-op or bypass its detection.
+
+The [ResourceLock prompt](./resource-lock-refactoring.md) now makes each terminal
+path a standalone `safeoutputs <tool_name> '<complete JSON object>'` invocation,
+using only the already-allowed executable. Its no-op, incomplete, and PR examples
+keep the JSON payload in one shell argument, including escaped multiline text.
+Unavailable or denied transport remains an explicit blocker; successful CLI
+acknowledgment records an intent, not a published PR. Once the agent genuinely
+emits only `noop` without a patch, ResourceLock uses the same eligibility guard
+as Pipeline Test Triage. Incomplete reports, other outputs, mixed outputs, and
+every patch still require detection.
+
 **What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
 on the presence of an actual safe output or patch:
 
@@ -696,6 +716,52 @@ $cases = @(
 python .github\scripts\test_agentic_workflow_warning_contracts.py --workflow-root $baseline @cases -v
 python .github\scripts\test_agentic_workflow_warning_contracts.py @cases -v
 ```
+
+ResourceLock's corresponding cases are
+`CompiledWarningContractTests.test_resource_lock_detection_skips_noop_only_runs`
+and `test_resource_lock_noop_skip_preserves_detection_security_controls`.
+`GhAwRuntimeContractTests.test_resource_lock_terminal_examples_use_pinned_cli_argument_parser`
+passes the authored examples through the unchanged pinned CLI argument parser
+and tool schemas, without starting MCP servers or making external writes.
+Use the same `--workflow-root $baseline` option for retained-test comparisons:
+
+```powershell
+$cases = @(
+  'CompiledWarningContractTests.test_resource_lock_detection_skips_noop_only_runs'
+  'CompiledWarningContractTests.test_resource_lock_noop_skip_preserves_detection_security_controls'
+  'CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs'
+  'CompiledWarningContractTests.test_pipeline_triage_noop_skip_preserves_detection_security_controls'
+)
+python .github\scripts\test_agentic_workflow_warning_contracts.py @cases -v
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions `
+  GhAwRuntimeContractTests.test_resource_lock_terminal_examples_use_pinned_cli_argument_parser -v
+```
+
+On November 9, 2026, these same selections ran with the regression tests retained
+against an isolated workflow archive of base
+`54980bc56a22eb758c040a20b8f3571ee2d50417`. The ResourceLock eligibility case
+failed both authored/compiled guard assertions; the CLI contract failed because
+all three standalone examples were absent (both runners exited 1). The other
+three gate-family methods passed. Against the corrected source and regenerated
+lock, all four gate-family methods and the CLI method passed (both runners exited
+0, no skips); the CLI method exercised all three example payloads through the
+pinned parser. Strict compilation with ShellCheck passed one workflow with zero
+warnings, and the pin audit passed 2,769 references across 60 files without
+changing any action reference. Diagnostic `--dry-run` refused the existing
+`on.steps` declaration and emitted no replacement lock; it was not used to
+weaken the normal workflow.
+
+A separate download from the development machine returned HTTP 200 for the
+pinned v0.5.3 asset; all 3,158,178 bytes matched its locked SHA-256. The binary
+was not executed, and this local check does not establish hosted-runner
+connectivity.
+
+These local contracts do not prove that a hosted model follows the prompt, that
+the detector's release download has recovered, or that a queued PR is published.
+The original-state failures are configuration/authoring assertions, not a
+hosted red/green replay; hosted regression sensitivity remains unproven.
+Do not rerun a live workflow or suppress a required detection failure to replace
+those missing observations.
 
 ### `detection` job succeeds but the run is recorded as `parse_error`
 

@@ -258,9 +258,9 @@ exec /usr/bin/mv "$@"
 
 
 class CompiledWarningContractTests(unittest.TestCase):
-    def test_pipeline_triage_detection_skips_noop_only_runs(self) -> None:
-        source, _ = authored("pipeline-test-triage.md")
-        jobs = compiled("pipeline-test-triage.lock.yml")["jobs"]
+    def assert_noop_detection_gate(self, name: str) -> None:
+        source, _ = authored(name + ".md")
+        jobs = compiled(name + ".lock.yml")["jobs"]
         gate = ("(needs.agent.outputs.output_types != '' && "
                 "needs.agent.outputs.output_types != 'noop') || "
                 "needs.agent.outputs.has_patch == 'true'")
@@ -274,9 +274,15 @@ class CompiledWarningContractTests(unittest.TestCase):
                 self.assertEqual(expected, actual,
                                  "Skip only empty/noop outputs without a patch; retain real-output and patch detection")
 
-    def test_pipeline_triage_noop_skip_preserves_detection_security_controls(self) -> None:
-        source, _ = authored("pipeline-test-triage.md")
-        jobs = compiled("pipeline-test-triage.lock.yml")["jobs"]
+    def test_pipeline_triage_detection_skips_noop_only_runs(self) -> None:
+        self.assert_noop_detection_gate("pipeline-test-triage")
+
+    def test_resource_lock_detection_skips_noop_only_runs(self) -> None:
+        self.assert_noop_detection_gate("resource-lock-refactoring")
+
+    def assert_detection_security_controls(self, name: str) -> None:
+        source, _ = authored(name + ".md")
+        jobs = compiled(name + ".lock.yml")["jobs"]
         detection = source["safe-outputs"]["threat-detection"]
         self.assertEqual("detection", detection["model"])
         self.assertEqual({"id": "copilot"}, detection["engine"])
@@ -291,6 +297,12 @@ class CompiledWarningContractTests(unittest.TestCase):
             "(needs.detection.result == 'success' || needs.detection.result == 'skipped')",
             " ".join(jobs["safe_outputs"]["if"].split()),
         )
+
+    def test_pipeline_triage_noop_skip_preserves_detection_security_controls(self) -> None:
+        self.assert_detection_security_controls("pipeline-test-triage")
+
+    def test_resource_lock_noop_skip_preserves_detection_security_controls(self) -> None:
+        self.assert_detection_security_controls("resource-lock-refactoring")
 
     def test_build_publisher_checkouts_have_direct_identity_dependency(self) -> None:
         jobs = compiled("build-failure-analysis.lock.yml")["jobs"]
