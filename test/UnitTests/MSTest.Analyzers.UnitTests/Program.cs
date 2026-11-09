@@ -10,6 +10,11 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
+if (MSTest.Analyzers.Test.AnalyzerProcessCompatibilityTests.TryRunControlledChild())
+{
+    return 17;
+}
+
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddAffectedTestsProvider();

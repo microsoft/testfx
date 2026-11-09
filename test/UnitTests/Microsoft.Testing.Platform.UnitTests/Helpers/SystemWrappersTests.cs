@@ -394,6 +394,11 @@ public sealed class SystemWrappersTests
         start.EnvironmentVariables[SystemWrapperChildProbe.ModeVariable] = mode;
         start.EnvironmentVariables["DOTNET_DbgEnableMiniDump"] = "0";
         start.EnvironmentVariables["COMPlus_DbgEnableMiniDump"] = "0";
+#if NETFRAMEWORK
+        // The desktop CLR's JIT-debugger policy is separate from Windows Error Reporting.
+        // Do not inherit a machine policy that can wait for an interactive debugger.
+        start.EnvironmentVariables["COMPlus_DbgJitDebugLaunchSetting"] = "1";
+#endif
         return start;
     }
 
@@ -403,9 +408,10 @@ public sealed class SystemWrappersTests
         Assert.IsTrue(process.Start());
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
+        Task exit = process.WaitForExitAsync();
         try
         {
-            await process.WaitForExitAsync().TimeoutAfterAsync(ChildLimit);
+            await exit.TimeoutAfterAsync(ChildLimit);
             return new(process.ExitCode, await output, await error);
         }
         finally
@@ -413,8 +419,10 @@ public sealed class SystemWrappersTests
             if (!process.HasExited)
             {
                 process.Kill();
-                await process.WaitForExitAsync().TimeoutAfterAsync(ChildLimit);
             }
+
+            // Join the original wait and readers even when the bounded observation timed out.
+            await Task.WhenAll(exit, output, error).TimeoutAfterAsync(ChildLimit);
         }
     }
 
@@ -674,7 +682,7 @@ internal static class SystemWrapperChildProbe
         internal static void DisableInteractiveReporting()
         {
             _ = SetErrorMode(0x0001 | 0x0002);
-            _ = WerSetFlags(0x0020);
+            Marshal.ThrowExceptionForHR(WerSetFlags(0x0020));
         }
 
         [DllImport("kernel32.dll")]
