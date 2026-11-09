@@ -843,16 +843,16 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
+        TestContext.WriteLine(buildResult.ToString());
+        Assert.DoesNotContain("CS4014", $"{buildResult.StandardOutput}{buildResult.StandardError}");
+        buildResult.AssertExitCodeIs(0);
+
         string shippingPackage = Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
         string restoredPackage = Path.Combine(isolatedPackages, "mstest.testframework", MSTestVersion, $"mstest.testframework.{MSTestVersion}.nupkg");
         string shippingHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(shippingPackage)));
         string restoredHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(restoredPackage)));
         Assert.AreEqual(shippingHash, restoredHash, "The consumer must restore the framework package built by this checkout.");
         TestContext.WriteLine($"Restored package: {restoredPackage}; SHA256: {restoredHash}");
-        TestContext.WriteLine(buildResult.ToString());
-
-        Assert.DoesNotContain("CS4014", $"{buildResult.StandardOutput}{buildResult.StandardError}");
-        buildResult.AssertExitCodeIs(0);
 
         string consumerDll = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "IsNotNullTaskConsumer.dll");
         using DotnetMuxer muxer = new(environmentVariables);

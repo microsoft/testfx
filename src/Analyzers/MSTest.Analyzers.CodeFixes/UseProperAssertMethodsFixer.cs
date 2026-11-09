@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
 
@@ -337,6 +338,11 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
+        IArgumentOperation? collectionArgument = properAssertMethodName == "IsNotNull" &&
+            argumentList.Parent is { } invocationSyntax &&
+            editor.SemanticModel.GetOperation(invocationSyntax, cancellationToken) is IInvocationOperation invocation
+                ? invocation.Arguments.FirstOrDefault(argument => argument.Parameter?.Ordinal == 1)
+                : null;
         ArgumentListSyntax newArgumentList;
         if (additionalLocations.Count > 1 && needsNullableBoolCast &&
             root.FindNode(additionalLocations[1].SourceSpan) is ArgumentSyntax actualArgument)
@@ -347,6 +353,16 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 actualArgument.Expression);
             newArgumentList = argumentList.WithArguments(
                 argumentList.Arguments.Replace(actualArgument, SyntaxFactory.Argument(castExpression)).RemoveAt(argumentIndexToRemove));
+        }
+        else if (collectionArgument?.Syntax.FirstAncestorOrSelf<ArgumentSyntax>() is { } actualArgumentToCast &&
+            actualArgumentToCast.Expression.DescendantNodesAndSelf().Any(node => node is CollectionExpressionSyntax) &&
+            collectionArgument.Parameter is { Type: { } actualType })
+        {
+            var castExpression = (CastExpressionSyntax)editor.Generator.CastExpression(
+                actualType.WithNullableAnnotation(NullableAnnotation.NotAnnotated),
+                actualArgumentToCast.Expression);
+            newArgumentList = argumentList.WithArguments(
+                argumentList.Arguments.Replace(actualArgumentToCast, actualArgumentToCast.WithExpression(castExpression)).RemoveAt(argumentIndexToRemove));
         }
         else
         {

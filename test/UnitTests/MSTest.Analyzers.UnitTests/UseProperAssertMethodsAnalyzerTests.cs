@@ -1174,6 +1174,47 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    [DataRow("[]", "(int[])[]", DisplayName = "IsNotNull empty collection")]
+    [DataRow("[1, 2]", "(int[])[1, 2]", DisplayName = "IsNotNull populated collection")]
+    [DataRow("([])", "(int[])([])", DisplayName = "IsNotNull parenthesized collection")]
+    [DataRow("true ? [] : []", "(int[])(true ? [] : [])", DisplayName = "IsNotNull conditional collections")]
+    public async Task WhenAssertAreNotEqualAndExpectedIsNull_PreservesCollectionExpressionTargetType(string actual, string expected)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Assert.AreNotEqual<int[]>(null, {{actual}})|};
+                }
+            }
+            """;
+
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Assert.IsNotNull({{expected}});
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotNull", "AreNotEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue()
     {
         string code = """
