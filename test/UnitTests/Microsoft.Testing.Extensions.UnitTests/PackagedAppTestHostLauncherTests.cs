@@ -6,6 +6,7 @@
 
 using Microsoft.Testing.Extensions.PackagedApp;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.IPC;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -1052,6 +1053,9 @@ public sealed class PackagedAppTestHostLauncherTests
                 ["TESTINGPLATFORM_HTMLREPORT_JOURNAL"] = "html.jsonl",
                 ["TESTINGPLATFORM_JUNITREPORT_JOURNAL"] = "junit.jsonl",
                 ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = "retry.txt",
+                [DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable] = "attempt-root",
+                [DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable] = "artifact-metadata",
+                [DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable] = "controller-owned-pipe",
                 ["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"] = "msbuild;packagedapp;retry",
                 ["TESTINGPLATFORM_SECRET"] = "must-not-flow",
             },
@@ -1065,7 +1069,10 @@ public sealed class PackagedAppTestHostLauncherTests
         Assert.AreEqual("html.jsonl", environment["TESTINGPLATFORM_HTMLREPORT_JOURNAL"]);
         Assert.AreEqual("junit.jsonl", environment["TESTINGPLATFORM_JUNITREPORT_JOURNAL"]);
         Assert.AreEqual("retry.txt", environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
+        Assert.AreEqual("attempt-root", environment[DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable]);
+        Assert.AreEqual("artifact-metadata", environment[DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable]);
         Assert.AreEqual("msbuild;packagedapp;retry", environment["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"]);
+        Assert.IsFalse(environment.ContainsKey(DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable));
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_SECRET"));
     }
 

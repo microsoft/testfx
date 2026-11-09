@@ -77,7 +77,7 @@ Verification deliberately has boundaries:
 
 - Coverage requires covered lines from the sample, not merely a nonempty Cobertura file or its misleading aggregate `line-rate`. Current packaged execution records no sample coverage and is reported as `Partial`; the script intentionally exits nonzero after writing all results.
 - HangDump is enabled during a passing run; no hang is induced and no dump is claimed.
-- Retry selects `RetryFailsFirstAttempt`, which fails attempt 1 and passes attempt 2; both attempt TRXs are checked.
+- Retry selects `RetryFailsFirstAttempt`, which fails attempt 1 and passes attempt 2. The failed report remains under `Retries/<id>/1/retry.trx`, and the final passed report is at the results root. The probe checks exactly two TRX reports and rejects a duplicate final-attempt report under `Retries`.
 - Hot Reload is installed but its interactive watch/restart behavior is not exercised.
 - Fakes is included by the profile; no shim assembly is generated or executed, and real Fakes usage requires the applicable Visual Studio Enterprise tooling/license.
 - OpenTelemetry's diagnostics producer is enabled, but no exporter/backend is configured. See [MTPOTel](../MTPOTel) for an exporter composition sample.

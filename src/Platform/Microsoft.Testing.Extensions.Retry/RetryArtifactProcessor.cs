@@ -2,18 +2,83 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
 internal static class RetryArtifactProcessor
 {
+    public static string GetDeferredTrxArtifactDirectory(string retryRootDirectory)
+        => Path.Combine(retryRootDirectory, "ArtifactMetadata");
+
+    [UnsupportedOSPlatform("browser")]
+    public static async Task PublishDeferredTrxArtifactsAsync(
+        IServiceProvider serviceProvider,
+        string retryRootDirectory,
+        IReadOnlyDictionary<string, string> movedArtifacts)
+    {
+        IPushOnlyProtocol? protocol = serviceProvider.GetServiceInternal<IPushOnlyProtocol>();
+        IEnvironment environment = serviceProvider.GetEnvironment();
+        string? replayPipe = environment.GetEnvironmentVariable(DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable);
+        string directory = GetDeferredTrxArtifactDirectory(retryRootDirectory);
+        if ((protocol is not { IsServerMode: true } && replayPipe is not { Length: > 0 }) || !Directory.Exists(directory))
+        {
+            return;
+        }
+
+        foreach (string manifest in Directory.GetFiles(directory, "*.bin", SearchOption.TopDirectoryOnly))
+        {
+            FileArtifactMessages message = DotnetTestDataConsumer.ReadDeferredTrxArtifacts(manifest);
+
+            FileArtifactMessage[] artifacts =
+            [
+                .. message.FileArtifacts.Select(artifact =>
+                {
+                    ApplicationStateGuard.Ensure(
+                        artifact.FullPath is not null
+                        && PathContainment.IsUnderDirectory(artifact.FullPath, retryRootDirectory));
+                    return movedArtifacts.TryGetValue(Path.GetFullPath(artifact.FullPath), out string? destination)
+                        ? artifact with { FullPath = destination }
+                        : artifact;
+                }),
+            ];
+            FileArtifactMessages updated = message with { FileArtifacts = artifacts };
+            if (protocol is { IsServerMode: true })
+            {
+                await protocol.SendMessageAsync(updated).ConfigureAwait(false);
+            }
+            else
+            {
+#if NET8_0_OR_GREATER
+                if (OperatingSystem.IsWasi())
+                {
+                    throw new PlatformNotSupportedException("Retry artifact replay through a named pipe is not supported on WASI.");
+                }
+#endif
+
+                await DotnetTestConnection.SendFileArtifactsToPipeAsync(
+                    replayPipe!,
+                    updated,
+                    environment,
+                    serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
+            }
+
+            File.Delete(manifest);
+        }
+
+        Directory.Delete(directory, recursive: true);
+    }
+
     public static IReadOnlyList<RetryAttemptArtifact> SnapshotAttemptArtifacts(
         IFileSystem fileSystem,
         IReadOnlyList<ArtifactRequest> artifacts,

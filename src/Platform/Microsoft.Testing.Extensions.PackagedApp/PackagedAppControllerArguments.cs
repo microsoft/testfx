@@ -4,6 +4,7 @@
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
@@ -97,6 +98,7 @@ internal static class PackagedAppControllerArguments
         if (transportIndex >= 0 || !isRestart)
         {
             setEnvironmentVariable(NativePipeEnvironmentVariable, transportIndex < 0 ? null : remaining[transportIndex + 3]);
+            setEnvironmentVariable(DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable, transportIndex < 0 ? null : remaining[transportIndex + 3]);
         }
 
         if (transportIndex >= 0 && getEnvironmentVariable(ExecutionIdEnvironmentVariable) is null or "")

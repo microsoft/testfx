@@ -940,18 +940,18 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string firstAttemptTrxPath = Path.Combine(attemptDirectories.Single(path => Path.GetFileName(path) == "1"), "appcontainer-retry.trx");
         string secondAttemptTrxPath = Path.Combine(attemptDirectories.Single(path => Path.GetFileName(path) == "2"), "appcontainer-retry.trx");
         var firstAttemptTrx = XDocument.Load(firstAttemptTrxPath);
-        var secondAttemptTrx = XDocument.Load(secondAttemptTrxPath);
         XElement[] firstAttemptResults = [.. firstAttemptTrx.Descendants(ns + "UnitTestResult")];
-        XElement[] secondAttemptResults = [.. secondAttemptTrx.Descendants(ns + "UnitTestResult")];
         Assert.HasCount(6, firstAttemptResults, firstAttemptTrxPath);
         Assert.AreEqual(
             "Failed",
             (string?)firstAttemptResults.Single(result =>
                 (string?)result.Attribute("testName") == "RetryTestMethod_PassesOnSecondAppContainerHost").Attribute("outcome"),
             firstAttemptTrxPath);
-        XElement secondAttemptResult = Assert.ContainsSingle(secondAttemptResults);
-        Assert.AreEqual("RetryTestMethod_PassesOnSecondAppContainerHost", (string?)secondAttemptResult.Attribute("testName"), secondAttemptTrxPath);
-        Assert.AreEqual("Passed", (string?)secondAttemptResult.Attribute("outcome"), secondAttemptTrxPath);
+        Assert.IsFalse(File.Exists(secondAttemptTrxPath), "The final attempt must not retain a duplicate TRX under Retries.");
+        Assert.AreEqual(
+            firstAttemptTrxPath,
+            Assert.ContainsSingle(Directory.GetFiles(retryDirectory, "*.trx", SearchOption.AllDirectories)));
+        Assert.HasCount(2, Directory.GetFiles(resultsDirectory, "*.trx", SearchOption.AllDirectories));
     }
 
     private static void AssertResolvedWinUIAssets(string reportPath, bool usingSdk = true)
