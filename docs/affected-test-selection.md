@@ -103,7 +103,7 @@ AffectedTests and its Azure DevOps storage provider are already at the newest av
 Product target frameworks, bootstrap runtime pins, the minimum supported SDK gate, and rollout switches are unchanged;
 this is a `main` toolchain refresh, not a release-branch feature activation.
 
-Validation used Release packages freshly built from `0ed1f874bf8afd75aec83ee4b7743d3f15cea2a2` plus the SDK-pin
+Initial validation used Release packages freshly built from `0ed1f874bf8afd75aec83ee4b7743d3f15cea2a2` plus the SDK-pin
 patch (SHA-256 `831069C0CD28D71FADB35F8C24B569A830328BAC146CF0E7F8D273C3314D58D7`).
 The isolated package-only consumer uses MSTest `5.0.0-preview.local.net12.20261109` and MTP
 `3.0.0-preview.local.net12.20261109`; all eight source-packed dependencies match its fresh cache byte-for-byte.
@@ -124,6 +124,14 @@ The old SDK was not rerun, so paired SDK preservation remains unverified; no new
 The CMD build wrapper and Arcade runtime bootstrap cannot resolve `powershell` on this host; the repository
 PowerShell entry point installed the SDK, and direct pinned-SDK build/pack commands succeeded. Full CI,
 live Azure artifact publication, non-Windows native collection, and cancellation were not exercised.
+
+The review/CI follow-up also synchronizes the Bazel engineering SDK, six archive checksums, and executed
+compiler/verifier metadata; see [the Bazel SDK refresh record](decisions/bazel-build.md#sdk-pin-refresh-2026-11-09).
+Build 1670839 and the GitHub shipping-attachments job exposed new CA1001 diagnostics on four ownership declarations.
+The follow-up keeps `TestContext`'s documented managed-cancellation lifetime and public API unchanged, gives the
+message-bus test explicit event ownership, and removes implicit ownership from borrowed orchestrator/retry handles.
+All three affected project graphs build with CI analysis and warnings as errors (zero warnings/errors);
+19 orchestrator/message-bus cases and the retry cancellation/disposal case execute and pass with fresh TRX verification.
 
 ## CI layout
 
