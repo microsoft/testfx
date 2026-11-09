@@ -25,8 +25,13 @@ project in a solution accepts the same framework or reporter options.
 For an MTP application using version 2.3 or later, a native invocation can use:
 
 ```powershell
-dotnet test --project .\Tests\Tests.csproj -- --ansi off --progress off --no-banner --show-stdout failed --show-stderr failed
+dotnet test --project .\Tests\Tests.csproj --no-ansi --no-progress -- --no-banner --show-stdout failed --show-stderr failed
 ```
+
+In native mode, the SDK renders the terminal output. Its `--no-ansi` and
+`--no-progress` options belong before `--`; forwarding the MTP host's `--ansi off`
+and `--progress off` after the separator does not configure the SDK renderer.
+See the [native SDK options](https://learn.microsoft.com/dotnet/core/tools/dotnet-test-mtp#options).
 
 For a supported legacy-wrapper invocation, use:
 
@@ -48,8 +53,9 @@ options predate the positive `--ansi` and `--progress` options.
 
 The 3.0 column describes upcoming changes on this repository's main branch, not
 an already shipped 2.x contract. Consult the [platform changelog](Changelog-Platform.md)
-and the actual application's `--info`. A nonempty `NO_COLOR` disables ANSI unless
-explicitly overridden with `--ansi on`; it does not disable progress.
+and the actual application's `--info`. For the MTP host, a nonempty `NO_COLOR`
+disables ANSI unless explicitly overridden with `--ansi on`; it does not disable
+progress.
 
 Starting with MTP 2.4, `--show-test-results failed` selects failure blocks, and
 `--output minimal` is another failure-only preset. `--show-test-results` takes
