@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-11-09T06:27:25.60305871Z
-manifestHash: sha256:80eb0d9a520e9c3131cb8f9023c6bf1a78dc7383e9f0885d5370d9fa3df26e52
+generatedAt: 2026-11-09T10:27:19.548354627Z
+manifestHash: sha256:a462424b4f11ba4c4b3765369c3ebc1414b782f3713f5e16e4d8eee9766011f8
 plugins:
     - id: dotnet
       source:
@@ -37,6 +37,31 @@ plugins:
           upstreamPath: plugins/dotnet/skills/csharp-refactoring/references/operation-catalog.md
           upstreamHash: sha256:94311ac23ea1098c130942084ceb07969f73790d59072c90b87967cbdc3b8dfa
           localHash: sha256:94311ac23ea1098c130942084ceb07969f73790d59072c90b87967cbdc3b8dfa
+          mode: "0644"
+        - path: .agents/skills/dotnet-breaking-changes/SKILL.md
+          upstreamPath: plugins/dotnet/skills/dotnet-breaking-changes/SKILL.md
+          upstreamHash: sha256:2dccf8ab440b6208557f0391bae7ac30cb5db9fcdd9c966e49541965eccdd2da
+          localHash: sha256:2dccf8ab440b6208557f0391bae7ac30cb5db9fcdd9c966e49541965eccdd2da
+          mode: "0644"
+        - path: .agents/skills/dotnet-breaking-changes/references/internals-visible-to.md
+          upstreamPath: plugins/dotnet/skills/dotnet-breaking-changes/references/internals-visible-to.md
+          upstreamHash: sha256:ba039289233134c05aa1b5cc86c73dd8cf54e9281a7197b1a77cc493dda75652
+          localHash: sha256:ba039289233134c05aa1b5cc86c73dd8cf54e9281a7197b1a77cc493dda75652
+          mode: "0644"
+        - path: .agents/skills/dotnet-breaking-changes/references/multi-targeting.md
+          upstreamPath: plugins/dotnet/skills/dotnet-breaking-changes/references/multi-targeting.md
+          upstreamHash: sha256:d5b60d425020ce75d1cc9fc8c3138694016670eff6e0f5c5bc0ece683bb5e3d0
+          localHash: sha256:d5b60d425020ce75d1cc9fc8c3138694016670eff6e0f5c5bc0ece683bb5e3d0
+          mode: "0644"
+        - path: .agents/skills/dotnet-breaking-changes/references/public-api.md
+          upstreamPath: plugins/dotnet/skills/dotnet-breaking-changes/references/public-api.md
+          upstreamHash: sha256:38e9ba24036b69b9b19c7c50cf4a14723cd8f0968a8204a6a0a9b808693915a6
+          localHash: sha256:38e9ba24036b69b9b19c7c50cf4a14723cd8f0968a8204a6a0a9b808693915a6
+          mode: "0644"
+        - path: .agents/skills/dotnet-breaking-changes/references/source-generation.md
+          upstreamPath: plugins/dotnet/skills/dotnet-breaking-changes/references/source-generation.md
+          upstreamHash: sha256:90cb491f2fa04d44a81f2a4f19305f602f4f1a3cb0a9cb27c72622e70944c0f5
+          localHash: sha256:90cb491f2fa04d44a81f2a4f19305f602f4f1a3cb0a9cb27c72622e70944c0f5
           mode: "0644"
         - path: .agents/skills/msbuild/SKILL.md
           upstreamPath: plugins/dotnet/skills/msbuild/SKILL.md

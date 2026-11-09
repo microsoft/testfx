@@ -74,6 +74,7 @@ plugins:
       include:
         - skills/csharp-expert
         - skills/csharp-refactoring
+        - skills/dotnet-breaking-changes
         - skills/msbuild
         - skills/setup-local-sdk
       install:
