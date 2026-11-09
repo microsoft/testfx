@@ -16,7 +16,7 @@ namespace MSTest.Analyzers;
 
 public sealed partial class UseProperAssertMethodsAnalyzer
 {
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol, INamedTypeSymbol? iDictionaryTypeSymbol)
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol, INamedTypeSymbol? iDictionaryTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
@@ -60,11 +60,21 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             out SyntaxNode? predicateExpr,
             out _);
 
-        // For Any() and Where().Any() patterns
-        if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny &&
+        bool useContainsOnly = isTrueInvocation &&
+            linqStatus == LinqPredicateCheckStatus.All &&
+            assertTypeSymbol.GetMembers("ContainsOnly").OfType<IMethodSymbol>().Any(method =>
+                method.IsStatic &&
+                method.DeclaredAccessibility == Accessibility.Public &&
+                method.Arity == 1 &&
+                method.Parameters.Length >= 2 &&
+                method.Parameters[0].Type is INamedTypeSymbol { Name: "Func", Arity: 2 } predicateType &&
+                predicateType.TypeArguments[1].SpecialType == SpecialType.System_Boolean &&
+                method.Parameters[1].Type.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T);
+
+        if ((linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny || useContainsOnly) &&
             linqCollectionExpr is not null && predicateExpr is not null)
         {
-            string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+            string properAssertMethod = useContainsOnly ? "ContainsOnly" : isTrueInvocation ? "Contains" : "DoesNotContain";
 
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);

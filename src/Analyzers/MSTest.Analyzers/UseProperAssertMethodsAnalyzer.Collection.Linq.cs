@@ -137,6 +137,14 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         // Check for direct Method(predicate) patterns
         switch (methodName)
         {
+            case "All":
+                if (TryMatchLinqMethod(invocation, "All", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
+                {
+                    return LinqPredicateCheckStatus.All;
+                }
+
+                break;
+
             case "Any":
                 if (TryMatchLinqMethod(invocation, "Any", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
                 {

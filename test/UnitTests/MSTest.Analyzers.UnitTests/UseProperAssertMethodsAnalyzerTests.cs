@@ -5593,4 +5593,368 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
+
+    #region ContainsOnly Enumerable.All
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithPredicate_SuggestsContainsOnly()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(items.All(item => item > 0))|};
+                }
+            }
+            """;
+        string fixedCode = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.ContainsOnly(item => item > 0, items);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("\"all positive\"", DisplayName = "ContainsOnlyLiteralMessage")]
+    [DataRow("detail", DisplayName = "ContainsOnlyMessageVariable")]
+    [DataRow("$\"minimum {threshold}\"", DisplayName = "ContainsOnlyInterpolatedMessage")]
+    public async Task WhenUsingIsTrueAllWithMessage_PreservesMessageAndExpressions(string messageExpression)
+    {
+        string code = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int threshold = 0;
+                    string detail = "all positive";
+                    {|#0:Assert.IsTrue(GetItems().All(item => item > threshold), {{messageExpression}})|};
+                }
+
+                private static int[] GetItems() => new[] { 1, 2, 3 };
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int threshold = 0;
+                    string detail = "all positive";
+                    Assert.ContainsOnly(item => item > threshold, GetItems(), {{messageExpression}});
+                }
+
+                private static int[] GetItems() => new[] { 1, 2, 3 };
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithMethodGroup_SuggestsContainsOnly()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(items.All(IsPositive))|};
+                }
+
+                private static bool IsPositive(int item) => item > 0;
+            }
+            """;
+        string fixedCode = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.ContainsOnly(IsPositive, items);
+                }
+
+                private static bool IsPositive(int item) => item > 0;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueWithStaticEnumerableAll_SuggestsContainsOnly()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(System.Linq.Enumerable.All<int>(items, static item => item > 0))|};
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.ContainsOnly(static item => item > 0, items);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingStaticAssertIsTrueWithAll_PreservesMessage()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using static Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    {|#0:IsTrue(items.All(item => item > 0), "all positive")|};
+                }
+            }
+            """;
+        string fixedCode = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using static Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    ContainsOnly(item => item > 0, items, "all positive");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueAllWithReorderedNamedArguments_PreservesArgumentMeaning()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(condition: Enumerable.All(predicate: IsPositive, source: items), message: "named detail")|};
+                }
+
+                private static bool IsPositive(int item) => item > 0;
+            }
+            """;
+        string fixedCode = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.ContainsOnly(IsPositive, items, message: "named detail");
+                }
+
+                private static bool IsPositive(int item) => item > 0;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsOnly", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseAll_NoDiagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.IsFalse(items.All(item => item > 0), "not all positive");
+                    Assert.IsFalse(Enumerable.All(items, item => item > 0));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingQueryableAll_NoDiagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    IQueryable<int> items = new[] { 1, 2, 3 }.AsQueryable();
+                    Assert.IsTrue(items.All(item => item > 0), "query provider");
+                    Assert.IsTrue(Queryable.All(items, item => item > 0));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingCustomAll_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var items = new CustomCollection();
+                    Assert.IsTrue(items.All(item => item > 0));
+                    Assert.IsTrue("items".All(character => character == 'i'));
+                }
+            }
+
+            public class CustomCollection
+            {
+                public bool All(Func<int, bool> predicate) => true;
+            }
+
+            public static class CustomExtensions
+            {
+                public static bool All(this string text, Func<char, bool> predicate) => true;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingEnumerableAllWithoutContainsOnlyApi_NoDiagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.IsTrue(items.All(item => item > 0), "older framework");
+                    Assert.IsTrue(Enumerable.All(items, item => item > 0));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
+    }
+
+    #endregion
 }
