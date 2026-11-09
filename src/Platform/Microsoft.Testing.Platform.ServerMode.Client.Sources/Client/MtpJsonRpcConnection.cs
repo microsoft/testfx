@@ -213,8 +213,12 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
                 break;
 
-            case ErrorMessage error:
-                if (_pendingRequests.TryGetValue(GetRequestKey(error.Id, error.StringId), out PendingRequest? failed))
+            case ErrorMessage { Id: null } error:
+                _logger.SafeLog(MtpClientLogLevel.Debug, $"Received an uncorrelated JSON-RPC error (code {error.ErrorCode}): {error.Message}");
+                break;
+
+            case ErrorMessage { Id: { } errorId } error:
+                if (_pendingRequests.TryGetValue(GetRequestKey(errorId, error.StringId), out PendingRequest? failed))
                 {
                     failed.Completion.TrySetException(new MtpServerErrorException(error.ErrorCode, error.Message));
                 }
