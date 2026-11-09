@@ -11,6 +11,54 @@ namespace MSTest.Analyzers.Test;
 public sealed class DataRowShouldBeValidAnalyzerTests
 {
     [TestMethod]
+    public async Task GenericArrayArguments_WideningReferenceTypes_AreIndependentOfArgumentOrder()
+    {
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                [DataRow(new string[] { "first" }, new object[] { "second" })]
+                [DataRow(new object[] { "first" }, new string[] { "second" })]
+                public void Check<T>(T first, T second) { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    [DataRow("bool", "true", DisplayName = "BooleanArray")]
+    [DataRow("byte", "17", DisplayName = "ByteArray")]
+    [DataRow("char", "'q'", DisplayName = "CharacterArray")]
+    [DataRow("double", "1.25", DisplayName = "DoubleArray")]
+    [DataRow("short", "17", DisplayName = "Int16Array")]
+    [DataRow("long", "17", DisplayName = "Int64Array")]
+    [DataRow("sbyte", "-17", DisplayName = "SByteArray")]
+    [DataRow("float", "1.25f", DisplayName = "SingleArray")]
+    [DataRow("string", "\"text\"", DisplayName = "StringArray")]
+    [DataRow("ushort", "17", DisplayName = "UInt16Array")]
+    [DataRow("uint", "17", DisplayName = "UInt32Array")]
+    [DataRow("ulong", "17", DisplayName = "UInt64Array")]
+    [DataRow("object", "17", DisplayName = "ObjectArray")]
+    [DataRow("System.Type", "typeof(int)", DisplayName = "TypeArray")]
+    [DataRow("SmallEnum", "SmallEnum.Value", DisplayName = "EnumWithByteUnderlyingType")]
+    public async Task GenericArrayArguments_AllLegalElementTypes_AreInferredWithoutDiagnostic(string elementType, string element)
+    {
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public enum SmallEnum : byte { Value = 17 }
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [DataRow(new object[] { new {{elementType}}[] { {{element}} } })]
+                public void Check<T>(T[] values) { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task WhenTrailingCancellationTokenIsOmitted_NoDiagnostic()
     {
         string code = """

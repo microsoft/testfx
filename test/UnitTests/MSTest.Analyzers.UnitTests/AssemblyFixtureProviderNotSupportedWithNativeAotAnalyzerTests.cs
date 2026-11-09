@@ -13,6 +13,17 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public class AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzerTests
 {
+    [TestMethod]
+    public async Task NativeAot_OlderFrameworkWithoutFixtureProviderAttribute_DoesNotReport()
+    {
+        var test = new VerifyCS.Test(useMSTestV4: true) { TestCode = "public class Ordinary { }" };
+        test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+            is_global = true
+            build_property.PublishAot = true
+            """));
+        await test.RunAsync();
+    }
+
     private static async Task VerifyAsync(string code, bool publishAot, params DiagnosticResult[] expected)
         => await VerifyWithPropertiesAsync(code, expected, ("build_property.PublishAot", publishAot ? "true" : "false"));
 

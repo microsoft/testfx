@@ -14,6 +14,41 @@ namespace MSTest.Analyzers.Test;
 public sealed class CultureMutationUnderParallelizationAnalyzerTests
 {
     [TestMethod]
+    public async Task ClassLevelCustomResourceLock_CoversTheCultureMutation()
+    {
+        const string source = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass, ResourceLock("culture")]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture; }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task OlderFrameworkWithoutResourceLocks_StillReportsTheCultureMutation()
+    {
+        const string source = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                public void Check() { {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|}; }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source, useMSTestV4: true,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule).WithLocation(0).WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodSetsDefaultThreadCurrentCulture_Diagnostic()
     {
         string code = """

@@ -14,6 +14,49 @@ namespace MSTest.Analyzers.UnitTests;
 public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
 {
     [TestMethod]
+    public async Task LocalFunctionsAndLambdas_InheritTheTestMethodScope()
+    {
+        const string source = """
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    void Local() { {|#0:Thread.Sleep(17)|}; }
+                    Action nested = () => { {|#1:Task.CompletedTask.Wait()|}; };
+                    Local();
+                    nested();
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(
+            source,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Thread.Sleep"),
+            VerifyCS.Diagnostic().WithLocation(1).WithArguments("Task.Wait"));
+    }
+
+    [TestMethod]
+    public async Task FieldInitializer_IsNotMistakenForATestMethod()
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class Tests
+            {
+                private readonly int value = Task.FromResult(17).Result;
+                [TestMethod]
+                public void Check() { }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task ThreadSleepInTestMethod_Diagnostic()
     {
         string code = """

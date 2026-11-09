@@ -26,6 +26,58 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
 
     [TestMethod]
+    [DataRow("T[]", "T", "T[]", false, DisplayName = "SameArrayElementParameter")]
+    [DataRow("T[]", "T", "T[,]", true, DisplayName = "DifferentArrayRank")]
+    [DataRow("List<T>", "T", "List<T>", false, DisplayName = "SameConstructedGeneric")]
+    [DataRow("List<T>", "U", "List<U>", true, DisplayName = "RenamedNestedTypeParameter")]
+    [DataRow("List<T>", "T", "List<int>", true, DisplayName = "DifferentGenericArgument")]
+    [DataRow("List<T>", "T", "HashSet<T>", true, DisplayName = "DifferentGenericDefinition")]
+    [DataRow("List<T>", "T", "Dictionary<T, T>", true, DisplayName = "DifferentGenericArity")]
+    [DataRow("Dictionary<string, List<T[]>>", "T", "Dictionary<string, List<T[]>>", false, DisplayName = "SameRecursivelyNestedType")]
+    [DataRow("Dictionary<string, List<T[]>>", "T", "Dictionary<int, List<T[]>>", true, DisplayName = "DifferentDictionaryKey")]
+    public async Task RecursiveGenericSignatures_HideOnlyAnEquivalentDiscoveryKey(string baseParameter, string derivedTypeParameter, string derivedParameter, bool expectedDiagnostic)
+    {
+        string legacyBase = $$"""
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+            namespace Repro
+            {
+                using System.Collections.Generic;
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run<T>({{baseParameter}} value) { }
+                }
+            }
+            """;
+        string consumer = $$"""
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Repro
+            {
+                [TestClass]
+                public class {{(expectedDiagnostic ? "{|#0:SampleTests|}" : "SampleTests")}} : TestBase
+                {
+                    [TestMethod]
+                    public new void Run<{{derivedTypeParameter}}>({{derivedParameter}} value) { }
+                }
+            }
+            """;
+        var test = new VerifyCS.Test { TestCode = consumer };
+        AddLegacyFrameworkBaseProject(test, legacyBase);
+        if (expectedDiagnostic)
+        {
+            test.ExpectedDiagnostics.Add(VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0).WithArguments("Run", "TestBase", "DataTestMethod", LegacyFrameworkAssemblyName));
+        }
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenInheritedTestInitializeComesFromDifferentFrameworkAssembly_Diagnostic()
     {
         string legacyBaseCode = """

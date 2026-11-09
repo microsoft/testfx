@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer,
     MSTest.Analyzers.UseOSConditionAttributeInsteadOfRuntimeCheckFixer>;
@@ -10,6 +12,68 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
 {
+    [TestMethod]
+    [DataRow("IsAndroid", "Android")]
+    [DataRow("IsIOS", "iOS")]
+    [DataRow("IsTvOS", "tvOS")]
+    [DataRow("IsWatchOS", "watchOS")]
+    [DataRow("IsBrowser", "Browser")]
+    [DataRow("IsWasi", "Wasi")]
+    [DataRow("IsMacCatalyst", "MacCatalyst")]
+    public async Task MobileBrowserAndWasiGuards_ReportTheFullGuard(string method, string platform)
+    {
+        string source = $$"""
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    if (!OperatingSystem.{{method}}())
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Diagnostic diagnostic = Assert.ContainsSingle(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer()));
+        AnalyzerContinuationTestHelpers.AssertDiagnostic(diagnostic, "MSTEST0061", DiagnosticSeverity.Info, source,
+            $$"""
+            if (!OperatingSystem.{{method}}())
+                    {
+                        return;
+                    }
+            """,
+            "Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'");
+        Assert.AreEqual(platform, diagnostic.Properties["OSPlatformKey"]);
+        Assert.AreEqual("True", diagnostic.Properties["IsNegatedKey"]);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, new UseOSConditionAttributeInsteadOfRuntimeCheckFixer()));
+    }
+
+    [TestMethod]
+    public async Task VersionSpecificOperatingSystemCheck_DoesNotSuggestAWholeFamilyCondition()
+    {
+        const string source = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class Tests
+            {
+                [TestMethod]
+                public void Check()
+                {
+                    if (!OperatingSystem.IsWindowsVersionAtLeast(10))
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
     [TestMethod]
     public async Task WhenNoRuntimeCheckUsed_NoDiagnostic()
     {
