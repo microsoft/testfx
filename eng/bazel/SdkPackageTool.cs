@@ -38,7 +38,6 @@ var substitutions = new Dictionary<string, string>(StringComparer.Ordinal)
     ["MSTestVersion"] = ExperimentalVersion(versions, "VersionPrefix"),
     ["MSTestWindowsUIAutomationVersion"] = ExperimentalVersion(versions, "VersionPrefix"),
     ["MicrosoftTestingPlatformVersion"] = ExperimentalVersion(versions, "TestingPlatformVersionPrefix"),
-    ["MicrosoftTestingExtensionsJUnitReportVersion"] = ExperimentalVersion(repositoryProperties, "MicrosoftTestingExtensionsJUnitReportVersionPrefix"),
     ["MicrosoftTestingExtensionsCodeCoverageVersion"] = Property(versions, "MicrosoftTestingExtensionsCodeCoverageVersion"),
     ["MicrosoftNETTestSdkVersion"] = Property(centralPackages, "MicrosoftNETTestSdkVersion"),
     ["MicrosoftTestingExtensionsFakesVersion"] = Property(centralPackages, "MicrosoftTestingExtensionsFakesVersion"),

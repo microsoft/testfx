@@ -1,1 +1,5 @@
 #nullable enable
+*REMOVED*[TPEXP]Microsoft.Testing.Extensions.JUnitReportExtensions
+*REMOVED*[TPEXP]static Microsoft.Testing.Extensions.JUnitReportExtensions.AddJUnitReportProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void
+Microsoft.Testing.Extensions.JUnitReportExtensions
+static Microsoft.Testing.Extensions.JUnitReportExtensions.AddJUnitReportProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

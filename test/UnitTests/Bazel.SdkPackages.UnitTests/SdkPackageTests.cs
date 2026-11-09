@@ -23,7 +23,6 @@ public sealed class SdkPackageTests(TestContext context)
                 <MSTest>7.8.9-preview.bazel</MSTest>
                 <Windows>7.8.9-preview.bazel</Windows>
                 <Platform>2.3.4-preview.bazel</Platform>
-                <JUnit>1.2.3-preview.bazel</JUnit>
                 <Coverage>18.13.0-preview.42</Coverage>
                 <TestSdk>18.10.1</TestSdk>
                 <Fakes>18.1.1</Fakes>
@@ -164,7 +163,6 @@ public sealed class SdkPackageTests(TestContext context)
         string repositoryProperties = Write("Directory.Build.props", """
             <Project><PropertyGroup>
               <SupportedNetFrameworks>net8.0;net9.0;net10.0;net11.0</SupportedNetFrameworks>
-              <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.2.3</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
               <PackageLicenseExpression>MIT</PackageLicenseExpression>
             </PropertyGroup></Project>
             """);
@@ -218,7 +216,6 @@ public sealed class SdkPackageTests(TestContext context)
                     <MSTest>${MSTestVersion}</MSTest>
                     <Windows>${MSTestWindowsUIAutomationVersion}</Windows>
                     <Platform>${MicrosoftTestingPlatformVersion}</Platform>
-                    <JUnit>${MicrosoftTestingExtensionsJUnitReportVersion}</JUnit>
                     <Coverage>${MicrosoftTestingExtensionsCodeCoverageVersion}</Coverage>
                     <TestSdk>${MicrosoftNETTestSdkVersion}</TestSdk>
                     <Fakes>${MicrosoftTestingExtensionsFakesVersion}</Fakes>
