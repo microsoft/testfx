@@ -28,7 +28,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///   and assert, via the consumer's own exit code and stdout markers, that it discovered then ran the single
 ///   expected node over the JSON-RPC wire.</item>
 /// </list>
-/// The end-to-end run covers the net10.0 and net11.0 (System.Text.Json) axes. A Unix-only net6.0
+/// The end-to-end run covers net6.0 (Jsonite) and the net10.0 and net11.0 (System.Text.Json) axes. A Unix-only net6.0
 /// run additionally proves that the down-level package slice retries through the muxer when the sibling apphost
 /// exists but the current process cannot execute it. The package must have been produced first (build with
 /// <c>-pack</c>); otherwise the test fails with a hint.
@@ -103,7 +103,7 @@ internal static class Program
             SerializerUtilities.RegisterClientSerializers();
             IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
             const string ErrorJson = "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32700,\"message\":\"JSON parse error\"}}";
-#if NETCOREAPP
+#if MTP_CLIENT_USE_MODERN_DOTNET
             ErrorMessage error = (ErrorMessage)formatter.Deserialize<RpcMessage>(Encoding.UTF8.GetBytes(ErrorJson));
 #else
             ErrorMessage error = (ErrorMessage)formatter.Deserialize<RpcMessage>(ErrorJson);
@@ -326,6 +326,7 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow("net6.0")]
     [DataRow("net10.0")]
     [DataRow("net11.0")]
     public async Task PackagedConsumer_LaunchesRealServer_DiscoversAndRunsExpectedNode(string targetFramework)
