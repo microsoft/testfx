@@ -2198,6 +2198,45 @@ dotnet11/dotnet-public feeds, but exact package manifests are available on
 the public dotnet12 feed. Azure Artifacts rejected HEAD with HTTP 405;
 the publication check therefore used GET, not a false missing-package claim.
 
+### SDK pin refresh (2026-11-09)
+
+The repository SDK refresh also updates the opt-in engineering registration to
+`12.0.100-alpha.1.26556.115` and runtime `12.0.0-alpha.1.26556.115`. Leaving the
+old engineering pin would reject both the module extension's `global.json`
+guard and the Windows dogfood preflight before compilation. All six archive
+SHA-512 values were checked against the version-specific
+`https://ci.dot.net/public-checksums/Sdk/12.0.100-alpha.1.26556.115/` manifests.
+
+The SDK's `.version` identifies commit `6e6f978fd9ca19b62796a13ff5230b21af0c42fa`;
+the executed compiler is
+`5.14.0-1.26556.115 (6e6f978fd9ca19b62796a13ff5230b21af0c42fa)`.
+Its runtimeconfig requests the matching .NET 12 runtime, and the bundled
+maximum/default target now names `net12.0`, rather than the transitional
+`net11.0` metadata of the earlier SDK. C# 15.0 and F# 11.2 remain the verified
+language versions. The default published SDK 11, SDK 10 bootstrap, and
+independently pinned .NET 8/9/10/11 target-pack graph are unchanged.
+
+All 12 existing verifier fixtures pass with the new SDK. Keeping the same valid
+four-framework fixture and real compiler while using the old verifier
+(blob `4f2c7796c14cc8ca7282b6eaa46e7f8248ed10af`, with only its isolated
+repository-root binding adapted) produces the intended
+`Unexpected compiler identity: 5.14.0-1.26556.115` rejection after compiler exit 0.
+The corrected verifier accepts that identical input. This is executed metadata
+validation sensitivity, not a compiler/setup failure counted as red-phase proof.
+
+The opt-in Windows `//:platform` build succeeds with 79 native actions in
+task-owned output/cache roots. Batch-mode startup exceeded Windows' command-line
+length limit before analysis; normal server mode succeeded without removing
+environment settings or weakening validation.
+
+Native `//:protocol_contract_tests` and `//:simple1_test` also pass: 27 exact
+protocol cases and one `TestMethod1` consumer case, with fresh TRX execution
+verification. The native action-graph audit executes the selected compiler and
+verifies all 16 declared source actions use the new engineering SDK, the two
+bootstrap actions retain SDK 10.0.401, and the actual `net10.0` reference pack
+remains 10.0.14. Other host archives have verified published checksums, but their
+native execution was not repeated by this refresh.
+
 ### Narrow, reversible registration decision
 
 Use the pinned rules' existing `dotnet_sdk_repositories` and

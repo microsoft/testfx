@@ -19,7 +19,7 @@ discovery path and Azure DevOps upload request, and ships both `netstandard2.0` 
 extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
 are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
-The affected-test packages now use `18.13.0-preview.26553.4`, built from commit
+The 2026-11-03 affected-test package update used `18.13.0-preview.26553.4`, built from commit
 `eca1718b78e9adb640b700ede7b51ec97ed077fa`. This includes setup-aware collection batching on top of the existing
 refill-on-completion scheduler. Validated, correlated child execution timing permits batches of up to 256 test UIDs,
 amortizing repeated child initialization and collector setup. Unavailable or incompatible timing visibly retains
@@ -32,7 +32,7 @@ are unchanged. Affected-test hosts resolve CodeCoverage `18.13.0-preview.26553.4
 `VersionOverride` in [`test/Directory.Build.targets`](../test/Directory.Build.targets). The affected-test, matching
 test-host CodeCoverage, and Azure DevOps storage packages at that version provide `netstandard2.0` and `net10.0`
 assets; older .NET and .NET Framework test hosts use the `netstandard2.0` assets. The separate shipping CodeCoverage
-pin remains `18.13.0-preview.26530.1`; it is not the CodeCoverage version loaded by these affected-test hosts.
+pin was `18.13.0-preview.26530.1`; it was not the CodeCoverage version loaded by those affected-test hosts.
 
 **Test-value evidence (2026-11-03):** this dependency update is based on
 `d3ce600610baaebac245acdbd4162615f5dfcaae`; the dependency-metadata patch, excluding this document, has SHA-256
@@ -80,7 +80,7 @@ pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffecte
 pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests false -EnableNonWindowsAffectedTests true
 ```
 
-Affected-test execution is enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
+Affected-test execution was initially enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
 `907535df2f7eb8e1845571867684244ad04b031b`. It includes both
 [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450) and
 [dotnet/sdk#56538](https://github.com/dotnet/sdk/pull/56538): successful collection can complete without an ordinary
@@ -92,6 +92,46 @@ controller-only or mixed partial handshakes, and protocol rejection remain failu
 orchestrator's server-control cancellation channel are preserved; the pipeline does not suppress handshakes or
 normalize failure output. The rollout validator requires this SDK or newer, preventing rollback to intermediate
 builds that contain only the no-handshake fix.
+
+## SDK refresh (2026-11-09)
+
+Both SDK pins in `global.json` advance to `12.0.100-alpha.1.26556.115`, the build selected by the
+[public .NET 12 daily SDK link](https://aka.ms/dotnet/12.0.1xx/daily/dotnet-sdk-win-x64.zip).
+Its stamped SDK commit is `6e6f978fd9ca19b62796a13ff5230b21af0c42fa`.
+AffectedTests and its Azure DevOps storage provider are already at the newest available `test-tools` build,
+`18.13.0-preview.26556.6`, so their shared pin remains unchanged. Test-host CodeCoverage resolves that same version.
+Product target frameworks, bootstrap runtime pins, the minimum supported SDK gate, and rollout switches are unchanged;
+this is a `main` toolchain refresh, not a release-branch feature activation.
+
+Initial validation used Release packages freshly built from `0ed1f874bf8afd75aec83ee4b7743d3f15cea2a2` plus the SDK-pin
+patch (SHA-256 `831069C0CD28D71FADB35F8C24B569A830328BAC146CF0E7F8D273C3314D58D7`).
+The isolated package-only consumer uses MSTest `5.0.0-preview.local.net12.20261109` and MTP
+`3.0.0-preview.local.net12.20261109`; all eight source-packed dependencies match its fresh cache byte-for-byte.
+`PackedPlatformAssemblyIsLoaded` and `AlignedAffectedTestsAssemblyIsLoaded` compare the loaded DLLs with independent
+hashes from the packed assets. The consumer targets `net12.0` and `net462` and compiles with C# 12 and warnings as errors.
+
+| Real SDK command / state | Observed result |
+| --- | --- |
+| Discovery and ordinary execution | Three exact tests per TFM; six pass, exit 0, with fresh TRX verification. |
+| `--collect-test-map` | Exit 0; two schema-v2 shards, each with three UIDs associated with both source files. Six independent execution markers confirm work despite suppressed child reporting. |
+| `--affected-tests`, unchanged sources | Exit 0 and zero execution markers for both TFMs, even with the intentional-failure switch set. |
+| Missing, partial, or unsupported-schema maps | Exit 0; full fallback executes all six tests, while one missing shard executes only that module's three tests. Original shards are restored byte-for-byte. |
+| Intentional `TestFailureExitIsPreserved` assertion failures | SDK exit 2; two passed and one failed test per TFM, with the exact failing identities verified. |
+
+**Test-value evidence:** all 27 unchanged protocol tests pass for each of `net10.0`, `net11.0`, and `net462`
+(81 executed, no skips). The modern protocol hosts run on the new .NET 12 runtime via explicit roll-forward.
+The old SDK was not rerun, so paired SDK preservation remains unverified; no new behavioral fix is claimed.
+The CMD build wrapper and Arcade runtime bootstrap cannot resolve `powershell` on this host; the repository
+PowerShell entry point installed the SDK, and direct pinned-SDK build/pack commands succeeded. Full CI,
+live Azure artifact publication, non-Windows native collection, and cancellation were not exercised.
+
+The review/CI follow-up also synchronizes the Bazel engineering SDK, six archive checksums, and executed
+compiler/verifier metadata; see [the Bazel SDK refresh record](decisions/bazel-build.md#sdk-pin-refresh-2026-11-09).
+Build 1670839 and the GitHub shipping-attachments job exposed new CA1001 diagnostics on four ownership declarations.
+The follow-up keeps `TestContext`'s documented managed-cancellation lifetime and public API unchanged, gives the
+message-bus test explicit event ownership, and removes implicit ownership from borrowed orchestrator/retry handles.
+All three affected project graphs build with CI analysis and warnings as errors (zero warnings/errors);
+19 orchestrator/message-bus cases and the retry cancellation/disposal case execute and pass with fresh TRX verification.
 
 ## CI layout
 
