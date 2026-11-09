@@ -14,37 +14,37 @@
       </trans-unit>
       <trans-unit id="AttachmentCleanupWarning">
         <source>Could not remove incomplete GitHub Actions attachment '{0}': {1}</source>
-        <target state="new">Could not remove incomplete GitHub Actions attachment '{0}': {1}</target>
+        <target state="translated">Nepovedlo se odstranit neúplnou přílohu GitHub Actions {0}: {1}</target>
         <note>{0} is the sanitized file name; {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
         <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
-        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <target state="translated">Bylo dosaženo limitu počtu příloh GitHub Actions. Další přílohy se nepřipraví.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
         <source>Could not write the GitHub Actions attachment manifest: {0}</source>
-        <target state="new">Could not write the GitHub Actions attachment manifest: {0}</target>
+        <target state="translated">Nepovedlo se zapsat manifest příloh GitHub Actions: {0}</target>
         <note>{0} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
         <source>Attachments (paths inside the workflow artifact):</source>
-        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <target state="translated">Přílohy (cesty uvnitř artefaktu pracovního postupu):</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentReportingWarning">
         <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
-        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <target state="translated">Některé testovací přílohy se nepovedlo připravit nebo indexovat. Výsledky testů nejsou ovlivněné.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
-        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <target state="translated">Příloha během kopírování překročila limit velikosti pro přípravu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
         <source>{0} bytes</source>
-        <target state="new">{0} bytes</target>
+        <target state="translated">{0} (bajty)</target>
         <note>{0} is the attachment size in bytes.</note>
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
@@ -54,12 +54,12 @@
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
         <source>not staged; see manifest.</source>
-        <target state="new">not staged; see manifest.</target>
+        <target state="translated">není připraveno; viz manifest.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">Připravte přílohy neúspěšných testů a manifest v zadaném absolutním adresáři. Za nahrání tohoto adresáře a propojení výsledného artefaktu odpovídá pracovní postup. Vyžaduje --report-gh.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">Adresář příloh GitHub Actions musí mít platnou neprázdnou absolutní cestu.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">

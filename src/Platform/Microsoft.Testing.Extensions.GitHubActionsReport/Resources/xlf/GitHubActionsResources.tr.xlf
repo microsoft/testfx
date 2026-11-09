@@ -19,27 +19,27 @@
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
         <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
-        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <target state="translated">GitHub Actions ek sayısı sınırına ulaşıldı. Daha fazla ek hazırlanmaz.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
         <source>Could not write the GitHub Actions attachment manifest: {0}</source>
-        <target state="new">Could not write the GitHub Actions attachment manifest: {0}</target>
+        <target state="translated">GitHub Actions ek bildirim dosyası yazılamadı: {0}</target>
         <note>{0} is the error message.</note>
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
         <source>Attachments (paths inside the workflow artifact):</source>
-        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <target state="translated">Ekler (iş akışı yapıtındaki yollar):</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentReportingWarning">
         <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
-        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <target state="translated">Bazı test ekleri hazırlanamadı veya dizine eklenemedi. Test sonuçları etkilenmedi.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
-        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <target state="translated">Ek kopyalanırken hazırlama boyutu sınırını aştı.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
@@ -54,12 +54,12 @@
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
         <source>not staged; see manifest.</source>
-        <target state="new">not staged; see manifest.</target>
+        <target state="translated">hazırlanmadı; bildirim dosyasına bakın.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">Başarısız test eklerini ve bir bildirim dosyasını belirtilen mutlak dizinde hazırlayın. Bu dizini yüklemekten ve ortaya çıkan yapıtı bağlamaktan iş akışı sorumludur. '--report-gh' gerektirir.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">GitHub Actions ek dizini geçerli ve boş olmayan bir mutlak dizin yolu olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">

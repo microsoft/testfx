@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
         <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
-        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <target state="translated">La limite du nombre de pièces jointes GitHub Actions a été atteinte. Les pièces jointes supplémentaires ne sont pas mises en lots.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
@@ -29,17 +29,17 @@
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
         <source>Attachments (paths inside the workflow artifact):</source>
-        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <target state="translated">Pièces jointes (chemins d’accès dans l’artefact du workflow) :</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentReportingWarning">
         <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
-        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <target state="translated">Certaines pièces jointes de test n’ont pas pu être mises en lots ou indexées. Les résultats de tests ne sont pas affectés.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
-        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <target state="translated">La pièce jointe a dépassé la limite de taille de mise en lots lors de sa copie.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
@@ -54,12 +54,12 @@
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
         <source>not staged; see manifest.</source>
-        <target state="new">not staged; see manifest.</target>
+        <target state="translated">sans mise en lots, consultez le manifeste.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">Mettez en lots les pièces jointes des tests ayant échoué et un manifeste dans le répertoire absolu spécifié. Le workflow doit charger ce répertoire et associer l’artefact obtenu. Nécessite « --report-gh ».</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
