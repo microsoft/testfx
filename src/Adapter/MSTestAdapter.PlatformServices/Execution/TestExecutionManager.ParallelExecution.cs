@@ -88,10 +88,11 @@ internal partial class TestExecutionManager
             var tasks = new List<Task>();
             var resourceLockManager = new ResourceLockManager();
 
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+            // Once workers are scheduled, let them observe cancellation so we always await their completion.
             for (int i = 0; i < parallelWorkers; i++)
             {
-                _testRunCancellationToken?.ThrowIfCancellationRequested();
-
                 tasks.Add(_taskFactory(async () =>
                 {
                     try

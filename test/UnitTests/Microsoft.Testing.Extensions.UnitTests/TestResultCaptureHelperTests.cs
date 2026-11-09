@@ -208,6 +208,115 @@ public sealed class TestResultCaptureHelperTests
     }
 
     [TestMethod]
+    [DataRow("failed")]
+    [DataRow("error")]
+    [DataRow("timeout")]
+    [DataRow("cancelled")]
+    public void TryCaptureCore_NestedException_PreservesInnerDiagnosticTrace(string stateName)
+    {
+        var exception = new InvalidOperationException("Invocation failed.", new ArgumentException("[INNER_CAUSE] Credential rejected."));
+#pragma warning disable CS0618, MTP0001 // Exercise the existing cancellation capture path.
+        TestNodeStateProperty state = stateName switch
+        {
+            "failed" => new FailedTestNodeStateProperty(exception),
+            "error" => new ErrorTestNodeStateProperty(exception),
+            "timeout" => new TimeoutTestNodeStateProperty(exception),
+            "cancelled" => new CancelledTestNodeStateProperty(exception),
+            _ => throw new InvalidOperationException("Unknown test state."),
+        };
+#pragma warning restore CS0618, MTP0001
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(state) };
+
+        object? result = InvokeTryCaptureCore(node);
+
+        Assert.IsNotNull(result);
+        object? exceptionDetails = GetMember(result, "ExceptionDetails");
+        Assert.IsNotNull(exceptionDetails);
+        Assert.AreEqual("Invocation failed.", GetMember(exceptionDetails, "ErrorMessage"));
+        Assert.AreEqual(typeof(InvalidOperationException).FullName, GetMember(exceptionDetails, "ExceptionType"));
+        string? trace = (string?)GetMember(exceptionDetails, "StackTrace");
+        Assert.IsNotNull(trace, "The nested exception must produce a diagnostic trace even before it is thrown.");
+        Assert.Contains("System.ArgumentException: [INNER_CAUSE] Credential rejected.", trace);
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_AggregateException_PreservesAllInnerDiagnostics()
+    {
+        var exception = new AggregateException(
+            "Parallel operations failed.",
+            new InvalidOperationException("Read failed.", new IOException("[READ_CAUSE] Missing file.")),
+            new ArgumentException("[AUTH_CAUSE] Credential rejected."));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(new ErrorTestNodeStateProperty(exception)) };
+
+        object? result = InvokeTryCaptureCore(node);
+
+        Assert.IsNotNull(result);
+        object? exceptionDetails = GetMember(result, "ExceptionDetails");
+        Assert.IsNotNull(exceptionDetails);
+        Assert.AreEqual(exception.Message, GetMember(exceptionDetails, "ErrorMessage"));
+        Assert.AreEqual(typeof(AggregateException).FullName, GetMember(exceptionDetails, "ExceptionType"));
+        string? trace = (string?)GetMember(exceptionDetails, "StackTrace");
+        Assert.IsNotNull(trace);
+        Assert.Contains("System.IO.IOException: [READ_CAUSE] Missing file.", trace);
+        Assert.Contains("System.ArgumentException: [AUTH_CAUSE] Credential rejected.", trace);
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_ExplanationWithNestedException_PreservesExplanationAndTrace()
+    {
+        var exception = new InvalidOperationException("Outer message.", new IOException("[INNER_CAUSE] Missing file."));
+        TestNode node = new()
+        {
+            Uid = "id",
+            DisplayName = "T",
+            Properties = new(new FailedTestNodeStateProperty(exception, "Framework explanation.")),
+        };
+
+        object? result = InvokeTryCaptureCore(node);
+
+        Assert.IsNotNull(result);
+        object? exceptionDetails = GetMember(result, "ExceptionDetails");
+        Assert.IsNotNull(exceptionDetails);
+        Assert.AreEqual("Framework explanation.", GetMember(exceptionDetails, "ErrorMessage"));
+        string? trace = (string?)GetMember(exceptionDetails, "StackTrace");
+        Assert.IsNotNull(trace);
+        Assert.Contains("System.IO.IOException: [INNER_CAUSE] Missing file.", trace);
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_SimpleThrownException_PreservesOriginalStackTrace()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => throw new InvalidOperationException("boom"));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(new FailedTestNodeStateProperty(exception)) };
+
+        object? result = InvokeTryCaptureCore(node);
+
+        Assert.IsNotNull(result);
+        object? exceptionDetails = GetMember(result, "ExceptionDetails");
+        Assert.IsNotNull(exceptionDetails);
+        Assert.AreEqual("boom", GetMember(exceptionDetails, "ErrorMessage"));
+        Assert.IsNotNull(exception.StackTrace);
+        Assert.AreEqual(exception.StackTrace, GetMember(exceptionDetails, "StackTrace"));
+    }
+
+    [TestMethod]
+    public void TryCapture_NestedException_KeepsDiagnosticTraceBounded()
+    {
+        var exception = new InvalidOperationException("Outer message.", new IOException(new string('x', 40_000)));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(new FailedTestNodeStateProperty(exception)) };
+
+        Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult? result = Microsoft.Testing.Extensions.HtmlReport.TestResultCapture.TryCapture(node);
+
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.StackTrace);
+        string fullTrace = exception.ToString();
+        Assert.AreEqual(
+            fullTrace.Substring(0, 32 * 1024) + $"\n…[truncated, original length: {fullTrace.Length}]",
+            result.StackTrace);
+    }
+
+    [TestMethod]
     public void TryCaptureCore_IncludeLocationTrue_PopulatesLocation()
     {
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);

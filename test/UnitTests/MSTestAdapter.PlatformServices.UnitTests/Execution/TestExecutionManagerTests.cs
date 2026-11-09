@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -508,6 +509,87 @@ public class TestExecutionManagerTests : TestContainer
     #endregion
 
     #region Parallel tests
+
+    public Task RunTests_CancelledWhileStartingParallelWorkers_WaitsForScheduledWorkers()
+        => RunTestsCancelledWhileStartingWorkersAsync(withDependencies: false);
+
+    public Task RunTests_CancelledWhileStartingDependencyWorkers_WaitsForScheduledWorkers()
+        => RunTestsCancelledWhileStartingWorkersAsync(withDependencies: true);
+
+    private async Task RunTestsCancelledWhileStartingWorkersAsync(bool withDependencies)
+    {
+        UnitTestElement[] tests = ToUnitTestElements(
+            GetTestCase(typeof(DummyTestClassForParallelize), nameof(DummyTestClassForParallelize.TestMethod1)),
+            GetTestCase(typeof(DummyTestClassForParallelize2), nameof(DummyTestClassForParallelize2.TestMethod1)));
+        if (withDependencies)
+        {
+            tests[1].Dependencies =
+            [
+                new TestDependencyInfo(typeof(DummyTestClassForParallelize).FullName, nameof(DummyTestClassForParallelize.TestMethod1), proceedOnFailure: false),
+            ];
+        }
+
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+        MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+
+        var releaseWorker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int scheduledWorkers = 0;
+        var manager = new TestExecutionManager(action =>
+        {
+            if (++scheduledWorkers == 1)
+            {
+                _cancellationToken.Cancel();
+                return releaseWorker.Task;
+            }
+
+            return action();
+        });
+        Task run = manager.RunTestsAsync(
+            tests,
+            CurrentDeploymentContext,
+            _frameworkHandle.ToAdapterMessageLogger(),
+            TestResultRecorder,
+            new TestElementFilterProvider(_runContext),
+            _cancellationToken);
+
+        using var assertions = new AssertionScope();
+        try
+        {
+            scheduledWorkers.Should().BeGreaterThan(0);
+            run.IsCompleted.Should().BeFalse("cancellation must not abandon an already scheduled worker");
+        }
+        finally
+        {
+            releaseWorker.TrySetResult(true);
+        }
+
+        const int WorkerCleanupTimeoutMilliseconds = 60_000;
+        if (await Task.WhenAny(run, Task.Delay(WorkerCleanupTimeoutMilliseconds)) != run)
+        {
+            throw new TimeoutException("Parallel workers did not finish after their release.");
+        }
+
+        Func<Task> completeRun = () => run;
+        await completeRun.Should().NotThrowAsync();
+
+        scheduledWorkers.Should().Be(2);
+        _frameworkHandle.TestCaseStartList.Should().BeEmpty();
+        _frameworkHandle.ResultsList.Should().BeEmpty();
+        _frameworkHandle.TestCaseEndList.Should().BeEmpty();
+    }
 
     public async Task RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
     {

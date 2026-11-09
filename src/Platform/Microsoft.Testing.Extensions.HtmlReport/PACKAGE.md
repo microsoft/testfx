@@ -26,6 +26,10 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable the report via the `--report-html` command line option. The report file name can be overridden with `--report-html-filename <name>.html`.
 
+## Exception diagnostics
+
+Expanded failure details preserve the framework's explanation or the exception's top-level message. For nested and aggregate exceptions, the stack trace also includes the inner causes. Diagnostic text remains subject to the existing capture limits.
+
 ## Documentation
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.

@@ -23,6 +23,10 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable the report via the `--report-ctrf` command line option. The report file name can be overridden with `--report-ctrf-filename <name>.json`.
 
+## Exception diagnostics
+
+The `message` field preserves the framework's explanation or the exception's top-level message. For nested and aggregate exceptions, `trace` also includes the inner causes. Diagnostic text remains subject to the existing capture limits.
+
 ## Identity and attachment semantics
 
 - `reportId` identifies one report document. Each physical report has its own UUID.
