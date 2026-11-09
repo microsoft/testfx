@@ -26,8 +26,9 @@ internal sealed record NotificationMessage(string Method, object? Params) : RpcM
 
 /// <summary>
 /// An error message is sent if some exception was thrown when processing the request.
+/// A null ID indicates that the peer could not determine the request ID.
 /// </summary>
-internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, object? Data) : RpcMessage
+internal sealed record ErrorMessage(int? Id, int ErrorCode, string Message, object? Data) : RpcMessage
 {
     public string? StringId { get; init; }
 }

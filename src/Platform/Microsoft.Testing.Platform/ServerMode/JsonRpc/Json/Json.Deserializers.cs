@@ -88,6 +88,13 @@ internal sealed partial class Json
         {
             ValidateJsonRpcHeader(json, jsonElement);
 
+            if (jsonElement.TryGetProperty(JsonRpcStrings.Error, out _)
+                && jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement errorId)
+                && errorId.ValueKind == JsonValueKind.Null)
+            {
+                return json.Bind<ErrorMessage>(jsonElement);
+            }
+
             if (json.TryBind(jsonElement, out string? method, JsonRpcStrings.Method))
             {
                 bool hasId = TryGetRpcId(jsonElement, out int id, out string? stringId);
@@ -338,8 +345,40 @@ internal sealed partial class Json
           {
               ValidateJsonRpcHeader(json, jsonElement);
 
-              int id = BindRpcId(jsonElement, out string? stringId);
+              if (!jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement))
+              {
+                  throw new MessageFormatException($"'{JsonRpcStrings.Id}' field is missing");
+              }
+
+              string? stringId = null;
+              int? id = idElement.ValueKind == JsonValueKind.Null ? null : BindRpcId(jsonElement, out stringId);
               JsonElement error = jsonElement.GetProperty(JsonRpcStrings.Error);
+
+              if (id is null)
+              {
+                  if (jsonElement.TryGetProperty(JsonRpcStrings.Method, out _) || jsonElement.TryGetProperty(JsonRpcStrings.Result, out _))
+                  {
+                      throw new MessageFormatException("An uncorrelated error response cannot contain 'method' or 'result'");
+                  }
+
+                  if (error.ValueKind != JsonValueKind.Object)
+                  {
+                      throw new MessageFormatException("'error' field has wrong type (expected Object)");
+                  }
+
+                  if (!error.TryGetProperty(JsonRpcStrings.Code, out JsonElement codeElement)
+                      || codeElement.ValueKind != JsonValueKind.Number
+                      || !codeElement.TryGetInt32(out _))
+                  {
+                      throw new MessageFormatException("error.code field must be an integer");
+                  }
+
+                  if (!error.TryGetProperty(JsonRpcStrings.Message, out JsonElement messageElement)
+                      || messageElement.ValueKind != JsonValueKind.String)
+                  {
+                      throw new MessageFormatException("error.message field must be a string");
+                  }
+              }
 
               int code = json.Bind<int>(error, JsonRpcStrings.Code);
               string message = json.Bind<string>(error, JsonRpcStrings.Message);

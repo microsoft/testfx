@@ -116,6 +116,15 @@ An example of an error:
 }
 ```
 
+An error response must include `id`, but its value is `null` when the peer could
+not determine the request ID, such as after a JSON parse error. The receiver
+diagnoses such an uncorrelated error without replying to it or completing an
+unrelated request. The connection remains usable, but this does not recover a
+lost message or identify which pending request failed. A pending request still
+needs a correlated response, cancellation, or connection teardown to complete.
+This does not change the ID rules for normal requests, successful responses, or
+`$/cancelRequest`, and does not promise recovery from malformed framing.
+
 For notifications the `id` is omitted, to signify that the callee does not respond to that message.
 
 An example of a notification:
