@@ -20,6 +20,7 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 
 ### Added
 
+* Add `Assert.ContainsOnly` for collections whose elements must all match a predicate, report the first offending index and value for it and predicate-based `Assert.DoesNotContain`, and extend MSTEST0037 to guide positive LINQ `All` assertions. See [#12260](https://github.com/microsoft/testfx/issues/12260).
 * Add [`--partition index/count`](mstest-partitioning.md) to native MSTest applications on Microsoft.Testing.Platform for deterministic class-preserving CI selections, keeping declared dependency components together and preserving normal filtering, Retry, and zero-test policies. Relates to [#4068](https://github.com/microsoft/testfx/issues/4068).
 * Add method-level `[ExpectedDuration(milliseconds)]` budgets that warn on final passed or failed results exceeding their reported duration budget without changing outcomes, cancellation, or timeout behavior. See [#12245](https://github.com/microsoft/testfx/issues/12245).
 * Discover annotated F# module functions without requiring `[<TestClass>]`, with module-level attributes and lifecycle functions for reflection-based execution on both test hosts, by @Evangelink in [#11830](https://github.com/microsoft/testfx/pull/11830)

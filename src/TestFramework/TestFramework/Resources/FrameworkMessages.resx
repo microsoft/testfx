@@ -691,6 +691,18 @@ Actual: {2}</value>
   <data name="ContainsPredicateFailedSummary" xml:space="preserve">
     <value>Expected collection to contain an element matching the predicate.</value>
   </data>
+  <data name="ContainsOnlyPredicateFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain only elements matching the predicate.</value>
+  </data>
+  <data name="PredicateMismatchIndexLabel" xml:space="preserve">
+    <value>index:</value>
+  </data>
+  <data name="PredicateMismatchItemLabel" xml:space="preserve">
+    <value>item:</value>
+  </data>
+  <data name="CollectionContentsNotEnumerated" xml:space="preserve">
+    <value>&lt;{0}&gt; (contents not enumerated)</value>
+  </data>
   <data name="ContainsSubstringFailedSummary" xml:space="preserve">
     <value>Expected string to contain the specified substring.</value>
   </data>

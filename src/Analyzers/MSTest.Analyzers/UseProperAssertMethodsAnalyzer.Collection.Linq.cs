@@ -137,6 +137,14 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         // Check for direct Method(predicate) patterns
         switch (methodName)
         {
+            case "All":
+                if (TryMatchLinqMethod(invocation, "All", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
+                {
+                    return LinqPredicateCheckStatus.All;
+                }
+
+                break;
+
             case "Any":
                 if (TryMatchLinqMethod(invocation, "Any", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
                 {
@@ -194,10 +202,12 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, enumerableTypeSymbol))
         {
             // Extension method with predicate: Method(collection, predicate)
-            if (invocation.Arguments.Length == 2)
+            if (invocation.Arguments.Length == 2 &&
+                TryGetArgumentForParameterOrdinal(invocation, 0, out IArgumentOperation? collection) &&
+                TryGetArgumentForParameterOrdinal(invocation, 1, out IArgumentOperation? predicate))
             {
-                collectionExpression = invocation.Arguments[0].Value.Syntax;
-                predicateExpression = invocation.Arguments[1].Value.Syntax;
+                collectionExpression = collection.Value.Syntax;
+                predicateExpression = predicate.Value.Syntax;
                 return true;
             }
 

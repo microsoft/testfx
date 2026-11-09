@@ -277,6 +277,9 @@ public partial class AssertTests : TestContainer
                         Assertion failed. Expected collection to not contain an element matching the predicate.
                         predicate context
 
+                        index: 1
+                        item:  42
+
                         Assert.DoesNotContain(predicate, collection)
                         """;
 

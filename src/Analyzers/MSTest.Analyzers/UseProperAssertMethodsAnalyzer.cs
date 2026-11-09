@@ -101,6 +101,11 @@ namespace MSTest.Analyzers;
 /// </item>
 /// <item>
 /// <description>
+/// <code>Assert.IsTrue(myEnumerable.All(predicate))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
 /// <code>Assert.IsFalse(myEnumerable.Any())</code>
 /// </description>
 /// </item>
@@ -291,11 +296,11 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (targetMethod.Name)
         {
             case "IsTrue":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol);
                 break;
 
             case "IsFalse":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol);
                 break;
 
             case "AreEqual":

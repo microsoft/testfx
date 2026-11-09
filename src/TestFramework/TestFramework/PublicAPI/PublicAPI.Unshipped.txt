@@ -4,3 +4,5 @@
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute.ExpectedDurationAttribute(int milliseconds) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute.Milliseconds.get -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void

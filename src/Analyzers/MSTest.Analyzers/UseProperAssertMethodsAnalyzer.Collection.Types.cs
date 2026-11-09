@@ -25,6 +25,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     {
         Unknown,
         Any,
+        All,
         Count,
         WhereAny,
         WhereCount,

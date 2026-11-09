@@ -14,6 +14,7 @@ internal static class AssertionValueRenderer
     // Cache the built-in renderer as a delegate so passing it to the formatter registry doesn't allocate
     // on every RenderValue call.
     private static readonly Func<object?, string> BuiltInRenderer = RenderBuiltIn;
+    private static readonly Func<object?, string> NonEnumeratingBuiltInRenderer = RenderBuiltInWithoutEnumeratingCollections;
 
     /// <summary>
     /// Renders a value as a string suitable for display in the evidence block.
@@ -30,6 +31,17 @@ internal static class AssertionValueRenderer
             : AssertionValueFormatterRegistry.HasFormatters
                 ? AssertionValueFormatterRegistry.Render(value, BuiltInRenderer)
                 : RenderBuiltIn(value);
+
+    /// <summary>
+    /// Renders a captured counterexample without enumerating collection contents in the built-in fallback.
+    /// Explicit user formatters retain their normal guarded behavior.
+    /// </summary>
+    internal static string RenderValueWithoutEnumeratingCollections(object? value)
+        => value is null
+            ? "null"
+            : AssertionValueFormatterRegistry.HasFormatters
+                ? AssertionValueFormatterRegistry.Render(value, NonEnumeratingBuiltInRenderer)
+                : RenderBuiltInWithoutEnumeratingCollections(value);
 
     /// <summary>
     /// Determines whether a rendered string is exactly the representation produced by the built-in renderer.
@@ -57,6 +69,11 @@ internal static class AssertionValueRenderer
             IEnumerable enumerable => RenderCollection(enumerable),
             _ => RenderObject(value),
         };
+
+    private static string RenderBuiltInWithoutEnumeratingCollections(object? value)
+        => value is IEnumerable and not string
+            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionContentsNotEnumerated, value.GetType().FullName ?? value.GetType().Name)
+            : RenderBuiltIn(value);
 
     private static string RenderObject(object value)
     {

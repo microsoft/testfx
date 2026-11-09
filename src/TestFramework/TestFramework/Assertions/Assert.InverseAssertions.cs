@@ -57,12 +57,22 @@ public sealed partial class Assert
     private static void ContainsCore<T>(Func<T, bool> predicate, IEnumerable<T> collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
-        if (collection.Any(predicate) == shouldContain)
+        if (!shouldContain)
+        {
+            if (TryFindPredicateMismatch(collection, predicate, expectedPredicateResult: false, out long index, out string? itemText))
+            {
+                ReportPredicateMismatchFailed(expectedPredicateResult: false, index, itemText, message, predicateExpression, collectionExpression);
+            }
+
+            return;
+        }
+
+        if (collection.Any(predicate))
         {
             return;
         }
 
-        ReportContainsFailure(message, predicateExpression, collectionExpression, shouldContain);
+        ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
     }
 
     private static void ContainsCore(Func<object?, bool> predicate, IEnumerable collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
@@ -71,12 +81,22 @@ public sealed partial class Assert
         CheckParameterNotNull(collection, assertMethodName, "collection");
         CheckParameterNotNull(predicate, assertMethodName, "predicate");
 
-        if (collection.Cast<object?>().Any(predicate) == shouldContain)
+        if (!shouldContain)
+        {
+            if (TryFindPredicateMismatch(collection.Cast<object?>(), predicate, expectedPredicateResult: false, out long index, out string? itemText))
+            {
+                ReportPredicateMismatchFailed(expectedPredicateResult: false, index, itemText, message, predicateExpression, collectionExpression);
+            }
+
+            return;
+        }
+
+        if (collection.Cast<object?>().Any(predicate))
         {
             return;
         }
 
-        ReportContainsFailure(message, predicateExpression, collectionExpression, shouldContain);
+        ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
     }
 
 #if NETCOREAPP3_1_OR_GREATER
@@ -128,6 +148,16 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
 
+        if (!shouldContain)
+        {
+            if (TryFindPredicateMismatch(collection, predicate, expectedPredicateResult: false, out long index, out string? itemText))
+            {
+                ReportPredicateMismatchFailed(expectedPredicateResult: false, index, itemText, message, predicateExpression, collectionExpression);
+            }
+
+            return;
+        }
+
         bool contains = false;
         foreach (T item in collection)
         {
@@ -138,12 +168,12 @@ public sealed partial class Assert
             }
         }
 
-        if (contains == shouldContain)
+        if (contains)
         {
             return;
         }
 
-        ReportContainsFailure(message, predicateExpression, collectionExpression, shouldContain);
+        ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
     }
 #endif
 
@@ -220,18 +250,6 @@ public sealed partial class Assert
         else
         {
             ReportAssertDoesNotContainItemFailed(expected, message, expectedExpression, collectionExpression, comparer);
-        }
-    }
-
-    private static void ReportContainsFailure(string? message, string predicateExpression, string collectionExpression, bool shouldContain)
-    {
-        if (shouldContain)
-        {
-            ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
-        }
-        else
-        {
-            ReportAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression);
         }
     }
 }
