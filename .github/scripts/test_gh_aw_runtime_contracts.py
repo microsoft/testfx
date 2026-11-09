@@ -13,6 +13,7 @@ import json
 import os
 import pathlib
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -149,6 +150,19 @@ async function main() {
     });
   } else if (input.action === "guard") {
     await load("determine_automatic_lockdown")(github, context, core);
+  } else if (input.action === "cli-arguments") {
+    const tools = JSON.parse(fs.readFileSync(path.join(input.actionsDir, "safe_outputs_tools.json"), "utf8"));
+    const tool = tools.find(item => item.name === input.tool);
+    assert.ok(tool, `Missing shipped tool schema: ${input.tool}`);
+    const parsed = load("mcp_cli_bridge").parseToolArgs(
+      input.arguments, tool.inputSchema.properties, null,
+      { rejectPositionalArguments: true, omitBlankOptionalFields: true, requiredFields: tool.inputSchema.required },
+    );
+    result = {
+      args: parsed.args,
+      missingFields: load("schema-validation").validateRequiredFields(parsed.args, tool.inputSchema),
+      unexpectedFields: Object.keys(parsed.args).filter(key => !Object.hasOwn(tool.inputSchema.properties, key)),
+    };
   } else if (input.action === "review") {
     const buffer = load("pr_review_buffer").createReviewBuffer();
     buffer.setReviewContext({ repo: "fixture/workflows", repoParts: context.repo, pullRequestNumber: 73, pullRequest });
@@ -238,10 +252,37 @@ class GhAwRuntimeContractTests(unittest.TestCase):
             self.assertEqual(0, process.returncode, process.stderr)
             result = json.loads(process.stdout)
             self.assertEqual([], result["unexpected"])
-            if action == "footer":
+            if action in ("footer", "cli-arguments"):
                 self.assertEqual([], result["calls"])
                 self.assertEqual([], result["errors"])
             return result
+
+    def test_resource_lock_terminal_examples_use_pinned_cli_argument_parser(self) -> None:
+        prompt = authored("resource-lock-refactoring.md")[1]
+        commands = re.findall(r"(?m)^safeoutputs (noop|report_incomplete|create_pull_request) ('[^\n]*')$", prompt)
+        expected = {
+            "noop": {"message": "No high-confidence bounded ResourceLock refactoring was found.\nNo files were changed."},
+            "report_incomplete": {
+                "reason": "The intended safe output could not be queued.",
+                "details": "<failed command and concrete error>",
+            },
+            "create_pull_request": {
+                "branch": "resource-lock/<short-project-slug>",
+                "title": "<final refactoring title>",
+                "body": "## Summary\n<complete final Markdown body>",
+            },
+        }
+        self.assertCountEqual(expected, [name for name, _ in commands],
+                              "Every terminal path needs a standalone CLI example, not a native-tool call or helper prefix")
+        execution = step(compiled("resource-lock-refactoring"), "agent", "id", "agentic_execution")["run"]
+        self.assertIn("shell(safeoutputs:*)", execution)
+        for name, payload in commands:
+            with self.subTest(case=name):
+                arguments = shlex.split("safeoutputs " + name + " " + payload)
+                self.assertEqual(["safeoutputs", name], arguments[:2])
+                self.assertEqual(3, len(arguments), "The complete JSON payload must remain one shell argument")
+                result = self.run_runtime("cli-arguments", tool=name, arguments=arguments[2:])["result"]
+                self.assertEqual({"args": expected[name], "missingFields": [], "unexpectedFields": []}, result)
 
     def footer_inventory(self) -> list[tuple[str, str]]:
         inventory = []

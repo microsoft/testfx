@@ -49,6 +49,9 @@
     <!-- CTRF report is opt-in only, not auto-enabled by any profile. -->
     <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsCtrfReportVersion>
 
+    <!-- JUnit report is opt-in only, not auto-enabled by any profile. -->
+    <MicrosoftTestingExtensionsJUnitReportVersion Condition=" '$(MicrosoftTestingExtensionsJUnitReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsJUnitReportVersion>
+
     <!-- OpenTelemetry is API-only and opt-in. The Enable property adds the package; users activate
          it from Program.cs via builder.AddOpenTelemetryProvider(...). -->
     <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsOpenTelemetryVersion>

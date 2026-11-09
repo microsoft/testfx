@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
         <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
-        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <target state="translated">Osiągnięto limit liczby załączników funkcji GitHub Actions. Dalsze załączniki nie są przemieszczane.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
@@ -29,22 +29,22 @@
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
         <source>Attachments (paths inside the workflow artifact):</source>
-        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <target state="translated">Załączniki (ścieżki wewnątrz artefaktu przepływu pracy):</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentReportingWarning">
         <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
-        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <target state="translated">Nie można przemieścić lub zindeksować niektórych załączników testowych. Nie wpływa to na wyniki testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
-        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <target state="translated">Załącznik przekroczył limit rozmiaru przemieszczania podczas kopiowania.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
         <source>{0} bytes</source>
-        <target state="new">{0} bytes</target>
+        <target state="translated">{0} B</target>
         <note>{0} is the attachment size in bytes.</note>
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
@@ -54,12 +54,12 @@
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
         <source>not staged; see manifest.</source>
-        <target state="new">not staged; see manifest.</target>
+        <target state="translated">nie przemieszczono; zobacz manifest.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">Przygotowywanie załączników testu zakończonego niepowodzeniem i manifestu w określonym katalogu bezwzględnym. Przepływ pracy jest odpowiedzialny za przekazanie tego katalogu i połączenie wynikowego artefaktu. Wymaga elementu „--report-gh”.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -254,7 +254,7 @@
       </trans-unit>
       <trans-unit id="InvalidAttachmentsPath">
         <source>The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</source>
-        <target state="new">The GitHub Actions attachment directory must be a valid, non-empty absolute directory path.</target>
+        <target state="translated">Katalog załączników funkcji GitHub Actions musi być prawidłową, niepustą ścieżką katalogu bezwzględnego.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">

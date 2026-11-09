@@ -29,9 +29,9 @@ $directory = Split-Path $output -Parent
 New-Item -ItemType Directory -Path $directory -Force | Out-Null
 
 # These expectations come from the checksum-verified SDK, not the selected toolchain.
-$sdkCommit = '907535df2f7eb8e1845571867684244ad04b031b'
-$compilerVersion = "5.13.0-1.26509.101 ($sdkCommit)"
-$runtimeVersion = '12.0.0-alpha.1.26509.101'
+$sdkCommit = '6e6f978fd9ca19b62796a13ff5230b21af0c42fa'
+$compilerVersion = "5.14.0-1.26556.115 ($sdkCommit)"
+$runtimeVersion = '12.0.0-alpha.1.26556.115'
 $bootstrapVersion = '10.0.401'
 $packVersions = [ordered]@{
     'net8.0' = '8.0.33'

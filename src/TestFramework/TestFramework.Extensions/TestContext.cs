@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Used to store information that is provided to unit tests.
 /// </summary>
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The cancellation source is intentionally not disposed, as documented on CancellationTokenSource.")]
 public abstract class TestContext
 {
     private static readonly AsyncLocal<TestContext?> CurrentContext = new();

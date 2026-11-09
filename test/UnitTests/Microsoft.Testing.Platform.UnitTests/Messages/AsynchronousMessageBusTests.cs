@@ -21,8 +21,8 @@ public sealed class AsynchronousMessageBusTests
     public async Task UnexpectedTypePublished_ShouldFail()
     {
         using MessageBusProxy proxy = new();
-        InvalidTypePublished consumer = new(proxy);
-        var asynchronousMessageBus = new AsynchronousMessageBus(
+        using InvalidTypePublished consumer = new(proxy);
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
             [consumer],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
@@ -1261,7 +1261,7 @@ public sealed class AsynchronousMessageBusTests
         }
     }
 
-    private sealed class InvalidTypePublished : IDataConsumer, IDataProducer
+    private sealed class InvalidTypePublished : IDataConsumer, IDataProducer, IDisposable
     {
         private readonly IMessageBus _messageBus;
 
@@ -1295,6 +1295,8 @@ public sealed class AsynchronousMessageBusTests
         }
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public void Dispose() => Published.Dispose();
 
         public sealed class ValidDataToProduce : IData
         {

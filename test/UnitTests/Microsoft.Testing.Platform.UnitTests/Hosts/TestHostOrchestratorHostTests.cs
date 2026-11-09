@@ -323,7 +323,8 @@ public sealed class TestHostOrchestratorHostTests
 
         public int ExitCode { get; }
 
-        public FakeApplicationCancellationTokenSource CancellationTokenSource { get; set; } = new();
+        // Assigned by the host factory; the service provider owns this source.
+        public FakeApplicationCancellationTokenSource CancellationTokenSource { get; set; } = null!;
 
         public string Uid => nameof(RecordingOrchestrator);
 
