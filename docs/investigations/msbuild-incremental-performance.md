@@ -158,9 +158,12 @@ performance measurements:
 ```
 
 Results: passed, respectively ten, six, and three builds; all exited zero. The
-last run revalidated the final PID/creation-time retention refinement. The final
-harness SHA-256 is
+last run revalidated the final PID/creation-time retention refinement. The tested
+Windows working copy (CRLF line endings) has SHA-256
 `F0093972A479993BCA6C0F222D7612969CDF6E6E02D8D9FF1D1452CCD0726503`.
+Git stores the identical script with LF line endings; its canonical blob SHA-256
+is `A2FF5EA082444956BFC8619648A09A2BE832FCE94F020E018901250A4337F412`.
+Remote readback confirmed that only the line endings differ.
 
 | Contract / case | Counterfactual | Without behavior | Correct implementation | Evidence / gap |
 |---|---|---|---|---|
