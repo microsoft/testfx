@@ -22,12 +22,14 @@ public sealed class TestResultTests : TestContainer
         // We use GetType() == typeof(...) to do a strict type match.
         testResult.TestFailureException.Should().BeOfType<InvalidOperationException>()
             .Which.Message.Should().Be("Failure1");
+        testResult.ExceptionMessage.Should().Be("Failure1");
 
         testResult.TestFailureException = new ArgumentException("Failure2");
         var aggregateException = (AggregateException)testResult.TestFailureException;
         aggregateException.InnerExceptions.Should().HaveCount(2);
         aggregateException.InnerExceptions[0].Message.Should().Be("Failure1");
         aggregateException.InnerExceptions[1].Message.Should().Be("Failure2");
+        testResult.ExceptionMessage.Should().Be($"{new AggregateException().Message} (Failure1) (Failure2)");
 
         testResult.TestFailureException = new ArgumentException("Failure3");
         aggregateException = (AggregateException)testResult.TestFailureException;
@@ -35,6 +37,19 @@ public sealed class TestResultTests : TestContainer
         aggregateException.InnerExceptions[0].Message.Should().Be("Failure1");
         aggregateException.InnerExceptions[1].Message.Should().Be("Failure2");
         aggregateException.InnerExceptions[2].Message.Should().Be("Failure3");
+        testResult.ExceptionMessage.Should().Be($"{new AggregateException().Message} (Failure1) (Failure2) (Failure3)");
+    }
+
+    public void SettingTestFailureExceptionShouldPreserveNestedAggregateMessages()
+    {
+        var exception = new AggregateException(
+            "outer failure",
+            new AggregateException("nested failure", new InvalidOperationException("first failure"), new ArgumentException("second failure")),
+            new InvalidOperationException("third failure"));
+
+        var testResult = new TestResult { TestFailureException = exception };
+
+        testResult.ExceptionMessage.Should().Be("outer failure (nested failure (first failure) (second failure)) (third failure)");
     }
 
     public void SettingTestFailureExceptionShouldCaptureAssertionTextsFromDirectAssertFailedException()

@@ -722,7 +722,15 @@
           "const": "2.0"
         },
         "id": {
-          "$ref": "#/$defs/rpcId"
+          "description": "Null when the peer could not determine the request ID. Such errors cannot be correlated to a pending request.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/rpcId"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "error": {
           "type": "object",
@@ -749,6 +757,24 @@
           "method"
         ]
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      ],
       "additionalProperties": true
     }
   }

@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : AcceptanceTestBase<TFixture>
-    where TFixture : TestAssetFixtureBase, new()
+    where TFixture : ITestAssetFixture, new()
 {
     private static readonly string Root = RootFinder.Find();
     private static readonly Dictionary<string, string?> DefaultEnvironmentVariables = new()
@@ -85,7 +85,11 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         {
             throw new OperationCanceledException($"Timeout on connection for command line '{processConfig.FileName} {processConfig.Arguments}'\n{builder}", ex, cancellationTokenSource.Token);
         }
+        finally
+        {
+            tcpListener.Stop();
+        }
 
-        return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler);
+        return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler, processOutput: () => builder.ToString());
     }
 }

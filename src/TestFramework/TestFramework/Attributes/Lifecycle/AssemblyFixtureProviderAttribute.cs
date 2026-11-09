@@ -12,19 +12,33 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// <para>
 /// Apply this attribute at the assembly level on the library that exposes the shared fixture. Every
-/// test assembly that ends up loading the library at runtime will then pick up its
+/// test assembly with a compiled reference to the library, directly or transitively, will pick up its
 /// <see cref="AssemblyInitializeAttribute"/> / <see cref="AssemblyCleanupAttribute"/> methods
-/// without the test project needing to declare anything itself.
+/// without needing to call the library or declare its own fixture methods. An otherwise-unused
+/// project or package reference that the compiler omits from assembly metadata is not sufficient.
+/// The attribute opts the library into supplying fixtures; consuming test assemblies do not
+/// separately opt into provider discovery.
+/// </para>
+/// <para>
+/// Discovery inspects file-backed references as metadata without loading unmarked libraries when
+/// their runtime resolution can be determined. Providers are loaded through the consumer's runtime
+/// load context. When metadata resolution is unavailable or ambiguous, including custom load contexts
+/// and binding overrides, discovery falls back to runtime resolution and can load unmarked references.
 /// </para>
 /// <para>
 /// If the consuming test assembly already declares its own <see cref="AssemblyInitializeAttribute"/>
 /// or <see cref="AssemblyCleanupAttribute"/> method, the local declaration always wins; methods
 /// contributed via <see cref="AssemblyFixtureProviderAttribute"/> only fill empty slots.
+/// Declaring both local methods bypasses provider discovery; declaring only one does not.
 /// </para>
 /// <para>
 /// The attribute can be applied multiple times on the same assembly to expose more than one fixture
 /// type. The attribute can also be applied on the consuming test assembly itself to opt into
 /// fixtures defined in a third-party library that cannot be modified.
+/// </para>
+/// <para>
+/// Shared assembly fixtures are not supported when the runtime cannot generate dynamic code,
+/// including Native AOT. Introduced in MSTest 4.3.0.
 /// </para>
 /// </remarks>
 /// <example>
