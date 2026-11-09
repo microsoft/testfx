@@ -7,6 +7,7 @@ namespace MSTest.Analyzers.Test;
 public sealed class AnalyzerProcessCompatibilityTests
 {
     internal const string ReadyMarker = "analyzer-wait-ready";
+    private const string ChildProbeVariable = "TESTFX_ANALYZER_PROCESS_CHILD";
 
     // Allow process startup and teardown on loaded CI workers; successful completion uses a handshake, not elapsed time.
     private const int StageTimeoutMilliseconds = 60_000;
@@ -64,23 +65,37 @@ public sealed class AnalyzerProcessCompatibilityTests
 
     internal static Process CreateControlledChild()
     {
-        bool windows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        return new Process
+        string module = typeof(AnalyzerProcessCompatibilityTests).Assembly.Location;
+#if NETCOREAPP
+        string host = Path.Combine(
+            RootFinder.Find(), ".dotnet", RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet");
+        ProcessStartInfo start = new(host);
+        start.ArgumentList.Add(module);
+#else
+        ProcessStartInfo start = new(module);
+#endif
+        start.WorkingDirectory = AppContext.BaseDirectory;
+        start.UseShellExecute = false;
+        start.CreateNoWindow = true;
+        start.RedirectStandardInput = true;
+        start.RedirectStandardOutput = true;
+        start.RedirectStandardError = true;
+        start.EnvironmentVariables[ChildProbeVariable] = "1";
+        return new Process { StartInfo = start };
+    }
+
+    internal static bool TryRunControlledChild()
+    {
+        if (Environment.GetEnvironmentVariable(ChildProbeVariable) != "1")
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = windows ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe") : "/bin/sh",
-                Arguments = windows
-                    ? "/d /q /c \"echo analyzer-wait-ready& set /p input=& exit /b 17\""
-                    : "-c \"echo analyzer-wait-ready; read input; exit 17\"",
-                WorkingDirectory = AppContext.BaseDirectory,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            },
-        };
+            return false;
+        }
+
+        // A shell's readiness line does not guarantee that its input command will keep waiting.
+        // This owned managed child exits only when the parent closes the input pipe.
+        Console.WriteLine(ReadyMarker);
+        _ = Console.In.ReadToEnd();
+        return true;
     }
 
     internal static void ReleaseAndJoin(Process process)
