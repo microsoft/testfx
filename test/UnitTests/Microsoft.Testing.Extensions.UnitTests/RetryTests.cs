@@ -911,7 +911,8 @@ public class RetryTests
         applicationCancellation.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
         serviceProvider.AddService(applicationCancellation.Object);
         serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
-        var launcher = new TerminatedTestHostLauncher();
+        using var handle = new TerminatedTestHostHandle();
+        var launcher = new TerminatedTestHostLauncher(handle);
         serviceProvider.AddService(launcher);
         using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
         using var cancellation = new CancellationTokenSource();
@@ -2950,9 +2951,9 @@ public class RetryTests
         }
     }
 
-    private sealed class TerminatedTestHostLauncher : ITestHostLauncher
+    private sealed class TerminatedTestHostLauncher(TerminatedTestHostHandle handle) : ITestHostLauncher
     {
-        public TerminatedTestHostHandle Handle { get; } = new();
+        public TerminatedTestHostHandle Handle { get; } = handle;
 
         public string Uid => nameof(TerminatedTestHostLauncher);
 

@@ -553,15 +553,15 @@ Passar a opção sem um valor a ativa.</target>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
+        <target state="translated">Determina quando mostrar a saída do erro capturado de um teste.
+Os valores válidos são 'All', 'Failed' 'None'. O padrão é 'Failed'.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
+        <target state="translated">Determina quando mostrar a saída padrão capturada de um teste.
+Os valores válidos são 'All', 'Failed' 'None'. O padrão é 'Failed'.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">

@@ -85,13 +85,6 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
-
     <MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>
 
     <!--

@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AttachmentCountLimitWarning">
         <source>The GitHub Actions attachment count limit was reached. Further attachments are not staged.</source>
-        <target state="new">The GitHub Actions attachment count limit was reached. Further attachments are not staged.</target>
+        <target state="translated">È stato raggiunto il limite relativo al numero di allegati di GitHub Actions. Gli allegati successivi non vengono preparati per il commit.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentManifestWarning">
@@ -29,17 +29,17 @@
       </trans-unit>
       <trans-unit id="AttachmentPathsLabel">
         <source>Attachments (paths inside the workflow artifact):</source>
-        <target state="new">Attachments (paths inside the workflow artifact):</target>
+        <target state="translated">Allegati (percorsi all'interno dell'artefatto del flusso di lavoro):</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentReportingWarning">
         <source>Some test attachments could not be staged or indexed. Test results are unaffected.</source>
-        <target state="new">Some test attachments could not be staged or indexed. Test results are unaffected.</target>
+        <target state="translated">Non è possibile preparare per il commit o indicizzare alcuni allegati di test. I risultati dei test non sono interessati.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeChanged">
         <source>The attachment grew beyond the staging size limit while being copied.</source>
-        <target state="new">The attachment grew beyond the staging size limit while being copied.</target>
+        <target state="translated">Durante la copia, le dimensioni dell'allegato hanno superato il limite per la preparazione del commit.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSizeText">
@@ -49,17 +49,17 @@
       </trans-unit>
       <trans-unit id="AttachmentSkippedWarning">
         <source>Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</source>
-        <target state="new">Could not stage GitHub Actions attachment '{0}' ({1}). See the attachment manifest for its status.</target>
+        <target state="translated">Non è possibile preparare per il commit l'allegato di GitHub Actions '{0}' ({1}). Per informazioni sullo stato, vedere il manifesto degli allegati.</target>
         <note>{0} is the sanitized file name; {1} is the invariant status code.</note>
       </trans-unit>
       <trans-unit id="AttachmentUnavailableLabel">
         <source>not staged; see manifest.</source>
-        <target state="new">not staged; see manifest.</target>
+        <target state="translated">non preparato per il commit; vedere il manifesto.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentsOptionDescription">
         <source>Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</source>
-        <target state="new">Stage failed-test attachments and a manifest in the specified absolute directory. The workflow is responsible for uploading this directory and linking the resulting artifact. Requires '--report-gh'.</target>
+        <target state="translated">Preparare per il commit gli allegati dei test non superati e un manifesto nella directory assoluta specificata. Il flusso di lavoro è responsabile del caricamento di questa directory e del collegamento all'artefatto risultante. Richiede '--report-gh'.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="Description">
