@@ -348,11 +348,6 @@
         <target state="translated">Expresión "{0}": "{1}", expresión "{2}": "{3}".</target>
         <note>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter.</note>
       </trans-unit>
-      <trans-unit id="CollectionContentsNotEnumerated">
-        <source>&lt;{0}&gt; (contents not enumerated)</source>
-        <target state="new">&lt;{0}&gt; (contents not enumerated)</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
         <target state="translated">{0}. {1}</target>
@@ -416,11 +411,6 @@
       <trans-unit id="ContainsItemFailedSummary">
         <source>Expected collection to contain the specified element.</source>
         <target state="translated">Se esperaba que la colección contuviera el elemento especificado.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ContainsOnlyPredicateFailedSummary">
-        <source>Expected collection to contain only elements matching the predicate.</source>
-        <target state="new">Expected collection to contain only elements matching the predicate.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -730,16 +720,6 @@ Real: {2}</target>
       <trans-unit id="MatchesRegexFailedSummary">
         <source>Expected string to match the specified pattern.</source>
         <target state="translated">Se esperaba que la cadena coincidía con el patrón especificado.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PredicateMismatchIndexLabel">
-        <source>index:</source>
-        <target state="new">index:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PredicateMismatchItemLabel">
-        <source>item:</source>
-        <target state="new">item:</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
