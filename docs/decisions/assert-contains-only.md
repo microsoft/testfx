@@ -489,6 +489,87 @@ packages. All reports, discovery/console logs, and build/pack binlogs are under
 also includes the HangDump teardown correction, but a future CI pass and actual
 terminal/IDE rendering inspection are not inferred from these local results.
 
+### 2026-11-09: Any binding and explicit caller-expression arguments
+
+Review against `75e75831c761fffefb10727e7e7cc1acbd5bd31c` supplied two new
+concrete examples in the shared predicate rewrite. Direct `Any<Base>` fixes
+drop the explicit predicate element type for both assertion polarities.
+Separately, an explicit constant `IsTrue` `conditionExpression` is incorrectly
+copied into `ContainsOnly`, which has no parameter with that name.
+
+The bounded correction retains explicit type arguments for direct predicate
+`Any`/`All` calls, without changing `Where(...).Any()` inference, and limits
+explicit additional `All` assertion arguments to constant messages. Implicit
+caller expressions remain supported. Eight focused rows cover static/extension
+`Any` with both polarities, two existing Where controls, and nonempty/empty
+explicit caller-expression overrides.
+
+#### Test-value evidence
+
+The actual pre-fix state is parent
+`75e75831c761fffefb10727e7e7cc1acbd5bd31c` plus retained test-only patch
+SHA-256 `47332EAC183D95DA6BEA85631C0E0B399ADE8C0D386FD2D712B80BC0D7630486`.
+The corrected source/test patch SHA-256 is
+`3D4E48C54E478A66CA2B43A0C698FA68619CD6C758DCB598A3A3DB807D5D666F`.
+The identical test-file SHA-256 in both states is
+`60584ED01EC8A476F5639FA648AECB8FFF09BA5790A064012691A93FEEEB8862`.
+
+| Contract / exact test | Actual pre-fix implementation | Corrected implementation |
+| --- | --- | --- |
+| `WhenUsingAnyWithExplicitBaseType_PreservesPredicateBinding`: static/extension `Any<Base>`, both `IsTrue` and `IsFalse` | Four executed fixed-source failures: expected `Contains<Base>` or `DoesNotContain<Base>`, actual missing `<Base>`. | All four execute and pass. |
+| `WhenUsingIsTrueAllWithExplicitConditionExpression_NoDiagnostic`: nonempty and empty overrides | Two executed failures: expected zero diagnostics, actual one MSTEST0037 diagnostic. | Both execute and pass with no unsafe rewrite. |
+| `WhenUsingAnyOnWhereWithExplicitType_PreservesExistingInference`: both polarities | Both controls execute and pass. | Both controls execute and pass unchanged. |
+
+Same eight-case selector and assertions: red executes eight, six fail and two
+pass, zero skips, exit 2; green executes eight and all pass, zero skips, exit 0.
+The complete related class passes 168/168 on net10.0 and 159/159 on net472,
+zero skips, exit 0. TRX parsing independently verifies every outcome/count and
+the identical paired identities. Assembly method-level parallelism remains
+enabled with 32 effective workers; the new inputs are per-test Roslyn source,
+not shared host state.
+
+SDK `12.0.100-alpha.1.26556.115` Release builds on both hosts and the analyzer
+package build pass with warnings as errors and zero warnings/errors. An initial
+strict build caught SA1408 on the new mixed Boolean guard; explicit parentheses
+were added before the successful rebuild. That build failure is not red proof.
+The tested analyzer and fixer DLLs on both hosts match the corresponding C#
+payloads in `MSTest.Analyzers.5.0.0-dev.nupkg` byte-for-byte. The package SHA-256
+is `AC51B0D51AD939A157418A6CCF3B0C7A77FEAD43F6ABDA419F3FDCB112348058`.
+
+`$RESULTS` denotes
+`artifacts\TestResults\Release\agent-merge-any-expression-1a9e3f7`; the red
+variant uses separate `artifacts\bin\any-expression-red` and
+`artifacts\obj\any-expression-red` roots. Corrected builds use the normal
+task-owned worktree outputs and `--no-incremental`. Commands and selectors:
+
+```powershell
+$project = 'test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj'
+$focus = 'FullyQualifiedName~WhenUsingAnyWithExplicitBaseType_PreservesPredicateBinding|FullyQualifiedName~WhenUsingAnyOnWhereWithExplicitType_PreservesExistingInference|FullyQualifiedName~WhenUsingIsTrueAllWithExplicitConditionExpression_NoDiagnostic'
+$redOutputs = @("/p:ArtifactsBinDir=$ROOT\artifacts\bin\any-expression-red\", "/p:ArtifactsObjDir=$ROOT\artifacts\obj\any-expression-red\")
+.\.dotnet\dotnet.exe restore $project --verbosity quiet /bl:$RESULTS\restore-red.binlog @redOutputs
+.\.dotnet\dotnet.exe build $project -f net10.0 -c Release --no-restore --no-incremental --verbosity quiet -warnaserror /bl:$RESULTS\build-red.binlog @redOutputs
+# Both exit 0; build has zero warnings/errors.
+.\.dotnet\dotnet.exe artifacts\bin\any-expression-red\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter $focus --report-trx --report-trx-filename red.trx --results-directory "$RESULTS\red" --progress off --no-ansi
+# Exit 2; eight execute, six intended failures, two controls pass.
+.\.dotnet\dotnet.exe build $project -f net10.0 -c Release --no-restore --no-incremental --verbosity quiet -warnaserror /bl:$RESULTS\build-green-net10-style-corrected.binlog
+.\.dotnet\dotnet.exe build $project -f net472 -c Release --no-restore --no-incremental --verbosity quiet -warnaserror /bl:$RESULTS\build-green-net472.binlog
+.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Release --no-restore --verbosity quiet -warnaserror /bl:$RESULTS\analyzer-pack.binlog
+# All exit 0; zero warnings/errors.
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter $focus --report-trx --report-trx-filename focused.trx --results-directory "$RESULTS\green-focused" --progress off --no-ansi
+# Exit 0; identical eight cases pass, zero skips.
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~UseProperAssertMethodsAnalyzerTests" --report-trx --report-trx-filename analyzers-net10.trx --results-directory "$RESULTS\net10" --progress off --no-ansi
+# Exit 0; 168/168 pass, zero skips.
+.\artifacts\bin\MSTest.Analyzers.UnitTests\Release\net472\MSTest.Analyzers.UnitTests.exe --filter "FullyQualifiedName~UseProperAssertMethodsAnalyzerTests" --report-trx --report-trx-filename analyzers-net472.trx --results-directory "$RESULTS\net472" --progress off --no-ansi
+# Exit 0; 159/159 pass, zero skips.
+```
+
+`$ROOT` is the checkout root. Native commands use the same `cmd.exe` PATH
+bootstrap as the earlier runs. Retained reports, console logs, unique binlogs,
+source patches, and `analyzer-package-provenance.json` are under `$RESULTS`.
+These are local artifacts, not uploaded evidence. Package payload equality and
+the executable Roslyn harness do not establish rendered IDE layout; the
+previously documented surface-inspection gap remains.
+
 ## Alternatives and decision
 
 `ContainsAll` is already multiplicity-aware expected-item inclusion and permits

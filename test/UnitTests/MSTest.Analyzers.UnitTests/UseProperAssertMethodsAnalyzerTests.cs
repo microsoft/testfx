@@ -5877,6 +5877,140 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    [DataRow("IsTrue", "Contains", "Enumerable.Any<Base>(items, item => Accept(item))", DisplayName = "ContainsExplicitBaseStaticAny")]
+    [DataRow("IsFalse", "DoesNotContain", "Enumerable.Any<Base>(items, item => Accept(item))", DisplayName = "DoesNotContainExplicitBaseStaticAny")]
+    [DataRow("IsTrue", "Contains", "items.Any<Base>(item => Accept(item))", DisplayName = "ContainsExplicitBaseExtensionAny")]
+    [DataRow("IsFalse", "DoesNotContain", "items.Any<Base>(item => Accept(item))", DisplayName = "DoesNotContainExplicitBaseExtensionAny")]
+    public async Task WhenUsingAnyWithExplicitBaseType_PreservesPredicateBinding(string assertion, string replacement, string condition)
+    {
+        string code = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base { }
+            public class Derived : Base { }
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Derived[] items = new Derived[] { new Derived() };
+                    {|#0:Assert.{{assertion}}({{condition}})|};
+                }
+
+                private static bool Accept(Base item) => true;
+                private static bool Accept(Derived item) => false;
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base { }
+            public class Derived : Base { }
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Derived[] items = new Derived[] { new Derived() };
+                    Assert.{{replacement}}<Base>(item => Accept(item), items);
+                }
+
+                private static bool Accept(Base item) => true;
+                private static bool Accept(Derived item) => false;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(replacement, assertion),
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsTrue", "Contains", DisplayName = "ContainsWhereAnyInference")]
+    [DataRow("IsFalse", "DoesNotContain", DisplayName = "DoesNotContainWhereAnyInference")]
+    public async Task WhenUsingAnyOnWhereWithExplicitType_PreservesExistingInference(string assertion, string replacement)
+    {
+        string code = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base { }
+            public class Derived : Base { }
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Derived[] items = new Derived[] { new Derived() };
+                    {|#0:Assert.{{assertion}}(Enumerable.Any<Derived>(items.Where<Derived>(item => Accept(item))))|};
+                }
+
+                private static bool Accept(Base item) => true;
+                private static bool Accept(Derived item) => false;
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base { }
+            public class Derived : Base { }
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Derived[] items = new Derived[] { new Derived() };
+                    Assert.{{replacement}}(item => Accept(item), items);
+                }
+
+                private static bool Accept(Base item) => true;
+                private static bool Accept(Derived item) => false;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(replacement, assertion),
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("\"custom\"", DisplayName = "ContainsOnlyExplicitConditionExpression")]
+    [DataRow("\"\"", DisplayName = "ContainsOnlyExplicitEmptyConditionExpression")]
+    public async Task WhenUsingIsTrueAllWithExplicitConditionExpression_NoDiagnostic(string conditionExpression)
+    {
+        string code = $$"""
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Assert.IsTrue(items.All(item => item > 0), message: "detail", conditionExpression: {{conditionExpression}});
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenUsingIsTrueAllWithStaticReadonlyFields_NoDiagnostic()
     {
         string code = """

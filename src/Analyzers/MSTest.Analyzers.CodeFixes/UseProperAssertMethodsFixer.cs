@@ -156,15 +156,17 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        GenericNameSyntax? explicitAllName = (conditionExpression as InvocationExpressionSyntax)?.Expression switch
+        GenericNameSyntax? explicitPredicateName = (conditionExpression as InvocationExpressionSyntax)?.Expression switch
         {
             MemberAccessExpressionSyntax { Name: GenericNameSyntax name } => name,
             GenericNameSyntax name => name,
             _ => null,
         };
-        if (properAssertMethodName == "ContainsOnly" && explicitAllName is not null)
+        if (properAssertMethodName is "ContainsOnly" or "Contains" or "DoesNotContain" &&
+            explicitPredicateName is not null &&
+            editor.SemanticModel.GetOperation(conditionExpression, cancellationToken) is IInvocationOperation { TargetMethod.Name: "All" or "Any", Arguments.Length: 2 })
         {
-            editor.ReplaceNode(simpleNameSyntax, explicitAllName.WithIdentifier(SyntaxFactory.Identifier(properAssertMethodName)).WithTriviaFrom(simpleNameSyntax));
+            editor.ReplaceNode(simpleNameSyntax, explicitPredicateName.WithIdentifier(SyntaxFactory.Identifier(properAssertMethodName)).WithTriviaFrom(simpleNameSyntax));
         }
         else
         {

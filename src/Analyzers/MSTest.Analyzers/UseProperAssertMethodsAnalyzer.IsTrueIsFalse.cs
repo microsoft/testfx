@@ -318,7 +318,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             assertion.Arguments.All(argument =>
                 argument.Parameter?.Ordinal == 0 ||
                 argument.IsImplicit ||
-                argument.Value.ConstantValue.HasValue);
+                (argument.Parameter?.Ordinal == 1 && argument.Value.ConstantValue.HasValue));
 
     private static bool IsStablePredicateAssertionInput(IOperation operation)
         => operation switch
