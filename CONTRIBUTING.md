@@ -98,6 +98,14 @@ refresh curated skills; the existing weekly workflow also refreshes them.
 Repository-specific instructions and the `behavior-preserving-refactor` skill
 continue to apply.
 
+PRs confined to `.agents/skills/`, `.copilot/curate/`, root `AGENTS.md`, and other
+known administrative paths use the infrastructure-only classification in
+`eng/classify-build-change.ps1`: the lightweight detection job still runs, but
+the .NET product and sample build jobs are skipped. Mixed changes keep the required
+validation; unknown paths and classification failures remain conservative. The
+classifier is trusted from the target branch, so updates take effect for later
+PRs after merging. Scheduled and manually queued builds still run full validation.
+
 The MSBuild and local-SDK siblings satisfy the expert skill's build and SDK
 routing assumptions. The existing `dotnet-msbuild` specialists remain available
 as alternative entry points; one task does not require both workflows.

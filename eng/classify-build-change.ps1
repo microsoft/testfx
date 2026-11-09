@@ -16,10 +16,12 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $false
 
-# Keep this allowlist intentionally narrow. These paths configure GitHub-only automation or repository
-# administration and are not consumed by the product build. Build pipelines, dependency configuration,
+# Keep this allowlist intentionally narrow. These paths configure GitHub-only automation, AI-tool guidance,
+# or repository administration and are not consumed by the product build. Build pipelines, dependency configuration,
 # general documentation, and unknown paths must remain product-affecting so classification fails closed.
 $infrastructureDirectories = @(
+    ".agents/skills/",
+    ".copilot/curate/",
     ".github/agents/",
     ".github/aw/",
     ".github/copilot/",
@@ -34,6 +36,7 @@ $infrastructureFiles = @(
     ".github/copilot-instructions.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/release.yml",
+    "AGENTS.md",
     "eng/vendored-files.md"
 )
 
@@ -227,6 +230,56 @@ function Invoke-GitDiffSelfTest {
             throw "Git self-test expected a mixed infrastructure, samples, and product diff but got '$formattedClassification'."
         }
 
+        $skillsDirectory = [System.IO.Path]::Combine($repository, ".agents", "skills", "msbuild")
+        $curateDirectory = [System.IO.Path]::Combine($repository, ".copilot", "curate")
+        [System.IO.Directory]::CreateDirectory($skillsDirectory) | Out-Null
+        [System.IO.Directory]::CreateDirectory($curateDirectory) | Out-Null
+        [System.IO.File]::WriteAllText((Join-Path $skillsDirectory "SKILL.md"), "# MSBuild guidance`n")
+        [System.IO.File]::WriteAllText((Join-Path $curateDirectory "manifest.yml"), "version: 1`n")
+        [System.IO.File]::WriteAllText((Join-Path $repository "AGENTS.md"), "Repository guidance`n")
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Curated guidance")
+        $guidanceRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        $classification = Get-GitDiffClassification $productRevision $guidanceRevision $repository
+        $formattedClassification = Format-Classification $classification
+        if ($formattedClassification -cne "hasProductChanges=false;hasSamplesChanges=false;infrastructureOnly=true") {
+            throw "Git self-test expected a curated-guidance-only diff but got '$formattedClassification'."
+        }
+
+        $guidancePath = Join-Path $skillsDirectory "REFERENCE.md"
+        [System.IO.File]::Move((Join-Path $skillsDirectory "SKILL.md"), $guidancePath)
+        [System.IO.File]::Delete((Join-Path $curateDirectory "manifest.yml"))
+        [System.IO.File]::Delete((Join-Path $repository "AGENTS.md"))
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Rename and delete curated guidance")
+        $previousRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        $classification = Get-GitDiffClassification $guidanceRevision $previousRevision $repository
+        $formattedClassification = Format-Classification $classification
+        if ($formattedClassification -cne "hasProductChanges=false;hasSamplesChanges=false;infrastructureOnly=true") {
+            throw "Git self-test expected a curated-guidance rename and deletion diff but got '$formattedClassification'."
+        }
+
+        $productGuidancePath = Join-Path $productDirectory "Guidance.md"
+        $samplesGuidancePath = Join-Path $samplesDirectory "Guidance.md"
+        foreach ($moveCase in @(
+            @{ Name = "Move guidance into product"; From = $guidancePath; To = $productGuidancePath; Expected = "hasProductChanges=true;hasSamplesChanges=false;infrastructureOnly=false" },
+            @{ Name = "Move product into guidance"; From = $productGuidancePath; To = $guidancePath; Expected = "hasProductChanges=true;hasSamplesChanges=false;infrastructureOnly=false" },
+            @{ Name = "Move guidance into samples"; From = $guidancePath; To = $samplesGuidancePath; Expected = "hasProductChanges=false;hasSamplesChanges=true;infrastructureOnly=false" },
+            @{ Name = "Move samples into guidance"; From = $samplesGuidancePath; To = $guidancePath; Expected = "hasProductChanges=false;hasSamplesChanges=true;infrastructureOnly=false" }
+        )) {
+            [System.IO.File]::Move($moveCase.From, $moveCase.To)
+            $null = Invoke-Git $repository @("add", "--all")
+            $null = Invoke-Git $repository @("commit", "--quiet", "-m", $moveCase.Name)
+            $revision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+            $classification = Get-GitDiffClassification $previousRevision $revision $repository
+            $formattedClassification = Format-Classification $classification
+            if ($formattedClassification -cne $moveCase.Expected) {
+                throw "Git self-test '$($moveCase.Name)' expected '$($moveCase.Expected)' but got '$formattedClassification'."
+            }
+
+            $previousRevision = $revision
+        }
+
         $classification = Get-GitDiffClassification $productRevision $productRevision $repository
         $formattedClassification = Format-Classification $classification
         if ($formattedClassification -cne "hasProductChanges=true;hasSamplesChanges=true;infrastructureOnly=false") {
@@ -250,12 +303,29 @@ function Invoke-GitDiffSelfTest {
 
 function Invoke-SelfTest {
     foreach ($pathCase in @(
+        @{ Path = ".agents/skills/msbuild/SKILL.md"; Infrastructure = $true; Samples = $false },
+        @{ Path = ".agents/skills/msbuild/references/incremental-build.md"; Infrastructure = $true; Samples = $false },
+        @{ Path = ".agents/skills/coverage-analysis/scripts/Analyze-Coverage.ps1"; Infrastructure = $true; Samples = $false },
+        @{ Path = ".copilot/curate/manifest.yml"; Infrastructure = $true; Samples = $false },
+        @{ Path = ".copilot/curate/manifest.lock.yml"; Infrastructure = $true; Samples = $false },
+        @{ Path = "AGENTS.md"; Infrastructure = $true; Samples = $false },
         @{ Path = ".github/workflows/triage.yml"; Infrastructure = $true; Samples = $false },
         @{ Path = ".github/scripts/triage.py"; Infrastructure = $true; Samples = $false },
         @{ Path = ".github/policies/LabelManagement.yml"; Infrastructure = $true; Samples = $false },
         @{ Path = ".github/PULL_REQUEST_TEMPLATE.md"; Infrastructure = $true; Samples = $false },
         @{ Path = "eng/vendored-files.md"; Infrastructure = $true; Samples = $false },
+        @{ Path = ".agents/skills-extra/SKILL.md"; Infrastructure = $false; Samples = $false },
+        @{ Path = ".agents/unknown.txt"; Infrastructure = $false; Samples = $false },
+        @{ Path = ".copilot/curate-extra/manifest.yml"; Infrastructure = $false; Samples = $false },
+        @{ Path = ".copilot/settings.json"; Infrastructure = $false; Samples = $false },
+        @{ Path = "AGENTS.md.extra"; Infrastructure = $false; Samples = $false },
+        @{ Path = "docs/AGENTS.md"; Infrastructure = $false; Samples = $false },
+        @{ Path = "src/AGENTS.md"; Infrastructure = $false; Samples = $false },
         @{ Path = ".github/dependabot.yml"; Infrastructure = $false; Samples = $false },
+        @{ Path = "Directory.Build.props"; Infrastructure = $false; Samples = $false },
+        @{ Path = "Directory.Packages.props"; Infrastructure = $false; Samples = $false },
+        @{ Path = "global.json"; Infrastructure = $false; Samples = $false },
+        @{ Path = "NuGet.config"; Infrastructure = $false; Samples = $false },
         @{ Path = "azure-pipelines.yml"; Infrastructure = $false; Samples = $false },
         @{ Path = "eng/pipelines/steps/build.yml"; Infrastructure = $false; Samples = $false },
         @{ Path = "eng/vendored-files.json"; Infrastructure = $false; Samples = $false },
@@ -280,6 +350,48 @@ function Invoke-SelfTest {
         ".github/scripts/triage.py",
         "eng/vendored-files.md"
     ) $false $false $true
+    Assert-Classification "Curated skills update (#12264)" @(
+        ".agents/skills/build-parallelism/SKILL.md",
+        ".agents/skills/check-bin-obj-clash/SKILL.md",
+        ".agents/skills/csharp-expert/SKILL.md",
+        ".agents/skills/csharp-refactoring/SKILL.md",
+        ".agents/skills/dotnet-breaking-changes/SKILL.md",
+        ".agents/skills/dotnet-breaking-changes/references/internals-visible-to.md",
+        ".agents/skills/dotnet-breaking-changes/references/multi-targeting.md",
+        ".agents/skills/dotnet-breaking-changes/references/public-api.md",
+        ".agents/skills/dotnet-breaking-changes/references/source-generation.md",
+        ".agents/skills/msbuild/SKILL.md",
+        ".agents/skills/msbuild/references/antipatterns/additional-antipatterns.md",
+        ".agents/skills/msbuild/references/build-perf-baseline.md",
+        ".agents/skills/msbuild/references/extension-points.md",
+        ".agents/skills/msbuild/references/incremental-build.md",
+        ".agents/skills/msbuild/references/msbuild-antipatterns.md",
+        ".copilot/curate/manifest.lock.yml",
+        ".copilot/curate/manifest.yml",
+        ".github/instructions/copilot-curate.instructions.md",
+        "AGENTS.md"
+    ) $false $false $true
+    Assert-Classification "Curated guidance and product" @(
+        ".agents/skills/msbuild/SKILL.md",
+        "src/Product.cs"
+    ) $true $false $false
+    Assert-Classification "Curated guidance and samples" @(
+        "AGENTS.md",
+        "samples/public/Sample.cs"
+    ) $false $true $false
+    Assert-Classification "Curated guidance and build inputs" @(
+        ".copilot/curate/manifest.yml",
+        "Directory.Build.props",
+        "Directory.Packages.props",
+        "global.json",
+        "NuGet.config",
+        "azure-pipelines.yml",
+        "eng/pipelines/steps/build.yml"
+    ) $true $false $false
+    Assert-Classification "Curated guidance and unknown input" @(
+        ".copilot/curate/manifest.lock.yml",
+        "unknown/new-location.txt"
+    ) $true $false $false
     Assert-Classification "Infrastructure and product" @(
         ".github/workflows/triage.yml",
         "src/Product.cs"
