@@ -133,17 +133,174 @@ message-bus test explicit event ownership, and removes implicit ownership from b
 All three affected project graphs build with CI analysis and warnings as errors (zero warnings/errors);
 19 orchestrator/message-bus cases and the retry cancellation/disposal case execute and pass with fresh TRX verification.
 
+## PR cache consumption repair (2026-11-09)
+
+The green main run [1669781](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1669781)
+published 48 mapping shards, but the Windows Release checkout in
+[PR run 1670899](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1670899)
+fetched only its detached merge commit at depth one. The complete checkout and target-branch fetch in
+`DetectChanges` belong to a different job. The published storage provider requires a merge-base with
+`refs/heads/main` before searching successful builds; without it, an empty candidate list produces the
+misleading missing-artifact fallback.
+
+The consumer contract is to prepare history in the affected-test invocation's own checkout, without changing
+HEAD, tracked files, credentials, the configured storage identity, or collection behavior. When enabled, PR
+selection fetches the main remote-tracking ref and unshallows its checkout when necessary, then requires a merge-base.
+An unavailable baseline must visibly choose the existing ordinary full-test fallback, not skip tests or mark
+affected execution successful. Main collection, disabled selection, and the Debug-only test path retain their
+existing behavior. The source branch is deliberately main because the rollout's map producer is main; this
+does not enable selection on release branches.
+
+An unconditional full checkout for every Windows matrix entry would also affect Debug and collection jobs
+that do not need this repair. Preparing Git immediately before selection is narrower and protects the actual
+consumer even when the hosted checkout defaults change. Relying on `DetectChanges` or merely adding a remote
+ref without repairing shallow ancestry does not satisfy the storage contract.
+
+There is a separate producer-owned blocker: the same main artifact downloads as a 565,133,476-byte ZIP
+(538.95 MiB), exceeding the published provider's 536,870,912-byte whole-archive bound. The owning Azure DevOps
+storage provider needs bounded individual-shard retrieval and an explicit missing-baseline diagnostic.
+Raising the download bound alone would retain repeated whole-artifact transfers. TestFx must not pin an
+unpublished local package or claim a Git-only repair restores end-to-end selection.
+
+The root `EnableAffectedTests` switch therefore defaults to off until the repaired provider is publicly
+available, pinned, and validated with the shipping SDK. Ordinary full testing and coverage remain enabled;
+the existing switch also suspends main collection while its consumers cannot safely use the artifacts.
+Leaving selection enabled with only the Git repair would expose expensive whole-ZIP downloads in every
+module instead of the previous early fallback. This staging gate does not replace the two fixes or their
+composed-product evidence. The delivery owner must complete package flow, main re-enablement, and the first
+real CI selection check; no release-branch activation or unapproved package publication is implied.
+
+| Requirement / risk | Automated evidence | Consuming surface |
+| --- | --- | --- |
+| A shallow, detached PR merge checkout resolves main without altering user work. | Executed: `AffectedGitHistoryRepairsShallowMergeCheckout` and `AffectedGitHistoryPreservesCheckout`. | Actual shared affected-test PowerShell body, isolated local Git remote. |
+| A complete checkout remains supported and repeated preparation is safe. | Executed: `AffectedGitHistoryHandlesFullCheckout` and `AffectedGitHistoryPreparationIsIdempotent`. | Same consumer invocation, not the separate change-detection job. |
+| Fetch/baseline failures run ordinary full validation; test failures remain authoritative. | Executed: `AffectedGitHistoryMissingRemoteFallsBack`, `AffectedGitHistoryUnrelatedBaselineFallsBack`, and the three native-exit cases in `eng/validate-affected-test-git.ps1`. | Existing affected-test success flag and full-test fallback gate. |
+| A real published cache can be read without downloading an oversized archive per module. | Final local provider `.2` passes both the native SDK matrix below and authenticated real Azure shard reads. | `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps`, then TestFx's pinned SDK. |
+
+This is a nonvisual Git/storage repair; a readable command transcript is more useful than screenshots.
+Validation results, exact source identities, counterfactuals, and package-flow limitations are updated below
+as the repair is exercised. The scope is main; release-branch activation and servicing are not implied.
+
+**Test-value evidence:** the new regression harness executes the actual shared PowerShell body against
+isolated local Git repositories, including a depth-one detached two-parent PR merge. Retaining those tests
+against the original template from base `310b20be259256263a8619e303d01b4f060f9af5` fails
+`AffectedGitHistoryRepairsShallowMergeCheckout` at the intended assertion: expected the main baseline, got an
+empty remote ref. The corrected step passes all nine named cases. Fixture HEAD, tracked edits and untracked
+files remain unchanged; each run owns its repositories and child processes. No test-assembly scheduling,
+shared caches, credentials, or user Git configuration are changed.
+
+Validation used base `310b20be259256263a8619e303d01b4f060f9af5` and implementation identity
+`C9C05B4C4FF74B9D99956F85180E50B4AB77D629DD700586FAF4476EFF874EC4`: SHA-256 of ordered
+`path + space + uppercase file SHA-256 + LF` records for `azure-pipelines.yml`,
+`eng/pipelines/steps/test-affected-tests.yml`, `eng/validate-affected-test-git.ps1`, and
+`eng/validate-affected-tests.ps1`, excluding this evolving evidence document.
+
+The following existing CI-validator entry points both exit 0 with the new nine-case Git suite, the 19
+collection-isolation checks, 39 non-Windows rollout checks, 13 CTS checks, and package-staging guard:
+
+```powershell
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests false -EnableNonWindowsAffectedTests true
+```
+
+The same retained Git regression can be run directly with
+`pwsh -NoProfile -File .\eng\validate-affected-test-git.ps1`; `-TemplatePath` selects the isolated original
+template for the counterfactual. Local execution uses task-owned `TEMP`/`TMP` directories because this host's
+protected Windows system-temp directory does not permit normal recursive cleanup.
+
+### Packaged-consumer experiments
+
+The final local provider candidate, `18.13.0-local.azdo-shard.20261109.2`, uses the published
+`18.13.0-preview.26556.6` affected-test extension rather than a replacement base DLL. Its nupkg SHA-256 is
+`40503C669B55E8691D6EFFF167F3BBDF9CAB74DE320766AA2668919D99D8E80B`, stamped with owning-source commit
+`f7de68c2738ff0bf7d14087b68282b1c7c2d300a`; the restored and executed net10.0 provider asset in both real
+test modules matches archive payload `E6CAD5676587C929C729C5E0A4BF50613A5E7961E0181DD33292763A51911DF9`.
+The immutable first candidate `.1` passed the same functional matrix; final inspection then bounded HTTP
+error-body diagnostics, with an executed regression reading 16,384 bytes before the fix against a 2,048-byte
+cap. The corrected error-prefix and UTF-16/status checks pass within the final 79-case provider suite.
+The exact-package TRX confirms 79 passed, zero failed/skipped. Its central regressions include
+`Read_ContainerArtifactOverArchiveLimit_DownloadsOnlyRequestedShard`,
+`Read_DefaultBranchMissing_ExplainsWhyArtifactsWereNotSearched`,
+`Read_DefaultBranchRefMissing_ExplainsRequiredGitBaseline`, and
+`DownloadFile_LargeErrorResponse_ReadsOnlyBoundedDiagnosticPrefix`. The original three storage cases failed
+on the original implementation and passed after the repair; the error-prefix case separately failed at
+the intended byte-read limit before its fix. The provider retains the per-shard 128 MiB bound and bounded
+legacy ZIP compatibility rather than increasing the whole-artifact limit.
+The consumer uses the repository-pinned SDK `12.0.100-alpha.1.26556.115`, published MSTest
+`5.0.0-preview.26556.8` and MTP `3.0.0-preview.26556.8`, Release/net12.0, and a fresh per-variant package cache.
+The actual shared CI PowerShell body invokes the real SDK; a reporting-only wrapper adds TRX arguments.
+The loopback Azure API requires authentication, the candidate build's project scope, and an octet-stream
+read, and rejects whole-artifact ZIP requests.
+
+| Named composed case | Observable result | SDK exit |
+| --- | --- | ---: |
+| `NativeCollectionRetainsAll120Identities` | Native map production retains 80 + 40 exact discovered UIDs and all 120 independent per-case execution markers. | 0 |
+| `ZeroSelectionSkipsAllModules` | Neither module executes, even with both intentional-failure switches set. | 0 |
+| `ChangedSourceExecutesExactMappedSubsetPlusConservativePeerFallback` | A production-library source edit executes the exact 16 mapped test UIDs plus the other module's conservative 40-test fallback; all 56 pass. | 0 |
+| `SelectedTestFailureRetainsIdentityAndExit2` | The same selected set contains only the intended `FeatureA_Result (1)` failure, with each report's names and outcomes checked. | 2 |
+| `MissingMapsExecuteAll120Identities` | Missing remote shards execute all 120 tests, rather than producing a false empty success. | 0 |
+| `MissingModuleFallsBackWithoutExecutingUnchangedPeer` | With unchanged sources and one missing shard, its 80 tests run; the available-map peer executes zero despite its failure switch. | 0 |
+
+These are functional work-selection observations, not a TestFx CI timing benchmark. Unknown source
+associations deliberately retain conservative full-module execution; they are not ignored to manufacture
+pruning. Positive TRX files are checked against independently planned names with the existing execution gate.
+The same retained native consumer against the published original provider fails `ProviderMustReadSingleShard`
+at its whole-ZIP request assertion after successful ordinary execution and native collection.
+
+Experiments also corrected three fixture assumptions, none counted as product red-phase proof: collection
+children need independent marker files even when each host disables test parallelism; editing a test assembly
+invalidates its metadata, so the meaningful source edit belongs to a separately referenced production library;
+and negative HTTP controls require a fresh, process-identified, noncached loopback endpoint. The missing-shard
+control is independently verified to return HTTP 404 before the final matrix.
+
+The final `.2` package also reads real build 1669781's 446,113-byte/27-UID and 104,935,457-byte/3,997-UID
+shards without ZIP staging and reports a missing shard correctly, exit 0. Both schema-2 maps retain baseline
+`54980bc56a22eb758c040a20b8f3571ee2d50417`. These are authenticated read-only checks through the explicit-token/Basic
+path used by CI, using the supported current-build override; normal ancestry is independently covered by the
+Git regressions and native SDK fixture. This host's `DefaultAzureCredential`/`AzureCliCredential` path is
+unavailable and is not counted as passing. No interactive credential workaround, token persistence, remote
+publication, or pipeline write is claimed.
+
+Exact fixture sources, native commands/binlogs, planned names, TRX, execution markers, package hashes, and
+per-command exits are retained in the session's `affected-test-fix` artifacts. They are local evidence, not
+public reviewer download links. Full repository acceptance, a live PR pipeline using the repaired package,
+and release-branch servicing remain unverified; the default-off rollout is intentional.
+Before re-enabling, validate the actual aligned public AffectedTests/storage/test-host CodeCoverage package
+tuple after dependency flow. The package-pin PR deliberately triggers full testing through `eng/**`;
+confirm real pruning on a subsequent mapped product-only PR with a fresh main map, not by weakening the
+force-all policy on the pin/configuration change itself.
+
+### Published-package check before activation
+
+The public `test-tools` feed was checked again on 2026-11-09 before finalizing this repair. Its newest
+aligned AffectedTests, Azure DevOps storage, and CodeCoverage version is `18.13.0-preview.26559.2`, but all
+three nupkgs identify source `3d593e008169bb3df357f337df901cea95a7c727`, before the repaired provider commits.
+The published storage nupkg SHA-256 is
+`C6F9A5FFF03F2A64DA7B7D953CE30FE7B6FD26FAE9F4C7A41125301DC052A4A1`.
+
+Inspection of its actual net10.0 DLL confirms that `DownloadMappingAsync` still calls
+`DownloadArtifactAsync`, stages the entire ZIP, and applies the 536,870,912-byte bound before selecting a
+shard. It also retains the empty-candidate/missing-artifact behavior when the common Git commit is absent.
+Git ancestry confirms that the package's stamped source does not contain
+`f7de68c2738ff0bf7d14087b68282b1c7c2d300a`. This is static payload/provenance evidence, not an executed
+claim that the newly published tuple passes the composed matrix.
+
+Consequently this change deliberately keeps the existing `18.13.0-preview.26556.6` pin and leaves the
+rollout off by default. A newer version number alone is not evidence that the repair shipped. The Git
+preparation and regression guards are ready, but activation requires a published package containing the
+verified provider repair; no unpublished local package is committed as a dependency.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- The trusted main-branch Windows Release entry runs full tests and publishes coverage. A separate
-  `WindowsAffectedTests` job runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
+- The trusted main-branch Windows Release entry runs full tests and publishes coverage. When affected tests are enabled,
+  a separate `WindowsAffectedTests` job runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
   collection owns its instrumentation and launches discovery children with `--list-tests`. A collection failure
   still fails its job; it is not normalized to success or allowed to consume the Release entry's time budget.
   Main-branch Windows validation entries retain a four-hour budget; the dedicated collection entry has six
   hours. PR jobs retain their two-hour budget.
-- The Windows Release PR test runs `--affected-tests`.
+- With the rollout enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific

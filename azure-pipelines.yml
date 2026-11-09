@@ -57,10 +57,11 @@ parameters:
   displayName: "Skip tests"
   type: boolean
   default: False
+# Re-enable after the bounded single-shard provider is published, pinned, and validated with this SDK.
 - name: EnableAffectedTests
   displayName: "Enable affected tests"
   type: boolean
-  default: true
+  default: false
 - name: EnableNonWindowsAffectedTests
   displayName: "Enable Linux/macOS affected tests (requires verified collector support)"
   type: boolean

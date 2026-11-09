@@ -1161,6 +1161,7 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 }
 
 if ($SelfTest) {
+    & (Join-Path $repoRoot "eng/validate-affected-test-git.ps1")
     Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $templateWithoutComments $windowsBuildTemplate
     Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate $affectedTestsPackageVersion
 } else {
