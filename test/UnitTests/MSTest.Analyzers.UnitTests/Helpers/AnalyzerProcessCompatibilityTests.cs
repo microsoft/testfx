@@ -67,10 +67,12 @@ public sealed class AnalyzerProcessCompatibilityTests
     {
         string module = typeof(AnalyzerProcessCompatibilityTests).Assembly.Location;
 #if NETCOREAPP
-        string host = Path.Combine(
-            RootFinder.Find(), ".dotnet", RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet");
+        string host = Environment.ProcessPath ?? throw new InvalidOperationException("The current test host path could not be determined.");
         ProcessStartInfo start = new(host);
-        start.ArgumentList.Add(module);
+        if (Path.GetFileNameWithoutExtension(host).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            start.ArgumentList.Add(module);
+        }
 #else
         ProcessStartInfo start = new(module);
 #endif
