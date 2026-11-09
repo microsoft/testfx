@@ -25,10 +25,18 @@ internal sealed partial class MtpServerProcess
     /// <param name="source">Path to the managed test application or native executable.</param>
     /// <param name="options">Client options (name, connection timeout, environment, logger).</param>
     /// <param name="cancellationToken">Cancels the launch and connection wait.</param>
-    public static async Task<MtpServerProcess> StartAsync(
+    public static Task<MtpServerProcess> StartAsync(
         string source,
         MtpServerClientOptions? options = null,
         CancellationToken cancellationToken = default)
+        => StartAsync(source, options, cancellationToken, processFactory: null);
+
+    // Keep process ownership observable per launch without a process-wide factory override.
+    internal static async Task<MtpServerProcess> StartAsync(
+        string source,
+        MtpServerClientOptions? options,
+        CancellationToken cancellationToken,
+        Func<Process>? processFactory)
     {
         if (source is null)
         {
@@ -84,7 +92,9 @@ internal sealed partial class MtpServerProcess
                 startInfo.Environment[variable.Key] = variable.Value;
             }
 
-            process = CreateProcess(startInfo, standardError, out Task standardErrorDrained);
+            process = processFactory is null
+                ? CreateProcess(startInfo, standardError, out Task standardErrorDrained)
+                : CreateProcess(processFactory(), startInfo, standardError, out standardErrorDrained);
             try
             {
                 process.Start();
@@ -100,7 +110,9 @@ internal sealed partial class MtpServerProcess
                     MtpClientLogLevel.Warning,
                     $"The sibling apphost could not be executed; retrying through '{launch.FileName} {launch.Arguments}'.");
 
-                process = CreateProcess(startInfo, standardError, out standardErrorDrained);
+                process = processFactory is null
+                    ? CreateProcess(startInfo, standardError, out standardErrorDrained)
+                    : CreateProcess(processFactory(), startInfo, standardError, out standardErrorDrained);
                 process.Start();
             }
 
@@ -232,11 +244,15 @@ internal sealed partial class MtpServerProcess
     }
 
     private static Process CreateProcess(ProcessStartInfo startInfo, StringBuilder standardError, out Task standardErrorDrained)
+        => CreateProcess(new Process(), startInfo, standardError, out standardErrorDrained);
+
+    private static Process CreateProcess(Process process, ProcessStartInfo startInfo, StringBuilder standardError, out Task standardErrorDrained)
     {
         var standardErrorDrainedSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         standardErrorDrained = standardErrorDrainedSource.Task;
 
-        var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+        process.StartInfo = startInfo;
+        process.EnableRaisingEvents = true;
         process.ErrorDataReceived += (_, e) =>
         {
             if (e.Data is null)
