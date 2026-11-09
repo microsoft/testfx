@@ -20,6 +20,13 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
+        var assertion = (IInvocationOperation)context.Operation;
+        if (assertion.Arguments.TakeWhile(argument => argument.Parameter?.Ordinal != 0)
+            .Any(argument => !argument.IsImplicit && !argument.Value.ConstantValue.HasValue))
+        {
+            return;
+        }
+
         NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
 
         // In this code path, we will be suggesting the use of IsNull/IsNotNull.

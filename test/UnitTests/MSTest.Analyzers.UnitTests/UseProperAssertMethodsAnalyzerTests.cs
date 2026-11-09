@@ -5980,6 +5980,79 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenUsingIsTrueWithEffectfulMessageBeforeComparison_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int value = 0;
+                    Assert.IsTrue(message: ChangeValue(), condition: value == 0);
+
+                    string ChangeValue()
+                    {
+                        value = 1;
+                        return "changed";
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    [DataRow("All", "ContainsOnly")]
+    [DataRow("Any", "Contains")]
+    public async Task WhenUsingLinqWithCastedPredicate_PreservesExplicitConversion(string linqMethod, string assertMethod)
+    {
+        string code = $$"""
+            using System;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Delegate predicate = new Func<int, bool>(item => item > 0);
+                    {|#0:Assert.IsTrue(items.{{linqMethod}}((Func<int, bool>)predicate))|};
+                }
+            }
+            """;
+        string fixedCode = $$"""
+            using System;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int[] items = new[] { 1, 2, 3 };
+                    Delegate predicate = new Func<int, bool>(item => item > 0);
+                    Assert.{{assertMethod}}((Func<int, bool>)predicate, items);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenUsingIsFalseAll_NoDiagnostic()
     {
         string code = """

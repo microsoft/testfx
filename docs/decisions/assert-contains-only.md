@@ -260,6 +260,37 @@ Retained results include:
 CI on the eventual pushed head and actual rendered terminal/IDE layout inspection
 remain separate, unclaimed evidence.
 
+### 2026-11-09: follow-up shared-fixer regressions
+
+Two fresh review examples exposed regressions introduced by the first correction:
+the shared LINQ matcher removed explicit operand casts through conversion
+unwrapping, and message-first comparison fixes could move effectful message
+evaluation after their operands.
+
+Argument selection still uses bound parameter ordinals, but now retains
+`argument.Value.Syntax`, including explicit casts. Unsafe effectful arguments
+before the condition suppress the Boolean-assertion mapping rather than
+reordering work. This protection covers the shared comparison path as well as
+the new `All` path.
+
+The analyzer class now passes 158/158 cases, including
+`WhenUsingLinqWithCastedPredicate_PreservesExplicitConversion` for both `Any` and
+`All`, and
+`WhenUsingIsTrueWithEffectfulMessageBeforeComparison_NoDiagnostic`.
+
+An isolated comparison retained the same 158 test identities and restored the
+two affected production files from actual pre-fix commit
+`ca81cf9feccf1c4b357a6a9012dba95b96cca211`. Exactly the three new rows failed at
+diagnostic/fixed-source assertions, exit 2. After clean restoration the identical
+158 cases passed, zero skips, exit 0. The test source SHA-256 was identical:
+`604CBBEE4770538F399282C3791F05A087EAE1C60C6745356D8B912EA3E7812B`.
+
+Retained evidence: main-worktree
+`artifacts\TestResults\Release\agent-merge-12278-followup-861d5eb384204e3f9a0ed6b1477e5aea`,
+and comparison-worktree `artifacts\TestResults\followup-red` and `followup-green`.
+The earlier 241 framework, one scope, and six packaged consumer checks remain
+unchanged, making 406 passing targeted cases across the current selections.
+
 ## Alternatives and decision
 
 `ContainsAll` is already multiplicity-aware expected-item inclusion and permits

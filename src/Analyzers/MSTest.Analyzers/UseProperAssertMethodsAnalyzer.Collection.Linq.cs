@@ -203,11 +203,11 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         {
             // Extension method with predicate: Method(collection, predicate)
             if (invocation.Arguments.Length == 2 &&
-                TryGetArgumentValueForParameterOrdinal(invocation, 0, out IOperation? collection) &&
-                TryGetArgumentValueForParameterOrdinal(invocation, 1, out IOperation? predicate))
+                TryGetArgumentForParameterOrdinal(invocation, 0, out IArgumentOperation? collection) &&
+                TryGetArgumentForParameterOrdinal(invocation, 1, out IArgumentOperation? predicate))
             {
-                collectionExpression = collection.Syntax;
-                predicateExpression = predicate.Syntax;
+                collectionExpression = collection.Value.Syntax;
+                predicateExpression = predicate.Value.Syntax;
                 return true;
             }
 
