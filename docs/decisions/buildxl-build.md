@@ -183,10 +183,12 @@ toolchain or hosted-image changes.
 
 Local YAML checks covered enabled/disabled expansion, the job's conditions,
 publication-on-failure wiring, and its fresh-cache/no-token contract. All
-existing affected-test rollout/gating self-tests still pass. **Hosted Azure
-execution and the live Test Analytics/summary rendering are unverified**: this
-change wires the enabled leg into source, but no push or pipeline run was
-performed from this session.
+existing affected-test rollout/gating self-tests still pass. The original
+`BuildXLPerformance` check succeeded in
+[Azure build 1671415](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1671415)
+for PR head `5c211fbaa7a9d5252248d6d35111bb925dea3712`. Live Test
+Analytics/summary rendering has not been visually inspected, and this result
+does not validate subsequent source revisions.
 
 ### Performance evidence and regression sensitivity
 
@@ -224,6 +226,57 @@ repository artifact directory instead. That failed setup attempt is not
 counted as red-phase behavioral evidence.
 
 ## Research and experiments
+
+### 2026-11-09: review correction for caller diagnostics
+
+Review identified one additional environment side effect of the existing
+Arcade bootstrap: `eng/common/tools.ps1` initializes `MSBUILDDEBUGPATH` when
+it is absent. The driver did not include that variable in its restoration
+snapshot, so direct invocation in an existing PowerShell session leaked the
+checkout-specific diagnostic destination to later, unrelated builds.
+
+The fix adds `MSBUILDDEBUGPATH` to the existing snapshot and `finally`
+restoration rather than changing the shared Arcade helper or build behavior.
+`CallerStateRestored` now explicitly starts with that variable absent and
+checks it alongside the other caller state. Its cleanup preserves the original
+value or absence even when the assertion fails.
+
+**Test-value evidence:** the same retained test ran before and after the
+driver fix with `& .\eng\buildxl\validate.ps1 -NoJournal -Case CallerStateRestored`.
+The pre-fix run selected/executed one case and exited 1 with
+`Caller environment variable MSBUILDDEBUGPATH changed from absent to present.`;
+the native build itself exited 0. The corrected run selected/executed/passed
+the same case and exited 0. The retained validator SHA-256 was
+`9547EC0865F6C949B5E4085CAD17ADB1E42D0CAD7F656801DEA0C6287DB17E65`
+in both runs. Driver hashes were:
+
+| State | Driver SHA-256 |
+| --- | --- |
+| Pre-fix, PR head `5c211fbaa7a9d5252248d6d35111bb925dea3712` | `3515FBC42FBFA2E1CC22F2DB7F6EE02AED6DF1D4079CB9C8FE83DCCD17440865` |
+| Corrected snapshot | `5FC6D69EE37C4F29D0DFD1817AF1559ADC24335DA0915F2DC3E98584F68AB28B` |
+
+Red/green reports are retained locally as
+`artifacts/buildxl-experiment/msbuild-debug-path-red.json` and
+`msbuild-debug-path-green.json`. The complete
+`& .\eng\buildxl\validate.ps1 -NoJournal` run also exited 0 with seven
+selected/executed/passed cases and no failures/skips; its report is
+`artifacts/buildxl-validation/700e8ee574754224849d7a5b2f59f232/results.json`.
+`& .\eng\buildxl\benchmark.ps1 -SelfTest` exited 0 with all six self-checks
+passing. The original 18-sample performance table remains bound to its
+original measured hashes; it was not rerun or relabeled as the new revision.
+
+The review suggestion to disable or make the performance job non-blocking
+would change this PR's intended default-on tracking policy, not correct a
+demonstrated defect. The default and queue-time opt-out remain unchanged;
+timing variance does not fail the job, while build/output/report errors remain
+visible.
+
+CI triage for the original head found one unrelated Windows Debug failure:
+`AnalyzerWaitCancellation [net472]` in the unchanged
+`AnalyzerCompatibilityTests.WaitForExit_OwnedChildCancellation_CompletesAndReleasesItsWait`
+failed `Assert.IsFalse(waiting.IsCompleted)` in Azure build 1671415,
+log 65. That test and its product paths were not changed by this PR, so no
+unrelated test fix or weakened assertion is included.
 
 ### 2026-11-09: matched local performance and pipeline leg
 
@@ -513,9 +566,10 @@ cache, and evidence are intentionally retained for repeat experiments.
   side effect need reconsideration before wider adoption.
 - Full-solution, other project/framework combinations, packaging, product tests,
   cancellation, cross-machine reuse, and remote/distributed caching are outside
-  this initial proof. The independent CI benchmark is now wired in source, but
-  hosted execution, downstream rollout, and servicing/backport decisions remain
-  unverified; Arcade remains responsible for shipping and release validation.
+  this initial proof. The independent CI benchmark passed for the original PR
+  head; live UI checks, later revisions, downstream rollout, and
+  servicing/backport decisions remain unverified. Arcade remains responsible
+  for shipping and release validation.
 
 [msbuild]: https://github.com/microsoft/BuildXL/blob/7c7fa36383a4a4ccc8e3cba45a4c7f486e2856e5/Documentation/Wiki/Frontends/MSBuild/Main.md
 [schema]: https://github.com/microsoft/BuildXL/blob/7c7fa36383a4a4ccc8e3cba45a4c7f486e2856e5/Public/Sdk/Public/Prelude/Prelude.Configuration.Resolvers.dsc

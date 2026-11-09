@@ -141,7 +141,7 @@ try {
     }
     Test-Case 'CallerStateRestored' {
         $names = @(
-            'PATH', 'DOTNET_INSTALL_DIR', 'DOTNET_NOLOGO', 'NUGET_PACKAGES',
+            'PATH', 'DOTNET_INSTALL_DIR', 'DOTNET_NOLOGO', 'NUGET_PACKAGES', 'MSBUILDDEBUGPATH',
             'DOTNET_ROOT', 'DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR', 'DOTNET_MULTILEVEL_LOOKUP', 'DOTNET_CLI_TELEMETRY_OPTOUT',
             'TESTFX_BUILDXL_ROOT', 'TESTFX_BUILDXL_PROJECT', 'TESTFX_BUILDXL_CONFIGURATION', 'TESTFX_BUILDXL_TFM',
             'TESTFX_BUILDXL_MSBUILD', 'TESTFX_BUILDXL_BIN', 'TESTFX_BUILDXL_OBJ', 'TESTFX_BUILDXL_ADDITIONAL_TARGETS'
@@ -157,6 +157,10 @@ try {
         try {
             if (Test-Path -LiteralPath Env:DOTNET_INSTALL_DIR) {
                 Remove-Item -LiteralPath Env:DOTNET_INSTALL_DIR
+            }
+
+            if (Test-Path -LiteralPath Env:MSBUILDDEBUGPATH) {
+                Remove-Item -LiteralPath Env:MSBUILDDEBUGPATH
             }
 
             $env:TESTFX_BUILDXL_PROJECT = 'caller-state-sentinel'
