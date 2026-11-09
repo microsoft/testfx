@@ -87,7 +87,8 @@ internal static class TestResultCaptureHelper
         if (exception is not null)
         {
             errorMessage ??= exception.Message;
-            stackTrace = exception.StackTrace;
+            // StackTrace alone omits inner causes, including the other branches of an AggregateException.
+            stackTrace = exception.InnerException is null ? exception.StackTrace : exception.ToString();
             exceptionType = exception.GetType().FullName;
         }
 

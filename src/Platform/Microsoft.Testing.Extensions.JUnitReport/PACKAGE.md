@@ -24,6 +24,10 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable the report via the `--report-junit` command line option. The report file name can be overridden with `--report-junit-filename <name>.xml`.
 
+Failure and error bodies retain nested and aggregate-exception causes while their
+`message` attribute continues to prefer the framework's explanation. Diagnostic
+text remains subject to the reporter's existing size limits.
+
 ## Documentation
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
