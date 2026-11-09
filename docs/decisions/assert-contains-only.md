@@ -291,6 +291,27 @@ and comparison-worktree `artifacts\TestResults\followup-red` and `followup-green
 The earlier 241 framework, one scope, and six packaged consumer checks remain
 unchanged, making 406 passing targeted cases across the current selections.
 
+### 2026-11-09: .NET Framework CI compatibility
+
+[Azure build 1670988](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1670988)
+tested source head `88a2a62c52c4e45a2da6df4142cb89efa54c8dad`. Windows Debug,
+Windows Release, and app-model dependency packing all failed on the same
+introduced CS1501 error in the named-argument test: the
+`string.Replace(string, string, StringComparison)` overload is unavailable on
+the test project's declared net472 target.
+
+The test now uses the equivalent ordinal two-string overload, without changing
+the input, expected fixed source, target frameworks, assertions, or CI gates.
+Pinned-SDK net472 Release and Debug builds pass with warnings treated as errors
+and zero warnings/errors. The net472 analyzer class executes 149/149 cases,
+including both named-argument order rows, with zero skips and exit 0. The same
+two rows also pass on net10.0.
+
+Evidence: `artifacts\TestResults\Release\agent-merge-net472-05712680da22425d974e0fc69ec11338`
+contains the three unique build binlogs and the legacy/modern TRX reports.
+This is compilation compatibility evidence; the CI compiler error is not
+presented as a behavioral red-phase assertion.
+
 ## Alternatives and decision
 
 `ContainsAll` is already multiplicity-aware expected-item inclusion and permits

@@ -5851,8 +5851,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         {
             code = code.Replace(
                 """condition: Enumerable.All(predicate: IsPositive, source: items), message: "named detail" """.TrimEnd(),
-                """message: "named detail", condition: Enumerable.All(predicate: IsPositive, source: items)""",
-                StringComparison.Ordinal);
+                """message: "named detail", condition: Enumerable.All(predicate: IsPositive, source: items)""");
         }
 
         await VerifyCS.VerifyCodeFixAsync(
