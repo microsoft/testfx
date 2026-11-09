@@ -196,7 +196,6 @@ try {
     $componentVersions = @{
         MSTestVersion = $mstestVersion; MSTestWindowsUIAutomationVersion = $mstestVersion
         MicrosoftTestingPlatformVersion = $platformVersion
-        MicrosoftTestingExtensionsJUnitReportVersion = (Read-Property $repositoryProperties 'MicrosoftTestingExtensionsJUnitReportVersionPrefix') + '-preview.bazel'
         MicrosoftTestingExtensionsCodeCoverageVersion = Read-Property $versions 'MicrosoftTestingExtensionsCodeCoverageVersion'
     }
     foreach ($name in @('MicrosoftNETTestSdkVersion', 'MicrosoftTestingExtensionsFakesVersion', 'MicrosoftPlaywrightVersion', 'AspireHostingTestingVersion')) {
