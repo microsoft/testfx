@@ -725,7 +725,7 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
             rootCts.Token);
 
         await leafStarted.Task;
-        Assert.IsNotNull(outerDownstream);
+        _ = Assert.IsNotNull(outerDownstream);
 
         // The inner middleware has failed, but the leaf it started remains active and must still observe
         // the ancestor's later cancellation before linked token sources are disposed.
