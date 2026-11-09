@@ -56,7 +56,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = error.StringId ?? (object)error.Id,
+                [JsonRpcStrings.Id] = error.StringId ?? (object?)error.Id,
                 [JsonRpcStrings.Error] = new Dictionary<string, object?>
                 {
                     [JsonRpcStrings.Code] = error.ErrorCode,

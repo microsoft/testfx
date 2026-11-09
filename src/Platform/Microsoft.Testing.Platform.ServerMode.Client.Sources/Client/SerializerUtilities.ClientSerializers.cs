@@ -147,6 +147,13 @@ internal static partial class SerializerUtilities
         {
             ValidateJsonRpcHeader(properties);
 
+            if (properties.ContainsKey(JsonRpcStrings.Error)
+                && properties.TryGetValue(JsonRpcStrings.Id, out object? errorId)
+                && errorId is null)
+            {
+                return Deserialize<ErrorMessage>(properties);
+            }
+
             if (properties.TryGetValue(JsonRpcStrings.Method, out object? methodObj) && methodObj is not null)
             {
                 string method = (string)methodObj;

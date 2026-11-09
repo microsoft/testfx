@@ -1494,6 +1494,125 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    [DataRow("response", false)]
+    [DataRow("response", true)]
+    [DataRow("cancellation", false)]
+    [DataRow("disconnect", false)]
+    [DataRow("disposal", false)]
+    public async Task RunTestsAsync_NullIdErrors_PreservePendingRequestLifecycle(string completion, bool failingLogger)
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        ConcurrentQueue<string> diagnostics = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            Logger = new DelegateMtpClientLogger((level, message) =>
+            {
+                if (level == MtpClientLogLevel.Debug && message.StartsWith("Received an uncorrelated JSON-RPC error", StringComparison.Ordinal))
+                {
+                    diagnostics.Enqueue(message);
+                    if (failingLogger)
+                    {
+                        throw new IOException("diagnostic sink failed");
+                    }
+                }
+            }),
+        });
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        Task<MtpRunResult> run = client.RunTestsAsync(cancellation.Token);
+
+        try
+        {
+            RequestMessage request = await server.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout).ConfigureAwait(false);
+            Task<MtpLogEventArgs> barrier = WaitForEventAsync<MtpLogEventArgs>(handler => client.LogReceived += handler);
+            server.SendRawFrame("""{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"JSON parse error"}}""");
+            server.SendRawFrame("""{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"JSON parse error"}}""");
+            await server.SendLogAsync("null-error barrier").ConfigureAwait(false);
+            Assert.AreEqual("null-error barrier", (await WithTimeoutAsync(barrier).ConfigureAwait(false)).Message);
+
+            Assert.IsFalse(run.IsCompleted, "An uncorrelated error must not complete or fail the pending request.");
+            Assert.AreSequenceEqual(
+                Enumerable.Repeat("Received an uncorrelated JSON-RPC error (code -32700): JSON parse error", 2),
+                diagnostics);
+            switch (completion)
+            {
+                case "response":
+                    await server.SendRunResponseAsync(request, useStringId: false).ConfigureAwait(false);
+                    Assert.IsEmpty((await WithTimeoutAsync(run).ConfigureAwait(false)).Artifacts);
+                    break;
+                case "cancellation":
+#pragma warning disable VSTHRD103 // CancelAsync is unavailable on the net462 formatter path.
+                    cancellation.Cancel();
+#pragma warning restore VSTHRD103
+                    await AssertThrowsAsync<OperationCanceledException>(() => run).ConfigureAwait(false);
+                    await server.WaitForNotificationAsync(JsonRpcMethods.CancelRequest, DefaultTimeout).ConfigureAwait(false);
+                    break;
+                case "disconnect":
+                    server.CloseConnection();
+                    await AssertThrowsAsync<MtpServerConnectionClosedException>(() => run).ConfigureAwait(false);
+                    break;
+                case "disposal":
+                    client.Dispose();
+                    await AssertThrowsAsync<ObjectDisposedException>(() => run).ConfigureAwait(false);
+                    break;
+            }
+        }
+        finally
+        {
+            client.Dispose();
+            _ = await WithTimeoutAsync(Task.WhenAny(run)).ConfigureAwait(false);
+        }
+    }
+
+    [TestMethod]
+    public async Task JsonRpcConnection_NullIdError_DoesNotCompleteRequestZero()
+    {
+        TaskCompletionSource<RpcMessage?> error = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<RpcMessage?> response = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<RpcMessage?> end = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> barrier = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        using ControlledMessageHandler handler = new()
+        {
+            ReadAsyncCallback = _ => Interlocked.Increment(ref reads) switch
+            {
+                1 => error.Task,
+                2 => Task.FromResult<RpcMessage?>(new NotificationMessage("barrier", null)),
+                3 => response.Task,
+                _ => end.Task,
+            },
+        };
+        using MtpJsonRpcConnection connection = new(handler);
+        typeof(MtpJsonRpcConnection).GetField("_nextRequestId", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(connection, -1);
+        connection.NotificationReceived += _ => barrier.TrySetResult(true);
+        connection.Start();
+        Task<ResponseMessage> request = connection.SendRequestAsync("request-zero", null, TestContext.CancellationToken);
+
+        try
+        {
+            await WithTimeoutAsync(handler.WriteStarted).ConfigureAwait(false);
+            error.SetResult(new ErrorMessage(null, ErrorCodes.ParseError, "JSON parse error", null));
+            await WithTimeoutAsync(barrier.Task).ConfigureAwait(false);
+            Assert.IsFalse(request.IsCompleted);
+            Assert.AreEqual(1, GetPendingRequestCount(connection));
+
+            ResponseMessage expected = new(0, "correlated-result");
+            response.SetResult(expected);
+            Assert.AreSame(expected, await WithTimeoutAsync(request).ConfigureAwait(false));
+            Assert.AreEqual(0, GetPendingRequestCount(connection));
+        }
+        finally
+        {
+            error.TrySetResult(null);
+            response.TrySetResult(null);
+            end.TrySetResult(null);
+            connection.Dispose();
+            await WithTimeoutAsync(GetReadLoop(connection)).ConfigureAwait(false);
+            _ = await WithTimeoutAsync(Task.WhenAny(request)).ConfigureAwait(false);
+        }
+    }
+
+    [TestMethod]
     public async Task RunTestsAsync_DisposedWhilePending_ThrowsObjectDisposedException()
     {
         using FakeMtpServer server = new() { WithholdRunResponse = true };

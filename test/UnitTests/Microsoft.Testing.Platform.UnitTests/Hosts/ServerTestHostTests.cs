@@ -57,6 +57,47 @@ public sealed class ServerTestHostTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    public async Task RunAsync_NullIdErrorsAreDiagnosedWithoutLeakingRequestCounts(bool failingLogger)
+    {
+        await using ServerFixture fixture = new();
+        TaskCompletionSource<bool> errorsLogged = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int diagnostics = 0;
+        fixture.Logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Returns<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, message, _, _) =>
+            {
+                if (message == "Received an uncorrelated JSON-RPC error (code -32700): JSON parse error")
+                {
+                    if (Interlocked.Increment(ref diagnostics) == 2)
+                    {
+                        errorsLogged.TrySetResult(true);
+                    }
+
+                    return failingLogger ? Task.FromException(new IOException("diagnostic sink failed")) : Task.CompletedTask;
+                }
+
+                return Task.CompletedTask;
+            });
+
+        Task<int> run = fixture.StartAsync();
+        fixture.Incoming.Write(new ErrorMessage(null, ErrorCodes.ParseError, "JSON parse error", null));
+        fixture.Incoming.Write(new ErrorMessage(null, ErrorCodes.ParseError, "JSON parse error", null));
+        fixture.Incoming.Write(new RequestMessage(
+            0, JsonRpcMethods.Initialize,
+            new InitializeRequestArgs(17, new Microsoft.Testing.Platform.ServerMode.ClientInfo("in-memory-client", "1.0"), new ClientCapabilities(false, true))));
+
+        ResponseMessage initialized = Assert.IsInstanceOfType<ResponseMessage>(await fixture.Written.ReadAsync().WaitAsync(Limit, TestContext.CancellationToken));
+        Assert.AreEqual(0, initialized.Id);
+        fixture.Incoming.Write(new NotificationMessage(JsonRpcMethods.Exit, null));
+
+        Assert.AreEqual(0, await run.WaitAsync(Limit, TestContext.CancellationToken));
+        await errorsLogged.Task.WaitAsync(Limit, TestContext.CancellationToken);
+        Assert.AreEqual(2, Volatile.Read(ref diagnostics));
+        fixture.Handler.Verify(h => h.WriteRequestAsync(It.IsAny<RpcMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     public async Task Forwarding_BestEffortTransportErrorsAreLoggedAndRequiredUpdatesPropagate(bool canceledWrite)
     {
         await using ServerFixture fixture = new();
