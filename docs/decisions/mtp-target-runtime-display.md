@@ -92,7 +92,7 @@ this implementation's selected base or the released-package repro.
 
 | Reviewer | Independent ordering and useful distinction |
 | --- | --- |
-| Claude Sonnet 5.5 | A/C/B. A keeps one self-explanatory group and stable `target|arch` prefix. C is shorter but ambiguous, especially when target is unknown. Suggested the truthful `(x64, runtime: net8.0)` fallback and preserving target/arch ahead of filename truncation. |
+| Claude Sonnet 5.5 | A/C/B. A keeps one self-explanatory group and stable `target\|arch` prefix. C is shorter but ambiguous, especially when target is unknown. Suggested the truthful `(x64, runtime: net8.0)` fallback and preserving target/arch ahead of filename truncation. |
 | GPT-5.6 Sol | A/B/C. A expresses authoritative identity followed by secondary runtime. B is explicit but punctuation-heavy; C erases the explicit target/runtime distinction. Suggested `target unknown` and stripping platform only for comparison, never display. |
 
 Both suggested hiding unrecognized runtime descriptions. The owner rejected
@@ -112,7 +112,7 @@ The alternatives actually discussed were:
 | Use an arrow between frameworks | Not selected. Claude ranked it second for compactness and GPT third; both noted ambiguous direction/semantics. |
 | Use two bracket groups | Rejected by both reported model reviews as noisier than one labelled group. |
 | Show `target unknown` | Not selected: explicitly labelling known runtime/architecture is shorter and does not manufacture target metadata. |
-| `(target|architecture, runtime: runtime)` | Selected: compact matching cases, explicit differing/unknown runtime, and one shared formatter for identity surfaces. |
+| `(target\|architecture, runtime: runtime)` | Selected: compact matching cases, explicit differing/unknown runtime, and one shared formatter for identity surfaces. |
 
 The comparison rule deliberately ignores platform suffixes only for
 equivalence, not for display. A Windows target running on the matching base
@@ -217,12 +217,12 @@ This is a later CLI build than the first released-producer capture above.
 
 | Actual composed cases | Expected/observed contract |
 | --- | --- |
-| Project and module-only net472 | `(net472|x64, runtime: net481)`, exit 0, one executed/passed each. Module-only has no project target and exercises the new producer field. |
+| Project and module-only net472 | `(net472\|x64, runtime: net481)`, exit 0, one executed/passed each. Module-only has no project target and exercises the new producer field. |
 | Project and module-only net481 / net12.0 | Compact matching identity, exit 0, one executed/passed each. |
-| Project and module-only net8.0, roll-forward to runtime 12 | `(net8.0|x64, runtime: net12.0)`, exit 0, one executed/passed each. The app target, MTP package asset (`netstandard2.0`), and runtime are all different. |
+| Project and module-only net8.0, roll-forward to runtime 12 | `(net8.0\|x64, runtime: net12.0)`, exit 0, one executed/passed each. The app target, MTP package asset (`netstandard2.0`), and runtime are all different. |
 | Missing TargetFrameworkAttribute, module-only | `(x64, runtime: net481)`, exit 0, one executed/passed; no invented target. |
 | Missing TargetFrameworkAttribute, project | Known project `net472` stays primary, exit 0, one executed/passed. |
-| Actual x86 process | `(net472|x86, runtime: net481)`, exit 0, one executed/passed; not AnyCPU or parent architecture. |
+| Actual x86 process | `(net472\|x86, runtime: net481)`, exit 0, one executed/passed; not AnyCPU or parent architecture. |
 | Deliberate failed test | Correct target/runtime identity, exit 2, one executed/failed and zero passed. |
 | Zero-result selection | Correct target/runtime identity, exit 8, zero selected/executed/passed/failed. This is intentionally not an outer green-test execution gate. |
 
