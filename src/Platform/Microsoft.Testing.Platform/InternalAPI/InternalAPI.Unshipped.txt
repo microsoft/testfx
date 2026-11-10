@@ -79,6 +79,8 @@ Microsoft.Testing.Platform.Helpers.SystemFileStream.SystemFileStream(System.IO.F
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TestRequestExecutionTimeInfo(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo timingInfo) -> void
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TimingInfo.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 *REMOVED*Microsoft.Testing.Platform.Requests.TestHostTestFrameworkInvoker.DataTypesProduced.get -> System.Type![]!
+*REMOVED*Microsoft.Testing.Platform.Requests.ValueExpression.Regex.get -> System.Text.RegularExpressions.Regex!
+Microsoft.Testing.Platform.Requests.ValueExpression.IsMatch(string! input) -> bool
 *REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.ToString() -> string!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunNotSelected(string! assembly, string? targetFramework, string? architecture) -> void
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler
