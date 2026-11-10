@@ -391,6 +391,31 @@ namespace SomeNamespace
     }
 
     [TestMethod]
+    public void SelfRegisteredExtensions_UsesProjectResolvedFullPath()
+    {
+        string outputPath = Path.Combine(TestContext.TestTempDirectory!, "extensions.cs");
+        InMemoryFileSystem fileSystem = new();
+        CustomTaskItem sourcePath = new CustomTaskItem("obj/extensions.cs").Add("FullPath", outputPath);
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = sourcePath,
+            Language = new CustomTaskItem("C#"),
+            SelfRegisteredExtensionsBuilderHook =
+            [
+                new CustomTaskItem("hook").Add("DisplayName", "Hook").Add("TypeFullName", "Contoso.Hook"),
+            ],
+        };
+
+        Assert.IsTrue(task.Execute());
+
+        Assert.AreEqual(outputPath, Assert.ContainsSingle(fileSystem.Files.Keys));
+        Assert.Contains("global::Contoso.Hook.AddExtensions(builder, args);", fileSystem.Files[outputPath]!);
+        Assert.AreSame(sourcePath, task.SelfRegisteredExtensionsGeneratedFilePath);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
     public void SelfRegisteredExtensions_Deduplicates_Exact_Duplicate_BuilderHooks()
     {
         InMemoryFileSystem inMemoryFileSystem = new();
@@ -636,6 +661,49 @@ namespace SomeNamespace
         Assert.Contains($"Missing '{missingMetadata}' metadata", error);
         Assert.Contains("<TestingPlatformBuilderHook Include=\"8E680F4D-E423-415A-9566-855439363BC0\" >", error);
         Assert.Contains("static Contoso.BuilderHook.AddExtensions", error);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Copy configuration using resolved paths")]
+    [DataRow(true, DisplayName = "Merge configuration using resolved paths")]
+    public void ConfigurationFileTask_UsesProjectResolvedFullPaths(bool mergeDefaults)
+    {
+        string projectDirectory = TestContext.TestTempDirectory!;
+        string sourcePath = Path.Combine(projectDirectory, "testconfig.json");
+        string outputPath = Path.Combine(projectDirectory, "bin", "Tests.testconfig.json");
+        InMemoryFileSystem fileSystem = new();
+        fileSystem.Files[sourcePath] = """{"project":"expected"}""";
+        ConfigurationFileTask task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformConfigurationFileSource = new CustomTaskItem("testconfig.json").Add("FullPath", sourcePath),
+            MSBuildProjectDirectory = new CustomTaskItem("project").Add("FullPath", projectDirectory),
+            AssemblyName = new CustomTaskItem("Tests"),
+            OutputPath = new CustomTaskItem("bin"),
+            TestingPlatformCommandLineOptionDefault = mergeDefaults
+                ? [new CustomTaskItem("filter-uid").Add("Value", "project-test")]
+                : null,
+        };
+
+        Assert.IsTrue(task.Execute());
+
+        Assert.IsNotNull(task.FinalTestingPlatformConfigurationFile);
+        Assert.AreEqual(outputPath, task.FinalTestingPlatformConfigurationFile.ItemSpec);
+        Assert.HasCount(2, fileSystem.Files);
+        using var configuration = JsonDocument.Parse(fileSystem.Files[outputPath]!);
+        Assert.AreEqual("expected", configuration.RootElement.GetProperty("project").GetString());
+        if (mergeDefaults)
+        {
+            Assert.AreEqual(
+                "project-test",
+                configuration.RootElement.GetProperty("commandLineOptionDefaults").GetProperty("filter-uid").GetString());
+        }
+        else
+        {
+            Assert.AreEqual("""{"project":"expected"}""", fileSystem.Files[outputPath]);
+        }
+
+        Assert.IsEmpty(_errors);
     }
 
     [TestMethod]
@@ -1086,7 +1154,9 @@ namespace SomeNamespace
 
         public void CopyMetadataTo(ITaskItem destinationItem) => throw new NotImplementedException();
 
-        public string? GetMetadata(string metadataName) => _keyValuePairs.TryGetValue(metadataName, out string? value) ? value : null;
+        public string? GetMetadata(string metadataName) => _keyValuePairs.TryGetValue(metadataName, out string? value)
+            ? value
+            : metadataName == "FullPath" ? ItemSpec : null;
 
         public void RemoveMetadata(string metadataName) => throw new NotImplementedException();
 

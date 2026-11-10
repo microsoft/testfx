@@ -179,7 +179,7 @@ public sealed class TestHostTestFrameworkInvokerTests
         Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> otel = new();
         otel.Setup(o => o.StartTestExecutionActivity(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>()))
             .Returns(activity.Object);
-        TestExecutionActivityBroker broker = new(otel.Object, PlatformOpenTelemetryOptions.Default);
+        TestExecutionActivityBroker broker = new(otel.Object);
         TestExecutionActivityReservation reservation = broker.Reserve(new TestNode { Uid = "test-17", DisplayName = "Case 17" })!;
         reservation.Activate();
         ScopeInvoker invoker = new(services);

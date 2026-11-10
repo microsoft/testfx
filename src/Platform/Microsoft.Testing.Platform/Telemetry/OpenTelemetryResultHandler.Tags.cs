@@ -58,24 +58,13 @@ internal sealed partial class OpenTelemetryResultHandler
 
     internal static IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(
         TestNode testNode,
-        TestNodeUid? parentUid,
-        PlatformOpenTelemetryOptions options)
+        TestNodeUid? parentUid)
     {
         yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseName, testNode.DisplayName);
         yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseId, testNode.Uid.Value);
         if (parentUid is not null)
         {
             yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseParentId, parentUid.Value);
-        }
-
-        if (options.EmitLegacyAttributes)
-        {
-            yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestName, testNode.DisplayName);
-            yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestId, testNode.Uid.Value);
-            if (parentUid is not null)
-            {
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestParentId, parentUid.Value);
-            }
         }
 
         // Single pass over the property bag for the two singleton properties below: two separate
@@ -113,27 +102,12 @@ internal sealed partial class OpenTelemetryResultHandler
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeFunctionName, GetFullyQualifiedName(identifierProperty));
             yield return new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, identifierProperty.TypeName);
             yield return new(TestingPlatformSemanticConventions.Attributes.TestAssemblyName, identifierProperty.AssemblyFullName);
-
-            if (options.EmitLegacyAttributes)
-            {
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestMethod, identifierProperty.MethodName);
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestClass, identifierProperty.TypeName);
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestNamespace, identifierProperty.Namespace);
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly, identifierProperty.AssemblyFullName);
-            }
         }
 
         if (testLocationProperty is not null)
         {
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeFilePath, testLocationProperty.FilePath);
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeLineNumber, testLocationProperty.LineSpan.Start.Line);
-
-            if (options.EmitLegacyAttributes)
-            {
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestFilePath, testLocationProperty.FilePath);
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestLineStart, testLocationProperty.LineSpan.Start.Line);
-                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestLineEnd, testLocationProperty.LineSpan.End.Line);
-            }
         }
 
         // The metadata is yielded after the blocks above, so it needs its own pass. OfType<TestMetadataProperty>()
@@ -147,10 +121,6 @@ internal sealed partial class OpenTelemetryResultHandler
             }
 
             yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix}{metadata.Key}", metadata.Value);
-            if (options.EmitLegacyAttributes)
-            {
-                yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix}{metadata.Key}", metadata.Value);
-            }
         }
     }
 }

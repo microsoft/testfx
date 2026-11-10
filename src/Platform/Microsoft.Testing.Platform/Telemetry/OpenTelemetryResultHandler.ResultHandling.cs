@@ -14,11 +14,6 @@ internal sealed partial class OpenTelemetryResultHandler
 
     private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty, bool recordMetrics = true)
     {
-        if (recordMetrics)
-        {
-            _totalCompletedTests?.Add(1);
-        }
-
         (string result, Exception? exception, TimeSpan? timeoutTime) = stateProperty switch
         {
             PassedTestNodeStateProperty => (TestingPlatformSemanticConventions.TestResultStatus.Pass, null, null),
@@ -124,20 +119,6 @@ internal sealed partial class OpenTelemetryResultHandler
 
         activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, truncatedExplanation);
 
-        if (_options.EmitLegacyAttributes)
-        {
-            // The legacy attribute keeps its original "passed"/"failed" spellings; the semantic-convention
-            // attribute uses the upstream "pass"/"fail" enum.
-            if (finalResult is not null)
-            {
-                activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(finalResult));
-            }
-
-            // Truncated as well: emitting the legacy twin untruncated would defeat the size limit, since legacy
-            // attributes are on by default.
-            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation, truncatedExplanation);
-        }
-
         if (activity is not null && exception is not null)
         {
             // The OpenTelemetry convention is an "exception" event carrying the type/message/stack trace, plus
@@ -160,13 +141,6 @@ internal sealed partial class OpenTelemetryResultHandler
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exceptionTypeName);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, truncatedStackTrace);
 
-            if (_options.EmitLegacyAttributes)
-            {
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType, exceptionTypeName);
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage, truncatedMessage);
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace, truncatedStackTrace);
-            }
-
             if (finalResult is not null)
             {
                 activity.SetStatus(PlatformActivityStatusCode.Error, truncatedMessage);
@@ -188,10 +162,6 @@ internal sealed partial class OpenTelemetryResultHandler
         if (timeoutTime is not null)
         {
             activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseTimeoutMilliseconds, timeoutTime.Value.TotalMilliseconds);
-            if (_options.EmitLegacyAttributes)
-            {
-                activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout, timeoutTime.Value.TotalMilliseconds);
-            }
         }
 
         SetResultDetails(testNode, measurementTags, activity, recordMetrics);
@@ -199,10 +169,6 @@ internal sealed partial class OpenTelemetryResultHandler
         {
             double totalMilliseconds = occurrenceDuration.Value.TotalMilliseconds;
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds, totalMilliseconds);
-            if (_options.EmitLegacyAttributes)
-            {
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestDuration, totalMilliseconds);
-            }
         }
     }
 
@@ -238,11 +204,6 @@ internal sealed partial class OpenTelemetryResultHandler
                     break;
                 case TestMetadataProperty metadataProperty:
                     activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix}{metadataProperty.Key}", metadataProperty.Value);
-                    if (_options.EmitLegacyAttributes)
-                    {
-                        activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix}{metadataProperty.Key}", metadataProperty.Value);
-                    }
-
                     break;
                 case StandardOutputProperty outputProperty:
                     if (standardOutputProperty is not null)
@@ -273,24 +234,14 @@ internal sealed partial class OpenTelemetryResultHandler
             if (recordMetrics)
             {
                 _testCaseDuration.Record(timingProperty.GlobalTiming.Duration.TotalSeconds, measurementTags);
-                _totalDuration?.Record(totalMilliseconds);
             }
 
             activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds, totalMilliseconds);
-            if (_options.EmitLegacyAttributes)
-            {
-                activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestDuration, totalMilliseconds);
-            }
 
             foreach (StepTimingInfo step in timingProperty.StepTimings)
             {
                 activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.TestStepPrefix}{step.Id}.duration", step.Timing.Duration.TotalMilliseconds);
                 activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.TestStepPrefix}{step.Id}.description", step.Description);
-                if (_options.EmitLegacyAttributes)
-                {
-                    activity?.SetTag($"test.step{step.Id}.duration.ms", step.Timing.Duration.TotalMilliseconds);
-                    activity?.SetTag($"test.step{step.Id}.description", step.Description);
-                }
             }
         }
 
@@ -299,18 +250,11 @@ internal sealed partial class OpenTelemetryResultHandler
             return;
         }
 
-        // Truncated for both the semantic-convention and the legacy names: test output routinely runs to megabytes
-        // and can contain secrets.
+        // Test output routinely runs to megabytes and can contain secrets.
         string standardOutput = _options.Truncate(standardOutputProperty?.StandardOutput) ?? string.Empty;
         string standardError = _options.Truncate(standardErrorProperty?.StandardError) ?? string.Empty;
 
         activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStdout, standardOutput);
         activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStderr, standardError);
-
-        if (_options.EmitLegacyAttributes)
-        {
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStdout, standardOutput);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStderr, standardError);
-        }
     }
 }
