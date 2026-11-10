@@ -204,7 +204,131 @@ still expected the intentionally removed `test.result=passed` alias. Its mock
 showed the correct `test.case.result.status=pass` on the second activity.
 The coupled positive assertion and the first activity's no-outcome assertion
 were migrated to the canonical key without weakening the oldest-activity
-association check. Rebuild and full-selection rerun remain pending.
+association check.
+The corrected owner was subsequently rebuilt with `BuildProjectReferences=false`;
+all **168 cases passed on each of .NET 10, .NET 11, and .NET Framework 4.6.2**
+(504 executed/passed, no failures or skips). Structured discovery, the TRX
+execution gate, and JUnit/CTRF parsing verified every run.
+
+### 2026-11-10: shipping packages and consumers
+
+The complete source-product pack at
+`8d006ba6208f2d0b35a92d45824faa3d9286ec81` exited 0 with no warnings/errors.
+Default desktop-engine/UAP assets and all NuGet content/metadata guards were
+retained:
+
+```powershell
+.\build.cmd -pack -c Release /m:2 /nr:false /p:UseSharedCompilation=false /p:Projects=Q:\dev\copilot-worktrees\testfx\evangelink-literate-guide\src\*\*\*.csproj /bl:artifacts\log\Release\telemetry-source-pack-1.binlog
+```
+
+The native `/p:Projects` glob avoids the wrapper's unescaped expanded
+semicolon-list problem. No mirrored build files, package guards, or supported
+asset sets were changed to obtain a successful pack.
+
+Affected utility/test owners were built individually with the repository script,
+`-c Release`, `/m:1 /nr:false /p:UseSharedCompilation=false`,
+`/p:BuildProjectReferences=false`, and separate owner binlogs. All passed with
+no warnings/errors. The adapter consumer compiled for all five declared targets.
+The actual acceptance hosts target `net12.0`; generated external-framework
+consumers target `net11.0`, and the native MSTest consumer runs `net10.0` and
+`net11.0`.
+
+The first generated exporter fixture failed compilation because its two
+snapshot records were accidentally nested in the exporter rather than visible
+to the verifier. Their scope was corrected without changing any assertion.
+That setup failure is not counted as regression sensitivity. Fixed retained
+test patch SHA-256:
+`4FEB587EAE7E232157C4B9A1139AF5181806252806873C899B353BB066155DF1`.
+The same fixed test source and byte-identical outer assertion assembly were
+used for every paired run; the latter's SHA-256 is
+`5A4937AEC817021541C9BDFE3E8353B0BFAF7026A2AEFE4D1597392B89022A69`.
+
+The package-consuming exporter selection is:
+
+```text
+FullyQualifiedName~Microsoft.Testing.Platform.Acceptance.IntegrationTests.OpenTelemetryTests
+```
+
+It selects these two methods, each with the retired setting unset, `"0"`, and
+`"1"`:
+
+- `HostApplicationBuilderProviders_ConsumeMtpDiagnosticsAndPreserveApplicationResource`
+- `ExternalFramework_PublicCanonicalExecutionApi_ProducesOneIsolatedSpanPerExecution`
+
+The direct Release acceptance apphost used `--filter $filter --report-trx`
+with named result files/directories, `--show-test-results all --progress off
+--ansi off`. Independent `--list-tests json` discovery supplied the six-name
+execution plan; stderr diagnostics were captured separately from JSON stdout.
+Both the initial corrected green run and the final post-counterfactual replay
+exited 0 with **6 planned/selected/executed/passed, 0 failed/skipped**, verified
+by `verify_execution.py`. Each intentionally mixed pass/fail child exited 2;
+the outer assertions require that exit and then verify the exported data.
+
+`MSTestSdk_ApplicationOwnedOpenTelemetry_UsesOneCanonicalTestActivity`
+also passed both .NET 10/11 rows: **2 executed/passed, 0 failed/skipped,
+outer exit 0**. Its existing fixture additionally builds a source-generation
+variant; only the two actual reflection executions are credited here.
+
+Existing real-SDK provider/listener/wrapper/environment tests passed
+**95/95 on each of net10.0, net11.0, net462, and net472** (380 executions).
+Their exact selection was
+`FullyQualifiedName~OpenTelemetryProviderExtensionsTests|FullyQualifiedName~OpenTelemetryPlatformServiceTests|FullyQualifiedName~MeasurementWrapperTests|FullyQualifiedName~OpenTelemetryEnvironmentVariablesTests`.
+Independent discovery and the fresh-TRX gate verified all four runs.
+
+### Executed paired sensitivity and package provenance
+
+The isolated comparison starts at pristine production
+`c46cfa7394e7be10c4057d3ba8d1d3b698fe242e`, retains the fixed test source,
+and runs the byte-identical green outer assertion assembly from inside that
+checkout. `RootFinder` resolves its package feeds from the copied assembly's
+location. Only the affected core is rebuilt/repacked; unchanged peer packages
+are fixed to their byte-identical green artifacts. This is an affected-core
+counterfactual with fixed peer packages, not a claim that the entire baseline
+repository was repacked.
+
+Both core variants were packed with:
+
+```powershell
+.\build.cmd -pack -c Release /m:2 /nr:false /p:UseSharedCompilation=false /p:Projects=Q:\dev\copilot-telemetry-counterfactual-c13fcd30\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /bl:artifacts\log\Release\<variant>-core-pack-1.binlog
+```
+
+The actual variant binlogs are `telemetry-baseline-core-pack-1.binlog` and
+`telemetry-wrong-unit-core-pack-1.binlog`; both commands exited 0 with no
+warnings/errors and package guards intact.
+
+| State / contract | Executed result with the same six exporter cases |
+| --- | --- |
+| Correct canonical-only core | 6 passed, outer exit 0, including the final replay after both comparisons. |
+| Pristine baseline core restores legacy output | 4 failed at the intended forbidden `SessionUid` attribute on `CreateTestFrameworkSession` (both modes, unset/`"1"`); both `"0"` cases passed. Outer exit 2, no skips/setup failures. |
+| Baseline plus one compiling wrong-unit mutation | 6 failed, outer exit 2. In particular both `"0"` cases reached the duration assertion and reported `count=1, duration=1250, samples=1` instead of 1.25 seconds. The other four still detected baseline legacy output. |
+
+The wrong-unit mutation changes only the canonical histogram's `TotalSeconds`
+to `TotalMilliseconds`; production patch SHA-256:
+`6291EAD4FBE0C602F78DD4B14F428EAFB79257FA9B4C38B4CE9AAD686E4E0130`.
+It was removed after the experiment. No counterfactual production change is
+present in the delivered worktree.
+
+Fresh, marked, run-owned caches selected through
+`TESTFX_COLLECTION_NUGET_CACHE` separate green, baseline, and wrong-unit
+packages despite their identical `3.0.0-dev` version. Generated `NuGet.config`
+and `project.assets.json` identify the intended feed, primary cache, package
+ID/version, and `lib/net11.0` runtime asset. The machine's additional Visual
+Studio fallback folder is recorded, not modified. The primary cached nupkg,
+cached DLL, every child's self-reported loaded DLL hash, and the physical loaded
+DLL all match the corresponding freshly packed nupkg payload:
+
+| Variant | Core nupkg SHA-256 | Executed net11.0 core DLL SHA-256 |
+| --- | --- | --- |
+| Green | `6B69635C0AA3D4AE96C5B5CE99CA45CBE94DD4E7B662CAFC15C7B126D03B3EF3` | `4712FA34954F619D68FEE700C351C74C470E45CA9C9047223EEF5C7CAAC84905` |
+| Baseline | `EF41412996AB094FD6217E9E2197257808157D35B25441DF1B5992F5E56E879D` | `DDEA8DBCF2983F6A07BCBA558D45A4D4E80B079A3D334F9722E1DFF69998BB39` |
+| Wrong unit | `35260E72983A6794A395F324D024D6A5C6AC3A3F69B13E6A32C032E5A393BDD0` | `86C692BEE861EBA27A65B166DF7712568B7D242894ADC6423899AD3AD048FEDD` |
+
+Native MSTest's .NET 10/11 core DLLs and effective package cache were checked
+against the same shipping package as well. The .NET 10 payload SHA-256 is
+`930A832018AB91CE2E9433A240DA0528536B5CF1B1ADE1D5F3B26BF4A3DA7DE6`.
+Logs, binlogs, raw TRX, discovery plans, and the detailed provenance JSON are
+retained in task-owned storage; the tables and failure excerpts above are the
+portable reviewer evidence. No live telemetry or credentials were published.
 
 ## Alternatives and decision
 
@@ -221,14 +345,14 @@ readiness remains a rollout responsibility, not a claim made by this PR.
 
 ## Validation and demonstration
 
-Planned evidence (updated with actual results before publication):
+Executed requirement coverage:
 
 | Requirement / risk | Automated evidence | Consumed surface |
 | --- | --- | --- |
-| Canonical-only attributes and instruments | `Constructor_CreatesOnlyCanonicalInstrumentsWithUnits`, `ExtensionTags_ContainOnlyCanonicalIdentity`, `HandleTestResult_EmitsOnlyCanonicalAttributes`, and both package-consuming `OpenTelemetryTests` methods with the retired variable unset, `0`, and `1`. | In-process OpenTelemetry SDK export batches; no external endpoint. |
-| Exact values, identities, and units | `HandleTestResult_WithTimingProperty_RecordsSecondsOnSemanticConventionHistogram`; packaged export checks distinguish `FirstCases.First` / pass / 1250 ms from `SecondCases.Second` / fail / 750 ms, require 1.25 s / 0.75 s histogram samples and their exact suite/status dimensions, and check the failure's own exception event. | Exported activity tags/events and metric points, not only console markers. |
-| Lifecycle and unrelated behavior | Existing `CompleteScope_DrainAndDisposeFailuresPreservePrimaryAndSecondaryExceptions`, execution/broker tests, result-handler retry/active-count tests, OpenTelemetry provider tests, and `MSTestSdk_ApplicationOwnedOpenTelemetry_UsesOneCanonicalTestActivity`. | Source-backed unit execution and native MSTest packaged topology. |
-| Regression sensitivity | Same assertions against isolated old-output behavior; a compiling wrong-unit mutation if needed to prove conversion sensitivity. | Separate outputs and fresh generated-consumer caches. |
+| Canonical-only attributes and instruments | Passed: `Constructor_CreatesOnlyCanonicalInstrumentsWithUnits`, `ExtensionTags_ContainOnlyCanonicalIdentity`, `HandleTestResult_EmitsOnlyCanonicalAttributes`, and both package-consuming `OpenTelemetryTests` methods with the retired variable unset, `0`, and `1`. | Real in-process SDK export batches; no external endpoint. |
+| Exact values, identities, and units | Passed: `HandleTestResult_WithTimingProperty_RecordsSecondsOnSemanticConventionHistogram`; packaged checks distinguish `FirstCases.First` / pass / 1250 ms from `SecondCases.Second` / fail / 750 ms, require 1.25 s / 0.75 s histogram samples and exact suite/status dimensions, and check the failure's own exception event. | Exported activity tags/events and metric points, not only console markers. |
+| Lifecycle and unrelated behavior | Passed: `CompleteScope_DrainAndDisposeFailuresPreservePrimaryAndSecondaryExceptions`, execution/broker tests, retry/active-count tests, provider tests, and `MSTestSdk_ApplicationOwnedOpenTelemetry_UsesOneCanonicalTestActivity`. | Source-backed unit execution and native MSTest packaged topology. |
+| Regression sensitivity | Executed: identical exporter assertions detect restored baseline legacy output and the compiling wrong-unit mutation; final correct implementation passes again. | Separate outputs, exact package/DLL hashes, fresh per-variant consumer caches. |
 
 Both relevant test assemblies use method-level parallelism with CPU-count
 workers. Result-handler tests use instance-owned mocks, not global listeners.
@@ -238,17 +362,26 @@ limit, and enables the SDK so inherited CI settings cannot change the probe's
 expected output. The output-capture opt-out is checked separately by
 `HandleTestResult_WithOutputCaptureDisabled_OmitsOutputWithoutSuppressingResult`.
 Existing listener filtering/resource declarations remain in place; no assembly
-scheduling change or global environment mutation is planned.
+scheduling change or global environment mutation was introduced.
 
 This is nonvisual telemetry. Exported names, values, units, and associations are
 the consumed contract, so an accessible text transcript is more useful than a
 screenshot. External dashboards are unavailable and outside the authorized
 scope; their queries/rendering and migration are not validated here.
 
-## Open questions and rollout
+## Rollout boundaries and remaining gaps
 
 External dashboards must migrate before adopting MTP 3; no dashboard readiness
 is inferred from local tests. This is a main/MTP 3 change, not a 2.x servicing
 backport. The telemetry PR owner is responsible for the core/extension package
 validation and migration documentation; downstream dashboard owners retain
 their own rollout responsibility.
+
+Full CI completion for the final published head is not inferred from these local
+runs. Individual legacy-name removals were not each subjected to a separate
+mutation campaign; the complete canonical-only export shape is asserted in
+green, and the legacy cohort is detected at its first forbidden attribute in
+the baseline comparison. The owned comparison source/package was restored and
+no task-owned build/compiler process remained. Named caches, comparison checkout,
+and evidence files are deliberately retained for reproducibility; shared/global
+caches and other sessions were untouched.

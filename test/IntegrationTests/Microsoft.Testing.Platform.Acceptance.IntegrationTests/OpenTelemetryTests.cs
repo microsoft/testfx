@@ -613,10 +613,6 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
         }
     }
 
-    internal sealed record MetricSnapshot(string? Unit, MetricPointSnapshot[] Points);
-
-    internal sealed record MetricPointSnapshot(Dictionary<string, object?> Tags, double Value, long Count);
-
     public Resource? GetCapturedResource()
     {
         lock (_syncRoot)
@@ -625,6 +621,10 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
         }
     }
 }
+
+internal sealed record MetricSnapshot(string? Unit, MetricPointSnapshot[] Points);
+
+internal sealed record MetricPointSnapshot(Dictionary<string, object?> Tags, double Value, long Count);
 
 internal sealed class SingleTestFramework(ActivitySource activitySource, string executionMode) : ITestFramework, IDataProducer
 {
