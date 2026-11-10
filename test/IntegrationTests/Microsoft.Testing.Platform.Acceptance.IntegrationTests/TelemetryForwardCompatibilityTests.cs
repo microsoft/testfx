@@ -46,6 +46,7 @@ public class TelemetryForwardCompatibilityTests : AcceptanceTestBase<TelemetryFo
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        testHostResult.AssertOutputContains($"PlatformAssemblyPath: {Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Platform.dll")}");
 
         // Guard explicitly against the #9710 failure mode so a regression produces an actionable message
         // rather than an opaque native crash exit code.
@@ -95,6 +96,7 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        Console.WriteLine($"PlatformAssemblyPath: {typeof(ITestApplicationBuilder).Assembly.Location}");
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),

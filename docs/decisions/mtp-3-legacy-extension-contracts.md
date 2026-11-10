@@ -108,10 +108,110 @@ silent runtime fallback is introduced.
 | Supported old extensions remain usable | Packed `ForwardCompatibilityTests` with the narrowly migrated Retry pin and enabled-telemetry `TelemetryForwardCompatibilityTests` on .NET Framework. | Actual generated consumers of local shipping packages. |
 | Current source generation and legacy reporters survive | Focused existing source-generation and TRX/JUnit packaged consumers. | Current source-generated adapter and final report artifacts. |
 
-Implementation, exact commands, revision-bound paired results, package
-provenance, and any unavailable evidence will be recorded here as they are run.
+### Executed results
+
+The implementation source is commit
+`e65a258740f90e366c1c6fb60f15d6aed45c094d`; the subsequent test-only delta adds
+loaded-assembly path assertions and enables CrashDump only on its supported
+modern .NET targets. CrashDump registration is retained on every target. The
+first expanded net462 run correctly rejected its unsupported `--crashdump`
+arrangement; correcting that arrangement produced four passing compatibility
+cases, including enabled Telemetry 2.1.0.
+
+All commands below used the repository-local
+`12.0.100-alpha.1.26556.115` SDK, Release, from the owned worktree root.
+
+```powershell
+.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -m:1 -nr:false -bl:artifacts\log\Release\binary-unit-final-1.binlog
+.\.dotnet\dotnet.exe build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -m:1 -nr:false -bl:artifacts\log\Release\binary-acceptance-final-2.binlog
+.\build.cmd -c Release -pack -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -bl /m:1 /nr:false /p:UseSharedCompilation=false
+```
+
+Each exited 0 with no warnings/errors. The supported focused pack also passed
+`verify-nupkgs` content/metadata validation without omitting UAP assets or
+weakening guards. A prior source-only `NoBuild=true` pack produced the relevant
+packages but was not a successful whole-source invocation: packaged-app custom
+targets still invoke Build and reject NoBuild. That unsupported invocation is
+not credited as a passing pack.
+
+The final unit filter was:
+
+```text
+FullyQualifiedName~LegacyExtensionContractTests|FullyQualifiedName~TestHostOrchestratorManagerTests|FullyQualifiedName~TestHostExecutionOrchestratorMiddlewarePipelineTests|FullyQualifiedName~TestHostHandleToProcessAdapterTests|FullyQualifiedName~TestHostBuilderTests.BuilderRegistration|FullyQualifiedName~SystemWrappersTests.ProcessWrappers|FullyQualifiedName~SystemWrappersTests.ProcessHandler|FullyQualifiedName~ActiveTestTrackerTests|FullyQualifiedName~TestExecutionActivityBrokerTests|FullyQualifiedName~ArtifactPostProcessingTests|FullyQualifiedName~TreeNodeFilterTests|FullyQualifiedName~ServerModePerCallOutputDeviceTests|FullyQualifiedName~TerminalTestReporterTests
+```
+
+`dotnet test --project <the unit project above> -c Release --no-build` used that
+filter, `--max-parallel-test-modules 1`, `-p:UsingDotNetTest=true`, and normal
+assembly scheduling (MethodLevel, 32 workers here). Separate discovery used
+`--list-tests text`: bare `--list-tests` consumed the following filter as the
+new SDK's format argument and was rejected before execution. The corrected
+discovery and final execution exited 0, with 520/520/521 planned and passed
+on net10/net11/net462: **1,561 passed, zero failed/skipped**. The execution gate
+reconciled every discovered display name and multiplicity with fresh per-module
+TRX; configured JUnit and CTRF reports also parsed successfully.
+
+The same 28 removal cases were run in isolated runtime directories with
+identical test assemblies, assertions, arguments, and scheduling. Green used
+the exact newly packed platform DLLs; red restored only the three preserved
+baseline platform DLLs built from `c46cfa7394e7be10c4057d3ba8d1d3b698fe242e`.
+This is a **baseline-binary restoration counterfactual**, not a claim that the
+entire historical source tree or package matrix was rebuilt.
+
+| Contract / cases | Restored baseline | Correct shipping DLLs |
+| --- | --- | --- |
+| Retired orchestrator types and concrete getter (12) | 12 intended `Assert.IsNull` failures | 12 passed |
+| Explicit-token process wait (9) | 9 intended `Assert.IsNull` failures; actual `Task WaitForExitAsync()` | 9 passed |
+| Retired engine friend access (6) | 6 intended `Assert.DoesNotContain` failures | 6 passed |
+| Core legacy-target polyfill exports (1) | Intended `Assert.DoesNotContain` failure for `Deconstruct` | Passed |
+
+Red exited 2 on each target; green exited 0 on each target. Counts were 9/9/10
+per state, with no missing/skipped cases. The first comparison shell inherited
+the final expected red exit; independent report verification returned 0 and
+the final shipping-DLL comparison normalized its harness exit to 0.
+
+Packed E2E selections used the same `dotnet test --project ... -c Release
+--no-build` entry point, `-p:UsingDotNetTest=true`, isolated result directories,
+and explicit filters:
+
+| Filter / outer cases | Executed result |
+| --- | --- |
+| `FullyQualifiedName~ForwardCompatibilityTests` | 4 passed: the three mixed-extension TFMs and enabled Telemetry 2.1.0/net462. This substring deliberately includes the telemetry class. |
+| The exact default-location methods in `TrxTests` and `JUnitReportTests` | 6 passed, three TFMs per reporter; final report shapes/identities/outcomes asserted. |
+| `FullyQualifiedName~SourceGenerationNonAotTests.SourceGenerationNonAot_BuildsAndRunsTests_WithExitCodeZero` | 2 passed on net11/net10; each child executed 8 source-generated tests and a filtered one-test null-row run successfully. |
+
+All three outer commands exited 0; independent discovery-to-TRX gates verified
+4 + 6 + 2 cases, with zero skipped. Default source-generation fixture compilation
+also remained enabled. These are local results, not a claim about CI.
+
+### Package provenance
+
+The actual old-extension fixture resolved CrashDump/HangDump/HotReload/Telemetry/
+TRX 2.2.1, Retry 2.3.0, and Platform.MSBuild 2.3.0. The enabled-telemetry fixture
+resolved Telemetry 2.1.0; its netstandard DLL hash was
+`5D2B41F9A5315D3F28900C27FCA55C73A2AEFA507B2412DDA653FF63D767F1ED`,
+matching the independently inspected package.
+
+Generated `project.assets.json` files recorded fresh, run-owned caches under
+`artifacts\tmp\Release\testsuite\<run>\.packages`, not the shared package cache.
+Both compatibility programs asserted their real loaded platform assembly path.
+Every retained consumer output (including compiled source-gen variants) was
+hashed against the corresponding entry in this branch's shipping package.
+Adapter verification used its real `buildTransitive/<tfm>` layout, not an
+assumed `lib` path. No shared caches were cleared.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `Microsoft.Testing.Platform.3.0.0-dev.nupkg` | `F87D65A8A86671FD01A72B51D56B37BB783FA1541FB29DF13A472ED1FA8AC47C` |
+| Packed net10 platform DLL | `46C0BAE100DAF5FD0052B94874A87D7D2DAF273A7C719B63F1AFF6BE2AFBC48F` |
+| Packed net11 platform DLL | `6D331A1BADC22AEF3676C7AC0EE2216AFCBFB802FC37660F570AF966AEE477E2` |
+| Packed netstandard platform DLL | `D07EE3609A727019BE1D2C94C8DC3274F7C5AEC139C9942F0F76D86B091E5306` |
+
+Binlogs, per-module TRX/XML/CTRF, discovery plans, raw assertion failures and
+package/consumer hash manifests are retained in task-owned artifact storage;
+the PR includes the decisive transcript/counters so local-only paths are not
+the sole reviewer evidence.
 External deprecated-engine applications are intentionally retired, not claimed
-as validated consumers. No user dashboard or external service is accessed.
+as validated consumers. No external dashboard or hosted UI was accessed or modified.
 
 ## Open questions
 

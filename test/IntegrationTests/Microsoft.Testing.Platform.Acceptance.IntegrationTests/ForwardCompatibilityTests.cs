@@ -15,10 +15,17 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
     public async Task NewerPlatform_WithPreviousExtensions_ShouldExecuteTests(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--crashdump --hangdump --report-trx --retry-failed-tests 3", cancellationToken: TestContext.CancellationToken);
+        string arguments = "--hangdump --report-trx --retry-failed-tests 3";
+        if (!TargetFrameworks.NetFramework.Contains(tfm))
+        {
+            arguments += " --crashdump";
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(arguments, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputContains($"PlatformAssemblyPath: {Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Platform.dll")}");
 
         string testResultsPath = Path.Combine(testHost.DirectoryName, "TestResults");
         Assert.IsTrue(Directory.Exists(testResultsPath), $"TestResults directory should exist at: {testResultsPath}");
@@ -85,6 +92,7 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        Console.WriteLine($"PlatformAssemblyPath: {typeof(ITestApplicationBuilder).Assembly.Location}");
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(new TrxReportCapability()),
