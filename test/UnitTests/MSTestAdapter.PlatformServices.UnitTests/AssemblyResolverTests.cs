@@ -212,6 +212,9 @@ public class AssemblyResolverTests : TestContainer
             startInfo.EnvironmentVariables[childVariable] = "1";
             startInfo.EnvironmentVariables["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US";
             startInfo.EnvironmentVariables["TESTINGPLATFORM_AZDO_OUTPUT"] = "off";
+
+            // Exercise retry isolation even when the parent is running its first attempt.
+            startInfo.EnvironmentVariables["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2";
             foreach (string variable in new[]
             {
                 "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
@@ -219,6 +222,7 @@ public class AssemblyResolverTests : TestContainer
                 "MTP_AFFECTED_TESTS_CHILD_PROCESS",
                 "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID",
                 "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH",
+                "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER",
                 "TESTINGPLATFORM_EXITCODE_IGNORE",
             })
             {
