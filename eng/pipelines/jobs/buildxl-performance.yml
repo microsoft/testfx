@@ -11,6 +11,10 @@ jobs:
     name: NetCore-Public
     demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
   variables:
+    # Match Arcade's public-job policy; the CodeQL tracer writes outside the BuildXL sandbox.
+    ${{ if eq(variables['System.TeamProject'], 'public') }}:
+      Codeql.SkipTaskAutoInjection: true
+      skipComponentGovernanceDetection: true
     BuildXLPerfResults: $(Build.ArtifactStagingDirectory)\buildxl-performance
     # Do not let reused agents supply a previous run's action/output state.
     # Package downloads are primed outside measured samples and never timed as cold-network work.
