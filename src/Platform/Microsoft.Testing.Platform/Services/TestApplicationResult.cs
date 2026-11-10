@@ -119,7 +119,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         switch (executionState)
         {
             case DiscoveredTestNodeStateProperty:
-                _openTelemetryResultHandler?.NotifyDiscovered();
                 // In discovery mode, discovered tests count toward the "ran" total.
                 if (_isDiscovery)
                 {
@@ -166,10 +165,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
                     message.TestNode,
                     message.ParentTestNodeUid,
                     executionActivityContext);
-                break;
-
-            default:
-                _openTelemetryResultHandler?.NotifyUnknown();
                 break;
         }
 

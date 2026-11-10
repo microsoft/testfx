@@ -60,9 +60,6 @@ internal static class EnvironmentVariableConstants
     // Maximum number of characters kept for a single captured output/stack trace attribute.
     public const string TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT = nameof(TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT);
 
-    // Opts out of emitting the pre-4.x attribute and instrument names alongside the semantic-convention ones.
-    public const string TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES = nameof(TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES);
-
     // Debugging
     public const string TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER);
     public const string TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER);

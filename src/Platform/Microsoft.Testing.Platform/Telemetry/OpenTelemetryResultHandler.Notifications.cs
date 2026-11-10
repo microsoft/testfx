@@ -7,26 +7,14 @@ namespace Microsoft.Testing.Platform.Telemetry;
 
 internal sealed partial class OpenTelemetryResultHandler
 {
-    internal void NotifyDiscovered()
-        => _totalDiscoveredTests?.Add(1);
-
     internal void NotifyPassed(TestNode testNode, TestNodeStateProperty stateProperty)
-    {
-        _totalPassedTests?.Add(1);
-        HandleTestResult(testNode, stateProperty);
-    }
+        => HandleTestResult(testNode, stateProperty);
 
     internal void NotifyFailed(TestNode testNode, TestNodeStateProperty stateProperty)
-    {
-        _totalFailedTests?.Add(1);
-        HandleTestResult(testNode, stateProperty);
-    }
+        => HandleTestResult(testNode, stateProperty);
 
     internal void NotifySkipped(TestNode testNode, TestNodeStateProperty stateProperty)
-    {
-        _totalSkippedTests?.Add(1);
-        HandleTestResult(testNode, stateProperty);
-    }
+        => HandleTestResult(testNode, stateProperty);
 
     internal void NotifySupersededRetryAttempt(TestNode testNode, TestNodeStateProperty stateProperty)
         => HandleTestResult(testNode, stateProperty, recordMetrics: false);
@@ -36,7 +24,6 @@ internal sealed partial class OpenTelemetryResultHandler
 
     internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid, PlatformActivityContext? executionActivityContext)
     {
-        _totalStartedTests?.Add(1);
         string activityName = GetActivityName(testNode);
         string? parentId = _otelService.TestFrameworkActivity?.Id;
         TestExecutionActivityProperty? canonicalActivity = GetTestExecutionActivityProperty(testNode);
@@ -58,7 +45,7 @@ internal sealed partial class OpenTelemetryResultHandler
             return;
         }
 
-        IEnumerable<KeyValuePair<string, object?>> tags = GetTestInitialInfo(testNode, parentUid, _options);
+        IEnumerable<KeyValuePair<string, object?>> tags = GetTestInitialInfo(testNode, parentUid);
         IPlatformActivity? activity =
             executionActivityContext is not null
             && _otelService is IPlatformOpenTelemetryServiceWithActivityLinks linkService
@@ -88,7 +75,6 @@ internal sealed partial class OpenTelemetryResultHandler
 
     internal void NotifyExecutionCompleted(TestNode testNode)
     {
-        _totalCompletedTests?.Add(1);
         if (GetTestExecutionActivityProperty(testNode) is { } canonicalActivity)
         {
             CompleteCanonicalActivity(canonicalActivity);
@@ -103,9 +89,6 @@ internal sealed partial class OpenTelemetryResultHandler
 
         activity?.Dispose();
     }
-
-    internal void NotifyUnknown()
-        => _totalUnknownTests?.Add(1);
 
     /// <summary>
     /// Records the run-level metrics. Called once, when the run verdict is known.

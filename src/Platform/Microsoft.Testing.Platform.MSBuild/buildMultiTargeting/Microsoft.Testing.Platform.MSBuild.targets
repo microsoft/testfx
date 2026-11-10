@@ -347,6 +347,7 @@
     <TestingPlatformSelfRegisteredExtensions SelfRegisteredExtensionsSourcePath="$(_SelfRegisteredExtensionsSourcePath)"
                                              SelfRegisteredExtensionsBuilderHook="@(TestingPlatformBuilderHook)"
                                              RootNamespace="$(RootNamespace)"
+                                             LaunchDebugger="$([System.String]::Equals('$(TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER)', '1'))"
                                              Language="$(Language)" >
       <Output TaskParameter="SelfRegisteredExtensionsGeneratedFilePath" PropertyName ="SelfRegisteredExtensionsGeneratedFilePath" />
     </TestingPlatformSelfRegisteredExtensions>
