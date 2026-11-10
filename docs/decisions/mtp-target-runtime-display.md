@@ -239,10 +239,63 @@ property, executed/passed one net472 test, and exited zero. Its old
 not repurposed. This session inspected its stdout and independent execution
 XML too.
 
-The final source/API freeze requires a fresh final producer package and a
-refreshed composed run; these v1 observations are not silently relabelled as
-final-package proof. Full-console constrained-width proof is still distinct
-from the passing 40/80/120-column SDK renderer-level checks.
+### Final source/package refresh
+
+The implementation was committed locally as
+`c2b618b17ef3ecbf46054cde3785476673ff9f63`, tree
+`6d4341b40cdf7a5174ddec89116a75ef22655dba`. This follow-up record changes
+evidence only; the producer/shared source remains that exact revision.
+The SDK counterpart was committed locally as
+`ce63d4292a5a7df62e651f12946e0570dd624d6d`.
+
+The final immutable package is
+`Microsoft.Testing.Platform.3.0.0-dev.framework7066.final1.nupkg`, SHA-256
+`E476C77337E7AF644D03D475F36DCECFE8307CB66BB36058316F6BA6FCAF8139`.
+Its nuspec source commit was read back and matched the implementation commit
+exactly. A new version and fresh `.packages-final1` cache prevented an earlier
+development package from satisfying the final consumer restore.
+
+The final managed SDK CLI SHA-256 is
+`EB6A8D101F8325448BEFFDEB40CA4A6A6F5CE36D2CF23FC59058BC4BF5B4579F`.
+The 13-case composed matrix above was rerun on this final pair, and this
+session reconciled every final independent execution XML with its retained
+summary. All expected outcomes were preserved, including exits 0/2/8,
+metadata absence, module-only target fallback, runtime roll-forward, and x86.
+Original-SDK-11/final-producer reverse compatibility also passed one test and
+exited zero. The SDK owner and coordinator separately verified the 363-case
+SDK suite, including existing real multi-module/TRX-merge coverage.
+
+Final cached/deployed package payloads were independently matched:
+
+| Asset | Final SHA-256 |
+| --- | --- |
+| `lib/netstandard2.0/Microsoft.Testing.Platform.dll` | `EF1F8A12D8B8B736D53FEB07E7765AC9233128C4A87AC3B0E0EFCA5D3761EE1F` |
+| `lib/net11.0/Microsoft.Testing.Platform.dll` | `35DE1521350C0C2EE04E9F90C0ED5DE15AEB5A62738795FA9A3F3EAADC574717` |
+
+The four new packed regressions were rerun against the final package:
+planned=selected=executed=passed=4, failed=skipped=0, outer exit=0.
+The fresh TRX interval was 2026-11-10 15:36:23Z through 15:36:34Z.
+Their in-test provenance checks compared both effective-cache and deployed
+payload bytes with the current shipping nupkg.
+
+The coordinator refreshed actual ANSI CLI inspection at its real 80x24
+viewport on the final SDK hash. The existing terminal canvas cannot resize
+its actual viewport, so a 40-column full CLI/PTTY inspection remains
+unavailable, not simulated. Executed renderer-level checks are separate:
+
+```text
+width 40:  [✓0/x0/↓0] Tests.exe (net472|x64)(1s)
+width 80:  [✓0/x0/↓0] Tests.exe (net472|x64, runtime: net481)(1s)
+width 120: [✓0/x0/↓0] Tests.exe (net472|x64, runtime: net481)(1s)
+long filename, width 40:
+           [✓0/x0/↓0] ...get.exe (net472|x64)(1s)
+```
+
+These are retained actual renderer strings with ANSI control codes removed,
+not cursor-resolved full-console screenshots. Their measured visible lengths
+were 37, 54, 54, and 38; all fit the configured widths. The two independent
+model reviews, these deterministic width checks, and actual normal-width CLI
+inspection establish different evidence and are not conflated.
 
 ## Validation and demonstration
 
@@ -250,13 +303,13 @@ from the passing 40/80/120-column SDK renderer-level checks.
 
 | Requirement / risk | Automated evidence | Rendered check / gap |
 | --- | --- | --- |
-| Genuine target, not package/runtime | `GetTargetFrameworkFromAssembly_UsesDeclaredMetadataRatherThanRuntimeOrDisplayName`; `IsCompatibleProtocolAsync_SeparatesDeclaredTargetFromExecutingRuntime` | New packed-producer composed lane pending. |
-| Unknown target stays unknown | `GetTargetFrameworkFromAssembly_WithNullAssembly_DoesNotInventRuntimeTarget`; `GetTargetFrameworkFromAssembly_WithoutTargetMetadata_DoesNotInventRuntimeTarget`; `GetDisplayName_KeepsTargetAndLabelsOnlyMeaningfulRuntimeDifferences` | Explicit architecture/runtime fallback verified in inspected released-producer module-only TRX; final SDK output evidence pending. |
-| Compact matching and labelled differing runtime | `GetDisplayName_KeepsTargetAndLabelsOnlyMeaningfulRuntimeDifferences`; `AssemblyRunStarted_RuntimeIdentityPersistsThroughStartCompletionAndSummary` | Released net472 output inspected as text; actual new-producer terminal inspection pending. |
-| Durable/progress identities agree | `ActualSimpleTerminalProgress_PreservesTargetAndSeparateRuntime`; `SlowTest_PreservesSeparateTargetAndRuntimeIdentity`; `AssemblyRunCompleted_ProcessFailureRecapKeepsRuntimeWithItsTarget` | ANSI/non-ANSI representative terminal proof pending. |
-| Constrained width preserves primary identity | `AnsiProgress_RuntimeSuffixRespectsWidthAndPreservesPrimaryIdentity` (before/at/after boundaries); `AnsiProgress_LongFilenameCannotDisplaceTargetAndArchitecture` | Normal/constrained actual product rendering pending. |
-| Old peers/signatures remain usable | `HandshakeMessage_RoundTrips` with and without target; `HandshakeMessagePropertyNames_AreStable`; `Constructor_PreservesSeparateRuntimeAndExistingCallShape`; unchanged existing suites | Actual released MTP 2.5.2 consumer compatibility inspected separately above. |
-| Packed application metadata/platform/missing attribute | `DotnetTestPipe_TargetFrameworkReflectsApplicationMetadata`; `DotnetTestPipe_FrameworkTargetIsNotInstalledRuntimeOrPackageTarget`; `DotnetTestPipe_TargetFrameworkIncludesDeclaredPlatform`; all four cases executed/passed | Final-package refresh pending after API freeze. |
+| Genuine target, not package/runtime | `GetTargetFrameworkFromAssembly_UsesDeclaredMetadataRatherThanRuntimeOrDisplayName`; `IsCompatibleProtocolAsync_SeparatesDeclaredTargetFromExecutingRuntime`; packed regressions and final composed matrix | Actual final-package module-only net472 and net8/runtime12 outputs inspected. |
+| Unknown target stays unknown | `GetTargetFrameworkFromAssembly_WithNullAssembly_DoesNotInventRuntimeTarget`; `GetTargetFrameworkFromAssembly_WithoutTargetMetadata_DoesNotInventRuntimeTarget`; `GetDisplayName_KeepsTargetAndLabelsOnlyMeaningfulRuntimeDifferences` | Final missing-attribute module/project outputs inspected separately; no target fabricated. |
+| Compact matching and labelled differing runtime | `GetDisplayName_KeepsTargetAndLabelsOnlyMeaningfulRuntimeDifferences`; `AssemblyRunStarted_RuntimeIdentityPersistsThroughStartCompletionAndSummary`; final composed matrix | Actual normal 80x24 ANSI inspection by coordinator; raw final outputs inspected here. |
+| Durable/progress identities agree | `ActualSimpleTerminalProgress_PreservesTargetAndSeparateRuntime`; `SlowTest_PreservesSeparateTargetAndRuntimeIdentity`; `AssemblyRunCompleted_ProcessFailureRecapKeepsRuntimeWithItsTarget` | Final real pass/failure/zero output and deterministic ANSI/non-ANSI rendering checked. |
+| Constrained width preserves primary identity | `AnsiProgress_RuntimeSuffixRespectsWidthAndPreservesPrimaryIdentity` (before/at/after boundaries); `AnsiProgress_LongFilenameCannotDisplaceTargetAndArchitecture`; SDK 40/80/120 checks | Renderer evidence executed; actual constrained CLI viewport unavailable, explicitly retained as a gap. |
+| Old peers/signatures remain usable | `HandshakeMessage_RoundTrips` with and without target; `HandshakeMessagePropertyNames_AreStable`; `Constructor_PreservesSeparateRuntimeAndExistingCallShape`; `AssemblyRunStarted_DefaultLiteralStillSelectsExistingAttemptOverload` | Actual released-MTP/new-SDK and new-MTP/old-SDK compatibility inspected separately. |
+| Packed application metadata/platform/missing attribute | `DotnetTestPipe_TargetFrameworkReflectsApplicationMetadata`; `DotnetTestPipe_FrameworkTargetIsNotInstalledRuntimeOrPackageTarget`; `DotnetTestPipe_TargetFrameworkIncludesDeclaredPlatform`; all four final-package cases executed/passed | Final shipping layout/cache/deployed hash equality asserted. |
 | Standalone stays separate | Existing fallback tests; packed net472 case asserts compact runtime banner, target identity, and no new `runtime:` suffix; executed/passed | Actual packed standalone stdout inspected in the regression. |
 
 ### Commands already executed
@@ -272,6 +325,7 @@ From the TestFx worktree, Debug:
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests\Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj -c Debug '-bl:artifacts\log\Debug\framework-protocol-contract.binlog' -v:quiet
 .\build.cmd -msbuildEngine dotnet -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066 -bl
 .\build.cmd -pack /p:VersionSuffix=dev.framework7066 -bl
+.\build.cmd -msbuildEngine dotnet -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066.final1 -bl
 python .github\scripts\test_check_localization.py
 python .github\scripts\check_localization.py
 ```
@@ -309,16 +363,71 @@ failed argument parsing and was not counted as discovery.
 
 ### Test-value evidence
 
-The source state is currently the selected base plus the implementation/test
-patch; final commit and immutable package identities will be filled in after
-the remaining validation. Green suites above are executed evidence, not yet
-paired regression-sensitivity evidence.
+The source state is implementation commit
+`c2b618b17ef3ecbf46054cde3785476673ff9f63`, against selected parent
+`c46cfa7394e7be10c4057d3ba8d1d3b698fe242e`. The isolated comparison retained
+every test/assertion/API and changed exactly two production lines:
+declared assembly metadata was made absent, and a nonempty primary identity
+discarded its secondary runtime. Its saved patch SHA-256 is
+`F2583430DB001AD1D686C2E2EA23E2EEAD861B7D9D4BE8189CC26FB69CD5944D`.
+This is a buildable behavior-removal counterfactual, not a pristine-base run.
 
 | Contract / test case | Counterfactual | Without behavior | Correct implementation | Evidence / gap |
 | --- | --- | --- | --- | --- |
-| Declared metadata / named parser and handshake cases | Buildable removal/corruption of target metadata in an isolated task-owned comparison | Not executed yet | Executed: passed | Isolation/repack evidence pending. |
-| Runtime identity / named display and lifecycle cases | Ignore the separate runtime while retaining the additive API | Not executed yet | Executed: passed | Paired sensitivity not yet claimed. |
-| Packed field 21 / named acceptance cases | Repack the comparison producer while retaining the same tests | Not executed yet | Not executed yet | Shipping-package and composed consumer validation pending. |
+| Declared metadata / `FrameworkWithoutDisplayName`, `FrameworkNameIsAuthoritative`, `PlatformWithoutDisplayName`, and handshake data cases | Set metadata lookup result to null, retaining the new API | Executed: detected; 10 parser + 3 handshake assertions fail | Executed: passed | Expected `net472`/platform-qualified target versus null; expected target-present true versus false. |
+| Runtime identity / `FrameworkRollForward`, `DifferentRuntime`, `RuntimeExactlyFits`, slow-test and process-recap cases | Retain runtime state/API but discard its suffix when a primary identity exists | Executed: detected; 13 renderer/formatter assertions fail | Executed: passed | Expected labelled secondary runtime versus primary-only output. |
+| Packed field 21 / `DeclaredModernTarget`, framework and platform cases | Rebuild/repack metadata-omitting producer, same tests and fresh cache | Executed: detected; three target-present assertions fail, missing-metadata case passes | Executed: passed; all four cases pass | Each red child exits normally; failures are the intended outer expected-true/actual-false metadata assertions, not launch failures. |
+
+The comparison first used session-artifact storage, where the generated
+platform-qualified application's Windows process path exceeded the usable
+launch length. That launch failure was excluded from behavioral proof. The
+owned comparison was relocated to the shorter
+`Q:\src\copilot-comparisons\testfx7066-ecb9`, rebuilt and repacked without
+changing tests, and the same complete selection was rerun successfully.
+
+| Same selection and configuration | Behavior removed | Restored committed behavior |
+| --- | --- | --- |
+| 426 net10.0 focused cases, Debug, pinned SDK | Exit 2; 426 executed, 400 passed, 26 assertion failures, zero skipped | Exit 0; 426 executed/passed, zero failed/skipped |
+| Four packed cases on net12.0 outer host, Debug, generated consumers Release | Exit 2; four executed, one passed, three intended target assertions, zero skipped | Exit 0; planned=selected=executed=passed=4, zero failed/skipped |
+
+Selected test identities and multiplicities were compared between each pair;
+they were identical. Both variants built with zero warnings/errors. The
+correct two production files were restored and `git diff --exit-code HEAD`
+confirmed the entire comparison source matched the implementation before
+the green rebuild/repack.
+
+Comparison package version stayed
+`3.0.0-dev.framework7066.final1`, but the feeds and per-run acceptance caches
+were isolated. Red package SHA-256:
+`731583084DDE38118948436A09C15BF003A65D025431279EF9D74BD7CE9E52FC`;
+restored comparison package SHA-256:
+`356C195B26381C33814F413EF0EC588E23DA3C25AB0A0458462215A73FB3813C`.
+These comparison-root builds are not the delivered package identified above.
+The tests checked the current physical nupkg/cache/deployed payload in each
+variant. The restored packed green interval was 2026-11-10 15:50:50Z through
+15:50:58Z.
+
+The counterfactual source build used the repository script and the same
+`VersionSuffix`; the focused runner used the exact selection above:
+
+```powershell
+.\build.cmd -msbuildEngine dotnet -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj /p:VersionSuffix=dev.framework7066.final1 -bl
+.\.dotnet\dotnet.exe build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug -p:VersionSuffix=dev.framework7066.final1 '-bl:artifacts\log\Debug\counterfactual-short-acceptance-build.binlog' -v:quiet
+.\build.cmd -msbuildEngine dotnet -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066.final1 -bl
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug --no-build --no-launch-profile --no-progress --filter 'FullyQualifiedName~DotnetTestPipeTargetFrameworkTests' -p:UsingDotNetTest=true -p:VersionSuffix=dev.framework7066.final1 '-p:ArtifactsTestResultsDir=<comparison>\artifacts\TestResults\Debug\<variant>' '-bl:artifacts\log\Debug\<variant>.binlog'
+```
+
+Both executions used those same arguments apart from separate result/binlog
+destinations. Red is intentionally nonzero and is not passed through the
+green-only execution gate; restored green passed the independent four-name
+gate. The unit runner was the built net10.0 DLL with the exact filter above,
+`--report-trx`, and separate red/green report paths.
+
+Retained session artifacts include the two-line patch, console logs,
+`sensitivity-evidence/{red,green}-{unit,packed}.trx`, and compilation/pack
+binlogs. They are local evidence, not uploaded/public artifacts. Concise
+results are preserved here so the decision does not depend on access to a
+local absolute path.
 
 Both affected unit assemblies retain MSTest method-level parallelization,
 Workers=0 (32 effective workers in these runs). New parser/formatter cases use
@@ -327,14 +436,39 @@ per-test fake state. Packed cases create distinct test assets and use the
 existing acceptance assembly's isolated restore cache. No new process-global
 mutation, shared asset writer, scheduling exclusion, or lock is introduced.
 
+### CI reachability
+
+The Windows pipeline's `SkipTests` parameter gates
+`eng\pipelines\steps\build-test-windows.yml`. Its ordinary Release path invokes
+`dotnet test --solution TestFx.slnx` through
+`test-windows-configuration-tests.yml`; Debug intentionally selects only
+unit-test modules. The new acceptance class is part of the existing MTP
+acceptance project, has no extra category/environment opt-in, and creates a
+unique mutable asset per case. Its two .NET Framework/platform cases retain
+the Windows OS condition. Existing affected-test/full-suite selection remains
+unchanged. No CI run was published or observed for these local commits, so
+CI execution is unproven rather than inferred from local results.
+
+### Delivery and owned cleanup
+
+The final source snapshot/26-file blob manifest and final1 package were
+transported to the SDK owner before the evidence-only follow-up. Both
+counterfactual checkouts and their SDK junction were removed after preserving
+paired TRX, source patch, logs, and binlogs; the repository-pinned SDK was
+preserved. Generated local consumer assets and immutable transport artifacts
+remain available for provenance/reproduction. A single SDK-install temporary
+file in the Windows system temp directory could not be deleted because access
+was denied; no ACL/elevation workaround or unrelated cleanup was attempted.
+No application/test process was intentionally left running.
+
 ## Open questions and delivery limits
 
-- Complete new-producer packed tests, isolated counterfactual, real composed
-  SDK pass/fail/zero/multi-module probes where the metadata boundary matters,
-  and actual terminal inspection at representative widths.
-- Freeze final TestFx/SDK source identities, package hashes, and resolved
-  consumer payloads before the final handoff.
+- Actual constrained-width full CLI/PTTY rendering remains unavailable with
+  the current canvas capabilities; normal 80x24 execution and deterministic
+  40/80/120 renderer checks are explicitly separate.
 - NativeAOT execution is not proven by a managed SDK build or unit tests;
   SDK native-linker prerequisites remain a reported environment limitation.
+- CI execution is unproven; all evidence above is local or retained
+  coordinated execution tied to the stated source/package identities.
 - Scope is main-derived, local implementation/delivery only. No publication,
   dependency rollout, servicing validation, or backport is implied.
