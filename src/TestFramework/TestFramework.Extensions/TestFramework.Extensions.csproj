@@ -46,7 +46,6 @@ $(CommonProductDescription)]]></PackageDescription>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
   <!-- UWP specific properties -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
@@ -84,8 +83,8 @@ $(CommonProductDescription)]]></PackageDescription>
   </ItemGroup>
 
   <ItemGroup>
-    <!-- WinUI dependency must not flow to consumers of the package. -->
-    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" PrivateAssets="all" />
+    <!-- Only WinUI is needed to build this library; consumers provide their own Windows App SDK. -->
+    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK.WinUI" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
