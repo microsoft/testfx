@@ -28,7 +28,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///   and assert, via the consumer's own exit code and stdout markers, that it discovered then ran the single
 ///   expected node over the JSON-RPC wire.</item>
 /// </list>
-/// The end-to-end run covers the net8.0 (System.Text.Json) axis vstest's .NET runner uses. A Unix-only net6.0
+/// The end-to-end run covers the net6.0 (Jsonite) and net8.0 (System.Text.Json) consumer axes. A Unix-only net6.0
 /// run additionally proves that the down-level package slice retries through the muxer when the sibling apphost
 /// exists but the current process cannot execute it. The package must have been produced first (build with
 /// <c>-pack</c>); otherwise the test fails with a hint.
@@ -103,7 +103,7 @@ internal static class Program
             SerializerUtilities.RegisterClientSerializers();
             IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
             const string ErrorJson = "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32700,\"message\":\"JSON parse error\"}}";
-#if NETCOREAPP
+#if MTP_CLIENT_USE_MODERN_DOTNET
             ErrorMessage error = (ErrorMessage)formatter.Deserialize<RpcMessage>(Encoding.UTF8.GetBytes(ErrorJson));
 #else
             ErrorMessage error = (ErrorMessage)formatter.Deserialize<RpcMessage>(ErrorJson);
@@ -326,8 +326,10 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public async Task PackagedConsumer_LaunchesRealServer_DiscoversAndRunsExpectedNode()
-        => await RunPackagedConsumerAsync(Net8Tfm, useManagedChildPath: false, TestContext.CancellationToken);
+    [DataRow(Net6Tfm)]
+    [DataRow(Net8Tfm)]
+    public async Task PackagedConsumer_LaunchesRealServer_DiscoversAndRunsExpectedNode(string targetFramework)
+        => await RunPackagedConsumerAsync(targetFramework, useManagedChildPath: false, TestContext.CancellationToken);
 
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = ".NET Framework requires Windows.")]
