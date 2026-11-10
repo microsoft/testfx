@@ -21,8 +21,7 @@ public sealed class JUnitReportGeneratorCommandLineTests
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
-        Assert.IsTrue(result.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+        result.AssertIsValid();
     }
 
     [TestMethod]
@@ -35,8 +34,7 @@ public sealed class JUnitReportGeneratorCommandLineTests
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["sub\\report.xml"]).ConfigureAwait(false);
 
-        Assert.IsTrue(result.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+        result.AssertIsValid();
     }
 
     [TestMethod]
@@ -49,8 +47,7 @@ public sealed class JUnitReportGeneratorCommandLineTests
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
-        Assert.IsTrue(result.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+        result.AssertIsValid();
     }
 
     [TestMethod]

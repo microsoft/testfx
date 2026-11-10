@@ -24,7 +24,11 @@ def extension_unit_tests():
         name = "extension_tests_binary",
         project = directory,
         exclude = [directory + "/Program.cs"],
-        linked_srcs = ["//eng/bazel:NativeUnitTestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
+        linked_srcs = [
+            "//eng/bazel:NativeUnitTestMain.cs",
+            "//eng/bazel:PortableTestFrameworkMetadata.cs",
+            "test/Utilities/ValidationResultExtensions.cs",
+        ],
         defines = ["TESTFX_TELEMETRY", "TESTFX_CRASHDUMP_IGNORE_UNSUPPORTED"],
         usings = ["Microsoft.Testing.TestInfrastructure", "Polyfills"],
         generate_documentation_file = False,

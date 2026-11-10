@@ -6,6 +6,7 @@ static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFr
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RuntimeFramework.get -> string?
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.TestProgressState(long id, string! assembly, string? targetFramework, string? architecture, Microsoft.Testing.Platform.Helpers.IStopwatch! stopwatch, bool isDiscovery, string? runtimeFramework) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunStarted(string! assembly, string? targetFramework, string? architecture, string! executionId, string! instanceId, int? attemptNumber, string? runtimeFramework) -> void
+*REMOVED*const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption = "no-ansi" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly = "test.assembly" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestClass = "test.class" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestDuration = "test.duration.ms" -> string!

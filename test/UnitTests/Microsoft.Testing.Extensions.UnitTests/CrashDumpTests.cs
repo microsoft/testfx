@@ -39,8 +39,7 @@ public sealed class CrashDumpTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [crashDumpType]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -62,8 +61,7 @@ public sealed class CrashDumpTests
         var provider = new CrashDumpCommandLineProvider();
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -97,8 +95,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -149,8 +146,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -164,8 +160,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -180,8 +175,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -225,8 +219,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -240,8 +233,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -257,8 +249,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -292,8 +283,7 @@ public sealed class CrashDumpTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]

@@ -54,10 +54,7 @@ internal sealed partial class TerminalOutputDevice
         }
 
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
-        bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
 
-        // --ansi <auto|on|off>, when present (with any value), takes precedence over the legacy --no-ansi flag.
-        // This keeps the help text honest: passing --ansi at all overrides --no-ansi.
         AnsiOverride ansiOverride = AnsiOverride.None;
         if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments)
             && ansiArguments is { Length: > 0 })
@@ -69,9 +66,6 @@ internal sealed partial class TerminalOutputDevice
                     ? AnsiOverride.ForceOff
                     : AnsiOverride.Auto;
         }
-
-        // When --ansi auto is explicitly specified, it overrides --no-ansi too.
-        bool effectiveNoAnsi = noAnsi && ansiOverride == AnsiOverride.None;
 
         // Honor the de-facto cross-tool NO_COLOR convention (https://no-color.org): when present with any
         // non-empty value, suppress ANSI color/cursor codes unless the user explicitly opted in via
@@ -95,7 +89,7 @@ internal sealed partial class TerminalOutputDevice
             // Fall back to environment-based detection.
             // In LLM environments, prefer simple text output so that the LLM can parse it easily.
             // NO_COLOR (https://no-color.org) is honored as well: any non-empty value suppresses ANSI.
-            _ when effectiveNoAnsi || noColorEnv || isLLMEnvironment => AnsiMode.NoAnsi,
+            _ when noColorEnv || isLLMEnvironment => AnsiMode.NoAnsi,
             _ when inCI => AnsiMode.SimpleAnsi,
             _ => AnsiMode.AnsiIfPossible,
         };
@@ -238,8 +232,7 @@ internal sealed partial class TerminalOutputDevice
         None,
 
         /// <summary>
-        /// The <c>--ansi auto</c> option was provided. The user explicitly opts in to auto-detection
-        /// (and out of the legacy <c>--no-ansi</c> flag if it was also passed).
+        /// The <c>--ansi auto</c> option was provided.
         /// </summary>
         Auto,
 

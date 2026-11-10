@@ -258,8 +258,8 @@ exec /usr/bin/mv "$@"
 
 
 class CompiledWarningContractTests(unittest.TestCase):
-    def assert_noop_detection_gate(self, name: str) -> None:
-        source, _ = authored(name + ".md")
+    def assert_noop_detection_gate(self, name: str, source_name: str | None = None) -> None:
+        source, _ = authored(source_name or name + ".md")
         jobs = compiled(name + ".lock.yml")["jobs"]
         gate = ("(needs.agent.outputs.output_types != '' && "
                 "needs.agent.outputs.output_types != 'noop') || "
@@ -280,8 +280,13 @@ class CompiledWarningContractTests(unittest.TestCase):
     def test_resource_lock_detection_skips_noop_only_runs(self) -> None:
         self.assert_noop_detection_gate("resource-lock-refactoring")
 
-    def assert_detection_security_controls(self, name: str) -> None:
-        source, _ = authored(name + ".md")
+    def test_expert_review_detection_skips_noop_only_runs(self) -> None:
+        for name in ("review.agent", "review-on-open.agent", "review-after-autofix.agent"):
+            with self.subTest(workflow=name):
+                self.assert_noop_detection_gate(name, "shared/review-shared.md")
+
+    def assert_detection_security_controls(self, name: str, source_name: str | None = None) -> None:
+        source, _ = authored(source_name or name + ".md")
         jobs = compiled(name + ".lock.yml")["jobs"]
         detection = source["safe-outputs"]["threat-detection"]
         self.assertEqual("detection", detection["model"])
@@ -303,6 +308,14 @@ class CompiledWarningContractTests(unittest.TestCase):
 
     def test_resource_lock_noop_skip_preserves_detection_security_controls(self) -> None:
         self.assert_detection_security_controls("resource-lock-refactoring")
+
+    def test_expert_review_noop_skip_preserves_detection_security_controls(self) -> None:
+        for name in ("review.agent", "review-on-open.agent", "review-after-autofix.agent"):
+            with self.subTest(workflow=name):
+                self.assert_detection_security_controls(name, "shared/review-shared.md")
+                source, _ = authored(name + ".md")
+                self.assertIs(False, source["safe-outputs"]["noop"]["report-as-issue"],
+                              "Skipping detection for noop-only output must not publish an issue")
 
     def test_build_publisher_checkouts_have_direct_identity_dependency(self) -> None:
         jobs = compiled("build-failure-analysis.lock.yml")["jobs"]

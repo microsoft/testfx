@@ -45,6 +45,12 @@ live progress feedback; retain it when investigating slow or hung tests. For
 older applications, inspect `--help`: the legacy `--no-ansi` and `--no-progress`
 options predate the positive `--ansi` and `--progress` options.
 
+MTP 3 removes the application's `--no-ansi` alias; use `--ansi off` for direct
+application and legacy-wrapper invocations. The native SDK's separately owned
+`--no-ansi` option above is unaffected. MTP's `--no-progress` removal remains
+blocked on an Arcade producer migration; prefer `--progress off` for application
+arguments. See the [migration boundaries and prerequisites](decisions/legacy-cli-migrations.md).
+
 | Behavior | MTP 2.3 through 2.x | MTP 3.0 development |
 | --- | --- | --- |
 | Captured stdout/stderr default | `Failed` in detected agent environments; `All` otherwise. | `Failed` in all environments. |

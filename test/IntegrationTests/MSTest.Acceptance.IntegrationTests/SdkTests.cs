@@ -259,7 +259,7 @@ namespace MSTestSdkTest
         string markerPath = Path.Combine(testAsset.TargetAssetPath, "working-directory.txt");
         string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
         DotnetMuxerResult runResult = await DotnetCli.RunAsync(
-            $"run --no-build -c Release -f {TargetFrameworks.NetCurrent} -- --coverage --coverage-settings \"{settingsPath}\" --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --results-directory \"{resultsDirectory}\" --no-ansi --progress off",
+            $"run --no-build -c Release -f {TargetFrameworks.NetCurrent} -- --coverage --coverage-settings \"{settingsPath}\" --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --results-directory \"{resultsDirectory}\" --ansi off --progress off",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: new()
             {

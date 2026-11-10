@@ -378,7 +378,7 @@ public sealed class TerminalTestReporterTests
             ShowStdout = OutputShowMode.All,
             ShowStderr = OutputShowMode.All,
 
-            // Like --no-ansi in commandline, should disable ANSI altogether.
+            // Like --ansi off in commandline, should disable ANSI altogether.
             AnsiMode = AnsiMode.NoAnsi,
 
             ShowProgress = () => false,
