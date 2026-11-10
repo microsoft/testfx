@@ -125,11 +125,12 @@ internal static partial class CtrfReportMerger
     /// non-cryptographic 128-bit FNV-1a fill is sufficient here — the id only needs to be deterministic and
     /// collision-resistant enough to identify a merged report, not secret.
     /// </summary>
-    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode, bool isSpecVersionPromoted)
+    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode, string? formatVersion)
     {
-        // Schema promotion also changes the document and must not reuse its pre-promotion identity.
-        string formatDiscriminator = isSpecVersionPromoted
-            ? "microsoft.testingplatform.lineage.v1.specVersion0.2.0"
+        // The 0.3.0 projection preserves new retry fields, even without schema promotion.
+        // Keep the existing discriminators for older formats.
+        string formatDiscriminator = formatVersion is not null
+            ? $"microsoft.testingplatform.lineage.v1.specVersion{formatVersion}"
             : "microsoft.testingplatform.lineage.v1";
         return CreateDeterministicId([formatDiscriminator, .. acceptedReports], (ulong)mode).ToString("D");
     }

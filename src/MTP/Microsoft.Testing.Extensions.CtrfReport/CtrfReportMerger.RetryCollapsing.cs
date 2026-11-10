@@ -22,6 +22,7 @@ internal static partial class CtrfReportMerger
         "duration",
         "message",
         "trace",
+        "assertionFailures",
         "line",
         "snippet",
         "stdout",

@@ -1,3 +1,7 @@
 #nullable enable
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Actual.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Actual.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Expected.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Expected.init -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN = "TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN" -> string!
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?

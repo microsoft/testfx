@@ -14,12 +14,14 @@ dotnet add package Microsoft.Testing.Extensions.CtrfReport
 
 This package extends Microsoft.Testing.Platform with:
 
-- **CTRF (Common Test Report Format) report**: a single JSON file conforming to the immutable [CTRF 0.2.0 schema](https://github.com/ctrf-io/ctrf/blob/v0.2.0/schema/ctrf.schema.json) that can be consumed by tools supporting that specification (dashboards, CI integrations, AI agents, etc.) without requiring a TRX or JUnit XML parser.
+- **CTRF (Common Test Report Format) report**: a single JSON file using the [reviewed CTRF 0.3.0 draft schema](https://github.com/ctrf-io/ctrf/blob/c109525a7567a629667ebbcdce1c03bdf7c79ab7/schema/ctrf.schema.json) that can be consumed by tools supporting that specification (dashboards, CI integrations, AI agents, etc.) without requiring a TRX or JUnit XML parser.
 - **Cross-tool interoperability**: same shape as outputs produced by other testing frameworks that adopt CTRF, so results from multiple test runs can be aggregated by a single consumer.
 
 ## Compatibility
 
-The stable 2.x package line supports the public registration API, existing CLI options, and documented CTRF 0.2.0 report semantics with backward compatibility. New execution reports remain pinned to the immutable 0.2.0 schema; a future upstream pre-1.0 specification is not adopted automatically. An incompatible schema or identity change requires a package major version or a separate explicit opt-in. Additive report fields must remain valid for the declared schema.
+The stable 2.x package line retains its documented CTRF 0.2.0 report semantics. The next major package version adopts CTRF 0.3.0 by default, including structured assertion failures, while preserving the public registration API and existing CLI options. The reviewed 0.3.0 schema is currently an upstream proposal, not a released specification; final upstream alignment is required before release. See the [assertion-failure proposal](https://github.com/ctrf-io/ctrf/pull/87).
+
+A future upstream pre-1.0 specification is not adopted automatically. An incompatible schema or identity change requires a package major version or a separate explicit opt-in. Additive report fields must remain valid for the declared schema.
 
 This commitment does not make the upstream CTRF working draft immutable, add cross-run identity guarantees to framework-provided UIDs, or turn producer-specific `extra` metadata into a stable interchange protocol. The identity and merge limitations below still apply.
 
@@ -42,6 +44,20 @@ When using MSTest.Sdk, the extension remains opt-in and is not enabled by any pr
 - `attachments[].path` is preserved without truncation as an opaque CTRF path value. Attachment names and descriptions retain their diagnostic size limits. A path can be a local absolute file path and consumers must not assume that it is remotely accessible.
 
 ## Logical runs and retries
+
+Failed attempts with an available structured comparison include one
+`assertionFailures` entry containing producer-formatted `expected` and/or
+`actual` strings. An unavailable side is omitted; an empty string remains a
+valid value. The explicit MTP `AssertionFailureProperty` takes precedence over
+the legacy exception-data keys. Comparison text follows the existing diagnostic
+size limits and survives crash recovery.
+
+The collection belongs only to its own attempt: earlier failures stay in
+`retryAttempts`, never on a later passing result. Overall `message` and `trace`
+remain on the enclosing result rather than being attributed to an individual
+assertion. When MSTest suppresses an ambiguous pair from multiple comparisons,
+the reporter retains those diagnostics without inventing assertion entries.
+The merger also preserves multiple entries supplied by other producers.
 
 For exceptions with inner causes, the test's `trace` retains the full exception
 representation, including nested and aggregate-exception branches. The `message`
@@ -81,9 +97,9 @@ Producer-owned metadata lives under the root `extra["microsoft.testingplatform"]
 
 For nested merges, `inputs` identifies the immediate parent reports, not a flattened list of all physical executions. Retain those immutable reports to follow their lineage. Legacy or foreign reports may lack IDs or this extension metadata; do not infer lineage from matching test names or a shared `runId`.
 
-When any input declares CTRF 0.2.0, the merged report also declares 0.2.0 regardless of input order. It accepts the reporter's historical 0.0.0 documents and the compatible 0.0.4/0.1.0 schema family alongside 0.2.0. Other or undeclared versions cannot be mixed with 0.2.0: the merge fails without overwriting its inputs or destination. Without a 0.2.0 input, the existing first-input version behavior is unchanged. Legacy final test objects retain their original identity fields; their optional native `attemptId` is not fabricated.
+When any input declares CTRF 0.3.0, the merged report also declares 0.3.0 regardless of input order. It accepts the reporter's historical 0.0.0 documents and the compatible 0.0.4/0.1.0/0.2.0 schema family. Without a 0.3.0 input, a 0.2.0 input still promotes those compatible earlier reports to 0.2.0. Other or undeclared versions cannot be mixed with 0.2.0 or 0.3.0: the merge fails without overwriting its inputs or destination. Without either reviewed version, the existing first-input version behavior is unchanged. Legacy final test objects retain their original identity fields; their optional native `attemptId` is not fabricated.
 
-A schema-promoted document gets a distinct deterministic `reportId` so it cannot be mistaken for the older merger's differently versioned output. Merging those same inputs again remains idempotent.
+A schema-promoted document gets a distinct deterministic `reportId` so it cannot be mistaken for the older merger's differently versioned output. The new 0.3.0 projection uses a separate identity discriminator because it preserves additional retry fields. Existing 0.2.0 merge identities are unchanged. Merging those same inputs again remains idempotent.
 
 For aggregate analysis, consume the merged report instead of also counting the input reports it represents. Retain raw inputs for diagnostics. Do not deduplicate solely by `runId`, because independent module reports legitimately share it. When input identities are unavailable, select the aggregate explicitly rather than assuming every report in a directory is disjoint.
 
@@ -93,7 +109,7 @@ Lineage is not proof of completeness. An input list records what contributed, no
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 
-For the versioned CTRF specification, see <https://github.com/ctrf-io/ctrf/blob/v0.2.0/spec/ctrf.md>.
+For the reviewed CTRF specification snapshot, see <https://github.com/ctrf-io/ctrf/blob/c109525a7567a629667ebbcdce1c03bdf7c79ab7/spec/ctrf.md>.
 
 ## Feedback & contributing
 

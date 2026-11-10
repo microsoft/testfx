@@ -15,7 +15,7 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// <list type="bullet">
 ///   <item><description><c>results.tests[]</c> arrays are concatenated, except that elements which are not Test objects are dropped so one input's malformed row cannot invalidate the merged document; <see cref="CtrfMergeMode.CollapseRetryAttempts"/> additionally folds successive attempts of the same test into one row.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
-///   <item><description><c>reportFormat</c> is taken from the first report. A 0.2.0 input promotes compatible earlier inputs to <c>specVersion</c> 0.2.0; unreviewed version mixtures are rejected. Otherwise the first report's version is retained. <c>reportId</c> is derived deterministically from the inputs, merge mode and schema promotion, so identical inputs reproduce the same id (RFC 018 idempotency) while materially different documents get distinct ids.</description></item>
+///   <item><description><c>reportFormat</c> is taken from the first report. A 0.3.0 input promotes compatible earlier inputs to <c>specVersion</c> 0.3.0; otherwise a 0.2.0 input promotes compatible earlier inputs to 0.2.0. Unreviewed version mixtures are rejected. Otherwise the first report's version is retained. <c>reportId</c> is derived deterministically from the inputs, merge mode and output format, so identical inputs reproduce the same id (RFC 018 idempotency) while materially different documents get distinct ids.</description></item>
 ///   <item><description><c>runId</c> is carried over when every input agrees on one, because the merged document describes the same logical run as its inputs while remaining a distinct artifact with its own <c>reportId</c> (see ctrf-io/ctrf#58).</description></item>
 ///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
 ///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
@@ -236,13 +236,15 @@ internal static partial class CtrfReportMerger
             throw new ArgumentException("None of the provided inputs were valid CTRF reports.", nameof(inputReports));
         }
 
-        // 0.2.0 only adds optional Test.attemptId to the schema used by our earlier reports.
+        // 0.3.0 adds optional assertion failures; 0.2.0 added optional Test.attemptId.
         // Do not infer compatibility across other pre-1.0 releases or undeclared versions.
-        bool useVersion02 = specVersions.Contains("0.2.0");
-        if (useVersion02 && specVersions.Any(version => version is not ("0.0.0" or "0.0.4" or "0.1.0" or "0.2.0")))
+        string? reviewedSpecVersion = specVersions.Contains("0.3.0")
+            ? "0.3.0"
+            : specVersions.Contains("0.2.0") ? "0.2.0" : null;
+        if (reviewedSpecVersion is not null && specVersions.Any(version => version is not ("0.0.0" or "0.0.4" or "0.1.0" or "0.2.0" or "0.3.0")))
         {
             throw new ArgumentException(
-                "CTRF 0.2.0 reports can only be merged with specification versions 0.0.0, 0.0.4, 0.1.0 or 0.2.0.",
+                $"CTRF {reviewedSpecVersion} reports can only be merged with specification versions 0.0.0, 0.0.4, 0.1.0, 0.2.0 or 0.3.0.",
                 invalidInputParameterName);
         }
 
@@ -335,11 +337,13 @@ internal static partial class CtrfReportMerger
         var merged = new JsonObject
         {
             ["reportFormat"] = first["reportFormat"]?.DeepClone() ?? "CTRF",
-            ["specVersion"] = useVersion02 ? "0.2.0" : first["specVersion"]?.DeepClone() ?? "0.0.0",
+            ["specVersion"] = reviewedSpecVersion is not null ? reviewedSpecVersion : first["specVersion"]?.DeepClone() ?? "0.0.0",
             ["reportId"] = CreateDeterministicReportId(
                 acceptedReports,
                 mode,
-                isSpecVersionPromoted: useVersion02 && ReadString(first, "specVersion") != "0.2.0"),
+                formatVersion: reviewedSpecVersion == "0.3.0" || (reviewedSpecVersion is not null && ReadString(first, "specVersion") != reviewedSpecVersion)
+                    ? reviewedSpecVersion
+                    : null),
         };
 
         // A merged document is a new artifact (hence its own reportId) but it still describes the same logical
