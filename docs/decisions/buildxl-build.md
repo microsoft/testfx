@@ -163,6 +163,14 @@ restored, and each job has a fresh package cache primed outside measured work.
 The job fails on build/output/cache-contract errors or an incomplete sample
 matrix, **not** on a noisy percentage threshold.
 
+The standalone job applies Arcade's existing public-project policy for
+`Codeql.SkipTaskAutoInjection` and `skipComponentGovernanceDetection`. Without
+those defaults, the CodeQL tracer injected into
+[run 1672558](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1672558)
+wrote `build-tracer.log` and `tags.db` outside BuildXL's declared outputs,
+failing sandbox validation. Keep sandbox enforcement enabled; CodeQL scanning
+remains in the official and dedicated CodeQL pipelines.
+
 After success or failure, the job uploads the Markdown summary and retains
 `results.json`, `timings.csv`, console logs, counters, tool/source/host
 provenance, and binlogs in the `buildxl-performance-Attempt<attempt>` artifact.
