@@ -50,12 +50,16 @@ See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v
 * Coalesce HangDump activity notifications instead of performing one IPC round trip per test result, while ensuring a dump is never triggered before the configured inactivity timeout, by @thomhurst and @Evangelink in [#12231](https://github.com/microsoft/testfx/pull/12231)
 * Distinguish elapsed time from cumulative test time in CI summaries, show bounded Azure DevOps skip-reason groups with platform context, and report authoritative runner-policy exits separately from failed test results, by @Evangelink in [#12149](https://github.com/microsoft/testfx/pull/12149)
 * Localize Azure DevOps live-publishing and history diagnostics, by @Evangelink in [#12209](https://github.com/microsoft/testfx/pull/12209)
+* Render Azure DevOps skip-reason groups as wrapping list entries rather than tables, and show shared module and platform context once for single-module summaries, by @Evangelink in [#12246](https://github.com/microsoft/testfx/pull/12246)
 
 ### Fixed
 
 * Include data-row arguments and custom display names in GitHub Actions failure, flaky-test and slowest-test summaries while retaining fully qualified method names, by @Evangelink in [#12144](https://github.com/microsoft/testfx/pull/12144)
 * Preserve Azure DevOps data-row display names and their associated durations while retaining canonical method identities for history. Retry interrupted result-metadata updates without republishing accepted test results, by @Evangelink in [#12163](https://github.com/microsoft/testfx/pull/12163)
 * Detect OpenCode through its `OPENCODE` environment variable so AI-agent terminal defaults apply correctly, by @Evangelink in [#12178](https://github.com/microsoft/testfx/pull/12178)
+* Diagnose uncorrelated JSON-RPC errors with `id: null` without ending server sessions, replying to the error or completing unrelated pending client requests, while preserving request accounting, by @Evangelink in [#12286](https://github.com/microsoft/testfx/pull/12286)
+* Correct TRX artifact publication with Retry, moving the final default or relative report to the results directory while retaining earlier attempt reports under `Retries`, preserving attachment paths and forwarding relocated artifacts through native `dotnet test` and packaged-app controllers, by @Evangelink in [#12290](https://github.com/microsoft/testfx/pull/12290)
+* Preserve nested and aggregate exception causes in CTRF, HTML and JUnit reports while retaining explicit failure explanations and existing simple-exception stack traces, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
 
 ## <a name="2.5.2" />[2.5.2] - 2026-10-27
 
