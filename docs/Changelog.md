@@ -39,11 +39,18 @@ See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v
 
 For the Microsoft.Testing.Platform changes included with this release, see [2.5.3](Changelog-Platform.md#2.5.3).
 
+### Changed
+
+* Inspect assembly metadata before loading dependencies during assembly-fixture provider discovery, avoiding unnecessary loads of unmarked libraries while preserving transitive providers, runtime binding and diagnosed fallback, by @Evangelink in [#12291](https://github.com/microsoft/testfx/pull/12291)
+
 ### Fixed
 
 * Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12128](https://github.com/microsoft/testfx/pull/12128)
 * Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12145](https://github.com/microsoft/testfx/pull/12145)
-* Preserve global test cleanup after a locally canceled or timed-out test cleanup, without restarting an active test or run deadline or losing the original cleanup failure, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220)
+* Preserve global test cleanup after a locally canceled or timed-out test cleanup, retain original deadlines and cancellation-source ownership, and aggregate independent cleanup failures without losing timeout or inconclusive outcomes, including nested aggregate messages on .NET Framework, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220) and [#12292](https://github.com/microsoft/testfx/pull/12292)
+* Keep `TestContext.AddResultFile` attachments readable after Microsoft.Testing.Platform host shutdown by retaining copied files in visible `MSTest-<random-id>` result folders, subject to the caller's results-retention policy, by @Evangelink in [#12247](https://github.com/microsoft/testfx/pull/12247)
+* Avoid duplicate Microsoft.Testing.Platform runtime DLLs in the classic UWP adapter payload by restoring dependencies from their owning NuGet packages and including the resolved assemblies in AppX deployment, by @Evangelink in [#12248](https://github.com/microsoft/testfx/pull/12248)
+* Await all scheduled workers when cancellation occurs during ordinary or dependency-ordered parallel execution, preventing canceled runs from returning before their workers finish, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
 
 ## <a name="4.5.2" />[4.5.2] - 2026-10-27
 
