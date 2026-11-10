@@ -655,7 +655,7 @@ public sealed class TestExecutionTests
                 It.IsAny<string?>(),
                 It.IsAny<DateTimeOffset>()))
             .Returns(sampledOut ? null : activity.Object);
-        return new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        return new TestExecutionActivityBroker(service.Object);
     }
 
     private static TestNodeUpdateMessage CreateInProgressMessage()

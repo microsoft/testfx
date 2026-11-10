@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Telemetry;
@@ -13,31 +14,14 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class OpenTelemetryResultHandlerTests : IDisposable
 {
     private readonly Mock<IPlatformOpenTelemetryService> _otelService = new();
-    private readonly FakeCounter<int> _discoveredCounter = new();
-    private readonly FakeCounter<int> _startedCounter = new();
-    private readonly FakeCounter<int> _completedCounter = new();
-    private readonly FakeCounter<int> _passedCounter = new();
-    private readonly FakeCounter<int> _failedCounter = new();
-    private readonly FakeCounter<int> _skippedCounter = new();
-    private readonly FakeCounter<int> _unknownCounter = new();
     private readonly FakeCounter<int> _testCaseResultCounter = new();
     private readonly FakeUpDownCounter<int> _activeTestCases = new();
-    private readonly FakeHistogram<double> _durationHistogram = new();
     private readonly FakeHistogram<double> _testCaseDurationHistogram = new();
     private readonly FakeHistogram<double> _testRunDurationHistogram = new();
     private readonly OpenTelemetryResultHandler _handler;
 
     public OpenTelemetryResultHandlerTests()
     {
-        _otelService.Setup(s => s.CreateCounter<int>("tests.discovered", null, null, null)).Returns(_discoveredCounter);
-        _otelService.Setup(s => s.CreateCounter<int>("tests.started", null, null, null)).Returns(_startedCounter);
-        _otelService.Setup(s => s.CreateCounter<int>("tests.completed", null, null, null)).Returns(_completedCounter);
-        _otelService.Setup(s => s.CreateCounter<int>("tests.passed", null, null, null)).Returns(_passedCounter);
-        _otelService.Setup(s => s.CreateCounter<int>("tests.failed", null, null, null)).Returns(_failedCounter);
-        _otelService.Setup(s => s.CreateCounter<int>("tests.skipped", null, null, null)).Returns(_skippedCounter);
-        _otelService.Setup(s => s.CreateCounter<int>("tests.unknown", null, null, null)).Returns(_unknownCounter);
-        _otelService.Setup(s => s.CreateHistogram<double>("tests.duration", null, null, null)).Returns(_durationHistogram);
-
         _otelService.Setup(s => s.CreateCounter<int>("test.case.result.count", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseResultCounter);
         _otelService.Setup(s => s.CreateUpDownCounter<int>("test.case.active", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_activeTestCases);
         _otelService.Setup(s => s.CreateHistogram<double>("test.case.duration", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseDurationHistogram);
@@ -47,58 +31,73 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
-    public void NotifyDiscovered_IncrementsDiscoveredCounter()
-    {
-        _handler.NotifyDiscovered();
+    public void Constructor_CreatesOnlyCanonicalInstrumentsWithUnits()
+        => Assert.AreSequenceEqual<(string Name, string? Unit)>(
+            [
+                ("test.case.active", "{test}"),
+                ("test.case.duration", "s"),
+                ("test.case.result.count", "{test}"),
+                ("test.run.duration", "s"),
+            ],
+            _otelService.Invocations
+                .Select(invocation => (Name: (string)invocation.Arguments[0], Unit: (string?)invocation.Arguments[1]))
+                .OrderBy(instrument => instrument.Name, StringComparer.Ordinal));
 
-        Assert.AreEqual(1, _discoveredCounter.Value);
+    [TestMethod]
+    public void ExtensionTags_ContainOnlyCanonicalIdentity()
+    {
+        Mock<IExtension> extension = new();
+        extension.SetupGet(e => e.Uid).Returns("extension-id");
+        extension.SetupGet(e => e.Version).Returns("3.0.0");
+        extension.SetupGet(e => e.DisplayName).Returns("Example extension");
+        extension.SetupGet(e => e.Description).Returns("Not exported.");
+
+        Assert.AreSequenceEqual<KeyValuePair<string, object?>>(
+            [
+                new("test.extension.uid", "extension-id"),
+                new("test.extension.version", "3.0.0"),
+                new("test.extension.display_name", "Example extension"),
+            ],
+            extension.Object.ToOTelTags());
     }
 
     [TestMethod]
-    public void NotifyUnknown_IncrementsUnknownCounter()
-    {
-        _handler.NotifyUnknown();
-
-        Assert.AreEqual(1, _unknownCounter.Value);
-    }
-
-    [TestMethod]
-    public void NotifyPassed_IncrementsPassedAndCompletedCounters()
+    public void NotifyPassed_IncrementsResultCounterWithPassStatus()
     {
         TestNode testNode = CreateTestNode();
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        Assert.AreEqual(1, _passedCounter.Value);
-        Assert.AreEqual(1, _completedCounter.Value);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+        Assert.Contains(new KeyValuePair<string, object?>("test.case.result.status", "pass"), _testCaseResultCounter.LastTags!);
     }
 
     [TestMethod]
-    public void NotifyFailed_IncrementsFailedAndCompletedCounters()
+    public void NotifyFailed_IncrementsResultCounterWithFailStatus()
     {
         TestNode testNode = CreateTestNode();
         _handler.NotifyFailed(testNode, new FailedTestNodeStateProperty());
 
-        Assert.AreEqual(1, _failedCounter.Value);
-        Assert.AreEqual(1, _completedCounter.Value);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+        Assert.Contains(new KeyValuePair<string, object?>("test.case.result.status", "fail"), _testCaseResultCounter.LastTags!);
     }
 
     [TestMethod]
-    public void NotifySkipped_IncrementsSkippedAndCompletedCounters()
+    public void NotifySkipped_IncrementsResultCounterWithSkippedStatus()
     {
         TestNode testNode = CreateTestNode();
         _handler.NotifySkipped(testNode, SkippedTestNodeStateProperty.CachedInstance);
 
-        Assert.AreEqual(1, _skippedCounter.Value);
-        Assert.AreEqual(1, _completedCounter.Value);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+        Assert.Contains(new KeyValuePair<string, object?>("test.case.result.status", "skipped"), _testCaseResultCounter.LastTags!);
     }
 
     [TestMethod]
-    public void NotifyInProgress_IncrementsStartedCounter()
+    public void NotifyInProgress_IncrementsActiveCases()
     {
         TestNode testNode = CreateTestNode();
         _handler.NotifyInProgress(testNode, null);
 
-        Assert.AreEqual(1, _startedCounter.Value);
+        Assert.AreEqual(1, _activeTestCases.Value);
     }
 
     [TestMethod]
@@ -117,7 +116,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         // Verify activity is tracked by completing the test and checking tags are set.
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
-        activity.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
     }
 
     [TestMethod]
@@ -242,7 +241,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
             It.IsAny<DateTimeOffset>())).Returns(activity.Object);
-        using TestExecutionActivityBroker broker = new(canonicalService.Object, PlatformOpenTelemetryOptions.Default);
+        using TestExecutionActivityBroker broker = new(canonicalService.Object);
 
         TestNode startNode = CreateTestNode("canonical");
         TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
@@ -289,7 +288,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
             It.IsAny<DateTimeOffset>())).Returns(activity.Object);
-        using TestExecutionActivityBroker broker = new(canonicalService.Object, PlatformOpenTelemetryOptions.Default);
+        using TestExecutionActivityBroker broker = new(canonicalService.Object);
 
         TestNode startNode = CreateTestNode("canonical-multiple");
         TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
@@ -329,11 +328,9 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         _handler.NotifyExecutionCompleted(testNode);
 
-        Assert.AreEqual(1, _completedCounter.Value);
-        Assert.AreEqual(0, _passedCounter.Value);
-        Assert.AreEqual(0, _failedCounter.Value);
-        Assert.AreEqual(0, _skippedCounter.Value);
-        activity.Verify(a => a.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        Assert.AreEqual(0, _testCaseResultCounter.Value);
+        Assert.AreEqual(0, _activeTestCases.Value);
+        activity.Verify(a => a.SetTag("test.case.result.status", It.IsAny<object?>()), Times.Never);
         activity.Verify(a => a.Dispose(), Times.Once);
     }
 
@@ -346,8 +343,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, new PassedTestNodeStateProperty("test passed"));
 
-        activity.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
-        activity.Verify(a => a.SetTag("test.result.explanation", "test passed"), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.explanation", "test passed"), Times.Once);
         activity.Verify(a => a.Dispose(), Times.Once);
     }
 
@@ -361,10 +358,10 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyFailed(testNode, new FailedTestNodeStateProperty(exception, "test failed"));
 
-        activity.Verify(a => a.SetTag("test.result", "failed"), Times.Once);
-        activity.Verify(a => a.SetTag("test.result.exception.type", typeof(InvalidOperationException).FullName), Times.Once);
-        activity.Verify(a => a.SetTag("test.result.exception.message", "something went wrong"), Times.Once);
-        activity.Verify(a => a.SetTag("test.result.exception.stacktrace", exception.StackTrace), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.SetTag("error.type", typeof(InvalidOperationException).FullName), Times.Once);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, "something went wrong"), Times.Once);
+        activity.Verify(a => a.SetTag("code.stacktrace", exception.StackTrace), Times.Once);
         activity.Verify(a => a.Dispose(), Times.Once);
     }
 
@@ -385,8 +382,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        Assert.AreEqual(150d, _durationHistogram.LastRecordedValue);
-        activity.Verify(a => a.SetTag("test.duration.ms", 150d), Times.Once);
+        Assert.AreEqual(0.15d, _testCaseDurationHistogram.LastRecordedValue);
+        activity.Verify(a => a.SetTag("test.case.duration_ms", 150d), Times.Once);
     }
 
     [TestMethod]
@@ -406,8 +403,28 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        activity.Verify(a => a.SetTag("test.stdout", "hello"), Times.Once);
-        activity.Verify(a => a.SetTag("test.stderr", "oops"), Times.Once);
+        activity.Verify(a => a.SetTag("test.output.stdout", "hello"), Times.Once);
+        activity.Verify(a => a.SetTag("test.output.stderr", "oops"), Times.Once);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_WithOutputCaptureDisabled_OmitsOutputWithoutSuppressingResult()
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT")).Returns("0");
+        using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("output-disabled");
+        TestNode testNode = CreateTestNode("output-disabled");
+        testNode.Properties.Add(new StandardOutputProperty("not exported"));
+        testNode.Properties.Add(new StandardErrorProperty("not exported"));
+
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        activity.Verify(a => a.SetTag("test.output.stdout", It.IsAny<object?>()), Times.Never);
+        activity.Verify(a => a.SetTag("test.output.stderr", It.IsAny<object?>()), Times.Never);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
     }
 
     [TestMethod]
@@ -418,8 +435,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         // Should not throw — no activity was started for this test node.
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        // Completed counter should still be incremented.
-        Assert.AreEqual(1, _completedCounter.Value);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
     }
 
     [TestMethod]
@@ -431,7 +447,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifySkipped(testNode, SkippedTestNodeStateProperty.CachedInstance);
 
-        activity.Verify(a => a.SetTag("test.result", "skipped"), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.status", "skipped"), Times.Once);
         activity.Verify(a => a.Dispose(), Times.Once);
     }
 
@@ -452,9 +468,9 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         Assert.IsNotNull(capturedTags);
         var tagList = capturedTags.ToList();
-        Assert.IsTrue(tagList.Exists(t => t.Key == "test.parent.id" && (string?)t.Value == "parent"));
-        Assert.IsTrue(tagList.Exists(t => t.Key == "test.name" && (string?)t.Value == "Test"));
-        Assert.IsTrue(tagList.Exists(t => t.Key == "test.id" && (string?)t.Value == "child"));
+        Assert.Contains(new KeyValuePair<string, object?>("test.case.parent.id", "parent"), tagList);
+        Assert.Contains(new KeyValuePair<string, object?>("test.case.name", "Test"), tagList);
+        Assert.Contains(new KeyValuePair<string, object?>("test.case.id", "child"), tagList);
     }
 
     [TestMethod]
@@ -530,7 +546,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        activity.Verify(a => a.SetTag("test.metadataProperty.category", "unit"), Times.Once);
+        activity.Verify(a => a.SetTag("test.metadata.category", "unit"), Times.Once);
     }
 
     [TestMethod]
@@ -556,7 +572,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyInProgress(testNode, null);
 
-        Assert.AreEqual(2, _startedCounter.Value);
+        Assert.AreEqual(2, _activeTestCases.Value);
     }
 
     [TestMethod]
@@ -585,15 +601,15 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
         _handler.NotifyFailed(testNode, new FailedTestNodeStateProperty());
 
-        activity1.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
-        activity1.Verify(a => a.SetTag("test.result", "failed"), Times.Never);
+        activity1.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity1.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
         activity1.Verify(a => a.Dispose(), Times.Once);
 
-        activity2.Verify(a => a.SetTag("test.result", "failed"), Times.Once);
-        activity2.Verify(a => a.SetTag("test.result", "passed"), Times.Never);
+        activity2.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity2.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Never);
         activity2.Verify(a => a.Dispose(), Times.Once);
 
-        Assert.AreEqual(2, _completedCounter.Value);
+        Assert.AreEqual(2, _testCaseResultCounter.Value);
     }
 
     [TestMethod]
@@ -654,10 +670,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
         activity.Verify(a => a.Dispose(), Times.Once);
         Assert.AreEqual(0, _testCaseResultCounter.Value);
-        Assert.AreEqual(0, _completedCounter.Value);
         Assert.AreEqual(0, _activeTestCases.Value);
         Assert.IsNull(_testCaseDurationHistogram.LastRecordedValue);
-        Assert.IsNull(_durationHistogram.LastRecordedValue);
     }
 
     [TestMethod]
@@ -719,9 +733,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        // The upstream test.case.result.status enum is "pass"/"fail"; the legacy attribute keeps "passed"/"failed".
         activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
-        activity.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
+        activity.Verify(a => a.SetTag("test.result", It.IsAny<object?>()), Times.Never);
         activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Ok, It.IsAny<string?>()), Times.Once);
         Assert.AreEqual(1, _testCaseResultCounter.Value);
         Assert.IsNotNull(_testCaseResultCounter.LastTags);
@@ -757,17 +770,17 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         activity.Verify(a => a.SetTag("error.type", typeof(InvalidOperationException).FullName), Times.Once);
 
         // error.message is deprecated upstream and NOT RECOMMENDED on spans; the message travels on the
-        // exception event and on the legacy attribute instead.
+        // exception event instead.
         activity.Verify(a => a.SetTag("error.message", It.IsAny<object?>()), Times.Never);
-        activity.Verify(a => a.SetTag("test.result.exception.message", "boom"), Times.Once);
+        activity.Verify(a => a.SetTag("test.result.exception.message", It.IsAny<object?>()), Times.Never);
         Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "fail", _testCaseResultCounter.LastTags!);
     }
 
     [TestMethod]
     public void HandleTestResult_WithTimingProperty_RecordsSecondsOnSemanticConventionHistogram()
     {
-        SetupActivityForTestNode("semconv-duration");
-        TimingInfo timing = new(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddSeconds(2), TimeSpan.FromSeconds(2));
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("semconv-duration");
+        TimingInfo timing = new(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddMilliseconds(2500), TimeSpan.FromMilliseconds(2500));
         TestNode testNode = new()
         {
             Uid = new TestNodeUid("semconv-duration"),
@@ -778,9 +791,9 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        // OpenTelemetry requires durations in seconds, while the legacy instrument stays in milliseconds.
-        Assert.AreEqual(2d, _testCaseDurationHistogram.LastRecordedValue);
-        Assert.AreEqual(2000d, _durationHistogram.LastRecordedValue);
+        Assert.AreEqual(2.5d, _testCaseDurationHistogram.LastRecordedValue);
+        activity.Verify(a => a.SetTag("test.case.duration_ms", 2500d), Times.Once);
+        activity.Verify(a => a.SetTag("test.duration.ms", It.IsAny<object?>()), Times.Never);
     }
 
     [TestMethod]
@@ -1096,9 +1109,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string?>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testRunDurationHistogram);
 
-        Mock<IEnvironment> environment = new();
-        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES")).Returns("0");
-        return new OpenTelemetryResultHandler(service.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+        return new OpenTelemetryResultHandler(service.Object);
     }
 
     [TestMethod]
@@ -1129,9 +1140,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
-    public void HandleTestResult_TruncatesLegacyAttributesToo()
+    public void HandleTestResult_TruncatesOutputAndExplanationWithoutLegacyTwins()
     {
-        // Legacy attributes are on by default, so leaving them untruncated would defeat the size limit entirely.
         Mock<IEnvironment> environment = new();
         environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT")).Returns("10");
         using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
@@ -1153,13 +1163,93 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         string expected = new string('x', 10) + "…";
         activity.Verify(a => a.SetTag("test.output.stdout", expected), Times.Once);
-        activity.Verify(a => a.SetTag("test.stdout", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.stdout", It.IsAny<object?>()), Times.Never);
         activity.Verify(a => a.SetTag("test.output.stderr", expected), Times.Once);
-        activity.Verify(a => a.SetTag("test.stderr", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.stderr", It.IsAny<object?>()), Times.Never);
 
         string expectedExplanation = new string('e', 10) + "…";
         activity.Verify(a => a.SetTag("test.case.result.explanation", expectedExplanation), Times.Once);
-        activity.Verify(a => a.SetTag("test.result.explanation", expectedExplanation), Times.Once);
+        activity.Verify(a => a.SetTag("test.result.explanation", It.IsAny<object?>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("0")]
+    [DataRow("1")]
+    public void HandleTestResult_EmitsOnlyCanonicalAttributes(string? legacySetting)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES")).Returns(legacySetting);
+        using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+        Dictionary<string, object?> tags = [];
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("canonical-timeout");
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>()))
+            .Callback<string, object?>((key, value) => tags[key] = value)
+            .Returns(activity.Object);
+        _otelService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((_, initialTags, _, _) =>
+            {
+                foreach (KeyValuePair<string, object?> tag in initialTags!)
+                {
+                    tags.Add(tag.Key, tag.Value);
+                }
+            })
+            .Returns(activity.Object);
+        DateTimeOffset start = DateTimeOffset.UtcNow;
+        TimingInfo timing = new(start, start.AddMilliseconds(2500), TimeSpan.FromMilliseconds(2500));
+        TimingInfo stepTiming = new(start, start.AddMilliseconds(125), TimeSpan.FromMilliseconds(125));
+        TestNode node = new()
+        {
+            Uid = "canonical-timeout",
+            DisplayName = "Timeout case",
+            Properties = new PropertyBag(
+                new TestMethodIdentifierProperty("Tests", "Example", "Cases", "Timeout", 0, [], "void"),
+                new TestFileLocationProperty("Cases.cs", new LinePositionSpan(new LinePosition(12, 0), new LinePosition(16, 0))),
+                new TestMetadataProperty("category", "unit"),
+                new TimingProperty(timing, [new StepTimingInfo("arrange", "Arrange case", stepTiming)]),
+                new StandardOutputProperty("captured output"),
+                new StandardErrorProperty("captured error")),
+        };
+        Exception exception = CreateExceptionWithStackTrace("timeout failure");
+
+        handler.NotifyInProgress(node, new TestNodeUid("parent"));
+        handler.NotifyFailed(node, new TimeoutTestNodeStateProperty(exception, "Timed out") { Timeout = TimeSpan.FromMilliseconds(1800) });
+
+        Dictionary<string, object?> expected = new()
+        {
+            ["test.case.name"] = "Timeout case",
+            ["test.case.id"] = "canonical-timeout",
+            ["test.case.parent.id"] = "parent",
+            ["code.function.name"] = "Example.Cases.Timeout",
+            ["test.suite.name"] = "Cases",
+            ["test.assembly.name"] = "Tests",
+            ["code.file.path"] = "Cases.cs",
+            ["code.line.number"] = 12,
+            ["test.metadata.category"] = "unit",
+            ["test.case.result.status"] = "timeout",
+            ["test.case.result.explanation"] = "Timed out",
+            ["error.type"] = typeof(InvalidOperationException).FullName,
+            ["code.stacktrace"] = exception.StackTrace,
+            ["test.case.timeout"] = 1800d,
+            ["test.case.duration_ms"] = 2500d,
+            ["test.step.arrange.duration"] = 125d,
+            ["test.step.arrange.description"] = "Arrange case",
+            ["test.output.stdout"] = "captured output",
+            ["test.output.stderr"] = "captured error",
+        };
+        Assert.AreSequenceEqual(
+            expected.OrderBy(tag => tag.Key, StringComparer.Ordinal),
+            tags.OrderBy(tag => tag.Key, StringComparer.Ordinal));
+        Assert.AreEqual(2.5d, _testCaseDurationHistogram.LastRecordedValue);
+        Assert.AreSequenceEqual<KeyValuePair<string, object?>>(
+            [new("test.case.result.status", "timeout"), new("test.suite.name", "Cases")],
+            _testCaseResultCounter.LastTags!);
+        environment.Verify(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
     }
 
     private sealed class FakeCounter<T> : ICounter<T>

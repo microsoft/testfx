@@ -16,6 +16,9 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// A task that creates the Microsoft Testing Platform configuration file in the output directory.
 /// </summary>
 // Took inspiration from https://github.com/dotnet/sdk/blob/main/src/Tasks/Microsoft.NET.Build.Tasks/GenerateRuntimeConfigurationFiles.cs
+#pragma warning disable CS0436 // Embed the marker so older MSBuild versions can load the task.
+[MSBuildMultiThreadableTask]
+#pragma warning restore CS0436
 public sealed class ConfigurationFileTask : Build.Utilities.Task
 {
     private const string ConfigurationFileNameSuffix = "testconfig.json";
@@ -74,7 +77,8 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file: '{TestingPlatformConfigurationFileSource.ItemSpec}'");
-        bool sourceExists = _fileSystem.Exist(TestingPlatformConfigurationFileSource.ItemSpec);
+        string sourcePath = TestingPlatformConfigurationFileSource.GetMetadata("FullPath");
+        bool sourceExists = _fileSystem.Exist(sourcePath);
         if (!sourceExists && TestingPlatformCommandLineOptionDefault is not { Length: > 0 })
         {
             Log.LogMessage(MessageImportance.Normal, "Microsoft Testing Platform configuration file not found");
@@ -85,7 +89,7 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
         Log.LogMessage(MessageImportance.Normal, $"AssemblyName: '{AssemblyName.ItemSpec}'");
         Log.LogMessage(MessageImportance.Normal, $"OutputPath: '{OutputPath.ItemSpec}'");
 
-        string finalPath = Path.Combine(MSBuildProjectDirectory.ItemSpec, OutputPath.ItemSpec);
+        string finalPath = Path.Combine(MSBuildProjectDirectory.GetMetadata("FullPath"), OutputPath.ItemSpec);
         Log.LogMessage(MessageImportance.Normal, $"Final path: '{finalPath}'");
 
         string finalFileName = Path.Combine(finalPath, $"{AssemblyName.ItemSpec}.{ConfigurationFileNameSuffix}");
@@ -94,12 +98,12 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
         if (TestingPlatformCommandLineOptionDefault is not { Length: > 0 } optionDefaults)
         {
             Log.LogMessage(MessageImportance.Normal, $"Configuration file found: '{TestingPlatformConfigurationFileSource.ItemSpec}'");
-            _fileSystem.CopyFile(TestingPlatformConfigurationFileSource.ItemSpec, finalFileName);
+            _fileSystem.CopyFile(sourcePath, finalFileName);
         }
         else
         {
             if (!TryCreateMergedConfiguration(
-                sourceExists ? _fileSystem.ReadAllText(TestingPlatformConfigurationFileSource.ItemSpec) : null,
+                sourceExists ? _fileSystem.ReadAllText(sourcePath) : null,
                 optionDefaults,
                 out string? mergedConfiguration))
             {
