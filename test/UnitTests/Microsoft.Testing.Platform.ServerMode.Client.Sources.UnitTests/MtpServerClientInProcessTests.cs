@@ -72,8 +72,7 @@ public sealed class MtpServerClientInProcessTests
             }
 
             Assert.IsFalse(await WithTimeoutAsync(shutdown), "An executing cancellation registration must keep the source alive once its shared grace expires.");
-            // This project consumes MSTest from NuGet; an object-valued check works with both API versions.
-            Assert.IsNotNull((object?)timing.CancellationTask);
+            Assert.IsNotNull(timing.CancellationTask);
         }
         finally
         {
@@ -336,8 +335,7 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken));
 
         TaskCanceledException cancellationException = Assert.IsInstanceOfType<TaskCanceledException>(exception.InnerException);
-        // This project consumes MSTest from NuGet; an object-valued check works with both API versions.
-        Assert.IsNotNull((object?)cancellationException.Task);
+        Assert.IsNotNull(cancellationException.Task);
         Assert.Contains("was canceled before connecting back", exception.Message);
     }
 
