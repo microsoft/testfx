@@ -25,7 +25,7 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
-        testHostResult.AssertOutputContains($"PlatformAssemblyPath: {Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Platform.dll")}");
+        testHostResult.AssertOutputContains($"PlatformAssemblyPath: {Path.Join(testHost.DirectoryName, "Microsoft.Testing.Platform.dll")}");
 
         string testResultsPath = Path.Combine(testHost.DirectoryName, "TestResults");
         Assert.IsTrue(Directory.Exists(testResultsPath), $"TestResults directory should exist at: {testResultsPath}");
