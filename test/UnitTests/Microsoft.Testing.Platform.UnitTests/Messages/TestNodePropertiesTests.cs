@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-
 using Microsoft.Testing.Platform.Messages;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages.UnitTests;
@@ -129,30 +127,6 @@ public sealed class TestNodePropertiesTests
         => Assert.AreEqual(
             "TimeoutTestNodeStateProperty { Explanation = , Exception = System.Exception: some message, Timeout =  }",
             new TimeoutTestNodeStateProperty(new Exception("some message")).ToString());
-
-    [TestMethod]
-    public void CancelledTestNodeStateProperty_ToStringIsCorrect()
-    => Assert.AreEqual(
-        "CancelledTestNodeStateProperty { Explanation = some explanation, Exception =  }",
-        new CancelledTestNodeStateProperty("some explanation").ToString());
-
-    [TestMethod]
-    public void CancelledTestNodeStateProperty_WhenNoExplanation_ToStringIsCorrect()
-        => Assert.AreEqual(
-            "CancelledTestNodeStateProperty { Explanation = , Exception =  }",
-            new CancelledTestNodeStateProperty().ToString());
-
-    [TestMethod]
-    public void CancelledTestNodeStateProperty_WhenExceptionAndExplanation_ToStringIsCorrect()
-        => Assert.AreEqual(
-            "CancelledTestNodeStateProperty { Explanation = some explanation, Exception = System.Exception: some message }",
-            new CancelledTestNodeStateProperty(new Exception("some message"), "some explanation").ToString());
-
-    [TestMethod]
-    public void CancelledTestNodeStateProperty_WhenExceptionAndNoExplanation_ToStringIsCorrect()
-        => Assert.AreEqual(
-            "CancelledTestNodeStateProperty { Explanation = , Exception = System.Exception: some message }",
-            new CancelledTestNodeStateProperty(new Exception("some message")).ToString());
 
     [TestMethod]
     public void CustomTestNodeStateProperty_ToStringUsesRuntimeTypeName()
@@ -361,11 +335,6 @@ public sealed class TestNodePropertiesTests
             new ErrorTestNodeStateProperty(exception, "different"),
             new ErrorTestNodeStateProperty(differentException, "reason"));
         AssertReferenceValueEquality(
-            new CancelledTestNodeStateProperty(exception, "reason"),
-            new CancelledTestNodeStateProperty(exception, "reason"),
-            new CancelledTestNodeStateProperty(exception, "different"),
-            new CancelledTestNodeStateProperty(differentException, "reason"));
-        AssertReferenceValueEquality(
             new TimeoutTestNodeStateProperty(exception, "reason") { Timeout = TimeSpan.FromSeconds(5) },
             new TimeoutTestNodeStateProperty(exception, "reason") { Timeout = TimeSpan.FromSeconds(5) },
             new TimeoutTestNodeStateProperty(exception, "different") { Timeout = TimeSpan.FromSeconds(5) },
@@ -388,8 +357,8 @@ public sealed class TestNodePropertiesTests
     public void StateCategories_SeparateDiscoveryOutcomesAndFailures()
     {
         Type[] discovered = [typeof(DiscoveredTestNodeStateProperty)];
-        Type[] outcomes = [typeof(PassedTestNodeStateProperty), typeof(FailedTestNodeStateProperty), typeof(ErrorTestNodeStateProperty), typeof(TimeoutTestNodeStateProperty), typeof(CancelledTestNodeStateProperty)];
-        Type[] failed = [typeof(FailedTestNodeStateProperty), typeof(ErrorTestNodeStateProperty), typeof(TimeoutTestNodeStateProperty), typeof(CancelledTestNodeStateProperty)];
+        Type[] outcomes = [typeof(PassedTestNodeStateProperty), typeof(FailedTestNodeStateProperty), typeof(ErrorTestNodeStateProperty), typeof(TimeoutTestNodeStateProperty)];
+        Type[] failed = [typeof(FailedTestNodeStateProperty), typeof(ErrorTestNodeStateProperty), typeof(TimeoutTestNodeStateProperty)];
 
         Assert.AreSequenceEqual(
             discovered,

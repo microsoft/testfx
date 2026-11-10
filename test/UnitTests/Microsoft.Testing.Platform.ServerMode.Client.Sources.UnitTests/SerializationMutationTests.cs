@@ -344,6 +344,32 @@ public sealed class SerializationMutationTests
     }
 
     [TestMethod]
+    public void JsonRpcResponse_OlderPeerCanceledState_PreservesIdentityAndDiagnostics()
+    {
+        const string Payload = """
+            {"jsonrpc":"2.0","id":"17","result":{"uid":"older-peer-node","display-name":"Older peer cancellation","node-type":"action","execution-state":"canceled","error.message":"Canceled by older peer"}}
+            """;
+        IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
+        // Exercise the shipping System.Text.Json path on modern .NET and Jsonite on net462.
+#if NETCOREAPP
+        RpcMessage message = formatter.Deserialize<RpcMessage>(Encoding.UTF8.GetBytes(Payload));
+#else
+        RpcMessage message = formatter.Deserialize<RpcMessage>(Payload);
+#endif
+
+        ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(message);
+        Assert.AreEqual(17, response.Id);
+        Assert.AreEqual("17", response.StringId);
+        IDictionary<string, object?> result = Assert.IsInstanceOfType<IDictionary<string, object?>>(response.Result);
+        Assert.HasCount(5, result);
+        Assert.AreEqual("older-peer-node", result["uid"]);
+        Assert.AreEqual("Older peer cancellation", result["display-name"]);
+        Assert.AreEqual("action", result["node-type"]);
+        Assert.AreEqual("canceled", result["execution-state"]);
+        Assert.AreEqual("Canceled by older peer", result["error.message"]);
+    }
+
+    [TestMethod]
     public void SerializerUtilities_SerializeGroupTestNode_UsesOnlyExpectedWireProperties()
     {
         IDictionary<string, object?> serialized = SerializerUtilities.Serialize(CreateNode());
@@ -921,7 +947,6 @@ public sealed class SerializationMutationTests
     [DataRow(false, "failed", "failed", true)]
     [DataRow(false, "timeout", "timed-out", true)]
     [DataRow(false, "error", "error", true)]
-    [DataRow(false, "canceled", "canceled", true)]
     [DataRow(false, "completed", "discovered", false)]
 #if NETCOREAPP
     [DataRow(true, "discovered", "discovered", false)]
@@ -931,12 +956,10 @@ public sealed class SerializationMutationTests
     [DataRow(true, "failed", "failed", true)]
     [DataRow(true, "timeout", "timed-out", true)]
     [DataRow(true, "error", "error", true)]
-    [DataRow(true, "canceled", "canceled", true)]
     [DataRow(true, "completed", "discovered", false)]
 #endif
     public async Task TestNodeWireState_MapsEachOutcomeAndOnlyItsApplicableError(bool modern, string state, string expectedState, bool hasError)
     {
-#pragma warning disable CS0618, MTP0001 // The wire decoder must continue to support the shipped legacy state.
         IProperty property = state switch
         {
             "discovered" => ClientMessages.DiscoveredTestNodeStateProperty.CachedInstance,
@@ -946,11 +969,9 @@ public sealed class SerializationMutationTests
             "failed" => new FailedTestNodeStateProperty("reason"),
             "timeout" => new ClientMessages.TimeoutTestNodeStateProperty("reason"),
             "error" => new ClientMessages.ErrorTestNodeStateProperty("reason"),
-            "canceled" => new ClientMessages.CancelledTestNodeStateProperty("reason"),
             "completed" => ClientMessages.TestNodeExecutionCompletedProperty.CachedInstance,
             _ => throw new ArgumentOutOfRangeException(nameof(state)),
         };
-#pragma warning restore CS0618, MTP0001
         IDictionary<string, object?> fields = await SerializeNodeFieldsAsync(CreateNode(property), modern);
 
         Assert.HasCount(hasError ? 5 : 4, fields);
@@ -1256,23 +1277,19 @@ public sealed class SerializationMutationTests
     [TestMethod]
     [DataRow(false, "timeout")]
     [DataRow(false, "error")]
-    [DataRow(false, "canceled")]
 #if NETCOREAPP
     [DataRow(true, "timeout")]
     [DataRow(true, "error")]
-    [DataRow(true, "canceled")]
 #endif
     public async Task TestNodeWireExceptionalStates_PreserveExplanationAndStackTrace(bool modern, string state)
     {
         var exception = new FixedStackTraceException("failure", "trace");
-#pragma warning disable CS0618, MTP0001 // The shipped legacy state remains a supported wire input.
         IProperty property = state switch
         {
             "timeout" => new ClientMessages.TimeoutTestNodeStateProperty(exception, "reason"),
             "error" => new ClientMessages.ErrorTestNodeStateProperty(exception, "reason"),
-            _ => new ClientMessages.CancelledTestNodeStateProperty(exception, "reason"),
+            _ => throw new ArgumentOutOfRangeException(nameof(state)),
         };
-#pragma warning restore CS0618, MTP0001
 
         IDictionary<string, object?> fields = await SerializeNodeFieldsAsync(CreateNode(property), modern);
 

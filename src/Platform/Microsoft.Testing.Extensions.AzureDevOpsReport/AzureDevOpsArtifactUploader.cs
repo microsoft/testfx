@@ -317,16 +317,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         };
 
     private static bool IsFailureState(TestNodeStateProperty? state)
-    {
-        if (state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty)
-        {
-            return true;
-        }
-
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        return state is CancelledTestNodeStateProperty;
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-    }
+        => state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty;
 
     private static string EnsureTrailingDirectorySeparator(string path)
         => path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;

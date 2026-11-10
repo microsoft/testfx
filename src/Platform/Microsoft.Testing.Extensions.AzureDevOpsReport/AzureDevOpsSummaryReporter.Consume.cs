@@ -132,9 +132,6 @@ internal sealed partial class AzureDevOpsSummaryReporter
             FailedTestNodeStateProperty failed => failed.Exception,
             ErrorTestNodeStateProperty error => error.Exception,
             TimeoutTestNodeStateProperty timeout => timeout.Exception,
-#pragma warning disable CS0618, MTP0001
-            CancelledTestNodeStateProperty cancelled => cancelled.Exception,
-#pragma warning restore CS0618, MTP0001
             _ => null,
         };
         string? explanation = state?.Explanation;

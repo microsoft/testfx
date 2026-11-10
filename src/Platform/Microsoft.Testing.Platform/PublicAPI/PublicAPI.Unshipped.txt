@@ -1,4 +1,14 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty() -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty(string! explanation) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty(System.Exception! exception, string? explanation = null) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty? other) -> bool
+*REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Exception.get -> System.Exception?
+*REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.ToString() -> string!
+*REMOVED*static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 *REMOVED*Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.CoverageSummary.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>?

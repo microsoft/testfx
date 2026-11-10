@@ -216,11 +216,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">配置項目 '{0}' (出力ディレクトリ '{1}')</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
-      <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
-        <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
-        <target state="translated">'mstest:orderTestsByNameInClass' 構成キーは非推奨であり、将来のバージョンで削除される予定です。代わりに 'mstest:execution:orderTestsByNameInClass' を使用してください。</target>
-        <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
-      </trans-unit>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>

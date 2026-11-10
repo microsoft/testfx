@@ -150,17 +150,14 @@ public sealed class CrashDumpSequenceLoggerTests
         {
             Assert.IsTrue(await logger.IsEnabledAsync());
             await logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
-#pragma warning disable CS0618, MTP0001 // Cover the same terminal-state set as the production sequence logger.
             (IProperty Property, string ExpectedState)[] terminalStates =
             [
                 (PassedTestNodeStateProperty.CachedInstance, "Passed"),
                 (new FailedTestNodeStateProperty(), "Failed"),
                 (new ErrorTestNodeStateProperty(), "Error"),
                 (SkippedTestNodeStateProperty.CachedInstance, "Skipped"),
-                (new CancelledTestNodeStateProperty(), "Cancelled"),
                 (new TimeoutTestNodeStateProperty(), "Timeout"),
             ];
-#pragma warning restore CS0618, MTP0001
 
             for (int i = 0; i < terminalStates.Length; i++)
             {

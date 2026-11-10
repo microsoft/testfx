@@ -286,25 +286,6 @@ internal sealed partial class TerminalOutputDevice
                             retryAttempt);
                         break;
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                    case CancelledTestNodeStateProperty cancelledState:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                        terminalTestReporter.TestCompleted(
-                            InProcessExecutionId,
-                            testNodeStateChanged.TestNode.Uid.Value,
-                            testNodeStateChanged.TestNode.DisplayName,
-                            TestOutcome.Canceled,
-                            duration,
-                            null,
-                            cancelledState.Explanation,
-                            cancelledState.Exception,
-                            expected: null,
-                            actual: null,
-                            standardOutput,
-                            standardError,
-                            retryAttempt);
-                        break;
-
                     case PassedTestNodeStateProperty:
                         terminalTestReporter.TestCompleted(
                             InProcessExecutionId,

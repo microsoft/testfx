@@ -164,10 +164,10 @@ public sealed class CiReporterLifecycleBehaviorTests
             : string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.QuarantineFileLoadFailedWarning, path, "read denied");
         Assert.HasCount(1, fixture.Logs.Where(entry => entry.Message == expectedWarning));
         Assert.HasCount(1, fixture.Logs.Where(entry => entry.Message.StartsWith("Skipping invalid '--report-azdo-stackframe-filter'", StringComparison.Ordinal)));
-        Assert.HasCount(4, fixture.Displays);
+        Assert.HasCount(3, fixture.Displays);
         string tfm = ghactions::Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
         Assert.AreSequenceEqual(
-            Enumerable.Repeat($"##vso[task.logissue type=warning]Tests.Final [{tfm}]%0Afinal explanation", 4),
+            Enumerable.Repeat($"##vso[task.logissue type=warning]Tests.Final [{tfm}]%0Afinal explanation", 3),
             fixture.Displays.Select(Command));
         Assert.IsTrue(fixture.DisplayAttempts.All(attempt => ReferenceEquals(reporter, attempt.Owner)));
     }
@@ -281,9 +281,6 @@ public sealed class CiReporterLifecycleBehaviorTests
             new FailedTestNodeStateProperty("final explanation"),
             new ErrorTestNodeStateProperty("final explanation"),
             new TimeoutTestNodeStateProperty("final explanation"),
-#pragma warning disable CS0618, MTP0001
-            new CancelledTestNodeStateProperty("final explanation"),
-#pragma warning restore CS0618, MTP0001
         ];
 
     private sealed class StackException(string stack) : Exception("stack failure")

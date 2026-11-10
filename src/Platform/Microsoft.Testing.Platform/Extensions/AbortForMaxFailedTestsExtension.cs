@@ -79,9 +79,6 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 
         if (testNodeStateProperty is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
                 or TimeoutTestNodeStateProperty
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                or CancelledTestNodeStateProperty
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             && ++_failCount >= maxFailedTests &&
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)

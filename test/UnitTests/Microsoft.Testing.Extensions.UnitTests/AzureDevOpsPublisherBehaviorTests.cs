@@ -333,7 +333,6 @@ public sealed class AzureDevOpsPublisherBehaviorTests
     [DataRow(2, 15000L, 2L, DisplayName = "Result_ErrorExceptionPrecedence")]
     [DataRow(3, 15000L, 2L, DisplayName = "Result_Skipped")]
     [DataRow(4, 15000L, 2L, DisplayName = "Result_TimeoutExplicitReason")]
-    [DataRow(5, 15000L, 2L, DisplayName = "Result_CanceledExceptionPrecedence")]
     [DataRow(6, 15000L, 2L, DisplayName = "Result_TimeoutWhitespaceFallback")]
     [DataRow(7, 0L, 0L, DisplayName = "Result_CustomStateIgnored")]
     [DataRow(8, 0L, 0L, DisplayName = "Result_StatelessIgnored")]
@@ -368,7 +367,7 @@ public sealed class AzureDevOpsPublisherBehaviorTests
         Assert.AreEqual(expectedMilliseconds, captured.Result.DurationInMs);
         Assert.AreEqual(CiReporterFixture.Epoch, captured.Result.StartedDate);
         Assert.AreEqual(CiReporterFixture.Epoch.AddTicks(ticks), captured.Result.CompletedDate);
-        Assert.AreEqual(partition switch { 0 => "Passed", 3 => "NotExecuted", 5 => "Aborted", _ => "Failed" }, captured.Result.Outcome);
+        Assert.AreEqual(partition switch { 0 => "Passed", 3 => "NotExecuted", _ => "Failed" }, captured.Result.Outcome);
         Assert.AreEqual(
             partition switch
             {
@@ -452,9 +451,6 @@ public sealed class AzureDevOpsPublisherBehaviorTests
             2 => new ErrorTestNodeStateProperty(new InvalidOperationException("exception detail"), "ignored explanation"),
             3 => new SkippedTestNodeStateProperty("skipped explanation"),
             4 => new TimeoutTestNodeStateProperty(new InvalidOperationException("exception detail"), "explicit timeout"),
-#pragma warning disable CS0618, MTP0001
-            5 => new CancelledTestNodeStateProperty(new InvalidOperationException("exception detail"), "ignored explanation"),
-#pragma warning restore CS0618, MTP0001
             6 => new TimeoutTestNodeStateProperty(new InvalidOperationException("exception detail"), " "),
             7 => new CustomState(),
             8 => null,

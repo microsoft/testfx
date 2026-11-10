@@ -237,16 +237,6 @@ public sealed class MessageModelMutationTests
             new ClientMessages.TimeoutTestNodeStateProperty(exception, "other") { Timeout = TimeSpan.FromSeconds(2) },
             new ClientMessages.TimeoutTestNodeStateProperty(otherException, "reason") { Timeout = TimeSpan.FromSeconds(2) },
             new ClientMessages.TimeoutTestNodeStateProperty(exception, "reason") { Timeout = TimeSpan.FromSeconds(3) });
-#pragma warning disable CS0618, MTP0001 // The shipped legacy state still has equality and serialization contracts.
-        AssertValueSemantics(
-            new ClientMessages.CancelledTestNodeStateProperty(exception, "reason"),
-            new ClientMessages.CancelledTestNodeStateProperty(exception, "reason"),
-            "CancelledTestNodeStateProperty { Explanation = reason, Exception = System.InvalidOperationException: failure }",
-            new ClientMessages.CancelledTestNodeStateProperty(exception, "other"),
-            new ClientMessages.CancelledTestNodeStateProperty(otherException, "reason"));
-        Assert.IsNull(new ClientMessages.CancelledTestNodeStateProperty().Exception);
-        Assert.AreEqual("reason", new ClientMessages.CancelledTestNodeStateProperty("reason").Explanation);
-#pragma warning restore CS0618, MTP0001
         Assert.IsNull(new ClientMessages.FailedTestNodeStateProperty().Exception);
         Assert.IsNull(new ClientMessages.ErrorTestNodeStateProperty().Exception);
         Assert.IsNull(new ClientMessages.TimeoutTestNodeStateProperty().Exception);

@@ -55,9 +55,6 @@ public class TrxTestResultExtractorTests
         Assert.AreEqual(TrxTestOutcome.Timeout, ExtractResult(new TimeoutTestNodeStateProperty()).Outcome);
         Assert.AreEqual(TrxTestOutcome.Failed, ExtractResult(new FailedTestNodeStateProperty()).Outcome);
         Assert.AreEqual(TrxTestOutcome.Failed, ExtractResult(new ErrorTestNodeStateProperty()).Outcome);
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-        Assert.AreEqual(TrxTestOutcome.Failed, ExtractResult(new CancelledTestNodeStateProperty()).Outcome);
-#pragma warning restore CS0618, MTP0001
     }
 
     [TestMethod]

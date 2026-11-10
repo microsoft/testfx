@@ -786,9 +786,6 @@ public sealed class TestApplicationResultTests : IDisposable
     {
         yield return [new FailedTestNodeStateProperty()];
         yield return [new ErrorTestNodeStateProperty()];
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        yield return [new CancelledTestNodeStateProperty()];
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         yield return [new TimeoutTestNodeStateProperty()];
     }
 

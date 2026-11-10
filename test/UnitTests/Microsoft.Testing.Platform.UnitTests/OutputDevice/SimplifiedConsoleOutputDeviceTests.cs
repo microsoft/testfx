@@ -146,22 +146,19 @@ public sealed class SimplifiedConsoleOutputDeviceTests
     [DataRow("failed")]
     [DataRow("error")]
     [DataRow("timeout")]
-    [DataRow("cancelled")]
     public async Task LifecycleFailureStatesPreserveExplanationExceptionDurationAndCount(string stateName)
     {
         using var monitor = new SystemAsyncMonitor();
         RecordingSimplifiedOutputDevice device = CreateOutputDevice(monitor, slowTestThreshold: TimeSpan.Zero);
         await device.OnTestSessionStartingAsync(Mock.Of<ITestSessionContext>());
         InvalidOperationException exception = new("failure sentinel");
-#pragma warning disable CS0618, MTP0001 // Exercise retained canceled-state compatibility behavior.
         TestNodeStateProperty state = stateName switch
         {
             "failed" => new FailedTestNodeStateProperty(exception, "exact explanation"),
             "error" => new ErrorTestNodeStateProperty(exception, "exact explanation"),
             "timeout" => new TimeoutTestNodeStateProperty(exception, "exact explanation"),
-            _ => new CancelledTestNodeStateProperty(exception, "exact explanation"),
+            _ => throw new ArgumentOutOfRangeException(nameof(stateName)),
         };
-#pragma warning restore CS0618, MTP0001
         DateTimeOffset start = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         TestNodeUpdateMessage update = CreateTestNodeUpdate("id", "observed failure", state);
         update.TestNode.Properties.Add(new TimingProperty(new TimingInfo(start, start.AddMilliseconds(10), TimeSpan.FromMilliseconds(10))));

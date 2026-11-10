@@ -1,4 +1,9 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.Helpers.AppVersion
+*REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
+*REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.PrintMembers(System.Text.StringBuilder! builder) -> void
+*REMOVED*static readonly Microsoft.Testing.Platform.Helpers.AppVersion.DefaultSemVer -> string!
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int Id, out int ErrorCode, out string! Message, out object? Data) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int Id, int ErrorCode, string! Message, object? Data) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int

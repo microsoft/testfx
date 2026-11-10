@@ -818,15 +818,12 @@ public sealed class FormatterUtilitiesTests
         string expectedMessage = $"explanation{Environment.NewLine} ---> {typeof(FixedStackTraceException).FullName}: inner";
         string expectedStackTrace = $"outer-stack{Environment.NewLine}--- Inner exception stack trace ({typeof(FixedStackTraceException).FullName}) ---{Environment.NewLine}inner-stack";
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
         (TestNodeStateProperty State, string ExecutionState)[] states =
         [
             (new FailedTestNodeStateProperty(exception, "explanation"), "failed"),
             (new ErrorTestNodeStateProperty(exception, "explanation"), "error"),
             (new TimeoutTestNodeStateProperty(exception, "explanation"), "timed-out"),
-            (new CancelledTestNodeStateProperty(exception, "explanation"), "canceled"),
         ];
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         foreach ((TestNodeStateProperty state, string executionState) in states)
         {
