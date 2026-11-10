@@ -130,7 +130,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string dumpFile = Assert.ContainsSingle(
             Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories),
             $"Expected single literal-percent dump file\n{testHostResult}");
-        Assert.AreEqual(Path.Combine(resultDirectory, "literal_%p.dmp"), dumpFile);
+        Assert.AreEqual(Path.Join(resultDirectory, "literal_%p.dmp"), dumpFile);
     }
 
     [TestMethod]
@@ -206,7 +206,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             dumpFiles,
             $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
 
-        Assert.AreEqual(Path.Combine(resultDirectory, "HangDump"), Path.GetDirectoryName(dumpFile),
+        Assert.AreEqual(Path.Join(resultDirectory, "HangDump"), Path.GetDirectoryName(dumpFile),
             "The {asm} placeholder should create exactly one assembly-named subdirectory.");
         Assert.MatchesRegex(@"^HangDump_[1-9][0-9]*_hang\.dmp$", Path.GetFileName(dumpFile));
     }

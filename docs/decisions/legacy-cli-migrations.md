@@ -304,6 +304,27 @@ Additional guards: localization self-tests 41 passed; final localization guard
 checked all 364 catalogs and exited 0; PowerShell AST checks included the
 embedded worker; all 19 changed C# files retain UTF-8 BOMs.
 
+### PR path-feedback preservation
+
+The three related path comments were evaluated together. Decline the proposed
+rooted-TFM guard: `TargetFrameworks.NetCurrent` comes from a repository-owned
+relative TFM and the other appended component is an `N`-formatted GUID.
+Partially accept the two literal-suffix suggestions for clarity: use
+`Path.Join` for the expected `literal_%p.dmp` filename and `HangDump` directory.
+Those literals were already relative; exact full-path/directory equality and
+the anchored PID filename assertion remain unchanged.
+
+The test-only patch against `36a0265bcf69ae7eb501775c014b9681bc8658f4` is SHA-256
+`D61477711C4AAE5B34DD6AE8D02175373467CA57EC9976C5202F89177D704714`.
+The pinned Release acceptance-owner build, using the owner-build command above
+and `path-review-acceptance-build-1.binlog`, passed with zero warnings/errors.
+The identical selectors `HangDumpTests.HangDump_LegacyPercentPlaceholder_IsLiteralFileName`
+and `HangDumpTests.HangDump_TemplateFileNameWithSubdirectory_CreateDump` passed
+**four cases before and four after**, with zero failures/skips (subdirectory
+consumers: net10.0/net11.0/net462). Discovery identities, fresh TRX/JUnit, and
+the unchanged packed core/HangDump hashes were verified. This is green/green
+preservation evidence, not a new product behavior or a claimed CodeQL rerun.
+
 Remaining evidence gaps: Linux/macOS runtime execution, older SDK native
 renderer behavior, a second correctly resized terminal grid, and CI for the
 published head. These do not imply those checks passed. No source-generation
