@@ -49,7 +49,7 @@ internal static class TrxModeHelpers
             || (arguments is [string mode] && TrxReportGeneratorCommandLine.OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)));
 
     // Another extension can still require a controller when TRX recovery is explicitly disabled.
-    // Only use the TRX pipe when both its mode and the actual controller-presence state allow it.
+    // Use the TRX pipe only when TRX mode allows it and a controller is present.
     [UnsupportedOSPlatformGuard("android")]
     [UnsupportedOSPlatformGuard("browser")]
     [UnsupportedOSPlatformGuard("ios")]

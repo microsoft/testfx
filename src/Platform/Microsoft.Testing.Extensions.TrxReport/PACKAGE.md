@@ -26,7 +26,7 @@ On macOS, TRX uses a controller process by default. The test host generates the 
 
 The controller adds another process and may increase startup time.
 
-Use `--report-trx --trx-mode:in-process` to generate a report without starting a controller for TRX. This can be useful for a launcher that runs tests in a separate application, such as on a device or simulator.
+Use `--report-trx --trx-mode:in-process` to generate a report without starting a controller for TRX. This can be useful when a launcher runs tests in a separate app, for example on a device or simulator.
 
 In-process mode cannot recover a report if the test host crashes, hangs, or is terminated. Other extensions or options, such as `--crashdump` or `--timeout`, may still start a controller, but TRX recovery remains disabled.
 
