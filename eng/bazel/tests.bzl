@@ -287,6 +287,7 @@ def unit_tests():
         linked_srcs = [
             "//eng/bazel:TestMain.cs",
             "test/Utilities/DiagnosticAssertionObserver.cs",
+            "test/Utilities/ValidationResultExtensions.cs",
         ] + ipc_sources() + [
             _PLATFORM + "/ServerMode/DotnetTest/Transport/DotnetTestHttpClient.cs",
             _PLATFORM + "/IPC/Models/TestHostCompletedRequest.cs",
