@@ -87,7 +87,7 @@ Out of process file artifacts produced:
             (tfm, string.Empty, 2, true),
             (tfm, "--trx-mode:in-process", 1, false),
             (tfm, "--trx-mode out-of-process", 2, true),
-            (tfm, "--trx-mode=in-process --crashdump", 2, false),
+            (tfm, "--trx-mode=in-process --hangdump", 2, false),
         });
 
     [DynamicData(nameof(TrxModeData))]
