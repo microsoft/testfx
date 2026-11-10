@@ -279,6 +279,32 @@ $cases = [ordered]@{
         $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", "Root/Other row")
         Assert-FixtureRejected $f "JUnit testpath"
     }
+    CappedJUnitPathWithoutLeafIsAccepted = {
+        param($f)
+        $parents = (@(1..17 | ForEach-Object { "P" * 4000 }) -join "/")
+        $path = "$parents/Row two"
+        $captured = $path.Substring(0, 65536) + "`n$([char]0x2026)[truncated, original length: 68024]"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $captured)
+        $result = Invoke-FixtureComparison $f
+        Assert-TestCondition ($result.Tests -eq 4 -and $result.CappedPaths -eq 1) "A producer-capped parent path must mark the unavailable leaf check without rejecting otherwise agreeing results."
+    }
+    CappedJUnitPathVisibleLeafPrefixIsAccepted = {
+        param($f)
+        $parents = (@(@(1..15 | ForEach-Object { "P" * 4096 }) + @("P" * 4075)) -join "/")
+        $path = "$parents/Row two"
+        $captured = $path.Substring(0, 65536) + "`n$([char]0x2026)[truncated, original length: 65538]"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $captured)
+        $result = Invoke-FixtureComparison $f
+        Assert-TestCondition ($result.CappedPaths -eq 1) "The visible part of a capped leaf must still be validated."
+    }
+    ConflictingVisibleLeafInCappedPathIsRejected = {
+        param($f)
+        $parents = (@(@(1..15 | ForEach-Object { "P" * 4096 }) + @("P" * 4075)) -join "/")
+        $path = "$parents/Xow two"
+        $captured = $path.Substring(0, 65536) + "`n$([char]0x2026)[truncated, original length: 65538]"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $captured)
+        Assert-FixtureRejected $f "JUnit testpath"
+    }
     WrongUidCannotMatchByOrder = {
         param($f)
         $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "unknown")

@@ -479,3 +479,50 @@ review correction independently of this decision record. Manifest SHA-256:
 | --- | --- |
 | `eng/compare-test-reports.ps1` | `2D906247157BBC9DFE71031E73A6A82BC8A21D72B0FC7350D972F5552D49D3C5` |
 | `eng/test-report-comparison.ps1` | `F908C11456676B293B8AF235788619FDD0E72C9F192191082004B50546A7B64C` |
+
+## Review correction: capped JUnit paths
+
+A later review body identified another concrete representation boundary:
+`JUnitSuiteBuilder.BuildTestPath` caps a parent/leaf path at 65,536 UTF-16
+characters, possibly before the leaf is reached. Requiring that serialized
+prefix to end in the leaf rejected a valid otherwise-agreeing report.
+
+The correction recognizes the producer's exact path marker and original length.
+It computes where the captured leaf would begin, validates any visible separator
+and leaf prefix, and distinguishes unavailable leaf data from conflicting leaf
+data. Identity, display name, method/class, outcome, counters, timing, streams,
+and traits are still validated independently. Uncapped path checks are unchanged.
+
+The internal comparison result counts `CappedPaths`; `-Verbose` reports that
+the available prefixes and other fields were checked. Default output and CLI
+options do not change, and an unavailable path suffix is not claimed to have
+been verified.
+
+### Test-value evidence for capped paths
+
+The same final 93 tests were retained against an isolated archive of actual
+parent `325f78ec1bf8fa12ea21caaa7f1e7e0ba48e16b2`:
+
+| Contract / cases | Actual parent | Corrected implementation |
+| --- | --- | --- |
+| `CappedJUnitPathWithoutLeafIsAccepted`, `CappedJUnitPathVisibleLeafPrefixIsAccepted` | Executed: detected; **91 passed / 2 failed / 93 executed**, exit 1. Both valid representations were rejected at the path suffix assertion. | **93 passed / 0 failed / 93 executed**, exit 0, on PowerShell 7.6.9 and 7.2.24. |
+| `ConflictingVisibleLeafInCappedPathIsRejected`, `WrongDisplayPathIsRejected` | Passed: conflicting visible leaf data remains an error. | Passed with the same assertions; the cap does not bypass shared-data validation. |
+
+Commands were the existing `pwsh -NoProfile -File .\eng\test-report-comparison.ps1`
+and the same invocation using the isolated portable 7.2.24 host. The generated
+packed consumer was rebuilt with the pinned SDK and unchanged shipping packages,
+then run with fixture-only `REPORT_CASE_MODE=capped-path`. It published actual
+parent chains of 17 and 16 nodes, exercising both an entirely unavailable leaf
+and a partially visible leaf. The producer exited **0** with **two passed /
+zero failed / zero skipped**; both runtime versions compared all three reports
+successfully, exit **0**, and `-Verbose` identified **two capped paths**.
+The existing rollout validator retained **19 + 39 + 13 passed**.
+
+Session-owned `review-capped-path-source-manifest.json`, SHA-256
+`B19FECCF17531302733511CE99FD528216FF21AC098B8EEB66358456B44D4EBF`,
+binds the two behavior-affecting Git-normalized LF files:
+
+| File | SHA-256, Git-normalized LF |
+| --- | --- |
+| `eng/compare-test-reports.ps1` | `B5DCBA42AD0AE822557D45BC4A6C55B334F4CE4785CB95999020DC5DE2A8236C` |
+| `eng/test-report-comparison.ps1` | `EB98A45C5698702E032C0697A5F1AC36AF453F4D6A562E97CE9D8B44F409D327` |

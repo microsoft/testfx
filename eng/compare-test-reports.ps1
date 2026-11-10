@@ -201,16 +201,16 @@ function Limit-ReportCapturedText {
 }
 
 function Get-ReportCaptureInfo {
-    param([string]$Text)
+    param([string]$Text, [int]$Limit = 4096)
 
-    if ($Text.Length -le 4096) {
+    if ($Text.Length -le $Limit) {
         return [pscustomobject]@{ Prefix = $Text; OriginalLength = $Text.Length; Truncated = $false }
     }
     $marker = [regex]::Escape("`n$([char]0x2026)[truncated, original length: ")
     $match = [regex]::Match($Text, "(?s)^(?<prefix>.*)$marker(?<length>[0-9]+)\]$")
     [int]$length = 0
-    if (-not $match.Success -or $match.Groups["prefix"].Value.Length -notin 4095, 4096 -or
-        -not [int]::TryParse($match.Groups["length"].Value, [ref]$length) -or $length -le 4096) {
+    if (-not $match.Success -or $match.Groups["prefix"].Value.Length -notin @(($Limit - 1), $Limit) -or
+        -not [int]::TryParse($match.Groups["length"].Value, [ref]$length) -or $length -le $Limit) {
         throw "Invalid captured identity truncation marker."
     }
     return [pscustomobject]@{ Prefix = $match.Groups["prefix"].Value; OriginalLength = $length; Truncated = $true }
@@ -569,6 +569,7 @@ function Compare-TestReportSet {
     }
     $matchedTrx = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     $withoutTimestamps = 0
+    $cappedPaths = 0
     foreach ($test in $ctrf.Values) {
         $context = "Test $(Format-ReportValue $test.Id 100) ($(Format-ReportValue $test.Name 100))"
         if (-not $junit.ContainsKey($test.JUnitId)) { throw "$context is missing from JUnit." }
@@ -620,7 +621,21 @@ function Compare-TestReportSet {
         Assert-ReportEqual (ConvertTo-ReportXmlText $method) (ConvertTo-ReportXmlText $junitTest.Name) "$context JUnit method name"
         $displayName = ConvertTo-ReportXmlText $test.Name
         $testPath = ConvertTo-ReportXmlText $junitTest.Path
-        if ($testPath -cne $displayName -and -not $testPath.EndsWith("/$displayName", [StringComparison]::Ordinal)) {
+        $pathMatches = $testPath -ceq $displayName -or $testPath.EndsWith("/$displayName", [StringComparison]::Ordinal)
+        if ($junitTest.Path.Length -gt 65536) {
+            $capture = Get-ReportCaptureInfo $junitTest.Path -Limit 65536
+            $leaf = ConvertTo-ReportXmlText $test.Name -PreserveNewlines
+            $leafStart = $capture.OriginalLength - $leaf.Length
+            $pathMatches = $leafStart -ge 0
+            if ($pathMatches -and $leafStart -gt 0 -and $leafStart -le $capture.Prefix.Length) {
+                $pathMatches = $capture.Prefix[$leafStart - 1] -ceq "/"
+            }
+            if ($pathMatches -and $leafStart -lt $capture.Prefix.Length) {
+                $pathMatches = $leaf.StartsWith($capture.Prefix.Substring($leafStart), [StringComparison]::Ordinal)
+            }
+            if ($pathMatches) { $cappedPaths++ }
+        }
+        if (-not $pathMatches) {
             throw "$context JUnit testpath does not preserve its display name."
         }
         Assert-ReportEqual $test.Outcome $trxTest.Outcome "$context TRX outcome"
@@ -655,7 +670,7 @@ function Compare-TestReportSet {
         Assert-ReportEqual $test.Traits $junitTest.Traits "$context JUnit traits"
     }
     Assert-ReportEqual @($ctrf.Values | Where-Object RawStatus -CEQ "timedOut").Count $trx.Timeouts "TRX/CTRF timeout count"
-    return [pscustomobject]@{ Tests = $ctrf.Count; WithoutTimestamps = $withoutTimestamps }
+    return [pscustomobject]@{ Tests = $ctrf.Count; WithoutTimestamps = $withoutTimestamps; CappedPaths = $cappedPaths }
 }
 
 function Get-TestReportInput {
@@ -712,6 +727,9 @@ function Invoke-TestReportComparison {
             $result = Compare-TestReportSet -TrxPath $entry.Value.TrxPath -CtrfPath $entry.Value.CtrfPath -JUnitPath $entry.Value.JUnitPath -ToleranceMilliseconds $ToleranceMilliseconds
             $total += $result.Tests
             Write-Output "PASS '$($entry.Key)': $($result.Tests) tests agree; $($result.WithoutTimestamps) without optional timestamps."
+            if ($result.CappedPaths -gt 0) {
+                Write-Verbose "$($result.CappedPaths) JUnit paths are capped; validated their available leaf prefixes and all other result fields."
+            }
         } catch {
             $failures.Add("Report set '$($entry.Key)' [TRX=$($entry.Value.TrxPath); CTRF=$($entry.Value.CtrfPath); JUnit=$($entry.Value.JUnitPath)]: $($_.Exception.Message)")
         }
