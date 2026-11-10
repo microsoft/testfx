@@ -66,6 +66,8 @@
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.2.19" />
+    <!-- The stable task-authoring analyzer is not yet mirrored on dotnet-public. -->
+    <PackageVersion Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="18.14.0-1.26559.118" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />

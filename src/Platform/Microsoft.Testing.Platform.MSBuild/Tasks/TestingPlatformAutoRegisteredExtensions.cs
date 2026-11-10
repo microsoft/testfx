@@ -10,6 +10,9 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// <summary>
 /// Task to generate the self-registered extensions source file.
 /// </summary>
+#pragma warning disable CS0436 // Embed the marker so older MSBuild versions can load the task.
+[MSBuildMultiThreadableTask]
+#pragma warning restore CS0436
 public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Task
 {
     private const string DisplayNameMetadataName = "DisplayName";
@@ -38,15 +41,7 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     }
 
     internal TestingPlatformSelfRegisteredExtensions(IFileSystem fileSystem)
-    {
-        // Stryker disable once String: The opt-in debugger hook cannot be exercised safely by an automated unit test.
-        if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
-        {
-            Debugger.Launch();
-        }
-
-        _fileSystem = fileSystem;
-    }
+        => _fileSystem = fileSystem;
 
     /// <summary>
     /// Gets or sets the path to the source file.
@@ -70,6 +65,11 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     /// Gets or sets the root namespace.
     /// </summary>
     public string? RootNamespace { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to launch a debugger before generating the source.
+    /// </summary>
+    public bool LaunchDebugger { get; set; }
 
     /// <summary>
     /// Gets or sets the path to the generated file. It stays <see langword="null"/> when the project language is
@@ -96,6 +96,12 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
     /// <inheritdoc />
     public override bool Execute()
     {
+        // Stryker disable once all: The opt-in debugger hook cannot be exercised safely by an automated unit test.
+        if (LaunchDebugger)
+        {
+            Debugger.Launch();
+        }
+
         Log.LogMessage(MessageImportance.Normal, $"SelfRegisteredExtensionsSourcePath: '{SelfRegisteredExtensionsSourcePath.ItemSpec}'");
         Log.LogMessage(MessageImportance.Normal, $"Language: '{Language.ItemSpec}'");
 
@@ -200,7 +206,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
         string entryPointSource = GetSourceCode(language, rootNamespace, builder.ToString());
         taskLoggingHelper.LogMessage(MessageImportance.Normal, $"SelfRegisteredExtensions source:\n'{entryPointSource}'");
-        fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
+        fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.GetMetadata("FullPath"), entryPointSource);
     }
 
     private static string GetSourceCode(string language, string? rootNamespace, string extensionsFragments)
