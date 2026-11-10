@@ -152,6 +152,60 @@ changing its assertions. Further heavy validation was deferred while another
 coordinated build owned the shared host's memory-constrained validation slot;
 this is scheduling, not a product test result.
 
+### 2026-11-10: Release unit build and cross-framework execution
+
+Implementation source: `006fa932f29de2841189f3e8c9a462409d8667e1`.
+The reserved single-node command exited 0 with no warnings or errors:
+
+```powershell
+.\build.cmd -c Release -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj /m:1 /nr:false /p:UseSharedCompilation=false /bl:artifacts\log\Release\telemetry-unit-release-1.binlog
+```
+
+It built core .NET 10/11/.NET Standard 2.0 and unit .NET 10/11/.NET Framework
+4.6.2 assets. The preceding attempt to forward a `{}` binlog name through
+`build.cmd` failed before compilation because its PowerShell wrapper split that
+token; the successful command used a checked, unique explicit filename instead.
+That logger-argument failure is not test evidence.
+
+The four-class telemetry/lifecycle selection used this exact filter:
+
+```text
+FullyQualifiedName~OpenTelemetryResultHandlerTests|FullyQualifiedName~TestHostTestFrameworkInvokerTests|FullyQualifiedName~TestExecutionActivityBrokerTests|FullyQualifiedName~TestExecutionTests
+```
+
+For each of `net10.0`, `net11.0`, and `net462`, the compiled Release apphost was
+invoked first with `--list-tests json --filter $filter`, then with:
+
+```powershell
+& $testHostPath --filter $filter --report-trx --report-trx-filename telemetry-contract.trx --report-junit --report-junit-filename telemetry-contract.xml --report-ctrf --report-ctrf-filename telemetry-contract.ctrf.json --results-directory $results --show-test-results all --progress off --ansi off
+```
+
+Here `$testHostPath` was
+`artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\<TFM>\Microsoft.Testing.Platform.UnitTests.exe`
+and `$results` was the absolute worktree path
+`artifacts\TestResults\Release\telemetry-contract-<TFM>`.
+Each run exited 0: **109 planned, selected, executed, and passed; 0 failed or
+skipped**. Separate structured discovery supplied each expected-name plan.
+`verify_execution.py` verified each fresh TRX against that plan and process
+exit; all JUnit and CTRF documents also parsed with 109 reported tests.
+
+The 109 cases comprise 55 result-handler cases, 21 activity-broker cases,
+24 execution cases, and 9 invoker cases. They include the new canonical-only
+instrument/attribute assertions, retired-setting cases, exact duration scaling,
+capture opt-out/truncation, retry association, compatible service fallback,
+and cancellation/drain/disposal fault observation. This is source-backed
+runtime evidence, including the .NET Standard asset through .NET Framework,
+not yet packed-consumer proof.
+
+A wider .NET 11 selection adding `TestApplicationResultTests` executed all
+168 cases: 167 passed, one failed because
+`ConsumeAsync_ExecutionCompleted_ClosesOnlyOldestActivityWithoutOutcome`
+still expected the intentionally removed `test.result=passed` alias. Its mock
+showed the correct `test.case.result.status=pass` on the second activity.
+The coupled positive assertion and the first activity's no-outcome assertion
+were migrated to the canonical key without weakening the oldest-activity
+association check. Rebuild and full-selection rerun remain pending.
+
 ## Alternatives and decision
 
 Keeping duplicate emission is incompatible with the authorized MTP 3 removal
