@@ -318,6 +318,65 @@ $cases = [ordered]@{
         $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "NAMED-CASE")
         Assert-FixtureRejected $f "is missing from JUnit"
     }
+    DateShapedStringsRemainStrings = {
+        param($f)
+        $name = "2026-11-11T03:04:05Z"
+        $uid = "2026-11-12T03:04:05Z"
+        $message = "2026-11-13T03:04:05Z"
+        $trait = "2026-11-14T03:04:05Z"
+        $f.Ctrf.results.tests[0].name = $name
+        $f.Trx.TestRun.Results.UnitTestResult[0].SetAttribute("testName", $name)
+        $f.JUnit.testsuites.testsuite.testcase[1].properties.property[1].SetAttribute("value", "Root/$name")
+        $f.Ctrf.results.tests[1].extra.uid = $uid
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", $uid)
+        $f.Ctrf.results.tests[3].message = $message
+        $f.JUnit.testsuites.testsuite.testcase[3].failure.SetAttribute("message", $message)
+        $f.JUnit.testsuites.testsuite.testcase[3].failure.InnerText = "Example.Failure: $message`n   at Example.Tests.Failed()"
+        $f.Ctrf.results.tests[0].labels.Owner = $trait
+        $f.JUnit.testsuites.testsuite.testcase[1].properties.property[5].SetAttribute("value", $trait)
+        $f.Ctrf.results.tests[3].stdout = @($name)
+        $f.JUnit.testsuites.testsuite.testcase[3]."system-out" = $name
+        $null = Invoke-FixtureComparison $f
+    }
+    JsonMetadataLikeTraitNamesRemainData = {
+        param($f)
+        $labels = [ordered]@{ '$type' = "NotAType"; '$id' = "literal-id"; '$ref' = "literal-reference" }
+        $f.Ctrf.results.tests[0].labels = $labels
+        $properties = $f.JUnit.testsuites.testsuite.testcase[1].properties
+        foreach ($property in @($properties.property | Where-Object { $_.GetAttribute("name").StartsWith("trait.", [StringComparison]::Ordinal) })) {
+            $null = $properties.RemoveChild($property)
+        }
+        foreach ($key in $labels.Keys) {
+            $property = $f.JUnit.CreateElement("property")
+            $property.SetAttribute("name", "trait.$key")
+            $property.SetAttribute("value", $labels[$key])
+            $null = $properties.AppendChild($property)
+        }
+        $null = Invoke-FixtureComparison $f
+    }
+    XmlInvalidUidIsCorrelated = {
+        param($f)
+        $f.Ctrf.results.tests[1].extra.uid = "row$([char]12)two"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "row$([char]0xFFFD)two")
+        $null = Invoke-FixtureComparison $f
+    }
+    SanitizedUidCollisionsAreRejected = {
+        param($f)
+        $f.Ctrf.results.tests[0].extra.uid = "row$([char]12)one"
+        $f.Ctrf.results.tests[1].extra.uid = "row$([char]0xFFFD)one"
+        foreach ($node in @($f.JUnit.testsuites.testsuite.testcase[0], $f.JUnit.testsuites.testsuite.testcase[1])) {
+            $node.properties.property[0].SetAttribute("value", "row$([char]0xFFFD)one")
+        }
+        Assert-FixtureRejected $f "Ambiguous"
+    }
+    UidLineEndingsRemainDistinct = {
+        param($f)
+        $f.Ctrf.results.tests[0].extra.uid = "line`r`nuid"
+        $f.JUnit.testsuites.testsuite.testcase[1].properties.property[0].SetAttribute("value", "line`r`nuid")
+        $f.Ctrf.results.tests[1].extra.uid = "line`nuid"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "line`nuid")
+        $null = Invoke-FixtureComparison $f
+    }
     AmbiguousNonGuidNamesAreRejected = {
         param($f)
         $f.Ctrf.results.tests[1].extra.uid = "named-case"
@@ -407,6 +466,84 @@ $cases = [ordered]@{
         $f.Ctrf.results.tests[1].name = $captured
         $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $captured)
         $null = Invoke-FixtureComparison $f
+    }
+    BoundaryXmlInvalidNamesAreAccepted = {
+        param($f)
+        $f.Ctrf.results.tests[1].name = ("A" * 4091) + [char]12
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", (("A" * 4091) + '\u000c'))
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", (("A" * 4091) + [char]0xFFFD))
+        $null = Invoke-FixtureComparison $f
+        $f.Ctrf.results.tests[1].extra.uid = "boundary-name-row"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "boundary-name-row")
+        $null = Invoke-FixtureComparison $f
+    }
+    LiteralUnicodeEscapeNamesRemainLiteral = {
+        param($f)
+        $name = ("A" * 4090) + '\u000c'
+        $f.Ctrf.results.tests[1].name = $name
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", $name)
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $name)
+        $null = Invoke-FixtureComparison $f
+        $f.Ctrf.results.tests[1].name = ("A" * 4091) + '\u000' + "`n$([char]0x2026)[truncated, original length: 4097]"
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", (("A" * 4091) + '\u000c'))
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $f.Ctrf.results.tests[1].name)
+        $null = Invoke-FixtureComparison $f
+        $f.Ctrf.results.tests[1].name = ("A" * 4096) + "`n$([char]0x2026)[truncated, original length: 4102]"
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", (("A" * 4096) + '\u000c'))
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $f.Ctrf.results.tests[1].name)
+        $null = Invoke-FixtureComparison $f
+    }
+    TruncatedXmlInvalidNamesAreAccepted = {
+        param($f)
+        $suffix = "`n$([char]0x2026)[truncated, original length: 4122]"
+        $f.Ctrf.results.tests[1].name = ("A" * 4091) + [char]12 + ("B" * 4) + $suffix
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", (("A" * 4091) + '\u000c' + ("B" * 30)))
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", (("A" * 4091) + [char]0xFFFD + ("B" * 4) + $suffix))
+        $null = Invoke-FixtureComparison $f
+        $f.Ctrf.results.tests[1].extra.uid = "truncated-name-row"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "truncated-name-row")
+        $null = Invoke-FixtureComparison $f
+        $f.Ctrf.results.tests[1].name = ("A" * 4096) + "`n$([char]0x2026)[truncated, original length: 4097]"
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", (("A" * 4096) + '\u000c'))
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $f.Ctrf.results.tests[1].name)
+        $null = Invoke-FixtureComparison $f
+    }
+    TruncatedNameLengthMismatchIsRejected = {
+        param($f)
+        $f.Ctrf.results.tests[1].name = ("A" * 4096) + "`n$([char]0x2026)[truncated, original length: 5001]"
+        $f.Trx.TestRun.Results.UnitTestResult[1].SetAttribute("testName", ("A" * 5000))
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[1].SetAttribute("value", $f.Ctrf.results.tests[1].name)
+        Assert-FixtureRejected $f "TRX display name"
+    }
+    LongClassCaptureRepresentationsAreAccepted = {
+        param($f)
+        $type = "T" * 5000
+        $f.Ctrf.results.tests[1].suite = @("Example", (("T" * 4096) + "`n$([char]0x2026)[truncated, original length: 5000]"))
+        $f.Trx.TestRun.TestDefinitions.UnitTest[1].TestMethod.SetAttribute("className", "Example.$type")
+        $f.JUnit.testsuites.testsuite.testcase[0].SetAttribute("classname", ("Example." + ("T" * 4088) + "`n$([char]0x2026)[truncated, original length: 5008]"))
+        $null = Invoke-FixtureComparison $f
+        $f.Ctrf.results.tests[1].extra.uid = "long-class-row"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "long-class-row")
+        $null = Invoke-FixtureComparison $f
+    }
+    LongNamespaceAndTypeCaptureAreAccepted = {
+        param($f)
+        $namespace = "N" * 5000
+        $type = "T" * 5000
+        $suffix = "`n$([char]0x2026)[truncated, original length: 5000]"
+        $f.Ctrf.results.tests[1].suite = @((("N" * 4096) + $suffix), (("T" * 4096) + $suffix))
+        $f.Trx.TestRun.TestDefinitions.UnitTest[1].TestMethod.SetAttribute("className", "$namespace.$type")
+        $f.JUnit.testsuites.testsuite.testcase[0].SetAttribute("classname", (("N" * 4096) + "`n$([char]0x2026)[truncated, original length: 10001]"))
+        $f.Ctrf.results.tests[1].extra.uid = "long-namespace-row"
+        $f.JUnit.testsuites.testsuite.testcase[0].properties.property[0].SetAttribute("value", "long-namespace-row")
+        $null = Invoke-FixtureComparison $f
+    }
+    LongClassCaptureMismatchIsRejected = {
+        param($f)
+        $f.Ctrf.results.tests[1].suite = @("Example", (("T" * 4095) + "X`n$([char]0x2026)[truncated, original length: 5000]"))
+        $f.Trx.TestRun.TestDefinitions.UnitTest[1].TestMethod.SetAttribute("className", ("Example." + ("T" * 5000)))
+        $f.JUnit.testsuites.testsuite.testcase[0].SetAttribute("classname", ("Example." + ("T" * 4088) + "`n$([char]0x2026)[truncated, original length: 5008]"))
+        Assert-FixtureRejected $f "TRX class"
     }
     MultilineNamesPreserveLineEndingEquivalence = {
         param($f)

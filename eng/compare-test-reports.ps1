@@ -80,6 +80,46 @@ function Get-ReportAttribute {
     return $Node.GetAttribute($Name)
 }
 
+function ConvertFrom-ReportJsonValue {
+    param([AllowNull()][object]$Value)
+
+    if ($Value -is [Newtonsoft.Json.Linq.JObject] -or $Value -is [Newtonsoft.Json.Linq.JArray]) {
+        $serializer = [Newtonsoft.Json.JsonSerializer]::Create()
+        $serializer.DateParseHandling = [Newtonsoft.Json.DateParseHandling]::None
+        $serializer.MetadataPropertyHandling = [Newtonsoft.Json.MetadataPropertyHandling]::Ignore
+        $serializer.TypeNameHandling = [Newtonsoft.Json.TypeNameHandling]::None
+        $serializer.MaxDepth = 100
+        $type = if ($Value -is [Newtonsoft.Json.Linq.JObject]) { [hashtable] } else { [object[]] }
+        return ,$Value.ToObject($type, $serializer)
+    }
+    if ($Value -is [Newtonsoft.Json.Linq.JValue]) { return ,$Value.Value }
+    return ,$Value
+}
+
+function Read-ReportJson {
+    param([string]$Path)
+
+    $json = Get-Content -LiteralPath $Path -Raw -Encoding utf8
+    if ((Get-Command ConvertFrom-Json -CommandType Cmdlet).Parameters.ContainsKey("DateKind")) {
+        return ,($json | ConvertFrom-Json -AsHashtable -Depth 100 -DateKind String)
+    }
+    Add-Type -AssemblyName Newtonsoft.Json
+    $textReader = [IO.StringReader]::new($json)
+    $reader = [Newtonsoft.Json.JsonTextReader]::new($textReader)
+    try {
+        $reader.DateParseHandling = [Newtonsoft.Json.DateParseHandling]::None
+        $reader.MaxDepth = 100
+        $token = [Newtonsoft.Json.Linq.JToken]::ReadFrom($reader)
+        if ($reader.Read()) { throw "Conversion from JSON failed for '$Path': more than one root value." }
+        return ,(ConvertFrom-ReportJsonValue $token)
+    } catch [Newtonsoft.Json.JsonException] {
+        throw "Conversion from JSON failed for '${Path}': $($_.Exception.Message)"
+    } finally {
+        $reader.Dispose()
+        $textReader.Dispose()
+    }
+}
+
 function Get-ReportJsonValue {
     param([object]$Node, [string]$Name, [switch]$Optional)
 
@@ -90,7 +130,9 @@ function Get-ReportJsonValue {
         if ($Optional) { return $null }
         throw "Missing required JSON property '$Name'."
     }
-    return ,$Node[$Name]
+    $value = $Node[$Name]
+    if ($value -is [Newtonsoft.Json.Linq.JToken]) { return ,(ConvertFrom-ReportJsonValue $value) }
+    return ,$value
 }
 
 function Get-ReportJsonString {
@@ -131,7 +173,7 @@ function Read-ReportXml {
 }
 
 function ConvertTo-ReportXmlText {
-    param([AllowNull()][string]$Text, [switch]$Trx)
+    param([AllowNull()][string]$Text, [switch]$Trx, [switch]$PreserveNewlines)
 
     $Text = [string]$Text
     # TRX escapes invalid UTF-16 code units; JUnit replaces them with U+FFFD.
@@ -145,6 +187,7 @@ function ConvertTo-ReportXmlText {
             return [string][char]0xFFFD
         })
     }
+    if ($PreserveNewlines) { return $result }
     return $result.Replace("`r`n", "`n").Replace("`r", "`n")
 }
 
@@ -155,6 +198,65 @@ function Limit-ReportCapturedText {
     $cut = $Limit
     if ([char]::IsHighSurrogate($Text[$cut - 1])) { $cut-- }
     return $Text.Substring(0, $cut) + "`n$([char]0x2026)[truncated, original length: $($Text.Length)]"
+}
+
+function Get-ReportCaptureInfo {
+    param([string]$Text)
+
+    if ($Text.Length -le 4096) {
+        return [pscustomobject]@{ Prefix = $Text; OriginalLength = $Text.Length; Truncated = $false }
+    }
+    $marker = [regex]::Escape("`n$([char]0x2026)[truncated, original length: ")
+    $match = [regex]::Match($Text, "(?s)^(?<prefix>.*)$marker(?<length>[0-9]+)\]$")
+    [int]$length = 0
+    if (-not $match.Success -or $match.Groups["prefix"].Value.Length -notin 4095, 4096 -or
+        -not [int]::TryParse($match.Groups["length"].Value, [ref]$length) -or $length -le 4096) {
+        throw "Invalid captured identity truncation marker."
+    }
+    return [pscustomobject]@{ Prefix = $match.Groups["prefix"].Value; OriginalLength = $length; Truncated = $true }
+}
+
+function Test-TrxCapturedName {
+    param([string]$CapturedName, [string]$TrxName)
+
+    if ($CapturedName.Length -le 4096) {
+        return [string]::Equals((ConvertTo-ReportXmlText $CapturedName -Trx), (ConvertTo-ReportXmlText $TrxName -Trx), [StringComparison]::Ordinal)
+    }
+    $capture = Get-ReportCaptureInfo $CapturedName
+    $prefix = ConvertTo-ReportXmlText $capture.Prefix -Trx -PreserveNewlines
+    if (-not $TrxName.StartsWith($prefix, [StringComparison]::Ordinal)) { return $false }
+    $tail = $TrxName.Substring($prefix.Length)
+    $extra = $tail.Length - ($capture.OriginalLength - $capture.Prefix.Length)
+    if ($extra -lt 0 -or $extra % 5 -ne 0) { return $false }
+    if ($extra -eq 0) { return $true }
+
+    # A TRX escape can also be literal backslash-u text. Check possible length
+    # expansion without decoding it or inventing the uncaptured suffix.
+    $possibleEscapes = 0
+    foreach ($match in [regex]::Matches($tail, '\\u([0-9a-f]{4})')) {
+        $code = [int]::Parse($match.Groups[1].Value, [Globalization.NumberStyles]::HexNumber, [Globalization.CultureInfo]::InvariantCulture)
+        if ($code -le 8 -or $code -in 11, 12 -or ($code -ge 14 -and $code -le 31) -or
+            ($code -ge 0xD800 -and $code -le 0xDFFF) -or $code -in 0xFFFE, 0xFFFF) {
+            $possibleEscapes++
+        }
+    }
+    return $extra / 5 -le $possibleEscapes
+}
+
+function Test-ReportClassCapture {
+    param([string[]]$Suite, [string]$TrxClass)
+
+    if ($Suite.Count -eq 1) {
+        return [string]::Equals((ConvertTo-ReportXmlText $Suite[0] -Trx), (ConvertTo-ReportXmlText (Limit-ReportCapturedText $TrxClass) -Trx), [StringComparison]::Ordinal)
+    }
+    if ($Suite.Count -ne 2) { return $false }
+    if ($Suite[0].Length -le 4096 -and $Suite[1].Length -le 4096 -and ($Suite -join ".") -ceq $TrxClass) { return $true }
+    $namespaceLength = (Get-ReportCaptureInfo $Suite[0]).OriginalLength
+    if ($TrxClass.Length -le $namespaceLength -or $TrxClass[$namespaceLength] -cne ".") { return $false }
+    $namespace = Limit-ReportCapturedText $TrxClass.Substring(0, $namespaceLength)
+    $type = Limit-ReportCapturedText $TrxClass.Substring($namespaceLength + 1)
+    return [string]::Equals((ConvertTo-ReportXmlText $Suite[0] -Trx), (ConvertTo-ReportXmlText $namespace -Trx), [StringComparison]::Ordinal) -and
+        [string]::Equals((ConvertTo-ReportXmlText $Suite[1] -Trx), (ConvertTo-ReportXmlText $type -Trx), [StringComparison]::Ordinal)
 }
 
 function ConvertTo-ReportStream {
@@ -238,25 +340,31 @@ function Read-TrxComparisonReport {
 function Read-CtrfComparisonReport {
     param([string]$Path)
 
-    $document = Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable -Depth 100
+    $document = Read-ReportJson $Path
     $extra = Get-ReportJsonValue $document "extra" -Optional
-    if ($null -ne $extra -and $extra.Contains("microsoft.testingplatform") -and
-        $extra["microsoft.testingplatform"]["documentRole"] -ceq "merged") {
+    $platformExtra = if ($null -ne $extra) { Get-ReportJsonValue $extra "microsoft.testingplatform" -Optional } else { $null }
+    if ($null -ne $platformExtra -and (Get-ReportJsonString $platformExtra "documentRole" -Optional) -ceq "merged") {
         throw "Merged CTRF reports cannot be compared alongside raw execution reports."
     }
     $results = Get-ReportJsonValue $document "results"
     $environment = Get-ReportJsonValue $results "environment" -Optional
-    if ($null -ne $environment -and $environment.Contains("extra") -and
-        ($environment["extra"]["incomplete"] -eq $true -or $environment["extra"]["runStatus"] -ceq "aborted")) {
+    $environmentExtra = if ($null -ne $environment) { Get-ReportJsonValue $environment "extra" -Optional } else { $null }
+    if ($null -ne $environmentExtra -and
+        ($environmentExtra["incomplete"] -eq $true -or $environmentExtra["runStatus"] -ceq "aborted")) {
         throw "Incomplete CTRF execution report."
     }
     $nodes = Get-ReportJsonValue $results "tests"
     if ($nodes -isnot [Collections.IList]) { throw "CTRF results.tests must be an array." }
     $tests = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal)
+    $junitIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     $statuses = @{}
     foreach ($node in $nodes) {
+        $node = ConvertFrom-ReportJsonValue $node
         $extra = Get-ReportJsonValue $node "extra"
         $uid = Get-ReportJsonString $extra "uid"
+        if ($tests.ContainsKey($uid)) { throw "Ambiguous repeated CTRF UID '$uid'." }
+        $junitId = ConvertTo-ReportXmlText $uid -PreserveNewlines
+        if (-not $junitIds.Add($junitId)) { throw "Ambiguous CTRF UIDs sanitize to the same JUnit identity." }
         $status = Get-ReportJsonString $node "status"
         $rawStatus = Get-ReportJsonString $node "rawStatus" -Optional
         $kind = switch -CaseSensitive ("$status/$rawStatus") {
@@ -302,7 +410,8 @@ function Read-CtrfComparisonReport {
         if ($null -ne $labels) {
             if ($labels -isnot [Collections.IDictionary]) { throw "CTRF labels for '$uid' must be an object." }
             foreach ($key in $labels.Keys) {
-                foreach ($value in @($labels[$key])) {
+                $values = ConvertFrom-ReportJsonValue $labels[$key]
+                foreach ($value in @($values)) {
                     if ($value -isnot [string]) { throw "CTRF label '$key' must contain strings." }
                     $traits.Add((ConvertTo-Json -InputObject @((ConvertTo-ReportXmlText $key), (ConvertTo-ReportXmlText $value)) -Compress))
                 }
@@ -310,8 +419,11 @@ function Read-CtrfComparisonReport {
         }
         $test = [pscustomobject]@{
             Id = $uid
+            JUnitId = $junitId
             Name = Get-ReportJsonString $node "name"
             Class = $class
+            Suite = $suite
+            HasTruncatedClass = $null -ne $suite -and @($suite | Where-Object { $_.Length -gt 4096 }).Count -gt 0
             Method = Get-ReportJsonString $extra "method" -Optional
             Outcome = $outcome
             Kind = $kind
@@ -447,9 +559,10 @@ function Compare-TestReportSet {
     Assert-ReportEqual $ctrf.Count $junit.Count "JUnit/CTRF test count"
     $nameIndex = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal)
     foreach ($test in $trx.Tests.Values) {
-        $name = ConvertTo-ReportXmlText (Limit-ReportCapturedText $test.Name) -Trx
+        $name = ConvertTo-ReportXmlText $test.Name -Trx
         $class = ConvertTo-ReportXmlText $test.Class -Trx
-        foreach ($key in @("name:$name", "class:$($class.Length):$class$name")) {
+        $prefix = $name.Substring(0, [Math]::Min(256, $name.Length))
+        foreach ($key in @("name:$name", "prefix:$prefix", "class:$($class.Length):$class$name")) {
             if (-not $nameIndex.ContainsKey($key)) { $nameIndex[$key] = [Collections.Generic.List[object]]::new() }
             $nameIndex[$key].Add($test)
         }
@@ -458,8 +571,8 @@ function Compare-TestReportSet {
     $withoutTimestamps = 0
     foreach ($test in $ctrf.Values) {
         $context = "Test $(Format-ReportValue $test.Id 100) ($(Format-ReportValue $test.Name 100))"
-        if (-not $junit.ContainsKey($test.Id)) { throw "$context is missing from JUnit." }
-        $junitTest = $junit[$test.Id]
+        if (-not $junit.ContainsKey($test.JUnitId)) { throw "$context is missing from JUnit." }
+        $junitTest = $junit[$test.JUnitId]
         $guid = [guid]::Empty
         if ([guid]::TryParse($test.Id, [ref]$guid)) {
             $id = $guid.ToString("D")
@@ -467,18 +580,38 @@ function Compare-TestReportSet {
             $trxTest = $trx.Tests[$id]
         } else {
             # TRX hashes non-GUID UIDs. Do not guess when that format lost correlation.
-            $name = ConvertTo-ReportXmlText $test.Name -Trx
+            $name = if ($test.Name.Length -gt 4096) {
+                ConvertTo-ReportXmlText (Get-ReportCaptureInfo $test.Name).Prefix -Trx
+            } else {
+                ConvertTo-ReportXmlText $test.Name -Trx
+            }
             $class = ConvertTo-ReportXmlText $test.Class -Trx
-            $key = if ($null -eq $test.Class) { "name:$name" } else { "class:$($class.Length):$class$name" }
-            $candidates = @(if ($nameIndex.ContainsKey($key)) { $nameIndex[$key].ToArray() })
+            $key = if ($test.Name.Length -gt 4096) {
+                "prefix:" + $name.Substring(0, [Math]::Min(256, $name.Length))
+            } elseif ($null -eq $test.Class -or $test.HasTruncatedClass) {
+                "name:$name"
+            } else {
+                "class:$($class.Length):$class$name"
+            }
+            $candidates = @(if ($nameIndex.ContainsKey($key)) {
+                foreach ($candidate in $nameIndex[$key]) {
+                    if (-not (Test-TrxCapturedName $test.Name $candidate.Name)) { continue }
+                    if ($null -ne $test.Suite -and -not (Test-ReportClassCapture $test.Suite $candidate.Class)) { continue }
+                    $candidate
+                }
+            })
             if ($candidates.Count -ne 1) { throw "$context has $($candidates.Count) TRX name/class matches; correlation is missing or ambiguous." }
             $trxTest = $candidates[0]
         }
         if (-not $matchedTrx.Add($trxTest.Id)) { throw "$context reuses a TRX result already matched to another UID." }
-        Assert-ReportEqual (ConvertTo-ReportXmlText $test.Name -Trx) (ConvertTo-ReportXmlText (Limit-ReportCapturedText $trxTest.Name) -Trx) "$context TRX display name"
+        if (-not (Test-TrxCapturedName $test.Name $trxTest.Name)) {
+            throw "$context TRX display name: expected $(Format-ReportValue (ConvertTo-ReportXmlText $test.Name -Trx)); got $(Format-ReportValue $trxTest.Name)."
+        }
         if ($null -ne $test.Class) {
-            Assert-ReportEqual (ConvertTo-ReportXmlText $test.Class -Trx) (ConvertTo-ReportXmlText $trxTest.Class -Trx) "$context TRX class"
-            Assert-ReportEqual (ConvertTo-ReportXmlText (Limit-ReportCapturedText $test.Class)) (ConvertTo-ReportXmlText $junitTest.Class) "$context JUnit class"
+            if (-not (Test-ReportClassCapture $test.Suite $trxTest.Class)) {
+                throw "$context TRX class: expected $(Format-ReportValue $test.Class); got $(Format-ReportValue $trxTest.Class)."
+            }
+            Assert-ReportEqual (ConvertTo-ReportXmlText (Limit-ReportCapturedText $trxTest.Class)) (ConvertTo-ReportXmlText $junitTest.Class) "$context JUnit class"
         }
         $method = if ($null -ne $test.Method) { $test.Method } else { $test.Name }
         if ($null -ne $test.Method) {

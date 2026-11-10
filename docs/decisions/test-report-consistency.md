@@ -400,3 +400,82 @@ blobs rather than depending on working-tree line endings:
 | `eng/test-report-comparison.ps1` | `07E6B509D9EBD4C3F6C2EA6C7C081585CAE6DC820BEA657FDE49231ED17D04BE` |
 | `eng/pipelines/steps/build-test-windows.yml` | `9FA1CD0835F9634ABEE9297B3009648BCC55FE815954F413FBE83E24EE11D50D` |
 | `eng/pipelines/steps/test-non-windows.yml` | `3DA83963979021323316480234F05A7898CB0C9BEC9C3C484C371CB661C364DE` |
+
+## Review correction: lossless identity normalization
+
+The next review of parent `5ab61cd61914c43b1af7e0e1cbdb353ae0b921df`
+provided four reproducible false-positive paths: ISO-8601 strings became dates,
+JUnit sanitized invalid UID characters that CTRF retained, TRX escape expansion
+was counted as original display-name length, and the reporters capped qualified
+class names differently. The source contracts were rechecked in
+`CapturedTestResultBase.cs`, CTRF's `TestResultCapture.cs`, and TRX's
+`TrxReportEngine.Utilities.cs`; no shipping producer was changed.
+
+The correction preserves those representations rather than loosening equality:
+
+- On hosts exposing `ConvertFrom-Json -DateKind`, use `-DateKind String`.
+  PowerShell 7.2 uses the JSON.NET assembly already shipped with PowerShell,
+  with date coercion disabled. Conversion ignores serializer metadata and
+  disables type-name handling so traits named `$type`, `$id`, or `$ref` remain
+  ordinary data. The existing depth bound remains 100; no module/package
+  dependency or minimum-version increase was introduced.
+- Correlate CTRF's raw UID with JUnit's XML-safe UID. Preserve UID line endings
+  rather than equating distinct identities, and reject sanitization collisions.
+- Compare complete captured names against their TRX-escaped representation.
+  For truncated names, match the known original UTF-16 prefix before considering
+  escape expansion and length constraints on the unshared suffix. Literal
+  backslash-u text is never blindly decoded. Prefix indexing only narrows
+  candidates; every candidate is verified and ambiguity still fails.
+- Retain CTRF suite components. Project the uncapped TRX class into CTRF's
+  independently capped namespace/type and JUnit's capped combined qualified
+  name. Non-GUID correlation uses the same class check, not an uncapped class key
+  when the source components were truncated.
+
+### Test-value evidence for identity normalization
+
+The same final 90 tests were retained against an isolated archive of actual
+parent `5ab61cd61914c43b1af7e0e1cbdb353ae0b921df`. That state executed
+**84 passed / 6 failed / 90 executed**, exit 1, with only the demonstrated
+normalization cases failing. Both corrected runtime paths executed
+**90 passed / 0 failed / 90 executed**, exit 0.
+
+| Contract | Named cases / observations |
+| --- | --- |
+| Preserve arbitrary JSON strings | `DateShapedStringsRemainStrings` covers the name, UID, message, trait value, and output line in one fixture; the actual parent converted these strings to dates and failed. |
+| XML-safe UID correlation without merging distinct tests | `XmlInvalidUidIsCorrelated` failed on the parent. `SanitizedUidCollisionsAreRejected` and `UidLineEndingsRemainDistinct` retain the collision and identity boundaries. |
+| Original capture space, not expanded TRX length | `BoundaryXmlInvalidNamesAreAccepted` and `TruncatedXmlInvalidNamesAreAccepted` failed on the parent and now exercise both GUID and non-GUID identities. `LiteralUnicodeEscapeNamesRemainLiteral` and `TruncatedNameLengthMismatchIsRejected` protect literal text and contradictory lengths. |
+| Per-reporter class capture | `LongClassCaptureRepresentationsAreAccepted` covers GUID/non-GUID UIDs; `LongNamespaceAndTypeCaptureAreAccepted` covers separately capped components. Both failed on the parent; `LongClassCaptureMismatchIsRejected` still rejects changed data. |
+| Compatibility-parser metadata safety | `JsonMetadataLikeTraitNamesRemainData` exposed JSON.NET's default metadata interpretation during implementation. A final isolated fault restoring `MetadataPropertyHandling.Default` executed on 7.2 with **89 passed / 1 failed / 90 executed**, exit 1; the unchanged correct case passes. |
+
+Commands and actual runtime provenance:
+
+- `pwsh -NoProfile -File .\eng\test-report-comparison.ps1`: PowerShell 7.6.9,
+  exit 0, **90/90 passed**.
+- `<portable-7.2>\pwsh.exe -NoLogo -NoProfile -File .\eng\test-report-comparison.ps1`:
+  PowerShell **7.2.24**, exit 0, **90/90 passed**, including native child-command
+  exit tests using that same runtime. The portable runtime was downloaded from
+  the official PowerShell release into session-owned storage and verified against
+  its published SHA-256:
+  `A1CCB6D8AD52F917470A136C3752AF4465F261BCBE570CF44F52AA69AE6E867E`.
+  It did not change a global installation.
+- The generated `ReportConsumer` was rebuilt with the pinned SDK and unchanged
+  `3.0.0-dev` shipping packages, then run with fixture-only
+  `REPORT_CASE_MODE=identity-boundaries`. Its six results cover ISO-shaped data,
+  a form-feed UID/name, a literal escape, a truncated escaped name, a 5,000-char
+  type and a 5,000-char namespace/type pair. The producer exited **2** for one
+  intentional failure (five passed / one failed / zero skipped). The actual
+  three reports compared with **six agreeing results**, exit **0**, on both
+  PowerShell 7.6.9 and 7.2.24.
+- The existing **1,237-result** raw triplet still compares successfully, exit 0.
+  The existing rollout validator still passes **19 + 39 + 13** checks.
+  No new controlled performance claim is made from concurrent validation runs.
+
+The two behavior-affecting file hashes in session-owned
+`review-normalization-source-manifest.json` normalize CRLF to LF and bind the
+review correction independently of this decision record. Manifest SHA-256:
+`C9C133875E330CC76D02B8AB54928AA0C47FCABA2453113887DCBAF80C0B3509`.
+
+| File | SHA-256, Git-normalized LF |
+| --- | --- |
+| `eng/compare-test-reports.ps1` | `2D906247157BBC9DFE71031E73A6A82BC8A21D72B0FC7350D972F5552D49D3C5` |
+| `eng/test-report-comparison.ps1` | `F908C11456676B293B8AF235788619FDD0E72C9F192191082004B50546A7B64C` |
