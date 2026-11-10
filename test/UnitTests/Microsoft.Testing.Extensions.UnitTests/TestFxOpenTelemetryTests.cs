@@ -352,6 +352,37 @@ public sealed class TestFxOpenTelemetryTests
 
 #if NET
     [TestMethod]
+    public void RepositoryTestHost_RemovesAffectedTestCollectionEnvironment()
+    {
+        var startInfo = new ProcessStartInfo();
+        string[] variables =
+        [
+            "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
+            "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+            "MTP_AFFECTED_TESTS_CHILD_PROCESS",
+            "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID",
+            "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH",
+        ];
+        foreach (string variable in variables)
+        {
+            startInfo.Environment[variable] = "inherited-parent-context";
+        }
+
+        startInfo.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
+        startInfo.Environment[TestFxOpenTelemetry.TraceDirectoryVariable] = "owned-traces";
+
+        RemoveAffectedTestEnvironment(startInfo);
+
+        foreach (string variable in variables)
+        {
+            Assert.DoesNotContain(variable, startInfo.Environment.Keys);
+        }
+
+        Assert.AreEqual("1", startInfo.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"]);
+        Assert.AreEqual("owned-traces", startInfo.Environment[TestFxOpenTelemetry.TraceDirectoryVariable]);
+    }
+
+    [TestMethod]
     [DataRow("enabled")]
     [DataRow("disabled")]
     [DataRow("no-directory")]
@@ -389,6 +420,7 @@ public sealed class TestFxOpenTelemetryTests
         startInfo.ArgumentList.Add("--no-ansi");
         startInfo.ArgumentList.Add("--progress");
         startInfo.ArgumentList.Add("off");
+        RemoveAffectedTestEnvironment(startInfo);
         foreach (string key in startInfo.Environment.Keys.Where(key => key.StartsWith("TESTINGPLATFORM_", StringComparison.OrdinalIgnoreCase)).ToArray())
         {
             startInfo.Environment.Remove(key);
@@ -492,6 +524,15 @@ public sealed class TestFxOpenTelemetryTests
                 Assert.AreEqual(run.GetProperty("traceId").GetString(), test.GetProperty("traceId").GetString());
             }
         }
+    }
+
+    private static void RemoveAffectedTestEnvironment(ProcessStartInfo startInfo)
+    {
+        startInfo.Environment.Remove("DOTNET_CLI_ENABLE_AFFECTED_TESTS");
+        startInfo.Environment.Remove("DOTNET_CLI_TEST_AFFECTED_TESTS_MODE");
+        startInfo.Environment.Remove("MTP_AFFECTED_TESTS_CHILD_PROCESS");
+        startInfo.Environment.Remove("MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID");
+        startInfo.Environment.Remove("MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH");
     }
 #endif
 

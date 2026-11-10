@@ -277,6 +277,41 @@ Each variant's real executable then ran with the identical `$filter` above,
 Normal sources/test hashes were checked unchanged after the experiment, followed
 by the final green runtime matrix and real acceptance startup checks.
 
+### Review follow-up: nested affected-test collection isolation
+
+Review of `82891641ec9d55ac035d0ed9eaab6d77868c6fc0` identified that the
+self-hosted trace-test children inherited affected-test selection/collection
+settings. Their existing `AddAffectedTestsProvider()` registration could join
+the parent's collection batch and overwrite its feedback inventory. The fix
+follows `EqtTraceLoggerContinuationTests` and the existing
+[nested-process contract](../affected-test-selection.md#ci-layout): remove only
+the five affected-test mode/child/batch-feedback variables from the child's
+`ProcessStartInfo.Environment`. The parent environment, tracing configuration
+and unrelated tool settings remain unchanged.
+
+`RepositoryTestHost_RemovesAffectedTestCollectionEnvironment` seeds all five
+variables, verifies their removal, and verifies that telemetry opt-out and the
+trace directory are preserved. The real six-mode host test uses the same
+removal helper. The focused selector
+`FullyQualifiedName~TestFxOpenTelemetryTests.RepositoryTestHost_` executed seven
+cases on each of `net10.0` and `net11.0`: seven passed, zero failed/skipped,
+exit 0; both builds used `-warnAsError` with zero warnings/errors. The same
+build/host commands above were used with binlog/result prefix
+`otel-review-isolation-<tfm>` and TRX filename `isolation.trx`.
+
+The follow-up test source SHA-256 is
+`7D5E091102A5BD919DE50AF32D0324C6EB50B32AC53EB335E1A9585D0A2E4A62`.
+The original revision-bound evidence above remains identified separately.
+An isolated compiler-input comparison retained the new assertions but made
+`RemoveAffectedTestEnvironment` a no-op. It built successfully, executed the
+single new case, and failed at `Assert.DoesNotContain` for
+`DOTNET_CLI_ENABLE_AFFECTED_TESTS` (exit 2, one failed, zero skipped).
+The correct seven-case selection then passed again. Moving the comparison
+source initially lost the repository's test-only analyzer policy; those setup
+failures were not red evidence. The successful comparison explicitly included
+an unchanged copy of `test/.editorconfig`, without disabling analyzers.
+Results are retained under `artifacts/TestResults/Debug/otel-review-isolation-*`.
+
 ## Open questions
 
 - The project owner must confirm the server-side artifact retention period and
