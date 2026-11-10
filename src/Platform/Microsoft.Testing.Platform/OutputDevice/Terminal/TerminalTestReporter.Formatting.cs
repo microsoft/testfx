@@ -203,7 +203,7 @@ internal sealed partial class TerminalTestReporter
             return;
         }
 
-        if (!message.Contains('\n'))
+        if (message.IndexOf('\n') < 0)
         {
             terminal.Append(indent);
             terminal.AppendLine(message);

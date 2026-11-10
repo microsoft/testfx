@@ -135,12 +135,13 @@ internal sealed class TestExecutionActivityBroker(
             }
 
             _disposed = true;
-            foreach ((long token, Entry entry) in _entries.ToArray())
+            foreach (KeyValuePair<long, Entry> pair in _entries.ToArray())
             {
+                Entry entry = pair.Value;
                 entry.Sealed = true;
                 if (!entry.ActivationInProgress)
                 {
-                    work.Add(ClaimFinalization(token, entry, DateTimeOffset.UtcNow));
+                    work.Add(ClaimFinalization(pair.Key, entry, DateTimeOffset.UtcNow));
                 }
             }
         }

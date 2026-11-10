@@ -7,9 +7,8 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
-internal class TestHostOrchestratorManager :
+internal sealed class TestHostOrchestratorManager :
     ITestHostOrchestratorManager,
-    Extensions.TestHostOrchestrator.ITestHostOrchestratorManager,
     ITestHostExecutionOrchestratorMiddlewareManager
 {
     private readonly List<Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime>> _testHostOrchestratorApplicationLifetimeFactories = [];
@@ -22,16 +21,6 @@ internal class TestHostOrchestratorManager :
         _factories ??= [];
         _factories.Add(factory);
     }
-
-    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostOrchestrator> factory)
-    {
-        _ = factory ?? throw new ArgumentNullException(nameof(factory));
-        _factories ??= [];
-        _factories.Add(sp => factory(sp));
-    }
-
-    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
-        => AddTestHostOrchestratorApplicationLifetime(testHostOrchestratorApplicationLifetimeFactory);
 
     public void AddTestHostExecutionOrchestratorMiddleware(Func<IServiceProvider, ITestHostExecutionOrchestratorMiddleware> factory)
     {

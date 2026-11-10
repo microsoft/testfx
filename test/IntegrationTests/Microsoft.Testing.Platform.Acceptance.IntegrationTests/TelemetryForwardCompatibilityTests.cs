@@ -4,21 +4,19 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
-/// Regression coverage for <see href="https://github.com/microsoft/testfx/issues/9710"/>.
+/// Compatibility coverage for the oldest telemetry extension supported on legacy targets after
+/// <see href="https://github.com/microsoft/testfx/issues/12314"/> retires the platform's polyfill exports.
 ///
 /// <para>
-/// A newer <c>Microsoft.Testing.Platform</c> combined with the OLDEST supported 2.x
-/// <c>Microsoft.Testing.Extensions.Telemetry</c> must still load and run. The old telemetry
-/// extension's <c>netstandard2.0</c> asset was compiled against the platform's internal
-/// <c>Polyfills.Polyfill</c> helper (shared via <c>InternalsVisibleTo</c> before polyfills became
-/// per-assembly embedded types), so its IL carries a reference to
-/// <c>[Microsoft.Testing.Platform]Polyfills.Polyfill.Deconstruct(KeyValuePair&lt;,&gt;, out, out)</c>.
-/// When that member is missing from the newer platform, <c>AppInsightsProvider.IngestLoopAsync</c>
-/// throws <c>MissingMethodException</c> on its background thread and crashes the process.
+/// Telemetry 2.0.0's <c>netstandard2.0</c> asset references the platform's old
+/// <c>Polyfills.Polyfill.Deconstruct</c> export and is intentionally no longer supported.
+/// Telemetry 2.1.0 embeds its own helpers and remains supported on .NET Framework.
+/// Keep telemetry enabled to exercise the background ingest loop rather than only registration.
 /// </para>
 ///
 /// <para>
-/// Two conditions are required to surface the crash, and both were missing from
+/// Two conditions are required to exercise the original legacy-target failure path from
+/// <see href="https://github.com/microsoft/testfx/issues/9710"/>, and both were missing from the original
 /// <see cref="ForwardCompatibilityTests"/>:
 /// <list type="number">
 /// <item>The <b>.NET Framework</b> host (<c>net462</c>) must be used so NuGet resolves the telemetry
@@ -35,8 +33,7 @@ public class TelemetryForwardCompatibilityTests : AcceptanceTestBase<TelemetryFo
 {
     private const string AssetName = "TelemetryForwardCompatibilityTest";
 
-    // The crash is specific to the netstandard2.0 telemetry asset that ships with old 2.x extensions,
-    // which is only resolved on the .NET Framework host. That host only exists on Windows.
+    // The .NET Framework host resolves the netstandard2.0 telemetry asset and only exists on Windows.
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     public async Task NewerPlatform_WithOldestSupportedTelemetryExtension_TelemetryEnabled_OnNetFramework_ShouldNotCrash()
@@ -59,9 +56,8 @@ public class TelemetryForwardCompatibilityTests : AcceptanceTestBase<TelemetryFo
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        // Oldest supported 2.x extension release. Its netstandard2.0 telemetry asset references the
-        // platform's internal Polyfills.Polyfill helper, which is what makes it a forward-compat canary.
-        private const string OldestSupportedExtensionVersion = "2.0.0";
+        // The first stable release without a dependency on the retired platform polyfill exports.
+        private const string OldestSupportedExtensionVersion = "2.1.0";
 
         private const string TestCode = """
 #file TelemetryForwardCompatibilityTest.csproj
@@ -81,9 +77,8 @@ public class TelemetryForwardCompatibilityTests : AcceptanceTestBase<TelemetryFo
         <!-- Use the locally built (newer) version of the platform. -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
 
-        <!-- Use the oldest supported 2.x telemetry extension to test forward compatibility. On .NET
-             Framework this resolves the netstandard2.0 asset that references the platform's internal
-             Polyfills.Polyfill helper (see #9710). -->
+        <!-- Keep the oldest telemetry release whose netstandard2.0 asset does not require the
+             platform polyfill exports retired in MTP 3. -->
         <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$OldestSupportedExtensionVersion$" />
     </ItemGroup>
 </Project>
