@@ -28,6 +28,10 @@ must not be counted again alongside their inputs. Explicit-file mode supports
 arbitrary filenames for one execution. The script cannot prove that a whole
 module, absent from all three formats, executed; the test runner remains
 responsible for selection and execution completeness.
+Unpaired XML is parsed securely and treated as JUnit only when its root is
+`testsuite` or `testsuites`; other XML artifacts are not report sets. XML at the
+expected stem of a TRX/CTRF report remains required even if its root is wrong.
+XML parsing errors remain errors, not a reason to silently discard input.
 
 CI checks whether any raw report exists before invoking the comparator, not just
 whether the directory exists. A successful affected-test no-op can leave only a
@@ -199,15 +203,15 @@ custom filenames require explicit-file mode.
 | CI scope and exact filenames | `PipelineWiringPreservesScope`, `PipelineProbeRecognizesEveryReportFormat`; both extracted pipeline probes executed; MSBuild evaluation and the native test command produced one correctly aligned triplet. Existing rollout validator: 19 + 39 + 13 passed. | Live Azure Pipelines and Linux/macOS execution were not run locally; no hosted report UI is changed. |
 | Regression sensitivity | Same 73 tests executed against four isolated faulty variants, the actual pre-blank-line-fix implementation, and the final correct comparator; results below. | Faults caused behavioral assertions, not compilation, launch, or zero-selection failures. |
 
-### Source and evidence identity
+### Initial source and evidence identity
 
-The implementation is a local, uncommitted change based on
+Initial validation used a local, uncommitted change based on
 `471a807cf8182e0bcd0d9967c8dbf002c04945d2`. The six behavior-affecting files
 (both scripts, root pipeline, both pipeline templates, and test targets) are
 bound by the retained `report-comparison-source-manifest.json`, SHA-256
 `C59EBE68B0478D8527CEDF631E882AE8003B0D672770E685A21D1AE6BC39BE9B`.
 This decision record is excluded from that manifest to avoid a self-referential
-hash. Final script identities:
+hash. Initial validated script identities:
 
 | File | SHA-256 |
 | --- | --- |
@@ -328,3 +332,71 @@ HTML, and hosted CI payloads is intentionally not claimed. Neither report
 agreement nor a matching total proves that all expected modules ran.
 The initial index requires unique per-file UIDs/IDs; repeated identities are
 rejected explicitly rather than guessed into matching rows or retry histories.
+
+## Review correction: unrelated XML artifacts
+
+The review of parent `fd8e8089edf13abce5ca592b9a9e7b00a482a8f1`
+identified a concrete discovery defect: a valid coverage/settings XML artifact
+was treated as an orphan JUnit report. Retaining four new cases against that
+parent produced 75 passes and exactly two intended failures, 77 executed:
+`UnrelatedXmlArtifactIsIgnored` and
+`NonJUnitXmlDoesNotEnablePipelineComparison`. The safety-net cases
+`InvalidExpectedJUnitRootIsRejected` and
+`MalformedOrphanXmlRemainsAnError` already passed.
+
+The bounded correction shares `Get-TestReportInput` between directory comparison
+and both CI probes. Unpaired XML is recognized by its JUnit `testsuite` or
+`testsuites` root using the existing secure parser. XML occupying the expected
+stem of a TRX/CTRF report is still required input, so a wrong root cannot silently
+disappear. Malformed XML remains a validation error, not an ignored artifact.
+
+The suggestion to skip or downgrade incomplete triplets after failed tests is
+not adopted. This feature intentionally validates failure reports under
+`succeededOrFailed()`; partial inputs cannot establish agreement, and the original
+test step's failure remains visible. Existing missing-partner and incomplete
+report tests are retained rather than weakening the gate.
+
+The folder-publication signal is emitted before loading/classifying reports.
+This keeps the existing artifact upload enabled even if malformed orphan XML
+fails the probe. `MalformedXmlProbeStillPublishesArtifacts` accepts either an
+immediate parsing failure or deferral to the comparator, but requires that the
+original artifacts remain publishable; it does not prescribe where validation
+must happen.
+
+### Test-value evidence for the review correction
+
+The final 78-case test script was retained unchanged against an isolated archive
+of actual parent `fd8e8089edf13abce5ca592b9a9e7b00a482a8f1`, then run against
+the corrected implementation. No producer/package source changed or was repacked
+for this discovery-only correction.
+
+| Contract / cases | Actual parent | Corrected implementation |
+| --- | --- | --- |
+| `UnrelatedXmlArtifactIsIgnored`, `NonJUnitXmlDoesNotEnablePipelineComparison` | Executed: detected; 76 passed / 2 failed / 78 executed, exit 1. The coverage document became a spurious report set and both probes falsely enabled comparison. | 78 passed / 0 failed / 78 executed, exit 0. |
+| `InvalidExpectedJUnitRootIsRejected`, `MalformedOrphanXmlRemainsAnError`, existing missing-partner/incomplete cases | Passed: invalid or incomplete report inputs remain failures. | Passed with the same assertions; the gate was not relaxed. |
+| `MalformedXmlProbeStillPublishesArtifacts` | Passed: validation is deferred to comparison and the folder remains publishable. | Passed: parsing can fail in discovery, but the folder signal is already emitted. An intermediate ordering was also checked and failed this specific artifact-preservation assertion before being corrected. |
+
+Commands and results:
+
+- `pwsh -NoProfile -File .\eng\test-report-comparison.ps1`: exit 0,
+  **78 passed / 0 failed / 78 executed**.
+- `pwsh -NoProfile -File <isolated-parent>\eng\test-report-comparison.ps1`:
+  exit 1, **76 passed / 2 failed / 78 executed**, only the two review regressions.
+- `.\eng\validate-affected-tests.ps1 -SelfTest`: exit 0,
+  **19 + 39 + 13 passed**; rollout and artifact-publishing contracts retained.
+- `pwsh -NoProfile -File .\eng\compare-test-reports.ps1 -ResultsDirectory <owned-copy>`:
+  exit 0, all **1,237 previously generated real results** still agree with an
+  added `coverage.cobertura.xml` artifact. Original reports were not modified.
+
+The four behavior-affecting files are bound by session-owned
+`review-xml-source-manifest.json`, SHA-256
+`3FFE00AE9127C8F908ECDC955F546D28DD16AB1052387BD242C459A5B16E225E`.
+Its file hashes normalize CRLF to LF and therefore identify the committed Git
+blobs rather than depending on working-tree line endings:
+
+| File | SHA-256, Git-normalized LF |
+| --- | --- |
+| `eng/compare-test-reports.ps1` | `AFABB5024663E04030D1D8EDE6770EC5887BF68EBB45DEF5A79D9F20F881958D` |
+| `eng/test-report-comparison.ps1` | `07E6B509D9EBD4C3F6C2EA6C7C081585CAE6DC820BEA657FDE49231ED17D04BE` |
+| `eng/pipelines/steps/build-test-windows.yml` | `9FA1CD0835F9634ABEE9297B3009648BCC55FE815954F413FBE83E24EE11D50D` |
+| `eng/pipelines/steps/test-non-windows.yml` | `3DA83963979021323316480234F05A7898CB0C9BEC9C3C484C371CB661C364DE` |

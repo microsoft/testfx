@@ -8,6 +8,7 @@ files, without recursing into merged/retry/child-asset reports. Explicit-file
 mode accepts arbitrary filenames. Inputs are never changed. Missing, invalid,
 incomplete, ambiguous, or inconsistent reports fail the command. Consistent
 zero-result reports are valid; agreement does not prove that tests executed.
+Unrelated XML artifacts are ignored unless they occupy an expected JUnit path.
 .EXAMPLE
 pwsh -NoProfile -File eng/compare-test-reports.ps1 -ResultsDirectory artifacts/TestResults/Release
 .EXAMPLE
@@ -524,6 +525,30 @@ function Compare-TestReportSet {
     return [pscustomobject]@{ Tests = $ctrf.Count; WithoutTimestamps = $withoutTimestamps }
 }
 
+function Get-TestReportInput {
+    param([string]$Directory)
+
+    $inputs = [Collections.Generic.List[object]]::new()
+    $expectedXmlStems = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($file in Get-ChildItem -LiteralPath $Directory -File | Sort-Object Name) {
+        foreach ($format in @(@(".ctrf.json", "CtrfPath"), @(".trx", "TrxPath"), @(".xml", "JUnitPath"))) {
+            if ($file.Name.EndsWith($format[0], [StringComparison]::OrdinalIgnoreCase)) {
+                $stem = $file.Name.Substring(0, $file.Name.Length - $format[0].Length)
+                $inputs.Add([pscustomobject]@{ Path = $file.FullName; Stem = $stem; Kind = $format[1] })
+                if ($format[1] -cne "JUnitPath") { $null = $expectedXmlStems.Add($stem) }
+                break
+            }
+        }
+    }
+    foreach ($reportInput in $inputs) {
+        if ($reportInput.Kind -ceq "JUnitPath" -and -not $expectedXmlStems.Contains($reportInput.Stem)) {
+            $document = Read-ReportXml $reportInput.Path
+            if ($document.DocumentElement.LocalName -cnotin @("testsuite", "testsuites")) { continue }
+        }
+        $reportInput
+    }
+}
+
 function Invoke-TestReportComparison {
     param([string]$ResultsDirectory, [string]$TrxPath, [string]$CtrfPath, [string]$JUnitPath, [decimal]$ToleranceMilliseconds = 1)
 
@@ -531,19 +556,12 @@ function Invoke-TestReportComparison {
     if ($ResultsDirectory) {
         if ($TrxPath -or $CtrfPath -or $JUnitPath) { throw "Use a results directory or three explicit files, not both." }
         if (-not (Test-Path -LiteralPath $ResultsDirectory -PathType Container)) { throw "Results directory does not exist: '$ResultsDirectory'." }
-        foreach ($file in Get-ChildItem -LiteralPath $ResultsDirectory -File | Sort-Object Name) {
-            $kind = $null
-            foreach ($format in @(@(".ctrf.json", "CtrfPath"), @(".trx", "TrxPath"), @(".xml", "JUnitPath"))) {
-                if ($file.Name.EndsWith($format[0], [StringComparison]::OrdinalIgnoreCase)) {
-                    $kind = $format[1]
-                    $stem = $file.Name.Substring(0, $file.Name.Length - $format[0].Length)
-                    break
-                }
-            }
-            if ($null -eq $kind) { continue }
+        foreach ($reportInput in Get-TestReportInput -Directory $ResultsDirectory) {
+            $stem = $reportInput.Stem
+            $kind = $reportInput.Kind
             if (-not $sets.ContainsKey($stem)) { $sets.Add($stem, @{ TrxPath = ""; CtrfPath = ""; JUnitPath = "" }) }
             if ($sets[$stem][$kind]) { throw "Duplicate $kind report for '$stem'." }
-            $sets[$stem][$kind] = $file.FullName
+            $sets[$stem][$kind] = $reportInput.Path
         }
         if ($sets.Count -eq 0) { throw "No report sets found in '$ResultsDirectory'." }
     } else {

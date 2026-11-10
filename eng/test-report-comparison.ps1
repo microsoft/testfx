@@ -135,8 +135,9 @@ function Invoke-PipelineReportProbe {
         param($assignment)
         return "`$testResults = '$($Directory.Replace("'", "''"))'"
     })
+    $body = $body.Replace(". ./eng/compare-test-reports.ps1", ". '$($ComparatorScript.Replace("'", "''"))'")
     $body = $body.Replace("Write-Host", "Write-Output")
-    return @(& ([scriptblock]::Create($body)))
+    & ([scriptblock]::Create($body))
 }
 
 function Invoke-FixtureComparison {
@@ -477,6 +478,34 @@ $cases = [ordered]@{
         Copy-Item -LiteralPath $f.JUnitPath -Destination (Join-Path $f.Directory "orphan.xml")
         Assert-DirectoryRejected $f "Missing TrxPath report"
     }
+    UnrelatedXmlArtifactIsIgnored = {
+        param($f)
+        Save-ComparisonFixture $f
+        Set-Content -LiteralPath (Join-Path $f.Directory "coverage.cobertura.xml") -Value "<coverage><sources /></coverage>"
+        $output = @(Invoke-TestReportComparison -ResultsDirectory $f.Directory)
+        Assert-TestCondition ($output[-1] -ceq "Compared 1 report set(s), 4 tests: TRX, CTRF, and JUnit agree.") "Non-JUnit XML must not become an orphan test-report set."
+    }
+    InvalidExpectedJUnitRootIsRejected = {
+        param($f)
+        Save-ComparisonFixture $f
+        Set-Content -LiteralPath $f.JUnitPath -Value "<coverage />"
+        Assert-DirectoryRejected $f "Expected a JUnit testsuites/testsuite document."
+    }
+    MalformedOrphanXmlRemainsAnError = {
+        param($f)
+        Save-ComparisonFixture $f
+        Set-Content -LiteralPath (Join-Path $f.Directory "broken.xml") -Value "<testsuites>"
+        try {
+            Invoke-TestReportComparison -ResultsDirectory $f.Directory | Out-Null
+        } catch {
+            if ($_.Exception.Message.Contains("Unexpected end of file", [StringComparison]::Ordinal) -or
+                $_.Exception.Message.Contains("Missing TrxPath report", [StringComparison]::Ordinal)) {
+                return
+            }
+            throw
+        }
+        throw "Malformed XML must not be silently ignored during report discovery."
+    }
     NestedReportsAreNotDoubleCounted = {
         param($f)
         Save-ComparisonFixture $f
@@ -603,11 +632,40 @@ $cases = [ordered]@{
             Assert-TestCondition ($output -ccontains "##vso[task.setvariable variable=HasTestReports]false") "No-work invocations must skip comparison, not claim report agreement."
         }
     }
+    NonJUnitXmlDoesNotEnablePipelineComparison = {
+        param($f)
+        Set-Content -LiteralPath (Join-Path $f.Directory "extension-settings.xml") -Value "<settings />"
+        foreach ($template in @("build-test-windows.yml", "test-non-windows.yml")) {
+            $output = Invoke-PipelineReportProbe $template $f.Directory
+            Assert-TestCondition ($output -ccontains "##vso[task.setvariable variable=HasTestResults]true") "Unrelated XML artifacts must still be published."
+            Assert-TestCondition ($output -ccontains "##vso[task.setvariable variable=HasTestReports]false") "Only actual test reports may enable comparison."
+        }
+    }
+    MalformedXmlProbeStillPublishesArtifacts = {
+        param($f)
+        Set-Content -LiteralPath (Join-Path $f.Directory "broken.xml") -Value "<testsuites>"
+        foreach ($template in @("build-test-windows.yml", "test-non-windows.yml")) {
+            $output = [Collections.Generic.List[string]]::new()
+            $rejected = $false
+            try {
+                Invoke-PipelineReportProbe $template $f.Directory | ForEach-Object { $output.Add([string]$_) }
+            } catch {
+                if (-not $_.Exception.Message.Contains("Unexpected end of file", [StringComparison]::Ordinal)) { throw }
+                $rejected = $true
+            }
+            Assert-TestCondition ($rejected -or $output.Contains("##vso[task.setvariable variable=HasTestReports]true")) "A malformed report must be rejected now or passed to the comparison gate."
+            Assert-TestCondition ($output.Contains("##vso[task.setvariable variable=HasTestResults]true")) "Report parsing failure must not suppress publication of the original test artifacts."
+        }
+    }
     PipelineProbeRecognizesEveryReportFormat = {
         param($f)
         foreach ($extension in @(".trx", ".ctrf.json", ".xml")) {
             $path = Join-Path $f.Directory "orphan$extension"
-            Set-Content -LiteralPath $path -Value "A lone report must trigger validation of its missing partners."
+            if ($extension -ceq ".xml") {
+                $f.JUnit.Save($path)
+            } else {
+                Set-Content -LiteralPath $path -Value "A lone report must trigger validation of its missing partners."
+            }
             foreach ($template in @("build-test-windows.yml", "test-non-windows.yml")) {
                 $output = Invoke-PipelineReportProbe $template $f.Directory
                 Assert-TestCondition ($output -ccontains "##vso[task.setvariable variable=HasTestReports]true") "$extension must trigger comparison even when TRX or another partner is missing."
