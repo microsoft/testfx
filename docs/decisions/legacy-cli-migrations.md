@@ -87,6 +87,26 @@ metadata validation. This is setup evidence, not a behavioral red phase.
 The host's other TestFx sessions requested serialized heavy validation; further
 builds and tests wait for the coordinator's validation slot.
 
+### 2026-11-10: the native writer is another filename consumer
+
+Static inspection caught a necessary second boundary before behavioral
+validation: deleting HangDump's own replacement alone does **not** make `%p`
+literal. The runtime's diagnostic IPC
+[`GenerateDump`](https://github.com/dotnet/runtime/blob/v10.0.0/src/coreclr/vm/excep.cpp)
+passes the filename unchanged to `createdump` on both Windows and Unix.
+Its [`FormatDumpName`](https://github.com/dotnet/runtime/blob/v10.0.0/src/coreclr/debug/createdump/dumpname.cpp)
+still expands `%p`; `%%` is the documented literal-percent escape.
+
+Escape percent characters only in HangDump's native **write argument** using the
+existing `GetDumpFileNames` seam. Keep the resolved artifact path unescaped and
+retain the Windows-space quoting workaround. This prevents a second formatter
+from changing a resolved filename or results-directory segment. HangDump's
+supported template language remains the six curly-brace tokens; CrashDump's
+separate runtime-token path is unchanged. Add two focused writer-argument cases
+covering literal `%p` and combined percent-containing path segments/spaces, and
+retain the real literal-percent dump regression. This is a static discovery,
+not an invented failing test run.
+
 ## Alternatives and decision
 
 1. Remove all three spellings now: rejected because the pinned Arcade runner
@@ -124,11 +144,11 @@ Record exact commands, revisions/patches, test identities/counts, exits, package
 provenance, and unavailable evidence here as validation proceeds.
 
 The prepared changed-production patch, excluding documentation, is SHA-256
-`ED8292417A5E378CFB4EC6EF15167CA277D735ABE765F2D0E7B97E3091A05E5D`
+`74DEA917F87B654685FC1411A4722F7E6A4C423501C45FDCE24A7CE135DD2851`
 (`git diff --binary` for `src`, `test`, and the two module-pool scripts).
 The isolated comparison remains at the pristine production base above, with
 the identical test/harness patch SHA-256
-`62185BE734514130E57B16A23C9CD4FF361D123641DDC3C485CA3ADED3222578`.
+`BAFCEEDD8DBA25EFD6D5D277441FA2CD17742D1E0E17160ED34BA49BB4EE76E2`.
 The comparison's `src`, global build configuration, versions, and module-pool
 producer have no tracked changes. Neither hash is a fabricated commit ID.
 
@@ -137,6 +157,9 @@ The prepared focused cases are:
 - Twelve naming rows in
   `EnsureProcessIdPlaceholder_MakesCustomDumpPathUnique` and
   `GetDumpFileNamePattern_PreservesRootNameAndMakesChildNamesUnique`.
+- Two writer-path rows in
+  `GetDumpFileNames_PercentCharactersAreLiteralInTheArtifactPath`, plus the
+  existing Windows-space quoting case.
 - `GetCommandLineOptions_DoesNotIncludeNoAnsiOption` and
   `ValidateOutputOptions_UnregisteredOptionThrows`, plus existing canonical
   option validation and retained progress-alias coverage.

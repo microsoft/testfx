@@ -234,6 +234,19 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    [DataRow("literal_%p.dmp", "literal_%%p.dmp", DisplayName = "Native dump writer preserves literal percent-p")]
+    [DataRow("directory %p with spaces/literal_%%_%p.dmp", "directory %%p with spaces/literal_%%%%_%%p.dmp", DisplayName = "Native dump writer preserves percent path segments and spaces")]
+    public void GetDumpFileNames_PercentCharactersAreLiteralInTheArtifactPath(string path, string escapedPath)
+    {
+        HangDumpProcessLifetimeHandler.DumpFileNames dumpFileNames = HangDumpProcessLifetimeHandler.GetDumpFileNames(path);
+
+        Assert.AreEqual(
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && path.Contains(' ') ? $"\"{escapedPath}\"" : escapedPath,
+            dumpFileNames.WriteDumpFileName);
+        Assert.AreEqual(path, dumpFileNames.ArtifactDumpFileName);
+    }
+
+    [TestMethod]
     public async Task QueryOnceAndDumpTree_WithStalledQuery_QueriesOncePerDumpAndStillDumpsWholeTree()
     {
         // A wedged test host never answers the in-progress-test query, so the query costs a full

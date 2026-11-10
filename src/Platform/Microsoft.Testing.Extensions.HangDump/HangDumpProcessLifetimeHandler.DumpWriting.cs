@@ -156,11 +156,16 @@ internal sealed partial class HangDumpProcessLifetimeHandler
     // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
     // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
     internal static DumpFileNames GetDumpFileNames(string dumpFileName)
-        => new(
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && dumpFileName.Contains(' ')
-                ? $"\"{dumpFileName}\""
-                : dumpFileName,
+    {
+        // createdump interprets percent tokens too. Escape only its argument so it writes the literal
+        // resolved path rather than expanding %p again; artifact publication must retain the real path.
+        string writeDumpFileName = dumpFileName.Replace("%", "%%");
+        return new(
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && writeDumpFileName.Contains(' ')
+                ? $"\"{writeDumpFileName}\""
+                : writeDumpFileName,
             dumpFileName);
+    }
 
     internal readonly record struct DumpFileNames(string WriteDumpFileName, string ArtifactDumpFileName);
 }
