@@ -442,26 +442,19 @@
         <target state="translated">başarılı</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalAnsiOptionDescription">
+      <trans-unit id="TerminalAnsiModeOptionDescription">
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="translated">ANSI kaçış karakterlerinin yayılıp yayılmadığını denetleyin.
-Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).
-'on' değeri, stdout yeniden yönlendirildiğinde bile ANSI kaçış kodlarını (imleç hareketi dahil) zorlar. Yalnızca renk istiyorsanız --progress off ile birlikte kullanın.
-Hem --ansi hem de --no-ansi birlikte sağlandığında --ansi öncelikli olur.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</source>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</target>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--ansi, değeri 'auto', 'on' (veya 'true', 'enable', '1') ya da 'off' (veya 'false', 'disable', '0') olan tek bir parametre bekliyor.</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
-      </trans-unit>
-      <trans-unit id="TerminalNoAnsiOptionDescription">
-        <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="translated">ANSI kaçış karakterlerinin ekrana çıkışını devre dışı bırakın.</target>
-        <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
@@ -500,16 +493,16 @@ Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: 'Normal
         <target state="translated"> | henüz tamamlanmış test yok</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalProgressOptionDescription">
+      <trans-unit id="TerminalProgressModeOptionDescription">
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="translated">İlerlemenin ekrana bildirilip bildirilmediğini denetler.
-Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).
-'auto', terminal satır içi güncelleme yapamıyorsa ilerlemeyi göstermez. Örneğin --no-ansi kullanıldığında veya CI ortamında bu geçerlidir.
-Bu seçenek, kullanım dışı bırakılan --no-progress bayrağından önceliklidir.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
+This option takes precedence over the deprecated --no-progress flag.</target>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
