@@ -197,7 +197,16 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         JsonElement[] tests = results.GetProperty("tests").EnumerateArray().ToArray();
         Assert.HasCount(2, tests);
         Assert.AreEqual("PassingTest", tests[0].GetProperty("name").GetString());
+        Assert.AreEqual("passed", tests[0].GetProperty("status").GetString());
+        Assert.IsFalse(tests[0].TryGetProperty("assertionFailures", out _));
         Assert.AreEqual("FailingTest", tests[1].GetProperty("name").GetString());
+        Assert.AreEqual("failed", tests[1].GetProperty("status").GetString());
+        Assert.AreEqual("Expected 1 but got 2", tests[1].GetProperty("message").GetString());
+        Assert.IsTrue(tests[1].TryGetProperty("assertionFailures", out JsonElement failures), "Crash recovery must retain the failed comparison.");
+        JsonElement comparison = Assert.ContainsSingle(failures.EnumerateArray());
+        Assert.AreSequenceEqual(["expected", "actual"], comparison.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreEqual("1", comparison.GetProperty("expected").GetString());
+        Assert.AreEqual("2", comparison.GetProperty("actual").GetString());
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -355,9 +364,11 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task Ctrf_MergingLegacyAndCurrentReports_PreservesVersionAndAttemptIdentities(bool currentFirst)
+    [DataRow("0.1.0", false)]
+    [DataRow("0.1.0", true)]
+    [DataRow("0.2.0", false)]
+    [DataRow("0.2.0", true)]
+    public async Task Ctrf_MergingLegacyAndCurrentReports_PreservesVersionAndAttemptIdentities(string earlierVersion, bool currentFirst)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
@@ -373,17 +384,21 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 
             string path = Path.Combine(resultDirectory, fileName);
             JsonObject report = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
-            Assert.AreEqual("0.2.0", (string?)report["specVersion"]);
+            Assert.AreEqual("0.3.0", (string?)report["specVersion"]);
             JsonArray tests = report["results"]!["tests"]!.AsArray();
             Assert.HasCount(4, tests);
             expectedAttemptIds.AddRange(tests.Select(test => (string)test!["attemptId"]!));
             if (index == (currentFirst ? 2 : 1))
             {
-                report["specVersion"] = "0.1.0";
+                report["specVersion"] = earlierVersion;
                 foreach (JsonObject legacyTest in tests.Select(test => test!.AsObject()))
                 {
-                    legacyTest["extra"]!["mtpAttemptId"] = (string)legacyTest["attemptId"]!;
-                    legacyTest.Remove("attemptId");
+                    legacyTest.Remove("assertionFailures");
+                    if (earlierVersion == "0.1.0")
+                    {
+                        legacyTest["extra"]!["mtpAttemptId"] = (string)legacyTest["attemptId"]!;
+                        legacyTest.Remove("attemptId");
+                    }
                 }
 
                 File.WriteAllText(path, report.ToJsonString());
@@ -398,16 +413,29 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
 
         using var merged = JsonDocument.Parse(File.ReadAllText(mergedPath));
-        Assert.AreEqual("0.2.0", merged.RootElement.GetProperty("specVersion").GetString());
+        Assert.AreEqual("0.3.0", merged.RootElement.GetProperty("specVersion").GetString());
         JsonElement[] mergedTests = [.. merged.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
         Assert.HasCount(8, mergedTests);
-        Assert.HasCount(4, mergedTests.Where(test => test.TryGetProperty("attemptId", out _)));
+        Assert.HasCount(earlierVersion == "0.1.0" ? 4 : 8, mergedTests.Where(test => test.TryGetProperty("attemptId", out _)));
         Assert.HasCount(8, expectedAttemptIds.Distinct(StringComparer.Ordinal));
         Assert.AreSequenceEqual(
             expectedAttemptIds,
             mergedTests.Select(test => test.TryGetProperty("attemptId", out JsonElement attemptId)
                 ? attemptId.GetString()!
                 : test.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!).ToArray());
+        JsonElement[] currentTests = [.. mergedTests.Skip(currentFirst ? 0 : 4).Take(4)];
+        JsonElement[] earlierTests = [.. mergedTests.Skip(currentFirst ? 4 : 0).Take(4)];
+        Assert.IsTrue(earlierTests.All(test => !test.TryGetProperty("assertionFailures", out _)));
+        JsonElement failure = currentTests.Single(test => test.GetProperty("name").GetString() == "FailingTest");
+        Assert.IsTrue(failure.TryGetProperty("assertionFailures", out JsonElement failures), "Merging must retain the current report's comparison.");
+        JsonElement comparison = Assert.ContainsSingle(failures.EnumerateArray());
+        Assert.AreEqual("1", comparison.GetProperty("expected").GetString());
+        Assert.AreEqual("2", comparison.GetProperty("actual").GetString());
+        JsonElement partialTest = currentTests.Single(test => test.GetProperty("name").GetString() == "DuplicateUidFailure");
+        Assert.IsTrue(partialTest.TryGetProperty("assertionFailures", out JsonElement partialFailures), "Merging must retain the empty actual side.");
+        JsonElement partial = Assert.ContainsSingle(partialFailures.EnumerateArray());
+        Assert.IsFalse(partial.TryGetProperty("expected", out _));
+        Assert.AreEqual(string.Empty, partial.GetProperty("actual").GetString());
     }
 
     private static void AssertCtrfReportShape(string filePath)
@@ -423,8 +451,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         // The dummy framework emits four tests that exercise status, attachments, and
         // duplicate UIDs end to end:
         //  - PassingTest             -> status: "passed"
-        //  - FailingTest             -> status: "failed" + message + attachment
-        //  - DuplicateUidFailure     -> status: "failed"
+        //  - FailingTest             -> status: "failed" + message + comparison + attachment
+        //  - DuplicateUidFailure     -> status: "failed" + missing expected / empty actual
         //  - DuplicateUidPass        -> status: "passed" with the same UID as the prior row
         string actual = File.ReadAllText(filePath);
         using (var document = JsonDocument.Parse(actual))
@@ -447,7 +475,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         const string expected = """
 {
   "reportFormat": "CTRF",
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "reportId": "<GUID>",
   "runId": "<RUN_ID>",
   "timestamp": "<TIMESTAMP>",
@@ -507,6 +535,12 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "failed",
         "duration": <DURATION_MS>,
         "message": "Expected 1 but got 2",
+        "assertionFailures": [
+          {
+            "expected": "1",
+            "actual": "2"
+          }
+        ],
         "attachments": [
           {
             "name": "failure.log",
@@ -529,6 +563,11 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "failed",
         "duration": <DURATION_MS>,
         "message": "Transient failure",
+        "assertionFailures": [
+          {
+            "actual": ""
+          }
+        ],
         "extra": {
           "uid": "test-3"
         }
@@ -689,8 +728,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             return;
         }
 
-        // 2) A plain failing test (no Exception object so no stack trace / exception type
-        //    are emitted; only the explanation propagates as CTRF `message`).
+        // 2) A comparison without an Exception: the explanation stays at test level
+        //    while the explicit pair supplies assertionFailures.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
             context.Request.Session.SessionUid,
             new TestNode()
@@ -699,6 +738,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 DisplayName = "FailingTest",
                 Properties = new PropertyBag(
                     new FailedTestNodeStateProperty("Expected 1 but got 2"),
+                    new AssertionFailureProperty("1", "2"),
                     new FileArtifactProperty(new FileInfo(attachmentPath), "failure.log", "Failure diagnostics")),
             }));
 
@@ -743,7 +783,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             {
                 Uid = "test-3",
                 DisplayName = "DuplicateUidFailure",
-                Properties = new PropertyBag(new FailedTestNodeStateProperty("Transient failure")),
+                Properties = new PropertyBag(
+                    new FailedTestNodeStateProperty("Transient failure"),
+                    new AssertionFailureProperty(null, string.Empty)),
             }));
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
             context.Request.Session.SessionUid,

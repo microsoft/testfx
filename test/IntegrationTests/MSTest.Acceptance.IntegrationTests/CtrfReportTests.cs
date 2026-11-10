@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public sealed class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixture>
 {
     [TestMethod]
@@ -33,9 +34,9 @@ public sealed class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAss
         Assert.Contains(@"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@", ctrfContent, ctrfContent);
 
         // Summary counts include both outcomes
-        Assert.Contains(@"""tests"": 2", ctrfContent, ctrfContent);
+        Assert.Contains(@"""tests"": 3", ctrfContent, ctrfContent);
         Assert.Contains(@"""passed"": 1", ctrfContent, ctrfContent);
-        Assert.Contains(@"""failed"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""failed"": 2", ctrfContent, ctrfContent);
 
         // Both per-test entries are present
         Assert.Contains(@"""name"": ""PassingTest""", ctrfContent, ctrfContent);
@@ -48,17 +49,41 @@ public sealed class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAss
         Assert.Contains("Assert.AreEqual", ctrfContent, ctrfContent);
 
         using var document = JsonDocument.Parse(ctrfContent);
-        Assert.AreEqual("0.2.0", document.RootElement.GetProperty("specVersion").GetString());
-        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
-        Assert.HasCount(2, tests);
+        Assert.AreEqual("0.3.0", document.RootElement.GetProperty("specVersion").GetString());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(3, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(2, summary.GetProperty("failed").GetInt32());
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(3, tests);
+        Assert.AreSequenceEqual(
+            ["FailingTest", "MultipleComparisonFailures", "PassingTest"],
+            tests.Select(test => test.GetProperty("name").GetString()!).OrderBy(name => name, StringComparer.Ordinal).ToArray());
         Assert.IsTrue(tests.All(test => !string.IsNullOrEmpty(test.GetProperty("testId").GetString())));
         string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
         Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
-        Assert.HasCount(2, executionIds.Distinct());
+        Assert.HasCount(3, executionIds.Distinct());
         string[] attemptIds = [.. tests.Select(test => test.GetProperty("attemptId").GetString()!)];
         Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
-        Assert.HasCount(2, attemptIds.Distinct());
+        Assert.HasCount(3, attemptIds.Distinct());
         Assert.IsEmpty(attemptIds.Intersect(executionIds, StringComparer.Ordinal));
+        JsonElement passing = tests.Single(test => test.GetProperty("name").GetString() == "PassingTest");
+        Assert.AreEqual("passed", passing.GetProperty("status").GetString());
+        Assert.IsFalse(passing.TryGetProperty("assertionFailures", out _));
+        JsonElement failing = tests.Single(test => test.GetProperty("name").GetString() == "FailingTest");
+        Assert.AreEqual("failed", failing.GetProperty("status").GetString());
+        Assert.IsTrue(failing.TryGetProperty("assertionFailures", out JsonElement failures), "A real Assert.AreEqual failure must retain assertionFailures.");
+        JsonElement comparison = Assert.ContainsSingle(failures.EnumerateArray());
+        Assert.AreSequenceEqual(["expected", "actual"], comparison.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreEqual("1", comparison.GetProperty("expected").GetString());
+        Assert.AreEqual("2", comparison.GetProperty("actual").GetString());
+        JsonElement multiple = tests.Single(test => test.GetProperty("name").GetString() == "MultipleComparisonFailures");
+        Assert.AreEqual("failed", multiple.GetProperty("status").GetString());
+        Assert.IsFalse(multiple.TryGetProperty("assertionFailures", out _), "Several failed comparisons must not be presented as one ambiguous pair.");
+        string message = multiple.GetProperty("message").GetString()!;
+        Assert.Contains("2 assertion(s) failed within the assert scope.", message);
+        Assert.Contains("MultipleComparisonFailures", multiple.GetProperty("trace").GetString()!);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -111,6 +136,16 @@ public class UnitTest1
     {
         Assert.AreEqual(1, 2);
     }
+
+    [TestMethod]
+    public void MultipleComparisonFailures()
+    {
+        using (Assert.Scope())
+        {
+            Assert.AreEqual(10, 11, "First comparison failure");
+            Assert.AreEqual(20, 21, "Second comparison failure");
+        }
+    }
 }
 """;
     }
@@ -150,8 +185,24 @@ public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfRepor
         Assert.Contains("Failing on the first attempt", ctrfContent, ctrfContent);
 
         using var document = JsonDocument.Parse(ctrfContent);
+        JsonElement summary = document.RootElement.GetProperty("results").GetProperty("summary");
+        Assert.AreEqual(1, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
         JsonElement test = Assert.ContainsSingle(
             document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("FlakyTest", test.GetProperty("name").GetString());
+        Assert.AreEqual("passed", test.GetProperty("status").GetString());
+        Assert.IsFalse(test.TryGetProperty("assertionFailures", out _));
+        JsonElement prior = Assert.ContainsSingle(test.GetProperty("retryAttempts").EnumerateArray());
+        Assert.AreEqual("failed", prior.GetProperty("status").GetString());
+        Assert.AreEqual(1, prior.GetProperty("attempt").GetInt32());
+        Assert.IsTrue(prior.TryGetProperty("assertionFailures", out JsonElement failures), "The failed retry attempt must retain assertionFailures.");
+        JsonElement comparison = Assert.ContainsSingle(failures.EnumerateArray());
+        Assert.AreSequenceEqual(["expected", "actual"], comparison.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreEqual("2", comparison.GetProperty("expected").GetString());
+        Assert.AreEqual("1", comparison.GetProperty("actual").GetString());
         Assert.IsFalse(string.IsNullOrEmpty(test.GetProperty("testId").GetString()));
         string executionId = test.GetProperty("executionId").GetString()!;
         string attemptId = test.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString()!;
@@ -210,11 +261,7 @@ public class UnitTest1
     [Retry(3)]
     public void FlakyTest()
     {
-        _attempts++;
-        if (_attempts <= 1)
-        {
-            Assert.Fail("Failing on the first attempt");
-        }
+        Assert.AreEqual(2, ++_attempts, "Failing on the first attempt");
     }
 }
 """;

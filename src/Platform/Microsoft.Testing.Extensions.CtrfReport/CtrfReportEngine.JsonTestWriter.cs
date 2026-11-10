@@ -71,6 +71,8 @@ internal sealed partial class CtrfReportEngine
             writer.WriteString("trace", r.StackTrace);
         }
 
+        WriteAssertionFailure(writer, r);
+
         if (r.FilePath is not null)
         {
             writer.WriteString("filePath", r.FilePath);
@@ -233,6 +235,8 @@ internal sealed partial class CtrfReportEngine
             writer.WriteString("trace", attempt.StackTrace);
         }
 
+        WriteAssertionFailure(writer, attempt);
+
         if (attempt.Line is { } line)
         {
             writer.WriteNumber("line", line);
@@ -260,6 +264,30 @@ internal sealed partial class CtrfReportEngine
         }
 
         writer.WriteEndObject();
+    }
+
+    private static void WriteAssertionFailure(Utf8JsonWriter writer, CapturedTestResult result)
+    {
+        if (result.Status != "failed" || (result.Expected is null && result.Actual is null))
+        {
+            return;
+        }
+
+        writer.WritePropertyName("assertionFailures");
+        writer.WriteStartArray();
+        writer.WriteStartObject();
+        if (result.Expected is not null)
+        {
+            writer.WriteString("expected", result.Expected);
+        }
+
+        if (result.Actual is not null)
+        {
+            writer.WriteString("actual", result.Actual);
+        }
+
+        writer.WriteEndObject();
+        writer.WriteEndArray();
     }
 
     private static bool HasSameKeyEarlier(IReadOnlyList<KeyValuePair<string, string>> traits, int index)

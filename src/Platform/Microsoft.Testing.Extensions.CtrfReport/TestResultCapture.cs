@@ -31,12 +31,23 @@ internal static class TestResultCapture
         (string status, string? rawStatus) = ClassifyStatus(core.State);
         (string? ns, string? className, _) = GetClassAndMethodName(core.Properties.Identifier);
         RetryAttemptProperty? retryAttempt = node.Properties.SingleOrDefault<RetryAttemptProperty>();
+        string? expected = null;
+        string? actual = null;
+        if (core.State is FailedTestNodeStateProperty failedState)
+        {
+            AssertionFailureProperty? assertionFailure = node.Properties.SingleOrDefault<AssertionFailureProperty>();
+            // An explicit property is authoritative even when one side is unavailable.
+            expected = assertionFailure is not null ? assertionFailure.Expected : failedState.Exception?.Data["assert.expected"] as string;
+            actual = assertionFailure is not null ? assertionFailure.Actual : failedState.Exception?.Data["assert.actual"] as string;
+        }
 
         var result = new CapturedTestResult
         {
             TestId = CreateTestId(node.Uid.Value),
             Status = status,
             RawStatus = rawStatus,
+            Expected = TestResultCaptureHelper.Truncate(expected, TestResultCaptureHelper.MaxMessageLength),
+            Actual = TestResultCaptureHelper.Truncate(actual, TestResultCaptureHelper.MaxMessageLength),
             Namespace = TestResultCaptureHelper.Truncate(ns, TestResultCaptureHelper.MaxIdentityFieldLength),
             FilePath = TestResultCaptureHelper.Truncate(core.Properties.Location?.FilePath, TestResultCaptureHelper.MaxIdentityFieldLength),
             Line = core.Properties.Location?.LineSpan.Start.Line,

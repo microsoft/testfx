@@ -14,6 +14,10 @@ internal sealed class CapturedTestResult : CapturedTestResultBase
     // (e.g. "timedOut", "errored", "cancelled"). Surfaced via CTRF `rawStatus`.
     public string? RawStatus { get; init; }
 
+    public string? Expected { get; init; }
+
+    public string? Actual { get; init; }
+
     public string? Namespace { get; init; }
 
     public string? FilePath { get; init; }
