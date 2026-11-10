@@ -66,6 +66,8 @@
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.2.19" />
+    <!-- Stable 18.13.0 is unavailable on the configured feeds; use this dotnet-tools build until a stable version is mirrored. -->
+    <PackageVersion Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="18.14.0-1.26559.118" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />

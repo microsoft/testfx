@@ -1,0 +1,3 @@
+#nullable enable
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.LaunchDebugger.get -> bool
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.LaunchDebugger.set -> void
