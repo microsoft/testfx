@@ -130,20 +130,24 @@ public sealed class VideoRecorderRegistrationBehaviorTests
         Assert.IsTrue(await first.IsEnabledAsync());
         Assert.IsTrue(await second.IsEnabledAsync());
         Assert.HasCount(2, configured);
-        Assert.AreNotSame(configured[0], configured[1]);
-        Assert.AreEqual(VideoRecorderPersistenceMode.OnFailure, configured[0].PersistMode);
-        Assert.AreEqual(VideoCaptureSource.Window, configured[0].Source);
-        Assert.AreEqual(VideoCaptureGranularity.PerSession, configured[0].Granularity);
-        Assert.AreEqual("-first", configured[0].ExtraRecorderArguments);
-        Assert.AreEqual(TimeSpan.FromSeconds(42), configured[0].MaxRetainedDuration);
-        Assert.IsFalse(configured[0].IncludeChapters);
-        Assert.AreEqual(VideoRecorderPersistenceMode.Always, configured[1].PersistMode);
-        Assert.AreEqual(VideoCaptureSource.Screen, configured[1].Source);
-        Assert.AreEqual(VideoCaptureGranularity.PerTest, configured[1].Granularity);
-        Assert.AreEqual("-configured", configured[1].ExtraRecorderArguments);
-        Assert.AreEqual(TimeSpan.FromSeconds(11), configured[1].MaxRetainedDuration);
-        Assert.IsTrue(configured[1].IncludeChapters);
-        Assert.AreEqual(VideoRecorderFormat.WebMVp9, configured[1].Format);
+        using (Assert.Scope())
+        {
+            Assert.AreNotSame(configured[0], configured[1]);
+            Assert.AreEqual(VideoRecorderPersistenceMode.OnFailure, configured[0].PersistMode);
+            Assert.AreEqual(VideoCaptureSource.Window, configured[0].Source);
+            Assert.AreEqual(VideoCaptureGranularity.PerSession, configured[0].Granularity);
+            Assert.AreEqual("-first", configured[0].ExtraRecorderArguments);
+            Assert.AreEqual(TimeSpan.FromSeconds(42), configured[0].MaxRetainedDuration);
+            Assert.IsFalse(configured[0].IncludeChapters);
+            Assert.AreEqual(VideoRecorderPersistenceMode.Always, configured[1].PersistMode);
+            Assert.AreEqual(VideoCaptureSource.Screen, configured[1].Source);
+            Assert.AreEqual(VideoCaptureGranularity.PerTest, configured[1].Granularity);
+            Assert.AreEqual("-configured", configured[1].ExtraRecorderArguments);
+            Assert.AreEqual(TimeSpan.FromSeconds(11), configured[1].MaxRetainedDuration);
+            Assert.IsTrue(configured[1].IncludeChapters);
+            Assert.AreEqual(VideoRecorderFormat.WebMVp9, configured[1].Format);
+        }
+
         context.Configuration.VerifyNoOtherCalls();
     }
 
