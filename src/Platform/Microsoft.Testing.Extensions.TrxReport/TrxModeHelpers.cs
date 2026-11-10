@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.CommandLine;
 
 #if !NETCOREAPP
@@ -37,16 +38,24 @@ internal static class TrxModeHelpers
         && !OperatingSystem.IsTvOS()
         && !OperatingSystem.IsWasi();
 
-    // Used from within the test host (child) process: rely on the controller-presence state that MTP
-    // actually established for this process, rather than recomputing which extension requested
-    // isolation. This stays true even when another extension (HangDump, --timeout, ...) is the one
-    // that caused the controller to be used.
+    [UnsupportedOSPlatformGuard("android")]
+    [UnsupportedOSPlatformGuard("browser")]
+    [UnsupportedOSPlatformGuard("ios")]
+    [UnsupportedOSPlatformGuard("tvos")]
+    [UnsupportedOSPlatformGuard("wasi")]
+    public static bool ShouldUseControllerBackedTrxGeneration(ICommandLineOptions commandLineOptions)
+        => IsTestHostControllerSupported
+        && (!commandLineOptions.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxModeOptionName, out string[]? arguments)
+            || (arguments is [string mode] && TrxReportGeneratorCommandLine.OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)));
+
+    // Another extension can still require a controller when TRX recovery is explicitly disabled.
+    // Only use the TRX pipe when both its mode and the actual controller-presence state allow it.
     [UnsupportedOSPlatformGuard("android")]
     [UnsupportedOSPlatformGuard("browser")]
     [UnsupportedOSPlatformGuard("ios")]
     [UnsupportedOSPlatformGuard("tvos")]
     [UnsupportedOSPlatformGuard("wasi")]
     public static bool ShouldUseOutOfProcessTrxGeneration(ICommandLineOptions commandLineOptions)
-        => IsTestHostControllerSupported
+        => ShouldUseControllerBackedTrxGeneration(commandLineOptions)
         && commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey);
 }

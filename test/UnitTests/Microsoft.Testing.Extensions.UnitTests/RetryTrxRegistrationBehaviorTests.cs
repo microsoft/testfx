@@ -178,7 +178,7 @@ public sealed class RetryTrxRegistrationBehaviorTests
 
         ICommandLineOptionsProvider[] providers = [.. commands.Select(factory => factory())];
         Assert.HasCount(3, providers);
-        Assert.AreSequenceEqual(["report-trx", "report-trx-filename"], providers[0].GetCommandLineOptions().Select(value => value.Name));
+        Assert.AreSequenceEqual(["report-trx", "report-trx-filename", "trx-mode"], providers[0].GetCommandLineOptions().Select(value => value.Name));
         ITool[] registeredTools = [.. toolFactories.Select(factory => factory(fixture.Services))];
         Assert.AreSequenceEqual([TrxCompareTool.ToolName, TrxMergeTool.ToolName], registeredTools.Select(value => value.Name));
         Assert.AreSequenceEqual(registeredTools.Select(value => value.Uid), providers.Skip(1).Select(value => value.Uid));

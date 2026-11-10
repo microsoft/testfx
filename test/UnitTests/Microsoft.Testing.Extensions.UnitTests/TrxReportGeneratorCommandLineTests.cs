@@ -11,6 +11,63 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class TrxReportGeneratorCommandLineTests
 {
     [TestMethod]
+    [DataRow("in-process")]
+    [DataRow("out-of-process")]
+    [DataRow("IN-PROCESS")]
+    [DataRow("OUT-OF-PROCESS")]
+    public async Task IsValid_When_Mode_Is_Supported(string mode)
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().Single(x => x.Name == TrxReportGeneratorCommandLine.TrxModeOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [mode]).ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(new string[] { })]
+    [DataRow(new[] { "" })]
+    [DataRow(new[] { "invalid" })]
+    [DataRow(new[] { "in-process", "out-of-process" })]
+    public async Task IsInvalid_When_Mode_Arguments_Are_Invalid(string[] arguments)
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().Single(x => x.Name == TrxReportGeneratorCommandLine.TrxModeOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, arguments).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxModeInvalidValue, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("in-process", false)]
+    [DataRow("out-of-process", false)]
+    [DataRow("in-process", true)]
+    [DataRow("out-of-process", true)]
+    public async Task Mode_Requires_ReportTrx(string mode, bool reportEnabled)
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        var options = new Dictionary<string, string[]>
+        {
+            [TrxReportGeneratorCommandLine.TrxModeOptionName] = [mode],
+        };
+        if (reportEnabled)
+        {
+            options.Add(TrxReportGeneratorCommandLine.TrxReportOptionName, []);
+        }
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+
+        Assert.AreEqual(reportEnabled, result.IsValid, result.ErrorMessage);
+        if (!reportEnabled)
+        {
+            Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxModeRequiresTrxReport, result.ErrorMessage);
+        }
+    }
+
+    [TestMethod]
     [DataRow("foo.trx")]
     [DataRow("sub/foo.trx")]
     [DataRow("sub\\foo.trx")]
