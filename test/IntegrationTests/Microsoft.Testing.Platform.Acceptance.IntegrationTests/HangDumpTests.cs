@@ -21,8 +21,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
-        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
-        Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
+        string dumpFile = Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
+        Assert.MatchesRegex(@"^HangDump_[1-9][0-9]*_hang\.dmp$", Path.GetRelativePath(resultDirectory, dumpFile));
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -98,15 +99,38 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_%p.dmp --results-directory {resultDirectory}",
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_{{pid}}.dmp --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "600000" },
             }, cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
-        string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        string dumpFile = Assert.ContainsSingle(
+            Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories),
+            $"Expected single dump file for '{TargetFrameworks.NetCurrent}'\n{testHostResult}");
+        Assert.MatchesRegex(@"^myhungdumpfile_[1-9][0-9]*\.dmp$", Path.GetRelativePath(resultDirectory, dumpFile));
+    }
+
+    [TestMethod]
+    public async Task HangDump_LegacyPercentPlaceholder_IsLiteralFileName()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --hangdump-type Mini --hangdump-filename literal_%p.dmp --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                ["SLEEPTIMEMS1"] = "4000",
+                ["SLEEPTIMEMS2"] = "600000",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        string dumpFile = Assert.ContainsSingle(
+            Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories),
+            $"Expected single literal-percent dump file\n{testHostResult}");
+        Assert.AreEqual(Path.Combine(resultDirectory, "literal_%p.dmp"), dumpFile);
     }
 
     [TestMethod]
@@ -117,7 +141,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         Directory.CreateDirectory(resultDirectory);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"""--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_%p.dmp --results-directory "{resultDirectory}" """,
+            $$"""--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_{pid}.dmp --results-directory "{{resultDirectory}}" """,
             new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
@@ -125,8 +149,10 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
-        string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        string dumpFile = Assert.ContainsSingle(
+            Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories),
+            $"Expected single dump file for '{TargetFrameworks.NetCurrent}'\n{testHostResult}");
+        Assert.MatchesRegex(@"^myhungdumpfile_[1-9][0-9]*\.dmp$", Path.GetRelativePath(resultDirectory, dumpFile));
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -136,7 +162,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-filename {{pname}}_{{pid}}_{{tfm}}_{{time}}_hang.dmp --results-directory {resultDirectory}",
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename {{pname}}_{{pid}}_{{tfm}}_{{arch}}_{{time}}_hang.dmp --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 ["SLEEPTIMEMS1"] = "4000",
@@ -145,21 +171,17 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             cancellationToken: TestContext.CancellationToken);
         AssertTemplateHangDumpCompleted(testHostResult);
 
-        // Verify the dump file uses the template format
-        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
         string dumpFile = Assert.ContainsSingle(
             dumpFiles,
             $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
-        string fileName = Path.GetFileNameWithoutExtension(dumpFile);
 
-        // File should match pattern: {pname}_{pid}_{tfm}_{time}_hang
-        // where {tfm} is e.g. net10.0, net8.0, net462
-        // and {time} is yyyy-MM-dd_HH-mm-ss.fffffff
-        Assert.MatchesRegex(@"^.+_\d+_net[\w.]+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.\d{7}_hang$", fileName,
-            $"File name should match '{{pname}}_{{pid}}_{{tfm}}_{{time}}_hang' pattern. Actual: {fileName}");
-
-        // Verify the TFM segment matches the expected target framework
-        Assert.Contains($"_{tfm}_", fileName, $"File name should contain the TFM '{tfm}'. Actual: {fileName}");
+        // Architecture comes from the child runtime, which need not match the outer runner.
+        // Pin every segment, including the exact TFM and the seven-digit timestamp fraction.
+        string architecturePattern = string.Join("|", Enum.GetNames<Architecture>().Select(architecture => architecture.ToLowerInvariant()));
+        Assert.MatchesRegex(
+            $@"^HangDump_[1-9][0-9]*_{Regex.Escape(tfm)}_(?:{architecturePattern})_\d{{4}}-\d{{2}}-\d{{2}}_\d{{2}}-\d{{2}}-\d{{2}}\.\d{{7}}_hang\.dmp$",
+            Path.GetRelativePath(resultDirectory, dumpFile));
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -179,17 +201,14 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         AssertTemplateHangDumpCompleted(testHostResult);
 
         // Verify the dump file was created inside a subdirectory named after the assembly
-        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
         string dumpFile = Assert.ContainsSingle(
             dumpFiles,
             $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
 
-        // The dump file should be in a subdirectory named after the assembly
-        string? parentDir = Path.GetDirectoryName(dumpFile);
-        Assert.IsNotNull(parentDir);
-        Assert.AreNotEqual(resultDirectory, parentDir, "Dump file should be in a subdirectory created from the {asm} placeholder");
-        Assert.AreEqual("HangDump", Path.GetFileName(parentDir),
-            $"Subdirectory should be named after the assembly ('HangDump'). Actual: {Path.GetFileName(parentDir)}");
+        Assert.AreEqual(Path.Combine(resultDirectory, "HangDump"), Path.GetDirectoryName(dumpFile),
+            "The {asm} placeholder should create exactly one assembly-named subdirectory.");
+        Assert.MatchesRegex(@"^HangDump_[1-9][0-9]*_hang\.dmp$", Path.GetFileName(dumpFile));
     }
 
     private static void AssertTemplateHangDumpCompleted(TestHostResult testHostResult)

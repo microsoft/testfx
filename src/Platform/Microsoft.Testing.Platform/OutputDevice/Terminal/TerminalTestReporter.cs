@@ -146,7 +146,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal = useAnsi ? new AnsiTerminal(console) : new NonAnsiTerminal(console);
 
             // Only cursor-capable ANSI terminals can redraw progress in place. Anything that resolved to a
-            // non-ANSI terminal (explicit --no-ansi, or AnsiIfPossible on a console that can't do ANSI) uses
+            // non-ANSI terminal (explicit NoAnsi, or AnsiIfPossible on a console that can't do ANSI) uses
             // the silence-driven heartbeat renderer instead, so it still gets a progress signal in CI / piped
             // / redirected runs without spamming a fixed-cadence summary.
             useCursorRenderer = useAnsi;

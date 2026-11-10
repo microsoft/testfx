@@ -1,4 +1,5 @@
 #nullable enable
+*REMOVED*const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption = "no-ansi" -> string!
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int Id, out int ErrorCode, out string! Message, out object? Data) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int Id, int ErrorCode, string! Message, object? Data) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int

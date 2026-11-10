@@ -62,14 +62,9 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public void GetCommandLineOptions_StillIncludesNoAnsiOption()
+    public void GetCommandLineOptions_DoesNotIncludeNoAnsiOption()
     {
-        // Validate backward compatibility: --no-ansi is preserved alongside --ansi.
-        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
-
-        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
-        Assert.IsFalse(option.IsHidden);
-        Assert.IsTrue(option.IsBuiltIn);
+        Assert.IsFalse(_provider.GetCommandLineOptions().Any(option => option.Name == "no-ansi"));
     }
 
     [TestMethod]
@@ -617,10 +612,11 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public async Task ValidateOutputOptions_NoAnsiCompatibilityAndUnknownOptionRemainDistinct()
+    [DataRow("no-ansi", DisplayName = "Removed no-ansi option is unregistered")]
+    [DataRow("not-registered", DisplayName = "Unknown option is unregistered")]
+    public async Task ValidateOutputOptions_UnregisteredOptionThrows(string name)
     {
-        Assert.IsTrue((await _provider.ValidateOptionArgumentsAsync(GetOption("no-ansi"), [])).IsValid);
         await Assert.ThrowsExactlyAsync<UnreachableException>(
-            () => _provider.ValidateOptionArgumentsAsync(new("not-registered", "unknown", ArgumentArity.Zero, isHidden: false), []));
+            () => _provider.ValidateOptionArgumentsAsync(new(name, "unregistered", ArgumentArity.Zero, isHidden: false), []));
     }
 }

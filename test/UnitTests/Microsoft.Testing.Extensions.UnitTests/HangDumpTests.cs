@@ -149,21 +149,24 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    [DataRow("hang.dmp", "hang_%p.dmp")]
-    [DataRow("hang", "hang_%p")]
-    [DataRow("subdirectory/hang.dmp", "subdirectory/hang_%p.dmp")]
-    [DataRow("hang_%p.dmp", "hang_%p.dmp")]
-    [DataRow("hang_{pid}.dmp", "hang_{pid}.dmp")]
+    [DataRow("hang.dmp", "hang_{pid}.dmp", DisplayName = "Filename gets PID suffix")]
+    [DataRow("hang", "hang_{pid}", DisplayName = "Extensionless filename gets PID suffix")]
+    [DataRow("subdirectory/hang.dmp", "subdirectory/hang_{pid}.dmp", DisplayName = "Subdirectory is preserved")]
+    [DataRow("hang_%p.dmp", "hang_%p_{pid}.dmp", DisplayName = "Literal percent-p does not supply uniqueness")]
+    [DataRow("hang_{pid}.dmp", "hang_{pid}.dmp", DisplayName = "Existing PID placeholder is preserved")]
+    [DataRow("subdirectory with spaces/hang dump_%p.dmp", "subdirectory with spaces/hang dump_%p_{pid}.dmp", DisplayName = "Spaces and literal percent-p are preserved")]
     public void EnsureProcessIdPlaceholder_MakesCustomDumpPathUnique(string pattern, string expected)
         => Assert.AreEqual(
             expected.Replace('/', Path.DirectorySeparatorChar),
             HangDumpProcessLifetimeHandler.EnsureProcessIdPlaceholder(pattern));
 
     [TestMethod]
-    [DataRow(null, "testhost", 123, 123, "testhost_%p_hang.dmp")]
-    [DataRow("hang.dmp", "testhost", 123, 123, "hang.dmp")]
-    [DataRow("hang.dmp", "child", 456, 123, "hang_%p.dmp")]
-    [DataRow("hang_%p.dmp", "child", 456, 123, "hang_%p.dmp")]
+    [DataRow(null, "testhost", 123, 123, "testhost_{pid}_hang.dmp", DisplayName = "Default name uses PID template")]
+    [DataRow("hang.dmp", "testhost", 123, 123, "hang.dmp", DisplayName = "Configured root name is preserved")]
+    [DataRow("hang.dmp", "child", 456, 123, "hang_{pid}.dmp", DisplayName = "Child name gets PID suffix")]
+    [DataRow("hang_%p.dmp", "child", 456, 123, "hang_%p_{pid}.dmp", DisplayName = "Child literal percent-p gets PID suffix")]
+    [DataRow("hang_%p.dmp", "testhost", 123, 123, "hang_%p.dmp", DisplayName = "Root literal percent-p is preserved")]
+    [DataRow("hang_{pid}.dmp", "child", 456, 123, "hang_{pid}.dmp", DisplayName = "Child PID template is preserved")]
     public void GetDumpFileNamePattern_PreservesRootNameAndMakesChildNamesUnique(
         string? configuredPattern,
         string processName,

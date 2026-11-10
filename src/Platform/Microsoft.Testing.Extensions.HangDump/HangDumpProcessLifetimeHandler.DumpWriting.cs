@@ -32,9 +32,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             process.Id,
             testHostProcessInformation.PID);
 
-        // First resolve {placeholder} templates, then handle legacy %p pattern for backward compatibility.
-        string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
-            .Replace("%p", processId);
+        string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements);
         string resultsDirectory = Path.GetFullPath(_configuration.GetTestResultDirectory());
         finalDumpFileName = Path.GetFullPath(Path.Combine(resultsDirectory, finalDumpFileName));
 

@@ -20,12 +20,14 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     public async Task AnsiOption_OnAliases_ForceAnsiOutputEvenWhenRedirected(string value)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync($"--ansi {value}", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--ansi {value}",
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.Success);
 
-        // TestHost.ExecuteAsync prepends `--no-ansi --progress off`. `--ansi <on-alias>` must take precedence
-        // over `--no-ansi` and re-enable ANSI escape codes, even though stdout is being redirected to a pipe.
+        // Explicit on-aliases must emit ANSI escape codes even though stdout is redirected to a pipe.
         Assert.IsTrue(
             result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
             $"Expected output to contain ANSI escape characters when '--ansi {value}' is specified, but got:\n{result.StandardOutput}");
@@ -39,7 +41,10 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     public async Task AnsiOption_OffAliases_DisableAnsiOutput(string value)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync($"--ansi {value}", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--ansi {value}",
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsFalse(
@@ -48,49 +53,43 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     }
 
     [TestMethod]
-    public async Task AnsiOption_Auto_OverridesNoAnsi_AndFollowsEnvironmentDetection()
+    public async Task AnsiOption_Auto_FollowsEnvironmentDetectionInCI()
     {
-        // TestHost.ExecuteAsync auto-injects `--no-ansi --progress off`. Asserting "no ESC" with
-        // `--ansi auto` would not actually prove `auto` won over `--no-ansi`: stdout-redirection
-        // alone also produces no ESC. To deterministically prove the override, we force the platform
-        // into a CI environment (which makes `auto` map to `SimpleAnsi`, which emits ESC) and clear
-        // known LLM env vars (which would otherwise force `NoAnsi`). With `--no-ansi` still on the
-        // command line, the only way ESC can appear in the output is if `--ansi auto` overrode it.
+        // A CI environment makes auto select SimpleAnsi even with redirected stdout.
+        // Clear known LLM variables so inherited agent detection cannot suppress ANSI.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync(
             "--ansi auto",
             environmentVariables: InCIEnvironmentVariablesWithLLMCleared,
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsTrue(
             result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
-            $"Expected output to contain ANSI escape characters proving '--ansi auto' overrode the auto-injected '--no-ansi' (SimpleAnsi mode in CI), but got:\n{result.StandardOutput}");
+            $"Expected output to contain ANSI escape characters for '--ansi auto' in CI (SimpleAnsi mode), but got:\n{result.StandardOutput}");
     }
 
     [TestMethod]
-    public async Task AnsiOption_OnExplicit_AfterNoAnsi_StillForcesAnsiOutput()
+    public async Task NoAnsiOption_IsRejectedAsUnknownOption()
     {
-        // Regression guard for the rule "any explicit --ansi value overrides --no-ansi", order-independent.
-        // We use --ansi on rather than --ansi auto because ForceOn short-circuits both the CI check AND the
-        // LLM env-var check in TerminalOutputDevice.InitializeAsync, making the assertion immune to whatever
-        // CI / LLM environment a contributor or CI agent might be running from.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync(
-            "--no-ansi --ansi on",
+            "--no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
-        result.AssertExitCodeIs(ExitCode.Success);
-        Assert.IsTrue(
-            result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
-            $"Expected output to contain ANSI escape characters proving '--ansi on' overrode the preceding '--no-ansi', but got:\n{result.StandardOutput}");
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("Unknown option '--no-ansi'");
     }
 
     [TestMethod]
     public async Task AnsiOption_InvalidArgument_FailsCommandLineValidation()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync("--ansi invalid", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--ansi invalid",
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         result.AssertOutputContains("--ansi expects a single parameter");
@@ -100,7 +99,10 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     public async Task AnsiOption_MissingArgument_FailsCommandLineValidation()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync("--ansi", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--ansi",
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
 
@@ -116,10 +118,9 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     {
         // The de-facto NO_COLOR convention (https://no-color.org): when present with any non-empty
         // value, color (and in our implementation, all ANSI escape codes) must be suppressed.
-        // TestHost.ExecuteAsync auto-injects `--no-ansi --progress off` which would already suppress ESC,
-        // so we use `--ansi auto` together with the CI env (which would otherwise produce SimpleAnsi
-        // ESC) to deterministically prove NO_COLOR alone forces NoAnsi. With NO_COLOR set the output
-        // must contain no ESC even though `--ansi auto` is opted in.
+        // Use `--ansi auto` without the helper's default `--ansi off`, together with the CI env
+        // (which would otherwise produce SimpleAnsi ESC) to prove NO_COLOR alone forces NoAnsi.
+        // With NO_COLOR set the output must contain no ESC even though `--ansi auto` is opted in.
         Dictionary<string, string?> environmentVariables = new(InCIEnvironmentVariablesWithLLMCleared)
         {
             ["NO_COLOR"] = "1",
@@ -129,7 +130,8 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         TestHostResult result = await testHost.ExecuteAsync(
             "--ansi auto",
             environmentVariables: environmentVariables,
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsFalse(
@@ -152,7 +154,8 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         TestHostResult result = await testHost.ExecuteAsync(
             "--ansi auto",
             environmentVariables: environmentVariables,
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsTrue(
@@ -174,7 +177,8 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         TestHostResult result = await testHost.ExecuteAsync(
             "--ansi on",
             environmentVariables: environmentVariables,
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken,
+            useDefaultAnsiOption: false);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsTrue(
