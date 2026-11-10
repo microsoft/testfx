@@ -129,53 +129,185 @@ of these named removals.
 
 ## Validation and demonstration
 
-Planned evidence, not yet execution claims:
+### Revisions, toolchain and package provenance
 
-| Requirement / risk | Automated consumer evidence | Surface |
+Executed on Windows x64 on 2026-11-10, using the repository-pinned
+`12.0.100-alpha.1.26556.115` SDK and Release configuration:
+
+- Product packages: `52f5c8e709cc0285806dc08f6133ce17d3e9c52d`.
+- Final test assertions: `9f7bbc5a4b571fabad818977371e17459fdb90f4`.
+  This follow-up changes only assertion style, not production or packaging.
+- Pristine production comparison:
+  `c46cfa7394e7be10c4057d3ba8d1d3b698fe242e`, with the same tests and harness
+  retained. The test/harness patch SHA-256 is
+  `D9FE3524AB3D0EC91C83F583C869A3FC39EED5A273920E3C66CF576F18FC2B73`.
+  Production `src`, build configuration, versions, and the module-pool producer
+  have no tracked changes in that comparison.
+- Full implementation/test diff, excluding documentation: SHA-256
+  `CC2AE2C6B6C91200E3298583C8232551489D8E3FDC962F77A75B5821D9C48237`.
+  These patch hashes are not commit IDs.
+
+Both variants were built and packed separately with real default Windows/UAP
+assets. The NuGet content/metadata guard passed in both variants; no guard or
+mirrored file was changed:
+
+```powershell
+# Run from each variant's root; $root is that exact checkout.
+$root = (Get-Location).Path
+.\build.cmd -pack -c Release '-nodeReuse:$false' /m:2 `
+    /p:UseSharedCompilation=false /p:EnableCodeCoverage=false `
+    "/p:Projects=$root\src\*\*\*.csproj" `
+    /bl:artifacts\log\Release\legacy-cli-green-pack-3.binlog
+# Baseline uses the same command with legacy-cli-red-pack-2.binlog.
+```
+
+Green: exit 0, zero warnings/errors, 3m56s. Baseline: exit 0, zero
+warnings/errors, 10m55s. The glob was checked against Git's tracked source
+projects: all 41, with no omission. The changed test owners, shared
+`Microsoft.Testing.TestInfrastructure`, and performance runner then built
+successfully with the pinned SDK using:
+
+```powershell
+.\.dotnet\dotnet.exe build $project -c Release /m:1 /nr:false `
+    /p:BuildProjectReferences=false /p:UseSharedCompilation=false `
+    /p:EnableCodeCoverage=false /p:TreatWarningsAsErrors=true `
+    /p:MSBuildTreatWarningsAsErrors=true "-bl:$uniqueBinlog"
+```
+
+The final provider-test rebuild and all baseline owner builds have zero
+warnings/errors. The initial green owner build exposed nine repeated
+IDE0022/MSTEST0037 warnings; the test-only follow-up above corrected them.
+
+Same package versions were deliberately used in isolated per-run caches.
+The existing marked-cache fixture opt-in retained those task-owned caches for
+inspection; neither the global cache nor another session's outputs was cleared.
+`project.assets.json` identified the owned primary cache and local shipping
+feed; Visual Studio also configured a read-only fallback folder. Cached package
+archives and executed-directory DLLs matched the correct packed variant.
+Core and HangDump runtime payloads matched on net10.0, net11.0, and the
+netstandard2.0 asset consumed by net462/net472. Nuspec repository commits
+matched the product revisions above.
+
+| Package | Green SHA-256 | Pristine-production SHA-256 |
 | --- | --- | --- |
-| MTP ANSI alias is rejected; modern values still work | Packed `AnsiOptionTests`, provider tests, direct-host producers, help and info expectations. | Real child stdout/stderr, including forced ANSI and non-ANSI output. |
-| Native module pool still configures the SDK renderer | Module-pool launch argument checks and a real pinned-SDK module invocation using `--progress off --no-ansi`. | Native SDK output; `--no-ansi` here is not an MTP alias. |
-| No HangDump `%p` substitution; canonical templates and paths preserved | HangDump naming unit cases and packed custom/default/template/subdirectory/space/traversal cases. | Actual dump filename and child exit; no UI change. |
-| Regression sensitivity | Same tests retained in isolated production comparisons, with separate outputs and packages. | Intended behavioral assertion failures, not setup or compilation errors. |
+| `Microsoft.Testing.Platform.3.0.0-dev.nupkg` | `7A59FB3274135AE6C673A990A078BA6E4B72378D48B3F31B66FD032E0D105B3C` | `AE9EC51A8D9ED4B1AB21D0ADBD4E920A8414C71D40E492D081C8CB833BF283F7` |
+| `Microsoft.Testing.Extensions.HangDump.3.0.0-dev.nupkg` | `5E090A7EFC1EC815F170B5151172070D1FE9669280D04C010E9F30C03DC3AE51` | `414783E3D65BA01507E1227DB4107351FC1C50447944C52FC82FC5C3080BC787` |
 
-Build and pack use the repository-pinned toolchain. Package-consuming acceptance
-tests run only after a configuration-matched pack, with fixture-owned caches.
-Record exact commands, revisions/patches, test identities/counts, exits, package
-provenance, and unavailable evidence here as validation proceeds.
+Two setup attempts are not behavioral red evidence: the PowerShell `-projects`
+glob wrapper expanded to an unescaped semicolon list and failed MSB1006, so the
+supported `Projects` property above was used directly; a dotnet-engine pack
+with `SkipUapTargetFramework=true` omitted required Windows assets and failed
+three MSTest package-count checks. Default-UAP packaging fixed the actual
+layout. No expectation was reduced.
 
-The prepared changed-production patch, excluding documentation, is SHA-256
-`74DEA917F87B654685FC1411A4722F7E6A4C423501C45FDCE24A7CE135DD2851`
-(`git diff --binary` for `src`, `test`, and the two module-pool scripts).
-The isolated comparison remains at the pristine production base above, with
-the identical test/harness patch SHA-256
-`BAFCEEDD8DBA25EFD6D5D277441FA2CD17742D1E0E17160ED34BA49BB4EE76E2`.
-The comparison's `src`, global build configuration, versions, and module-pool
-producer have no tracked changes. Neither hash is a fabricated commit ID.
+### Executed requirements and commands
 
-The prepared focused cases are:
+Every test group had separate JSON discovery followed by actual execution.
+Discovery exited 0; fresh TRX and JUnit reports were parsed. The green execution
+gate reconciled exact discovered display names, counts, unique execution IDs,
+timestamps, and outer exit 0. No selected test was skipped.
 
-- Twelve naming rows in
-  `EnsureProcessIdPlaceholder_MakesCustomDumpPathUnique` and
-  `GetDumpFileNamePattern_PreservesRootNameAndMakesChildNamesUnique`.
-- Two writer-path rows in
-  `GetDumpFileNames_PercentCharactersAreLiteralInTheArtifactPath`, plus the
-  existing Windows-space quoting case.
-- `GetCommandLineOptions_DoesNotIncludeNoAnsiOption` and
-  `ValidateOutputOptions_UnregisteredOptionThrows`, plus existing canonical
-  option validation and retained progress-alias coverage.
-- Packed `NoAnsiOption_IsRejectedAsUnknownOption` and
-  `HangDump_LegacyPercentPlaceholder_IsLiteralFileName` for behavioral red/green
-  proof, followed by canonical ANSI, `NO_COLOR`, dump-template/path, help/info,
-  `ExitOnProcessExit_Succeed`, and
-  `DotnetRun_WithCoverageSettings_PreservesInvocationWorkingDirectory` coverage.
-- The existing module-pool validator, whose actual worker argv now checks the
-  canonical progress tokens and the independently owned SDK ANSI switch.
+The exact shared execution arguments were:
 
-These are planned execution identities, not passing-test claims. Scheduling
-remains method-level with CPU-count workers. New naming rows are pure strings;
-acceptance methods use GUID result directories and child-only environment
-overrides. Existing console-lock coverage, rendezvous, process joins, and
-fixture cleanup are unchanged.
+```powershell
+# $module is artifacts\bin\<project>\Release\<tfm>\<project>.dll.
+# For net462/net472, run the corresponding .exe directly instead.
+.\.dotnet\dotnet.exe $module --filter $filter --ansi off --progress off `
+    --no-banner --report-trx --report-trx-filename results.trx `
+    --report-junit --report-junit-filename results.xml `
+    --results-directory $uniqueResults --show-test-results all
+# Independent discovery used the same module/filter/output preferences,
+# replacing report arguments with: --list-tests json
+```
+
+| Requirement | Exact cases / selector | Executed result |
+| --- | --- | --- |
+| Default/child uniqueness, literal percent paths and Windows quoting | `HangDumpTests.EnsureProcessIdPlaceholder_MakesCustomDumpPathUnique`, `GetDumpFileNamePattern_PreservesRootNameAndMakesChildNamesUnique`, `GetDumpFileNames_*` | 15 each on net10.0/net11.0/net462/net472: 60 passed. |
+| Removed ANSI registration; canonical option validation; retained progress warning/precedence; six naming templates | `TerminalTestReporterCommandLineOptionsProviderTests`, `TerminalOutputDeviceTests.InitializeAsync_NoProgress*`, `InitializeAsync_ProgressOff*`, `InitializeAsync_ProgressOption_TakesPrecedenceOverLegacyNoProgress*`, `ArtifactNamingHelperTests` | 146 each on net10.0/net11.0/net462: 438 passed. |
+| Real host rejection, ANSI on/off aliases, auto/CI and `NO_COLOR` | `AnsiOptionTests` | 15 passed. |
+| Actual literal-percent native dump | `HangDumpTests.HangDump_LegacyPercentPlaceholder_IsLiteralFileName` | 1 passed; the actual filename is `literal_%p.dmp`. |
+| Default/custom filenames, all templates, spaces/subdirectories and containment | `HangDumpTests.HangDump_DefaultSetting_CreateDump`, `HangDump_CustomFileName_CreateDump`, `HangDump_PathWithSpaces_CreateDump`, `HangDump_TemplateFileName_CreateDump`, `HangDump_TemplateFileNameWithSubdirectory_CreateDump`, `HangDump_TemplateWithPathTraversal_RejectsAndFails` | 12 passed, including net10.0/net11.0/net462 where parameterized. |
+| MTP help/info and unknown-option command echo | `HelpInfoTests.Help_WhenNoExtensionRegistered_OutputDefaultHelpContent`, `Info_WhenNoExtensionRegistered_OutputDefaultInfoContent`, `Help_WhenNoExtensionRegisteredAndUnknownOptionIsSpecified_OutputDefaultHelpContentAndUnknownOption` | 9 passed on the three consumer TFMs. |
+| All-extension help/info, including HangDump description | `HelpInfoAllExtensionsTests.Help_WithAllExtensionsRegistered_OutputFullHelpContent`, `Info_WithAllExtensionsRegistered_OutputFullInfoContent` | 6 passed on the three consumer TFMs. |
+| Direct process-exit producer and joined teardown | `ExitOnProcessExitTests.ExitOnProcessExit_Succeed` | 3 passed. |
+| MSTest help | `HelpInfoTests.Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension` in MSTest acceptance | 3 passed. |
+| Direct `dotnet run` producer with coverage settings and working-directory preservation | `SdkTests.DotnetRun_WithCoverageSettings_PreservesInvocationWorkingDirectory` | Both absolute/relative cases passed. |
+| Shared helper still supports current core with deliberate old extensions | `ForwardCompatibilityTests.NewerPlatform_WithPreviousExtensions_ShouldExecuteTests` | 1 passed with extensions 2.2.1 / MSBuild extension 2.3.0. |
+
+Each listed selector uses `FullyQualifiedName~<class.method>`; alternatives are
+joined with `|`. Acceptance outer hosts run on net12.0; their generated consumers
+use the TFMs listed above. There are 550 distinct unit/acceptance case executions
+in these groups, plus two exact-selector green repeats after the red comparison:
+**552 passed, zero failed/skipped**. The repeats are not additional coverage.
+Per-run `run.json`, discovery, TRX, JUnit and command logs remain under each
+variant's `artifacts\TestResults\Release\legacy-cli`.
+
+The real producer's self-tests ran separately:
+
+```powershell
+pwsh -NoProfile -File eng\validate-collection-module-pool.ps1
+```
+
+Green: exit 0, **34 passed**, including native failure, peer cancellation,
+orphan cleanup and output/cleanup-failure cases. The pristine producer with
+the same validator retained launched its workers, passed 24 preceding checks,
+then failed the intended argv assertion requiring separate `--progress` /
+`off` tokens and preserving SDK-owned `--no-ansi` (exit 1).
+
+### Real native SDK consumer and rendered surface
+
+The newly packed `AnsiOptionTest` net11.0 module was also launched by the
+**real pinned SDK**, not only by `TestHost`:
+
+```powershell
+.\.dotnet\dotnet.exe test --test-modules AnsiOptionTest.dll `
+    --root-directory $consumerBin --no-build --progress off --no-ansi `
+    --show-test-results all --no-banner
+```
+
+Exit 0; exactly **Test1 / Passed**, total 1, failed 0, succeeded 1, skipped 0;
+stdout contained no ANSI escapes. The resolved module's core DLL SHA-256 was
+`D5D72B8CA426F64655B79296FA8E3B3C61ACCF0F6898981263A9118C55136A22`,
+matching the current pack's `lib/net11.0` payload. This proves the exercised
+SDK consumes its own `--no-ansi` rather than forwarding the removed MTP option.
+It does not establish a version floor for older SDKs.
+
+An actual terminal canvas at **80 columns x 24 rows** displayed the packed
+host's help, canonical ANSI-off/on Test1 executions (both exit 0), and removed
+option diagnostic (exit 5). The option list excludes `--no-ansi`, keeps
+`--no-progress`, and exposes `--ansi off`; normal summaries remained readable.
+A 120-column console resize attempt did not resize the canvas's 80-column
+renderer and produced mismatched reflow, so wider/constrained-grid validation
+is **unverified**, not a claimed layout pass. The original size was restored.
+Readable command/output excerpts are more useful here than fabricated media.
+
+### Test-value evidence
+
+The same retained tests and selectors ran on independently rebuilt/repacked
+production states. The two exact packed selectors were re-run green after red.
+
+| Contract / case | Without removal: pristine production | Correct implementation | Distinguishing assertion |
+| --- | --- | --- | --- |
+| ANSI registration/validation / provider cases | Executed: 2 intended failures per TFM; other 144 cases pass. | Executed: all 146 pass per TFM. | `no-ansi` still appears in registration; its validator returns normally instead of rejecting an unregistered option. |
+| HangDump naming/native write argument / 15 focused cases | Executed: 10 intended failures and 5 preservation passes per TFM. | Executed: all 15 pass per TFM. | Old defaults/child names use `%p`; the native argument is not percent-escaped. |
+| `NoAnsiOption_IsRejectedAsUnknownOption` | Executed: outer exit 2, one assertion failure; old child exits **0**, expected **5**. | Executed: outer exit 0, one pass; child exits 5. | The removed application option must be unknown, not silently accepted. |
+| `HangDump_LegacyPercentPlaceholder_IsLiteralFileName` | Executed: outer exit 2, one assertion failure; actual **`literal_39992.dmp`**, expected **`literal_%p.dmp`**. | Executed: outer exit 0, one pass; literal file exists. | Exact actual native dump filename, not output-text presence. |
+| Module-pool argv | Executed: worker argv assertion detects the old producer; outer validator exit 1. | Executed: 34 checks pass, exit 0. | Token boundaries and independent SDK ANSI ownership. |
+
+The paired unit/packed selection executes **500 cases per production state**:
+baseline **452 passed / 48 intended failures / 0 skipped**, corresponding green
+selection **500 passed / 0 failed / 0 skipped**. All intended failures were
+attributed to their behavioral assertions; restore/compile/launch failures,
+zero tests, skips and green CI are not counted as red proof.
+
+Additional guards: localization self-tests 41 passed; final localization guard
+checked all 364 catalogs and exited 0; PowerShell AST checks included the
+embedded worker; all 19 changed C# files retain UTF-8 BOMs.
+
+Remaining evidence gaps: Linux/macOS runtime execution, older SDK native
+renderer behavior, a second correctly resized terminal grid, and CI for the
+published head. These do not imply those checks passed. No source-generation
+runtime variant is credited merely because its fixture compiled.
 
 ## Remaining prerequisite
 
