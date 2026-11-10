@@ -247,8 +247,11 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
 
     public async Task ConnectAsync()
     {
-        Task controller = StartControllerAsync();
+        // Complete the primary handshake before the controller's synchronous wait can occupy a
+        // .NET Framework I/O completion thread needed to read the child's pipe-name request.
         Task child = StartChildAsync();
+        await AwaitAsync(ChildReverseAccepting.Task);
+        Task controller = StartControllerAsync();
         await AwaitAsync(Task.WhenAll(controller, child));
     }
 
