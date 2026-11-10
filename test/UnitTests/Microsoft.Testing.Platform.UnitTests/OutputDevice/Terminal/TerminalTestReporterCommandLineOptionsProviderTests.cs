@@ -63,9 +63,7 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 
     [TestMethod]
     public void GetCommandLineOptions_DoesNotIncludeNoAnsiOption()
-    {
-        Assert.IsFalse(_provider.GetCommandLineOptions().Any(option => option.Name == "no-ansi"));
-    }
+        => Assert.DoesNotContain(static option => option.Name == "no-ansi", _provider.GetCommandLineOptions());
 
     [TestMethod]
     [DataRow("auto")]
@@ -614,9 +612,7 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     [TestMethod]
     [DataRow("no-ansi", DisplayName = "Removed no-ansi option is unregistered")]
     [DataRow("not-registered", DisplayName = "Unknown option is unregistered")]
-    public async Task ValidateOutputOptions_UnregisteredOptionThrows(string name)
-    {
-        await Assert.ThrowsExactlyAsync<UnreachableException>(
+    public Task ValidateOutputOptions_UnregisteredOptionThrows(string name)
+        => Assert.ThrowsExactlyAsync<UnreachableException>(
             () => _provider.ValidateOptionArgumentsAsync(new(name, "unregistered", ArgumentArity.Zero, isHidden: false), []));
-    }
 }
