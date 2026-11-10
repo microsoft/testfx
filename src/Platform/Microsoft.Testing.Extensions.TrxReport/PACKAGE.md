@@ -22,7 +22,7 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable TRX report generation via the `--report-trx` command line option.
 
-On macOS, Windows, Linux, and other platforms that support a test-host controller, TRX uses a controller process by default. The test host generates the report during normal execution; the controller can recover completed results if the host crashes, hangs, or is stopped by `--timeout`. On Android, browser, iOS, tvOS, and WASI, TRX runs in-process by default, without controller-backed recovery.
+On macOS, Windows, Linux, and other platforms that support a controller process, TRX uses one by default. The test host generates the report during normal execution; the controller can recover completed results if the host crashes, hangs, or is stopped by `--timeout`. On Android, iOS, Mac Catalyst, tvOS, WASI, and in browsers, TRX always runs in-process, without controller-backed recovery.
 
 The controller adds another process and may increase startup time.
 
@@ -30,7 +30,7 @@ Use `--report-trx --trx-mode:in-process` to generate a report without starting a
 
 In-process mode cannot recover a report if the test host crashes, hangs, or is terminated. Other options, such as `--crashdump` or `--hangdump`, may still start a controller, but TRX recovery remains disabled.
 
-Use `--trx-mode:out-of-process` to explicitly request controller-backed recovery. This mode is unavailable on Android, browser, iOS, tvOS, and WASI. Both modes require `--report-trx`; leaving `--trx-mode` unspecified preserves the default behavior.
+Use `--trx-mode:out-of-process` to explicitly request controller-backed recovery. This mode is unavailable on Android, iOS, Mac Catalyst, tvOS, WASI, and in browsers. Both modes require `--report-trx`; leaving `--trx-mode` unspecified preserves the default behavior.
 
 ## Related packages
 
