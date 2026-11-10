@@ -80,12 +80,12 @@ Informações do disco:
 {1}</target>
         <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
-      <trans-unit id="HangDumpFileNameTemplateOptionDescription">
+      <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</target>
-        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</note>
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
+        <target state="translated">Especifique o nome do arquivo de despejo.
+Dá suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino), {arch} (arquitetura do processo), {time} (carimbo de data/hora). O token %p herdado (ID do processo) também é aceito para compatibilidade com versões anteriores.</target>
+        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"} or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs.</source>
