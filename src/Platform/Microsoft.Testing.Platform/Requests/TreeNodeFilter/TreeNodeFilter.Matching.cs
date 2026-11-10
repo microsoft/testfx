@@ -87,7 +87,7 @@ public sealed partial class TreeNodeFilter
         switch (filterExpression)
         {
             case ValueExpression vExpr:
-                return vExpr.Regex.IsMatch(testNodeFragment);
+                return vExpr.IsMatch(testNodeFragment);
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprs }:
                 for (int i = 0; i < subexprs.Count; i++)
                 {
@@ -169,8 +169,8 @@ public sealed partial class TreeNodeFilter
 
     private static bool IsMatchingProperty(IProperty prop, ValueExpression propExpr, ValueExpression valueExpr)
         => prop is TestMetadataProperty testMetadataProperty &&
-            propExpr.Regex.IsMatch(testMetadataProperty.Key) &&
-            valueExpr.Regex.IsMatch(testMetadataProperty.Value);
+            propExpr.IsMatch(testMetadataProperty.Key) &&
+            valueExpr.IsMatch(testMetadataProperty.Value);
 
     private static bool HasPropertyFilterExpression(FilterExpression expression)
     {
