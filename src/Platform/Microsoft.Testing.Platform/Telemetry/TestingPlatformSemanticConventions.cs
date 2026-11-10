@@ -73,29 +73,6 @@ internal static class TestingPlatformSemanticConventions
         internal const string TestOutputStderr = "test.output.stderr";
         internal const string TestStepPrefix = "test.step.";
         internal const string TestMetadataPrefix = "test.metadata.";
-
-        // ---- Legacy attribute names kept for backward compatibility ----
-        // Emitted alongside the semantic-convention names so existing dashboards keep working.
-        internal const string LegacyTestName = "test.name";
-        internal const string LegacyTestId = "test.id";
-        internal const string LegacyTestParentId = "test.parent.id";
-        internal const string LegacyTestMethod = "test.method";
-        internal const string LegacyTestClass = "test.class";
-        internal const string LegacyTestNamespace = "test.namespace";
-        internal const string LegacyTestAssembly = "test.assembly";
-        internal const string LegacyTestFilePath = "test.file.path";
-        internal const string LegacyTestLineStart = "test.line.start";
-        internal const string LegacyTestLineEnd = "test.line.end";
-        internal const string LegacyTestResult = "test.result";
-        internal const string LegacyTestResultExplanation = "test.result.explanation";
-        internal const string LegacyTestResultExceptionType = "test.result.exception.type";
-        internal const string LegacyTestResultExceptionMessage = "test.result.exception.message";
-        internal const string LegacyTestResultExceptionStackTrace = "test.result.exception.stacktrace";
-        internal const string LegacyTestResultTimeout = "test.result.timeout.ms";
-        internal const string LegacyTestDuration = "test.duration.ms";
-        internal const string LegacyTestStdout = "test.stdout";
-        internal const string LegacyTestStderr = "test.stderr";
-        internal const string LegacyTestMetadataPrefix = "test.metadataProperty.";
     }
 
     /// <summary>
@@ -115,18 +92,6 @@ internal static class TestingPlatformSemanticConventions
         internal const string Timeout = "timeout";
         internal const string Cancelled = "cancelled";
         internal const string Unknown = "unknown";
-
-        /// <summary>
-        /// Maps a status onto the value the pre-4.x <c>test.result</c> attribute used, so legacy dashboards keep
-        /// seeing the spellings they were built against.
-        /// </summary>
-        internal static string ToLegacy(string status)
-            => status switch
-            {
-                Pass => "passed",
-                Fail => "failed",
-                _ => status,
-            };
     }
 
     /// <summary>
@@ -140,16 +105,6 @@ internal static class TestingPlatformSemanticConventions
         internal const string TestRunDuration = "test.run.duration";
         internal const string TestRunActiveCases = "test.case.active";
         internal const string TestRetryCount = "test.case.retry.count";
-
-        // Legacy instruments kept for backward compatibility.
-        internal const string LegacyTestsDiscovered = "tests.discovered";
-        internal const string LegacyTestsStarted = "tests.started";
-        internal const string LegacyTestsCompleted = "tests.completed";
-        internal const string LegacyTestsPassed = "tests.passed";
-        internal const string LegacyTestsFailed = "tests.failed";
-        internal const string LegacyTestsSkipped = "tests.skipped";
-        internal const string LegacyTestsUnknown = "tests.unknown";
-        internal const string LegacyTestsDuration = "tests.duration";
     }
 
     /// <summary>

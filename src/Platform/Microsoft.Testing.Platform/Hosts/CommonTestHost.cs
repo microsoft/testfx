@@ -56,12 +56,6 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         try
         {
             platformOTelService = ServiceProvider.GetPlatformOTelService();
-            if (platformOTelService is not null)
-            {
-                ExtensionHelper.ConfigureOTelLegacyAttributes(
-                    PlatformOpenTelemetryOptions.FromEnvironment(ServiceProvider.GetEnvironment()));
-            }
-
             string hostType = GetHostType();
 
             // When the builder activity has already been closed (or OTel was configured late) there is no ambient
