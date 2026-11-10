@@ -71,6 +71,11 @@ steps:
   continueOnError: true
   condition: and(always(), ne(variables._CollectAffectedTests, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
+- pwsh: |
+    ./eng/verify-test-traces.ps1 -TraceDirectory '$(TESTFX_OTEL_TRACE_DIRECTORY)' -AllowIncomplete:('$(Agent.JobStatus)' -in @('Failed', 'Canceled'))
+  displayName: Verify OpenTelemetry trace completion
+  condition: always()
+
 # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
 # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the tests run
 # therefore reported one real problem as two failed steps, the way the official build did in
