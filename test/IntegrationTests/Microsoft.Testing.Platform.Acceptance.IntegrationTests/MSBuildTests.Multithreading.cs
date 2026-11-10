@@ -41,6 +41,8 @@ public sealed class MSBuildMultithreadingTests : AcceptanceTestBase<NopAssetFixt
 
         if (multithreaded)
         {
+            // MSBuild strict mode logs its sentinel once; any other occurrence reveals a process-relative path leak.
+            // https://github.com/dotnet/msbuild/blob/main/documentation/specs/multithreading/thread-safe-tasks.md#validate-a-task-migration
             Assert.HasCount(
                 1,
                 binlog.FindChildrenRecursive<SL.Message>().Where(message => message.Text.Contains("MT-sentinel-CWD", StringComparison.Ordinal)));
