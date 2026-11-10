@@ -735,7 +735,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
             It.IsAny<DateTimeOffset>())).Returns(activity.Object);
-        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        using var broker = new TestExecutionActivityBroker(service.Object);
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(
             CreateExecuteRequestContext(messageBus, broker),
@@ -790,7 +790,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
             It.IsAny<DateTimeOffset>())).Returns(activity.Object);
-        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        using var broker = new TestExecutionActivityBroker(service.Object);
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(
             CreateExecuteRequestContext(messageBus, broker),
@@ -847,7 +847,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
                 publishCompleted.Should().BeTrue();
                 return activity.Object;
             });
-        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        using var broker = new TestExecutionActivityBroker(service.Object);
         var recorder = new MtpTestResultRecorder(
             CreateExecuteRequestContext(messageBus, broker),
             new StubDataProducer(),
@@ -880,7 +880,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     public async Task MtpTestResultRecorder_RecordStart_DoesNotReserveWhenExecutionLeaseIsUnsupported()
     {
         Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
-        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        using var broker = new TestExecutionActivityBroker(service.Object);
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(
             CreateExecuteRequestContext(messageBus, broker),

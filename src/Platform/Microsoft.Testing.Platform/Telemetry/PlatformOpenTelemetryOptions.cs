@@ -17,11 +17,10 @@ internal sealed class PlatformOpenTelemetryOptions
 {
     internal const int DefaultAttributeValueLengthLimit = 8 * 1024;
 
-    private PlatformOpenTelemetryOptions(bool captureTestOutput, int attributeValueLengthLimit, bool emitLegacyAttributes)
+    private PlatformOpenTelemetryOptions(bool captureTestOutput, int attributeValueLengthLimit)
     {
         CaptureTestOutput = captureTestOutput;
         AttributeValueLengthLimit = attributeValueLengthLimit;
-        EmitLegacyAttributes = emitLegacyAttributes;
     }
 
     /// <summary>
@@ -35,18 +34,11 @@ internal sealed class PlatformOpenTelemetryOptions
     /// </summary>
     public int AttributeValueLengthLimit { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether the pre-semantic-convention attribute and instrument names are emitted
-    /// alongside the new ones. Keeping them on by default means existing dashboards do not break.
-    /// </summary>
-    public bool EmitLegacyAttributes { get; }
-
-    public static PlatformOpenTelemetryOptions Default { get; } = new(captureTestOutput: true, DefaultAttributeValueLengthLimit, emitLegacyAttributes: true);
+    public static PlatformOpenTelemetryOptions Default { get; } = new(captureTestOutput: true, DefaultAttributeValueLengthLimit);
 
     public static PlatformOpenTelemetryOptions FromEnvironment(IEnvironment environment)
     {
         bool captureTestOutput = GetBoolean(environment, EnvironmentVariableConstants.TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT, defaultValue: true);
-        bool emitLegacyAttributes = GetBoolean(environment, EnvironmentVariableConstants.TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES, defaultValue: true);
 
         int limit = DefaultAttributeValueLengthLimit;
         if (int.TryParse(environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT), out int parsedLimit)
@@ -55,7 +47,7 @@ internal sealed class PlatformOpenTelemetryOptions
             limit = parsedLimit;
         }
 
-        return new PlatformOpenTelemetryOptions(captureTestOutput, limit, emitLegacyAttributes);
+        return new PlatformOpenTelemetryOptions(captureTestOutput, limit);
     }
 
     /// <summary>
