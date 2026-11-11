@@ -31,7 +31,7 @@ Older framework consumers must still be able to use the migration analyzers.
 | `DoesNotContain(collection, element)` | `Assert.DoesNotContain(element, collection)` |
 | `AllItemsAreNotNull(collection)` | `Assert.AreAllNotNull(collection)` |
 | `AllItemsAreUnique(collection)` | `Assert.AreAllDistinct(collection)` |
-| `AllItemsAreInstancesOfType(collection, typeof(T))` | `Assert.ContainsOnly(item => item is null || item is T, collection)` |
+| `AllItemsAreInstancesOfType(collection, typeof(T))` | `Assert.ContainsOnly(item => item is null \|\| item is T, collection)` |
 | `AllItemsAreInstancesOfType(collection, expectedType)` | `Assert.AreAllOfType(expectedType, collection?.Cast<object?>().Where(item => item is not null))` |
 | `IsSubsetOf(subset, superset)` | `Assert.ContainsAll(subset, superset)` |
 | `IsNotSubsetOf(subset, superset)` | `Assert.DoesNotContainAll(subset, superset)` |
