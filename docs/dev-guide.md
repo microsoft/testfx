@@ -61,6 +61,9 @@ cache the existing MSBuild projects on Windows x64. Its default entry point is
 which requires desktop MSBuild. Separate Debug and Release pipeline legs build
 the solution and retain engine counters and project binlogs for later analysis.
 Outputs are isolated; the Arcade build remains the shipping authority.
+The driver enables tracked shared compilation, sizes concurrency to the available
+CPUs, and automatically falls back to full input hashing when change journals
+are unavailable. CI persists the action cache between compatible runs.
 The [BuildXL performance comparison](decisions/buildxl-build.md#comparing-build-performance)
 remains an explicit local experiment for matched cold, changed-input, and no-op
 TRX builds. CI runs real solution builds, not repeated benchmark samples.

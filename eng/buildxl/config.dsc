@@ -72,7 +72,7 @@ config({
             // BuildXL omits CurrentSolutionConfigurationContents from project command lines.
             ["ShouldUnsetParentConfigurationAndPlatform", "false"],
             ["EnableProjectDataOnBuild", "false"],
-            ["UseSharedCompilation", "false"],
+            ["UseSharedCompilation", "true"],
             ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS") !== "*",
                 ["CustomAfterMicrosoftCommonTargets", Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS")]),
             ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_TFM") !== "*",
@@ -81,6 +81,6 @@ config({
         logVerbosity: "minimal",
         enableBinLogTracing: true,
         keepProjectGraphFile: true,
-        useManagedSharedCompilation: false
+        useManagedSharedCompilation: true
     }]
 });
