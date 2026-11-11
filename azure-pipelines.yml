@@ -57,6 +57,7 @@ parameters:
   displayName: "Skip tests"
   type: boolean
   default: False
+# The pinned public provider has been validated with bounded single-shard reads and this SDK.
 - name: EnableAffectedTests
   displayName: "Enable affected tests"
   type: boolean
