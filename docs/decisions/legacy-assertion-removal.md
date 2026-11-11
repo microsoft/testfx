@@ -33,8 +33,8 @@ Older framework consumers must still be able to use the migration analyzers.
 | `AllItemsAreUnique(collection)` | `Assert.AreAllDistinct(collection)` |
 | `AllItemsAreInstancesOfType(collection, typeof(T))` | `Assert.ContainsOnly(item => item is null \|\| item is T, collection)` |
 | `AllItemsAreInstancesOfType(collection, expectedType)` | `Assert.AreAllOfType(expectedType, collection?.Cast<object?>().Where(item => item is not null))` |
-| `IsSubsetOf(subset, superset)` | `Assert.ContainsAll(subset, superset)` |
-| `IsNotSubsetOf(subset, superset)` | `Assert.DoesNotContainAll(subset, superset)` |
+| `IsSubsetOf(subset, superset)` | `Assert.ContainsAll((IEnumerable)subset, superset)` |
+| `IsNotSubsetOf(subset, superset)` | `Assert.DoesNotContainAll((IEnumerable)subset, superset)` |
 | `That` | Change the extension receiver to `Assert` and invoke `Assert.That` |
 | Obsolete `Equals` / `ReferenceEquals` traps | Use `Assert.AreEqual` / `Assert.AreSame`; these traps were not working equality assertions |
 
@@ -42,6 +42,10 @@ Subset assertions preserve multiplicity: `[1, 1]` is not a subset of `[1]`.
 An empty subset is contained in every non-null collection. The negative
 assertion means **not all** elements are present, not that no elements overlap.
 Non-generic collections remain supported without converting them to arrays.
+For typed collections, select the non-generic overload to retain legacy object
+equality instead of switching to `IEquatable<T>` equality. The fixer remaps named
+arguments in their source evaluation order and names the message argument, so
+side effects and null/default messages keep their original meaning.
 
 The legacy type assertion ignored null elements. `Assert.AreAllOfType` rejects
 them, so an unfiltered rename is **not equivalent** and must not be offered as
@@ -228,6 +232,31 @@ had one existing 30-second child-process startup timeout in
 Neither infrastructure failure is counted as regression-sensitivity evidence.
 
 ### Test-value evidence
+
+#### Review corrections (2026-11-11)
+
+Fixed four demonstrated migration defects from review: typed subset operands
+must retain object equality, named subset arguments must retain source evaluation
+order, null/default messages must remain unambiguous, and conditional null
+membership operands need parentheses inside the object cast. The subset fixer
+now selects the non-generic overload and remaps named arguments without sorting
+their evaluation order. No public assertion contract changed.
+
+Added two typed-equality, two null-message, and two side-effecting-order data rows,
+and extended all four existing null-membership rows with conditional expressions.
+The focused net10.0 build passes, all 31 collection migration cases pass without
+skips, and the complete analyzer suite passes 3,098 cases with the same existing
+Unix-only skip. Markdown lint also passes. Logs, reports, and binlogs are retained
+as `review-fixer-*` session artifacts.
+
+The initial pre-fix run executed 31 cases: 19 passed and 12 failed at the intended
+fixed-source assertions. Expected redundant-cast formatting was subsequently
+refined for statically non-generic collections, so this is not claimed as an
+identical-assertion 31-case red/green pair. The two typed-equality and four
+conditional-membership cases retained the same assertions across the failed
+pre-fix and passing final runs. The final message and evaluation-order cases
+also pass, but their final formatting expectations did not receive another
+isolated counterfactual run.
 
 #### Base integration validation (2026-11-11)
 

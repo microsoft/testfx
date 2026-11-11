@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Operations;
 
@@ -82,33 +83,47 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
-        // Re-order the original arguments according to the source signature's parameter ordinals
-        // (handles named arguments) and strip the name colons because the target Assert method's
-        // parameter names may differ from CollectionAssert's.
-        if (!TryGetArgumentsByOrdinal(invocationOperation, out ArgumentSyntax[]? orderedArguments))
+        var generator = SyntaxGenerator.GetGenerator(document);
+        List<ArgumentSyntax> newArguments;
+        if (properAssertMethodName is "ContainsAll" or "DoesNotContainAll")
         {
-            return document;
-        }
-
-        // A null element must not bind to Assert's predicate overload after the argument swap.
-        if (fixKind == CollectionAssertToAssertAnalyzer.FixKindSwapTwoArgs
-            && properAssertMethodName is "Contains" or "DoesNotContain"
-            && invocationOperation.Arguments.Any(argument => argument.Parameter?.Ordinal == 1
-                && argument.Value.ConstantValue.HasValue
-                && argument.Value.ConstantValue.Value is null))
-        {
-            TypeSyntax objectType = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
-            if ((semanticModel.GetNullableContext(invocationExpr.SpanStart) & NullableContext.AnnotationsEnabled) != 0)
+            if (!TryGetSubsetArguments(invocationOperation, semanticModel, generator, properAssertMethodName, out List<ArgumentSyntax>? subsetArguments))
             {
-                objectType = SyntaxFactory.NullableType(objectType);
+                return document;
             }
 
-            ExpressionSyntax element = orderedArguments![1].Expression;
-            orderedArguments[1] = orderedArguments[1].WithExpression(
-                SyntaxFactory.CastExpression(objectType, element.WithoutTrivia()).WithTriviaFrom(element));
+            newArguments = subsetArguments!;
         }
+        else
+        {
+            if (!TryGetArgumentsByOrdinal(invocationOperation, out ArgumentSyntax[]? orderedArguments))
+            {
+                return document;
+            }
 
-        List<ArgumentSyntax> newArguments = BuildNewArguments(orderedArguments!, fixKind);
+            // A null element must not bind to Assert's predicate overload after the argument swap.
+            if (fixKind == CollectionAssertToAssertAnalyzer.FixKindSwapTwoArgs
+                && properAssertMethodName is "Contains" or "DoesNotContain"
+                && invocationOperation.Arguments.Any(argument => argument.Parameter?.Ordinal == 1
+                    && argument.Value.ConstantValue.HasValue
+                    && argument.Value.ConstantValue.Value is null))
+            {
+                TypeSyntax objectType = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
+                if ((semanticModel.GetNullableContext(invocationExpr.SpanStart) & NullableContext.AnnotationsEnabled) != 0)
+                {
+                    objectType = SyntaxFactory.NullableType(objectType);
+                }
+
+                ExpressionSyntax element = orderedArguments![1].Expression;
+                ExpressionSyntax operand = element is ConditionalExpressionSyntax
+                    ? SyntaxFactory.ParenthesizedExpression(element.WithoutTrivia())
+                    : element.WithoutTrivia();
+                orderedArguments[1] = orderedArguments[1].WithExpression(
+                    SyntaxFactory.CastExpression(objectType, operand).WithTriviaFrom(element));
+            }
+
+            newArguments = BuildNewArguments(orderedArguments!, fixKind);
+        }
 
         ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
 
@@ -144,6 +159,55 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
             .WithAdditionalAnnotations(Formatter.Annotation);
 
         return await AssertToAssertFixerHelpers.ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static bool TryGetSubsetArguments(
+        IInvocationOperation invocation,
+        SemanticModel semanticModel,
+        SyntaxGenerator generator,
+        string targetMethod,
+        out List<ArgumentSyntax>? arguments)
+    {
+        var rewritten = new List<ArgumentSyntax>(invocation.Arguments.Length);
+        ITypeSymbol enumerableType = semanticModel.Compilation.GetSpecialType(SpecialType.System_Collections_IEnumerable)
+            .WithNullableAnnotation((semanticModel.GetNullableContext(invocation.Syntax.SpanStart) & NullableContext.AnnotationsEnabled) != 0
+                ? NullableAnnotation.Annotated
+                : NullableAnnotation.NotAnnotated);
+
+        // Keep source evaluation order and force the object-equality overload used by the legacy API.
+        foreach (IArgumentOperation argument in invocation.Arguments.OrderBy(argument => argument.Syntax.SpanStart))
+        {
+            if (argument.Parameter is null || argument.IsImplicit || argument.Syntax is not ArgumentSyntax syntax)
+            {
+                arguments = null;
+                return false;
+            }
+
+            string? name = argument.Parameter.Ordinal switch
+            {
+                0 => targetMethod == "ContainsAll" ? "expected" : "notExpected",
+                1 => "collection",
+                2 => "message",
+                _ => null,
+            };
+            if (name is null)
+            {
+                arguments = null;
+                return false;
+            }
+
+            if (argument.Parameter.Ordinal == 0)
+            {
+                syntax = syntax.WithExpression(
+                    ((ExpressionSyntax)generator.CastExpression(enumerableType, syntax.Expression.WithoutTrivia()))
+                        .WithTriviaFrom(syntax.Expression));
+            }
+
+            rewritten.Add(syntax.WithNameColon(SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(name))));
+        }
+
+        arguments = rewritten;
+        return true;
     }
 
     private static bool TryGetArgumentsByOrdinal(IInvocationOperation invocationOperation, out ArgumentSyntax[]? orderedArguments)

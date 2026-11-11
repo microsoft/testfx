@@ -572,6 +572,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                     {|#0:CollectionAssert.{{method}}(collection, null)|};
                     {|#1:CollectionAssert.{{method}}(collection, default, "context")|};
                     {|#2:CollectionAssert.{{method}}(element: null, message: "named", collection: collection)|};
+                    {|#3:CollectionAssert.{{method}}(collection, true ? null : "x")|};
                 }
             }
             """;
@@ -589,6 +590,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                     Assert.{{method}}(({{objectType}})null, collection);
                     Assert.{{method}}(({{objectType}})default, collection, "context");
                     Assert.{{method}}(({{objectType}})null, collection, "named");
+                    Assert.{{method}}(({{objectType}})(true ? null : "x"), collection);
                 }
             }
             """;
@@ -599,6 +601,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(method, method),
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments(method, method),
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments(method, method),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments(method, method),
             ],
             fixedCode);
     }
@@ -608,6 +611,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "NotSubsetKeepsOperandOrder")]
     public async Task WhenCollectionAssertIsSubsetOf_FixesToContainsAll(string legacyMethod, string assertMethod)
     {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
         string code = $$"""
             using System.Collections;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -639,9 +643,9 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 {
                     ICollection subset = new[] { 1, 1 };
                     ICollection superset = new[] { 1, 1, 2 };
-                    Assert.{{assertMethod}}(subset, superset);
-                    Assert.{{assertMethod}}(subset, superset, "message");
-                    Assert.{{assertMethod}}(subset, superset, "context");
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset);
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset, message: "message");
+                    Assert.{{assertMethod}}(message: "context", collection: superset, {{expectedParameter}}: subset);
                 }
             }
             """;
@@ -653,6 +657,132 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments(assertMethod, legacyMethod),
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments(assertMethod, legacyMethod),
             ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "TypedSubsetKeepsObjectEquality")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "TypedNotSubsetKeepsObjectEquality")]
+    public async Task WhenCollectionAssertSubsetUsesTypedCollections_PreservesObjectEquality(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    var subset = new List<Item> { new Item(1) };
+                    var superset = new List<Item> { new Item(1) };
+                    {|#0:CollectionAssert.{{legacyMethod}}(subset, superset)|};
+                }
+            }
+
+            public sealed class Item : IEquatable<Item>
+            {
+                private readonly int _value;
+                public Item(int value) => _value = value;
+                public bool Equals(Item other) => other._value == _value;
+                public override int GetHashCode() => _value;
+            }
+            """;
+        string fixedCode = code
+            .Replace(
+                "{|#0:CollectionAssert." + legacyMethod + "(subset, superset)|}",
+                "Assert." + assertMethod + "(" + expectedParameter + ": (IEnumerable)subset, collection: superset)");
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "SubsetNullMessagesRemainNamed")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "NotSubsetNullMessagesRemainNamed")]
+    public async Task WhenCollectionAssertSubsetHasNullMessage_PreservesMessageOverload(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection subset = new[] { 1 };
+                    ICollection superset = new[] { 1, 2 };
+                    {|#0:CollectionAssert.{{legacyMethod}}(subset, superset, null)|};
+                    {|#1:CollectionAssert.{{legacyMethod}}(subset, superset, default)|};
+                }
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection subset = new[] { 1 };
+                    ICollection superset = new[] { 1, 2 };
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset, message: null);
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset, message: default);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments(assertMethod, legacyMethod),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "SubsetKeepsNamedEvaluationOrder")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "NotSubsetKeepsNamedEvaluationOrder")]
+    public async Task WhenCollectionAssertSubsetArgumentsHaveSideEffects_PreservesSourceOrder(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    int i = 0;
+                    {|#0:CollectionAssert.{{legacyMethod}}(superset: new[] { ++i }, subset: new[] { i })|};
+                }
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    int i = 0;
+                    Assert.{{assertMethod}}(collection: new[] { ++i }, {{expectedParameter}}: (IEnumerable)(new[] { i }));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
             fixedCode);
     }
 
