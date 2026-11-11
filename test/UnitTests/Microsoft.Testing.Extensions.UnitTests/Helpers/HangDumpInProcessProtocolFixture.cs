@@ -516,7 +516,7 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
             // The test already awaited and asserted these original injected lifecycle failures.
         }
 
-        Assert.IsTrue(operations.All(task => task.IsCompleted));
+        Assert.ContainsOnly(task => task.IsCompleted, operations);
     }
 
     private async Task DrainTransportAsync()
@@ -533,7 +533,7 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
                 // A never-connected accept task observes the fixture's canceled lifetime.
             }
 
-            Assert.IsTrue(tasks.All(task => task.IsCompleted));
+            Assert.ContainsOnly(task => task.IsCompleted, tasks);
             if (tasks.Length == _transportTasks.Count)
             {
                 return;

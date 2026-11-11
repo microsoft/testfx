@@ -257,6 +257,96 @@ exec /usr/bin/mv "$@"
         return self.git("rev-parse", "HEAD")
 
 
+@unittest.skipUnless(sys.platform.startswith("linux"), "Ubuntu runner setup uses /etc/os-release")
+class MarkdownLinterSetupTests(unittest.TestCase):
+    def scripts(self) -> list[tuple[str, str]]:
+        source, _ = authored("markdown-linter.md")
+        return [
+            ("agent", source["steps"][0]["run"]),
+            ("detection", source["safe-outputs"]["threat-detection"]["steps"][0]["run"]),
+        ]
+
+    def fixture(self) -> Fixture:
+        fixture = Fixture(self)
+        fixture.env["TMPDIR"] = fixture.runner.as_posix()
+        fixture.env["FIXTURE_APT_FAILURE"] = "none"
+        fixture.wrapper("sudo", '''
+printf '%s\\n' "$*" >> "$FIXTURE_ROOT/apt-calls"
+sources=
+for argument in "$@"; do
+  if [[ "$argument" == Dir::Etc::sourcelist=* ]]; then
+    sources="${argument#*=}"
+  fi
+done
+# The runner's relative system sources select the unavailable Azure mirror.
+if [[ "$sources" != /* ]]; then
+  echo "Temporary failure resolving 'azure.archive.ubuntu.com'" >&2
+  exit 100
+fi
+cp "$sources" "$FIXTURE_ROOT/ubuntu-sources"
+if [[ " $* " == *" $FIXTURE_APT_FAILURE "* ]]; then
+  exit 100
+fi
+''')
+        return fixture
+
+    def test_authored_setup_matches_both_compiled_jobs(self) -> None:
+        jobs = compiled("markdown-linter.lock.yml")["jobs"]
+        for job, script in self.scripts():
+            with self.subTest(job=job):
+                step = next(step for step in jobs[job]["steps"]
+                            if step.get("name") == "Install ripgrep from Ubuntu repositories")
+                self.assertEqual(script, step["run"])
+
+    def test_missing_ripgrep_bypasses_azure_mirror(self) -> None:
+        for job, script in self.scripts():
+            with self.subTest(job=job):
+                fixture = self.fixture()
+                result = fixture.bash(
+                    "set -e\ncommand() { return 1; }\n" + script)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                sources = (fixture.root / "ubuntu-sources").read_text().splitlines()
+                self.assertEqual(3, len(sources))
+                self.assertRegex(sources[0], r"^deb https://archive\.ubuntu\.com/ubuntu/ \w+ main universe$")
+                codename = sources[0].split()[2]
+                self.assertEqual([
+                    f"deb https://archive.ubuntu.com/ubuntu/ {codename} main universe",
+                    f"deb https://archive.ubuntu.com/ubuntu/ {codename}-updates main universe",
+                    f"deb https://security.ubuntu.com/ubuntu/ {codename}-security main universe",
+                ], sources)
+                calls = (fixture.root / "apt-calls").read_text().splitlines()
+                self.assertEqual(2, len(calls))
+                self.assertTrue(calls[0].endswith("APT::Update::Error-Mode=any update -qq"))
+                self.assertTrue(calls[1].endswith("install -y -qq ripgrep"))
+                for call in calls:
+                    for option in ("Dir::Etc::sourceparts=-", "Acquire::Retries=3",
+                                   "Acquire::http::Timeout=30", "Acquire::https::Timeout=30"):
+                        self.assertIn(option, call)
+                self.assertEqual([], list(fixture.runner.iterdir()), "Temporary sources must be removed")
+
+    def test_existing_ripgrep_needs_no_repository_access(self) -> None:
+        for job, script in self.scripts():
+            with self.subTest(job=job):
+                fixture = self.fixture()
+                fixture.wrapper("rg", "exit 0\n")
+                result = fixture.bash("set -e\n" + script)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertFalse((fixture.root / "apt-calls").exists())
+                self.assertEqual([], list(fixture.runner.iterdir()))
+
+    def test_package_failures_stop_setup_and_remove_temporary_sources(self) -> None:
+        for job, script in self.scripts():
+            for operation, count in (("update", 1), ("install", 2)):
+                with self.subTest(job=job, operation=operation):
+                    fixture = self.fixture()
+                    fixture.env["FIXTURE_APT_FAILURE"] = operation
+                    result = fixture.bash(
+                        "set -e\ncommand() { return 1; }\n" + script)
+                    self.assertEqual(100, result.returncode, result.stdout + result.stderr)
+                    self.assertEqual(count, len((fixture.root / "apt-calls").read_text().splitlines()))
+                    self.assertEqual([], list(fixture.runner.iterdir()), "Failure must also clean up sources")
+
+
 class CompiledWarningContractTests(unittest.TestCase):
     def assert_noop_detection_gate(self, name: str, source_name: str | None = None) -> None:
         source, _ = authored(source_name or name + ".md")

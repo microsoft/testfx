@@ -163,7 +163,7 @@ internal sealed class TrxReportGenerator :
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
-        bool shouldUseOutOfProcessTrxGeneration = TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService);
+        bool shouldUseOutOfProcessTrxGeneration = TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService, _environment);
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             await _logger.LogDebugAsync($"""
@@ -265,7 +265,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         // TRX can run in two modes. In-process or out-of-process.
         // If we are already running with the in-process mode, we publish the SessionFileArtifact to the message bus directly.
         // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
-        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
+        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService, _environment))
         {
             await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription, TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
         }
@@ -300,7 +300,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         // store and start enqueuing into it. If the IPC is cancelled we tear the store down so we don't
         // leak the writer thread + file handle when OnTestSessionFinishingAsync never runs (which is
         // exactly what cancellation triggers in the platform).
-        if (TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
+        if (TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService, _environment))
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);

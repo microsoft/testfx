@@ -98,7 +98,7 @@ public sealed class FfmpegVideoRecorderBehaviorTests
         await recorder.StopAsync(TestContext.CancellationToken);
 
         Assert.HasCount(2, warnings);
-        Assert.IsTrue(warnings.All(message => message.Length > 0));
+        Assert.ContainsOnly(message => message.Length > 0, warnings);
         Assert.IsEmpty(logs, "Directory creation must fail before process launch is logged.");
         Assert.AreEqual("keep", File.ReadAllText(blockedOutput));
         Assert.AreEqual("webm", recorder.SegmentExtension);

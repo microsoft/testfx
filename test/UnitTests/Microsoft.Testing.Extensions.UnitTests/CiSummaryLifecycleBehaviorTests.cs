@@ -157,17 +157,19 @@ public sealed class CiSummaryLifecycleBehaviorTests
             ["Tests.EmptyFailed", "Tests.Error", "Tests.Retry", "Tests.Retry", "Tests.Skipped", "Tests.Timeout"],
             histories.Select(item => item.GetProperty("fullyQualifiedName").GetString()));
         Assert.AreSequenceEqual(["failed", "failed", "passed", "passed", "skipped", "failed"], histories.Select(item => item.GetProperty("outcome").GetString()));
-        Assert.IsTrue(histories.All(item => !item.GetProperty("isFlaky").GetBoolean()
-            && item.GetProperty("historicalPassCount").GetInt32() == 7
-            && item.GetProperty("historicalFailCount").GetInt32() == 3
-            && item.GetProperty("durationSampleCount").GetInt32() == 8
-            && item.GetProperty("p95DurationMilliseconds").GetDouble() == 150
-            && item.GetProperty("p99DurationMilliseconds").GetDouble() == 250
-            && item.GetProperty("historyWindowInDays").GetInt32() == 14));
+        Assert.ContainsOnly(
+            item => !item.GetProperty("isFlaky").GetBoolean()
+                && item.GetProperty("historicalPassCount").GetInt32() == 7
+                && item.GetProperty("historicalFailCount").GetInt32() == 3
+                && item.GetProperty("durationSampleCount").GetInt32() == 8
+                && item.GetProperty("p95DurationMilliseconds").GetDouble() == 150
+                && item.GetProperty("p99DurationMilliseconds").GetDouble() == 250
+                && item.GetProperty("historyWindowInDays").GetInt32() == 14,
+            histories);
         JsonElement[] edges = [.. module.GetProperty("dependencies").EnumerateArray()];
         Assert.AreSequenceEqual(["BareMethod", "Class.*", "Class.Method", "Class.Method", "Method"], edges.Select(edge => edge.GetProperty("prerequisite").GetString()));
         Assert.AreSequenceEqual([false, false, false, true, true], edges.Select(edge => edge.GetProperty("proceedOnFailure").GetBoolean()));
-        Assert.IsTrue(edges.All(edge => edge.GetProperty("dependentFullyQualifiedName").GetString() == "Tests.Retry"));
+        Assert.ContainsOnly(edge => edge.GetProperty("dependentFullyQualifiedName").GetString() == "Tests.Retry", edges);
         JsonElement[] failures = [.. module.GetProperty("failures").EnumerateArray()];
         Assert.AreSequenceEqual(
             ["Tests.EmptyFailed", "Tests.Error", "Tests.Timeout"],

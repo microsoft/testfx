@@ -22,14 +22,19 @@ safe-outputs:
           exit 0
         fi
 
-        ubuntu_sources=sources.list.d/ubuntu.sources
-        if [ ! -f "/etc/apt/$ubuntu_sources" ]; then
-          ubuntu_sources=sources.list
-        fi
-
-        # Ignore unrelated third-party feeds, which can fail transiently and block agent setup (#10822).
-        sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- update -qq
-        sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- install -y -qq ripgrep
+        # Bypass the runner's Azure mirror, whose DNS failure blocked setup (#12386),
+        # and unrelated third-party feeds (#10822). Keep system sources unchanged.
+        ubuntu_sources=$(mktemp)
+        trap 'rm -f "$ubuntu_sources"' EXIT
+        . /etc/os-release
+        printf '%s\n' \
+          "deb https://archive.ubuntu.com/ubuntu/ $VERSION_CODENAME main universe" \
+          "deb https://archive.ubuntu.com/ubuntu/ $VERSION_CODENAME-updates main universe" \
+          "deb https://security.ubuntu.com/ubuntu/ $VERSION_CODENAME-security main universe" > "$ubuntu_sources"
+        apt_options=(-o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=-
+          -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+        sudo apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update -qq
+        sudo apt-get "${apt_options[@]}" install -y -qq ripgrep
     # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).
     enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
     prompt: >
@@ -64,14 +69,19 @@ steps:
       exit 0
     fi
 
-    ubuntu_sources=sources.list.d/ubuntu.sources
-    if [ ! -f "/etc/apt/$ubuntu_sources" ]; then
-      ubuntu_sources=sources.list
-    fi
-
-    # Ignore unrelated third-party feeds, which can fail transiently and block agent setup (#10822).
-    sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- update -qq
-    sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- install -y -qq ripgrep
+    # Bypass the runner's Azure mirror, whose DNS failure blocked setup (#12386),
+    # and unrelated third-party feeds (#10822). Keep system sources unchanged.
+    ubuntu_sources=$(mktemp)
+    trap 'rm -f "$ubuntu_sources"' EXIT
+    . /etc/os-release
+    printf '%s\n' \
+      "deb https://archive.ubuntu.com/ubuntu/ $VERSION_CODENAME main universe" \
+      "deb https://archive.ubuntu.com/ubuntu/ $VERSION_CODENAME-updates main universe" \
+      "deb https://security.ubuntu.com/ubuntu/ $VERSION_CODENAME-security main universe" > "$ubuntu_sources"
+    apt_options=(-o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=-
+      -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+    sudo apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update -qq
+    sudo apt-get "${apt_options[@]}" install -y -qq ripgrep
 - name: Download markdownlint log
   uses: actions/download-artifact@v8.0.2
   with:

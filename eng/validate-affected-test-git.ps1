@@ -112,10 +112,8 @@ try {
     $baseline = Invoke-FixtureGit @("-C", $source, "rev-parse", "HEAD")
     $null = Invoke-FixtureGit @("-C", $source, "switch", "--quiet", "--create", "pr")
     $null = Invoke-FixtureGit @("-C", $source, "merge", "--quiet", "--no-ff", "change", "-m", "Fixture PR merge", "-m", $trailer)
-    $sourceUri = ([uri]($source + [System.IO.Path]::DirectorySeparatorChar)).AbsoluteUri
-
     $shallow = Join-Path $fixture "shallow checkout"
-    $null = Invoke-FixtureGit @("clone", "--quiet", "--depth=1", "--single-branch", "--branch", "pr", $sourceUri, $shallow)
+    $null = Invoke-FixtureGit @("clone", "--quiet", "--no-local", "--depth=1", "--single-branch", "--branch", "pr", $source, $shallow)
     $null = Invoke-FixtureGit @("-C", $shallow, "switch", "--quiet", "--detach")
     [System.IO.File]::WriteAllText((Join-Path $shallow "fixture.txt"), "uncommitted")
     [System.IO.File]::WriteAllText((Join-Path $shallow "untracked.txt"), "untracked")
@@ -147,7 +145,7 @@ try {
     $passed++
 
     $complete = Join-Path $fixture "complete checkout"
-    $null = Invoke-FixtureGit @("clone", "--quiet", "--single-branch", "--branch", "pr", $sourceUri, $complete)
+    $null = Invoke-FixtureGit @("clone", "--quiet", "--no-local", "--single-branch", "--branch", "pr", $source, $complete)
     $result = Invoke-AffectedStep -Repository $complete
     Assert-StepResult -Name "AffectedGitHistoryHandlesFullCheckout" -Result $result
     if ((Invoke-FixtureGit @("-C", $complete, "merge-base", "HEAD", "refs/remotes/origin/main")) -ne $baseline) {
