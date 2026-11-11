@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" VersionOverride="5.9.0" />
   </ItemGroup>
 
   <ItemGroup>

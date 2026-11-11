@@ -21,7 +21,7 @@
     <!-- MSBuild 18.10+ requires .NET 11; keep the latest version that supports our .NET 10 targets. -->
     <MicrosoftBuildVersion>18.9.6</MicrosoftBuildVersion>
     <!-- Roslyn is supplied by the analyzer host: Visual Studio 2022 17.14 / .NET SDK 9.0.300 or newer. -->
-    <MicrosoftCodeAnalysisVersion>4.14.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>5.9.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.14.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers.
