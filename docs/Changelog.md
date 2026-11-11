@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="5.0.0" />[5.0.0] - Unreleased
 
-See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5.2...main)
+See full log [of v4.5.3...main](https://github.com/microsoft/testfx/compare/v4.5.3...main)
 
 For the Microsoft.Testing.Platform changes included with this release, see [3.0.0](Changelog-Platform.md#3.0.0).
 
@@ -36,15 +36,16 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 * Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12121](https://github.com/microsoft/testfx/pull/12121)
 * Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12134](https://github.com/microsoft/testfx/pull/12134)
 
-## <a name="4.5.3" />[4.5.3] - Unreleased
+## <a name="4.5.3" />[4.5.3] - 2026-11-11
 
-See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v4.5.2...rel/4.5)
+See full log [of v4.5.2...v4.5.3](https://github.com/microsoft/testfx/compare/v4.5.2...v4.5.3)
 
 For the Microsoft.Testing.Platform changes included with this release, see [2.5.3](Changelog-Platform.md#2.5.3).
 
 ### Changed
 
 * Inspect assembly metadata before loading dependencies during assembly-fixture provider discovery, avoiding unnecessary loads of unmarked libraries while preserving transitive providers, runtime binding and diagnosed fallback, by @Evangelink in [#12291](https://github.com/microsoft/testfx/pull/12291)
+* Update the `Microsoft.NET.Test.Sdk` dependency selected by `MSTest.Sdk` to 18.10.2, by @Evangelink in [#12366](https://github.com/microsoft/testfx/pull/12366)
 
 ### Fixed
 
