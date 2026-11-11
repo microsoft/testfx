@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TestAssertExtensionsTests : IDisposable
 {
+    private const string UnformattableDescription = "Microsoft.Testing.Platform.UnitTests.TestAssertExtensionsTests+UnformattableValue (formatting threw InvalidOperationException)";
+
     private readonly CultureInfo _originalUICulture = CultureInfo.CurrentUICulture;
 
     // The exact diagnostic expectations use English framework resources within this test's ExecutionContext.
@@ -596,6 +598,65 @@ public sealed class TestAssertExtensionsTests : IDisposable
         Assert.HasCount(6, failures.InnerExceptions);
         Assert.AreEqual("6 assertion(s) failed within the assert scope.", failure.Message);
         Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsEntry("key", null, empty));
+    }
+
+    [TestMethod]
+    [DataRow(false, "Dictionary is empty.", DisplayName = "ContainsEntry_Unformattable_EmptyDictionary")]
+    [DataRow(true, "Key was not found (dictionary count: 1).", DisplayName = "ContainsEntry_Unformattable_PopulatedDictionary")]
+    public void ContainsEntry_UnformattableMissingKey_WithinScope_CollectsFailureAndContinues(bool populated, string reason)
+    {
+        object key = new UnformattableValue(1);
+        Dictionary<object, object?> dictionary = [];
+        if (populated)
+        {
+            dictionary.Add("unrelated", null);
+        }
+
+        int completed = 0;
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(() =>
+        {
+#pragma warning disable MSTESTEXP // Exercise the current framework's experimental assertion scope.
+            using (Assert.Scope())
+#pragma warning restore MSTESTEXP
+            {
+                Assert.ContainsEntry(key, null, dictionary);
+                completed++;
+            }
+        });
+
+        Assert.AreEqual(1, completed);
+        Assert.IsNull(failure.InnerException);
+        AssertFailureMessage(
+            $"""
+            Assertion failed. Expected condition to be true.
+            Assert.ContainsEntry(key, null, dictionary) failed. Key: {UnformattableDescription}. {reason} Expected: <null>.
+
+            actual: false
+            """,
+            failure);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "ContainsEntry_Unformattable_ExpectedValue")]
+    [DataRow(false, DisplayName = "ContainsEntry_Unformattable_ActualValue")]
+    public void ContainsEntry_UnformattableValueMismatch_ReportsFormattingError(bool unformattableExpected)
+    {
+        object expectedValue = unformattableExpected ? new UnformattableValue(1) : "expected";
+        object actualValue = unformattableExpected ? "actual" : new UnformattableValue(1);
+        Dictionary<string, object> dictionary = new() { ["key"] = actualValue };
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(
+            () => Assert.ContainsEntry("key", expectedValue, dictionary, "custom"));
+
+        string expected = unformattableExpected ? UnformattableDescription : "\"expected\"";
+        string actual = unformattableExpected ? "\"actual\"" : UnformattableDescription;
+        AssertFailureMessage(
+            $"""
+            Assertion failed. Expected condition to be true.
+            Assert.ContainsEntry("key", expectedValue, dictionary) failed. Key: "key". Key is present, but its value differs. Expected: {expected}. Actual: {actual}. custom
+
+            actual: false
+            """,
+            failure);
     }
 
     public void Dispose() => CultureInfo.CurrentUICulture = _originalUICulture;

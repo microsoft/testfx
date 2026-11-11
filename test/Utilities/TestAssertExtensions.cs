@@ -57,6 +57,7 @@ internal static class TestAssertExtensions
         /// <remarks>
         /// Uses the dictionary's own key lookup and <see cref="EqualityComparer{T}.Default"/> for value equality.
         /// Accepts <see cref="IDictionary{TKey, TValue}"/> without modifying it; readonly-interface-only dictionaries are not supported.
+        /// Unformattable keys or values are described by their runtime type and formatting exception.
         /// </remarks>
         public static void ContainsEntry<TKey, TValue>(
             TKey key,
@@ -151,7 +152,19 @@ internal static class TestAssertExtensions
 
         if (value is not string text)
         {
-            return $"{FormatValue(Convert.ToString(value, CultureInfo.InvariantCulture))} ({value.GetType().FullName})";
+            Type type = value.GetType();
+            string typeName = type.FullName ?? type.Name;
+            string? rendered;
+            try
+            {
+                rendered = Convert.ToString(value, CultureInfo.InvariantCulture);
+            }
+            catch (Exception exception) when (exception is not (OutOfMemoryException or StackOverflowException or AccessViolationException))
+            {
+                return $"{typeName} (formatting threw {exception.GetType().Name})";
+            }
+
+            return $"{FormatValue(rendered)} ({typeName})";
         }
 
         StringBuilder builder = new("\"");
