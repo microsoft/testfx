@@ -39,7 +39,7 @@ The `message` field preserves the framework's explanation or the exception's top
 - Each physical attempt receives its own UUID. Earlier attempts represented in `retryAttempts` use the standard `attemptId` field. CTRF 0.1.0 does not allow `attemptId` on the final test object, so that attempt's identity is carried in `extra.mtpAttemptId` instead; retry merging preserves it when promoting a raw result into history. Legacy reports without an attempt identity remain mergeable, but the merger omits their optional `attemptId` rather than treating an execution lifecycle ID as an attempt ID.
 - Retry consolidation uses both case identity and `executionId`, preserving distinct lifecycles even when they share a framework UID. Legacy rows without an execution ID can be correlated only when their case identity is unique in each input report and does not span conflicting known lifecycles. Repeated case/lifecycle pairs within one report remain separate; ambiguous results are preserved rather than guessed into another test's retry history.
 - `extra.uid` continues to carry the Microsoft.Testing.Platform UID for compatibility with reports produced before first-class CTRF identity fields were available.
-- `attachments[].path` is emitted unchanged as an opaque CTRF path value. It can be a local absolute file path and consumers must not assume that it is remotely accessible.
+- `attachments[].path` is preserved without truncation as an opaque CTRF path value. Attachment names and descriptions retain their diagnostic size limits. A path can be a local absolute file path and consumers must not assume that it is remotely accessible.
 
 ## Documentation
 

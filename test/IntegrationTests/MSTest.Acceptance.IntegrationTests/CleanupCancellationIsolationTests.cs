@@ -14,7 +14,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<CleanupCancellationIsolationTests.TestAssetFixture>
 {
-    private static string ConsumerTargetFramework => TargetFrameworks.Net[^1];
+    // Fast acceptance mode omits net8.0 from TargetFrameworks.Net, but the release adapter does not ship net10.0.
+    private static string ConsumerTargetFramework => "net8.0";
 
     public static IEnumerable<TestDataRow<(string Scenario, MetadataMode MetadataMode, bool NonCooperativeTimeout)>> CleanupCases
     {
