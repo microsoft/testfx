@@ -396,7 +396,7 @@ public sealed class RetrySummaryBehaviorTests
             Assert.AreSequenceEqual(
                 expected.OrderBy(path => path, StringComparer.Ordinal),
                 replayed.SelectMany(message => message.FileArtifacts).Select(artifact => artifact.FullPath!).OrderBy(path => path, StringComparer.Ordinal));
-            Assert.IsTrue(expected.All(File.Exists));
+            Assert.ContainsOnly(File.Exists, expected);
             Assert.IsEmpty(fixture.Displays);
             if (replayFails)
             {

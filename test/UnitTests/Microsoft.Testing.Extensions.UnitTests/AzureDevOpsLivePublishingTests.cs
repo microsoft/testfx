@@ -3123,7 +3123,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual("row B first", created[1].ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[2].Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[3].Outcome);
-        Assert.IsTrue(created.All(result => result.SubResults is null));
+        Assert.ContainsOnly(result => result.SubResults is null, created);
         AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 100, 101, 102, 103);
         Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
         Assert.AreEqual(100, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
