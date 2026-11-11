@@ -1,5 +1,146 @@
 # BuildXL build: research and decisions
 
+## 2026-11-11: correct the performance setup
+
+The setup audit of [Azure build 1674906](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1674906)
+confirmed a successful Release build with 226 cache misses, no hits, and no
+uncacheable processes. The job had no persisted action cache, disabled managed
+shared compilation, and scheduled eight processes on four logical CPUs. Its
+32-minute engine execution averaged 100% CPU; graph construction took about
+10 seconds. The matching MTP `net10.0` main compiler task took 160.5 seconds,
+versus 23.4 seconds in normal CI. These observations identify setup differences,
+not the isolated contribution of each difference.
+
+The requested correction preserves native project scheduling, analyzers,
+sandbox/file-access enforcement, project frameworks, and blocking failures:
+
+- Enable the resolver's supported managed shared compiler and its file-access
+  logger, rather than manually breaking an arbitrary compiler out of the sandbox.
+  Keep the MSBuild reference backend's compiler-reuse setting aligned.
+- Default concurrency to the process's available logical CPU count, capped at
+  the existing 64-worker limit; retain explicit `-Jobs` overrides.
+- Restore and save the local action cache with Azure's branch-scoped `Cache@2`.
+  Use toolchain/configuration-qualified, immutable run keys with a compatible
+  restore prefix. Keep checkout cleaning, and do not cache binary/intermediate
+  output directories, running compiler state, credentials, or the whole checkout.
+  The engine's default cache root includes content, fingerprints, and serialized
+  graph-cache metadata; BuildXL validates restored entries before reuse.
+  Use a stable checkout-local
+  NuGet path instead of embedding build/attempt IDs in tracked process inputs.
+- Detect journal availability read-only. Use journal/content-table/hardlink
+  optimizations when available, otherwise explicitly report the full-hashing
+  fallback. Preserve `-NoJournal` as an explicit override. Never enable a volume
+  journal or disable sandbox checks as part of this script.
+- Retain .NET SDK MSBuild for the native resolver and the `-Engine MSBuild`
+  comparison. Normal shipping CI must keep desktop MSBuild for classic UAP;
+  changing that job merely to make its timing comparable would drop coverage.
+  Record the effective compiler, concurrency, and filesystem policy, and use the
+  matched reference command for engine-only comparisons.
+
+The producer remains the checksum-pinned public BuildXL deployment and the
+SDK pinned by `global.json`; the consumers are the existing local driver and
+Windows Debug/Release jobs. A missing cache is a normal cold build, not a reason
+to skip restore/build or fall back to another engine. Azure owns cache
+authorization and branch isolation. Each action still validates its actual
+inputs before reusing outputs; a pipeline cache hit is not itself an action hit.
+Cancellation/failure ownership and the bounded native-build retry are unchanged.
+No shipping package/API or release-branch behavior is changed by this experiment.
+
+Validation extends the existing script suites: parsed pipeline cache
+contracts, automatic/default and explicit settings, real shared-compiler
+input invalidation (including preserved timestamps), unchanged action hits,
+missing-output recovery, and failure propagation. Real native builds and the
+SDK-matched reference must still produce equivalent assemblies. Hosted cache
+restore/save and a hosted performance improvement remain unproven until the
+changed pipeline runs; no new speedup is claimed from configuration alone.
+
+The corrected defaults have completed a real Release `TestFx.slnx` build:
+
+```powershell
+pwsh -NoLogo -NoProfile -File .\eng\buildxl.ps1 `
+    -Project TestFx.slnx -Configuration Release -OutputId r
+```
+
+Exit 0; all 67 solution project paths reconcile to 226 process-instance binlogs,
+with 226 cache misses, no hits, and no failed processes. The effective default
+was 32 workers on this 32-CPU Windows host. Read-only probing reported the
+unavailable Q-volume journal and selected full hashing without an explicit
+`-NoJournal` switch. The native compiler binlog records
+`UseSharedCompilation=True` and `CompilerServer: server - server processed
+compilation`, including the resolver's compiler-access logger.
+The same selector on the available C-volume journal selects `Journal`, while
+the explicit override selects `FullHashing`. No volume settings were changed.
+This local coverage result is not a comparison with the four-CPU hosted run.
+
+Repeating that full-solution command exited 0 with **226 hits, zero misses**.
+The engine's execution phase was 22.8 seconds; this is one unchanged local
+cache check, not a three-sample timing baseline or a hosted-CI speedup.
+A separate fresh-output recovery probe saved only the default cache directory,
+removed its task-owned binary/intermediate/object directories, restored the
+snapshot, and rebuilt the TRX graph. All six actions were cache hits, all 67
+output files returned, and the three expected assembly identities matched.
+This tests actual persisted-cache recovery rather than leaving old DLLs on disk.
+The SDK-matched `-Engine MSBuild` TRX build also exited 0 with the same 67-file
+inventory and three assembly identities. Metadata confirms identical SDK,
+MSBuild/compiler paths, shared compilation, CPU limit, framework/configuration,
+and resolved filesystem mode in the two backends. Embedded source/output paths
+can differ, so this is not a byte-identical-binary claim.
+
+### Correction validation and test-value evidence
+
+Source state is base `cb020393f8c050fd794f575ca69be4ddf673d2ea` plus the
+uncommitted setup correction. The actual producer versions remain SDK
+`12.0.100-alpha.1.26556.115` and BuildXL `0.1.0-20261030.6`.
+The retained executable-only patch SHA-256 is
+`08617CAEE31D6053CEABEB0B0323B29CAB8132E7F2EA47D40AB568EDACBCB3CB`;
+it includes the driver, resolver, benchmark, validator, pipeline job, and Python
+regressions, but excludes documentation so this identity is not self-referential.
+
+| Requirement | Evidence |
+| --- | --- |
+| Reusable, qualified, branch-scoped cache snapshots | `test_action_cache_uses_qualified_immutable_key_and_compatible_restore_prefix`, `test_action_cache_restores_only_actions_between_checkout_and_native_build`, and `test_action_cache_hit_never_skips_native_build`; real saved-cache recovery restores six actions and 67 files without old binaries/intermediates. |
+| Stable package paths and native auto-settings | `test_checkout_and_nuget_cache_are_job_isolated` and `test_native_build_targets_full_solution_and_preserves_exit_code`. |
+| CPU-sized defaults, explicit worker limits, and SDK-matched backends | `SettingsAndProvenance` checks default and explicit 1/64 workers, existing pinned compiler files, equal backend profiles, and prepare-only behavior. The real SDK reference also produces equivalent outputs. |
+| Shared compilation still tracks source content | `SharedCompilerTracksChangedInputs` compiles assembly version `1.0.0.0`, changes the source to `2.0.0.0` with the original timestamp, requires a cache miss and the new version, then requires an unchanged cache hit. SDK analyzers and shared compilation remain enabled. |
+| Read-only journal detection and explicit fallback | `test_journal_mode_checks_every_relevant_volume_read_only`, `test_missing_journal_falls_back_with_diagnostics`, and `test_no_journal_explicitly_forces_full_hashing`. These execute the actual helper with an isolated fake journal command. Available/unavailable real local volumes were also checked read-only. |
+| Preserve framework selection, errors, caller state, and output recovery | All nine pre-existing native cases remain, including `SolutionBuildPreservesProjectFrameworks`, `BuildFailurePropagates`, `CallerStateRestored`, `UnchangedBuildUsesCache`, and `MissingOutputRestoredFromCache`. |
+
+Executed commands:
+
+| Command | Result |
+| --- | --- |
+| `python .github\scripts\test_buildxl_pipeline.py` | Exit 0; 23 executed/passed, zero failures/errors/skips. All 17 original case identities remain. |
+| `pwsh -NoLogo -NoProfile -File .\eng\buildxl\validate.ps1` | Exit 0; all 11 named cases executed/passed. The parsed `results.json` reconciles 19 child invocations; the two deliberately failing children retain exit 1 and every other child exits 0. |
+| `pwsh -NoLogo -NoProfile -File .\eng\buildxl\benchmark.ps1 -SelfTest` | Exit 0; all six existing statistics/output/export self-checks pass. |
+| Full-solution Release command above, repeated unchanged | Both exit 0; cold 226 misses, unchanged 226 hits/zero misses. |
+| `pwsh -NoLogo -NoProfile -File .\eng\buildxl.ps1 -Project src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj -TargetFramework net10.0 -Engine MSBuild -OutputId m` | Exit 0; settings, 67 output paths, and three primary assembly identities match the native backend. |
+
+Native regression results are retained in
+`artifacts/buildxl-validation/16c0d77f5fb2468686bc17bdd79d7676/results.json`.
+The generated C# fixture's UTF-8 BOM was independently checked.
+The tests remain serial: child journal mocks cannot alter real volumes,
+collector trees are per-test, and the compiler fixture precedes the shared TRX
+closure/cache checks. No test scheduling or shipping package layout changed.
+
+The same retained assertions also ran against isolated counterfactuals, without
+changing the real worktree or its generated outputs:
+
+| Contract / retained test | Without the correction | Correct controls |
+| --- | --- | --- |
+| Old pipeline / cache-key, package-path, native-command tests | Actual base job YAML: all three methods execute and fail their intended assertions; zero errors/skips. | Five selected methods pass before and after the pipeline/journal counterfactuals. |
+| Missing-journal fallback / `test_missing_journal_falls_back_with_diagnostics` | A buildable helper mutation ignoring failed queries produces three expected assertion failures across its three subcases; zero errors/skips. | Same method passes before/after. |
+| Explicit override / `test_no_journal_explicitly_forces_full_hashing` | Ignoring `-NoJournal` produces one expected assertion failure, not a launch/setup error. | Same method passes before/after. |
+| CPU default / `SettingsAndProvenance` | Restore only the fixed eight-worker default in a comparison clone outside the repository: one case executes and fails `Expected <32>, got <8>.`; its child preparation exits 0. | The same case passes before and after both settings counterfactuals. |
+| Shared compiler / `SettingsAndProvenance` | Restore disabled compilation policy and matching metadata in that clone: one case executes and fails `Expected <True>, got <False>.`; child preparation exits 0. | The same case passes before/after. The real shared-compiler invalidation case separately passes. |
+
+These are **executed: detected** assertions. The settings/helper mutations are
+targeted counterfactuals, not claims that the new API shape existed at the base
+revision. The comparison clone shared only the existing pinned SDK/tool
+deployment, performed no native compilation, and was removed along with its
+borrowed tool junction. Pipeline-cache service transfer, hosted performance,
+and native journal-optimized execution on this journal-less checkout remain
+unverified. Do not equate the local 226-hit result with a hosted cache hit rate.
+
 ## 2026-11-10: build the repository instead of benchmarking in CI
 
 The requested outcome is a real BuildXL repository build, with performance
@@ -93,7 +234,11 @@ builds `TestFx.slnx` using each project's declared frameworks:
 pwsh -NoProfile -File .\eng\buildxl.ps1
 ```
 
-On ReFS or a volume without a change journal, opt into full input hashing:
+The driver checks the source, SDK, package, and output volumes read-only. When
+their journals are available, it uses journal-backed input tracking, the file
+content table, and hardlinks. On ReFS or another volume without an accessible
+journal, it reports the reason and automatically uses full input hashing.
+Force that compatibility profile explicitly with:
 
 ```powershell
 pwsh -NoProfile -File .\eng\buildxl.ps1 -NoJournal
@@ -126,12 +271,14 @@ from the solution's existence.
 Binaries are in `artifacts\buildxl\bin`, intermediates in
 `artifacts\obj\buildxl`, and the local action cache and engine logs are under
 `artifacts\buildxl`. The pinned deployment is in `artifacts\buildxl-tools`.
-Per-project MSBuild binlogs are under
+Concurrency defaults to the available logical CPU count (at most 64); `-Jobs`
+overrides that limit for controlled experiments. Per-project MSBuild binlogs are under
 `artifacts\buildxl\Out\Logs\MSBuild`; restore writes
 `artifacts\buildxl\logs\restore.binlog`. `toolchain.json` records the source
-revision, SDK/BuildXL versions, configuration, framework policy, and concurrency.
+revision, SDK/BuildXL versions, configuration, framework policy, concurrency,
+compiler-reuse policy, SDK MSBuild/compiler paths, and the resolved filesystem mode.
 The validation script retains separate console logs, counters, and a parsed
-nine-case `results.json` in a unique `artifacts\buildxl-validation` directory.
+per-case `results.json` in a unique `artifacts\buildxl-validation` directory.
 It intentionally exercises a failing build and deletes/retrieves one generated
 reporter DLL; it does not edit product sources. Its cache/closure checks still
 select the small TRX graph explicitly, while its solution fixture checks distinct
@@ -141,9 +288,12 @@ project-framework declarations and its default-selection case checks
 Do not run this backend, its validator, or another builder concurrently in
 the **same checkout**. Different invocations share this checkout's BuildXL
 outputs and cache. The source mount is not declared scrubbable, but BuildXL
-does clean its own recorded generated outputs. No remote cache is configured.
-The engine server and managed compiler server are disabled so compilation
-does not depend on reusable background services.
+does clean its own recorded generated outputs. The local driver does not configure
+a remote cache backend. CI restores/saves this local cache through Azure's
+branch-scoped pipeline cache; it never reuses shipping outputs.
+The engine server remains disabled. Managed compiler reuse is enabled through
+the native resolver's supported compiler-access logger, retaining input tracking
+and sandbox enforcement rather than manually exempting compiler accesses.
 
 Keep the checkout and any `-OutputId` short when building Windows app-model
 projects. The Windows SDK's native PRI tool can exceed its path limit after
@@ -162,7 +312,7 @@ The comparison is now a **local-only experiment**, not the CI workload:
 
 ```powershell
 pwsh -NoProfile -File .\eng\buildxl\benchmark.ps1 -SelfTest
-pwsh -NoProfile -File .\eng\buildxl\benchmark.ps1 -Samples 3 -Jobs 8 -NoJournal
+pwsh -NoProfile -File .\eng\buildxl\benchmark.ps1 -Samples 3
 ```
 
 By default, results go into a new `artifacts\buildxl-perf\<run-id>` directory.
@@ -181,6 +331,14 @@ benchmark import, and `-PrepareOnly` for untimed tool/package acquisition.
 Its default engine remains BuildXL. Do not compare the reference backend
 against the shipping Arcade pipeline's complete pack/test job: this comparison
 is deliberately limited to equivalent builds of the TRX project graph.
+Both backends use the pinned SDK's MSBuild/Roslyn and shared compilation, unlike
+normal Windows shipping CI's desktop MSBuild. For a full-solution SDK-matched
+reference build, invoke the driver with `-Engine MSBuild -Project TestFx.slnx`;
+keep configuration, `-Jobs`, source/output starting state, and restore policy
+matched. That command alone is not a repeated performance baseline.
+New benchmark results use the `SharedCompilation.v2` trend series and record
+the resolved filesystem profile. The historical measurements below used
+compiler reuse disabled and are not measurements of the corrected defaults.
 
 ### Observed local results
 
@@ -242,7 +400,8 @@ retain their exclusions. `SkipTests` still controls product tests, not these
 build-only jobs.
 
 Each entry invokes `eng/buildxl.ps1 -Project TestFx.slnx` with its configuration,
-eight workers, and `-NoJournal`. There is one normal restore/build, no warm-up,
+CPU-sized concurrency, tracked shared compilation, and automatic filesystem
+profile selection. There is one normal restore/build, no warm-up,
 synthetic source marker, benchmark repetition, or comparison threshold.
 A failed task can retry the same native build once to recover from the observed
 Windows child-process teardown race; a second failure still fails the job.
@@ -255,8 +414,9 @@ The job retains `toolchain.json`, the consumed `config.dsc`, engine `logs`
 (including counters and execution logs), and `Out/Logs/MSBuild` project binlogs
 in **buildxl-Debug-Attempt&lt;attempt&gt;** or
 **buildxl-Release-Attempt&lt;attempt&gt;**. Collection runs after success or
-failure, tolerates absent/partial output trees, and never uploads the local
-action cache or binary tree. Publication requires actual evidence to exist.
+failure, tolerates absent/partial output trees, and never includes the local
+action cache or binary tree in the log artifact. Publication requires actual
+evidence to exist.
 These raw build artifacts support later performance analysis without claiming
 matched workloads or a speedup now.
 
@@ -265,8 +425,17 @@ The standalone job preserves Arcade's public-project
 The earlier injected tracer wrote `build-tracer.log` and `tags.db` outside
 BuildXL's declared outputs; sandbox enforcement remains enabled.
 CodeQL scanning remains in the official and dedicated CodeQL pipelines.
-No remote cache or OAuth token is configured. The package cache is isolated by
-build ID, job attempt, and configuration.
+No BuildXL remote backend or custom cache credentials are configured.
+`Cache@2` separately persists `artifacts/buildxl/cache` with Azure's native
+branch/pipeline isolation. Keys bind the OS, configuration, SDK/toolchain files,
+and driver/resolver imports; a build/attempt suffix creates a new immutable
+snapshot while a compatible prefix restores the latest prior one.
+`NUGET_PACKAGES` is the stable checkout-local `.packages` path, so build IDs
+do not salt tracked package paths. A clean checkout prevents leftover local
+state from bypassing the pipeline cache's authorization scope. Cache restoration
+never skips restore or the native engine, and actual engine counters remain the
+authority for action reuse. Version metadata and other legitimate changed inputs
+can still cause misses even after a pipeline cache restore.
 
 ### Previous benchmark pipeline and trends (historical)
 

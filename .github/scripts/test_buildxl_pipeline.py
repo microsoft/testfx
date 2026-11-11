@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import base64
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -13,6 +14,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[2]
+CACHE_STEP = "Cache BuildXL actions"
 BUILD_STEP = "Build repository with BuildXL"
 COLLECT_STEP = "Collect BuildXL engine and project logs"
 PUBLISH_STEP = "Publish BuildXL build logs"
@@ -130,11 +132,59 @@ class BuildXLPipelineTests(unittest.TestCase):
         self.assertEqual(1, len(checkouts))
         self.assertEqual("self", checkouts[0]["checkout"])
         self.assertIs(True, checkouts[0]["clean"])
+        self.assertIs(False, checkouts[0]["persistCredentials"])
         self.assertEqual(
-            r"$(Agent.TempDirectory)\buildxl-nuget-$(Build.BuildId)-"
-            r"$(System.JobAttempt)-$(BuildXLConfiguration)",
+            r"$(Build.SourcesDirectory)\.packages",
             self.job["variables"]["NUGET_PACKAGES"],
         )
+
+    def test_action_cache_uses_qualified_immutable_key_and_compatible_restore_prefix(self) -> None:
+        inputs = self.step(CACHE_STEP)["inputs"]
+        prefix = [
+            '"buildxl-actions-v1"',
+            '"$(Agent.OS)"',
+            '"$(BuildXLConfiguration)"',
+            "global.json",
+            r"eng\buildxl.ps1,eng\buildxl\config.dsc,eng\buildxl\msbuild.targets",
+        ]
+        self.assertEqual(
+            prefix + ['"$(Build.BuildId)"', '"$(System.JobAttempt)"'],
+            inputs["key"].split(" | "),
+        )
+        self.assertEqual(
+            [" | ".join(prefix)], inputs["restoreKeys"].strip().splitlines()
+        )
+
+    def test_action_cache_restores_only_actions_between_checkout_and_native_build(self) -> None:
+        cache = self.step(CACHE_STEP)
+        self.assertEqual("Cache@2", cache["task"])
+        self.assertEqual(
+            [cache],
+            [
+                step for step in self.steps
+                if step.get("task", "").partition("@")[0] == "Cache"
+            ],
+        )
+        self.assertEqual(
+            {"key", "restoreKeys", "path", "cacheHitVar"}, set(cache["inputs"])
+        )
+        self.assertEqual(
+            r"$(Build.SourcesDirectory)\artifacts\buildxl\cache",
+            cache["inputs"]["path"],
+        )
+        self.assertEqual("BuildXLCacheRestored", cache["inputs"]["cacheHitVar"])
+        self.assertIs(True, cache.get("enabled", True))
+        self.assertNotIn("condition", cache)
+        checkout = next(step for step in self.steps if "checkout" in step)
+        self.assertLess(self.steps.index(checkout), self.steps.index(cache))
+        self.assertLess(self.steps.index(cache), self.steps.index(self.step(BUILD_STEP)))
+
+    def test_action_cache_hit_never_skips_native_build(self) -> None:
+        build = self.step(BUILD_STEP)
+        self.assertIs(True, build.get("enabled", True))
+        self.assertNotIn("condition", build)
+        for node in mappings(self.job):
+            self.assertNotIn("BuildXLCacheRestored", node.get("condition", ""))
 
     def test_public_project_retains_codeql_and_cg_injection_policy(self) -> None:
         self.assertEqual(
@@ -151,7 +201,7 @@ class BuildXLPipelineTests(unittest.TestCase):
         # Pin the complete command: no redirection, wrapper, or fallback can replace it.
         self.assertEqual(
             [
-                r".\eng\buildxl.ps1 -Project TestFx.slnx -Configuration '$(BuildXLConfiguration)' -Jobs 8 -NoJournal",
+                r".\eng\buildxl.ps1 -Project TestFx.slnx -Configuration '$(BuildXLConfiguration)'",
                 "exit $LASTEXITCODE",
             ],
             self.step(BUILD_STEP)["pwsh"].strip().splitlines(),
@@ -208,6 +258,130 @@ class BuildXLPipelineTests(unittest.TestCase):
             "buildxl-$(BuildXLConfiguration)-Attempt$(System.JobAttempt)",
             publisher["inputs"]["artifact"],
         )
+
+    def file_system_mode(
+        self, paths: list[str], journals: dict[str, dict], no_journal: bool = False
+    ) -> tuple[dict, str]:
+        fixture = base64.b64encode(
+            json.dumps(
+                {"Paths": paths, "Journals": journals, "NoJournal": no_journal}
+            ).encode("utf-8")
+        ).decode("ascii")
+        script = r"""
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version 2.0
+$tokens = $null
+$parseErrors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    '__DRIVER__', [ref] $tokens, [ref] $parseErrors)
+if ($parseErrors.Count -ne 0) { throw 'The driver must parse before extracting its helper.' }
+$helpers = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-BuildXLFileSystemMode'
+}, $true))
+if ($helpers.Count -ne 1) { throw 'Expected exactly one Get-BuildXLFileSystemMode helper.' }
+# Load only the actual helper; never execute driver setup, restore or build code.
+. ([scriptblock]::Create($helpers[0].Extent.Text))
+$fixture = [Text.Encoding]::UTF8.GetString(
+    [Convert]::FromBase64String('__FIXTURE__')) | ConvertFrom-Json -AsHashtable
+$queries = [Collections.Generic.List[string]]::new()
+$global:LASTEXITCODE = 0
+function fsutil.exe {
+    if ($args.Count -ne 3 -or $args[0] -cne 'usn' -or $args[1] -cne 'queryjournal') {
+        throw 'Only read-only fsutil usn queryjournal calls are permitted.'
+    }
+
+    $volume = [string] $args[2]
+    $script:queries.Add($volume)
+    if (-not $script:fixture.Journals.Contains($volume)) {
+        throw "Unexpected journal volume: $volume"
+    }
+
+    $reply = $script:fixture.Journals[$volume]
+    $global:LASTEXITCODE = $reply.ExitCode
+    Write-Output $reply.Output
+}
+$mode = Get-BuildXLFileSystemMode -Paths $fixture.Paths -NoJournal:$fixture.NoJournal
+$result = [ordered]@{ Mode = $mode; Queries = @($queries.ToArray()) }
+Write-Output ('BUILDXL_FILE_SYSTEM_RESULT=' + ($result | ConvertTo-Json -Compress))
+"""
+        script = script.replace(
+            "__DRIVER__", str(ROOT / "eng" / "buildxl.ps1").replace("'", "''")
+        ).replace("__FIXTURE__", fixture)
+        command = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+        process = subprocess.run(
+            [
+                "pwsh", "-NoLogo", "-NoProfile", "-NonInteractive",
+                "-OutputFormat", "Text", "-EncodedCommand", command,
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        self.assertEqual(0, process.returncode, process.stdout + process.stderr)
+        self.assertEqual("", process.stderr.strip())
+        marker = "BUILDXL_FILE_SYSTEM_RESULT="
+        results = [
+            line.removeprefix(marker)
+            for line in process.stdout.splitlines() if line.startswith(marker)
+        ]
+        self.assertEqual(1, len(results), process.stdout)
+        diagnostics = "\n".join(
+            line for line in process.stdout.splitlines() if not line.startswith(marker)
+        )
+        return json.loads(results[0]), diagnostics
+
+    def test_journal_mode_checks_every_relevant_volume_read_only(self) -> None:
+        result, _ = self.file_system_mode(
+            [
+                r"C:\checkout with spaces", r"D:\pinned sdk", r"E:\packages",
+                r"C:\checkout with spaces\artifacts\buildxl",
+            ],
+            {
+                "C:\\": {"ExitCode": 0, "Output": "Usn Journal ID : 0x01234"},
+                "D:\\": {"ExitCode": 0, "Output": "USN-Journal-ID : 0x56789"},
+                "E:\\": {"ExitCode": 0, "Output": ""},
+            },
+        )
+        self.assertEqual("Journal", result["Mode"])
+        self.assertCountEqual(["C:\\", "D:\\", "E:\\"], result["Queries"])
+
+    def test_missing_journal_falls_back_with_diagnostics(self) -> None:
+        cases = (
+            ("inactive-journal", 1, "The volume change journal is not active."),
+            ("access-denied", 5, "Access is denied."),
+            ("nonzero-with-journal-output", 1, "Usn Journal ID : 0x01234"),
+        )
+        for name, exit_code, output in cases:
+            with self.subTest(case=name):
+                result, diagnostics = self.file_system_mode(
+                    [r"C:\checkout", r"D:\pinned sdk"],
+                    {
+                        "C:\\": {"ExitCode": 0, "Output": "Usn Journal ID : 0x56789"},
+                        "D:\\": {"ExitCode": exit_code, "Output": output},
+                    },
+                )
+                self.assertEqual("FullHashing", result["Mode"])
+                self.assertIn("D:\\", result["Queries"])
+                self.assertIn("D:\\", diagnostics)
+                self.assertIn(f"exit {exit_code}", diagnostics)
+                self.assertIn(output, diagnostics)
+
+    def test_no_journal_explicitly_forces_full_hashing(self) -> None:
+        result, diagnostics = self.file_system_mode(
+            [r"C:\checkout", r"D:\pinned sdk"],
+            {
+                "C:\\": {"ExitCode": 0, "Output": "Usn Journal ID : 0x01234"},
+                "D:\\": {"ExitCode": 0, "Output": "Usn Journal ID : 0x56789"},
+            },
+            no_journal=True,
+        )
+        self.assertEqual("FullHashing", result["Mode"])
+        self.assertEqual([], result["Queries"])
+        self.assertIn("-NoJournal", diagnostics)
 
     def assert_collected(
         self,

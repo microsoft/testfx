@@ -21,16 +21,27 @@ jobs:
       Codeql.SkipTaskAutoInjection: true
       skipComponentGovernanceDetection: true
     BuildXLArtifacts: $(Build.ArtifactStagingDirectory)\buildxl-$(BuildXLConfiguration)-Attempt$(System.JobAttempt)
-    # Do not let reused agents supply a previous run's action/output state.
-    NUGET_PACKAGES: $(Agent.TempDirectory)\buildxl-nuget-$(Build.BuildId)-$(System.JobAttempt)-$(BuildXLConfiguration)
+    # Keep tracked package paths stable across runs; checkout cleaning isolates jobs.
+    NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages
   steps:
   - checkout: self
     fetchDepth: 1
     clean: true
     persistCredentials: false
 
+  # Cache@2 enforces branch isolation. Each immutable snapshot restores the latest
+  # compatible actions, while BuildXL still validates every action's actual inputs.
+  - task: Cache@2
+    displayName: Cache BuildXL actions
+    inputs:
+      key: '"buildxl-actions-v1" | "$(Agent.OS)" | "$(BuildXLConfiguration)" | global.json | eng\buildxl.ps1,eng\buildxl\config.dsc,eng\buildxl\msbuild.targets | "$(Build.BuildId)" | "$(System.JobAttempt)"'
+      restoreKeys: |
+        "buildxl-actions-v1" | "$(Agent.OS)" | "$(BuildXLConfiguration)" | global.json | eng\buildxl.ps1,eng\buildxl\config.dsc,eng\buildxl\msbuild.targets
+      path: $(Build.SourcesDirectory)\artifacts\buildxl\cache
+      cacheHitVar: BuildXLCacheRestored
+
   - pwsh: |
-      .\eng\buildxl.ps1 -Project TestFx.slnx -Configuration '$(BuildXLConfiguration)' -Jobs 8 -NoJournal
+      .\eng\buildxl.ps1 -Project TestFx.slnx -Configuration '$(BuildXLConfiguration)'
       exit $LASTEXITCODE
     displayName: Build repository with BuildXL
     # Restore uses the pinned SDK; BuildXL schedules the solution's native MSBuild graph.

@@ -16,7 +16,7 @@ param(
     [ValidatePattern('^$|^[a-z0-9][a-z0-9-]{0,80}$')]
     [string] $OutputId = '',
     [ValidateRange(1, 64)]
-    [int] $Jobs = 8,
+    [int] $Jobs = [Math]::Min(64, [Environment]::ProcessorCount),
     [string] $AdditionalTargets = '',
     [switch] $PrepareOnly,
     [switch] $SkipRestore,
@@ -24,7 +24,28 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 Set-StrictMode -Version 2.0
+
+function Get-BuildXLFileSystemMode([string[]] $Paths, [switch] $NoJournal) {
+    if ($NoJournal) {
+        Write-Host 'BuildXL filesystem mode: full input hashing without hardlinks (-NoJournal).'
+        return 'FullHashing'
+    }
+
+    $volumes = @($Paths | Where-Object { $_ } | ForEach-Object { [IO.Path]::GetPathRoot($_) } | Sort-Object -Unique)
+    foreach ($volume in $volumes) {
+        $diagnostics = & fsutil.exe usn queryjournal $volume 2>&1
+        $code = $LASTEXITCODE
+        if ($code -ne 0) {
+            Write-Host "BuildXL filesystem mode: full input hashing without hardlinks; journal unavailable on $volume (exit $code): $($diagnostics -join ' ')"
+            return 'FullHashing'
+        }
+    }
+
+    Write-Host 'BuildXL filesystem mode: journal-backed input tracking and hardlinks.'
+    return 'Journal'
+}
 
 if ($env:OS -ne 'Windows_NT' -or $env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
     throw 'The experimental BuildXL build requires Windows x64 and PowerShell 7.'
@@ -139,7 +160,7 @@ try {
         '/p:SkipUapTargetFramework=true',
         '/p:ShouldUnsetParentConfigurationAndPlatform=false',
         '/p:EnableProjectDataOnBuild=false',
-        '/p:UseSharedCompilation=false'
+        '/p:UseSharedCompilation=true'
     )
     if ($TargetFramework) {
         $properties += "/p:TargetFrameworks=$TargetFramework"
@@ -167,6 +188,7 @@ try {
         throw 'Cannot identify the BuildXL source revision.'
     }
 
+    $fileSystemMode = Get-BuildXLFileSystemMode -Paths @($repo, $sdk, $env:NUGET_PACKAGES, $output) -NoJournal:$NoJournal
     [ordered]@{
         SourceRevision = $revision.Trim()
         Sdk = $sdkVersion
@@ -178,7 +200,14 @@ try {
         TargetFramework = if ($TargetFramework) { $TargetFramework } else { 'Project defaults' }
         SkipUapTargetFramework = $true
         Jobs = $Jobs
-        NoJournal = $NoJournal.IsPresent
+        ProcessorCount = [Environment]::ProcessorCount
+        UseSharedCompilation = $true
+        MSBuildRuntime = 'DotNetCore'
+        MSBuildPath = Join-Path $env:TESTFX_BUILDXL_MSBUILD 'MSBuild.dll'
+        CompilerDirectory = Join-Path $env:TESTFX_BUILDXL_MSBUILD 'Roslyn\bincore'
+        FileSystemMode = $fileSystemMode
+        NoJournal = $fileSystemMode -eq 'FullHashing'
+        NoJournalRequested = $NoJournal.IsPresent
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'toolchain.json') -Encoding utf8
 
     Push-Location $repo
@@ -202,7 +231,7 @@ try {
         $config = Join-Path $output 'config.dsc'
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'buildxl\config.dsc') -Destination $config -Force
         $journalArguments = @()
-        if ($NoJournal) {
+        if ($fileSystemMode -eq 'FullHashing') {
             # Rehash inputs instead of relying on journal-backed file identities.
             $journalArguments = @('/verifyJournalForEngineVolumes-', '/scanChangeJournal-', '/useFileContentTable-', '/useHardlinks-')
         }
