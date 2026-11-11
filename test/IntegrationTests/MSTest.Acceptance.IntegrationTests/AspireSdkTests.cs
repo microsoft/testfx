@@ -57,7 +57,7 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Keep Aspire's transitive MessagePack dependency on the patched 2.5.x line. -->
-    <PackageReference Include="MessagePack" Version="2.5.303" />
+    <PackageReference Include="MessagePack" Version="2.5.307" />
   </ItemGroup>
 </Project>
 

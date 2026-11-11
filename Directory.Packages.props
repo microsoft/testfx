@@ -17,7 +17,7 @@
          declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
-    <AspireHostingTestingVersion>13.5.3</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>13.6.5</AspireHostingTestingVersion>
     <!-- MSBuild 18.10+ requires .NET 11; keep the latest version that supports our .NET 10 targets. -->
     <MicrosoftBuildVersion>18.9.6</MicrosoftBuildVersion>
     <!-- Roslyn is supplied by the analyzer host: Visual Studio 2022 17.14 / .NET SDK 9.0.300 or newer. -->
@@ -193,7 +193,7 @@
     bumps only the PackageVersion), so the duplication can never ship out of sync.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.5.3" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.5" />
     <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.64.1" />
   </ItemGroup>
 </Project>
