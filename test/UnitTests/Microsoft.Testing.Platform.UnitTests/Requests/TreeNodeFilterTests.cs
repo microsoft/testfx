@@ -49,6 +49,112 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void LiteralSegment_IsCaseInsensitive()
+    {
+        TreeNodeFilter filter = new("/MyAssembly/*/MyClass");
+        Assert.IsTrue(filter.MatchesFilter("/MyAssembly/MyNamespace/MyClass", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/MYASSEMBLY/MyNamespace/myclass", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/MyAssembly/MyNamespace/MyClass2", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/MyAssembly/MyNamespace/MyKlass", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void LiteralSegment_WithEscapedCharacters_MatchesExactly()
+    {
+        TreeNodeFilter filter = new("/My.Assembly/Method\\(1, 2\\)");
+        Assert.IsTrue(filter.MatchesFilter("/My.Assembly/Method(1, 2)", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/my.assembly/method(1, 2)", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/MyXAssembly/Method(1, 2)", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/My.Assembly/Method(1, 3)", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void LiteralSegment_NonAsciiCaseEquivalence_MatchesLikeRegex()
+    {
+        // The Kelvin sign (U+212A) is case-insensitively equal to 'K' and 'k' in a regex, but not in an ordinal comparison.
+        TreeNodeFilter filter = new("/Kelvin");
+        Assert.IsTrue(filter.MatchesFilter("/\u212Aelvin", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/\u212Belvin", new PropertyBag()));
+
+        TreeNodeFilter nonAsciiFilter = new("/\u00C9t\u00E9");
+        Assert.IsTrue(nonAsciiFilter.MatchesFilter("/\u00E9T\u00C9", new PropertyBag()));
+        Assert.IsFalse(nonAsciiFilter.MatchesFilter("/Ete", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void Segment_WithNewLine_MatchesLikeRegex()
+    {
+        // '$' matches before a final new line, and '.' doesn't match a new line.
+        Assert.IsTrue(new TreeNodeFilter("/A").MatchesFilter("/A\n", new PropertyBag()));
+        Assert.IsFalse(new TreeNodeFilter("/A").MatchesFilter("/A\nB", new PropertyBag()));
+        Assert.IsTrue(new TreeNodeFilter("/*").MatchesFilter("/A\n", new PropertyBag()));
+        Assert.IsFalse(new TreeNodeFilter("/*").MatchesFilter("/A\nB", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void LiteralSegment_TurkishCulture_MatchesLikeRegex()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+            TreeNodeFilter filter = new("/file");
+            bool regexMatches = new Regex("^file$", RegexOptions.IgnoreCase).IsMatch("FILE");
+
+            Assert.AreEqual(regexMatches, filter.MatchesFilter("/FILE", new PropertyBag()));
+            Assert.IsTrue(filter.MatchesFilter("/file", new PropertyBag()));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
+    public void LiteralSegment_CultureChangedToTurkishAfterConstruction_MatchesLikeRegex()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            TreeNodeFilter filter = new("/file");
+            Regex regex = new("^file$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            // On .NET Framework, the regex uses the current culture when matching, so 'I' no longer matches 'i'.
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+
+            Assert.AreEqual(regex.IsMatch("FILE"), filter.MatchesFilter("/FILE", new PropertyBag()));
+            Assert.IsTrue(filter.MatchesFilter("/file", new PropertyBag()));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
+    public void WildcardSegment_CultureChangedToTurkishBeforeFirstMatch_MatchesLikeRegex()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            TreeNodeFilter filter = new("/FILE*");
+            Regex regex = new("^FILE.*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            // The filter's regex is created on first use, but must still use the culture the filter was created under.
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+
+            Assert.IsTrue(regex.IsMatch("file1"));
+            Assert.IsTrue(filter.MatchesFilter("/file1", new PropertyBag()));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
     public void EscapeSequences_SupportsWildcard()
     {
         TreeNodeFilter filter = new("/*.\\*UnitTests");
