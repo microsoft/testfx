@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="InvalidPartitionOptionArgument">
         <source>The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</source>
-        <target state="new">The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</target>
+        <target state="translated">"--partition" 选项要求使用 "index/count"，其中两个值均为正整数，且 index 小于或等于 count。</target>
         <note>{Locked="--partition"}{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="MSTestExtensionDescription">
@@ -19,17 +19,17 @@
       </trans-unit>
       <trans-unit id="PartitionNotSupportedInServerMode">
         <source>The '--partition' option is not supported in JSON-RPC server mode.</source>
-        <target state="new">The '--partition' option is not supported in JSON-RPC server mode.</target>
+        <target state="translated">JSON-RPC 服务器模式下不支持 "--partition" 选项。</target>
         <note>{Locked="--partition"}{Locked="JSON-RPC"}</note>
       </trans-unit>
       <trans-unit id="PartitionNotSupportedOnWebAssembly">
         <source>The '--partition' option is not supported on WebAssembly.</source>
-        <target state="new">The '--partition' option is not supported on WebAssembly.</target>
+        <target state="translated">WebAssembly 上不支持 "--partition" 选项。</target>
         <note>{Locked="--partition"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="PartitionOptionDescription">
         <source>Run partition 'index/count' of the tests, keeping test classes and dependencies together.</source>
-        <target state="new">Run partition 'index/count' of the tests, keeping test classes and dependencies together.</target>
+        <target state="translated">运行测试的 "index/count" 分区，使测试类和依赖项保持在一起。</target>
         <note>{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">

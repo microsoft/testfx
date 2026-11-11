@@ -150,11 +150,6 @@ internal sealed partial class TypeCache
     private bool IsAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
         where TInitializeAttribute : Attribute
     {
-        // TODO: this would be inconsistent with the codebase, but potential perf gain, issue: https://github.com/microsoft/testfx/issues/2999
-        // if (!methodInfo.IsStatic)
-        // {
-        //    return false;
-        // }
         if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo))
         {
             return false;
@@ -178,11 +173,6 @@ internal sealed partial class TypeCache
     private bool IsAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
         where TCleanupAttribute : Attribute
     {
-        // TODO: this would be inconsistent with the codebase, but potential perf gain, issue: https://github.com/microsoft/testfx/issues/2999
-        // if (!methodInfo.IsStatic)
-        // {
-        //    return false;
-        // }
         if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo))
         {
             return false;

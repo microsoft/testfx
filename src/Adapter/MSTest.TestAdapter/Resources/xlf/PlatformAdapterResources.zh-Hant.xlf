@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="InvalidPartitionOptionArgument">
         <source>The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</source>
-        <target state="new">The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</target>
+        <target state="translated">'--partition' 選項需要使用 'index/count' 格式，其中兩個值都必須是正整數，且 index 必須小於或等於 count。</target>
         <note>{Locked="--partition"}{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="MSTestExtensionDescription">
@@ -19,17 +19,17 @@
       </trans-unit>
       <trans-unit id="PartitionNotSupportedInServerMode">
         <source>The '--partition' option is not supported in JSON-RPC server mode.</source>
-        <target state="new">The '--partition' option is not supported in JSON-RPC server mode.</target>
+        <target state="translated">在 JSON-RPC 伺服器模式中不支援 '--partition' 選項。</target>
         <note>{Locked="--partition"}{Locked="JSON-RPC"}</note>
       </trans-unit>
       <trans-unit id="PartitionNotSupportedOnWebAssembly">
         <source>The '--partition' option is not supported on WebAssembly.</source>
-        <target state="new">The '--partition' option is not supported on WebAssembly.</target>
+        <target state="translated">WebAssembly 不支援 '--partition' 選項。</target>
         <note>{Locked="--partition"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="PartitionOptionDescription">
         <source>Run partition 'index/count' of the tests, keeping test classes and dependencies together.</source>
-        <target state="new">Run partition 'index/count' of the tests, keeping test classes and dependencies together.</target>
+        <target state="translated">執行測試的 'index/count' 分割區，並將測試類別及其相依性分在一起。</target>
         <note>{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">

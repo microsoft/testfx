@@ -496,8 +496,7 @@ public sealed class FormatterUtilitiesTests
         ErrorMessage error = new(null, ErrorCodes.ParseError, "parse-error", null);
         IDictionary<string, object?> properties = SerializerUtilities.Serialize(error);
 
-        Assert.IsTrue(properties.TryGetValue(JsonRpcStrings.Id, out object? id));
-        Assert.IsNull(id);
+        Assert.ContainsEntry(JsonRpcStrings.Id, null, properties);
         Assert.AreEqual(
             """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"data":{},"message":"parse-error"}}""",
             (await _formatter.SerializeAsync(error)).Replace(" ", string.Empty));

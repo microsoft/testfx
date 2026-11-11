@@ -7,6 +7,10 @@ updates:
     open-pull-requests-limit: 15
     labels:
       - dependencies
+    groups:
+      roslyn-testing:
+        patterns:
+          - "Microsoft.CodeAnalysis.*.Testing"
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"

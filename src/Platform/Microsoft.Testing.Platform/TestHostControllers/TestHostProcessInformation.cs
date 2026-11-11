@@ -25,6 +25,6 @@ internal sealed class TestHostProcessInformation : ITestHostProcessInformation
     public int ExitCode
         => _exitCode ?? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage);
 
-    public bool HasExitedGracefully
+    public bool HasReceivedTestHostCompletedMessage
         => _testHostCompletedReceived ?? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage);
 }
