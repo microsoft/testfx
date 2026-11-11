@@ -370,15 +370,19 @@ public sealed class TestAssertExtensionsTests : IDisposable
     [TestMethod]
     public void ContainsEntry_Success_UsesValueEqualityAndOneLookupWithoutFormatting()
     {
-        object key = new UnformattableValue(1);
-        object expected = new UnformattableValue(2);
-        object? actual = new UnformattableValue(2);
+        UnformattableValue key = new(1);
+        UnformattableValue expected = new(2);
+        UnformattableValue actual = new(2);
+        object? actualValue = actual;
         Mock<IDictionary<object, object>> dictionary = new(MockBehavior.Strict);
-        dictionary.Setup(d => d.TryGetValue(key, out actual)).Returns(true);
+        dictionary.Setup(d => d.TryGetValue(key, out actualValue)).Returns(true);
 
         Assert.ContainsEntry(key, expected, dictionary.Object);
 
-        dictionary.Verify(d => d.TryGetValue(key, out actual), Times.Once);
+        Assert.AreEqual(0, key.FormattingCalls);
+        Assert.AreEqual(0, expected.FormattingCalls);
+        Assert.AreEqual(0, actual.FormattingCalls);
+        dictionary.Verify(d => d.TryGetValue(key, out actualValue), Times.Once);
         dictionary.VerifyNoOtherCalls();
     }
 
@@ -666,13 +670,19 @@ public sealed class TestAssertExtensionsTests : IDisposable
 
     private sealed class UnformattableValue(int value) : IEquatable<UnformattableValue>
     {
+        public int FormattingCalls { get; private set; }
+
         public bool Equals(UnformattableValue? other) => other is not null && value == other.Value;
 
         public override bool Equals(object? obj) => obj is UnformattableValue other && Equals(other);
 
         public override int GetHashCode() => value;
 
-        public override string ToString() => throw new InvalidOperationException("Successful assertions must not format keys or values.");
+        public override string ToString()
+        {
+            FormattingCalls++;
+            throw new InvalidOperationException("Successful assertions must not format keys or values.");
+        }
 
         private int Value => value;
     }
