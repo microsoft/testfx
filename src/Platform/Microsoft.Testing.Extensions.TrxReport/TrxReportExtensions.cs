@@ -5,7 +5,9 @@ using Microsoft.Testing.Extensions.TrxReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -114,5 +116,40 @@ public static class TrxReportExtensions
             serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{endpoint.PipeName}'");
             return new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), endpoint);
         });
+        ((TestHostControllersManager)builder.TestHostControllers).AddEnvironmentVariableProviderWhenControllerStarts(serviceProvider =>
+            new TrxModeEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment()));
+    }
+
+    private sealed class TrxModeEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, IEnvironment environment)
+        : ITestHostEnvironmentVariableProvider
+    {
+        public string Uid => nameof(TrxModeEnvironmentVariableProvider);
+
+        public string Version => ExtensionVersion.DefaultSemVer;
+
+        public string DisplayName => ExtensionResources.TrxReportGeneratorDisplayName;
+
+        public string Description => ExtensionResources.TrxReportGeneratorDescription;
+
+        private string VariableName => TrxModeHelpers.GetControllerModeEnvironmentVariableName(environment.ProcessId.ToString(CultureInfo.InvariantCulture));
+
+        private string Mode => TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(commandLineOptions)
+            ? TrxReportGeneratorCommandLine.OutOfProcessMode
+            : TrxReportGeneratorCommandLine.InProcessMode;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName));
+
+        public Task UpdateAsync(IEnvironmentVariables environmentVariables)
+        {
+            // Scope the choice to this controller so nested launchers cannot reuse an ancestor's mode.
+            environmentVariables.SetVariable(new EnvironmentVariable(VariableName, Mode, isSecret: false, isLocked: true));
+            return Task.CompletedTask;
+        }
+
+        public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
+            => environmentVariables.TryGetVariable(VariableName, out OwnedEnvironmentVariable? variable)
+                && variable.Value == Mode
+                    ? ValidationResult.ValidTask
+                    : ValidationResult.InvalidTask(ExtensionResources.TrxModeInvalidValue);
     }
 }

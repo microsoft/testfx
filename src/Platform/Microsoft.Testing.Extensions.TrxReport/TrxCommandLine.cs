@@ -5,6 +5,7 @@ using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -16,7 +17,15 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
     public const string InProcessMode = "in-process";
     public const string OutOfProcessMode = "out-of-process";
 
+    private readonly bool _isTestHostControllerSupported;
+    private readonly IEnvironment _environment;
+
     public TrxReportGeneratorCommandLine()
+        : this(TrxModeHelpers.IsTestHostControllerSupported, new SystemEnvironment())
+    {
+    }
+
+    internal TrxReportGeneratorCommandLine(bool isTestHostControllerSupported, IEnvironment environment)
         : base(
             // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
             "TrxReportGeneratorCommandLine",
@@ -29,6 +38,8 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
                 new(TrxModeOptionName, ExtensionResources.TrxModeOptionDescription, ArgumentArity.ExactlyOne, false),
             ])
     {
+        _isTestHostControllerSupported = isTestHostControllerSupported;
+        _environment = environment;
     }
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
@@ -63,10 +74,9 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
 
         if (commandLineOptions.IsOptionSet(TrxReportOptionName))
         {
-            if (commandLineOptions.TryGetOptionArgumentListOrDefault(TrxModeOptionName, out string[]? arguments)
-                && arguments is [string mode]
-                && OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)
-                && !TrxModeHelpers.IsTestHostControllerSupported)
+            string? mode = TrxModeHelpers.GetEffectiveMode(commandLineOptions, _environment);
+            if (OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)
+                && !_isTestHostControllerSupported)
             {
                 return ValidationResult.Invalid(ExtensionResources.TrxModeOutOfProcessNotSupported);
             }

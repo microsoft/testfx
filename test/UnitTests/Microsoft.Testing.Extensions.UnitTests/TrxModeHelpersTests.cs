@@ -5,6 +5,9 @@ using Microsoft.Testing.Extensions.TrxReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Helpers;
+
+using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -39,7 +42,7 @@ public sealed class TrxModeHelpersTests
         var commandLineOptions = new TestCommandLineOptions(options);
 
         Assert.AreEqual(requestController, TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(commandLineOptions));
-        Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions));
+        Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions, Mock.Of<IEnvironment>()));
     }
 
     [TestMethod]
@@ -70,6 +73,61 @@ public sealed class TrxModeHelpersTests
             new() { [TrxReportGeneratorCommandLine.TrxModeOptionName] = [defaultMode] });
 
         Assert.AreEqual(requestController, TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(commandLineOptions));
-        Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions));
+        Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions, Mock.Of<IEnvironment>()));
+    }
+
+    [TestMethod]
+    [DataRow("in-process", "out-of-process", false)]
+    [DataRow("out-of-process", "in-process", true)]
+    public void Mode_ControllerChoiceOverridesChildDefault(string controllerMode, string childDefault, bool usePipe)
+    {
+        var options = new TestCommandLineOptions(
+            new()
+            {
+                [TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
+                [PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["42"],
+            },
+            new() { [TrxReportGeneratorCommandLine.TrxModeOptionName] = [childDefault] });
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(value => value.GetEnvironmentVariable(TrxModeHelpers.GetControllerModeEnvironmentVariableName("42")))
+            .Returns(controllerMode);
+
+        Assert.AreEqual(controllerMode, TrxModeHelpers.GetEffectiveMode(options, environment.Object));
+        Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(options, environment.Object));
+    }
+
+    [TestMethod]
+    public void Mode_DoesNotReuseAnAncestorControllersChoice()
+    {
+        var options = new TestCommandLineOptions(new()
+        {
+            [PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["42"],
+            [TrxReportGeneratorCommandLine.TrxModeOptionName] = ["out-of-process"],
+        });
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(value => value.GetEnvironmentVariable(TrxModeHelpers.GetControllerModeEnvironmentVariableName("99")))
+            .Returns("in-process");
+
+        Assert.AreEqual("out-of-process", TrxModeHelpers.GetEffectiveMode(options, environment.Object));
+        Assert.IsTrue(TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(options, environment.Object));
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("invalid")]
+    public void Mode_InvalidControllerChoiceIsRejected(string controllerMode)
+    {
+        var options = new TestCommandLineOptions(new()
+        {
+            [PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["42"],
+        });
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(value => value.GetEnvironmentVariable(TrxModeHelpers.GetControllerModeEnvironmentVariableName("42")))
+            .Returns(controllerMode);
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => TrxModeHelpers.GetEffectiveMode(options, environment.Object));
+
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxModeInvalidValue, exception.Message);
     }
 }

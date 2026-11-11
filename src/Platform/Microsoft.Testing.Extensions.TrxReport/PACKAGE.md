@@ -34,6 +34,8 @@ Use `--trx-mode:out-of-process` to explicitly request controller-backed recovery
 
 To make in-process mode the passive default, set `"commandLineOptionDefaults": { "trx-mode": "in-process" }` in `testconfig.json`. It takes effect only with `--report-trx`, and an explicit `--trx-mode` overrides it.
 
+The controller passes its selected mode to the test host, so a custom launcher can use a child application with different configuration defaults. Configured run defaults remain passive when invoking `merge-trx` or `ms-trxcompare`.
+
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport.Abstractions](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions): interfaces for extensions interoperating with TRX reports

@@ -1,4 +1,8 @@
 #nullable enable
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGeneratorCommandLine.TrxReportGeneratorCommandLine(bool isTestHostControllerSupported, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
+static Microsoft.Testing.Extensions.TrxReport.TrxModeHelpers.GetControllerModeEnvironmentVariableName(string! controllerPid) -> string!
+static Microsoft.Testing.Extensions.TrxReport.TrxModeHelpers.GetEffectiveMode(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string?
+static Microsoft.Testing.Extensions.TrxReport.TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> bool
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGeneratorCommandLine.InProcessMode = "in-process" -> string!

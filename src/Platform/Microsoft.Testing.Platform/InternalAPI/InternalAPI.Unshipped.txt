@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddEnvironmentVariableProviderWhenControllerStarts(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider!>! factory) -> void
 *REMOVED*Microsoft.Testing.Platform.TestHostControllers.TestHostProcessInformation.HasExitedGracefully.get -> bool
 Microsoft.Testing.Platform.TestHostControllers.TestHostProcessInformation.HasReceivedTestHostCompletedMessage.get -> bool
 *REMOVED*Microsoft.Testing.Platform.Helpers.AppVersion

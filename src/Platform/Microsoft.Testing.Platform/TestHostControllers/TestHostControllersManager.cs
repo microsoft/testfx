@@ -15,6 +15,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     private readonly List<object> _factoryOrdering = [];
 
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _environmentVariableProviderFactories = [];
+    private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _controllerObserverEnvironmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostLauncher>> _testHostLauncherFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostControllerRunCompletionHandler>> _runCompletionHandlerFactories = [];
@@ -168,6 +169,10 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             return new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false);
         }
 
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(
+            _controllerObserverEnvironmentVariableProviderFactories, serviceProvider, environmentVariableProviders,
+            _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
+
         // Observers of an existing controller must not introduce an extra process themselves.
         List<(IExtension Extension, int RegistrationOrder)> runCompletionHandlers = [];
         await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_runCompletionHandlerFactories, serviceProvider, runCompletionHandlers, _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
@@ -186,6 +191,12 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     internal void AddRunCompletionHandler(Func<IServiceProvider, ITestHostControllerRunCompletionHandler> factory)
     {
         _runCompletionHandlerFactories.Add(factory);
+        _factoryOrdering.Add(factory);
+    }
+
+    internal void AddEnvironmentVariableProviderWhenControllerStarts(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> factory)
+    {
+        _controllerObserverEnvironmentVariableProviderFactories.Add(factory);
         _factoryOrdering.Add(factory);
     }
 

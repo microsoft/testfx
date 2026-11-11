@@ -109,6 +109,61 @@ Out of process file artifacts produced:
             (tfm, "--trx-mode=in-process --hangdump", 2, false),
         });
 
+    public static IEnumerable<(string TargetFramework, string Tool)> TrxToolDefaultData =>
+        TargetFrameworks.All.SelectMany(tfm => new[] { (tfm, "merge-trx"), (tfm, "ms-trxcompare") });
+
+    [TestMethod]
+    [DynamicData(nameof(TrxToolDefaultData))]
+    public async Task Trx_ToolsAcceptPassiveModeDefault(string tfm, string tool)
+    {
+        var originalHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        TestInfrastructure.TestHost testHost = await CloneTestHostAsync(originalHost, clone, TestAssetFixture.AssetName);
+        await File.WriteAllTextAsync(
+            Path.Combine(testHost.DirectoryName, $"{TestAssetFixture.AssetName}.testconfig.json"),
+            """
+            {
+              "commandLineOptionDefaults": {
+                "trx-mode": "in-process"
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+        string first = Path.Combine(clone.Path, "first.trx");
+        string second = Path.Combine(clone.Path, "second.trx");
+        foreach (string reportPath in new[] { first, second })
+        {
+            TestHostResult run = await testHost.ExecuteAsync(
+                $"--report-trx --report-trx-filename \"{reportPath}\"",
+                cancellationToken: TestContext.CancellationToken);
+            run.AssertExitCodeIs(ExitCode.Success);
+        }
+
+        string merged = Path.Combine(clone.Path, "merged.trx");
+        string arguments = tool == "merge-trx"
+            ? $"--input \"{first}\" \"{second}\" --output-trx \"{merged}\""
+            : $"--baseline-trx \"{first}\" --trx-to-compare \"{first}\"";
+        TestHostResult result = await testHost.ExecuteAsync(arguments, cancellationToken: TestContext.CancellationToken, toolName: tool);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        if (tool == "merge-trx")
+        {
+            var report = XDocument.Load(merged);
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            Assert.AreEqual("2", report.Descendants(ns + "Counters").Single().Attribute("total")?.Value);
+            Assert.HasCount(2, report.Descendants(ns + "UnitTestResult"));
+        }
+        else
+        {
+            Assert.Contains(
+                """
+                --- Comparing TRX files ---
+                Comparison check succeeded!
+                """.ReplaceLineEndings(),
+                result.StandardOutput.ReplaceLineEndings());
+        }
+    }
+
     [DynamicData(nameof(TrxModeData))]
     [TestMethod]
     public async Task Trx_ModeControlsProcessIsolationAndReportGeneration(string tfm, string options, int processCount, bool controllerReportsTrx)
