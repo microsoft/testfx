@@ -402,11 +402,6 @@
         <target state="translated">'--{0}' için kapsam eşiği başarısız oldu: {1}% &lt; {2}%.</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
-      <trans-unit id="DeprecatedEnvironmentVariableWarning">
-        <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="translated">Uyarı: '{0}' ortam değişkeni kullanım dışı bırakıldı ve gelecekteki bir birincil sürümde kaldırılacak. Bunun yerine '{1}' kullanın.</target>
-        <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
-      </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Tanılama dosyası (zaman uyumsuz boşaltma ile düzey '{0}'): {1}</target>
