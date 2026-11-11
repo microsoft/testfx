@@ -16,16 +16,6 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
     private readonly IUpDownCounter<int> _activeTestCases;
     private readonly IHistogram<double> _testRunDuration;
 
-    // Legacy instruments, kept so existing dashboards keep working.
-    private readonly ICounter<int>? _totalDiscoveredTests;
-    private readonly ICounter<int>? _totalStartedTests;
-    private readonly ICounter<int>? _totalCompletedTests;
-    private readonly ICounter<int>? _totalPassedTests;
-    private readonly ICounter<int>? _totalFailedTests;
-    private readonly ICounter<int>? _totalSkippedTests;
-    private readonly ICounter<int>? _totalUnknownTests;
-    private readonly IHistogram<double>? _totalDuration;
-
     private readonly Stopwatch _runStopwatch = Stopwatch.StartNew();
 
     // Note: we use a queue per Uid/attempt because frameworks are allowed (but discouraged) to produce multiple
@@ -77,18 +67,6 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
             TestingPlatformSemanticConventions.Metrics.TestRunDuration,
             TestingPlatformSemanticConventions.Units.Seconds,
             "Duration of the whole test run.");
-
-        if (options.EmitLegacyAttributes)
-        {
-            _totalDiscoveredTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsDiscovered);
-            _totalStartedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsStarted);
-            _totalCompletedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsCompleted);
-            _totalPassedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsPassed);
-            _totalFailedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsFailed);
-            _totalSkippedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsSkipped);
-            _totalUnknownTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsUnknown);
-            _totalDuration = otelService.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.LegacyTestsDuration);
-        }
     }
 
     public void Dispose()

@@ -118,7 +118,7 @@ public sealed class CiRunSummaryPolicyTests
                 Assert.AreEqual(finalExitCode is not null, step.Contains("**Runner policy:**", StringComparison.Ordinal));
             }
 
-            Assert.IsTrue(File.Exists(fragment), "An on-failure preference must not remove producer fragments.");
+            Assert.FileExists(fragment, "An on-failure preference must not remove producer fragments.");
         }
         finally
         {

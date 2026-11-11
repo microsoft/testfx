@@ -77,8 +77,7 @@ public sealed class TrxReportGeneratorCommandLineTests
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxReportFileNameOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [filename]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -89,8 +88,7 @@ public sealed class TrxReportGeneratorCommandLineTests
         string filename = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".trx");
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [filename]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -184,8 +182,7 @@ public sealed class TrxReportGeneratorCommandLineTests
         }
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]

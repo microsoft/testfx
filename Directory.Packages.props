@@ -66,6 +66,8 @@
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.2.19" />
+    <!-- Stable 18.13.0 is unavailable on the configured feeds; use this dotnet-tools build until a stable version is mirrored. -->
+    <PackageVersion Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="18.14.0-1.26559.118" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />
@@ -94,7 +96,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
-    <PackageVersion Include="Azure.Core" Version="1.64.0" />
+    <PackageVersion Include="Azure.Core" Version="1.65.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsAffectedTestsVersion)" />
     <PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsAffectedTestsVersion)" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
@@ -112,7 +114,7 @@
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="FSharp.Core" Version="11.0.100" />
+    <PackageVersion Include="FSharp.Core" Version="11.0.101" />
     <PackageVersion Include="NUnit" Version="4.6.1" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.3.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />

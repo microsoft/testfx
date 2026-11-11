@@ -40,7 +40,7 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
     [
         new(HangDumpOptionName, ExtensionResources.HangDumpOptionDescription, ArgumentArity.Zero, false),
         new(HangDumpTimeoutOptionName, ExtensionResources.HangDumpTimeoutOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
+        new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameTemplateOptionDescription, ArgumentArity.ExactlyOne, false),
         new(
             HangDumpTypeOptionName,
             string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsFormatted),

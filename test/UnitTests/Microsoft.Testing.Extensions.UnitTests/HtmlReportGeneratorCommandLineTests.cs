@@ -21,8 +21,7 @@ public sealed class HtmlReportGeneratorCommandLineTests
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
-        Assert.IsTrue(result.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+        result.AssertIsValid();
     }
 
     [TestMethod]
@@ -37,8 +36,7 @@ public sealed class HtmlReportGeneratorCommandLineTests
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["sub\\report.html"]).ConfigureAwait(false);
 
-        Assert.IsTrue(result.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+        result.AssertIsValid();
     }
 
     [TestMethod]
@@ -51,8 +49,7 @@ public sealed class HtmlReportGeneratorCommandLineTests
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
-        Assert.IsTrue(result.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+        result.AssertIsValid();
     }
 
     [TestMethod]

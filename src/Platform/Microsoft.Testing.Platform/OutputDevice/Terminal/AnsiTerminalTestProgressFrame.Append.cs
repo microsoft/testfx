@@ -72,48 +72,33 @@ internal sealed partial class AnsiTerminalTestProgressFrame
 
         terminal.Append(' ');
         charsTaken++;
-        AppendToWidth(terminal, progress.AssemblyName, nonReservedWidth, ref charsTaken);
-
-        if (charsTaken < nonReservedWidth && (progress.TargetFramework is not null || progress.Architecture is not null))
+        string displayName = TestFrameworkDisplay.GetDisplayName(progress.TargetFramework, progress.Architecture, progress.RuntimeFramework);
+        int displayWidth = displayName.Length == 0 ? 0 : displayName.Length + 3;
+        int availableWidth = Math.Max(0, nonReservedWidth - charsTaken);
+        if (progress.AssemblyName.Length + displayWidth > availableWidth)
         {
-            int lengthNeeded = 0;
+            displayName = TestFrameworkDisplay.GetDisplayName(progress.TargetFramework, progress.Architecture);
+            displayWidth = displayName.Length == 0 ? 0 : displayName.Length + 3;
+        }
 
-            lengthNeeded++; // for '('
-            if (progress.TargetFramework is not null)
-            {
-                lengthNeeded += progress.TargetFramework.Length;
-                if (progress.Architecture is not null)
-                {
-                    lengthNeeded++; // for '|'
-                }
-            }
+        // Preserve the target and architecture ahead of a long filename, but leave room for its ellipsis.
+        if (displayWidth + 3 > availableWidth)
+        {
+            displayName = string.Empty;
+            displayWidth = 0;
+        }
 
-            if (progress.Architecture is not null)
-            {
-                lengthNeeded += progress.Architecture.Length;
-            }
+        int assemblyWidth = Math.Max(0, availableWidth - displayWidth);
+        if (assemblyWidth > 0)
+        {
+            AppendProgressMessageToWidth(terminal, progress.AssemblyName, assemblyWidth);
+        }
 
-            lengthNeeded++; // for ')'
-
-            if ((charsTaken + lengthNeeded) < nonReservedWidth)
-            {
-                terminal.Append(" (");
-                if (progress.TargetFramework is not null)
-                {
-                    terminal.Append(progress.TargetFramework);
-                    if (progress.Architecture is not null)
-                    {
-                        terminal.Append('|');
-                    }
-                }
-
-                if (progress.Architecture is not null)
-                {
-                    terminal.Append(progress.Architecture);
-                }
-
-                terminal.Append(')');
-            }
+        if (displayName.Length > 0)
+        {
+            terminal.Append(" (");
+            terminal.Append(displayName);
+            terminal.Append(')');
         }
 
         terminal.SetCursorHorizontal(Width - durationString.Length);

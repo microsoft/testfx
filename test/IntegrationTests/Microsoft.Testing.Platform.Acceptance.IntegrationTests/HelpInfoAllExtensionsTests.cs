@@ -36,7 +36,6 @@ Options:
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
     --coverage-threshold-branch
@@ -79,8 +78,6 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --no-ansi
-        Disable outputting ANSI escape characters to screen.
     --no-progress
         [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
@@ -89,7 +86,7 @@ Options:
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
         This option takes precedence over the deprecated --no-progress flag.
     --results-directory
         The directory where the test results are going to be placed.
@@ -151,7 +148,7 @@ Extension options:
         Generate a dump file if the test process hangs.
     --hangdump-filename
         Specify the name of the dump file.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
     --hangdump-timeout
         Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
@@ -458,11 +455,6 @@ Built-in command line providers:
         Description: Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
-      --no-ansi
-        Arity: 0
-        Hidden: False
-        Description: Disable outputting ANSI escape characters to screen.
       --no-progress
         Arity: 0
         Hidden: False
@@ -477,7 +469,7 @@ Built-in command line providers:
         Hidden: False
         Description: Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
         This option takes precedence over the deprecated --no-progress flag.
       --show-flaky-tests
         Arity: 0..1
@@ -694,7 +686,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Specify the name of the dump file.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
       --hangdump-timeout
         Arity: 1
         Hidden: False

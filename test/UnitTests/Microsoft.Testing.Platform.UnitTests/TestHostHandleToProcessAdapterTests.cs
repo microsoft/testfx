@@ -80,8 +80,7 @@ public sealed class TestHostHandleToProcessAdapterTests
         Assert.AreEqual(DateTime.MinValue, adapter.StartTime);
         Assert.AreEqual(17, adapter.ExitCode);
         Assert.IsFalse(adapter.HasExited);
-        Func<Task> waitWithoutToken = adapter.WaitForExitAsync;
-        await waitWithoutToken();
+        await adapter.WaitForExitAsync(CancellationToken.None);
         await adapter.WaitForExitAsync(caller.Token);
         adapter.WaitForExit();
         adapter.Kill();

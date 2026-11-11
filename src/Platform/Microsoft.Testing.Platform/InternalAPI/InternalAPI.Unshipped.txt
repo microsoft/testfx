@@ -1,4 +1,61 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestHostOrchestrator.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager!
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator!>! factory) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime!>! testHostOrchestratorApplicationLifetimeFactory) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostOrchestratorManager
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostOrchestratorManager.AddTestHostOrchestrator(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator!>! factory) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostOrchestratorManager.TestHostOrchestratorManager() -> void
+*REMOVED*Microsoft.Testing.Platform.Helpers.IProcess.WaitForExitAsync() -> System.Threading.Tasks.Task!
+*REMOVED*Microsoft.Testing.Platform.Helpers.SystemProcess.WaitForExitAsync() -> System.Threading.Tasks.Task!
+*REMOVED*Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.WaitForExitAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestFrameworkDisplay
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TestFrameworkDisplay.GetDisplayName(string? targetFramework, string? architecture, string? runtimeFramework = null) -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.TargetFramework = 21 -> byte
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RuntimeFramework.get -> string?
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.TestProgressState(long id, string! assembly, string? targetFramework, string? architecture, Microsoft.Testing.Platform.Helpers.IStopwatch! stopwatch, bool isDiscovery, string? runtimeFramework) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunStarted(string! assembly, string? targetFramework, string? architecture, string! executionId, string! instanceId, int? attemptNumber, string? runtimeFramework) -> void
+*REMOVED*const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption = "no-ansi" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly = "test.assembly" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestClass = "test.class" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestDuration = "test.duration.ms" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestFilePath = "test.file.path" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestId = "test.id" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestLineEnd = "test.line.end" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestLineStart = "test.line.start" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix = "test.metadataProperty." -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestMethod = "test.method" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestName = "test.name" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestNamespace = "test.namespace" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestParentId = "test.parent.id" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResult = "test.result" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage = "test.result.exception.message" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace = "test.result.exception.stacktrace" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType = "test.result.exception.type" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation = "test.result.explanation" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout = "test.result.timeout.ms" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestStderr = "test.stderr" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestStdout = "test.stdout" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsCompleted = "tests.completed" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsDiscovered = "tests.discovered" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsDuration = "tests.duration" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsFailed = "tests.failed" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsPassed = "tests.passed" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsSkipped = "tests.skipped" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsStarted = "tests.started" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsUnknown = "tests.unknown" -> string!
+*REMOVED*Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyDiscovered() -> void
+*REMOVED*Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyUnknown() -> void
+*REMOVED*Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.EmitLegacyAttributes.get -> bool
+*REMOVED*Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.TestExecutionActivityBroker(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithTestExecutionActivities! otelService, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+*REMOVED*static Microsoft.Testing.Platform.Helpers.ExtensionHelper.ConfigureOTelLegacyAttributes(Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+*REMOVED*static Microsoft.Testing.Platform.Helpers.ExtensionHelper.EmitLegacyOTelAttributes.get -> bool
+*REMOVED*static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetTestInitialInfo(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>!
+*REMOVED*static Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(string! status) -> string!
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.TestExecutionActivityBroker(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithTestExecutionActivities! otelService) -> void
+static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetTestInitialInfo(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>!
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int Id, out int ErrorCode, out string! Message, out object? Data) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int Id, int ErrorCode, string! Message, object? Data) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int

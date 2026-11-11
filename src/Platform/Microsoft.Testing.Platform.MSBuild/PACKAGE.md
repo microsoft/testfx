@@ -34,6 +34,10 @@ SDKs and shared build infrastructure can supply the same defaults through MSBuil
 
 These defaults are passive: they do not enable `--report-trx` or any other feature. An explicit command-line value or active `commandLineOptions` entry takes precedence. If both `testconfig.json` and MSBuild define the same default, the value in `testconfig.json` wins.
 
+### Multithreaded MSBuild
+
+On MSBuild versions supporting `-mt`, configuration-file generation and self-registered extension source generation run in-process without depending on the process working directory. Older MSBuild versions continue to run the same tasks normally. Other tasks in this package may still require an isolated TaskHost.
+
 ### Generate an application-owned host entry point
 
 Set `TestingPlatformHostFactory` to a fully qualified parameterless static method returning `Task<IHost>`:

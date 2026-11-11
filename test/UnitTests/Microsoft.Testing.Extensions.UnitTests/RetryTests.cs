@@ -2193,8 +2193,7 @@ public class RetryTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == optionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [retries]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "invalid")]
@@ -2293,8 +2292,7 @@ public class RetryTests
         }
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow("0")]
@@ -2311,8 +2309,7 @@ public class RetryTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [delay]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow("invalid")]
@@ -2355,8 +2352,7 @@ public class RetryTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     private static ServiceProvider CreateServiceProvider(params IArtifactPostProcessor[] processors)
@@ -2725,8 +2721,6 @@ public class RetryTests
         public IMainModule? MainModule => null;
 
         public DateTime StartTime => default;
-
-        public Task WaitForExitAsync() => Task.CompletedTask;
 
         public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 

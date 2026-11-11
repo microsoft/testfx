@@ -57,6 +57,7 @@ parameters:
   displayName: "Skip tests"
   type: boolean
   default: False
+# The pinned public provider has been validated with bounded single-shard reads and this SDK.
 - name: EnableAffectedTests
   displayName: "Enable affected tests"
   type: boolean
@@ -144,6 +145,8 @@ stages:
       displayName: Validate CTS module selection
     - pwsh: ./eng/validate-collection-module-pool.ps1
       displayName: Validate bounded collection scheduling
+    - pwsh: ./eng/test-report-comparison.ps1
+      displayName: Validate report comparison
     - bash: |
         set -euo pipefail
 

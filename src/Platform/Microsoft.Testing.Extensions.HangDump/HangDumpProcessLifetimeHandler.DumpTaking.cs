@@ -202,7 +202,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
 
     internal static string EnsureProcessIdPlaceholder(string pattern)
     {
-        if (pattern.Contains("%p", StringComparison.Ordinal) || pattern.Contains("{pid}", StringComparison.Ordinal))
+        if (pattern.Contains("{pid}", StringComparison.Ordinal))
         {
             return pattern;
         }
@@ -210,13 +210,13 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         string? directory = Path.GetDirectoryName(pattern);
         string fileName = Path.GetFileNameWithoutExtension(pattern);
         string extension = Path.GetExtension(pattern);
-        string uniqueFileName = $"{fileName}_%p{extension}";
+        string uniqueFileName = $"{fileName}_{{pid}}{extension}";
         return Path.Combine(directory ?? string.Empty, uniqueFileName);
     }
 
     internal static string GetDumpFileNamePattern(string? configuredPattern, string processName, int processId, int rootProcessId)
         => configuredPattern is null
-            ? $"{processName}_%p_hang.dmp"
+            ? $"{processName}_{{pid}}_hang.dmp"
             : processId == rootProcessId
                 ? configuredPattern
                 : EnsureProcessIdPlaceholder(configuredPattern);

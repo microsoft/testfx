@@ -149,7 +149,7 @@ public sealed class ArtifactPostProcessingTests
         if (mode == "none")
         {
             Assert.IsEmpty(fixture.Published);
-            Assert.IsFalse(File.Exists(outputPath));
+            Assert.FileDoesNotExist(outputPath);
         }
         else
         {
@@ -371,7 +371,7 @@ public sealed class ArtifactPostProcessingTests
         Assert.Contains("pipe", error.Message, StringComparison.OrdinalIgnoreCase);
         Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.OutputTokens));
         Assert.IsEmpty(fixture.Published);
-        Assert.IsFalse(Directory.Exists(fixture.OutputDirectory));
+        Assert.DirectoryDoesNotExist(fixture.OutputDirectory);
     }
 
     [TestMethod]
@@ -468,7 +468,7 @@ public sealed class ArtifactPostProcessingTests
         else
         {
             Assert.IsEmpty(fixture.Published);
-            Assert.IsFalse(File.Exists(outputPath));
+            Assert.FileDoesNotExist(outputPath);
         }
     }
 

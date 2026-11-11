@@ -29,7 +29,7 @@ internal sealed partial class TerminalTestReporter
     {
         lock (_erroredAssembliesLock)
         {
-            _erroredAssemblies.Add(new ErroredAssemblyRecord(assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, exitCode, outputData, errorData));
+            _erroredAssemblies.Add(new ErroredAssemblyRecord(assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework, exitCode, outputData, errorData));
         }
     }
 
@@ -59,7 +59,7 @@ internal sealed partial class TerminalTestReporter
         foreach (ErroredAssemblyRecord failure in errored)
         {
             terminal.Append(SingleIndentation);
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, failure.AssemblyPath, failure.TargetFramework, failure.Architecture);
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, failure.AssemblyPath, failure.TargetFramework, failure.Architecture, failure.RuntimeFramework);
             terminal.AppendLine();
             AppendExecutableSummary(terminal, failure.ExitCode, failure.OutputData, failure.ErrorData);
         }
@@ -69,6 +69,7 @@ internal sealed partial class TerminalTestReporter
         string AssemblyPath,
         string? TargetFramework,
         string? Architecture,
+        string? RuntimeFramework,
         int ExitCode,
         string? OutputData,
         string? ErrorData);

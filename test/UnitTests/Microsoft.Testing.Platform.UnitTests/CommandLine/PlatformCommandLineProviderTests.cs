@@ -87,8 +87,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DiagnosticVerbosityOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [dumpType]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -113,8 +112,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ZeroTestsPolicyOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [policy]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -138,8 +136,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [clientPort]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -164,8 +161,7 @@ public sealed class PlatformCommandLineProviderTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ExitOnProcessExitOptionKey);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -193,8 +189,7 @@ public sealed class PlatformCommandLineProviderTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -203,8 +198,7 @@ public sealed class PlatformCommandLineProviderTests
         var provider = new PlatformCommandLineProvider();
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow(PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey)]
@@ -243,8 +237,7 @@ public sealed class PlatformCommandLineProviderTests
         }
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [TestMethod]
@@ -649,8 +642,7 @@ public sealed class PlatformCommandLineProviderTests
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
                 ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]);
-                Assert.IsTrue(validateOptionsResult.IsValid, $"Failed with culture {cultureName} and timeout {timeout}");
-                Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+                validateOptionsResult.AssertIsValid($"Failed with culture {cultureName} and timeout {timeout}");
             }
         }
         finally
