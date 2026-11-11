@@ -72,7 +72,7 @@
     <PackageVersion Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="18.14.0-1.26559.118" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
-    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
     <!-- Keep a version mirrored by dotnet-public; the internal pipeline rejects mixed external feeds. -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
