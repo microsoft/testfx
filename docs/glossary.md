@@ -476,7 +476,15 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes tes
 
 ### OSConditionAttribute
 
-An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test assembly, test class, or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
+Use an assembly guard to restrict every test in an assembly without repeating the attribute on each class:
+
+```csharp
+[assembly: OSCondition(OperatingSystems.Windows)]
+```
+
+Assembly, class, and method conditions are combined with AND, so a class or method cannot re-enable a test excluded by its assembly. Existing condition grouping applies independently within each scope. An excluded assembly produces skipped results with the condition's `IgnoreMessage` (or its default reason), without running assembly, class, or test initialization or cleanup. MSTEST0084 recognizes an assembly guard when checking consistency with `SupportedOSPlatform` and `UnsupportedOSPlatform` metadata. Use compatible framework and adapter packages containing this support; older adapters do not enforce assembly conditions.
 
 ### OutputCaptureMode
 

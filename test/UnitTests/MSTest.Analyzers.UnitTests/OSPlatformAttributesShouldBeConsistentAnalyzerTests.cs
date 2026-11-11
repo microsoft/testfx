@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 
@@ -18,6 +20,158 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
 {
+    [TestMethod]
+    [DataRow("SupportedOSPlatform(\"windows\")", "OperatingSystems.Windows", DisplayName = "AssemblyGuard_DefaultIncludeMatches")]
+    [DataRow("SupportedOSPlatform(\"windows\")", "ConditionMode.Include, OperatingSystems.Windows", DisplayName = "AssemblyGuard_ExplicitIncludeMatches")]
+    [DataRow("UnsupportedOSPlatform(\"windows\")", "ConditionMode.Exclude, OperatingSystems.Windows", DisplayName = "AssemblyGuard_ExcludeMatches")]
+    public async Task WhenAssemblyOSConditionMatchesPlatformMetadata_NoDiagnostic(string metadata, string guard)
+    {
+        string code = $$"""
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: OSCondition({{guard}})]
+
+            [TestClass]
+            [{{metadata}}]
+            public class Tests
+            {
+                [TestMethod]
+                [{{metadata}}]
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    [DataRow("windows", DisplayName = "AssemblyCompatibility_Windows")]
+    [DataRow("windows10.0.17763.0", DisplayName = "AssemblyCompatibility_VersionedWindows")]
+    public async Task WhenAssemblyCompatibilityAndAssemblyGuardConstrainMembers_NoDiagnostic(string platform)
+    {
+        string code = $$"""
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: SupportedOSPlatform("{{platform}}")]
+            [assembly: OSCondition(OperatingSystems.Windows)]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [UnsupportedOSPlatform("linux")]
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "AssemblyGuard_ClassNarrows")]
+    [DataRow(false, DisplayName = "AssemblyGuard_MethodNarrows")]
+    public async Task WhenAssemblyAndNarrowerOSConditionsComposeToMetadata_NoDiagnostic(bool narrowClass)
+    {
+        string code = $$"""
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: SupportedOSPlatform("windows")]
+            [assembly: SupportedOSPlatform("linux")]
+            [assembly: OSCondition(OperatingSystems.Windows | OperatingSystems.Linux)]
+
+            [TestClass]
+            {{(narrowClass ? "[SupportedOSPlatform(\"windows\")]" : string.Empty)}}
+            {{(narrowClass ? "[OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)]" : string.Empty)}}
+            public class Tests
+            {
+                [TestMethod]
+                [SupportedOSPlatform("windows")]
+                {{(narrowClass ? string.Empty : "[OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)]")}}
+                public void Check() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    [DataRow("OperatingSystems.Linux", DisplayName = "AssemblyGuard_WrongFamily")]
+    [DataRow("OperatingSystems.Windows | OperatingSystems.Linux", DisplayName = "AssemblyGuard_TooBroad")]
+    [DataRow("(OperatingSystems)0", DisplayName = "AssemblyGuard_EmptyIntersection")]
+    [DataRow("ConditionMode.Exclude, OperatingSystems.Linux | OperatingSystems.OSX | OperatingSystems.FreeBSD", DisplayName = "AssemblyGuard_UnknownPlatformsStillAllowed")]
+    public async Task WhenAssemblyOSConditionMismatchesMetadata_ReportsWithoutUnsafeFix(string guard)
+    {
+        string code = $$"""
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: OSCondition({{guard}})]
+
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod]
+                [SupportedOSPlatform("windows")]
+                public void Check() { }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, code);
+
+        Diagnostic diagnostic = Assert.ContainsSingle(await AnalyzerContinuationTestHelpers.AnalyzeAsync(
+            document, new OSPlatformAttributesShouldBeConsistentAnalyzer()));
+
+        AnalyzerContinuationTestHelpers.AssertDiagnostic(
+            diagnostic, "MSTEST0084", DiagnosticSeverity.Info, code, "SupportedOSPlatform(\"windows\")",
+            "Platform compatibility attributes on test 'Check' are not represented by a compatible '[OSCondition]' attribute");
+        Assert.IsEmpty(diagnostic.Properties);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(
+            document, diagnostic, new OSPlatformAttributesShouldBeConsistentFixer()));
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, code);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "AssemblyGuard_FixerRejectsClassLocalChange")]
+    [DataRow(false, DisplayName = "AssemblyGuard_FixerRejectsMethodLocalChange")]
+    public async Task WhenDiagnosticCarriesFixPropertiesUnderAssemblyGuard_FixerDoesNotChangeMembers(bool onClass)
+    {
+        string code = $$"""
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: OSCondition(OperatingSystems.Linux)]
+
+            [TestClass]
+            {{(onClass ? "[SupportedOSPlatform(\"windows\")]" : string.Empty)}}
+            public class Tests
+            {
+                [TestMethod]
+                {{(onClass ? string.Empty : "[SupportedOSPlatform(\"windows\")]")}}
+                public void Check() { }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, code);
+        Diagnostic reported = Assert.ContainsSingle(await AnalyzerContinuationTestHelpers.AnalyzeAsync(
+            document, new OSPlatformAttributesShouldBeConsistentAnalyzer()));
+        // Also check the fixer's own guard: stale diagnostic properties must not make
+        // a member-local edit appear to repair a contradictory assembly restriction.
+        var diagnostic = Diagnostic.Create(
+            reported.Descriptor,
+            reported.Location,
+            ImmutableDictionary<string, string?>.Empty
+                .Add("ConditionModeKey", "Include")
+                .Add("OperatingSystemsKey", "Windows"),
+            onClass ? "Tests" : "Check");
+
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(
+            document, diagnostic, new OSPlatformAttributesShouldBeConsistentFixer()));
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, code);
+    }
+
     [TestMethod]
     [DataRow("10.0", false, DisplayName = "VersionWithoutFamily")]
     [DataRow("windows10", false, DisplayName = "SingleVersionComponent")]

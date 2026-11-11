@@ -108,6 +108,8 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         }
 
         ImmutableArray<AttributeData> assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+        AttributeData? assemblyOSConditionAttribute = assemblyAttributes.FirstOrDefault(
+            attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
         if (HasVersionedUnsupportedPlatformAttribute(
                 platformAttributes,
                 unsupportedOSPlatformAttributeSymbol)
@@ -148,13 +150,14 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         if (canFix && IsEquivalentOSCondition(
             localOSConditionAttribute,
             containingClassOSConditionAttribute,
+            assemblyOSConditionAttribute,
             includeMode,
             operatingSystems))
         {
             return;
         }
 
-        ImmutableDictionary<string, string?> properties = canFix && !hasContainingClassCondition
+        ImmutableDictionary<string, string?> properties = canFix && !hasContainingClassCondition && assemblyOSConditionAttribute is null
             ? ImmutableDictionary<string, string?>.Empty
                 .Add(ConditionModeKey, includeMode ? "Include" : "Exclude")
                 .Add(OperatingSystemsKey, operatingSystemsExpression)
@@ -414,6 +417,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
     private static bool IsEquivalentOSCondition(
         AttributeData? localAttribute,
         AttributeData? containingClassAttribute,
+        AttributeData? assemblyAttribute,
         bool includeMode,
         int operatingSystems)
     {
@@ -430,14 +434,18 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             || !TryGetAllowedOperatingSystems(
                 containingClassAttribute,
                 out int containingClassAllowedOperatingSystems,
-                out bool containingClassAllowsUnknownOperatingSystems))
+                out bool containingClassAllowsUnknownOperatingSystems)
+            || !TryGetAllowedOperatingSystems(
+                assemblyAttribute,
+                out int assemblyAllowedOperatingSystems,
+                out bool assemblyAllowsUnknownOperatingSystems))
         {
             return false;
         }
 
-        int actualAllowedOperatingSystems = localAllowedOperatingSystems & containingClassAllowedOperatingSystems;
+        int actualAllowedOperatingSystems = localAllowedOperatingSystems & containingClassAllowedOperatingSystems & assemblyAllowedOperatingSystems;
         bool actualAllowsUnknownOperatingSystems =
-            localAllowsUnknownOperatingSystems && containingClassAllowsUnknownOperatingSystems;
+            localAllowsUnknownOperatingSystems && containingClassAllowsUnknownOperatingSystems && assemblyAllowsUnknownOperatingSystems;
         return actualAllowedOperatingSystems == expectedAllowedOperatingSystems
             && actualAllowsUnknownOperatingSystems == expectedAllowsUnknownOperatingSystems;
     }
