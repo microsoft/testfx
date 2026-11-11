@@ -83,6 +83,18 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     }
 
     [TestMethod]
+    public async Task NoProgressOption_IsRejectedAsUnknownOption()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--no-progress",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        result.AssertOutputContains("Unknown option '--no-progress'");
+    }
+
+    [TestMethod]
     public async Task AnsiOption_InvalidArgument_FailsCommandLineValidation()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);

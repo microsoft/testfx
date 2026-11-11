@@ -22,8 +22,7 @@ internal sealed partial class TerminalOutputDevice
     // Sole point that bypasses IConsole to reach stderr (IConsole has no stderr abstraction today).
     // Used whenever stdout must stay clean or for process-level notices that should not pollute
     // stdout: the --list-tests json paths (so stdout stays reserved for the JSON document), the
-    // Ctrl+C cancellation notice, and the --no-progress deprecation warning. If IConsole ever grows
-    // a stderr abstraction, replace this helper.
+    // Ctrl+C cancellation notice. If IConsole ever grows a stderr abstraction, replace this helper.
     private static async Task WriteToStandardErrorAsync(string message)
         => await Console.Error.WriteLineAsync(message).ConfigureAwait(false);
 

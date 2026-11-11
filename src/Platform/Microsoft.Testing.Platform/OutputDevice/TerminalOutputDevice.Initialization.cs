@@ -94,29 +94,9 @@ internal sealed partial class TerminalOutputDevice
             _ => AnsiMode.AnsiIfPossible,
         };
 
-        // --progress <auto|on|off> is the modern, positive form. When present it wins over the legacy
-        // --no-progress flag. --no-progress keeps working as a deprecated alias for --progress off and
-        // emits a single deprecation warning per process.
-        bool progressOptionSet = _commandLineOptions.TryGetOptionArgumentList(
-            TerminalTestReporterCommandLineOptionsProvider.ProgressOption,
-            out string[]? progressArguments)
-            && progressArguments is { Length: > 0 };
-
         // 'on' and 'auto' use the renderer appropriate for the terminal. Test-host controllers,
         // --list-tests and server mode do not render progress.
         bool noProgress = !TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(_commandLineOptions);
-        if (!progressOptionSet
-            && _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
-        {
-            // The deprecation warning is a nudge for interactive users to move to --progress off. We deliberately
-            // do not emit it in CI: it is invisible noise there, and build infrastructure (e.g. the Arcade SDK test
-            // runner) passes --no-progress unconditionally, so emitting to stderr would surface as a build error in
-            // logging setups that treat any stderr output as a failure.
-            if (!inCI && Interlocked.Exchange(ref s_noProgressDeprecationWarningEmitted, 1) == 0)
-            {
-                await WriteToStandardErrorAsync(PlatformResources.TerminalNoProgressDeprecatedWarning).ConfigureAwait(false);
-            }
-        }
 
         OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
         OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);

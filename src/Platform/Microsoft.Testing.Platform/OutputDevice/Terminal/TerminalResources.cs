@@ -207,8 +207,6 @@ internal static partial class TerminalResources
 
     internal static string @TerminalAnsiOptionInvalidArgument => GetResourceString("TerminalAnsiOptionInvalidArgument");
 
-    internal static string @TerminalNoProgressOptionDescription => GetResourceString("TerminalNoProgressOptionDescription");
-
     internal static string @TerminalOutputOptionDescription => GetResourceString("TerminalOutputOptionDescription");
 
     internal static string @TerminalOutputOptionInvalidArgument => GetResourceString("TerminalOutputOptionInvalidArgument");
@@ -221,9 +219,9 @@ internal static partial class TerminalResources
 
     internal static string @TerminalProgressHeartbeatNoCompletionSuffix => GetResourceString("TerminalProgressHeartbeatNoCompletionSuffix");
 
-    internal static string @TerminalProgressModeOptionDescription => GetResourceString("TerminalProgressModeOptionDescription");
-
     internal static string @TerminalProgressOptionInvalidArgument => GetResourceString("TerminalProgressOptionInvalidArgument");
+
+    internal static string @TerminalProgressReportingOptionDescription => GetResourceString("TerminalProgressReportingOptionDescription");
 
     internal static string @TerminalProgressSlowTest => GetResourceString("TerminalProgressSlowTest");
 
