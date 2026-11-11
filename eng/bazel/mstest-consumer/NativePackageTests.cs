@@ -30,7 +30,7 @@ public sealed class NativePackageTests
             "Microsoft.Testing.Extensions.TrxReport",
             "Microsoft.Testing.Extensions.TrxReport.Abstractions",
         ];
-        CollectionAssert.AreEquivalent(names, assemblies.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreSequenceEqual(names, assemblies.EnumerateObject().Select(property => property.Name).ToArray(), SequenceOrder.InAnyOrder);
 
         var loaded = new List<object>();
         foreach (string name in names)

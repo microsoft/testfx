@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace MSTest.Analyzers.Test;
 
@@ -15,37 +14,33 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
 {
     [TestMethod]
     [DataRow(LanguageNames.CSharp)]
-    [DataRow(LanguageNames.VisualBasic)]
     public async Task Generate_StaticInvocation_EmitsMetadata(string language)
     {
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language);
 
-        AssertGeneratedMetadata(result, output, language);
+        AssertGeneratedMetadata(result, output);
     }
 
     [TestMethod]
     [DataRow(LanguageNames.CSharp)]
-    [DataRow(LanguageNames.VisualBasic)]
     public async Task Generate_ReducedExtensionInvocation_EmitsMetadata(string language)
     {
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, reducedExtension: true);
 
-        AssertGeneratedMetadata(result, output, language);
+        AssertGeneratedMetadata(result, output);
     }
 
     [TestMethod]
     [DataRow(LanguageNames.CSharp)]
-    [DataRow(LanguageNames.VisualBasic)]
     public async Task Generate_RepeatedInvocations_EmitsMetadataOnce(string language)
     {
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, invocationCount: 3);
 
-        AssertGeneratedMetadata(result, output, language);
+        AssertGeneratedMetadata(result, output);
     }
 
     [TestMethod]
     [DataRow(LanguageNames.CSharp)]
-    [DataRow(LanguageNames.VisualBasic)]
     public async Task Generate_InvocationRemoved_RemovesMetadata(string language)
     {
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, removeInvocationAfterFirstRun: true);
@@ -55,23 +50,14 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
 
     [TestMethod]
     [DataRow(LanguageNames.CSharp, "assembly")]
-    [DataRow(LanguageNames.VisualBasic, "assembly")]
     [DataRow(LanguageNames.CSharp, "namespace")]
-    [DataRow(LanguageNames.VisualBasic, "namespace")]
     [DataRow(LanguageNames.CSharp, "type")]
-    [DataRow(LanguageNames.VisualBasic, "type")]
     [DataRow(LanguageNames.CSharp, "method")]
-    [DataRow(LanguageNames.VisualBasic, "method")]
     [DataRow(LanguageNames.CSharp, "zero-parameters")]
-    [DataRow(LanguageNames.VisualBasic, "zero-parameters")]
     [DataRow(LanguageNames.CSharp, "two-parameters")]
-    [DataRow(LanguageNames.VisualBasic, "two-parameters")]
     [DataRow(LanguageNames.CSharp, "parameter-type")]
-    [DataRow(LanguageNames.VisualBasic, "parameter-type")]
     [DataRow(LanguageNames.CSharp, "parameter-interface")]
-    [DataRow(LanguageNames.VisualBasic, "parameter-interface")]
     [DataRow(LanguageNames.CSharp, "return-type")]
-    [DataRow(LanguageNames.VisualBasic, "return-type")]
     public async Task Generate_LookalikeApi_DoesNotEmitMetadata(string language, string scenario)
     {
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, scenario);
@@ -81,7 +67,6 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
 
     [TestMethod]
     [DataRow(LanguageNames.CSharp)]
-    [DataRow(LanguageNames.VisualBasic)]
     public async Task Generate_NoCandidateInvocation_DoesNotEmitMetadata(string language)
     {
         (GeneratorDriverRunResult result, Compilation output) = await RunGeneratorAsync(language, invocationCount: 0);
@@ -165,37 +150,22 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
             : $"{typeName}.{methodName}({arguments})";
         string body = nameofOnly
             ? $"var name = nameof({typeName}.{methodName});"
-            : string.Join(Environment.NewLine, Enumerable.Repeat(invocation + (language == LanguageNames.CSharp ? ";" : string.Empty), invocationCount));
-        string source = language == LanguageNames.CSharp
-            ? $$"""
-                using {{apiNamespace}};
-                public class Registration
+            : string.Join(Environment.NewLine, Enumerable.Repeat(invocation + ";", invocationCount));
+        string source = $$"""
+            using {{apiNamespace}};
+            public class Registration
+            {
+                public void Configure({{consumerParameterType}} services)
                 {
-                    public void Configure({{consumerParameterType}} services)
-                    {
-                        {{body}}
-                    }
+                    {{body}}
                 }
-                """
-            : $$"""
-                Imports {{apiNamespace}}
-                Public Class Registration
-                    Public Sub Configure(services As {{consumerParameterType}})
-                        {{body}}
-                    End Sub
-                End Class
-                """;
-        Compilation compilation = language == LanguageNames.CSharp
-            ? CSharpCompilation.Create(
-                "Consumer",
-                [CSharpSyntaxTree.ParseText(source)],
-                references.Add(apiReference),
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-            : VisualBasicCompilation.Create(
-                "Consumer",
-                [VisualBasicSyntaxTree.ParseText(source)],
-                references.Add(apiReference),
-                new VisualBasicCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            }
+            """;
+        Compilation compilation = CSharpCompilation.Create(
+            "Consumer",
+            [CSharpSyntaxTree.ParseText(source)],
+            references.Add(apiReference),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
         AssertNoCompilationErrors(compilation);
 
         // The shipping generator is internal. Exercise its public Roslyn contract
@@ -203,15 +173,13 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
         Type generatorType = typeof(ReviewAlwaysTrueAssertConditionAnalyzer).Assembly.GetType(
             "MSTest.Analyzers.MSTestHostInjectionMetadataGenerator", throwOnError: true)!;
         ISourceGenerator generator = ((IIncrementalGenerator)Activator.CreateInstance(generatorType, nonPublic: true)!).AsSourceGenerator();
-        GeneratorDriver driver = language == LanguageNames.CSharp
-            ? CSharpGeneratorDriver.Create(generator)
-            : VisualBasicGeneratorDriver.Create(ImmutableArray.Create(generator));
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation output, out ImmutableArray<Diagnostic> diagnostics);
 
         if (removeInvocationAfterFirstRun)
         {
             Assert.IsEmpty(diagnostics);
-            AssertGeneratedMetadata(driver.GetRunResult(), output, language);
+            AssertGeneratedMetadata(driver.GetRunResult(), output);
             SyntaxTree originalTree = compilation.SyntaxTrees.Single();
             SyntaxTree updatedTree = originalTree.WithChangedText(SourceText.From(source.Replace(invocation, string.Empty), Encoding.UTF8));
             compilation = compilation.ReplaceSyntaxTree(originalTree, updatedTree);
@@ -226,21 +194,15 @@ public sealed class MSTestHostInjectionMetadataGeneratorTests
         return (result, output);
     }
 
-    private static void AssertGeneratedMetadata(GeneratorDriverRunResult result, Compilation output, string language)
+    private static void AssertGeneratedMetadata(GeneratorDriverRunResult result, Compilation output)
     {
         Assert.HasCount(1, result.Results[0].GeneratedSources);
         GeneratedSourceResult generated = result.Results[0].GeneratedSources[0];
-        string expectedSource = language == LanguageNames.CSharp
-            ? """
-                // <auto-generated/>
-                [assembly: System.Reflection.AssemblyMetadataAttribute("MSTestHostTestClassInjectionEnabled", "true")]
-                """
-            : """
-                ' <auto-generated/>
-                <Assembly: System.Reflection.AssemblyMetadataAttribute("MSTestHostTestClassInjectionEnabled", "true")>
-                """;
-        string extension = language == LanguageNames.CSharp ? "cs" : "vb";
-        Assert.AreEqual($"MSTestHostTestClassInjectionMetadata.g.{extension}", generated.HintName);
+        string expectedSource = """
+            // <auto-generated/>
+            [assembly: System.Reflection.AssemblyMetadataAttribute("MSTestHostTestClassInjectionEnabled", "true")]
+            """;
+        Assert.AreEqual("MSTestHostTestClassInjectionMetadata.g.cs", generated.HintName);
         Assert.AreEqual(expectedSource.Replace("\r\n", "\n"), generated.SourceText.ToString().Replace("\r\n", "\n"));
 
         AttributeData[] metadata = GetHostInjectionMetadata(output);

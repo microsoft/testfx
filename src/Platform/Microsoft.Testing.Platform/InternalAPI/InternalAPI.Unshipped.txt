@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddDataConsumerWhenControllerStarts<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddEnvironmentVariableProviderWhenControllerStarts(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider!>! factory) -> void
 *REMOVED*Microsoft.Testing.Platform.TestHostControllers.TestHostProcessInformation.HasExitedGracefully.get -> bool
 Microsoft.Testing.Platform.TestHostControllers.TestHostProcessInformation.HasReceivedTestHostCompletedMessage.get -> bool
 *REMOVED*Microsoft.Testing.Platform.Helpers.AppVersion
@@ -63,18 +65,6 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRu
 *REMOVED*static Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(string! status) -> string!
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.TestExecutionActivityBroker(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithTestExecutionActivities! otelService) -> void
 static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetTestInitialInfo(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>!
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int Id, out int ErrorCode, out string! Message, out object? Data) -> void
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int Id, int ErrorCode, string! Message, object? Data) -> void
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int
-Microsoft.Testing.Platform.ServerMode.ErrorMessage.Deconstruct(out int? Id, out int ErrorCode, out string! Message, out object? Data) -> void
-Microsoft.Testing.Platform.ServerMode.ErrorMessage.ErrorMessage(int? Id, int ErrorCode, string! Message, object? Data) -> void
-Microsoft.Testing.Platform.ServerMode.ErrorMessage.Id.get -> int?
-const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.ArtifactReplayPipeEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_ARTIFACT_REPLAY_PIPE" -> string!
-static Microsoft.Testing.Platform.DotnetTestConnection.SendFileArtifactsToPipeAsync(string! pipeName, Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages! message, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.DeferredTrxDirectoryEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_DIRECTORY" -> string!
-const Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.DeferredTrxRootEnvironmentVariable = "TESTINGPLATFORM_RETRY_DEFERRED_TRX_ROOT" -> string!
-static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TryDeferTrxArtifacts(Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages! message, string? attemptRoot, string? publicationDirectory) -> bool
-static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.ReadDeferredTrxArtifacts(string! manifestPath) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
 Microsoft.Testing.Platform.Helpers.IFileSystem.IsRegularFile(string! path) -> bool
 Microsoft.Testing.Platform.Helpers.IFileSystem.OpenReadRegularFile(string! path) -> Microsoft.Testing.Platform.Helpers.IFileStream?
 Microsoft.Testing.Platform.Helpers.SystemFileSystem.IsRegularFile(string! path) -> bool
@@ -90,20 +80,7 @@ Microsoft.Testing.Platform.Helpers.SystemFileStream.SystemFileStream(System.IO.F
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TimingInfo.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 *REMOVED*Microsoft.Testing.Platform.Requests.TestHostTestFrameworkInvoker.DataTypesProduced.get -> System.Type![]!
 *REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.ToString() -> string!
-Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
-Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.init -> void
-Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.get -> System.Func<bool>!
-Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.init -> void
-*REMOVED*static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped) -> string!
-static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped, bool hasTestSessionFailure = false) -> string!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunNotSelected(string! assembly, string? targetFramework, string? architecture) -> void
-Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.AllowZeroTests.get -> bool
-Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.AllowZeroTests.init -> void
-*REMOVED*static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.IsRunFailed(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped) -> bool
-static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.IsRunFailed(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped, bool allowZeroTests = false) -> bool
-Microsoft.Testing.Platform.Services.ShutdownProgressReporter.ShutdownProgressReporter(Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.OutputDevice.IOutputDevice? outputDevice, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, System.TimeSpan quietWindow, System.TimeSpan pollInterval, Microsoft.Testing.Platform.Helpers.ITask! task) -> void
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler.OnRunCompletedAsync(int exitCode, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>! artifacts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler![]!

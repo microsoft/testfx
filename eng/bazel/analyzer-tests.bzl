@@ -52,9 +52,6 @@ def analyzer_unit_tests():
             "@testsupport.analyzers//microsoft.codeanalysis.csharp.analyzer.testing",
             "@testsupport.analyzers//microsoft.codeanalysis.csharp.codefix.testing",
             "@testsupport.analyzers//microsoft.codeanalysis.csharp.coderefactoring.testing",
-            "@testsupport.analyzers//microsoft.codeanalysis.visualbasic.analyzer.testing",
-            "@testsupport.analyzers//microsoft.codeanalysis.visualbasic.codefix.testing",
-            "@testsupport.analyzers//microsoft.codeanalysis.visualbasic.coderefactoring.testing",
         ],
     )
     applications = {}

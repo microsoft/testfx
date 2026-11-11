@@ -59,9 +59,11 @@ public sealed class OSPlatformAttributesShouldBeConsistentFixer : CodeFixProvide
 
         SemanticModel semanticModel = await context.Document.GetRequiredSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
         ISymbol? declaredSymbol = semanticModel.GetDeclaredSymbol(declaration, context.CancellationToken);
-        if (declaredSymbol is IMethodSymbol methodSymbol
-            && methodSymbol.ContainingType.GetAttributes().Any(
-                attribute => attribute.AttributeClass?.ToDisplayString() == WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOSConditionAttribute))
+        if (declaredSymbol?.ContainingAssembly.GetAttributes().Any(
+                attribute => attribute.AttributeClass?.ToDisplayString() == WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOSConditionAttribute) is true
+            || (declaredSymbol is IMethodSymbol methodSymbol
+                && methodSymbol.ContainingType.GetAttributes().Any(
+                    attribute => attribute.AttributeClass?.ToDisplayString() == WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOSConditionAttribute)))
         {
             return;
         }

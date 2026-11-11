@@ -12,6 +12,22 @@ updates:
         patterns:
           - "Microsoft.CodeAnalysis.*.Testing"
     ignore:
+      # Roslyn APIs are supplied by the compiler/IDE host, not bundled.
+      # Keep the 4.14 host baseline; intentional upgrades also need minimum-host
+      # compatibility coverage and regenerated native producer/test lockfiles.
+      # Leave patch/security and analyzer-authoring/testing package updates enabled.
+      - dependency-name: "Microsoft.CodeAnalysis"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "Microsoft.CodeAnalysis.Common"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "Microsoft.CodeAnalysis.CSharp.Workspaces"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
       - dependency-name: "Microsoft.CodeCoverage.MSBuild"

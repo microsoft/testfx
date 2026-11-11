@@ -138,7 +138,7 @@ public sealed class AvoidAssertsInCatchBlocksAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -168,7 +168,7 @@ public sealed class AvoidAssertsInCatchBlocksAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyCodeFixAsync(code, code, useMSTestV4: true);
     }
 
     [TestMethod]

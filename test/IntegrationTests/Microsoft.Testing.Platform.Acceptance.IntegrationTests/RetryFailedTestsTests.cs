@@ -977,8 +977,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.HasCount(1, physicalExecutions.Select(execution => execution.TestId).Distinct(StringComparer.Ordinal));
         Assert.HasCount(1, physicalExecutions.Select(execution => execution.ExecutionId).Distinct(StringComparer.Ordinal));
         Assert.HasCount(2, physicalExecutions.Select(execution => execution.AttemptId).Distinct(StringComparer.Ordinal));
-        Assert.IsTrue(physicalExecutions.All(execution => Guid.TryParse(execution.ExecutionId, out _)));
-        Assert.IsTrue(physicalExecutions.All(execution => Guid.TryParse(execution.AttemptId, out _)));
+        Assert.ContainsOnly(execution => Guid.TryParse(execution.ExecutionId, out _), physicalExecutions);
+        Assert.ContainsOnly(execution => Guid.TryParse(execution.AttemptId, out _), physicalExecutions);
         Assert.HasCount(
             3,
             results.GetProperty("tests").EnumerateArray().Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));

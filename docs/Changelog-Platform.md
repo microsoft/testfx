@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="3.0.0" />[3.0.0] - Unreleased
 
-See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5.2...main)
+See full log [of v4.5.3...main](https://github.com/microsoft/testfx/compare/v4.5.3...main)
 
 ### Breaking changes
 
@@ -53,9 +53,9 @@ See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5
 * Preserve Azure DevOps data-row display names and their associated durations while retaining canonical method identities for history. Retry interrupted result-metadata updates without republishing accepted test results, by @Evangelink in [#12150](https://github.com/microsoft/testfx/pull/12150)
 * Detect OpenCode through its `OPENCODE` environment variable so AI-agent terminal defaults apply correctly, by @Evangelink in [#12174](https://github.com/microsoft/testfx/pull/12174)
 
-## <a name="2.5.3" />[2.5.3] - Unreleased
+## <a name="2.5.3" />[2.5.3] - 2026-11-11
 
-See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v4.5.2...rel/4.5)
+See full log [of v4.5.2...v4.5.3](https://github.com/microsoft/testfx/compare/v4.5.2...v4.5.3)
 
 ### Changed
 
@@ -72,6 +72,7 @@ See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v
 * Diagnose uncorrelated JSON-RPC errors with `id: null` without ending server sessions, replying to the error or completing unrelated pending client requests, while preserving request accounting, by @Evangelink in [#12286](https://github.com/microsoft/testfx/pull/12286)
 * Correct TRX artifact publication with Retry, moving the final default or relative report to the results directory while retaining earlier attempt reports under `Retries`, preserving attachment paths and forwarding relocated artifacts through native `dotnet test` and packaged-app controllers, by @Evangelink in [#12290](https://github.com/microsoft/testfx/pull/12290)
 * Preserve nested and aggregate exception causes in CTRF, HTML and JUnit reports while retaining explicit failure explanations and existing simple-exception stack traces, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
+* Preserve complete CTRF attachment paths instead of truncating references longer than 4,096 characters, while retaining diagnostic size limits for attachment names and descriptions, by @Evangelink in [#12359](https://github.com/microsoft/testfx/pull/12359)
 
 ## <a name="2.5.2" />[2.5.2] - 2026-10-27
 

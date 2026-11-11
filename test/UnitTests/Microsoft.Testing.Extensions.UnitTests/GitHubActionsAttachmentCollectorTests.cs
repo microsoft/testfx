@@ -250,7 +250,7 @@ public sealed class GitHubActionsAttachmentCollectorTests : IDisposable
             CreateNode("over", "Over budget", source), TestContext.CancellationToken))!);
 
         Assert.HasCount(11, staged);
-        Assert.IsTrue(staged.All(attachment => attachment.Status == "staged"));
+        Assert.ContainsOnly(attachment => attachment.Status == "staged", staged);
         Assert.AreEqual(250L * 1024 * 1024, staged.Sum(attachment => attachment.SizeBytes));
         Assert.AreEqual("size-limit", overBudget.Status);
         Assert.IsNull(overBudget.RelativePath);

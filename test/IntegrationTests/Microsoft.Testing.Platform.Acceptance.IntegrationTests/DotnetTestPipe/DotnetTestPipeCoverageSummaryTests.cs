@@ -67,7 +67,7 @@ public sealed class DotnetTestPipeCoverageSummaryTests
             .. result.MessagesWithSerializerId(15).Select(frame => DotnetTestPipeProtocol.DecodeCoverageSummaryMessagesBody(frame.Body)),
         ];
         Assert.HasCount(2, batches, "The File-scoped final measurement must not be forwarded.");
-        Assert.IsTrue(batches.All(batch => batch.ExecutionId == executionId && batch.InstanceId == result.ReceivedHandshake[8]));
+        Assert.ContainsOnly(batch => batch.ExecutionId == executionId && batch.InstanceId == result.ReceivedHandshake[8], batches);
         Assert.AreEqual(
             new CoverageSummary(sessionEnd.SessionUid, "coverage.session.publisher", 0, null, 0, null, 3_000_000_000L, long.MaxValue),
             Assert.ContainsSingle(batches[0].Summaries));
@@ -160,7 +160,7 @@ public sealed class DotnetTestPipeCoverageSummaryTests
         if (enabled)
         {
             Assert.HasCount(3, batches);
-            Assert.IsTrue(batches.All(batch => batch.ExecutionId == executionId));
+            Assert.ContainsOnly(batch => batch.ExecutionId == executionId, batches);
             CoverageSummaryBatch controllerBatch = Assert.ContainsSingle(batches.Where(batch => batch.InstanceId == controller[8]));
             Assert.AreEqual(
                 new CoverageSummary("controller-session", "coverage.controller.publisher", 0, null, 0, null, 11, 17),

@@ -23,7 +23,7 @@ public sealed class GlobalConfigGeneratorContinuationTests
         ToolResult result = await RunToolAsync(directory.Path, provideOutputPath: false);
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
-        StringAssert.Contains(result.StandardError, "System.InvalidOperationException: OUTPUT_PATH environment variable is not set.");
+        Assert.Contains("System.InvalidOperationException: OUTPUT_PATH environment variable is not set.", result.StandardError);
         Assert.IsEmpty(Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories));
     }
 
@@ -49,7 +49,7 @@ public sealed class GlobalConfigGeneratorContinuationTests
             });
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
-        StringAssert.Contains(result.StandardError, "System.InvalidOperationException: OUTPUT_PATH environment variable is not set.");
+        Assert.Contains("System.InvalidOperationException: OUTPUT_PATH environment variable is not set.", result.StandardError);
         Assert.IsEmpty(Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories), result.StandardOutput);
     }
 
@@ -78,13 +78,13 @@ public sealed class GlobalConfigGeneratorContinuationTests
         })
         {
             string text = ReadMode(directory.Path, mode);
-            StringAssert.Contains(text, $"dotnet_diagnostic.MSTEST0001.severity = {severity}{Environment.NewLine}");
-            StringAssert.Contains(text, $"dotnet_diagnostic.MSTEST0059.severity = {(mode == "none" ? "none" : "warning")}{Environment.NewLine}");
+            Assert.Contains($"dotnet_diagnostic.MSTEST0001.severity = {severity}{Environment.NewLine}", text);
+            Assert.Contains($"dotnet_diagnostic.MSTEST0059.severity = {(mode == "none" ? "none" : "warning")}{Environment.NewLine}", text);
             string[] identifiers = text.Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries)
                 .Where(line => line.StartsWith("dotnet_diagnostic.", StringComparison.Ordinal))
                 .Select(line => line.Substring("dotnet_diagnostic.".Length, "MSTEST0001".Length))
                 .ToArray();
-            CollectionAssert.AreEqual(identifiers.OrderBy(id => id, StringComparer.Ordinal).ToArray(), identifiers);
+            Assert.AreSequenceEqual(identifiers.OrderBy(id => id, StringComparer.Ordinal).ToArray(), identifiers);
             Assert.AreEqual(identifiers.Length, identifiers.Distinct(StringComparer.Ordinal).Count());
         }
     }
@@ -141,7 +141,7 @@ public sealed class GlobalConfigGeneratorContinuationTests
         ToolResult result = await RunToolAsync(directory.Path);
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
-        StringAssert.Contains(result.StandardError, $"System.InvalidOperationException: {expectedMessage}");
+        Assert.Contains($"System.InvalidOperationException: {expectedMessage}", result.StandardError);
         Assert.IsFalse(Directory.Exists(System.IO.Path.Combine(directory.Path, "globalconfigs")));
     }
 
@@ -157,7 +157,7 @@ public sealed class GlobalConfigGeneratorContinuationTests
         ToolResult result = await RunToolAsync(directory.Path);
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
-        StringAssert.Contains(result.StandardError, "System.InvalidOperationException: Rule 'COV0001' has conflicting severities 'Warning' and 'Info'.");
+        Assert.Contains("System.InvalidOperationException: Rule 'COV0001' has conflicting severities 'Warning' and 'Info'.", result.StandardError);
         Assert.IsFalse(Directory.Exists(System.IO.Path.Combine(directory.Path, "globalconfigs")));
     }
 
@@ -169,8 +169,8 @@ public sealed class GlobalConfigGeneratorContinuationTests
         ToolResult result = await RunToolAsync(directory.Path);
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
-        StringAssert.Contains(result.StandardError, "System.IO.FileNotFoundException");
-        StringAssert.Contains(result.StandardError, "MSTest.Analyzers.dll");
+        Assert.Contains("System.IO.FileNotFoundException", result.StandardError);
+        Assert.Contains("MSTest.Analyzers.dll", result.StandardError);
         Assert.IsEmpty(Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories));
     }
 
@@ -193,7 +193,7 @@ public sealed class GlobalConfigGeneratorContinuationTests
     }
 
     private static void AssertModeFiles(string directory)
-        => CollectionAssert.AreEquivalent(
+        => Assert.AreSequenceEqual(
             new[]
             {
                 "mstest-none.globalconfig",
@@ -203,7 +203,8 @@ public sealed class GlobalConfigGeneratorContinuationTests
             },
             Directory.GetFiles(System.IO.Path.Combine(directory, "globalconfigs"))
                 .Select(System.IO.Path.GetFileName)
-                .ToArray());
+                .ToArray(),
+            SequenceOrder.InAnyOrder);
 
     private static void AssertMode(string directory, string mode, string[] severities)
     {

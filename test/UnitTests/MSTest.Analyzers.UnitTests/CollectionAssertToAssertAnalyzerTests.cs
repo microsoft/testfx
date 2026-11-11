@@ -1,6 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+using MSTest.Analyzers.CodeFixes;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.CollectionAssertToAssertAnalyzer,
     MSTest.Analyzers.CodeFixes.CollectionAssertToAssertFixer>;
@@ -49,7 +56,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreSequenceEqual", "AreEqual"),
@@ -97,7 +104,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreNotSequenceEqual", "AreNotEqual"),
@@ -131,7 +138,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -173,7 +180,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreSequenceEqual", "AreEquivalent"),
@@ -221,7 +228,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreNotSequenceEqual", "AreNotEquivalent"),
@@ -250,11 +257,23 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                     CollectionAssert.AreEquivalent(a, b, comparer, "message");
                     CollectionAssert.AreNotEquivalent(a, b, comparer);
                     CollectionAssert.AreNotEquivalent(a, b, comparer, "message");
+                    CollectionAssert.AreEquivalent<int>(a, b, null);
+                    CollectionAssert.AreEquivalent<int>(a, b, null, "message");
+                    CollectionAssert.AreNotEquivalent<int>(a, b, null);
+                    CollectionAssert.AreNotEquivalent<int>(a, b, null, "message");
+                    CollectionAssert.AreEquivalent<int>(a, b, default);
+                    CollectionAssert.AreEquivalent<int>(a, b, default, "message");
+                    CollectionAssert.AreNotEquivalent<int>(a, b, default);
+                    CollectionAssert.AreNotEquivalent<int>(a, b, default, "message");
+                    CollectionAssert.AreEquivalent<int>(null, null, null);
+                    CollectionAssert.AreNotEquivalent<int>(null, null, null);
+                    CollectionAssert.AreEquivalent<int>(null, null, default);
+                    CollectionAssert.AreNotEquivalent<int>(null, null, default);
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -294,7 +313,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreAllNotNull", "AllItemsAreNotNull"),
@@ -340,7 +359,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreAllDistinct", "AllItemsAreUnique"),
@@ -350,9 +369,10 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_WithTypeof_FixesToGenericAreAllOfType()
+    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_WithTypeof_NoDiagnostic()
     {
         string code = """
+            #nullable enable
             using System;
             using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -363,44 +383,21 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    var a = new List<object> { 1, 2, 3 };
-                    {|#0:CollectionAssert.AllItemsAreInstancesOfType(a, typeof(int))|};
-                    {|#1:CollectionAssert.AllItemsAreInstancesOfType(a, typeof(int), "message")|};
+                    var a = new List<object?> { 1, null, 3 };
+                    CollectionAssert.AllItemsAreInstancesOfType(a, typeof(int));
+                    CollectionAssert.AllItemsAreInstancesOfType(a, typeof(int), "message");
                 }
             }
             """;
 
-        string fixedCode = """
-            using System;
-            using System.Collections.Generic;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    var a = new List<object> { 1, 2, 3 };
-                    Assert.AreAllOfType<int>(a);
-                    Assert.AreAllOfType<int>(a, "message");
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            [
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreAllOfType", "AllItemsAreInstancesOfType"),
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreAllOfType", "AllItemsAreInstancesOfType"),
-            ],
-            fixedCode);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
-    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_WithRuntimeType_FixesToNonGenericAreAllOfTypeWithSwappedArgs()
+    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_WithRuntimeType_NoDiagnostic()
     {
         string code = """
+            #nullable enable
             using System;
             using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -411,40 +408,54 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    var a = new List<object> { 1, 2, 3 };
+                    var a = new List<object?> { 1, null, 3 };
                     Type t = typeof(int);
-                    {|#0:CollectionAssert.AllItemsAreInstancesOfType(a, t)|};
-                    {|#1:CollectionAssert.AllItemsAreInstancesOfType(a, t, "message")|};
+                    CollectionAssert.AllItemsAreInstancesOfType(a, t);
+                    CollectionAssert.AllItemsAreInstancesOfType(a, t, "message");
                 }
             }
             """;
 
-        string fixedCode = """
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "TypeofMigrationIsNotOfferedFromStaleDiagnostic")]
+    [DataRow(true, DisplayName = "RuntimeTypeMigrationIsNotOfferedFromStaleDiagnostic")]
+    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_StaleDiagnostic_NoCodeFix(bool runtimeType)
+    {
+        string typeExpression = runtimeType ? "expectedType" : "typeof(int)";
+        string code = $$"""
+            #nullable enable
             using System;
             using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [TestClass]
-            public class MyTestClass
+            public class Tests
             {
-                [TestMethod]
-                public void MyTestMethod()
+                public void Check()
                 {
-                    var a = new List<object> { 1, 2, 3 };
-                    Type t = typeof(int);
-                    Assert.AreAllOfType(t, a);
-                    Assert.AreAllOfType(t, a, "message");
+                    var collection = new List<object?> { 1, null, 3 };
+                    Type expectedType = typeof(int);
+                    CollectionAssert.AllItemsAreInstancesOfType(collection, {{typeExpression}}, "message");
                 }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            [
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreAllOfType", "AllItemsAreInstancesOfType"),
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreAllOfType", "AllItemsAreInstancesOfType"),
-            ],
-            fixedCode);
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, code, useMSTestV4: true);
+        AnalyzerContinuationTestHelpers.AssertCompilerErrors((await document.Project.GetCompilationAsync())!);
+        SyntaxNode root = (await document.GetSyntaxRootAsync())!;
+        InvocationExpressionSyntax invocation = root.DescendantNodes().OfType<InvocationExpressionSyntax>().Single();
+        ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
+            .Add("ProperAssertMethodNameKey", "AreAllOfType")
+            .Add("FixKindKey", "InstanceOfType");
+        var stale = Diagnostic.Create(
+            new CollectionAssertToAssertAnalyzer().SupportedDiagnostics[0],
+            invocation.GetLocation(),
+            properties: properties,
+            messageArgs: ["AreAllOfType", "AllItemsAreInstancesOfType"]);
+        Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, stale, new CollectionAssertToAssertFixer()));
     }
 
     [TestMethod]
@@ -484,7 +495,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
@@ -530,7 +541,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "DoesNotContain"),
@@ -540,11 +551,69 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenCollectionAssertIsSubsetOf_NoDiagnostic()
+    [DataRow("Contains", false, DisplayName = "ContainsNullWithoutNullableAnnotations")]
+    [DataRow("Contains", true, DisplayName = "ContainsNullWithNullableAnnotations")]
+    [DataRow("DoesNotContain", false, DisplayName = "DoesNotContainNullWithoutNullableAnnotations")]
+    [DataRow("DoesNotContain", true, DisplayName = "DoesNotContainNullWithNullableAnnotations")]
+    public async Task WhenCollectionAssertMembershipWithNullElement_CastsToObject(string method, bool nullableAnnotations)
     {
-        // IsSubsetOf / IsNotSubsetOf have no direct Assert equivalent today; they are out of scope.
-        string code = """
-            using System.Collections.Generic;
+        string nullableDirective = nullableAnnotations ? "enable" : "disable";
+        string objectType = nullableAnnotations ? "object?" : "object";
+        string code = $$"""
+            #nullable {{nullableDirective}}
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection collection = new {{objectType}}[] { null };
+                    {|#0:CollectionAssert.{{method}}(collection, null)|};
+                    {|#1:CollectionAssert.{{method}}(collection, default, "context")|};
+                    {|#2:CollectionAssert.{{method}}(element: null, message: "named", collection: collection)|};
+                    {|#3:CollectionAssert.{{method}}(collection, true ? null : "x")|};
+                }
+            }
+            """;
+
+        string fixedCode = $$"""
+            #nullable {{nullableDirective}}
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection collection = new {{objectType}}[] { null };
+                    Assert.{{method}}(({{objectType}})null, collection);
+                    Assert.{{method}}(({{objectType}})default, collection, "context");
+                    Assert.{{method}}(({{objectType}})null, collection, "named");
+                    Assert.{{method}}(({{objectType}})(true ? null : "x"), collection);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(method, method),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments(method, method),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments(method, method),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments(method, method),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "SubsetKeepsOperandOrder")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "NotSubsetKeepsOperandOrder")]
+    public async Task WhenCollectionAssertIsSubsetOf_FixesToContainsAll(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System.Collections;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -553,15 +622,192 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    var a = new List<int> { 1, 2 };
-                    var b = new List<int> { 1, 2, 3 };
-                    CollectionAssert.IsSubsetOf(a, b);
-                    CollectionAssert.IsNotSubsetOf(b, a);
+                    ICollection subset = new[] { 1, 1 };
+                    ICollection superset = new[] { 1, 1, 2 };
+                    {|#0:CollectionAssert.{{legacyMethod}}(subset, superset)|};
+                    {|#1:CollectionAssert.{{legacyMethod}}(subset, superset, "message")|};
+                    {|#2:CollectionAssert.{{legacyMethod}}(message: "context", superset: superset, subset: subset)|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    ICollection subset = new[] { 1, 1 };
+                    ICollection superset = new[] { 1, 1, 2 };
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset);
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset, message: "message");
+                    Assert.{{assertMethod}}(message: "context", collection: superset, {{expectedParameter}}: subset);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments(assertMethod, legacyMethod),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments(assertMethod, legacyMethod),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", DisplayName = "OlderFrameworkHasNoContainsAll")]
+    [DataRow("IsNotSubsetOf", DisplayName = "OlderFrameworkHasNoDoesNotContainAll")]
+    public async Task WhenCollectionAssertSubsetReplacementIsUnavailable_NoDiagnostic(string legacyMethod)
+    {
+        string code = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection subset = new[] { 1 };
+                    ICollection superset = new[] { 1, 2 };
+                    CollectionAssert.{{legacyMethod}}(subset, superset);
+                    CollectionAssert.{{legacyMethod}}(subset, superset, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "TypedSubsetKeepsObjectEquality")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "TypedNotSubsetKeepsObjectEquality")]
+    public async Task WhenCollectionAssertSubsetUsesTypedCollections_PreservesObjectEquality(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    var subset = new List<Item> { new Item(1) };
+                    var superset = new List<Item> { new Item(1) };
+                    {|#0:CollectionAssert.{{legacyMethod}}(subset, superset)|};
+                }
+            }
+
+            public sealed class Item : IEquatable<Item>
+            {
+                private readonly int _value;
+                public Item(int value) => _value = value;
+                public bool Equals(Item other) => other._value == _value;
+                public override int GetHashCode() => _value;
+            }
+            """;
+        string fixedCode = code
+            .Replace(
+                "{|#0:CollectionAssert." + legacyMethod + "(subset, superset)|}",
+                "Assert." + assertMethod + "(" + expectedParameter + ": (IEnumerable)subset, collection: superset)");
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "SubsetNullMessagesRemainNamed")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "NotSubsetNullMessagesRemainNamed")]
+    public async Task WhenCollectionAssertSubsetHasNullMessage_PreservesMessageOverload(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection subset = new[] { 1 };
+                    ICollection superset = new[] { 1, 2 };
+                    {|#0:CollectionAssert.{{legacyMethod}}(subset, superset, null)|};
+                    {|#1:CollectionAssert.{{legacyMethod}}(subset, superset, default)|};
+                }
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection subset = new[] { 1 };
+                    ICollection superset = new[] { 1, 2 };
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset, message: null);
+                    Assert.{{assertMethod}}({{expectedParameter}}: subset, collection: superset, message: default);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments(assertMethod, legacyMethod),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "SubsetKeepsNamedEvaluationOrder")]
+    [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "NotSubsetKeepsNamedEvaluationOrder")]
+    public async Task WhenCollectionAssertSubsetArgumentsHaveSideEffects_PreservesSourceOrder(string legacyMethod, string assertMethod)
+    {
+        string expectedParameter = assertMethod == "ContainsAll" ? "expected" : "notExpected";
+        string code = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    int i = 0;
+                    {|#0:CollectionAssert.{{legacyMethod}}(superset: new[] { ++i }, subset: new[] { i })|};
+                }
+            }
+            """;
+        string fixedCode = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    int i = 0;
+                    Assert.{{assertMethod}}(collection: new[] { ++i }, {{expectedParameter}}: (IEnumerable)(new[] { i }));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments(assertMethod, legacyMethod),
+            fixedCode);
     }
 
     [TestMethod]
@@ -627,7 +873,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains", "Contains"),
@@ -671,7 +917,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
             fixedCode);
@@ -713,7 +959,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains", "Contains"),
             fixedCode);
@@ -755,7 +1001,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreSequenceEqual", "AreEqual"),
             fixedCode);

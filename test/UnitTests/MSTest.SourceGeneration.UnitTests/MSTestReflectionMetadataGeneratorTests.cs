@@ -2280,6 +2280,60 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    [DataRow(false, DisplayName = "AssemblyOSCondition_IncludeMetadata")]
+    [DataRow(true, DisplayName = "AssemblyOSCondition_ExcludeMetadata")]
+    public void Generator_MaterializesAssemblyOSConditionWithoutMergingNarrowerScopes(bool exclude)
+    {
+        string source = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: OSCondition(ConditionMode.{{(exclude ? "Exclude" : "Include")}}, OperatingSystems.Windows | OperatingSystems.Linux)]
+
+            [TestClass]
+            [OSCondition(OperatingSystems.OSX, IgnoreMessage = "class condition")]
+            public sealed class Tests
+            {
+                [TestMethod]
+                [OSCondition(OperatingSystems.FreeBSD, IgnoreMessage = "method condition")]
+                public void Check() { }
+            }
+            """;
+        // Use the source-built framework: a permissive OSCondition stub could hide an
+        // invalid assembly target or lose the real constructor's mode/message semantics.
+        MetadataReference[] frameworkReferences = new[]
+        {
+            typeof(OSConditionAttribute).Assembly.Location,
+            typeof(TestClassAttribute).Assembly.Location,
+            typeof(TestContext).Assembly.Location,
+            System.Reflection.Assembly.Load("System.Runtime").Location,
+        }
+            .Distinct(StringComparer.Ordinal)
+            .Select(path => MetadataReference.CreateFromFile(path))
+            .ToArray();
+        CSharpCompilation compilation = CreateCompilation(source)
+            .AddReferences(frameworkReferences)
+            .WithAssemblyName("AssemblyOSConditionMetadata_" + Guid.NewGuid().ToString("N"));
+        GeneratorDriver driver = CreateDriver(compilation);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation output, out _);
+
+        driver.GetRunResult().Results.Single().Diagnostics.Should().BeEmpty();
+        output.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        using var stream = new MemoryStream();
+        Microsoft.CodeAnalysis.Emit.EmitResult emitted = output.Emit(stream);
+        emitted.Success.Should().BeTrue(string.Join(Environment.NewLine, emitted.Diagnostics));
+        var assembly = System.Reflection.Assembly.Load(stream.ToArray());
+        Type registry = assembly.GetType("MSTest.SourceGenerated.MSTestReflectionMetadata", throwOnError: true)!;
+        object[] attributes = (object[])registry.GetProperty("AssemblyAttributes")!.GetValue(null)!;
+
+        OSConditionAttribute condition = attributes.OfType<OSConditionAttribute>().Should().ContainSingle().Which;
+        condition.Mode.Should().Be(exclude ? ConditionMode.Exclude : ConditionMode.Include);
+        condition.IgnoreMessage.Should().Be(exclude
+            ? "Test is not supported on Linux, Windows"
+            : "Test is only supported on Linux, Windows");
+        condition.GroupName.Should().Be("OSCondition");
+    }
+
+    [TestMethod]
     public void Generator_AssemblyAttributes_IsEmptyArray_WhenNoneApplied()
     {
         const string userCode = """

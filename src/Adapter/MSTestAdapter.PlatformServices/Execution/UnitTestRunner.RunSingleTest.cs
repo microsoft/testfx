@@ -450,6 +450,12 @@ internal sealed partial class UnitTestRunner
             return false;
         }
 
+        if (testMethodInfo.Parent.Parent.Assembly.IsIgnored(out string? ignoreMessageOnAssembly))
+        {
+            notRunnableResult = [TestResult.CreateIgnoredResult(ignoreMessageOnAssembly)];
+            return false;
+        }
+
         bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
         bool shouldIgnoreMethod = testMethodInfo.MethodInfo.IsIgnored(out string? ignoreMessageOnMethod);
 

@@ -25,6 +25,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public sealed class UnitTestRunnerTests : TestContainer
 {
+    private const OperatingSystems AllOperatingSystems = OperatingSystems.Windows | OperatingSystems.Linux | OperatingSystems.OSX | OperatingSystems.FreeBSD;
+
     private readonly Dictionary<string, object?> _testRunParameters;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
@@ -467,6 +469,187 @@ public sealed class UnitTestRunnerTests : TestContainer
         results.Length.Should().Be(1);
         results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be("IgnoreTestClassMessage");
+    }
+
+    public async Task AssemblyOSCondition_IncludeExcludeAndAbsentGuards_ControlExecutionAndLifecycle()
+    {
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Include, AllOperatingSystems),
+            [], [], UnitTestOutcome.Passed, null);
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Include, default) { IgnoreMessage = "assembly include rejection" },
+            [], [], UnitTestOutcome.Ignored, "assembly include rejection");
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Exclude, AllOperatingSystems),
+            [], [], UnitTestOutcome.Ignored, "Test is not supported on Linux, OSX, Windows, FreeBSD");
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(ConditionMode.Exclude, default),
+            [], [], UnitTestOutcome.Passed, null);
+        await AssertAssemblyOSConditionAsync(
+            null, [], [], UnitTestOutcome.Passed, null);
+    }
+
+    public async Task AssemblyOSCondition_FailedAssemblyCannotBeReenabledByNarrowerScopes()
+    {
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(default) { IgnoreMessage = "assembly wins" },
+            [new OSConditionAttribute(AllOperatingSystems)],
+            [new OSConditionAttribute(AllOperatingSystems), new AssemblyOSAlternativeConditionAttribute(true)],
+            UnitTestOutcome.Ignored, "assembly wins");
+
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(default) { IgnoreMessage = "assembly wins" },
+            [new OSConditionAttribute(default) { IgnoreMessage = "class must not replace assembly" }],
+            [new OSConditionAttribute(default) { IgnoreMessage = "method must not replace assembly" }],
+            UnitTestOutcome.Ignored, "assembly wins");
+    }
+
+    public async Task AssemblyOSCondition_MatchingAssemblyAllowsNarrowerScopesToSkip()
+    {
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(AllOperatingSystems),
+            [new OSConditionAttribute(default) { IgnoreMessage = "class rejection" }],
+            [new OSConditionAttribute(AllOperatingSystems)],
+            UnitTestOutcome.Ignored, "class rejection");
+
+        await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(AllOperatingSystems),
+            [new OSConditionAttribute(AllOperatingSystems)],
+            [new OSConditionAttribute(default) { IgnoreMessage = "method rejection" }],
+            UnitTestOutcome.Ignored, "method rejection");
+    }
+
+    public async Task AssemblyOSCondition_SameGroupAlternativesRemainWithinTheirScope()
+        => await AssertAssemblyOSConditionAsync(
+            new OSConditionAttribute(AllOperatingSystems),
+            [new OSConditionAttribute(default), new AssemblyOSAlternativeConditionAttribute(true)],
+            [new OSConditionAttribute(default), new AssemblyOSAlternativeConditionAttribute(true)],
+            UnitTestOutcome.Passed, null);
+
+    private async Task AssertAssemblyOSConditionAsync(
+        OSConditionAttribute? assemblyCondition,
+        Attribute[] classConditions,
+        Attribute[] methodConditions,
+        UnitTestOutcome expectedOutcome,
+        string? expectedReason)
+    {
+        Type type = typeof(AssemblyOSConditionProbe);
+        MethodInfo test = type.GetMethod(nameof(AssemblyOSConditionProbe.Test))!;
+        List<string> lifecycle = [];
+        Dictionary<MethodInfo, Func<object?, object?[]?, object?>> invokers = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .ToDictionary<MethodInfo, MethodInfo, Func<object?, object?[]?, object?>>(
+                method => method,
+                method => (_, _) =>
+                {
+                    lifecycle.Add(method.Name);
+                    return Task.CompletedTask;
+                });
+        _testablePlatformServiceProvider.SetReflectionOperations(new SourceGeneratedReflectionOperations(
+            new SourceGeneratedReflectionDataProvider
+            {
+                Assembly = type.Assembly,
+                AssemblyName = type.Assembly.GetName().Name!,
+                Types = [type],
+                TypesByName = new Dictionary<string, Type> { [type.FullName!] = type },
+                AssemblyAttributes = assemblyCondition is null ? [] : [assemblyCondition],
+                TypeAttributes = new Dictionary<Type, Attribute[]>
+                {
+                    [type] = [new TestClassAttribute(), .. classConditions],
+                },
+                TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>
+                {
+                    [test] = [new TestMethodAttribute(), .. methodConditions],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.AssemblyInitialize))!] = [new AssemblyInitializeAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.AssemblyCleanup))!] = [new AssemblyCleanupAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.ClassInitialize))!] = [new ClassInitializeAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.ClassCleanup))!] = [new ClassCleanupAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.TestInitialize))!] = [new TestInitializeAttribute()],
+                    [type.GetMethod(nameof(AssemblyOSConditionProbe.TestCleanup))!] = [new TestCleanupAttribute()],
+                },
+                TypeMethodInvokers = invokers,
+                TypeConstructorsInvoker = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>
+                {
+                    [type] =
+                    [
+                        new()
+                        {
+                            Invoker = _ =>
+                            {
+                                lifecycle.Add("Constructor");
+                                return new AssemblyOSConditionProbe();
+                            },
+                        },
+                    ],
+                },
+            }));
+        const string source = "assembly-os-condition-source";
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(source)).Returns(type.Assembly);
+        var element = new UnitTestElement(CreateTestMethod(test.Name, type.FullName!, source, null));
+        UnitTestRunner runner = CreateUnitTestRunner([element]);
+        IAdapterMessageLogger logger = _mockMessageLogger.Object.ToAdapterMessageLogger();
+
+        TestResult[] results = await runner.RunSingleTestAsync(element, _testRunParameters, logger);
+        if (expectedOutcome == UnitTestOutcome.Ignored)
+        {
+            // Exercise the graceful-stop fallback on cached, uninitialized scopes.
+            // A normally completed runnable test has already performed its cleanup.
+            runner.ForceCleanup(_testRunParameters, logger);
+        }
+
+        TestResult result = results.Should().ContainSingle().Which;
+        result.Outcome.Should().Be(expectedOutcome);
+        result.IgnoreReason.Should().Be(expectedReason);
+        result.TestFailureException.Should().BeNull();
+        string[] expectedLifecycle = expectedOutcome == UnitTestOutcome.Passed
+            ? ["AssemblyInitialize", "ClassInitialize", "Constructor", "TestInitialize", "Test", "TestCleanup", "ClassCleanup", "AssemblyCleanup"]
+            : [];
+        lifecycle.Should().Equal(expectedLifecycle);
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+    private sealed class AssemblyOSAlternativeConditionAttribute(bool isConditionMet) : ConditionBaseAttribute(ConditionMode.Include)
+    {
+        public override bool IsConditionMet => isConditionMet;
+
+        public override string GroupName => "OSCondition";
+    }
+
+    // Lifecycle attributes live only in the per-case metadata above. Putting real
+    // AssemblyInitialize/Cleanup attributes here would pollute other runner tests
+    // that intentionally inspect this unit-test assembly with ordinary reflection.
+    private sealed class AssemblyOSConditionProbe
+    {
+        public AssemblyOSConditionProbe()
+        {
+        }
+
+        public static void AssemblyInitialize(TestContext context)
+        {
+        }
+
+        public static void AssemblyCleanup()
+        {
+        }
+
+        public static void ClassInitialize(TestContext context)
+        {
+        }
+
+        public static void ClassCleanup()
+        {
+        }
+
+        public void TestInitialize()
+        {
+        }
+
+        public void TestCleanup()
+        {
+        }
+
+        public void Test()
+        {
+        }
     }
 
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()

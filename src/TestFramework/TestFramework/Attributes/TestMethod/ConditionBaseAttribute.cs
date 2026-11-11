@@ -34,6 +34,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// built-in condition attribute types use distinct group names for different condition kinds, so combining those
 /// different built-in kinds requires all of them to be satisfied.
 /// </para>
+/// <para>
+/// Each scope is evaluated independently. An assembly-level <see cref="OSConditionAttribute"/> must be satisfied
+/// in addition to class and method conditions, even when those conditions use the same group name.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public abstract class ConditionBaseAttribute : Attribute

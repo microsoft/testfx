@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 /// Guarantees that every public assertion API is covered by <c>[StackTraceHidden]</c>, so
 /// MSTest framework frames are stripped from <see cref="Exception.StackTrace"/> on
 /// runtimes that honor the attribute (.NET 6+). The reflection-based checks ensure new
-/// public APIs added to <see cref="Assert"/>/<see cref="CollectionAssert"/>/<see cref="StringAssert"/>
+/// public APIs added to <see cref="Assert"/>
 /// in the future cannot silently regress this guarantee, and two runtime smoke tests
 /// confirm the attribute is actually honored end-to-end.
 /// </summary>
@@ -29,11 +29,11 @@ public class AssertStackTraceHiddenTests : TestContainer
     public void Assert_AllPublicMethodsAreCoveredByStackTraceHidden()
         => AssertAllPublicMethodsAreCovered(typeof(Assert));
 
-    public void CollectionAssert_AllPublicMethodsAreCoveredByStackTraceHidden()
-        => AssertAllPublicMethodsAreCovered(typeof(CollectionAssert));
+    public void CollectionAssert_IsNotExposed()
+        => typeof(Assert).Assembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert").Should().BeNull();
 
-    public void StringAssert_AllPublicMethodsAreCoveredByStackTraceHidden()
-        => AssertAllPublicMethodsAreCovered(typeof(StringAssert));
+    public void StringAssert_IsNotExposed()
+        => typeof(Assert).Assembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert").Should().BeNull();
 
     public void AssertExtensions_AllPublicMethodsAreCoveredByStackTraceHidden()
     {
@@ -46,7 +46,7 @@ public class AssertStackTraceHiddenTests : TestContainer
 
     public void InternalAssertionHelpers_AreCoveredByStackTraceHidden()
     {
-        // These helpers sit between Assert/CollectionAssert/StringAssert and the throw site;
+        // These helpers sit between Assert and the throw site;
         // they need to be hidden so the "hidden span" of frames is contiguous (see #8277).
         string[] internalHelperNames =
         [

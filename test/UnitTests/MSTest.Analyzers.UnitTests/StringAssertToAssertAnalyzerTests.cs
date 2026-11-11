@@ -53,7 +53,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
@@ -103,7 +103,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.StartsWith' instead of 'StringAssert.StartsWith'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("StartsWith", "StartsWith"),
@@ -145,7 +145,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.EndsWith' instead of 'StringAssert.EndsWith'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("EndsWith", "EndsWith"),
@@ -189,7 +189,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.MatchesRegex' instead of 'StringAssert.Matches'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("MatchesRegex", "Matches"),
@@ -233,7 +233,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.DoesNotMatchRegex' instead of 'StringAssert.DoesNotMatch'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotMatchRegex", "DoesNotMatch"),
@@ -275,7 +275,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
@@ -322,7 +322,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
     }
 
     [TestMethod]
@@ -382,7 +382,7 @@ public sealed class StringAssertToAssertAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
+        await VerifyCS.VerifyCodeFixWithLegacyMSTestAsync(
             code,
             [
                 // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'

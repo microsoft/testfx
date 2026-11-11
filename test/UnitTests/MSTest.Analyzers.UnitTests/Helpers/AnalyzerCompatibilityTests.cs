@@ -102,7 +102,7 @@ public sealed class AnalyzerCompatibilityTests
             ArgumentException error = Assert.ThrowsExactly<ArgumentException>(
                 () => ProductReflection.Call(type, null, "NotNullOrWhiteSpace", [typeof(string), typeof(string)], value, "input"));
             Assert.AreEqual("input", error.ParamName);
-            StringAssert.StartsWith(error.Message, "Argument cannot be whitespace.");
+            Assert.StartsWith("Argument cannot be whitespace.", error.Message);
         }
 
         Assert.AreEqual(" value ", ProductReflection.Call(type, null, "NotNullOrWhiteSpace", [typeof(string), typeof(string)], " value ", "input"));
@@ -123,7 +123,7 @@ public sealed class AnalyzerCompatibilityTests
         {
             ArgumentException error = Assert.ThrowsExactly<ArgumentException>(() => ProductReflection.Invoke(method, null, empty, "numbers"));
             Assert.AreEqual("numbers", error.ParamName);
-            StringAssert.StartsWith(error.Message, "Argument cannot be empty.");
+            Assert.StartsWith("Argument cannot be empty.", error.Message);
         }
 
         foreach (IEnumerable<int>? value in new IEnumerable<int>?[] { null, [17], new NonGenericCollection([17]), new ReadOnlyValues([17]), YieldValues(1) })
@@ -209,7 +209,7 @@ public sealed class AnalyzerCompatibilityTests
         using var source = new MemoryStream([1, 3, 5, 7]);
         using var destination = new MemoryStream();
         await (Task)ProductReflection.Call(type, null, "CopyToAsync", [typeof(Stream), typeof(Stream), typeof(CancellationToken)], source, destination, CancellationToken.None)!;
-        CollectionAssert.AreEqual(new byte[] { 1, 3, 5, 7 }, destination.ToArray());
+        Assert.AreSequenceEqual(new byte[] { 1, 3, 5, 7 }, destination.ToArray());
         using var xmlStream = new MemoryStream();
         var document = new XDocument(new XElement("root", new XAttribute("value", "a&b")));
         await (Task)ProductReflection.Call(type, null, "SaveAsync", [typeof(XDocument), typeof(Stream), typeof(SaveOptions), typeof(CancellationToken)], document, xmlStream, SaveOptions.DisableFormatting, CancellationToken.None)!;
@@ -328,7 +328,7 @@ public sealed class AnalyzerCompatibilityTests
             object? actual = attributeType.GetProperty(expectedProperty)!.GetValue(attribute);
             if (expectedValue is string[] strings)
             {
-                CollectionAssert.AreEqual(strings, (string[])actual!);
+                Assert.AreSequenceEqual(strings, (string[])actual!);
             }
             else
             {

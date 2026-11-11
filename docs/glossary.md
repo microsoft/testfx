@@ -25,7 +25,7 @@ Introduced in [PR #9233](https://github.com/microsoft/testfx/pull/9233). Inherit
 
 ### AwesomeAssertions
 
-A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in some unit and integration test suites in this repository. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Assertion policy in this repository varies by project: some `BannedSymbols.txt` files require `AwesomeAssertions` instead of the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types, while others ban `AwesomeAssertions`.
+A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in some unit and integration test suites in this repository. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Assertion policy in this repository varies by project: some `BannedSymbols.txt` files require `AwesomeAssertions` instead of the built-in MSTest `Assert` type, while others ban `AwesomeAssertions`.
 
 ### ArgumentArity
 
@@ -300,7 +300,7 @@ An MSTest analyzer (`ConflictingDataRowDisplayNamesAnalyzer`, warning severity, 
 
 ### MSTest
 
-Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
+Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
 
 ### MSTest Runner
 
@@ -476,7 +476,15 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes tes
 
 ### OSConditionAttribute
 
-An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test assembly, test class, or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
+Use an assembly guard to restrict every test in an assembly without repeating the attribute on each class:
+
+```csharp
+[assembly: OSCondition(OperatingSystems.Windows)]
+```
+
+Assembly, class, and method conditions are combined with AND, so a class or method cannot re-enable a test excluded by its assembly. Existing condition grouping applies independently within each scope. An excluded assembly produces skipped results with the condition's `IgnoreMessage` (or its default reason), without running assembly, class, or test initialization or cleanup. MSTEST0084 recognizes an assembly guard when checking consistency with `SupportedOSPlatform` and `UnsupportedOSPlatform` metadata. Use compatible framework and adapter packages containing this support; older adapters do not enforce assembly conditions.
 
 ### OutputCaptureMode
 

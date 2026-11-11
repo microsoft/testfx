@@ -351,7 +351,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             ["PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass", "PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass"],
             tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
         Assert.HasCount(8, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
-        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+        Assert.ContainsOnly(test => !test.TryGetProperty("retryAttempts", out _), tests);
     }
 
     [TestMethod]
@@ -434,10 +434,10 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
                 ["test-1", "test-2", "test-3", "test-3"],
                 tests.Select(test => test.GetProperty("testId").GetString()!).ToArray());
             string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
-            Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
+            Assert.ContainsOnly(executionId => Guid.TryParse(executionId, out _), executionIds);
             Assert.HasCount(4, executionIds.Distinct());
             string[] attemptIds = [.. tests.Select(test => test.GetProperty("attemptId").GetString()!)];
-            Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+            Assert.ContainsOnly(attemptId => Guid.TryParse(attemptId, out _), attemptIds);
             Assert.HasCount(4, attemptIds.Distinct());
             Assert.IsEmpty(attemptIds.Intersect(executionIds, StringComparer.Ordinal));
         }

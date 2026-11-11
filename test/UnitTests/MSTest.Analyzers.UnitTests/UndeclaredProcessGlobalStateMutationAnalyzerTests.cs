@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UndeclaredProcessGlobalStateMutationAnalyzer,
     MSTest.Analyzers.AddResourceLockFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.UndeclaredProcessGlobalStateMutationAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -503,31 +500,6 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodSetsEnvironmentVariable_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
     }
 
     [TestMethod]

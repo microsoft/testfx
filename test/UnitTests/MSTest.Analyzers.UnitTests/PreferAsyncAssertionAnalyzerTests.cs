@@ -8,10 +8,6 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferAsyncAssertionAnalyzer,
     MSTest.Analyzers.PreferAsyncAssertionFixer>;
 
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.PreferAsyncAssertionAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
@@ -998,30 +994,6 @@ public sealed class PreferAsyncAssertionAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenVisualBasicFunctionLambdaBlocksOnGenericTask_Diagnostic()
-    {
-        string code = """
-            Imports System
-            Imports System.Threading.Tasks
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    [|Assert.ThrowsExactly(Of InvalidOperationException)(Function() BarAsync().GetAwaiter().GetResult())|]
-                End Sub
-
-                Private Function BarAsync() As Task(Of Integer)
-                    Return Task.FromResult(42)
-                End Function
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]

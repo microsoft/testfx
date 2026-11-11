@@ -202,8 +202,8 @@ public sealed class AnalyzerResidualHelperTests
         Exception exception = Assert.Throws<Exception>(() => ProductReflection.Call(fixtures, null, "HasCorrectParameters",
             [typeof(IMethodSymbol), mode, typeof(INamedTypeSymbol)], method, Enum.ToObject(mode, 731), null));
         Assert.AreEqual(ProductReflection.Type(false, "System.Diagnostics.UnreachableException"), exception.GetType());
-        StringAssert.StartsWith(exception.Message, "This program location is thought to be unreachable. File='");
-        StringAssert.Contains(exception.Message, "FixtureUtils.cs' Line=");
+        Assert.StartsWith("This program location is thought to be unreachable. File='", exception.Message);
+        Assert.Contains("FixtureUtils.cs' Line=", exception.Message);
     }
 
     [TestMethod]

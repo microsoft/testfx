@@ -562,6 +562,65 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("trx-mode", true)]
+    [DataRow("TRX-MODE", true)]
+    [DataRow("trx-mode-typo", false)]
+    public async Task ParseAndValidateAsync_ToolAcceptsOnlyRegisteredPassiveRunDefaults(string defaultOption, bool isValid)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["tool"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("trx-mode"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult, _systemCommandLineOptionsProviders, providers, Mock.Of<ICommandLineOptions>(),
+            jsonCommandLineOptionDefaults: [new(defaultOption, ["in-process"], isDisabled: false)]);
+
+        Assert.AreEqual(isValid, result.IsValid, result.ErrorMessage);
+        if (!result.IsValid)
+        {
+            Assert.Contains("Unknown option '--trx-mode-typo'", result.ErrorMessage);
+        }
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ToolRejectsUnregisteredPassiveDefault()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["tool"], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult, _systemCommandLineOptionsProviders, [new ToolCommandLineProviderMock("input")], Mock.Of<ICommandLineOptions>(),
+            jsonCommandLineOptionDefaults: [new("trx-mode", ["in-process"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--trx-mode'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ParseAndValidateAsync_ToolStillRejectsActiveRunOptions(bool fromJson)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(
+            fromJson ? ["tool"] : ["tool", "--trx-mode", "in-process"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("trx-mode"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult, _systemCommandLineOptionsProviders, providers, Mock.Of<ICommandLineOptions>(),
+            jsonCommandLineOptions: fromJson ? [new("trx-mode", ["in-process"], isDisabled: false)] : null,
+            jsonCommandLineOptionDefaults: [new("trx-mode", ["in-process"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--trx-mode'", result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_RepeatedToolOption_ValidatesAggregatedArguments()
     {
         CommandLineParseResult parseResult = CommandLineParser.Parse(
