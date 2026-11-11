@@ -124,9 +124,6 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             FailedTestNodeStateProperty => true,
             ErrorTestNodeStateProperty => true,
             TimeoutTestNodeStateProperty => true,
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            CancelledTestNodeStateProperty => true,
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => false,
         };
 

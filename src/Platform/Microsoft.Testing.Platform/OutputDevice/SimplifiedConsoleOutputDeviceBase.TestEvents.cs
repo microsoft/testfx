@@ -148,10 +148,8 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                 {
                     _activeTestTracker.Start(testNodeStateChanged.TestNode.Uid, testNodeStateChanged.TestNode.DisplayName);
                 }
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                 else if ((executionCompleted
-                    || nodeStateProp is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+                    || nodeStateProp is PassedTestNodeStateProperty or ErrorTestNodeStateProperty
                     or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty)
                     // A retry sequence has one in-progress update for the whole test but a terminal update per
                     // attempt, so completing the tracker on a superseded one would stop tracking the test while
@@ -188,13 +186,6 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
-                        testCompleted = true;
-                        break;
-
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                    case CancelledTestNodeStateProperty cancelledState:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                        OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
                         testCompleted = true;
                         break;
 

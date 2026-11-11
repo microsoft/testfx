@@ -426,7 +426,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     // expected-vs-actual diff. AssertionFailureProperty is the supported channel;
                     // Exception.Data is the legacy fallback for producers that have not been updated yet. The
                     // choice is all-or-nothing so the two halves of a diff always come from the same producer.
-                    // Only failed tests carry these (error/timeout/cancelled pass null, as in single-assembly).
+                    // Only failed tests carry these (error/timeout pass null, as in single-assembly).
                     expected = assertionFailureProperty is not null ? assertionFailureProperty.Expected : failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
                     actual = assertionFailureProperty is not null ? assertionFailureProperty.Actual : failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
                     break;
@@ -443,15 +443,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     duration = timingProperty?.GlobalTiming.Duration.Ticks;
                     reason = nodeState.Explanation;
                     exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
-                    break;
-
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                    state = TestStates.Cancelled;
-                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                    reason = nodeState.Explanation;
-                    exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
                     break;
 
                 case InProgressTestNodeStateProperty:

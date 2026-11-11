@@ -177,14 +177,11 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             : state switch
             {
                 InProgressTestNodeStateProperty => FormatLine(StartedEvent, _clock.UtcNow, update.TestNode.Uid, update.TestNode.DisplayName),
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete - keep parity with HangDumpActivityIndicator's terminal-state set.
                 PassedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Passed"),
                 FailedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Failed"),
                 ErrorTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Error"),
                 SkippedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Skipped"),
-                CancelledTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Cancelled"),
                 TimeoutTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Timeout"),
-#pragma warning restore CS0618, MTP0001
                 _ => null,
             };
 

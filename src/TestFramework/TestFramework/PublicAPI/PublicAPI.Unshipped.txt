@@ -1,4 +1,10 @@
 #nullable enable
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.DatarowIndex.get -> int
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.DatarowIndex.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.InnerResultsCount.get -> int
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.InnerResultsCount.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ReturnValue.get -> object?
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ReturnValue.set -> void
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute

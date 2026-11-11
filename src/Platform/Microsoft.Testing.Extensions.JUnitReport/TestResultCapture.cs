@@ -43,25 +43,9 @@ internal static class TestResultCapture
             // budget on both sides to keep lookups consistent.
             RawUid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             ParentRawUid = TestResultCaptureHelper.Truncate(update.ParentTestNodeUid?.Value, TestResultCaptureHelper.MaxIdentityFieldLength),
-            Outcome = ClassifyOutcome(core.State),
+            Outcome = TestResultCaptureHelper.ClassifyOutcome(core.State),
         };
         result.PopulateBaseFields(node, core);
         return result;
-    }
-
-    private static string ClassifyOutcome(TestNodeStateProperty state)
-    {
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-        // Cancellation is an interruption, not an assertion failure. The RFC maps it
-        // to <error> in the generated XML; classifying it as its own bucket here
-        // keeps that mapping local to JUnit. Keep the cancellation decision out of
-        // the shared helper so each report format preserves its existing behavior.
-        if (state is CancelledTestNodeStateProperty)
-        {
-            return "cancelled";
-        }
-#pragma warning restore CS0618, MTP0001
-
-        return TestResultCaptureHelper.ClassifyOutcome(state);
     }
 }

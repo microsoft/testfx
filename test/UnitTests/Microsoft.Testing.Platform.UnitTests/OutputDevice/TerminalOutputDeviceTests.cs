@@ -76,7 +76,6 @@ public sealed class TerminalOutputDeviceTests
     [DataRow("failed", 1, 0, 0)]
     [DataRow("error", 1, 0, 0)]
     [DataRow("timeout", 1, 0, 0)]
-    [DataRow("cancelled", 1, 0, 0)]
     [DataRow("skipped", 0, 0, 1)]
     public async Task ActualConsume_AllTerminalOutcomePartitionsReachActualReporterAndSummary(string outcome, int failures, int passed, int skipped)
     {
@@ -85,17 +84,15 @@ public sealed class TerminalOutputDeviceTests
         await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
         await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
         InvalidOperationException exception = new("terminal failure sentinel");
-#pragma warning disable CS0618, MTP0001 // Verify retained canceled-state compatibility output.
         TestNodeStateProperty state = outcome switch
         {
             "passed" => PassedTestNodeStateProperty.CachedInstance,
             "failed" => new FailedTestNodeStateProperty(exception, "explanation sentinel"),
             "error" => new ErrorTestNodeStateProperty(exception, "explanation sentinel"),
             "timeout" => new TimeoutTestNodeStateProperty(exception, "explanation sentinel"),
-            "cancelled" => new CancelledTestNodeStateProperty(exception, "explanation sentinel"),
-            _ => new SkippedTestNodeStateProperty("skip sentinel"),
+            "skipped" => new SkippedTestNodeStateProperty("skip sentinel"),
+            _ => throw new ArgumentOutOfRangeException(nameof(outcome)),
         };
-#pragma warning restore CS0618, MTP0001
         TestNodeUpdateMessage update = new(default, new TestNode
         {
             Uid = "id",

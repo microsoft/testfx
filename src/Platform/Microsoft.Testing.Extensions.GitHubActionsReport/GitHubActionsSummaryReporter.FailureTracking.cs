@@ -148,9 +148,6 @@ internal sealed partial class GitHubActionsSummaryReporter
             FailedTestNodeStateProperty failed => (failed.Explanation, failed.Exception),
             ErrorTestNodeStateProperty error => (error.Explanation, error.Exception),
             TimeoutTestNodeStateProperty timeout => (timeout.Explanation, timeout.Exception),
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            CancelledTestNodeStateProperty cancelled => (cancelled.Explanation, cancelled.Exception),
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => null,
         };
 

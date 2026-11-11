@@ -136,9 +136,6 @@ public sealed class CiSummaryLifecycleBehaviorTests
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Skipped", new SkippedTestNodeStateProperty("intentional"), Timing(1)), CancellationToken.None);
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Timeout", new TimeoutTestNodeStateProperty(new IOException("exception fallback"), " "), Timing(1)), CancellationToken.None);
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Error", new ErrorTestNodeStateProperty(new InvalidOperationException("ignored"), new string('e', 4097)), Timing(1)), CancellationToken.None);
-#pragma warning disable CS0618, MTP0001
-        await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Cancel", new CancelledTestNodeStateProperty(new IOException("cancel detail")), Timing(1)), CancellationToken.None);
-#pragma warning restore CS0618, MTP0001
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.EmptyFailed", new FailedTestNodeStateProperty(), Timing(1)), CancellationToken.None);
 
         await reporter.OnTestSessionFinishingAsync(new CiReporterFixture.Session());
@@ -148,15 +145,18 @@ public sealed class CiSummaryLifecycleBehaviorTests
         Assert.AreEqual(new SessionUid("ci-session"), artifact.SessionUid);
         using var document = JsonDocument.Parse(File.ReadAllText(artifact.FileInfo.FullName));
         JsonElement module = document.RootElement.GetProperty("module");
-        Assert.AreEqual(7, module.GetProperty("totalTests").GetInt32());
+        Assert.AreEqual(6, module.GetProperty("totalTests").GetInt32());
         Assert.AreEqual(2, module.GetProperty("attemptNumber").GetInt32());
         Assert.AreEqual(2, module.GetProperty("passedTests").GetInt32());
-        Assert.AreEqual(4, module.GetProperty("failedTests").GetInt32());
+        Assert.AreEqual(3, module.GetProperty("failedTests").GetInt32());
         Assert.AreEqual(1, module.GetProperty("skippedTests").GetInt32());
-        Assert.AreEqual(TimeSpan.FromSeconds(7).Ticks, module.GetProperty("testDurationTicks").GetInt64());
+        Assert.AreEqual(TimeSpan.FromSeconds(6).Ticks, module.GetProperty("testDurationTicks").GetInt64());
         Assert.IsEmpty(module.GetProperty("flakyTests").EnumerateArray());
         JsonElement[] histories = [.. module.GetProperty("historyTests").EnumerateArray()];
-        Assert.AreSequenceEqual(["failed", "failed", "failed", "passed", "passed", "skipped", "failed"], histories.Select(item => item.GetProperty("outcome").GetString()));
+        Assert.AreSequenceEqual(
+            ["Tests.EmptyFailed", "Tests.Error", "Tests.Retry", "Tests.Retry", "Tests.Skipped", "Tests.Timeout"],
+            histories.Select(item => item.GetProperty("fullyQualifiedName").GetString()));
+        Assert.AreSequenceEqual(["failed", "failed", "passed", "passed", "skipped", "failed"], histories.Select(item => item.GetProperty("outcome").GetString()));
         Assert.IsTrue(histories.All(item => !item.GetProperty("isFlaky").GetBoolean()
             && item.GetProperty("historicalPassCount").GetInt32() == 7
             && item.GetProperty("historicalFailCount").GetInt32() == 3
@@ -169,11 +169,13 @@ public sealed class CiSummaryLifecycleBehaviorTests
         Assert.AreSequenceEqual([false, false, false, true, true], edges.Select(edge => edge.GetProperty("proceedOnFailure").GetBoolean()));
         Assert.IsTrue(edges.All(edge => edge.GetProperty("dependentFullyQualifiedName").GetString() == "Tests.Retry"));
         JsonElement[] failures = [.. module.GetProperty("failures").EnumerateArray()];
-        Assert.AreEqual("cancel detail", failures[0].GetProperty("errorMessage").GetString());
-        Assert.IsFalse(failures[1].TryGetProperty("errorMessage", out _));
-        Assert.AreEqual(new string('e', 4096) + "\n…[truncated, original length: 4097]", failures[2].GetProperty("errorMessage").GetString());
-        Assert.AreEqual(typeof(InvalidOperationException).FullName, failures[2].GetProperty("errorType").GetString());
-        Assert.AreEqual("exception fallback", failures[3].GetProperty("errorMessage").GetString());
+        Assert.AreSequenceEqual(
+            ["Tests.EmptyFailed", "Tests.Error", "Tests.Timeout"],
+            failures.Select(item => item.GetProperty("fullyQualifiedName").GetString()));
+        Assert.IsFalse(failures[0].TryGetProperty("errorMessage", out _));
+        Assert.AreEqual(new string('e', 4096) + "\n…[truncated, original length: 4097]", failures[1].GetProperty("errorMessage").GetString());
+        Assert.AreEqual(typeof(InvalidOperationException).FullName, failures[1].GetProperty("errorType").GetString());
+        Assert.AreEqual("exception fallback", failures[2].GetProperty("errorMessage").GetString());
         Assert.DoesNotContain(failure => failure.TryGetProperty("stackTrace", out _), failures);
         Assert.IsEmpty(fixture.Displays);
         Assert.IsEmpty(fixture.Logs);

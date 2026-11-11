@@ -69,24 +69,20 @@ public sealed class SlowestTestsConsumerTests
     [DataRow("failed", "failed", DisplayName = "SlowestTerminalFailed")]
     [DataRow("error", "failed", DisplayName = "SlowestTerminalError")]
     [DataRow("timeout", "failed", DisplayName = "SlowestTerminalTimeout")]
-    [DataRow("cancelled", "failed", DisplayName = "SlowestTerminalCancelled")]
     [DataRow("skipped", "skipped", DisplayName = "SlowestTerminalSkipped")]
     public async Task ConsumeAsync_RecordsEveryTerminalOutcome(string state, string expectedOutcome)
     {
         List<string> lines = [];
         var consumer = new SlowestTestsConsumer(lines.Add, moduleName: "Module", targetFramework: "net8.0");
-#pragma warning disable CS0618, MTP0001 // The consumer must still recognize the obsolete terminal cancellation state.
         TestNodeStateProperty property = state switch
         {
             "passed" => PassedTestNodeStateProperty.CachedInstance,
             "failed" => new FailedTestNodeStateProperty(),
             "error" => new ErrorTestNodeStateProperty(),
             "timeout" => new TimeoutTestNodeStateProperty(),
-            "cancelled" => new CancelledTestNodeStateProperty(),
             "skipped" => SkippedTestNodeStateProperty.CachedInstance,
             _ => throw new ArgumentOutOfRangeException(nameof(state)),
         };
-#pragma warning restore CS0618, MTP0001
 
         await consumer.ConsumeAsync(null!, CreateTestNodeUpdate("Test", property, TimeSpan.FromSeconds(1.25)), CancellationToken.None);
         await consumer.OnTestSessionFinishingAsync(null!);

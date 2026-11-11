@@ -48,7 +48,6 @@ public sealed class AbortForMaxFailedTestsExtensionTests
     [DataRow("failed")]
     [DataRow("error")]
     [DataRow("timeout")]
-    [DataRow("cancelled")]
     public async Task ConsumeAsync_ReachingThreshold_StopsBeforeNotifyingPolicy(string failure)
     {
         using var fixture = new Fixture();
@@ -146,9 +145,6 @@ public sealed class AbortForMaxFailedTestsExtensionTests
             "failed" => new FailedTestNodeStateProperty(),
             "error" => new ErrorTestNodeStateProperty(),
             "timeout" => new TimeoutTestNodeStateProperty(),
-#pragma warning disable CS0618, MTP0001 // The obsolete cancelled state still counts towards the failure budget.
-            "cancelled" => new CancelledTestNodeStateProperty(),
-#pragma warning restore CS0618, MTP0001
             "passed" => PassedTestNodeStateProperty.CachedInstance,
             "skipped" => SkippedTestNodeStateProperty.CachedInstance,
             "discovered" => DiscoveredTestNodeStateProperty.CachedInstance,

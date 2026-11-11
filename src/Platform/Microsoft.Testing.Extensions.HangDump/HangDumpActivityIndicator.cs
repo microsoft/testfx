@@ -226,10 +226,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
             _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.Uid, (nodeChangedMessage.TestNode.DisplayName, typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
         }
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
         else if ((executionCompleted
-            || state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+            || state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty
             or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty)
             // A test framework that retries in-process reports a terminal update per attempt but only one
             // in-progress update for the test. Dropping it from the in-progress set on a superseded attempt would
