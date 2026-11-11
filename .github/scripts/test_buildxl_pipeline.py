@@ -340,15 +340,21 @@ finally {
         self.assertEqual([["usn", "queryjournal", "D:"]], calls)
 
     def test_missing_change_journal_is_created_and_verified(self) -> None:
-        for case, checkout, volume in (
-            ("hosted-workspace", r"D:\a\_work\1\s", "D:"),
-            ("different-drive", r"T:\CI checkout's workspace\src", "T:"),
+        for case, checkout, volume, diagnostic in (
+            (
+                "hosted-workspace", r"D:\a\_work\1\s", "D:",
+                "Error 1179: The volume change journal is not active.",
+            ),
+            (
+                "different-drive", r"T:\CI checkout's workspace\src", "T:",
+                "Fehler 1179: Das Journal ist nicht aktiv.",
+            ),
         ):
             with self.subTest(case=case):
                 process, calls = self.initialize_change_journal(
                     checkout,
                     [
-                        {"ExitCode": 1, "Output": "The volume change journal is not active."},
+                        {"ExitCode": 1, "Output": diagnostic},
                         {"ExitCode": 0, "Output": "Journal created."},
                         {"ExitCode": 0, "Output": "USN-Journal-ID : 0x56789"},
                     ],
@@ -364,11 +370,32 @@ finally {
                     calls,
                 )
 
+    def test_change_journal_query_failure_preserves_existing_journal(self) -> None:
+        for case, diagnostic in (
+            ("access-denied", "Error 5: Access is denied."),
+            ("deletion-in-progress", "Error 1178: The volume change journal is being deleted."),
+            ("unrecognized-output", "The volume change journal is not active."),
+            ("journal-id-collision", "Usn Journal ID : 1179"),
+        ):
+            with self.subTest(case=case):
+                process, calls = self.initialize_change_journal(
+                    r"D:\a\_work\1\s",
+                    [
+                        {"ExitCode": 1, "Output": diagnostic},
+                        {"ExitCode": 0, "Output": "An existing journal was resized."},
+                        {"ExitCode": 0, "Output": "USN-Journal-ID : 0x56789"},
+                    ],
+                )
+                self.assertNotEqual(0, process.returncode)
+                self.assertEqual([["usn", "queryjournal", "D:"]], calls)
+                self.assertIn(diagnostic, process.stdout)
+                self.assertIn("exit 1", process.stderr)
+
     def test_change_journal_creation_failure_blocks_build(self) -> None:
         process, calls = self.initialize_change_journal(
             r"D:\a\_work\1\s",
             [
-                {"ExitCode": 1, "Output": "The volume change journal is not active."},
+                {"ExitCode": 1, "Output": "Error 1179: The volume change journal is not active."},
                 {"ExitCode": 5, "Output": "Access is denied."},
             ],
         )
@@ -387,7 +414,7 @@ finally {
         process, calls = self.initialize_change_journal(
             r"D:\a\_work\1\s",
             [
-                {"ExitCode": 1, "Output": "The volume change journal is not active."},
+                {"ExitCode": 1, "Output": "Error 1179: The volume change journal is not active."},
                 {"ExitCode": 0, "Output": "Journal created."},
                 {"ExitCode": 1, "Output": "Journal is still unavailable."},
             ],

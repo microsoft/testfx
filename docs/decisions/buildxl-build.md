@@ -1,5 +1,52 @@
 # BuildXL build: research and decisions
 
+## 2026-11-11: preserve journals when a query fails
+
+Review of `9435e80cf4736dc2cfaadf843bb88d821fd928b3` identified an
+error-handling gap in the new CI prerequisite: a failed query does not prove a
+journal is inactive, so unconditionally creating one could resize an active
+journal. This violates the existing preservation contract.
+
+A real, read-only `fsutil.exe usn queryjournal Q:` probe exited 1 and reported
+`Error 1179: The volume change journal is not active.` The command's exit code
+alone is insufficient. Create only when a failed query reports Win32
+`ERROR_JOURNAL_NOT_ACTIVE` (1179) in the diagnostic's error-code position.
+Do not match English message text or a number occurring in journal metadata.
+Retain the query diagnostic and fail without mutation for other errors,
+including access denial, deletion in progress, and unrecognized output.
+The existing local-driver fallback remains unchanged.
+
+Extend the actual-inline-script tests with those query-error cases and a
+non-English error prefix. Keep all journal commands faked inside their existing
+child-process boundary; no real volume settings may change.
+
+### Query-error correction: test-value evidence
+
+The tested source is `9435e80cf4736dc2cfaadf843bb88d821fd928b3` plus the
+correction. Its executable-only `git diff --binary` patch SHA-256 is
+`D038BC6D96116A9A4505190FA4B51ABC7519259F1664ED0F39F371B8A06DEE9A`.
+Runner versions and the child-process isolation contract are unchanged.
+
+Keep the changed regression script with the original job YAML in an isolated
+comparison outside the checkout, then replace only that YAML for the paired
+run. `test_change_journal_query_failure_preserves_existing_journal` provides
+successful fake creation/verification responses too, so the old implementation
+actually issues the unwanted mutation and incorrectly exits 0; a fixture error
+cannot manufacture the red result.
+
+| Executed command / source state | Result |
+| --- | --- |
+| `python "$comparison\.github\scripts\test_buildxl_pipeline.py" -k query_failure` / original job YAML at `9435e80cf4736dc2cfaadf843bb88d821fd928b3` | Exit 1; one method executes and fails its intended nonzero-exit assertion in all four subcases: access denied, deletion in progress, unrecognized output, and a journal-metadata number collision. No errors or skips. |
+| Same command and unchanged tests / corrected job YAML | Exit 0; the method and all four subcases pass, requiring that only the query executes and its diagnostic/code are retained. |
+| `python .github\scripts\test_buildxl_pipeline.py` / corrected worktree | Exit 0; all 29 methods pass, with no failures, errors, or skips. |
+
+This is **executed: detected** for the reported query-error defect.
+`test_missing_change_journal_is_created_and_verified` also still creates and
+verifies an inactive journal with both English and German error prefixes.
+The only real filesystem command was the read-only probe above; no real journal
+was created, resized, or deleted. Hosted validation of the corrected revision
+remains pending.
+
 ## 2026-11-11: initialize the CI workspace change journal
 
 [Azure build 1676185](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1676185)

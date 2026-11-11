@@ -33,8 +33,15 @@ jobs:
   - pwsh: |
       $PSNativeCommandUseErrorActionPreference = $false
       $volume = [IO.Path]::GetPathRoot($env:BUILD_SOURCESDIRECTORY).TrimEnd('\')
-      & fsutil.exe usn queryjournal $volume
-      if ($LASTEXITCODE -ne 0) {
+      $queryOutput = (& fsutil.exe usn queryjournal $volume 2>&1) -join [Environment]::NewLine
+      $queryExitCode = $LASTEXITCODE
+      Write-Host $queryOutput
+      if ($queryExitCode -ne 0) {
+        # fsutil reuses exit 1; only ERROR_JOURNAL_NOT_ACTIVE (1179) permits creation.
+        if ($queryOutput -notmatch '(?m)^[^:\r\n]+\s+1179\s*:') {
+          throw "Cannot query the BuildXL change journal on $volume (exit $queryExitCode). No journal changes were made."
+        }
+
         & fsutil.exe usn createjournal m=0x20000000 a=0x8000000 $volume
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to enable the BuildXL change journal on $volume (exit $LASTEXITCODE). The CI agent must run elevated."
