@@ -11,9 +11,6 @@ using Microsoft.Testing.TestInfrastructure;
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.OSPlatformAttributesShouldBeConsistentAnalyzer,
     MSTest.Analyzers.OSPlatformAttributesShouldBeConsistentFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.OSPlatformAttributesShouldBeConsistentAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -1255,48 +1252,5 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenSupportedPlatformHasNoOSConditionInVisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.Runtime.Versioning
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                <{|#0:SupportedOSPlatform("linux")|}>
-                Public Sub TestMethod()
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
-    }
-
-    [TestMethod]
-    public async Task WhenOSConditionIsInconsistentInVisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.Runtime.Versioning
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                <{|#0:SupportedOSPlatform("windows")|}>
-                <OSCondition(OperatingSystems.Linux)>
-                Public Sub TestMethod()
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
     }
 }

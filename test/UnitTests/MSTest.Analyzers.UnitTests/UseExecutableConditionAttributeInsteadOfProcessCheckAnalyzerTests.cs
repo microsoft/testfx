@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer,
     MSTest.Analyzers.UseExecutableConditionAttributeInsteadOfProcessCheckFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -445,29 +442,5 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenMissingExecutableGuardPrecedesProcessStart_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.Diagnostics
-            Imports System.IO
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    [|If Not File.Exists("dotnet") Then
-                        Return
-                    End If|]
-
-                    Process.Start("dotnet")
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }

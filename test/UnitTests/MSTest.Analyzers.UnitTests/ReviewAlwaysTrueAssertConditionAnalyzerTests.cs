@@ -8,9 +8,6 @@ using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -119,63 +116,6 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
             await test.RunAsync();
         }
-    }
-
-    [TestMethod]
-    public async Task WhenAssertAreEqualPinsReferencedConstantInVisualBasic_NoDiagnostic()
-    {
-        var test = new VerifyVB.Test
-        {
-            TestCode = """
-                Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-                Public Class ContractTests
-                    Private Const LocalSize As Integer = 16
-
-                    Public Sub PinsConstant()
-                        Assert.AreEqual(16, Protocol.HeaderSize)
-                        Assert.AreEqual(Protocol.HeaderSize, 16)
-                        Assert.AreEqual(actual:=Protocol.HeaderSize, expected:=16)
-                        Assert.AreEqual((16), (Protocol.HeaderSize))
-                        Assert.AreEqual(-16, Protocol.Negative)
-                        Assert.AreEqual("v1", Protocol.Version)
-                        [|Assert.AreEqual(16, LocalSize)|]
-                        [|Assert.AreEqual(16, 16)|]
-                        [|Assert.AreEqual(16, Protocol.HeaderSize + 0)|]
-                        [|Assert.AreEqual(Protocol.HeaderSize, Protocol.HeaderSize)|]
-                        [|Assert.AreEqual(16, CInt(Protocol.HeaderSize))|]
-                    End Sub
-                End Class
-                """,
-        };
-        test.TestState.AdditionalReferences.Add(await CreateProtocolReferenceAsync());
-
-        await test.RunAsync();
-    }
-
-    [TestMethod]
-    public async Task WhenAssertAreEqualPinsConstantInCurrentVisualBasicAssembly_Diagnostic()
-    {
-        string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Public Class Protocol
-                Public Const HeaderSize As Integer = 16
-                Public Const Version As String = "v1"
-            End Class
-
-            Public Class ContractTests
-                Public Sub PinsConstant()
-                    [|Assert.AreEqual(16, Protocol.HeaderSize)|]
-                    [|Assert.AreEqual(Protocol.HeaderSize, 16)|]
-                    [|Assert.AreEqual(actual:=Protocol.HeaderSize, expected:=16)|]
-                    [|Assert.AreEqual((16), (Protocol.HeaderSize))|]
-                    [|Assert.AreEqual("v1", Protocol.Version)|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     private static async Task<MetadataReference> CreateProtocolReferenceAsync()

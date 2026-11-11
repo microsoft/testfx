@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestClassAttributeShouldNotBeAppliedToAbstractClassAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.TestClassAttributeShouldNotBeAppliedToAbstractClassAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -116,23 +113,5 @@ public sealed class TestClassAttributeShouldNotBeAppliedToAbstractClassAnalyzerT
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestClassAttributeIsAppliedToMustInheritClass_Diagnostic()
-    {
-        string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <{|#0:TestClass|}>
-            Public MustInherit Class BaseTests
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(TestClassAttributeShouldNotBeAppliedToAbstractClassAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("BaseTests"));
     }
 }

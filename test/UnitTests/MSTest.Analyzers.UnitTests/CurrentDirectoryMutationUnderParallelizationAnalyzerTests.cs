@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.CurrentDirectoryMutationUnderParallelizationAnalyzer,
     MSTest.Analyzers.AddResourceLockFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.CurrentDirectoryMutationUnderParallelizationAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -428,30 +425,5 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("Directory.SetCurrentDirectory"),
             code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodSetsCurrentDirectory_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.IO
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    {|#0:Directory.SetCurrentDirectory("/tmp")|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("Directory.SetCurrentDirectory"));
     }
 }

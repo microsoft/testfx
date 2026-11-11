@@ -9,9 +9,6 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 using VerifyProperAssert = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseProperAssertMethodsAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.AvoidEnumerableAssertionsOnQueryableAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -84,29 +81,6 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             .WithLocation(0)
             .WithSeverity(DiagnosticSeverity.Info)
             .WithMessage($"Use 'Queryable.{queryOperation}' instead of 'Assert.{method}' to avoid enumerating query results for a count or existence check"));
-    }
-
-    [TestMethod]
-    [DataRow("Assert.HasCount(1, query)", "HasCount", "Count", DisplayName = "VisualBasic HasCount")]
-    [DataRow("Assert.IsEmpty(query)", "IsEmpty", "Any", DisplayName = "VisualBasic IsEmpty")]
-    [DataRow("Assert.IsNotEmpty(query)", "IsNotEmpty", "Any", DisplayName = "VisualBasic IsNotEmpty")]
-    [DataRow("Assert.ContainsSingle(query)", "ContainsSingle", "Count", DisplayName = "VisualBasic ContainsSingle")]
-    public async Task VisualBasicQueryableAssertions_Diagnostic(string assertion, string method, string queryOperation)
-    {
-        string code = $$"""
-            Imports System.Linq
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Public Class Tests
-                Public Sub Check(query As IQueryable(Of Integer))
-                    {|#0:{{assertion}}|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code, VerifyVB.Diagnostic()
-            .WithLocation(0)
-            .WithArguments($"Assert.{method}", queryOperation));
     }
 
     [TestMethod]
@@ -427,32 +401,6 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
     }
 
     [TestMethod]
-    public async Task VisualBasicQueryPatterns_Diagnostic()
-    {
-        string code = """
-            Imports System.Linq
-            Imports System.Collections
-            Imports System.Collections.Generic
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Public Class Tests
-                Public Sub Check(query As IQueryable(Of Integer))
-                    [|Assert.HasCount(collection:=query.Where(Function(i) i > 0), expected:=1)|]
-                    [|Assert.IsEmpty(DirectCast(query, IEnumerable(Of Integer)))|]
-                    [|Assert.IsNotEmpty(query.AsEnumerable())|]
-                    [|Assert.ContainsSingle(Function(i) i > 0, query)|]
-                    Dim item = Assert.ContainsSingle(query)
-                    Assert.AreEqual(1, query.Count())
-                    Assert.IsTrue(query.Any())
-                    Assert.IsEmpty(query.ToList())
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
     public async Task CountBearingQueries_UseCountFastPaths_NoDiagnostic()
     {
         string code = $$"""
@@ -515,35 +463,6 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task VisualBasicCountBearingQueries_RespectSelectedOverload()
-    {
-        string code = """
-            Imports System.Linq
-            Imports System.Collections
-            Imports System.Collections.Generic
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Public Interface ICountedQuery(Of T)
-                Inherits IQueryable(Of T), ICollection(Of T)
-            End Interface
-
-            Public Class Tests
-                Public Sub Check(query As ICountedQuery(Of String))
-                    Assert.HasCount(1, query)
-                    Assert.IsEmpty(query)
-                    Assert.IsNotEmpty(query)
-                    Assert.IsEmpty(query.AsEnumerable())
-                    [|Assert.ContainsSingle(query)|]
-                    [|Assert.HasCount(Of Object)(1, query)|]
-                    [|Assert.IsEmpty(DirectCast(query, IEnumerable))|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]

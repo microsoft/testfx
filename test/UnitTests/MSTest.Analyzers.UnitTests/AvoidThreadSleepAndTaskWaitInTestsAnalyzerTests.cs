@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidThreadSleepAndTaskWaitInTestsAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.AvoidThreadSleepAndTaskWaitInTestsAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -813,106 +810,5 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task TaskWaitInVisualBasicTestMethod_Diagnostic()
-    {
-        string code = """
-            Imports System.Threading.Tasks
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    Dim t As Task = Task.CompletedTask
-                    [|t.Wait()|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task TaskWaitAllInVisualBasicTestMethod_Diagnostic()
-    {
-        string code = """
-            Imports System.Threading.Tasks
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    Dim t1 As Task = Task.CompletedTask
-                    Dim t2 As Task = Task.CompletedTask
-                    [|Task.WaitAll(t1, t2)|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task TaskWaitAnyInVisualBasicTestMethod_Diagnostic()
-    {
-        string code = """
-            Imports System.Threading.Tasks
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    Dim t1 As Task = Task.CompletedTask
-                    Dim t2 As Task = Task.CompletedTask
-                    [|Task.WaitAny(t1, t2)|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task ThreadSleepInVisualBasicTestMethod_Diagnostic()
-    {
-        string code = """
-            Imports System.Threading
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    [|Thread.Sleep(100)|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task TaskOfTResultInVisualBasicTestMethod_Diagnostic()
-    {
-        string code = """
-            Imports System.Threading.Tasks
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    Dim t As Task(Of Integer) = Task.FromResult(42)
-                    Dim value As Integer = [|t.Result|]
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }

@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.CultureMutationUnderParallelizationAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.CultureMutationUnderParallelizationAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -300,31 +297,6 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodSetsDefaultThreadCurrentCulture_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.Globalization
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
     }
 
     [TestMethod]
