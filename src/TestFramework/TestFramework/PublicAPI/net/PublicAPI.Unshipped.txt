@@ -1,1 +1,7 @@
 #nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T, TCollection>(System.Func<T, bool>! predicate, TCollection collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Memory<T> collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.ReadOnlyMemory<T> collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.ReadOnlySpan<T> collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Span<T> collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, T[]! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void

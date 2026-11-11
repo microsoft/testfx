@@ -16,6 +16,14 @@
 
 Introduce **`Microsoft.Testing.Extensions.JUnitReport`**: a new Microsoft.Testing.Platform (MTP) extension that emits a JUnit-style XML report at the end of a test run. The report follows the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema that is consumed by Jenkins, GitLab CI, GitHub Actions test reporters, Azure DevOps, CircleCI, TeamCity, and most other CI tooling. The extension ships with the standard MTP integration surface (CLI option, MSBuild auto-registration, `AddJUnitReportProvider` builder method) and addresses [#4268](https://github.com/microsoft/testfx/issues/4268).
 
+## Stable release decision
+
+The extension graduates using the same version line as Microsoft.Testing.Platform, following the [CTRF graduation policy](../decisions/ctrf-stable-release.md). Remove the experimental registration marker and forced alpha version together with the SDK's independent version calculation; removing only one would leave contradictory API, package and consumer contracts. The Bazel SDK packager uses the same shared extension default rather than retaining a separate JUnit template substitution.
+
+The public registration signature, CLI options, XML semantics, retry/merge behavior and host-owned lifecycle remain unchanged. MSTest.Sdk reporting stays opt-in, including explicit version overrides, and existing NativeAOT and VSTest restrictions remain in place. Normal developer, CI and preview suffixes still apply; only a final release produces an unsuffixed package. This change targets the next release from `main`, not a servicing backport or downstream profile rollout.
+
+Before promotion, retained regression tests detected the experimental registration marker on all supported unit-test targets and the SDK's independently versioned package in both central and non-central package management. Existing JUnit unit cases remained green. The PR records the exact source states, package provenance and executed red/green results; historical checks below do not establish fresh schema or external CI-service interoperability evidence.
+
 ## Motivation
 
 JUnit XML is the de facto interchange format for test results in CI ecosystems. Every modern CI tool can ingest it; nearly all reporting/badging/flaky-test services consume it. Today, MTP-based projects must either:

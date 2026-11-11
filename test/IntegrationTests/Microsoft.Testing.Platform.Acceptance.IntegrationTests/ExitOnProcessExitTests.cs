@@ -58,7 +58,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
             child = ProcessFactory.Start(
                 new ProcessConfiguration(testHost.FullName)
                 {
-                    Arguments = $"--exit-on-process-exit {parent.Id} --progress off --no-ansi",
+                    Arguments = $"--exit-on-process-exit {parent.Id} --progress off --ansi off",
                     EnvironmentVariables = environmentVariables,
                     OnStandardOutput = (_, line) => output.Enqueue(line),
                     OnErrorOutput = (_, line) => output.Enqueue(line),

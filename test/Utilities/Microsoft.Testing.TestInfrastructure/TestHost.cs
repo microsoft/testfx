@@ -40,7 +40,8 @@ public sealed class TestHost
         bool disableTelemetry = true,
         bool disableAzureDevOpsOutput = true,
         CancellationToken cancellationToken = default,
-        string? toolName = null)
+        string? toolName = null,
+        bool useDefaultAnsiOption = true)
     {
         await s_maxOutstandingExecutions_semaphore.WaitAsync(cancellationToken);
         try
@@ -87,14 +88,15 @@ public sealed class TestHost
             environmentVariables.Add("DOTNET_ROOT", $"{RootFinder.Find()}/.dotnet");
 
             string finalArguments = command ?? string.Empty;
+            string defaultAnsiOption = useDefaultAnsiOption ? "--ansi off " : string.Empty;
 
             CommandLine commandLine = new();
             // Disable ANSI rendering so tests have easier time parsing the output.
             // Disable progress so tests don't mix progress with overall progress, and with test process output.
             int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
                 toolName is null
-                    ? $"{FullName} --no-ansi --progress off {finalArguments}"
-                    : $"{FullName} {toolName} --no-ansi --progress off {finalArguments}",
+                    ? $"{FullName} {defaultAnsiOption}--progress off {finalArguments}"
+                    : $"{FullName} {toolName} {defaultAnsiOption}--progress off {finalArguments}",
                 environmentVariables: environmentVariables,
                 workingDirectory: null,
                 cleanDefaultEnvironmentVariableIfCustomAreProvided: true,

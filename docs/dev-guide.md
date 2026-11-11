@@ -55,6 +55,14 @@ An [experimental native Bazel build](bazel.md) is available for the portable
 consumers. It does not replace the MSBuild/Arcade shipping build or its complete
 framework/workload and acceptance matrix.
 
+An [experimental BuildXL build](decisions/buildxl-build.md) can schedule and
+cache the existing MSBuild projects on Windows x64. It is opt-in, uses isolated
+outputs, and currently validates the portable TRX reporter dependency graph;
+the Arcade build remains the shipping authority.
+The [BuildXL performance comparison](decisions/buildxl-build.md#comparing-build-performance)
+measures matched cold, changed-input, and no-op builds locally and in its own
+Windows pipeline leg; raw samples and benchmark duration history are retained.
+
 The easiest and recommended solution is to build the repository with the provided scripts at the repo root.
 
 For Windows:
@@ -166,6 +174,76 @@ For Linux and macOS:
 ```
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
+
+### Retained OpenTelemetry traces
+
+The Windows, Linux and macOS CI test jobs save existing MTP activities under
+`artifacts/TestResults/<Configuration>/OpenTelemetry`. Download the corresponding
+`TestResults_<OS>_<configuration or collection kind>_Attempt<job attempt>` build
+artifact to retrieve them. Failed jobs publish partial traces too. Availability
+follows the build's Azure Pipelines retention policy; no guaranteed number of days
+is configured in this repository.
+
+The Windows app-model job includes the same directory inside
+`Windows_App_Model_Diagnostics_Attempt<job attempt>/artifacts/TestResults/<Configuration>/OpenTelemetry`.
+
+Local collection is opt-in. After building the desired test host with the
+repository scripts, set `TESTFX_OTEL_TRACE_DIRECTORY` to an absolute directory
+before running it. For example, in PowerShell:
+
+```powershell
+$previous = $env:TESTFX_OTEL_TRACE_DIRECTORY
+try {
+    $env:TESTFX_OTEL_TRACE_DIRECTORY = Join-Path $PWD 'artifacts\TestResults\Debug\OpenTelemetry'
+    & .\artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net10.0\Microsoft.Testing.Extensions.UnitTests.exe --filter 'FullyQualifiedName~TestFxOpenTelemetryTests'
+} finally {
+    $env:TESTFX_OTEL_TRACE_DIRECTORY = $previous
+}
+```
+
+`OTEL_SDK_DISABLED=true` disables collection. Without the directory variable the
+existing instrumentation-only dogfooding remains active without writing files.
+The helper does not configure or contact an OTLP endpoint. The existing Native
+AOT exclusion remains unchanged.
+
+Each uniquely named `.jsonl` file is a UTF-8 **TestFx archive**, not an OTLP request:
+
+- The first `resource` record declares `format: "testfx-otel-jsonl"`,
+  `schemaVersion: 1`, a unique archive `runId`, and resource `attributes`.
+- Each `span` record preserves IDs/parents, trace state/flags, source, name/kind,
+  exact UTC start/end, `durationTicks` (100 ns ticks), status, attributes, events
+  and links. Attribute lists contain `{ "key": ..., "value": ... }` entries;
+  JSON strings, booleans, numbers and arrays retain their value types. Readers
+  must preserve 64-bit integers. Non-finite floats and unsupported attribute
+  types are represented as invariant strings.
+- The last `completion` record contains `status`, `spanCount` and `failedExports`.
+  Require `status: "complete"` and zero failures before treating a file as a
+  complete export. A crash/forced termination can leave no completion and a
+  partial last line; earlier complete lines remain useful, but are not a full run.
+
+Completion describes archive delivery, **not test-session success**. For example,
+`--help` and `--info` produce complete archives with an informative
+`TestHostBuilder` operation (`HostType: InformativeCommandLineHost`) but no test
+results or `test.run.exit_code` verdict. Do not count those as healthy execution
+samples. Likewise, a complete archive can describe a failed or zero-result run.
+
+CI checks completion with `eng/verify-test-traces.ps1` before the existing artifact
+upload. Incomplete files fail that check on successful jobs and remain diagnostic
+warnings on failed/canceled jobs. Empty selection or explicit disablement is not
+proof that traces were collected.
+
+Module version/binary MVID, build/SDK/TFM, machine/OS/runtime/CPU, CI/source, logical
+execution and supplied retry/job-attempt provenance are retained on the resource.
+Do not mix different attempts or use an absent phase duration as zero. Existing `test.step.*` attributes
+are preserved; canonical span elapsed time and reported result durations are not
+interchangeable, and fixture intervals may overlap.
+
+The sink omits captured stdout/stderr attributes, but names, parameter values,
+paths, metadata and exceptions can still contain sensitive information. Treat
+these files like the other test artifacts; do not upload them to a new destination
+without reviewing their contents. Synchronous span flushing adds collection
+overhead and uses no dropping batch queue. See the
+[research, contract and validation record](decisions/otel-trace-retention.md).
 
 ### Code coverage
 

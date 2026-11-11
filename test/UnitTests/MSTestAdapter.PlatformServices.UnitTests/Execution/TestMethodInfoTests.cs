@@ -3461,9 +3461,11 @@ public class TestMethodInfoTests : TestContainer
     private async Task VerifyNonCooperativeGlobalCleanupAsync(bool useSynchronizationContext, bool expireDeadline)
     {
         const int TestDeadlineMilliseconds = 5_000;
+        var localEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var globalEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseGlobal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var workerCompleted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenSource? localSource = null;
         bool globalCompleted = false;
         bool globalCancellationRequested = false;
         bool monitorCanceledByLocalCleanup = false;
@@ -3492,11 +3494,15 @@ public class TestMethodInfoTests : TestContainer
             });
         MethodInfo localCleanup = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
         _testClassInfo.TestCleanupMethod = localCleanup;
-        _testClassInfo.TestCleanupMethodTimeoutMilliseconds[localCleanup] =
-            TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(100) { CooperativeCancellation = true });
         _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
         _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(TestDeadlineMilliseconds);
-        DummyTestClass.TestCleanupMethodBodyAsync = _ => Task.Delay(Timeout.Infinite, _testContextImplementation.CancellationToken);
+        DummyTestClass.TestCleanupMethodBodyAsync = _ =>
+        {
+            localSource = _testContextImplementation.CancellationTokenSource;
+            var canceled = Task.Delay(Timeout.Infinite, localSource.Token);
+            localEntered.TrySetResult(true);
+            return canceled;
+        };
         DummyTestClass.GlobalTestCleanupMethodBodyAsync = async context =>
         {
             monitorCanceledByLocalCleanup = monitorToken.IsCancellationRequested;
@@ -3518,11 +3524,22 @@ public class TestMethodInfoTests : TestContainer
         PlatformServiceProvider.Instance = services;
         Task<TestResult> invocation = useSynchronizationContext
             ? RunInvokeAsyncOnContextAsync(_testMethodInfo, synchronizationContext!)
-            : Task.Run(() => _testMethodInfo.InvokeAsync(null));
+            // The real monitor blocks; leave thread-pool workers available for cleanup continuations.
+            : Task.Factory.StartNew(
+                () => _testMethodInfo.InvokeAsync(null),
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default).Unwrap();
         TestResult result;
         try
         {
-            await WaitForCompletionAsync(globalEntered.Task);
+            await WaitForCompletionAsync(Task.WhenAny(localEntered.Task, invocation));
+            localEntered.Task.IsCompleted.Should().BeTrue("the local cleanup must start before its cancellation is requested");
+            // Exercise local cancellation after startup, rather than racing a short fixture timer against dispatch.
+            localSource!.Cancel();
+            await WaitForCompletionAsync(Task.WhenAny(globalEntered.Task, invocation));
+            globalEntered.Task.IsCompleted.Should().BeTrue("local cleanup cancellation must not bypass global cleanup");
+            invocation.IsCompleted.Should().BeFalse("the original invocation must still wait for the blocked global cleanup");
             if (!expireDeadline)
             {
                 releaseGlobal.TrySetResult(true);
@@ -3533,17 +3550,23 @@ public class TestMethodInfoTests : TestContainer
         }
         finally
         {
+            localSource?.Cancel();
             releaseGlobal.TrySetResult(true);
-            try
-            {
-                await WaitForCompletionAsync(invocation);
-                await WaitForCompletionAsync(useSynchronizationContext
+            var operations = Task.WhenAll(
+                invocation,
+                useSynchronizationContext
                     ? Task.WhenAll(synchronizationContext!.DispatchedTasks)
                     : workerCompleted.Task);
+            try
+            {
+                await WaitForCompletionAsync(operations);
             }
             finally
             {
-                PlatformServiceProvider.Instance = previousServices;
+                if (operations.IsCompleted)
+                {
+                    PlatformServiceProvider.Instance = previousServices;
+                }
             }
         }
 

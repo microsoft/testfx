@@ -9,14 +9,27 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
     private const string AssetName = "ApplicationOwnedOpenTelemetry";
 
     [TestMethod]
-    public async Task HostApplicationBuilderProviders_ConsumeMtpDiagnosticsAndPreserveApplicationResource()
+    [DataRow(null)]
+    [DataRow("0")]
+    [DataRow("1")]
+    public async Task HostApplicationBuilderProviders_ConsumeMtpDiagnosticsAndPreserveApplicationResource(string? legacySetting)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync(
-            environmentVariables: new() { ["MTP_OTEL_EXECUTION_MODE"] = "fallback" },
+            environmentVariables: new()
+            {
+                ["MTP_OTEL_EXECUTION_MODE"] = "fallback",
+                ["TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"] = legacySetting,
+                ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
+                ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
+                ["OTEL_SDK_DISABLED"] = "false",
+                ["OTEL_TRACES_SAMPLER"] = "always_on",
+            },
             cancellationToken: TestContext.CancellationToken);
 
-        result.AssertExitCodeIs(ExitCode.Success);
+        WriteBinaryProvenance(result);
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-OUTPUT] pass=1 fail=1; duration=1.25s,0.75s; legacy=none");
         result.AssertOutputContains("[APP-OWNED-TRACE] TestHostBuilder");
         result.AssertOutputContains("[APP-OWNED-TEST-TRACE] application-test-activity-one");
         result.AssertOutputContains("[APP-OWNED-METRIC] test.run.duration");
@@ -28,14 +41,27 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
     }
 
     [TestMethod]
-    public async Task ExternalFramework_PublicCanonicalExecutionApi_ProducesOneIsolatedSpanPerExecution()
+    [DataRow(null)]
+    [DataRow("0")]
+    [DataRow("1")]
+    public async Task ExternalFramework_PublicCanonicalExecutionApi_ProducesOneIsolatedSpanPerExecution(string? legacySetting)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync(
-            environmentVariables: new() { ["MTP_OTEL_EXECUTION_MODE"] = "canonical" },
+            environmentVariables: new()
+            {
+                ["MTP_OTEL_EXECUTION_MODE"] = "canonical",
+                ["TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"] = legacySetting,
+                ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
+                ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
+                ["OTEL_SDK_DISABLED"] = "false",
+                ["OTEL_TRACES_SAMPLER"] = "always_on",
+            },
             cancellationToken: TestContext.CancellationToken);
 
-        result.AssertExitCodeIs(ExitCode.Success);
+        WriteBinaryProvenance(result);
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-OUTPUT] pass=1 fail=1; duration=1.25s,0.75s; legacy=none");
         result.AssertOutputContains("[APP-OWNED-CANONICAL] one-span-per-execution");
         result.AssertOutputContains("[APP-OWNED-CANONICAL-PARALLEL] isolated");
         result.AssertOutputContains("[APP-OWNED-CANONICAL-CUSTOM] children");
@@ -43,6 +69,15 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
         result.AssertOutputContains("[APP-OWNED-CANONICAL-MULTI-RESULT] one-span");
         result.AssertOutputContains("[APP-OWNED-CANONICAL-LINKS] none");
         result.AssertOutputContains("[APP-OWNED-CANONICAL-API] all-run-overloads");
+    }
+
+    private static void WriteBinaryProvenance(TestHostResult result)
+    {
+        foreach (string line in result.StandardOutput.Split(Environment.NewLine)
+            .Where(line => line.StartsWith("[APP-OWNED-MTP-", StringComparison.Ordinal)))
+        {
+            Console.WriteLine(line);
+        }
     }
 
     public TestContext TestContext { get; set; } = null!;
@@ -75,6 +110,7 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -131,9 +167,10 @@ internal static class Program
 
         ITestApplicationBuilder testBuilder = await TestApplication.CreateBuilderAsync(args);
         string executionMode = Environment.GetEnvironmentVariable("MTP_OTEL_EXECUTION_MODE") ?? "fallback";
+        var framework = new SingleTestFramework(applicationActivitySource, executionMode);
         testBuilder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
-            (_, _) => new SingleTestFramework(applicationActivitySource, executionMode));
+            (_, _) => framework);
         testBuilder.AddTestingPlatformDiagnostics();
 
         int exitCode;
@@ -145,6 +182,9 @@ internal static class Program
         applicationActivity.Stop();
         ServiceProviderServiceExtensions.GetRequiredService<TracerProvider>(host.Services).ForceFlush();
         ServiceProviderServiceExtensions.GetRequiredService<MeterProvider>(host.Services).ForceFlush();
+        string platformBinary = typeof(ITestApplication).Assembly.Location;
+        Console.WriteLine($"[APP-OWNED-MTP-BINARY] {platformBinary}");
+        Console.WriteLine($"[APP-OWNED-MTP-SHA256] {Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(platformBinary)))}");
 
         Activity applicationRootActivity = activityExporter.Single(
             activity => activity.Source.Name == ApplicationActivitySourceName
@@ -178,10 +218,7 @@ internal static class Program
                 throw new InvalidOperationException($"Unknown MTP_OTEL_EXECUTION_MODE value '{executionMode}'.");
         }
 
-        if (!metricExporter.Contains("test.run.duration"))
-        {
-            throw new InvalidOperationException("The application-owned meter provider did not export test.run.duration.");
-        }
+        VerifyCanonicalTelemetry(activityExporter, metricExporter, executionMode, framework.CreatedSessionId);
 
         string traceServiceName = GetServiceName(activityExporter.GetCapturedResource(), "trace");
         _ = GetServiceName(metricExporter.GetCapturedResource(), "metric");
@@ -326,6 +363,147 @@ internal static class Program
         Console.WriteLine("[APP-OWNED-CANONICAL-API] all-run-overloads");
     }
 
+    private static void VerifyCanonicalTelemetry(
+        CapturingActivityExporter activityExporter,
+        CapturingMetricExporter metricExporter,
+        string executionMode,
+        string? sessionId)
+    {
+        HashSet<string> legacyAttributes = new(StringComparer.Ordinal)
+        {
+            "test.name", "test.id", "test.parent.id", "test.method", "test.class", "test.namespace",
+            "test.assembly", "test.file.path", "test.line.start", "test.line.end", "test.result",
+            "test.result.explanation", "test.result.exception.type", "test.result.exception.message",
+            "test.result.exception.stacktrace", "test.result.timeout.ms", "test.duration.ms",
+            "test.stdout", "test.stderr", "SessionUid", "RequestType",
+        };
+        Activity[] activities = activityExporter.Snapshot()
+            .Where(activity => activity.Source.Name == "Microsoft.Testing.Platform")
+            .ToArray();
+        foreach (Activity activity in activities)
+        {
+            foreach (KeyValuePair<string, object?> tag in activity.TagObjects)
+            {
+                if (legacyAttributes.Contains(tag.Key)
+                    || tag.Key.StartsWith("Extension.", StringComparison.Ordinal)
+                    || tag.Key.StartsWith("test.metadataProperty.", StringComparison.Ordinal)
+                    || (tag.Key.StartsWith("test.step", StringComparison.Ordinal)
+                        && !tag.Key.StartsWith("test.step.", StringComparison.Ordinal)))
+                {
+                    throw new InvalidOperationException(
+                        $"Legacy MTP attribute '{tag.Key}' was exported on '{activity.OperationName}'.");
+                }
+            }
+        }
+
+        Dictionary<string, MetricSnapshot> metrics = metricExporter.Snapshot();
+        string[] expectedInstruments = ["test.case.active", "test.case.duration", "test.case.result.count", "test.run.duration"];
+        if (!metrics.Keys.Order(StringComparer.Ordinal).SequenceEqual(expectedInstruments, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Unexpected exported instruments: {string.Join(", ", metrics.Keys.Order())}.");
+        }
+
+        if (metrics["test.case.duration"].Unit != "s"
+            || metrics["test.run.duration"].Unit != "s"
+            || metrics["test.case.result.count"].Unit != "{test}"
+            || metrics["test.case.active"].Unit != "{test}")
+        {
+            throw new InvalidOperationException("Canonical metric units did not match seconds and test counts.");
+        }
+
+        VerifyCase("application-owned-test-one", "Application-owned telemetry test one", "FirstCases", "First", "pass", 1250);
+        VerifyCase("application-owned-test-two", "Application-owned telemetry test two", "SecondCases", "Second", "fail", 750);
+        MetricPointSnapshot active = metrics["test.case.active"].Points.Single();
+        MetricPointSnapshot run = metrics["test.run.duration"].Points.Single();
+        Activity runActivity = activities.Single(activity => activity.GetTagItem("test.run.total") is not null);
+        if (active.Value != 0
+            || active.Tags.Count != 0
+            || run.Count != 1
+            || run.Value <= 0
+            || run.Tags.Count != 2
+            || run.Tags["test.run.result.status"]?.ToString() != "fail"
+            || run.Tags["test.run.exit_code"] is not 2
+            || runActivity.GetTagItem("test.run.total") is not 2
+            || runActivity.GetTagItem("test.run.failed") is not 1
+            || runActivity.GetTagItem("test.run.skipped") is not 0)
+        {
+            throw new InvalidOperationException("Run verdict/counts or active-case balancing did not match the two results.");
+        }
+
+        Activity framework = activities.Single(activity => activity.OperationName == "TestFramework");
+        Activity request = activities.Single(activity => activity.OperationName == "ExecuteTestRequest");
+        Activity[] sessionActivities = activities.Where(activity => activity.OperationName is
+            "CreateTestFrameworkSession" or "CreateTestRequest" or "ExecuteTestRequest" or "CloseTestFrameworkSession").ToArray();
+        if (framework.GetTagItem("test.extension.uid")?.ToString() != "SingleTestFramework"
+            || framework.GetTagItem("test.extension.version")?.ToString() != "1.0.0"
+            || framework.GetTagItem("test.extension.display_name")?.ToString() != "SingleTestFramework"
+            || framework.GetTagItem("test.framework.name")?.ToString() != "SingleTestFramework"
+            || framework.GetTagItem("test.framework.version")?.ToString() != "1.0.0"
+            || sessionId is not { Length: > 0 }
+            || sessionActivities.Length != 4
+            || sessionActivities.Any(activity => activity.GetTagItem("test.session.id") is not string value || value != sessionId)
+            || request.GetTagItem("test.run.request_type")?.ToString() != "RunTestExecutionRequest")
+        {
+            throw new InvalidOperationException("Canonical framework, extension, or request identity was lost.");
+        }
+
+        Console.WriteLine("[APP-OWNED-CANONICAL-OUTPUT] pass=1 fail=1; duration=1.25s,0.75s; legacy=none");
+
+        void VerifyCase(string uid, string name, string suite, string method, string status, double milliseconds)
+        {
+            Activity activity = activities.Single(activity => activity.GetTagItem("test.case.id")?.ToString() == uid);
+            if (activity.OperationName != name
+                || activity.GetTagItem("test.case.name")?.ToString() != name
+                || activity.GetTagItem("test.suite.name")?.ToString() != suite
+                || activity.GetTagItem("code.function.name")?.ToString() != $"Example.Telemetry.{suite}.{method}"
+                || activity.GetTagItem("test.assembly.name")?.ToString() != "ApplicationOwnedOpenTelemetry"
+                || activity.GetTagItem("test.case.result.status")?.ToString() != status
+                || activity.GetTagItem("test.metadata.category")?.ToString() != suite
+                || activity.GetTagItem("test.output.stdout")?.ToString() != $"stdout:{uid}"
+                || activity.GetTagItem("test.case.duration_ms") is not double duration
+                || (executionMode == "fallback" ? duration != milliseconds : duration < 0))
+            {
+                throw new InvalidOperationException($"Canonical identity, result, output, or millisecond duration did not match '{uid}'.");
+            }
+
+            if (status == "fail")
+            {
+                ActivityEvent exception = activity.Events.Single(e => e.Name == "exception");
+                if (activity.Status != ActivityStatusCode.Error
+                    || activity.GetTagItem("error.type")?.ToString() != typeof(InvalidOperationException).FullName
+                    || exception.Tags.Single(tag => tag.Key == "exception.message").Value?.ToString() != "Synthetic failure for test two.")
+                {
+                    throw new InvalidOperationException($"The failure event/status was not associated with '{uid}'.");
+                }
+            }
+            else if (activity.Status != ActivityStatusCode.Ok || activity.Events.Any(e => e.Name == "exception"))
+            {
+                throw new InvalidOperationException($"The passing result inherited another test's failure for '{uid}'.");
+            }
+
+            MetricPointSnapshot result = CasePoint("test.case.result.count");
+            MetricPointSnapshot latency = CasePoint("test.case.duration");
+            if (result.Value != 1 || latency.Count != 1 || latency.Value != milliseconds / 1000)
+            {
+                throw new InvalidOperationException(
+                    $"Incorrect result count or seconds for '{uid}': count={result.Value}, duration={latency.Value}, samples={latency.Count}.");
+            }
+
+            MetricPointSnapshot CasePoint(string instrument)
+            {
+                MetricSnapshot metric = metrics[instrument];
+                if (metric.Points.Length != 2)
+                {
+                    throw new InvalidOperationException($"Expected two suite/result points for '{instrument}', found {metric.Points.Length}.");
+                }
+
+                return metric.Points.Single(point => point.Tags.Count == 2
+                    && point.Tags["test.suite.name"]?.ToString() == suite
+                    && point.Tags["test.case.result.status"]?.ToString() == status);
+            }
+        }
+    }
+
     private static string GetServiceName(Resource? resource, string signal)
     {
         Dictionary<string, object> attributes = (resource
@@ -391,7 +569,7 @@ internal sealed class CapturingActivityExporter : BaseExporter<Activity>
 internal sealed class CapturingMetricExporter : BaseExporter<Metric>
 {
     private readonly object _syncRoot = new();
-    private readonly HashSet<string> _metricNames = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, MetricSnapshot> _metrics = new(StringComparer.Ordinal);
     private Resource? _capturedResource;
 
     public override ExportResult Export(in Batch<Metric> batch)
@@ -401,18 +579,37 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
             _capturedResource ??= ParentProvider?.GetResource();
             foreach (Metric metric in batch)
             {
-                _metricNames.Add(metric.Name);
+                List<MetricPointSnapshot> points = [];
+                if (metric.Name is "test.case.duration" or "test.run.duration" or "test.case.result.count" or "test.case.active")
+                {
+                    foreach (MetricPoint point in metric.GetMetricPoints())
+                    {
+                        Dictionary<string, object?> tags = new(StringComparer.Ordinal);
+                        foreach (KeyValuePair<string, object?> tag in point.Tags)
+                        {
+                            tags.Add(tag.Key, tag.Value);
+                        }
+
+                        bool histogram = metric.Name is "test.case.duration" or "test.run.duration";
+                        points.Add(new(
+                            tags,
+                            histogram ? point.GetHistogramSum() : point.GetSumLong(),
+                            histogram ? point.GetHistogramCount() : 0));
+                    }
+                }
+
+                _metrics[metric.Name] = new(metric.Unit, points.ToArray());
             }
         }
 
         return ExportResult.Success;
     }
 
-    public bool Contains(string metricName)
+    public Dictionary<string, MetricSnapshot> Snapshot()
     {
         lock (_syncRoot)
         {
-            return _metricNames.Contains(metricName);
+            return new(_metrics, StringComparer.Ordinal);
         }
     }
 
@@ -425,18 +622,26 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
     }
 }
 
+internal sealed record MetricSnapshot(string? Unit, MetricPointSnapshot[] Points);
+
+internal sealed record MetricPointSnapshot(Dictionary<string, object?> Tags, double Value, long Count);
+
 internal sealed class SingleTestFramework(ActivitySource activitySource, string executionMode) : ITestFramework, IDataProducer
 {
     public string Uid => nameof(SingleTestFramework);
     public string Version => "1.0.0";
     public string DisplayName => nameof(SingleTestFramework);
-    public string Description => "Publishes two passing tests in parallel.";
+    public string Description => "Publishes a pass and a failure in parallel.";
     public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
+    public string? CreatedSessionId { get; private set; }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
-        => Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
+    {
+        CreatedSessionId = context.SessionUid.Value;
+        return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
+    }
 
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
@@ -510,7 +715,7 @@ internal sealed class SingleTestFramework(ActivitySource activitySource, string 
                 {
                     Uid = uid,
                     DisplayName = displayName,
-                    Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+                    Properties = CreateTestProperties(uid, new InProgressTestNodeStateProperty()),
                 }));
 
         ActivitySpanId canonicalSpanId = execution.Run(
@@ -556,26 +761,26 @@ internal sealed class SingleTestFramework(ActivitySource activitySource, string 
             throw new InvalidOperationException($"The HTTP probe returned {statusCode}.");
         }
 
-        TestNodeUpdateMessage CreateResult(PropertyBag properties)
+        TestNodeUpdateMessage CreateResult(TestNodeStateProperty state, RetryAttemptProperty? retryAttempt = null)
             => new(
                 sessionUid,
                 new TestNode
                 {
                     Uid = uid,
                     DisplayName = displayName,
-                    Properties = properties,
+                    Properties = CreateTestProperties(uid, state, retryAttempt),
                 });
 
         TestNodeUpdateMessage[] results = publishMultipleResults
             ? [
-                CreateResult(new PropertyBag(
+                CreateResult(
                     new FailedTestNodeStateProperty("Superseded retry attempt."),
-                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true))),
-                CreateResult(new PropertyBag(
+                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true)),
+                CreateResult(
                     PassedTestNodeStateProperty.CachedInstance,
-                    new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false))),
+                    new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false)),
             ]
-            : [CreateResult(new PropertyBag(PassedTestNodeStateProperty.CachedInstance))];
+            : [CreateResult(new FailedTestNodeStateProperty(new InvalidOperationException("Synthetic failure for test two.")))];
         await execution.CompleteAsync(results, DateTimeOffset.UtcNow);
     }
 
@@ -603,7 +808,7 @@ internal sealed class SingleTestFramework(ActivitySource activitySource, string 
                 {
                     Uid = uid,
                     DisplayName = displayName,
-                    Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+                    Properties = CreateTestProperties(uid, new InProgressTestNodeStateProperty()),
                 }));
         started.SetResult();
         await otherStarted;
@@ -615,8 +820,37 @@ internal sealed class SingleTestFramework(ActivitySource activitySource, string 
                 {
                     Uid = uid,
                     DisplayName = displayName,
-                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+                    Properties = CreateTestProperties(
+                        uid,
+                        uid == "application-owned-test-one"
+                            ? PassedTestNodeStateProperty.CachedInstance
+                            : new FailedTestNodeStateProperty(new InvalidOperationException("Synthetic failure for test two."))),
                 }));
+    }
+
+    private static PropertyBag CreateTestProperties(string uid, TestNodeStateProperty state, RetryAttemptProperty? retryAttempt = null)
+    {
+        bool first = uid == "application-owned-test-one";
+        string suite = first ? "FirstCases" : "SecondCases";
+        PropertyBag properties = new(
+            state,
+            new TestMethodIdentifierProperty(
+                "ApplicationOwnedOpenTelemetry", "Example.Telemetry", suite, first ? "First" : "Second", 0, [], "void"));
+        if (retryAttempt is not null)
+        {
+            properties.Add(retryAttempt);
+        }
+
+        if (state is not InProgressTestNodeStateProperty)
+        {
+            double milliseconds = first ? 1250 : 750;
+            DateTimeOffset start = DateTimeOffset.UtcNow;
+            properties.Add(new TimingProperty(new TimingInfo(start, start.AddMilliseconds(milliseconds), TimeSpan.FromMilliseconds(milliseconds))));
+            properties.Add(new StandardOutputProperty($"stdout:{uid}"));
+            properties.Add(new TestMetadataProperty("category", suite));
+        }
+
+        return properties;
     }
 
     private static Activity RequireCurrent(string location)

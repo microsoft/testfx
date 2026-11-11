@@ -172,19 +172,29 @@ public sealed class DotnetTestProtocolSerializerTests
     }
 
     [TestMethod]
-    public void HandshakeMessage_RoundTrips()
+    [DataRow(false, DisplayName = "LegacyHandshakeWithoutTarget")]
+    [DataRow(true, DisplayName = "TargetAndRuntimeAreSeparate")]
+    public void HandshakeMessage_RoundTrips(bool includeTargetFramework)
     {
         var message = new HandshakeMessage(new Dictionary<byte, string>
         {
             [HandshakeMessagePropertyNames.PID] = "1234",
             [HandshakeMessagePropertyNames.SupportedProtocolVersions] = ProtocolConstants.SupportedVersions,
+            [HandshakeMessagePropertyNames.Framework] = ".NET Framework 4.8.1",
         });
+        if (includeTargetFramework)
+        {
+            message.Properties!.Add(HandshakeMessagePropertyNames.TargetFramework, "net472");
+        }
 
         HandshakeMessage actual = RoundTrip(new HandshakeMessageSerializer(), message);
 
         Assert.IsNotNull(actual.Properties);
         Assert.AreEqual("1234", actual.Properties[HandshakeMessagePropertyNames.PID]);
         Assert.AreEqual(ProtocolConstants.SupportedVersions, actual.Properties[HandshakeMessagePropertyNames.SupportedProtocolVersions]);
+        Assert.AreEqual(".NET Framework 4.8.1", actual.Properties[HandshakeMessagePropertyNames.Framework]);
+        Assert.AreEqual(includeTargetFramework, actual.Properties.TryGetValue(21, out string? targetFramework));
+        Assert.AreEqual(includeTargetFramework ? "net472" : null, targetFramework);
     }
 
     [TestMethod]

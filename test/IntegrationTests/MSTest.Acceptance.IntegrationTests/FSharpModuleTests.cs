@@ -364,7 +364,7 @@ public sealed class FSharpModuleTests : AcceptanceTestBase<FSharpModuleTests.Tes
         using TempDirectory run = new("cooperative-timeout");
         TestHostResult result = await ExecuteAsync(tfm, useVstest, run, "Name=CooperativeTimeout");
         XDocument trx = AssertResults(result, useVstest, run, passed: 0, failed: 1);
-        Assert.Contains("Test 'CooperativeTimeout' timed out after 1000ms", trx.ToString());
+        Assert.Contains("Test 'CooperativeTimeout' timed out after 10000ms", trx.ToString());
         Assert.AreEqual(
             """
             global-initialize
@@ -385,7 +385,7 @@ public sealed class FSharpModuleTests : AcceptanceTestBase<FSharpModuleTests.Tes
         using TempDirectory run = new("noncooperative-timeout");
         TestHostResult result = await ExecuteAsync(tfm, useVstest, run, "Name=NonCooperativeTimeout");
         XDocument trx = AssertResults(result, useVstest, run, passed: 0, failed: 1);
-        Assert.Contains("Test 'NonCooperativeTimeout' timed out after 1000ms", trx.ToString());
+        Assert.Contains("Test 'NonCooperativeTimeout' timed out after 10000ms", trx.ToString());
         Assert.AreEqual(
             """
             global-initialize
@@ -574,10 +574,10 @@ module Marker =
     let append name line =
         lock syncRoot (fun () -> File.AppendAllText(path name, line + "\n"))
     let current line =
-        Assert.IsNotNull(TestContext.Current) |> ignore
+        Assert.IsNotNull(TestContext.Current)
         append TestContext.Current.TestName line
     let assertFreshCleanupToken () =
-        Assert.IsNotNull(TestContext.Current) |> ignore
+        Assert.IsNotNull(TestContext.Current)
         Assert.IsFalse(TestContext.Current.CancellationToken.IsCancellationRequested)
 
 // These fixtures intentionally have no TestClass and no test methods.
@@ -668,7 +668,7 @@ type CustomModuleClassAttribute () =
 module CustomModule =
     [<TestMethod; TestCategory("basic")>]
     let CustomModuleTest () =
-        Assert.IsNotNull(TestContext.Current) |> ignore
+        Assert.IsNotNull(TestContext.Current)
         Assert.AreEqual("custom-before\n", File.ReadAllText(Marker.path "custom"))
         Marker.append "custom" "custom-body"
 
@@ -933,6 +933,8 @@ module CleanupFailureModule =
     [<TestMethod; TestCategory("failure")>]
     let CleanupFailure () = Marker.current "body"
 
+// These timeouts include global/local initialization, which must finish before the body times out.
+// Allow for initialization on loaded CI agents rather than testing their scheduling speed.
 module CooperativeTimeoutModule =
     [<TestInitialize>]
     let Initialize () = Marker.current "test-initialize"
@@ -941,7 +943,7 @@ module CooperativeTimeoutModule =
         Marker.assertFreshCleanupToken()
         Assert.AreEqual(UnitTestOutcome.Timeout, TestContext.Current.CurrentTestOutcome)
         Marker.current "test-cleanup"
-    [<TestMethod; TestCategory("timeout"); Timeout(1000, CooperativeCancellation = true)>]
+    [<TestMethod; TestCategory("timeout"); Timeout(10000, CooperativeCancellation = true)>]
     let CooperativeTimeout () : Task =
         task {
             Marker.current "body"
@@ -962,7 +964,7 @@ module NonCooperativeTimeoutModule =
         // Release the abandoned invocation only after cleanup has claimed its exactly-once gate.
         // The test task deliberately does not observe the cancellation token.
         release.TrySetResult(()) |> ignore
-    [<TestMethod; TestCategory("timeout"); Timeout(1000, CooperativeCancellation = false)>]
+    [<TestMethod; TestCategory("timeout"); Timeout(10000, CooperativeCancellation = false)>]
     let NonCooperativeTimeout () : Task =
         Marker.current "body"
         release.Task :> Task

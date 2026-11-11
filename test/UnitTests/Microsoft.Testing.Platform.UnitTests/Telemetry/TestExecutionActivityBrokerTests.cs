@@ -296,7 +296,7 @@ public sealed class TestExecutionActivityBrokerTests
     }
 
     private TestExecutionActivityBroker CreateBroker()
-        => new(_service.Object, PlatformOpenTelemetryOptions.Default);
+        => new(_service.Object);
 
     private static TestExecutionActivityReservation Reserve(TestExecutionActivityBroker broker)
     {

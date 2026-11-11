@@ -71,7 +71,7 @@ public sealed class TestApplicationResultTests : IDisposable
             CancellationToken.None);
 
         firstActivity.Verify(activity => activity.Dispose(), Times.Once);
-        firstActivity.Verify(activity => activity.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        firstActivity.Verify(activity => activity.SetTag("test.case.result.status", It.IsAny<object?>()), Times.Never);
         secondActivity.Verify(activity => activity.Dispose(), Times.Never);
 
         await testApplicationResult.ConsumeAsync(
@@ -79,7 +79,7 @@ public sealed class TestApplicationResultTests : IDisposable
             new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance)),
             CancellationToken.None);
 
-        secondActivity.Verify(activity => activity.SetTag("test.result", "passed"), Times.Once);
+        secondActivity.Verify(activity => activity.SetTag("test.case.result.status", "pass"), Times.Once);
         secondActivity.Verify(activity => activity.Dispose(), Times.Once);
     }
 

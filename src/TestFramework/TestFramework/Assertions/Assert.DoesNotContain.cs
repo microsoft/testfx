@@ -259,13 +259,4 @@ public sealed partial class Assert
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotContain", notExpectedExpression, collectionExpression, "<notExpected>", "<collection>"));
         ReportAssertFailed(structured);
     }
-
-    [DoesNotReturn]
-    private static void ReportAssertDoesNotContainPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression)
-    {
-        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotContainPredicateFailedSummary);
-        structured.WithUserMessage(userMessage);
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotContain", predicateExpression, collectionExpression, "<predicate>", "<collection>"));
-        ReportAssertFailed(structured);
-    }
 }

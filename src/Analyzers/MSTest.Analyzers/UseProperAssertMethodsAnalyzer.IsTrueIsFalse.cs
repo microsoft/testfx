@@ -16,9 +16,16 @@ namespace MSTest.Analyzers;
 
 public sealed partial class UseProperAssertMethodsAnalyzer
 {
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol, INamedTypeSymbol? iDictionaryTypeSymbol)
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol, INamedTypeSymbol? iDictionaryTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
+
+        var assertion = (IInvocationOperation)context.Operation;
+        if (assertion.Arguments.TakeWhile(argument => argument.Parameter?.Ordinal != 0)
+            .Any(argument => !argument.IsImplicit && !argument.Value.ConstantValue.HasValue))
+        {
+            return;
+        }
 
         NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
 
@@ -60,11 +67,22 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             out SyntaxNode? predicateExpr,
             out _);
 
-        // For Any() and Where().Any() patterns
-        if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny &&
+        bool useContainsOnly = isTrueInvocation &&
+            linqStatus == LinqPredicateCheckStatus.All &&
+            CanRewriteAllWithoutReorderingEffects((IInvocationOperation)context.Operation, conditionArgument) &&
+            assertTypeSymbol.GetMembers("ContainsOnly").OfType<IMethodSymbol>().Any(method =>
+                method.IsStatic &&
+                method.DeclaredAccessibility == Accessibility.Public &&
+                method.Arity == 1 &&
+                method.Parameters.Length >= 2 &&
+                method.Parameters[0].Type is INamedTypeSymbol { Name: "Func", Arity: 2 } predicateType &&
+                predicateType.TypeArguments[1].SpecialType == SpecialType.System_Boolean &&
+                method.Parameters[1].Type.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T);
+
+        if ((linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny || useContainsOnly) &&
             linqCollectionExpr is not null && predicateExpr is not null)
         {
-            string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+            string properAssertMethod = useContainsOnly ? "ContainsOnly" : isTrueInvocation ? "Contains" : "DoesNotContain";
 
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
@@ -290,4 +308,26 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
         }
     }
+
+    private static bool CanRewriteAllWithoutReorderingEffects(IInvocationOperation assertion, IOperation condition)
+        => condition is IInvocationOperation all &&
+            TryGetArgumentForParameterOrdinal(all, 0, out IArgumentOperation? collection) &&
+            TryGetArgumentForParameterOrdinal(all, 1, out IArgumentOperation? predicate) &&
+            IsStablePredicateAssertionInput(collection.Value) &&
+            IsStablePredicateAssertionInput(predicate.Value) &&
+            assertion.Arguments.All(argument =>
+                argument.Parameter?.Ordinal == 0 ||
+                argument.IsImplicit ||
+                (argument.Parameter?.Ordinal == 1 && argument.Value.ConstantValue.HasValue));
+
+    private static bool IsStablePredicateAssertionInput(IOperation operation)
+        => operation switch
+        {
+            IConversionOperation conversion => conversion.OperatorMethod is null && IsStablePredicateAssertionInput(conversion.Operand),
+            IDelegateCreationOperation creation => IsStablePredicateAssertionInput(creation.Target),
+            IAnonymousFunctionOperation or ILocalReferenceOperation or IParameterReferenceOperation or IInstanceReferenceOperation => true,
+            IMethodReferenceOperation method => method.Instance is null || IsStablePredicateAssertionInput(method.Instance),
+            IFieldReferenceOperation field => !field.Field.IsStatic && field.Field.IsReadOnly && (field.Instance is null || IsStablePredicateAssertionInput(field.Instance)),
+            _ => operation.ConstantValue.HasValue,
+        };
 }

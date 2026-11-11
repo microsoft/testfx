@@ -88,6 +88,7 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy),
             [HandshakeMessagePropertyNames.RequiredPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds),
             [HandshakeMessagePropertyNames.RequiredPostProcessingSupported] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported),
+            [HandshakeMessagePropertyNames.TargetFramework] = nameof(HandshakeMessagePropertyNames.TargetFramework),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -110,6 +111,7 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.TargetFramework), properties[21]);
     }
 
     [TestMethod]

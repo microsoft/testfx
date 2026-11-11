@@ -12,7 +12,7 @@ dotnet add package Microsoft.Testing.Extensions.JUnitReport
 
 ## About
 
-> **⚠️ Experimental:** This extension is currently experimental. The API, CLI options and on-disk format may change in future releases without notice.
+This extension uses the same package version as Microsoft.Testing.Platform. Final releases are stable; preview, CI and developer builds retain their normal prerelease suffixes.
 
 This package extends Microsoft.Testing.Platform with:
 
@@ -23,6 +23,26 @@ This package extends Microsoft.Testing.Platform with:
 ## Usage
 
 Enable the report via the `--report-junit` command line option. The report file name can be overridden with `--report-junit-filename <name>.xml`.
+
+Failure and error bodies retain nested and aggregate-exception causes while their
+`message` attribute continues to prefer the framework's explanation. Diagnostic
+text remains subject to the reporter's existing size limits.
+
+When using MSTest.Sdk, the extension remains opt-in and is not enabled by any testing extensions profile:
+
+```xml
+<PropertyGroup>
+  <EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>
+</PropertyGroup>
+```
+
+The SDK defaults to the common platform extension version. An explicit `MicrosoftTestingExtensionsJUnitReportVersion` override is still supported.
+
+## Compatibility
+
+Stable releases preserve the public registration API, CLI options and documented JUnit XML semantics within the platform's major version. JUnit XML is a de facto format with consumer-specific dialects; the extension continues to target the Jenkins / Surefire-compatible shape described above.
+
+Graduation does not change report generation, merging, retry handling or the `testpath` hierarchy metadata. It does not add NativeAOT or VSTest support.
 
 ## Documentation
 

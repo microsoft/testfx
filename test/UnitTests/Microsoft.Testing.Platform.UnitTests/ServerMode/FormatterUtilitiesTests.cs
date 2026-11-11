@@ -470,6 +470,111 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
+    [DataRow(-32700)]
+    [DataRow(-32600)]
+    [DataRow(-31001)]
+    public void Deserialize_NullIdError_PreservesUncorrelatedPayload(int code)
+    {
+        string json = $$$$"""
+            {"jsonrpc":"2.0","id":null,"error":{"code":{{{{code}}}},"message":"remote-error","data":{"detail":"preserved"}}}
+            """;
+
+        ErrorMessage error = Assert.IsInstanceOfType<ErrorMessage>(Deserialize<RpcMessage>(json));
+
+        Assert.IsNull(error.Id);
+        Assert.IsNull(error.StringId);
+        Assert.AreEqual(code, error.ErrorCode);
+        Assert.AreEqual("remote-error", error.Message);
+        IDictionary<string, object?> data = Assert.IsInstanceOfType<IDictionary<string, object?>>(error.Data);
+        Assert.AreEqual("preserved", data["detail"]);
+        Assert.HasCount(1, data);
+    }
+
+    [TestMethod]
+    public async Task Serialize_NullIdError_EmitsExplicitNullId()
+    {
+        ErrorMessage error = new(null, ErrorCodes.ParseError, "parse-error", null);
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(error);
+
+        Assert.IsTrue(properties.TryGetValue(JsonRpcStrings.Id, out object? id));
+        Assert.IsNull(id);
+        Assert.AreEqual(
+            """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"data":{},"message":"parse-error"}}""",
+            (await _formatter.SerializeAsync(error)).Replace(" ", string.Empty));
+    }
+
+    [TestMethod]
+    [DataRow("0", 0, null)]
+    [DataRow("\"0\"", 0, "0")]
+    [DataRow("-2147483648", int.MinValue, null)]
+    [DataRow("\"-2147483648\"", int.MinValue, "-2147483648")]
+    [DataRow("2147483647", int.MaxValue, null)]
+    [DataRow("\"2147483647\"", int.MaxValue, "2147483647")]
+    public void Deserialize_CorrelatedError_PreservesIdKind(string rawId, int expectedId, string? expectedStringId)
+    {
+        string json = $$$"""
+            {"jsonrpc":"2.0","id":{{{rawId}}},"error":{"code":-32700,"message":"parse-error"}}
+            """;
+
+        ErrorMessage error = Assert.IsInstanceOfType<ErrorMessage>(Deserialize<RpcMessage>(json));
+
+        Assert.AreEqual(expectedId, error.Id);
+        Assert.AreEqual(expectedStringId, error.StringId);
+    }
+
+    [TestMethod]
+    [DataRow("result")]
+    [DataRow("method")]
+    [DataRow("null-method")]
+    [DataRow("null-error")]
+    [DataRow("array-error")]
+    [DataRow("missing-code")]
+    [DataRow("null-code")]
+    [DataRow("string-code")]
+    [DataRow("fractional-code")]
+    [DataRow("out-of-range-code")]
+    [DataRow("missing-message")]
+    [DataRow("null-message")]
+    [DataRow("non-string-message")]
+    public void Deserialize_NullIdError_RejectsInvalidEnvelope(string scenario)
+    {
+        string json = scenario switch
+        {
+            "result" => """{"jsonrpc":"2.0","id":null,"result":null,"error":{"code":-32700,"message":"parse-error"}}""",
+            "method" => """{"jsonrpc":"2.0","id":null,"method":"custom","error":{"code":-32700,"message":"parse-error"}}""",
+            "null-method" => """{"jsonrpc":"2.0","id":null,"method":null,"error":{"code":-32700,"message":"parse-error"}}""",
+            "null-error" => """{"jsonrpc":"2.0","id":null,"error":null}""",
+            "array-error" => """{"jsonrpc":"2.0","id":null,"error":[]}""",
+            "missing-code" => """{"jsonrpc":"2.0","id":null,"error":{"message":"parse-error"}}""",
+            "null-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":null,"message":"parse-error"}}""",
+            "string-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":"-32700","message":"parse-error"}}""",
+            "fractional-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700.5,"message":"parse-error"}}""",
+            "out-of-range-code" => """{"jsonrpc":"2.0","id":null,"error":{"code":2147483648,"message":"parse-error"}}""",
+            "missing-message" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700}}""",
+            "null-message" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":null}}""",
+            "non-string-message" => """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":42}}""",
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
+        };
+
+        Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(json));
+        Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<ErrorMessage>(json));
+    }
+
+    [TestMethod]
+    public void Deserialize_MissingErrorId_RemainsInvalid()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            """{"jsonrpc":"2.0","error":{"code":-32700,"message":"parse-error"}}"""));
+
+    [TestMethod]
+    public void Deserialize_NullSuccessId_RemainsInvalid()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            """{"jsonrpc":"2.0","id":null,"result":null}"""));
+
+    [TestMethod]
+    public void Deserialize_NullCancellationId_RemainsInvalid()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<CancelRequestArgs>("""{"id":null}"""));
+
+    [TestMethod]
     public void DeserializeInitializeResponse_NonStringProtocolVersion_Throws()
     {
         const string Json = """

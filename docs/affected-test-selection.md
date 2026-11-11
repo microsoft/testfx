@@ -366,6 +366,25 @@ run locally. First fresh main-map publication and a subsequent product-only PR a
 actual CI pruning; the pin/configuration PR intentionally retains its force-all behavior. No release-branch
 rollout, backport, push, or remote mutation is claimed.
 
+## Main integration (2026-11-11)
+
+The first hosted Azure Pipelines check on head `3e4fefaa5038f896d391d57d60b7139a26213024` was
+`action_required` with title `Skipped due to merge conflicts` and summary `This branch has conflicts that
+must be resolved.` No hosted test execution or cache-consumption result can be inferred from that check.
+
+The branch integrates main commit `7d5d0508fd6984bf37d0eee47ba7dfc2443febbe`. The dependency conflicts retain
+main's Arcade/templating `12.0.0-beta.26560.9`, published MSTest/MTP `5.0.0-preview.26559.7` /
+`3.0.0-preview.26559.7`, and shipping CodeCoverage `18.13.0-preview.26560.2`. The affected-test/test-host
+coverage tuple remains the deliberately validated `18.13.0-preview.26560.3`, with source
+`13fcbb6be5af9c988589f5474d595818085a7441`; neither side's independent dependency updates are rolled back.
+The pinned .NET SDK and runtime versions are unchanged. The merged default-enabled, explicit-enabled, and
+rollback configurations each pass all 81 named rollout checks, including the nine real-Git regressions.
+The updated source dependency graph builds with zero warnings/errors using the pinned SDK and
+`OfficialBuildId=20261111.91`. `TerminalResources_AreCompiledIntoThisAssembly` and
+`SharedTerminalTypes_AreUsable` pass on each pinned .NET 10/.NET 11 runtime, with both per-TFM TRX gates
+verifying four executed/passed cases and no skips. This is green-before/green-after merge validation, not
+new hosted cache-use or savings evidence.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact

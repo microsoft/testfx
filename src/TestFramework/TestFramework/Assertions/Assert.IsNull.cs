@@ -155,24 +155,23 @@ public sealed partial class Assert
         ReportAssertFailed(structured);
     }
 
-    /// <inheritdoc cref="IsNotNull{T}(T, string, string)" />
-    [return: NotNull]
-    public static T IsNotNull<T>([NotNull] T? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    /// <inheritdoc cref="IsNull(object?, string, string)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
         message.ComputeAssertion(valueExpression);
-        return value!;
     }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
-    /// Tests whether the specified value is non-null and returns it, or throws
-    /// an exception if it is null.
+    /// Tests whether the specified object is non-null and throws an exception
+    /// if it is null.
     /// </summary>
-    /// <typeparam name="T">The type of the value being checked.</typeparam>
     /// <param name="value">
-    /// The value the test expects not to be null.
+    /// The object the test expects not to be null.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -185,13 +184,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    /// <returns>The non-null <paramref name="value"/>.</returns>
-    /// <remarks>
-    /// Within an <see cref="AssertScope"/>, a failure is collected and the value is returned even if it is null.
-    /// Nullability postconditions are not enforced within an assertion scope.
-    /// </remarks>
-    [return: NotNull]
-    public static T IsNotNull<T>([NotNull] T? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotNull([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
 
@@ -199,8 +192,6 @@ public sealed partial class Assert
         {
             ReportAssertIsNotNullFailed(message, valueExpression, nameof(value));
         }
-
-        return value!;
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;

@@ -236,6 +236,13 @@ $moduleIndex = [Array]::IndexOf($args, "--test-modules")
 $module = $args[$moduleIndex + 1]
 $rootIndex = [Array]::IndexOf($args, "--root-directory")
 $root = $args[$rootIndex + 1]
+$progressIndex = [Array]::IndexOf($args, "--progress")
+if (@($args | Where-Object { $_ -ceq "--progress" }).Count -ne 1 -or
+    $progressIndex + 1 -ge $args.Count -or $args[$progressIndex + 1] -cne "off" -or
+    $args -ccontains "--no-progress" -or
+    @($args | Where-Object { $_ -ceq "--no-ansi" }).Count -ne 1) {
+    throw "The module launch must pass separate '--progress' and 'off' tokens, omit '--no-progress', and retain SDK-owned '--no-ansi'."
+}
 if ($module -notlike "orphan-*" -and -not [string]::IsNullOrEmpty($env:TESTFX_COLLECTION_NUGET_CACHE)) {
     throw "A module without an owned cache inherited the collection-cache opt-in."
 }

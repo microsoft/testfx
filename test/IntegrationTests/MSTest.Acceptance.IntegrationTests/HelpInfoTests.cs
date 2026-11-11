@@ -30,7 +30,6 @@ Options:
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
     --coverage-threshold-branch
@@ -73,8 +72,6 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --no-ansi
-        Disable outputting ANSI escape characters to screen.
     --no-progress
         [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
@@ -83,7 +80,7 @@ Options:
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+        'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
         This option takes precedence over the deprecated --no-progress flag.
     --results-directory
         The directory where the test results are going to be placed.

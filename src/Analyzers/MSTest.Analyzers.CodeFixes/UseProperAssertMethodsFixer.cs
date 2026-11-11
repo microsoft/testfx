@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
 
@@ -136,16 +137,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
     private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location conditionLocation, Location expectedLocation, Location actualLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
-        // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == y)
-        // The proper handling of this may be Assert.AreEqual(message: "My message", expected: x, actual: y)
-        // Or: Assert.AreEqual(x, y, "My message")
-        // For now this is not handled.
-        if (root.FindNode(conditionLocation.SourceSpan) is not ArgumentSyntax conditionNode)
-        {
-            return document;
-        }
-
-        if (conditionNode.Parent is not ArgumentListSyntax argumentList)
+        SyntaxNode conditionExpression = root.FindNode(conditionLocation.SourceSpan, getInnermostNodeForTie: true);
+        ArgumentSyntax? conditionNode = conditionExpression.FirstAncestorOrSelf<ArgumentSyntax>();
+        if (conditionNode?.Parent is not ArgumentListSyntax argumentList)
         {
             return document;
         }
@@ -156,13 +150,28 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
-        if (root.FindNode(actualLocation.SourceSpan) is not ExpressionSyntax actualNode)
+        if (root.FindNode(actualLocation.SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax actualNode)
         {
             return document;
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+        GenericNameSyntax? explicitPredicateName = (conditionExpression as InvocationExpressionSyntax)?.Expression switch
+        {
+            MemberAccessExpressionSyntax { Name: GenericNameSyntax name } => name,
+            GenericNameSyntax name => name,
+            _ => null,
+        };
+        if (properAssertMethodName is "ContainsOnly" or "Contains" or "DoesNotContain" &&
+            explicitPredicateName is not null &&
+            editor.SemanticModel.GetOperation(conditionExpression, cancellationToken) is IInvocationOperation { TargetMethod.Name: "All" or "Any", Arguments.Length: 2 })
+        {
+            editor.ReplaceNode(simpleNameSyntax, explicitPredicateName.WithIdentifier(SyntaxFactory.Identifier(properAssertMethodName)).WithTriviaFrom(simpleNameSyntax));
+        }
+        else
+        {
+            FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+        }
 
         ArgumentListSyntax newArgumentList = argumentList;
         ExpressionSyntax expectedExpression = expectedNode switch
@@ -200,14 +209,14 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
         // Add remaining arguments (e.g., message) with their original separators and trivia
         var originalSeparators = argumentList.Arguments.GetSeparators().ToList();
-        for (int i = conditionIndex + 1; i < argumentList.Arguments.Count; i++)
+        for (int i = 0; i < argumentList.Arguments.Count; i++)
         {
-            // Get the separator that was before this argument (at index i-1 in the separators list)
-            if (i - 1 < originalSeparators.Count)
+            if (i == conditionIndex)
             {
-                newSeparators.Add(originalSeparators[i - 1]);
+                continue;
             }
 
+            newSeparators.Add(i > 0 ? originalSeparators[i - 1] : SyntaxFactory.Token(SyntaxKind.CommaToken));
             newArguments.Add(argumentList.Arguments[i]);
         }
 
@@ -337,6 +346,11 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
+        IArgumentOperation? collectionArgument = properAssertMethodName == "IsNotNull" &&
+            argumentList.Parent is { } invocationSyntax &&
+            editor.SemanticModel.GetOperation(invocationSyntax, cancellationToken) is IInvocationOperation invocation
+                ? invocation.Arguments.FirstOrDefault(argument => argument.Parameter?.Ordinal == 1)
+                : null;
         ArgumentListSyntax newArgumentList;
         if (additionalLocations.Count > 1 && needsNullableBoolCast &&
             root.FindNode(additionalLocations[1].SourceSpan) is ArgumentSyntax actualArgument)
@@ -347,6 +361,16 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 actualArgument.Expression);
             newArgumentList = argumentList.WithArguments(
                 argumentList.Arguments.Replace(actualArgument, SyntaxFactory.Argument(castExpression)).RemoveAt(argumentIndexToRemove));
+        }
+        else if (collectionArgument?.Syntax.FirstAncestorOrSelf<ArgumentSyntax>() is { } actualArgumentToCast &&
+            actualArgumentToCast.Expression.DescendantNodesAndSelf().Any(node => node is CollectionExpressionSyntax) &&
+            collectionArgument.Parameter is { Type: { } actualType })
+        {
+            var castExpression = (CastExpressionSyntax)editor.Generator.CastExpression(
+                actualType.WithNullableAnnotation(NullableAnnotation.NotAnnotated),
+                actualArgumentToCast.Expression);
+            newArgumentList = argumentList.WithArguments(
+                argumentList.Arguments.Replace(actualArgumentToCast, actualArgumentToCast.WithExpression(castExpression)).RemoveAt(argumentIndexToRemove));
         }
         else
         {
@@ -462,12 +486,5 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         // This is not very common and is currently not handled properly.
         // If needed, we can adjust the codefix to account for that case and
         // produce a GenericNameSyntax (e.g, AreEqual<object>) instead of IdentifierNameSyntax (e.g, AreEqual).
-        => editor.ReplaceNode(
-            simpleNameSyntax,
-            properAssertMethodName == "IsNotNull" &&
-            simpleNameSyntax is GenericNameSyntax genericName &&
-            editor.SemanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert)?
-                .GetMembers(properAssertMethodName).OfType<IMethodSymbol>().Any(method => method.IsGenericMethod) == true
-                ? genericName.WithIdentifier(SyntaxFactory.Identifier(properAssertMethodName))
-                : SyntaxFactory.IdentifierName(properAssertMethodName));
+        => editor.ReplaceNode(simpleNameSyntax, SyntaxFactory.IdentifierName(properAssertMethodName));
 }

@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
@@ -63,6 +64,69 @@ namespace MSTestSdkTest
         """;
 
     public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task JUnitReport_UsesPlatformVersion_WhenOptedIn(bool useCentralPackageManagement)
+    {
+        string sourceCode = SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <TestingExtensionsProfile>None</TestingExtensionsProfile>
+                <EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>
+                """);
+        if (useCentralPackageManagement)
+        {
+            sourceCode += """
+
+                #file Directory.Packages.props
+                <Project>
+                  <PropertyGroup>
+                    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+                    <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+                  </PropertyGroup>
+                </Project>
+                """;
+        }
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, sourceCode);
+        string buildLog = Path.Combine(testAsset.TargetAssetPath, "build.binlog");
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{buildLog}\"",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        using var assets = JsonDocument.Parse(
+            await File.ReadAllTextAsync(Path.Combine(testAsset.TargetAssetPath, "obj", "project.assets.json"), TestContext.CancellationToken));
+        const string packagePrefix = "Microsoft.Testing.Extensions.JUnitReport/";
+        JsonProperty package = Assert.ContainsSingle(
+            assets.RootElement.GetProperty("libraries").EnumerateObject()
+                .Where(property => property.Name.StartsWith(packagePrefix, StringComparison.Ordinal)));
+        Assert.AreEqual(MicrosoftTestingPlatformVersion, package.Name[packagePrefix.Length..]);
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--report-junit --report-junit-filename version.junit.xml --results-directory \"{resultsDirectory}\"",
+            cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.Success);
+        result.AssertOutputContainsSummary(0, 1, 0);
+
+        XElement report = XDocument.Load(Path.Combine(resultsDirectory, "version.junit.xml")).Root!;
+        Assert.AreEqual("testsuites", report.Name.LocalName);
+        Assert.AreEqual("1", report.Attribute("tests")!.Value);
+        Assert.AreEqual("0", report.Attribute("failures")!.Value);
+        Assert.AreEqual("0", report.Attribute("errors")!.Value);
+        Assert.AreEqual("0", report.Attribute("skipped")!.Value);
+        XElement suite = Assert.ContainsSingle(report.Elements("testsuite"));
+        Assert.AreEqual("MSTestSdkTest.UnitTest1", suite.Attribute("name")!.Value);
+        XElement test = Assert.ContainsSingle(suite.Elements("testcase"));
+        Assert.AreEqual("MSTestSdkTest.UnitTest1", test.Attribute("classname")!.Value);
+        Assert.AreEqual("TestMethod1", test.Attribute("name")!.Value);
+        Assert.IsEmpty(test.Elements("failure").Concat(test.Elements("error")).Concat(test.Elements("skipped")));
+    }
 
     [TestMethod]
     [DataRow(false)]
@@ -195,7 +259,7 @@ namespace MSTestSdkTest
         string markerPath = Path.Combine(testAsset.TargetAssetPath, "working-directory.txt");
         string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
         DotnetMuxerResult runResult = await DotnetCli.RunAsync(
-            $"run --no-build -c Release -f {TargetFrameworks.NetCurrent} -- --coverage --coverage-settings \"{settingsPath}\" --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --results-directory \"{resultsDirectory}\" --no-ansi --progress off",
+            $"run --no-build -c Release -f {TargetFrameworks.NetCurrent} -- --coverage --coverage-settings \"{settingsPath}\" --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --results-directory \"{resultsDirectory}\" --ansi off --progress off",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: new()
             {

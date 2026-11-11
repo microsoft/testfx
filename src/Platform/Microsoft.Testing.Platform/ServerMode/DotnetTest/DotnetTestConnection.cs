@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
@@ -191,6 +192,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost)
         {
             properties.Add(HandshakeMessagePropertyNames.AttemptNumber, GetAttemptNumber());
+        }
+
+        if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost or HandshakeMessageHostTypes.TestHostOrchestrator
+            && TargetFrameworkParser.GetTargetFrameworkFromAssembly(Assembly.GetEntryAssembly()) is { } targetFramework)
+        {
+            properties.Add(HandshakeMessagePropertyNames.TargetFramework, targetFramework);
         }
 
         if (additionalHandshakeProperties is not null)

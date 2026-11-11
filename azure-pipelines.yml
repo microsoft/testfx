@@ -70,6 +70,10 @@ parameters:
   displayName: "Compare CTS collection on main (requires public CTS package)"
   type: boolean
   default: false
+- name: EnableBuildXLPerformance
+  displayName: "Compare BuildXL and MSBuild performance in a separate Windows leg"
+  type: boolean
+  default: true
 
 variables:
   # Cannot use key:value syntax in root defined variables
@@ -141,6 +145,8 @@ stages:
       displayName: Validate CTS module selection
     - pwsh: ./eng/validate-collection-module-pool.ps1
       displayName: Validate bounded collection scheduling
+    - pwsh: ./eng/test-report-comparison.ps1
+      displayName: Validate report comparison
     - bash: |
         set -euo pipefail
 
@@ -221,6 +227,10 @@ stages:
         echo "##vso[task.setvariable variable=xmlDocsOnly;isOutput=true]${xmlDocsOnly}"
       name: detect
       displayName: Classify changed files
+
+  # This is a build benchmark, independent of SkipTests and the product test matrix.
+  - ${{ if eq(parameters.EnableBuildXLPerformance, true) }}:
+    - template: /eng/pipelines/jobs/buildxl-performance.yml
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

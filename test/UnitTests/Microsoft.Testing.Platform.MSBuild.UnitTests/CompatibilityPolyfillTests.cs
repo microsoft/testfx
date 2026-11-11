@@ -10,6 +10,20 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 [TestClass]
 public sealed class CompatibilityPolyfillTests
 {
+    // The polyfills are stateless; keep one assembly alive until all parallel cases have finished.
+    private static CompatibilityAssembly? s_compatibilityAssembly;
+
+    [ClassInitialize]
+    public static void InitializeCompatibilityAssembly(TestContext _)
+        => s_compatibilityAssembly = new();
+
+    [ClassCleanup]
+    public static void CleanupCompatibilityAssembly()
+    {
+        s_compatibilityAssembly?.Dispose();
+        s_compatibilityAssembly = null;
+    }
+
     [TestMethod]
     [DataRow(0, false, 0, 0, "0")]
     [DataRow(0, true, 0, 0, "^0")]
@@ -21,7 +35,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow(11, false, 10, 11, "11")]
     public void Index_OffsetsAndFormatting_PreserveOrigin(int value, bool fromEnd, int length, int expectedOffset, string expectedText)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("System.Index");
         object index = CreateIndex(type, value, fromEnd);
         object equal = CreateIndex(type, value, fromEnd);
@@ -46,7 +60,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow(int.MinValue)]
     public void Index_NegativeValues_AreRejectedByConstructorAndFactories(int value)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("System.Index");
         Action[] create =
         [
@@ -65,7 +79,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void Index_FactoriesAndConversion_PreserveStartAndEndSemantics()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("System.Index");
         object start = type.GetProperty("Start")!.GetValue(null)!;
         object end = type.GetProperty("End")!.GetValue(null)!;
@@ -90,7 +104,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow(10, false, 0, true, 10, 10, 0)]
     public void Range_OffsetsAndLength_RespectBothBounds(int start, bool startFromEnd, int end, bool endFromEnd, int length, int expectedOffset, int expectedLength)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type indexType = assembly.GetRequiredType("System.Index");
         Type rangeType = assembly.GetRequiredType("System.Range");
         object startIndex = CreateIndex(indexType, start, startFromEnd);
@@ -114,7 +128,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow(11, true, 0, true, 10)]
     public void Range_OutOfBoundsOrReversed_ReportsLength(int start, bool startFromEnd, int end, bool endFromEnd, int length)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type indexType = assembly.GetRequiredType("System.Index");
         Type rangeType = assembly.GetRequiredType("System.Range");
         object range = Invoke(rangeType.GetConstructor([indexType, indexType])!, null, CreateIndex(indexType, start, startFromEnd), CreateIndex(indexType, end, endFromEnd))!;
@@ -128,7 +142,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void Range_Factories_PreserveEndpointsAndValueEquality()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type indexType = assembly.GetRequiredType("System.Index");
         Type rangeType = assembly.GetRequiredType("System.Range");
         object startAt = Invoke(rangeType.GetMethod("StartAt")!, null, CreateIndex(indexType, 3, true))!;
@@ -148,7 +162,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void BackwardCompatibility_ContainsAndAppendJoin_PreserveLegacyContracts()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("Polyfills.Polyfill");
         MethodInfo containsCharacter = type.GetMethod("Contains", [typeof(string), typeof(char)])!;
         MethodInfo containsText = type.GetMethod("Contains", [typeof(string), typeof(string), typeof(StringComparison)])!;
@@ -175,7 +189,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void BackwardCompatibility_Deconstruct_PreservesBothComponents()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("Polyfills.Polyfill");
         MethodInfo deconstruct = type.GetMethods().Single(method => method.Name == "Deconstruct" && method.IsGenericMethodDefinition).MakeGenericMethod(typeof(string), typeof(int));
         object?[] arguments = [new KeyValuePair<string, int>("answer", 42), null, null];
@@ -189,7 +203,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public async Task BackwardCompatibility_CopyToAsync_TransfersFromCurrentPositionAndHonorsCancellation()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         MethodInfo copy = assembly.GetRequiredType("Polyfills.Polyfill").GetMethod("CopyToAsync", [typeof(Stream), typeof(Stream), typeof(CancellationToken)])!;
         using MemoryStream source = new([0, 255, 1, 13, 10, 128], writable: false);
         source.Position = 2;
@@ -209,7 +223,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public async Task BackwardCompatibility_SaveAsync_PreservesXmlAndHonorsCancellation()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         MethodInfo save = assembly.GetRequiredType("Polyfills.Polyfill").GetMethod("SaveAsync", [typeof(XDocument), typeof(Stream), typeof(SaveOptions), typeof(CancellationToken)])!;
         var document = XDocument.Parse("<root><item id=\"7\">value</item></root>");
         using MemoryStream destination = new();
@@ -233,7 +247,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute", "ParameterName", "result", false)]
     public void CompatibilityAttributes_StringPayloads_PreserveCompilerMetadata(string fullName, string propertyName, string payload, bool inherited)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType(fullName);
         object attribute = Invoke(type.GetConstructor([typeof(string)])!, null, payload)!;
         AttributeUsageAttribute usage = type.GetCustomAttribute<AttributeUsageAttribute>()!;
@@ -268,7 +282,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow("System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute", "ParameterValue", true)]
     public void CompatibilityAttributes_ConditionalNullability_PreservesBothBooleanStates(string fullName, string propertyName, bool condition)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType(fullName);
         object attribute = Invoke(type.GetConstructor([typeof(bool)])!, null, condition)!;
         AttributeUsageAttribute usage = type.GetCustomAttribute<AttributeUsageAttribute>()!;
@@ -281,7 +295,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void CompatibilityAttributes_MemberLists_PreserveOverloadsAndConditions()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type memberType = assembly.GetRequiredType("System.Diagnostics.CodeAnalysis.MemberNotNullAttribute");
         object single = Invoke(memberType.GetConstructor([typeof(string)])!, null, "_first")!;
         string[] names = ["_first", "_second"];
@@ -304,7 +318,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void CompatibilityAttributes_InterpolatedArgumentsAndPriority_PreserveBindingInputs()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type argumentType = assembly.GetRequiredType("System.Runtime.CompilerServices.InterpolatedStringHandlerArgumentAttribute");
         object single = Invoke(argumentType.GetConstructor([typeof(string)])!, null, "receiver")!;
         string[] arguments = ["receiver", "provider"];
@@ -329,7 +343,7 @@ public sealed class CompatibilityPolyfillTests
     [DataRow("UnsupportedOSPlatformGuardAttribute")]
     public void CompatibilityAttributes_PlatformAnnotations_PreserveVersionAndOptionalMessage(string name)
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType($"System.Runtime.Versioning.{name}");
         object attribute = Invoke(type.GetConstructor([typeof(string)])!, null, "windows10.0.19041.0")!;
         Assert.AreEqual("windows10.0.19041.0", type.GetProperty("PlatformName")!.GetValue(attribute));
@@ -355,7 +369,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void CompatibilityAttributes_SuppressionAndDynamicMembers_PreserveAllMetadata()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type suppressionType = assembly.GetRequiredType("System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute");
         object suppression = Invoke(suppressionType.GetConstructor([typeof(string), typeof(string)])!, null, "Trimming", "IL2026")!;
         Assert.AreEqual("Trimming", suppressionType.GetProperty("Category")!.GetValue(suppression));
@@ -378,7 +392,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void CompatibilityException_PreservesMessagesAndInnerException()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("System.Diagnostics.UnreachableException");
         var defaultException = (Exception)Invoke(type.GetConstructor(Type.EmptyTypes)!, null)!;
         var messageException = (Exception)Invoke(type.GetConstructor([typeof(string)])!, null, "custom unreachable")!;
@@ -395,7 +409,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void OperatingSystemCompatibility_UsesActualRuntimePlatform()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("Polyfills.Polyfill");
         foreach (string platform in new[] { "Wasi", "Android", "IOS", "TvOS", "Browser" })
         {
@@ -407,7 +421,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void Ensure_NotEmpty_ValidatesNullEmptyAndNonemptyCollectionShapes()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         MethodInfo method = assembly.GetRequiredType("Polyfills.Ensure").GetMethods()
             .Single(candidate => candidate.Name == "NotEmpty" && candidate.IsGenericMethodDefinition)
             .MakeGenericMethod(typeof(int));
@@ -431,7 +445,7 @@ public sealed class CompatibilityPolyfillTests
     [TestMethod]
     public void Ensure_StringGuards_PreserveInputAndDistinguishEmptyFromWhitespace()
     {
-        using CompatibilityAssembly assembly = new();
+        CompatibilityAssembly assembly = s_compatibilityAssembly!;
         Type type = assembly.GetRequiredType("Polyfills.Ensure");
         MethodInfo notEmpty = type.GetMethod("NotEmpty", [typeof(string), typeof(string)])!;
         MethodInfo notNullOrWhitespace = type.GetMethod("NotNullOrWhiteSpace")!;

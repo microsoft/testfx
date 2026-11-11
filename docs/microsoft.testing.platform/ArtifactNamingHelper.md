@@ -41,9 +41,20 @@ Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 | `{arch}` | Process architecture (lowercased value of `RuntimeInformation.ProcessArchitecture`) | `x64`, `x86`, `arm64` |
 | `{time}` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
 
-## Backward Compatibility
+## Migrate HangDump filenames to MTP 3
 
-Legacy patterns like `%p` continue to work in the hang dump extension.
+HangDump no longer substitutes the legacy `%p` token. Replace it with `{pid}`:
+`--hangdump-filename "mydump_{pid}.dmp"`. All other supported curly-brace
+placeholders, relative subdirectories, and paths with spaces remain supported.
+Dump paths must stay inside the results directory.
+
+The default resolved filename is unchanged. For process-tree children, HangDump
+adds `_{pid}` before the extension when the configured pattern has no `{pid}`;
+a literal `%p` no longer satisfies this uniqueness requirement. A configured
+root-process filename is still preserved.
+
+This change does not affect CrashDump's .NET runtime-owned `%p`, `%e`, `%h`, or
+`%t` tokens. See the [migration decision and validation record](../decisions/legacy-cli-migrations.md).
 
 ## Custom Replacements
 
@@ -62,12 +73,12 @@ string result = ArtifactNamingHelper.ResolveTemplate("{pname}_{pid}.dmp", replac
 
 ## Hang Dump Integration
 
-The hang dump extension uses the artifact naming helper and supports both legacy and modern patterns:
+The hang dump extension uses the artifact naming helper:
 
 ```text
-# Legacy pattern (still works)
---hangdump-filename "mydump_%p.dmp"
+# Process ID
+--hangdump-filename "mydump_{pid}.dmp"
 
-# New template pattern
+# Process name, ID, and timestamp
 --hangdump-filename "{pname}_{pid}_{time}_hang.dmp"
 ```

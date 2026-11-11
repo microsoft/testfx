@@ -16,11 +16,11 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 * Remove `DataTestMethodAttribute`. Replace `[DataTestMethod]` with `[TestMethod]` for data-driven tests. Unlike `DataTestMethodAttribute`, `TestMethodAttribute` is not inherited: explicitly apply `[TestMethod]` to overrides that previously inherited `[DataTestMethod]` from a virtual base method, or those overrides will no longer be discovered. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
 * Raise the minimum compiler host for `MSTest.Analyzers` and its code fixes to Roslyn 4.14: Visual Studio 2022 17.14 or .NET SDK 9.0.300 or newer. Roslyn is supplied by the host, not bundled with the package; older hosts can continue using `MSTest.Analyzers` 4.x. See [#10446](https://github.com/microsoft/testfx/issues/10446) and [#12201](https://github.com/microsoft/testfx/pull/12201).
 * Drop .NET 8 and .NET 9 support from MSTest, including the framework, adapter, SDK, hosting and UI Automation packages, and the modern UWP/WinUI assets. The supported modern .NET targets are .NET 10 and .NET 11; .NET Framework, .NET Standard and classic UWP assets remain where previously provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
-* Replace the `void Assert.IsNotNull(object?, ...)` overloads with generic `Assert.IsNotNull<T>(T?, ...)` overloads that return the checked value with its original type. Recompile consumers, provide a type argument or typed value for untyped `null`/`default` calls, adapt delegates targeting the old `void` signature, and use `|> ignore` for F# statement calls when needed, in [#12219](https://github.com/microsoft/testfx/pull/12219).
 * Remove `DeploymentItemAttribute` from the .NET Standard 2.0 assembly. Projects using `[DeploymentItem]` must target a supported .NET Framework or .NET version; deployment remains unsupported for UWP and WinUI, in [#12223](https://github.com/microsoft/testfx/pull/12223).
 
 ### Added
 
+* Add `Assert.ContainsOnly` for collections whose elements must all match a predicate, report the first offending index and value for it and predicate-based `Assert.DoesNotContain`, and extend MSTEST0037 to guide positive LINQ `All` assertions. See [#12260](https://github.com/microsoft/testfx/issues/12260).
 * Add [`--partition index/count`](mstest-partitioning.md) to native MSTest applications on Microsoft.Testing.Platform for deterministic class-preserving CI selections, keeping declared dependency components together and preserving normal filtering, Retry, and zero-test policies. Relates to [#4068](https://github.com/microsoft/testfx/issues/4068).
 * Add method-level `[ExpectedDuration(milliseconds)]` budgets that warn on final passed or failed results exceeding their reported duration budget without changing outcomes, cancellation, or timeout behavior. See [#12245](https://github.com/microsoft/testfx/issues/12245).
 * Discover annotated F# module functions without requiring `[<TestClass>]`, with module-level attributes and lifecycle functions for reflection-based execution on both test hosts, by @Evangelink in [#11830](https://github.com/microsoft/testfx/pull/11830)
@@ -39,11 +39,18 @@ See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v
 
 For the Microsoft.Testing.Platform changes included with this release, see [2.5.3](Changelog-Platform.md#2.5.3).
 
+### Changed
+
+* Inspect assembly metadata before loading dependencies during assembly-fixture provider discovery, avoiding unnecessary loads of unmarked libraries while preserving transitive providers, runtime binding and diagnosed fallback, by @Evangelink in [#12291](https://github.com/microsoft/testfx/pull/12291)
+
 ### Fixed
 
 * Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12128](https://github.com/microsoft/testfx/pull/12128)
 * Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12145](https://github.com/microsoft/testfx/pull/12145)
-* Preserve global test cleanup after a locally canceled or timed-out test cleanup, without restarting an active test or run deadline or losing the original cleanup failure, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220)
+* Preserve global test cleanup after a locally canceled or timed-out test cleanup, retain original deadlines and cancellation-source ownership, and aggregate independent cleanup failures without losing timeout or inconclusive outcomes, including nested aggregate messages on .NET Framework, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220) and [#12292](https://github.com/microsoft/testfx/pull/12292)
+* Keep `TestContext.AddResultFile` attachments readable after Microsoft.Testing.Platform host shutdown by retaining copied files in visible `MSTest-<random-id>` result folders, subject to the caller's results-retention policy, by @Evangelink in [#12247](https://github.com/microsoft/testfx/pull/12247)
+* Avoid duplicate Microsoft.Testing.Platform runtime DLLs in the classic UWP adapter payload by restoring dependencies from their owning NuGet packages and including the resolved assemblies in AppX deployment, by @Evangelink in [#12248](https://github.com/microsoft/testfx/pull/12248)
+* Await all scheduled workers when cancellation occurs during ordinary or dependency-ordered parallel execution, preventing canceled runs from returning before their workers finish, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
 
 ## <a name="4.5.2" />[4.5.2] - 2026-10-27
 

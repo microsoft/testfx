@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -14,6 +18,85 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "AssertSourceCompatibility consumer";
+
+    private const string TaskConsumerSource = """
+        #file IsNotNullTaskConsumer.csproj
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>$TargetFrameworks$</TargetFramework>
+            <OutputType>Exe</OutputType>
+            <ImplicitUsings>disable</ImplicitUsings>
+            <Nullable>enable</Nullable>
+            <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+            <LangVersion>12.0</LangVersion>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+          </ItemGroup>
+        </Project>
+
+        #file Program.cs
+        using System;
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        internal static class Program
+        {
+            private static async Task Main()
+            {
+                using CancellationTokenSource shutdown = new();
+                TaskCompletionSource<int> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                using CancellationTokenRegistration registration = shutdown.Token.Register(() => completion.SetResult(42));
+                int messageEvaluations = 0;
+
+                Task? task = GetTask();
+                Assert.IsNotNull(task);
+                Assert.IsFalse(task.IsCompleted);
+                task = GetTask();
+                Assert.IsNotNull(task, "pending task");
+                Assert.IsFalse(task.IsCompleted);
+                task = GetTask();
+                Assert.IsNotNull(task, $"pending task {GetMessage()}");
+                Assert.IsFalse(task.IsCompleted);
+
+                Task<int>? resultTask = GetResultTask();
+                Assert.IsNotNull(resultTask);
+                Assert.IsFalse(resultTask.IsCompleted);
+                resultTask = GetResultTask();
+                Assert.IsNotNull(resultTask, "pending task");
+                Assert.IsFalse(resultTask.IsCompleted);
+                resultTask = GetResultTask();
+                Assert.IsNotNull(resultTask, $"pending task {GetMessage()}");
+                Assert.IsFalse(resultTask.IsCompleted);
+
+                Assert.AreEqual(0, messageEvaluations);
+                Assert.IsFalse(shutdown.IsCancellationRequested);
+                shutdown.Cancel();
+                await task;
+                Assert.AreEqual(42, await resultTask);
+
+                Task? missingTask = null;
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.IsNotNull(missingTask));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.IsNotNull(missingTask, "missing task"));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.IsNotNull(missingTask, $"missing task {GetMessage()}"));
+                Assert.AreEqual(1, messageEvaluations);
+
+                Console.WriteLine(typeof(Assert).Assembly.Location);
+                Console.WriteLine("IsNotNull Task consumer passed.");
+
+                Task? GetTask() => completion.Task;
+
+                Task<int>? GetResultTask() => completion.Task;
+
+                string GetMessage()
+                {
+                    messageEvaluations++;
+                    return "message";
+                }
+            }
+        }
+        """;
 
     private const string ConsumerSource = """
         #file AssertSourceCompatibility.csproj
@@ -45,8 +128,9 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
 
         namespace AssertSourceCompatibility;
 
-        // This code is compiled but never executed. Keep calls implicit except when deliberately testing
-        // explicit generic calls: casts or type arguments would hide overload-resolution regressions.
+        // This code is compiled but never executed. Except for ExplicitGenericArrayCalls, keep the calls
+        // implicit: casts or explicit type arguments would hide the overload-resolution regressions this
+        // asset is intended to catch.
         internal static class AssertCallShapes
         {
             internal static void ArrayAndEnumerableCalls(
@@ -80,6 +164,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, values);
                 Assert.Contains(1, values, comparer);
                 Assert.Contains(predicate, values);
+                Assert.ContainsOnly(predicate, values);
+                Assert.ContainsOnly(predicate, values, "all positive");
                 Assert.DoesNotContain(1, values);
                 Assert.DoesNotContain(1, values, comparer);
                 Assert.DoesNotContain(predicate, values);
@@ -118,6 +204,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains<int>(1, values);
                 Assert.Contains<int>(1, values, comparer);
                 Assert.Contains<int>(predicate, values);
+                Assert.ContainsOnly<int>(predicate, values);
+                Assert.ContainsOnly<int>(predicate, values, message: "all positive");
                 Assert.DoesNotContain<int>(1, values);
                 Assert.DoesNotContain<int>(1, values, comparer);
                 Assert.DoesNotContain<int>(predicate, values);
@@ -149,6 +237,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains<int>(1, default!);
                 Assert.Contains<int>(1, default!, comparer);
                 Assert.Contains<int>(predicate, default!);
+                Assert.ContainsOnly<int>(predicate, default!);
                 Assert.DoesNotContain<int>(1, default!);
                 Assert.DoesNotContain<int>(1, default!, comparer);
                 Assert.DoesNotContain<int>(predicate, default!);
@@ -186,6 +275,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, values);
                 Assert.Contains(1, values, comparer);
                 Assert.Contains(predicate, values);
+                Assert.ContainsOnly(predicate, values);
+                Assert.ContainsOnly(predicate, values, "all positive");
                 Assert.DoesNotContain(1, values);
                 Assert.DoesNotContain(1, values, comparer);
                 Assert.DoesNotContain(predicate, values);
@@ -207,6 +298,12 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 IEnumerable<string> enumerable,
                 IEqualityComparer<string> comparer)
             {
+                Func<string, bool> predicate = value => value.Length > 0;
+
+                Assert.ContainsOnly(predicate, list);
+                Assert.ContainsOnly(predicate, set);
+                Assert.ContainsOnly(predicate, array);
+                Assert.ContainsOnly(predicate, enumerable);
                 Assert.Contains("Name", list);
                 Assert.DoesNotContain("Missing", list);
                 Assert.Contains("Name", list, comparer);
@@ -234,6 +331,15 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 string? nullValue = null;
                 Func<string?, bool> predicate = value => value is null;
 
+                Assert.ContainsOnly(predicate, list);
+                Assert.ContainsOnly(predicate, set);
+                Assert.ContainsOnly(predicate, array);
+                Assert.ContainsOnly(predicate, enumerable);
+                Assert.ContainsOnly(predicate, collection);
+                Assert.ContainsOnly(predicate, readOnlyCollection);
+                Assert.ContainsOnly(predicate, segment);
+                Assert.ContainsOnly(predicate, immutableArray);
+                Assert.ContainsOnly(predicate, dualConvertible);
                 Assert.Contains("Name", list);
                 Assert.DoesNotContain("Missing", list);
                 Assert.Contains(nullValue, list);
@@ -321,7 +427,12 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 IEnumerable<int?> enumerable)
             {
                 int? nullValue = null;
+                Func<int?, bool> predicate = value => value.HasValue;
 
+                Assert.ContainsOnly(predicate, list);
+                Assert.ContainsOnly(predicate, set);
+                Assert.ContainsOnly(predicate, array);
+                Assert.ContainsOnly(predicate, enumerable);
                 Assert.Contains(1, list);
                 Assert.DoesNotContain(0, list);
                 Assert.Contains(nullValue, list);
@@ -355,6 +466,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains('a', values);
                 Assert.Contains('a', values, comparer);
                 Assert.Contains(predicate, values);
+                Assert.ContainsOnly(predicate, values);
                 Assert.DoesNotContain('z', values);
                 Assert.DoesNotContain('z', values, comparer);
                 Assert.DoesNotContain(predicate, values);
@@ -378,6 +490,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, values);
                 Assert.Contains(1, values, comparer);
                 Assert.Contains(predicate, values);
+                Assert.ContainsOnly(predicate, values);
                 Assert.DoesNotContain(0, values);
                 Assert.DoesNotContain(0, values, comparer);
                 Assert.DoesNotContain(predicate, values);
@@ -401,6 +514,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, values);
                 Assert.Contains(1, values, comparer);
                 Assert.Contains(predicate, values);
+                Assert.ContainsOnly(predicate, values);
                 Assert.DoesNotContain(0, values);
                 Assert.DoesNotContain(0, values, comparer);
                 Assert.DoesNotContain(predicate, values);
@@ -421,6 +535,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, [1, 2, 3]);
                 Assert.Contains(1, [1, 2, 3], comparer);
                 Assert.Contains(predicate, [1, 2, 3]);
+                Assert.ContainsOnly(predicate, [1, 2, 3]);
                 Assert.DoesNotContain(0, [1, 2, 3]);
                 Assert.DoesNotContain(0, [1, 2, 3], comparer);
                 Assert.DoesNotContain(predicate, [1, 2, 3]);
@@ -445,6 +560,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, values);
                 Assert.Contains(1, values, comparer);
                 Assert.Contains(predicate, values);
+                Assert.ContainsOnly(predicate, values);
                 Assert.DoesNotContain(0, values);
                 Assert.DoesNotContain(0, values, comparer);
                 Assert.DoesNotContain(predicate, values);
@@ -470,6 +586,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, values);
                 Assert.Contains(1, values, comparer);
                 Assert.Contains((object? value) => value is int, values);
+                Assert.ContainsOnly((object? value) => value is int, values);
+                Assert.ContainsOnly((object? value) => value is int, values, message: "all integers");
                 Assert.DoesNotContain(1, values);
                 Assert.DoesNotContain(1, values, comparer);
                 Assert.DoesNotContain((object? value) => value is string, values);
@@ -525,15 +643,19 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.Contains(1, span);
                 Assert.Contains(1, span, comparer);
                 Assert.Contains((int value) => value > 0, span);
+                Assert.ContainsOnly((int value) => value > 0, span);
                 Assert.Contains(1, readOnlySpan);
                 Assert.Contains(1, readOnlySpan, comparer);
                 Assert.Contains((int value) => value > 0, readOnlySpan);
+                Assert.ContainsOnly((int value) => value > 0, readOnlySpan);
                 Assert.Contains(1, memory);
                 Assert.Contains(1, memory, comparer);
                 Assert.Contains((int value) => value > 0, memory);
+                Assert.ContainsOnly((int value) => value > 0, memory);
                 Assert.Contains(1, readOnlyMemory);
                 Assert.Contains(1, readOnlyMemory, comparer);
                 Assert.Contains((int value) => value > 0, readOnlyMemory);
+                Assert.ContainsOnly((int value) => value > 0, readOnlyMemory);
                 Assert.DoesNotContain(1, span);
                 Assert.DoesNotContain(1, span, comparer);
                 Assert.DoesNotContain((int value) => value < 0, span);
@@ -642,48 +764,6 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.DoesNotMatchRegex(new Regex("z"), "abc");
             }
 
-            internal static void IsNotNullCalls(
-                string? text,
-                object? value,
-                int number,
-                int? nullableNumber,
-                int[]? array,
-                IEnumerable<int>? sequence)
-            {
-                string result = Assert.IsNotNull(text);
-                result = Assert.IsNotNull(text, "message");
-                result = Assert.IsNotNull(text, $"message {text}");
-                result = Assert.IsNotNull(text, message: null);
-                _ = result.Length;
-                _ = text.Length;
-
-                object objectResult = Assert.IsNotNull(value);
-                int numberResult = Assert.IsNotNull(number);
-                int? nullableResult = Assert.IsNotNull(nullableNumber);
-                _ = nullableResult.Value;
-                int[] arrayResult = Assert.IsNotNull(array);
-                IEnumerable<int> sequenceResult = Assert.IsNotNull(sequence);
-
-                string explicitNullableResult = Assert.IsNotNull<string?>(text);
-                explicitNullableResult = Assert.IsNotNull<string?>(text, "message");
-                explicitNullableResult = Assert.IsNotNull<string?>(text, $"message {text}");
-                _ = Assert.IsNotNull<object>(null);
-                _ = Assert.IsNotNull<object>(default);
-
-                Func<string?, string?, string, string> callback = Assert.IsNotNull;
-                _ = callback(text, null, "text");
-                Action action = () => Assert.IsNotNull(value);
-                action();
-            }
-
-            internal static T IsNotNullGenericCalls<T>(T? value)
-            {
-                T result = Assert.IsNotNull(value);
-                result = Assert.IsNotNull(value, "message");
-                result = Assert.IsNotNull(value, $"message {value}");
-                return result;
-            }
-
             internal static async Task ExceptionCallsAsync()
             {
                 _ = Assert.Throws<InvalidOperationException>(() => Throw());
@@ -745,55 +825,151 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         }
         """;
 
-    private const string FSharpConsumerSource = """
-        #file IsNotNullFSharp.fsproj
+    private const string PredicateConsumerSource = """"
+        #file ContainsOnlyConsumer.csproj
         <Project Sdk="Microsoft.NET.Sdk">
           <PropertyGroup>
             <TargetFramework>$TargetFrameworks$</TargetFramework>
             <OutputType>Exe</OutputType>
-            <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+            <ImplicitUsings>disable</ImplicitUsings>
+            <Nullable>enable</Nullable>
             <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+            <LangVersion>12.0</LangVersion>
           </PropertyGroup>
           <ItemGroup>
             <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-            <Compile Include="Program.fs" />
           </ItemGroup>
         </Project>
 
-        #file Program.fs
-        open System
-        open Microsoft.VisualStudio.TestTools.UnitTesting
+        #file Program.cs
+        using System;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        let mutable evaluations = 0
-        let checkedValue = obj()
-        let getValue () =
-            evaluations <- evaluations + 1
-            checkedValue
+        internal static class Program
+        {
+            private const string OnlyFailure = """
+                Assertion failed. Expected collection to contain only elements matching the predicate.
+                consumer only
 
-        let result: obj = Assert.IsNotNull(getValue())
-        if not (Object.ReferenceEquals(checkedValue, result)) || evaluations <> 1 then
-            failwith "IsNotNull must return the original value after one evaluation."
+                index: 1
+                item:  -2
 
-        let text: string = Assert.IsNotNull("checked value", "message")
-        if text <> "checked value" then
-            failwith "IsNotNull must preserve the inferred string type and value."
+                Assert.ContainsOnly(IsPositive, values)
+                """;
 
-        let number: int = Assert.IsNotNull(42)
-        let nullableNumber: Nullable<int> = Assert.IsNotNull(Nullable<int>(42))
-        if number <> 42 || nullableNumber.Value <> 42 then
-            failwith "IsNotNull must preserve value types."
+            private const string NoneFailure = """
+                Assertion failed. Expected collection to not contain an element matching the predicate.
+                consumer none
 
-        Assert.IsNotNull(checkedValue) |> ignore
-        Assert.IsNotNull(checkedValue, $"message {number}") |> ignore
+                index: 2
+                item:  3
 
-        try
-            Assert.IsNotNull<string>(null) |> ignore
-            failwith "IsNotNull must reject null."
-        with :? AssertFailedException -> ()
+                Assert.DoesNotContain(IsPositive, values)
+                """;
 
-        Console.WriteLine(typeof<Assert>.Assembly.Location)
-        Console.WriteLine("IsNotNull F# consumer passed.")
-        """;
+            private const string OnlyScopeFailure = """
+                Assertion failed. Expected collection to contain only elements matching the predicate.
+                scope only
+
+                index: 0
+                item:  -1
+
+                Assert.ContainsOnly(IsPositive, values)
+                """;
+
+            private const string NoneScopeFailure = """
+                Assertion failed. Expected collection to not contain an element matching the predicate.
+                scope none
+
+                index: 1
+                item:  2
+
+                Assert.DoesNotContain(IsPositive, values)
+                """;
+
+            private static int Main()
+            {
+                int visits = 0;
+                Assert.ContainsOnly((int item) =>
+                {
+                    visits++;
+                    return item > 0;
+                }, new[] { 1, 2, 3 });
+                if (visits != 3)
+                {
+                    throw new InvalidOperationException("ContainsOnly must visit every matching item exactly once.");
+                }
+
+                Assert.ContainsOnly(static (int _) => throw new InvalidOperationException("Empty predicate was evaluated."), Array.Empty<int>());
+                Assert.DoesNotContain(IsPositive, new[] { -3, -2, -1 });
+
+                int[] values = new[] { 1, -2, 3 };
+                AssertFailedException onlyFailure = ExpectFailure(
+                    () => Assert.ContainsOnly(IsPositive, values, "consumer only"),
+                    OnlyFailure);
+                values = new[] { -1, -2, 3, 4 };
+                AssertFailedException noneFailure = ExpectFailure(
+                    () => Assert.DoesNotContain(IsPositive, values, "consumer none"),
+                    NoneFailure);
+                if (onlyFailure.ExpectedText != "true" || onlyFailure.ActualText != "false" ||
+                    noneFailure.ExpectedText != "false" || noneFailure.ActualText != "true")
+                {
+                    throw new InvalidOperationException("Structured predicate failures must retain expected and actual predicate results.");
+                }
+
+                values = new[] { -1, 2 };
+                int continued = 0;
+                AssertFailedException scopeFailure = ExpectFailure(() =>
+                {
+        #pragma warning disable MSTESTEXP
+                    using (Assert.Scope())
+                    {
+                        Assert.ContainsOnly(IsPositive, values, "scope only");
+                        Assert.DoesNotContain(IsPositive, values, "scope none");
+                        continued++;
+                    }
+        #pragma warning restore MSTESTEXP
+                }, "2 assertion(s) failed within the assert scope.");
+                if (continued != 1 ||
+                    scopeFailure.InnerException is not AggregateException aggregate ||
+                    aggregate.InnerExceptions.Count != 2 ||
+                    aggregate.InnerExceptions[0].Message.ReplaceLineEndings() != OnlyScopeFailure.ReplaceLineEndings() ||
+                    aggregate.InnerExceptions[1].Message.ReplaceLineEndings() != NoneScopeFailure.ReplaceLineEndings())
+                {
+                    throw new InvalidOperationException("Predicate assertions must collect both exact failures and continue in one scope.");
+                }
+
+                Console.WriteLine(typeof(Assert).Assembly.Location);
+                Console.WriteLine(onlyFailure.Message);
+                Console.WriteLine();
+                Console.WriteLine(noneFailure.Message);
+                Console.WriteLine();
+                Console.WriteLine("ContainsOnly C# 12 consumer passed.");
+                return 0;
+            }
+
+            private static bool IsPositive(int item) => item > 0;
+
+            private static AssertFailedException ExpectFailure(Action assertion, string expected)
+            {
+                try
+                {
+                    assertion();
+                }
+                catch (AssertFailedException failure)
+                {
+                    if (failure.Message.ReplaceLineEndings() != expected.ReplaceLineEndings())
+                    {
+                        throw new InvalidOperationException("Unexpected predicate assertion diagnostic: " + failure.Message, failure);
+                    }
+
+                    return failure;
+                }
+
+                throw new InvalidOperationException("Expected a predicate assertion failure, but the assertion returned successfully.");
+            }
+        }
+        """";
 
     private static readonly Regex PublicAssertMethodRegex = new(
         @"^(?:\[[^\]]+\])*\s*static Microsoft\.VisualStudio\.TestTools\.UnitTesting\.Assert\.(?<name>[A-Za-z0-9]+)(?:<|\()",
@@ -829,30 +1005,31 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(0);
+        VerifyPackedPredicateConsumerProvenance(testAsset, targetFramework, isolatedPackages, verifyRuntimeCopy: false);
     }
 
     [TestMethod]
     [DynamicData(nameof(GetSourceCompatibilityTargetFrameworks))]
-    public async Task IsNotNullCallShapes_CompileAndRunWithFSharp(string targetFramework)
+    public async Task ContainsOnlyAndDoesNotContain_ExecuteFromPackedFrameworkWithCSharp12(string targetFramework)
     {
-        string source = FSharpConsumerSource
+        string source = PredicateConsumerSource
             .PatchTargetFrameworks(targetFramework)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("IsNotNull FSharp consumer", source);
-
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("ContainsOnly CSharp consumer", source);
+        string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
         var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
-            ["NUGET_PACKAGES"] = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages"),
+            ["NUGET_PACKAGES"] = isolatedPackages,
         };
-
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             "build -c Release",
             environmentVariables: environmentVariables,
             workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
         buildResult.AssertExitCodeIs(0);
+        VerifyPackedPredicateConsumerProvenance(testAsset, targetFramework, isolatedPackages, verifyRuntimeCopy: true);
 
-        string consumerDll = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "IsNotNullFSharp.dll");
+        string consumerDll = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "ContainsOnlyConsumer.dll");
         using DotnetMuxer muxer = new(environmentVariables);
         int exitCode = await muxer.ExecuteAsync(
             $"\"{consumerDll}\"",
@@ -863,10 +1040,123 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         Assert.AreEqual(
             $"""
             {Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll")}
-            IsNotNull F# consumer passed.
+            Assertion failed. Expected collection to contain only elements matching the predicate.
+            consumer only
+            index: 1
+            item:  -2
+            Assert.ContainsOnly(IsPositive, values)
+            Assertion failed. Expected collection to not contain an element matching the predicate.
+            consumer none
+            index: 2
+            item:  3
+            Assert.DoesNotContain(IsPositive, values)
+            ContainsOnly C# 12 consumer passed.
             """.ReplaceLineEndings(),
             muxer.StandardOutput.ReplaceLineEndings());
         TestContext.WriteLine(muxer.StandardOutput);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetSourceCompatibilityTargetFrameworks))]
+    public async Task IsNotNullTaskStatements_CompileAndRunWithCSharp12(string targetFramework)
+    {
+        string source = TaskConsumerSource
+            .PatchTargetFrameworks(targetFramework)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("IsNotNull Task consumer", source);
+
+        string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
+        var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["NUGET_PACKAGES"] = isolatedPackages,
+        };
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            "build -c Release",
+            environmentVariables: environmentVariables,
+            workingDirectory: testAsset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        TestContext.WriteLine(buildResult.ToString());
+        Assert.DoesNotContain("CS4014", $"{buildResult.StandardOutput}{buildResult.StandardError}");
+        buildResult.AssertExitCodeIs(0);
+
+        string shippingPackage = Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
+        string restoredPackage = Path.Combine(isolatedPackages, "mstest.testframework", MSTestVersion, $"mstest.testframework.{MSTestVersion}.nupkg");
+        string shippingHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(shippingPackage)));
+        string restoredHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(restoredPackage)));
+        Assert.AreEqual(shippingHash, restoredHash, "The consumer must restore the framework package built by this checkout.");
+        TestContext.WriteLine($"Restored package: {restoredPackage}; SHA256: {restoredHash}");
+
+        string consumerDll = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "IsNotNullTaskConsumer.dll");
+        using DotnetMuxer muxer = new(environmentVariables);
+        int exitCode = await muxer.ExecuteAsync(
+            $"\"{consumerDll}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exitCode, $"{muxer.StandardOutput}{muxer.StandardError}");
+        Assert.AreEqual(
+            $"""
+            {Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll")}
+            IsNotNull Task consumer passed.
+            """.ReplaceLineEndings(),
+            muxer.StandardOutput.ReplaceLineEndings());
+        TestContext.WriteLine(muxer.StandardOutput);
+    }
+
+    private void VerifyPackedPredicateConsumerProvenance(TestAsset asset, string targetFramework, string isolatedPackages, bool verifyRuntimeCopy)
+    {
+        string assetsPath = Path.Combine(asset.TargetAssetPath, "obj", "project.assets.json");
+        using var assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
+        string packageIdentity = $"MSTest.TestFramework/{MSTestVersion}";
+        JsonProperty target = assets.RootElement.GetProperty("targets").EnumerateObject().Single();
+        JsonElement selection = target.Value.GetProperty(packageIdentity);
+        string expectedAsset = $"lib/{targetFramework}/MSTest.TestFramework.dll";
+        string compileAsset = selection.GetProperty("compile").EnumerateObject()
+            .Single(property => property.Name.EndsWith("/MSTest.TestFramework.dll", StringComparison.Ordinal)).Name;
+        string runtimeAsset = selection.GetProperty("runtime").EnumerateObject()
+            .Single(property => property.Name.EndsWith("/MSTest.TestFramework.dll", StringComparison.Ordinal)).Name;
+        Assert.AreEqual(expectedAsset, compileAsset);
+        Assert.AreEqual(expectedAsset, runtimeAsset);
+
+        string[] packageFolders = assets.RootElement.GetProperty("packageFolders").EnumerateObject()
+            .Select(property => Path.GetFullPath(property.Name).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+            .ToArray();
+        Assert.Contains(Path.GetFullPath(isolatedPackages).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), packageFolders);
+        string packageRelativePath = assets.RootElement.GetProperty("libraries").GetProperty(packageIdentity).GetProperty("path").GetString()!;
+        string cachedDll = Path.Combine(isolatedPackages, packageRelativePath.Replace('/', Path.DirectorySeparatorChar), runtimeAsset.Replace('/', Path.DirectorySeparatorChar));
+        string packagePath = Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
+        using ZipArchive package = ZipFile.OpenRead(packagePath);
+        ZipArchiveEntry? entry = package.GetEntry(expectedAsset);
+        Assert.IsNotNull(entry);
+        using Stream packedStream = entry.Open();
+        string packedHash = GetPredicateConsumerAssetHash(packedStream);
+        using FileStream cachedStream = File.OpenRead(cachedDll);
+        Assert.AreEqual(packedHash, GetPredicateConsumerAssetHash(cachedStream), "The effective isolated cache must contain the freshly packed framework.");
+
+        if (verifyRuntimeCopy)
+        {
+            string copiedDll = Path.Combine(asset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll");
+            using FileStream copiedStream = File.OpenRead(copiedDll);
+            Assert.AreEqual(packedHash, GetPredicateConsumerAssetHash(copiedStream), "The executable must load the current packed framework payload.");
+        }
+
+        string nugetConfigPath = Path.Combine(asset.TargetAssetPath, "NuGet.config");
+        var nugetConfig = XDocument.Load(nugetConfigPath);
+        string sources = string.Join("; ", nugetConfig.Descendants("packageSources").Elements("add")
+            .Select(element => $"{element.Attribute("key")?.Value}={element.Attribute("value")?.Value}"));
+        TestContext.WriteLine($"Consumer assets: {assetsPath}; target: {target.Name}; package: {packageIdentity}; asset: {runtimeAsset}");
+        TestContext.WriteLine($"Consumer package folders: {string.Join("; ", packageFolders)}");
+        TestContext.WriteLine($"Consumer NuGet config: {nugetConfigPath}; sources: {sources}");
+        TestContext.WriteLine($"Packed framework: {packagePath}; cached framework: {cachedDll}; DLL SHA-256: {packedHash}");
+    }
+
+    private static string GetPredicateConsumerAssetHash(Stream stream)
+    {
+        using var hash = SHA256.Create();
+        return Convert.ToHexString(hash.ComputeHash(stream));
     }
 
     private static IEnumerable<object[]> GetSourceCompatibilityTargetFrameworks()

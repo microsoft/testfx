@@ -31,6 +31,12 @@ internal sealed partial class ServerTestHost
                     return;
                 }
 
+                if (message is ErrorMessage { Id: null } uncorrelatedError)
+                {
+                    QueueLog(LogLevel.Debug, $"Received an uncorrelated JSON-RPC error (code {uncorrelatedError.ErrorCode}): {uncorrelatedError.Message}");
+                    continue;
+                }
+
                 // Signal that we have to handle this request
                 _requestCounter.AddCount();
 
@@ -82,11 +88,11 @@ internal sealed partial class ServerTestHost
                             completion => completion.TrySetResult(response));
                         break;
 
-                    case ErrorMessage error:
+                    case ErrorMessage { Id: { } errorId } error:
                         RemoteInvocationException exception = new(error.ErrorCode, error.Message, error.Data);
                         CompleteRequest(
                             ref _serverToClientRequests,
-                            GetRequestKey(error.Id, error.StringId),
+                            GetRequestKey(errorId, error.StringId),
                             completion => completion.TrySetException(exception));
                         break;
                 }

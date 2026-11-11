@@ -28,6 +28,31 @@ Supported platforms:
 
 ## Documentation
 
+### Predicate-based collection assertions
+
+Starting with MSTest 5, use `Assert.ContainsOnly` to assert that every collection
+element satisfies a predicate. Use `Assert.DoesNotContain` to assert that no
+element satisfies a predicate:
+
+```csharp
+string[] fragments = ["AB", "A", "BC"];
+
+Assert.ContainsOnly(fragment => fragment.Length < 3, fragments);
+Assert.DoesNotContain(fragment => fragment.Length > 2, fragments);
+```
+
+Both methods stop at the first violation and report its zero-based index, value,
+and predicate expression. They evaluate the predicate once per visited element
+and do not enumerate the collection again to construct the failure message.
+Predicate and iterator exceptions propagate unchanged. Built-in counterexample
+formatting does not enumerate nested collection contents; an explicit value
+formatter can provide a representation when needed.
+
+An empty collection passes both assertions. Add `Assert.IsNotEmpty` separately
+when at least one element is required. `ContainsAll` remains a different
+assertion: it verifies that every expected item is present, with multiplicity,
+and permits additional items.
+
 ### Expected duration warnings
 
 Use `[ExpectedDuration(2000)]` on a test method to warn when a completed result

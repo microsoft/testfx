@@ -39,9 +39,14 @@ When using MSTest.Sdk, the extension remains opt-in and is not enabled by any pr
 - Each physical attempt receives its own UUID. The final test object uses the standard `attemptId` field introduced in CTRF 0.2.0, including tests that were never retried; earlier attempts use `retryAttempts[].attemptId`. Older 0.1.0 reports carried the final identity in `extra.mtpAttemptId`. Retry merging still accepts that key and prefers a native `attemptId` when both are present. Legacy reports without an attempt identity remain mergeable, but the merger omits their optional `attemptId` rather than treating an execution lifecycle ID as an attempt ID.
 - Retry consolidation uses both case identity and `executionId`, preserving distinct lifecycles even when they share a framework UID. Legacy rows without an execution ID can be correlated only when their case identity is unique in each input report and does not span conflicting known lifecycles. Repeated case/lifecycle pairs within one report remain separate; ambiguous results are preserved rather than guessed into another test's retry history.
 - `extra.uid` continues to carry the Microsoft.Testing.Platform UID for compatibility with reports produced before first-class CTRF identity fields were available.
-- `attachments[].path` is emitted unchanged as an opaque CTRF path value. It can be a local absolute file path and consumers must not assume that it is remotely accessible.
+- `attachments[].path` is preserved without truncation as an opaque CTRF path value. Attachment names and descriptions retain their diagnostic size limits. A path can be a local absolute file path and consumers must not assume that it is remotely accessible.
 
 ## Logical runs and retries
+
+For exceptions with inner causes, the test's `trace` retains the full exception
+representation, including nested and aggregate-exception branches. The `message`
+continues to prefer the framework's explanation. Diagnostic text remains subject
+to the reporter's existing size limits.
 
 One coordinated invocation, including a multi-project `dotnet test` invocation, is one logical run. Its module reports, retry-attempt reports, and merged report should share a `runId`; each distinct report has its own `reportId`.
 

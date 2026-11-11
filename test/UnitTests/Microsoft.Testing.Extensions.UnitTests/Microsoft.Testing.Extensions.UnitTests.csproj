@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
+    <Compile Include="$(RepoRoot)test\Utilities\ValidationResultExtensions.cs" Link="TestInfrastructure\ValidationResultExtensions.cs" />
     <Content Include="$(RepoRoot)test\Shared\WindowsAppModel\appx-manifest-conformance-vectors.json"
              Link="AppxManifestConformanceVectors.json"
              CopyToOutputDirectory="PreserveNewest" />

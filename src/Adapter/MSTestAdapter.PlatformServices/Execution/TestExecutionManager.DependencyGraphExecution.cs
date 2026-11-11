@@ -106,6 +106,8 @@ internal partial class TestExecutionManager
         bool usesAppDomains,
         int parallelWorkers)
     {
+        _testRunCancellationToken?.ThrowIfCancellationRequested();
+
         int chunkCount = graph.ParallelChunks.Length;
         int[] pendingPrerequisites = new int[chunkCount];
         var dependents = new List<int>[chunkCount];
@@ -147,10 +149,9 @@ internal partial class TestExecutionManager
         var resourceLockManager = new ResourceLockManager();
         var tasks = new List<Task>(effectiveWorkers);
 
+        // Once workers are scheduled, let them observe cancellation so we always await their completion.
         for (int worker = 0; worker < effectiveWorkers; worker++)
         {
-            _testRunCancellationToken?.ThrowIfCancellationRequested();
-
             tasks.Add(_taskFactory(async () =>
             {
                 try
