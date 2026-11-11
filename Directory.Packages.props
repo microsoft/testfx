@@ -62,7 +62,7 @@
     <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
-    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.26255.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
+    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.4</MicrosoftCodeAnalysisAnalyzerTestingVersion>
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.2.19" />
