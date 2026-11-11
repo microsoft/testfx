@@ -177,6 +177,7 @@ internal partial class TestMethodInfo
                         {
                             var tcs = new TaskCompletionSource<object?>();
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+#pragma warning disable VSTHRD103 // RunOnContext only starts the callback; tcs.Task below awaits its asynchronous completion.
                             ExecutionContextHelpers.RunOnContext(_executionContext, async () =>
                             {
                                 try
@@ -203,6 +204,7 @@ internal partial class TestMethodInfo
                                     tcs.TrySetResult(null);
                                 }
                             });
+#pragma warning restore VSTHRD103
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
                             await tcs.Task.ConfigureAwait(false);
