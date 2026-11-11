@@ -6,13 +6,16 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class TrxSkippedTestTests : AcceptanceTestBase<TrxSkippedTestTests.TestAssetFixture>
 {
-    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public static IEnumerable<(string TargetFramework, string Mode)> Modes =>
+        TargetFrameworks.Net.SelectMany(tfm => new[] { (tfm, string.Empty), (tfm, "--trx-mode:in-process") });
+
+    [DynamicData(nameof(Modes))]
     [TestMethod]
-    public async Task Trx_WhenSkipTest_ItAppearsAsExpectedInsideTheTrx(string tfm)
+    public async Task Trx_WhenSkipTest_ItAppearsAsExpectedInsideTheTrx(string tfm, string mode)
     {
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetNameUsingMSTest, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx --zero-tests-policy strict", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx --zero-tests-policy strict {mode}", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 

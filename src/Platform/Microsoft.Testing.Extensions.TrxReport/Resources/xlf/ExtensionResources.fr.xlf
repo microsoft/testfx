@@ -102,6 +102,26 @@
         <target state="translated">Rapport TRX fusionné</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
+      <trans-unit id="TrxModeInvalidValue">
+        <source>'--trx-mode' expects 'in-process' or 'out-of-process'</source>
+        <target state="new">'--trx-mode' expects 'in-process' or 'out-of-process'</target>
+        <note>Do not localize option name {Locked="--trx-mode"} or mode names {Locked="in-process"}{Locked="out-of-process"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxModeOptionDescription">
+        <source>TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</source>
+        <target state="new">TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</target>
+        <note>Do not localize format name {Locked="TRX"}, mode names {Locked="in-process"}{Locked="out-of-process"}, or option name {Locked="--report-trx"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxModeOutOfProcessNotSupported">
+        <source>'--trx-mode out-of-process' is not supported on this platform</source>
+        <target state="new">'--trx-mode out-of-process' is not supported on this platform</target>
+        <note>Do not localize option and value {Locked="--trx-mode out-of-process"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxModeRequiresTrxReport">
+        <source>'--trx-mode' requires '--report-trx' to be enabled</source>
+        <target state="new">'--trx-mode' requires '--report-trx' to be enabled</target>
+        <note>Do not localize option names {Locked="--trx-mode"}{Locked="--report-trx"}.</note>
+      </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
         <target state="translated">Session de test</target>

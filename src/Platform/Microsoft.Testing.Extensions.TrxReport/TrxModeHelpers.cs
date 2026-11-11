@@ -1,7 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Helpers;
 
 #if !NETCOREAPP
 using Polyfills;
@@ -37,16 +40,55 @@ internal static class TrxModeHelpers
         && !OperatingSystem.IsTvOS()
         && !OperatingSystem.IsWasi();
 
-    // Used from within the test host (child) process: rely on the controller-presence state that MTP
-    // actually established for this process, rather than recomputing which extension requested
-    // isolation. This stays true even when another extension (HangDump, --timeout, ...) is the one
-    // that caused the controller to be used.
+    [UnsupportedOSPlatformGuard("android")]
+    [UnsupportedOSPlatformGuard("browser")]
+    [UnsupportedOSPlatformGuard("ios")]
+    [UnsupportedOSPlatformGuard("tvos")]
+    [UnsupportedOSPlatformGuard("wasi")]
+    public static bool ShouldUseControllerBackedTrxGeneration(ICommandLineOptions commandLineOptions)
+        => IsTestHostControllerSupported
+        && (!commandLineOptions.TryGetOptionArgumentListOrDefault(TrxReportGeneratorCommandLine.TrxModeOptionName, out string[]? arguments)
+            || (arguments is [string mode] && TrxReportGeneratorCommandLine.OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)));
+
+    public static string GetControllerModeEnvironmentVariableName(string controllerPid) => $"TRXMODE_{controllerPid}";
+
+    public static string? GetEffectiveMode(ICommandLineOptions commandLineOptions, IEnvironment environment)
+    {
+        string? controllerMode = commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, out string[]? controllerArguments)
+            && controllerArguments is [string controllerPid]
+                ? environment.GetEnvironmentVariable(GetControllerModeEnvironmentVariableName(controllerPid))
+                : null;
+
+        return controllerMode switch
+        {
+            null => commandLineOptions.TryGetOptionArgumentListOrDefault(TrxReportGeneratorCommandLine.TrxModeOptionName, out string[]? arguments)
+                && arguments is [string mode] ? mode : null,
+            TrxReportGeneratorCommandLine.InProcessMode or TrxReportGeneratorCommandLine.OutOfProcessMode => controllerMode,
+            _ => throw new InvalidOperationException(ExtensionResources.TrxModeInvalidValue),
+        };
+    }
+
     [UnsupportedOSPlatformGuard("android")]
     [UnsupportedOSPlatformGuard("browser")]
     [UnsupportedOSPlatformGuard("ios")]
     [UnsupportedOSPlatformGuard("tvos")]
     [UnsupportedOSPlatformGuard("wasi")]
     public static bool ShouldUseOutOfProcessTrxGeneration(ICommandLineOptions commandLineOptions)
-        => IsTestHostControllerSupported
-        && commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey);
+        => ShouldUseOutOfProcessTrxGeneration(commandLineOptions, new SystemEnvironment());
+
+    [UnsupportedOSPlatformGuard("android")]
+    [UnsupportedOSPlatformGuard("browser")]
+    [UnsupportedOSPlatformGuard("ios")]
+    [UnsupportedOSPlatformGuard("tvos")]
+    [UnsupportedOSPlatformGuard("wasi")]
+    public static bool ShouldUseOutOfProcessTrxGeneration(ICommandLineOptions commandLineOptions, IEnvironment environment)
+    {
+        if (!IsTestHostControllerSupported || !commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey))
+        {
+            return false;
+        }
+
+        string? mode = GetEffectiveMode(commandLineOptions, environment);
+        return mode is null || TrxReportGeneratorCommandLine.OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase);
+    }
 }
