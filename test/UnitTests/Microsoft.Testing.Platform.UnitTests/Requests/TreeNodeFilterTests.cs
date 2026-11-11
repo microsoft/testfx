@@ -133,6 +133,28 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void WildcardSegment_CultureChangedToTurkishBeforeFirstMatch_MatchesLikeRegex()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            TreeNodeFilter filter = new("/FILE*");
+            Regex regex = new("^FILE.*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            // The filter's regex is created on first use, but must still use the culture the filter was created under.
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+
+            Assert.IsTrue(regex.IsMatch("file1"));
+            Assert.IsTrue(filter.MatchesFilter("/file1", new PropertyBag()));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
     public void EscapeSequences_SupportsWildcard()
     {
         TreeNodeFilter filter = new("/*.\\*UnitTests");
