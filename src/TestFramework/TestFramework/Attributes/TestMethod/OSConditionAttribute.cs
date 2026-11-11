@@ -4,12 +4,14 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// This attribute is used to ignore a test class or a test method, with an optional message.
+/// This attribute is used to conditionally ignore a test assembly, test class, or test method, with an optional message.
 /// </summary>
 /// <remarks>
 /// This attribute isn't inherited. Applying it to a base class will not cause derived classes to be ignored.
+/// Assembly, class, and method conditions must all be satisfied for a test to run.
+/// An ignored assembly does not run assembly, class, or test initialization or cleanup.
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class OSConditionAttribute : ConditionBaseAttribute
 {
 #if !NETFRAMEWORK
@@ -52,7 +54,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 
     /// <summary>
-    /// Gets a value indicating whether the test method or test class should be ignored.
+    /// Gets a value indicating whether the current operating system matches the configured operating systems.
     /// </summary>
     public override bool IsConditionMet
 #if NET462
