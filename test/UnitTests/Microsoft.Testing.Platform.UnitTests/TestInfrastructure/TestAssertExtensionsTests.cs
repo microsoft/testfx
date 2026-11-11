@@ -4,8 +4,13 @@
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class TestAssertExtensionsTests
+public sealed class TestAssertExtensionsTests : IDisposable
 {
+    private readonly CultureInfo _originalUICulture = CultureInfo.CurrentUICulture;
+
+    // The exact diagnostic expectations use English framework resources within this test's ExecutionContext.
+    public TestAssertExtensionsTests() => CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+
     [TestMethod]
     public void FileAssertions_DistinguishFilesDirectoriesAndMissingPaths()
     {
@@ -165,11 +170,13 @@ public sealed class TestAssertExtensionsTests
     }
 
     [TestMethod]
-    [DataRow(false, DisplayName = "NegativeDiagnostics_File")]
-    [DataRow(true, DisplayName = "NegativeDiagnostics_Directory")]
-    public void FileSystemAssertions_NegativeFailures_IncludeEvaluatedPath(bool useDirectory)
+    [DataRow(false, "", DisplayName = "NegativeDiagnostics_File")]
+    [DataRow(true, "", DisplayName = "NegativeDiagnostics_Directory")]
+    [DataRow(false, "\u00a0\u2003", DisplayName = "NegativeDiagnostics_File_UnicodeWhitespace")]
+    [DataRow(true, "\u00a0\u2003", DisplayName = "NegativeDiagnostics_Directory_UnicodeWhitespace")]
+    public void FileSystemAssertions_NegativeFailures_IncludeEvaluatedPath(bool useDirectory, string directorySuffix)
     {
-        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + directorySuffix);
         Directory.CreateDirectory(directory);
         try
         {
@@ -194,7 +201,17 @@ public sealed class TestAssertExtensionsTests
 
             Assert.AreEqual(1, evaluations);
             string assertion = useDirectory ? "DirectoryDoesNotExist" : "FileDoesNotExist";
-            string escapedPath = path.Replace("\\", "\\\\");
+            string escapedPath = string.Concat(path.Select(character => character switch
+            {
+                '\\' => @"\\",
+                '"' => "\\\"",
+                '\r' => @"\r",
+                '\n' => @"\n",
+                '\t' => @"\t",
+                _ when char.IsControl(character) || (char.IsWhiteSpace(character) && character != ' ') || char.IsSurrogate(character)
+                    => @"\u" + ((int)character).ToString("x4", CultureInfo.InvariantCulture),
+                _ => character.ToString(),
+            }));
             AssertFailureMessage(
                 $"""
                 Assertion failed. Expected condition to be true.
@@ -314,6 +331,8 @@ public sealed class TestAssertExtensionsTests
             Directory.Delete(directory, recursive: true);
         }
     }
+
+    public void Dispose() => CultureInfo.CurrentUICulture = _originalUICulture;
 
     private static void AssertFailureMessage(string expected, AssertFailedException failure)
         => Assert.AreEqual(expected.Replace("\r\n", "\n"), failure.Message.Replace("\r\n", "\n"));
