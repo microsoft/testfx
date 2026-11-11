@@ -19,14 +19,12 @@ public interface ITestHostProcessInformation
     int ExitCode { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the test host app has exited gracefully.
+    /// Gets a value indicating whether the controller received the completion message from the test host.
     /// </summary>
     /// <remarks>
-    /// This flag is based on a message that the TestApplication sends at its end.
-    /// The test host process might still crash or be killed after sending this message, in which
-    /// case this flag will be true but the process hasn't truly exited gracefully.
+    /// This value describes receipt of the completion message, not successful process termination.
+    /// The test host can still crash or be killed after sending this message, so this value can be
+    /// <see langword="true"/> even when the process exits abnormally. Inspect <see cref="ExitCode"/> separately.
     /// </remarks>
-    // TODO: As a follow-up, obsolete this property as error, and rename it to ReceivedTestHostCompletedEvent or TestHostCompletedEventReceived (tracked by https://github.com/microsoft/testfx/issues/8086).
-    // Note that this is a public API
-    bool HasExitedGracefully { get; }
+    bool HasReceivedTestHostCompletedMessage { get; }
 }

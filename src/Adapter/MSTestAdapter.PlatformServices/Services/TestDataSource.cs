@@ -45,8 +45,6 @@ internal sealed class TestDataSource : ITestDataSource
             Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath),
         ];
 
-        List<TestResult> dataRowResults = [];
-
         // Connect to data source.
         TestDataConnectionFactory factory = new();
 

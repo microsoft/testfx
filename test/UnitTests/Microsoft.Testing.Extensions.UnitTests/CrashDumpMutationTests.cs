@@ -892,7 +892,7 @@ public sealed class CrashDumpArtifactPublisherMutationTests
 
         public int ExitCode => 1;
 
-        public bool HasExitedGracefully => false;
+        public bool HasReceivedTestHostCompletedMessage => false;
     }
 
     private sealed class TemporaryDirectory : IDisposable
