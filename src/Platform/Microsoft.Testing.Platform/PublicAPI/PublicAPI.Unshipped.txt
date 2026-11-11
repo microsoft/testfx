@@ -1,4 +1,6 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.HasExitedGracefully.get -> bool
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.HasReceivedTestHostCompletedMessage.get -> bool
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty() -> void
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty(string! explanation) -> void

@@ -93,7 +93,7 @@ internal sealed partial class ReportProcessLifetimeHandler<TGenerator, TCaptured
 
         try
         {
-            if (testHostProcessInformation.HasExitedGracefully)
+            if (testHostProcessInformation.HasReceivedTestHostCompletedMessage)
             {
                 return;
             }
