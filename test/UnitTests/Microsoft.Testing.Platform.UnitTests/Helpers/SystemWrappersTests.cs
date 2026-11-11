@@ -191,8 +191,6 @@ public sealed class SystemWrappersTests
             process.Exited += (sender, _) => exited.TrySetResult(sender);
 
             process.Kill();
-            Func<Task> waitWithoutToken = process.WaitForExitAsync;
-            await waitWithoutToken().TimeoutAfterAsync(ChildLimit);
             await process.WaitForExitAsync(CancellationToken.None).TimeoutAfterAsync(ChildLimit);
             process.WaitForExit();
 
@@ -232,8 +230,7 @@ public sealed class SystemWrappersTests
             if (!child.HasExited)
             {
                 child.Kill();
-                Func<Task> finishTermination = child.WaitForExitAsync;
-                await finishTermination().TimeoutAfterAsync(ChildLimit);
+                await child.WaitForExitAsync(CancellationToken.None).TimeoutAfterAsync(ChildLimit);
             }
         }
 

@@ -77,7 +77,7 @@ internal sealed class ArtifactPostProcessingManager : IArtifactPostProcessingMan
 
     private static void ValidateCapability(IArtifactPostProcessor processor, string capability)
     {
-        if (capability.Contains(';'))
+        if (capability.IndexOf(';') >= 0)
         {
             throw new InvalidOperationException(string.Format(
                 CultureInfo.CurrentCulture,

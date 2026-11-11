@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="InvalidPartitionOptionArgument">
         <source>The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</source>
-        <target state="new">The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</target>
+        <target state="translated">La opción "--partition" requiere "index/count", donde ambos valores deben ser enteros positivos y el índice debe ser menor o igual que el recuento.</target>
         <note>{Locked="--partition"}{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="MSTestExtensionDescription">
@@ -19,17 +19,17 @@
       </trans-unit>
       <trans-unit id="PartitionNotSupportedInServerMode">
         <source>The '--partition' option is not supported in JSON-RPC server mode.</source>
-        <target state="new">The '--partition' option is not supported in JSON-RPC server mode.</target>
+        <target state="translated">La opción "--partition" no se admite en el modo de servidor JSON-RPC.</target>
         <note>{Locked="--partition"}{Locked="JSON-RPC"}</note>
       </trans-unit>
       <trans-unit id="PartitionNotSupportedOnWebAssembly">
         <source>The '--partition' option is not supported on WebAssembly.</source>
-        <target state="new">The '--partition' option is not supported on WebAssembly.</target>
+        <target state="translated">La opción "--partition" no se admite en WebAssembly.</target>
         <note>{Locked="--partition"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="PartitionOptionDescription">
         <source>Run partition 'index/count' of the tests, keeping test classes and dependencies together.</source>
-        <target state="new">Run partition 'index/count' of the tests, keeping test classes and dependencies together.</target>
+        <target state="translated">Ejecute la partición "index/count" de las pruebas y mantenga juntas las clases de prueba y sus dependencias.</target>
         <note>{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">

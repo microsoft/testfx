@@ -617,7 +617,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="UTA_TestDurationExceeded">
         <source>Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</source>
-        <target state="new">Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</target>
+        <target state="translated">Test '{0}' {1:F4} ms sürdü ve {2} ms olan beklenen en yüksek süreyi aştı.</target>
         <note>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestDurationWarningDeliveryFailed">

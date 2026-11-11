@@ -213,7 +213,7 @@ public sealed class TestHostBuilderTests
         builder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
             (_, _) => Mock.Of<ITestFramework>());
-        var orchestratorManager = (PublicApi.TestHostOrchestratorManager)builder.TestHostOrchestrator;
+        var orchestratorManager = (PublicApi.TestHostOrchestratorManager)((ITestApplicationBuilder)builder).TestHostOrchestrator;
         for (int i = 0; i < orchestratorCount; i++)
         {
             int orchestratorIndex = i;
@@ -227,15 +227,14 @@ public sealed class TestHostBuilderTests
                 });
         }
 
-        ((PublicApi.ITestHostExecutionOrchestratorMiddlewareManager)orchestratorManager)
-            .AddTestHostExecutionOrchestratorMiddleware(
-                _ =>
-                {
-                    Mock<BackCompat.ITestHostExecutionOrchestratorMiddleware> middleware = new();
-                    middleware.SetupGet(x => x.Uid).Returns("middleware");
-                    middleware.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
-                    return middleware.Object;
-                });
+        orchestratorManager.AddTestHostExecutionOrchestratorMiddleware(
+            _ =>
+            {
+                Mock<BackCompat.ITestHostExecutionOrchestratorMiddleware> middleware = new();
+                middleware.SetupGet(x => x.Uid).Returns("middleware");
+                middleware.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+                return middleware.Object;
+            });
 
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => builder.BuildAsync());

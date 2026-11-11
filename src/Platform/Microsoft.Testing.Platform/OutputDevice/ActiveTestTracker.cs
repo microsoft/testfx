@@ -69,15 +69,16 @@ internal sealed class ActiveTestTracker
             }
 
             List<SlowTestDiagnostic>? diagnostics = null;
-            foreach ((TestNodeUid uid, ActiveTest activeTest) in _activeTests)
+            foreach (KeyValuePair<TestNodeUid, ActiveTest> pair in _activeTests)
             {
+                ActiveTest activeTest = pair.Value;
                 TimeSpan elapsed = activeTest.Stopwatch.Elapsed;
                 if (!activeTest.SlowTestThreshold.IsDue(elapsed))
                 {
                     continue;
                 }
 
-                (diagnostics ??= []).Add(new(uid, activeTest.DisplayName, elapsed, activeTest.Generation));
+                (diagnostics ??= []).Add(new(pair.Key, activeTest.DisplayName, elapsed, activeTest.Generation));
             }
 
             if (diagnostics is null)
