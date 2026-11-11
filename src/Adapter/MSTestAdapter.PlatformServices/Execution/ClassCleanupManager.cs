@@ -75,6 +75,11 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
+            if (!assemblyInfo.IsAssemblyInitializeExecuted)
+            {
+                continue;
+            }
+
             var testContext = new TestContextImplementation(null, null, sourceLevelParameters, logger, testRunCancellationToken: null);
 
             // Flow properties set during AssemblyInitialize so the AssemblyCleanup method observes
