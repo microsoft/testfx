@@ -104,12 +104,6 @@ public sealed class TestResultCaptureHelperTests
         => Assert.AreEqual("failed", InvokeClassifyOutcome(new FailedTestNodeStateProperty()));
 
     [TestMethod]
-#pragma warning disable CS0618, MTP0001 // Cancelled* is obsolete but still in the well-known failed set.
-    public void ClassifyOutcome_Cancelled_FallsThroughToFailed()
-        => Assert.AreEqual("failed", InvokeClassifyOutcome(new CancelledTestNodeStateProperty()));
-#pragma warning restore CS0618, MTP0001
-
-    [TestMethod]
     public void GetClassAndMethodName_NullIdentifier_ReturnsNullPair()
         => Assert.AreEqual<(string?, string?)>((null, null), InvokeGetClassAndMethodName(null));
 
@@ -211,20 +205,16 @@ public sealed class TestResultCaptureHelperTests
     [DataRow("failed")]
     [DataRow("error")]
     [DataRow("timeout")]
-    [DataRow("cancelled")]
     public void TryCaptureCore_NestedException_PreservesInnerDiagnosticTrace(string stateName)
     {
         var exception = new InvalidOperationException("Invocation failed.", new ArgumentException("[INNER_CAUSE] Credential rejected."));
-#pragma warning disable CS0618, MTP0001 // Exercise the existing cancellation capture path.
         TestNodeStateProperty state = stateName switch
         {
             "failed" => new FailedTestNodeStateProperty(exception),
             "error" => new ErrorTestNodeStateProperty(exception),
             "timeout" => new TimeoutTestNodeStateProperty(exception),
-            "cancelled" => new CancelledTestNodeStateProperty(exception),
             _ => throw new InvalidOperationException("Unknown test state."),
         };
-#pragma warning restore CS0618, MTP0001
         TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(state) };
 
         object? result = InvokeTryCaptureCore(node);

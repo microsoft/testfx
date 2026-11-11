@@ -22,8 +22,6 @@ internal static class TestResultCapture
         RetryAttemptProperty? retryAttempt = node.Properties.SingleOrDefault<RetryAttemptProperty>();
         var result = new CapturedTestResult
         {
-            // HTML does not special-case cancellation — it falls through to the shared
-            // helper which maps it to "failed", unlike JUnit which maps it to "cancelled".
             Outcome = TestResultCaptureHelper.ClassifyOutcome(core.State),
             RetryAttemptNumber = retryAttempt?.AttemptNumber,
             IsSupersededRetryAttempt = retryAttempt?.IsSuperseded,

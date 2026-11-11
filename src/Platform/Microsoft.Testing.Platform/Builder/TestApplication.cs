@@ -34,28 +34,6 @@ public sealed class TestApplication : ITestApplication
     internal IServiceProvider ServiceProvider => ((CommonHost)_host).ServiceProvider;
 
     /// <summary>
-    /// Creates a server mode builder asynchronously.
-    /// </summary>
-    /// <param name="args">The command line arguments.</param>
-    /// <param name="testApplicationOptions">The test application options.</param>
-    /// <returns>The task representing the asynchronous operation.</returns>
-#if NET8_0_OR_GREATER
-    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.", DiagnosticId = "MTP0002", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-#else
-    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.")]
-#endif
-    public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
-    {
-        if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
-        {
-            // Remove the --server option from the args so that the builder can be created.
-            args = [.. args.Where(arg => arg.Trim('-') != PlatformCommandLineProvider.ServerOptionKey)];
-        }
-
-        return CreateBuilderAsync([.. args, $"--{PlatformCommandLineProvider.ServerOptionKey}"], testApplicationOptions);
-    }
-
-    /// <summary>
     /// Creates a builder asynchronously.
     /// </summary>
     /// <param name="args">The command line arguments.</param>
@@ -412,27 +390,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Override the prefix name.
-        // Prefer the new TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX env var (matching the --diagnostic-file-prefix CLI option),
-        // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX for backward compatibility.
-        // See https://github.com/microsoft/testfx/issues/7159.
         string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
-#pragma warning disable CS0618 // Type or member is obsolete - intentional back-compat fallback to the legacy env var.
-        string? legacyEnvironmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
-        if (!RoslynString.IsNullOrEmpty(legacyEnvironmentFilePrefix))
-        {
-            console.WriteLine(string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.DeprecatedEnvironmentVariableWarning,
-                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX,
-                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX));
-        }
-#pragma warning restore CS0618
-
-        if (RoslynString.IsNullOrEmpty(environmentFilePrefix))
-        {
-            environmentFilePrefix = legacyEnvironmentFilePrefix;
-        }
-
         if (!RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
             prefixName = environmentFilePrefix;
@@ -441,27 +399,7 @@ public sealed class TestApplication : ITestApplication
         bool synchronousWrite = result.IsOptionSet(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey);
 
         // Override the synchronous write.
-        // Prefer the new TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE env var (matching the --diagnostic-synchronous-write CLI option),
-        // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE for backward compatibility.
-        // See https://github.com/microsoft/testfx/issues/7159.
         string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
-#pragma warning disable CS0618 // Type or member is obsolete - intentional back-compat fallback to the legacy env var.
-        string? legacyEnvironmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
-        if (!RoslynString.IsNullOrEmpty(legacyEnvironmentSynchronousWrite))
-        {
-            console.WriteLine(string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.DeprecatedEnvironmentVariableWarning,
-                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE,
-                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE));
-        }
-#pragma warning restore CS0618
-
-        if (RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
-        {
-            environmentSynchronousWrite = legacyEnvironmentSynchronousWrite;
-        }
-
         if (!RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
             synchronousWrite = environmentSynchronousWrite == "1";

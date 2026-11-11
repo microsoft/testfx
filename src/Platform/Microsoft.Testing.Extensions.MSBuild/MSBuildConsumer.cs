@@ -177,22 +177,6 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     cancellationToken).ConfigureAwait(false);
                 break;
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty canceledState:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                await HandleFailuresAsync(
-                    testNodeStateChanged.TestNode.DisplayName,
-                    isCanceled: true,
-                    duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
-                    errorMessage: canceledState.Exception?.Message ?? canceledState.Explanation,
-                    errorStackTrace: canceledState.Exception?.StackTrace,
-                    expected: null,
-                    actual: null,
-                    testFileLocationProperty?.FilePath,
-                    testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                    cancellationToken).ConfigureAwait(false);
-                break;
-
             case PassedTestNodeStateProperty:
                 _totalTests++;
                 _totalPassedTests++;

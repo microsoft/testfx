@@ -104,7 +104,6 @@ public sealed class HangDumpActivityBehaviorTests
     [DataRow(1, DisplayName = "ActivityTerminal_Failed")]
     [DataRow(2, DisplayName = "ActivityTerminal_Error")]
     [DataRow(3, DisplayName = "ActivityTerminal_Skipped")]
-    [DataRow(4, DisplayName = "ActivityTerminal_Cancelled")]
     [DataRow(5, DisplayName = "ActivityTerminal_Timeout")]
     [DataRow(6, DisplayName = "ActivityTerminal_ExecutionCompleted")]
     public async Task Consume_TerminalUpdateReportsOriginalStartAndRemainingTestWithoutIpc(int terminalState)
@@ -279,18 +278,14 @@ public sealed class HangDumpActivityBehaviorTests
 #endif
 
     private static IProperty GetTerminalProperty(int terminalState) =>
-#pragma warning disable CS0618, MTP0001 // Exercise the terminal states supported by the production consumer.
         terminalState switch
         {
             0 => PassedTestNodeStateProperty.CachedInstance,
             1 => new FailedTestNodeStateProperty(),
             2 => new ErrorTestNodeStateProperty(),
             3 => SkippedTestNodeStateProperty.CachedInstance,
-            4 => new CancelledTestNodeStateProperty(),
             5 => new TimeoutTestNodeStateProperty(),
             6 => TestNodeExecutionCompletedProperty.CachedInstance,
             _ => throw new ArgumentOutOfRangeException(nameof(terminalState)),
         };
-#pragma warning restore CS0618, MTP0001
-
 }

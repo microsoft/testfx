@@ -232,9 +232,6 @@ public sealed class TestExecution : IDisposable
             or FailedTestNodeStateProperty
             or ErrorTestNodeStateProperty
             or TimeoutTestNodeStateProperty
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            or CancelledTestNodeStateProperty
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             or SkippedTestNodeStateProperty;
 
     private void ThrowIfNotActive()

@@ -1536,9 +1536,9 @@ public class MSTestSettingsTests : TestContainer
         return mockConfig.Object;
     }
 
-    public void ConfigJson_WithDeprecatedFlatOrderTestsByNameInClassKey_ValueIsSetAndWarningIsEmitted()
+    public void ConfigJson_WithRemovedFlatOrderTestsByNameInClassKey_KeyIsIgnoredWithoutWarning()
     {
-        // Arrange - using the deprecated flat key
+        // The removed key must not enable ordering or emit a deprecation warning.
         var configDictionary = new Dictionary<string, string>
         {
             { "mstest:orderTestsByNameInClass", "true" },
@@ -1554,13 +1554,26 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
 
         // Assert
-        settings.OrderTestsByNameInClass.Should().BeTrue();
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Once);
+        settings.OrderTestsByNameInClass.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
+    }
+
+    public void ConfigJson_WithInvalidRemovedFlatOrderTestsByNameInClassKey_KeyIsIgnoredWithoutWarning()
+    {
+        var settings = new MSTestSettings();
+
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new() { ["mstest:orderTestsByNameInClass"] = "not-a-boolean" }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+
+        settings.OrderTestsByNameInClass.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
     }
 
     public void ConfigJson_WithExecutionOrderTestsByNameInClassKey_ValueIsSetAndNoWarningIsEmitted()
     {
-        // Arrange - using the new grouped key
+        // Arrange - using the supported grouped key
         var configDictionary = new Dictionary<string, string>
         {
             { "mstest:execution:orderTestsByNameInClass", "true" },
@@ -1577,13 +1590,30 @@ public class MSTestSettingsTests : TestContainer
 
         // Assert
         settings.OrderTestsByNameInClass.Should().BeTrue();
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Never);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
     }
 
-    public void ConfigJson_WithBothOrderTestsByNameInClassKeys_NewExecutionKeyTakesPrecedenceAndNoWarningIsEmitted()
+    public void ConfigJson_WithExecutionOrderTestsByNameInClassKeyFalse_UpdatesPreviouslyEnabledSetting()
     {
-        // Arrange - both the new grouped key and the deprecated flat key are present with conflicting values.
-        // The new key must win and, since it is present, the deprecated key is ignored without a warning.
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new() { ["mstest:execution:orderTestsByNameInClass"] = "true" }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new() { ["mstest:execution:orderTestsByNameInClass"] = "false" }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+
+        settings.OrderTestsByNameInClass.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
+    }
+
+    public void ConfigJson_WithBothOrderTestsByNameInClassKeys_ExecutionTrueIsAppliedWithoutWarning()
+    {
+        // The supported grouped key is applied and the conflicting removed key is ignored.
         var configDictionary = new Dictionary<string, string>
         {
             { "mstest:orderTestsByNameInClass", "false" },
@@ -1601,7 +1631,29 @@ public class MSTestSettingsTests : TestContainer
 
         // Assert
         settings.OrderTestsByNameInClass.Should().BeTrue();
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Never);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
+    }
+
+    public void ConfigJson_WithBothOrderTestsByNameInClassKeys_ExecutionFalseIsAppliedWithoutWarning()
+    {
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new() { ["mstest:execution:orderTestsByNameInClass"] = "true" }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new()
+            {
+                ["mstest:orderTestsByNameInClass"] = "true",
+                ["mstest:execution:orderTestsByNameInClass"] = "false",
+            }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+
+        settings.OrderTestsByNameInClass.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
     }
 
     public void ConfigJson_Parllelism_Enabled_True() => ConfigJson_Parllelism_Enabled_Core(true);

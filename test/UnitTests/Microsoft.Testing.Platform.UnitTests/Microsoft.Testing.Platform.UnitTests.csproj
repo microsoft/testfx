@@ -11,6 +11,8 @@
     <CodeCoverageIncludeSourceLinkedProductionCode>true</CodeCoverageIncludeSourceLinkedProductionCode>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
+    <!-- Align the embedded PlatformVersion with the product under test, not the MSTest version. -->
+    <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
     <!-- OSCondition cannot express browser, so it cannot mirror [UnsupportedOSPlatform("browser")]. -->
     <NoWarn>$(NoWarn);MSTEST0084</NoWarn>
   </PropertyGroup>

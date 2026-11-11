@@ -140,9 +140,6 @@ internal static class SummaryReporterHelpers
             ErrorTestNodeStateProperty => TerminalKind.Failed,
             TimeoutTestNodeStateProperty => TerminalKind.Failed,
             SkippedTestNodeStateProperty => TerminalKind.Skipped,
-#pragma warning disable CS0618, MTP0001
-            CancelledTestNodeStateProperty => TerminalKind.Failed,
-#pragma warning restore CS0618, MTP0001
             _ => TerminalKind.NotTerminal,
         };
 

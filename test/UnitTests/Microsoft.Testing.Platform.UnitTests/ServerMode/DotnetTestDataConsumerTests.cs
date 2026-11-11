@@ -233,22 +233,19 @@ public sealed class DotnetTestDataConsumerTests
     [DataRow("failed", TestStates.Failed)]
     [DataRow("error", TestStates.Error)]
     [DataRow("timeout", TestStates.Timeout)]
-    [DataRow("cancelled", TestStates.Cancelled)]
     public async Task ConsumeAsync_UnsuccessfulStatesForwardExceptionChainAndOnlyFailuresCarryDiff(string outcome, byte expectedState)
     {
         using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
         List<TestResultMessages> sent = [];
         fixture.Client.RespondVoid<TestResultMessages>(TestContext.CancellationToken, sent.Add);
         var exception = new InvalidOperationException("outer", new ArgumentException("inner"));
-#pragma warning disable CS0618, MTP0001 // Exercise the still-supported cancelled wire outcome.
         TestNodeStateProperty state = outcome switch
         {
             "failed" => new FailedTestNodeStateProperty(exception, "reason"),
             "error" => new ErrorTestNodeStateProperty(exception, "reason"),
             "timeout" => new TimeoutTestNodeStateProperty(exception, "reason"),
-            _ => new CancelledTestNodeStateProperty(exception, "reason"),
+            _ => throw new ArgumentOutOfRangeException(nameof(outcome)),
         };
-#pragma warning restore CS0618, MTP0001
         var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
 
         await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), CreateUpdate(

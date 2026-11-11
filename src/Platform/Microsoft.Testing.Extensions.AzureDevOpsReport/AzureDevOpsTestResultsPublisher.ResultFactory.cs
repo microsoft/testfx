@@ -37,9 +37,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             ErrorTestNodeStateProperty error => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.FailedTestOutcome, error.Exception?.Message ?? error.Explanation, error.Exception?.StackTrace, timing),
             SkippedTestNodeStateProperty skipped => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.NotExecutedTestOutcome, skipped.Explanation, null, timing),
             TimeoutTestNodeStateProperty timeout => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.FailedTestOutcome, BuildTimeoutMessage(timeout), timeout.Exception?.StackTrace, timing),
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            CancelledTestNodeStateProperty cancelled => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled.Exception?.Message ?? cancelled.Explanation, cancelled.Exception?.StackTrace, timing),
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => null,
         };
 
@@ -60,11 +57,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // Only attach artifacts for non-passing outcomes to avoid uploading large dumps/logs for every
         // passing test. Users who want pass-time artifacts can use the pipeline-level
         // `--report-azdo-upload-artifacts files` option instead.
-        bool isFailure = state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            or CancelledTestNodeStateProperty
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-            ;
+        bool isFailure = state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty;
 
         IReadOnlyList<AzureDevOpsTestResultAttachment> attachments = isFailure
             ? BuildAttachmentsFromTestNode(testNode)

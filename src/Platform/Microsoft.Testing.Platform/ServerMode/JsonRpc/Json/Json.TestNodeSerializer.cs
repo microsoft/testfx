@@ -183,23 +183,6 @@ internal sealed partial class Json
                             break;
                         }
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                    case CancelledTestNodeStateProperty canceledTestNodeStateProperty:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                        {
-                            properties.Add(("execution-state", "canceled"));
-                            (string? errorMessage, string? errorStackTrace) = SerializerUtilities.FormatException(
-                                canceledTestNodeStateProperty.Explanation,
-                                canceledTestNodeStateProperty.Exception);
-                            properties.Add(("error.message", errorMessage));
-                            if (errorStackTrace is not null)
-                            {
-                                properties.Add(("error.stacktrace", errorStackTrace));
-                            }
-
-                            break;
-                        }
-
                     default:
                         throw new NotSupportedException($"Unsupported TestNodeStateProperty '{testNodeStateProperty.GetType()}'");
                 }
