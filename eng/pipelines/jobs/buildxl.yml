@@ -1,0 +1,73 @@
+jobs:
+- job: BuildXL
+  displayName: Windows BuildXL repository build
+  dependsOn: DetectChanges
+  # The solution includes samples as well as products. Unknown classification runs it.
+  condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false')))
+  timeoutInMinutes: 90
+  cancelTimeoutInMinutes: 5
+  pool:
+    name: NetCore-Public
+    demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+  strategy:
+    matrix:
+      Debug:
+        BuildXLConfiguration: Debug
+      Release:
+        BuildXLConfiguration: Release
+  variables:
+    # Match Arcade's public-job policy; the CodeQL tracer writes outside the BuildXL sandbox.
+    ${{ if eq(variables['System.TeamProject'], 'public') }}:
+      Codeql.SkipTaskAutoInjection: true
+      skipComponentGovernanceDetection: true
+    BuildXLArtifacts: $(Build.ArtifactStagingDirectory)\buildxl-$(BuildXLConfiguration)-Attempt$(System.JobAttempt)
+    # Keep tracked package paths stable across runs; checkout cleaning isolates jobs.
+    NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages
+  steps:
+  - checkout: self
+    fetchDepth: 1
+    clean: true
+    persistCredentials: false
+
+  # Cache@2 enforces branch isolation. Each immutable snapshot restores the latest
+  # compatible actions, while BuildXL still validates every action's actual inputs.
+  - task: Cache@2
+    displayName: Cache BuildXL actions
+    inputs:
+      key: '"buildxl-actions-v1" | "$(Agent.OS)" | "$(BuildXLConfiguration)" | global.json | eng\buildxl.ps1,eng\buildxl\config.dsc,eng\buildxl\msbuild.targets | "$(Build.BuildId)" | "$(System.JobAttempt)"'
+      restoreKeys: |
+        "buildxl-actions-v1" | "$(Agent.OS)" | "$(BuildXLConfiguration)" | global.json | eng\buildxl.ps1,eng\buildxl\config.dsc,eng\buildxl\msbuild.targets
+      path: $(Build.SourcesDirectory)\artifacts\buildxl\cache
+      cacheHitVar: BuildXLCacheRestored
+
+  - pwsh: |
+      .\eng\buildxl.ps1 -Project TestFx.slnx -Configuration '$(BuildXLConfiguration)'
+      exit $LASTEXITCODE
+    displayName: Build repository with BuildXL
+    # Restore uses the pinned SDK; BuildXL schedules the solution's native MSBuild graph.
+    # Native MSBuild gives terminating Windows SDK children only 500 ms to exit.
+    retryCountOnTaskFailure: 1
+
+  - pwsh: |
+      $root = '$(Build.SourcesDirectory)\artifacts\buildxl'
+      $evidence = '$(BuildXLArtifacts)'
+      $hasEvidence = $false
+      foreach ($relativePath in @('toolchain.json', 'config.dsc', 'logs', 'Out\Logs\MSBuild')) {
+        $source = Join-Path $root $relativePath
+        if (Test-Path -LiteralPath $source) {
+          $destination = Join-Path $evidence $relativePath
+          New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+          Copy-Item -LiteralPath $source -Destination (Split-Path $destination -Parent) -Recurse -Force
+          $hasEvidence = $true
+        }
+      }
+      Write-Host "##vso[task.setvariable variable=BuildXLHasEvidence]$hasEvidence"
+    displayName: Collect BuildXL engine and project logs
+    condition: always()
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish BuildXL build logs
+    condition: and(always(), eq(variables.BuildXLHasEvidence, 'True'))
+    inputs:
+      targetPath: $(BuildXLArtifacts)
+      artifact: buildxl-$(BuildXLConfiguration)-Attempt$(System.JobAttempt)

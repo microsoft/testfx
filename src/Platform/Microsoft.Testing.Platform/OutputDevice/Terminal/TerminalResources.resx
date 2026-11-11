@@ -212,15 +212,11 @@
     <value>in</value>
     <comment>in that is used in stack frame it is followed by file name</comment>
   </data>
-  <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
-    <value>Disable outputting ANSI escape characters to screen.</value>
-  </data>
-  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
+  <data name="TerminalAnsiModeOptionDescription" xml:space="preserve">
     <value>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</value>
-    <comment>{Locked=&quot;auto&quot;}{Locked=&quot;&apos;on&apos;&quot;}{Locked=&quot;true&quot;}{Locked=&quot;enable&quot;}{Locked=&quot;1&quot;}{Locked=&quot;off&quot;}{Locked=&quot;false&quot;}{Locked=&quot;disable&quot;}{Locked=&quot;0&quot;}{Locked=&quot;--progress off&quot;}{Locked=&quot;--ansi&quot;}{Locked=&quot;--no-ansi&quot;}</comment>
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</value>
+    <comment>{Locked=&quot;auto&quot;}{Locked=&quot;&apos;on&apos;&quot;}{Locked=&quot;true&quot;}{Locked=&quot;enable&quot;}{Locked=&quot;1&quot;}{Locked=&quot;off&quot;}{Locked=&quot;false&quot;}{Locked=&quot;disable&quot;}{Locked=&quot;0&quot;}{Locked=&quot;--progress off&quot;}</comment>
   </data>
   <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
     <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
@@ -230,12 +226,12 @@ When both --ansi and --no-ansi are provided, --ansi wins.</value>
     <value>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</value>
     <comment>{Locked="--progress off"}</comment>
   </data>
-  <data name="TerminalProgressOptionDescription" xml:space="preserve">
+  <data name="TerminalProgressModeOptionDescription" xml:space="preserve">
     <value>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
 This option takes precedence over the deprecated --no-progress flag.</value>
-    <comment>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</comment>
+    <comment>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</comment>
   </data>
   <data name="TerminalProgressOptionInvalidArgument" xml:space="preserve">
     <value>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
@@ -426,6 +422,10 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
   <data name="RunningTestsFrom" xml:space="preserve">
     <value>Running tests from</value>
     <comment>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</comment>
+  </data>
+  <data name="RuntimeFramework" xml:space="preserve">
+    <value>runtime: {0}</value>
+    <comment>{0} is the executing runtime framework, shown after the target framework and process architecture when the runtime differs or the target is unknown.</comment>
   </data>
   <data name="DiscoveringTestsFrom" xml:space="preserve">
     <value>Discovering tests from</value>

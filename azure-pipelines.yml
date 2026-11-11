@@ -61,6 +61,7 @@ parameters:
   displayName: "Trial Linux/macOS tests using Windows Release outputs"
   type: boolean
   default: false
+# The pinned public provider has been validated with bounded single-shard reads and this SDK.
 - name: EnableAffectedTests
   displayName: "Enable affected tests"
   type: boolean
@@ -73,8 +74,8 @@ parameters:
   displayName: "Compare CTS collection on main (requires public CTS package)"
   type: boolean
   default: false
-- name: EnableBuildXLPerformance
-  displayName: "Compare BuildXL and MSBuild performance in a separate Windows leg"
+- name: EnableBuildXL
+  displayName: "Build the repository with BuildXL in separate Windows legs"
   type: boolean
   default: true
 
@@ -152,6 +153,8 @@ stages:
       displayName: Validate bounded collection scheduling
     - pwsh: ./eng/test-windows-build-outputs.ps1
       displayName: Validate cross-platform output transport
+    - pwsh: ./eng/test-report-comparison.ps1
+      displayName: Validate report comparison
     - bash: |
         set -euo pipefail
 
@@ -233,9 +236,9 @@ stages:
       name: detect
       displayName: Classify changed files
 
-  # This is a build benchmark, independent of SkipTests and the product test matrix.
-  - ${{ if eq(parameters.EnableBuildXLPerformance, true) }}:
-    - template: /eng/pipelines/jobs/buildxl-performance.yml
+  # Native BuildXL builds are independent of SkipTests and the product test matrix.
+  - ${{ if eq(parameters.EnableBuildXL, true) }}:
+    - template: /eng/pipelines/jobs/buildxl.yml
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

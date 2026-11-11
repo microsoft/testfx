@@ -6,9 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="3.0.0" />[3.0.0] - Unreleased
 
-See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5.2...main)
+See full log [of v4.5.3...main](https://github.com/microsoft/testfx/compare/v4.5.3...main)
 
 ### Breaking changes
+
+* Replace `ITestHostProcessInformation.HasExitedGracefully` with `HasReceivedTestHostCompletedMessage`, which reports receipt of the test host's completion message rather than successful process termination. Update custom implementations and rebuild extensions using this interface alongside MTP 3, including CrashDump, HangDump, and report-recovery consumers. Exit-code handling, recovery decisions, the IPC protocol, and the existing telemetry payload key are unchanged. See [#12358](https://github.com/microsoft/testfx/issues/12358).
+* Remove the obsolete `CancelledTestNodeStateProperty` in-process result state. Test frameworks must throw `OperationCanceledException` with the cancellation token supplied by Microsoft.Testing.Platform instead. Extensions compiled against the removed type must upgrade alongside the platform. Cancellation requests and older-peer wire-state representations remain supported. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Remove `TestApplication.CreateServerModeBuilderAsync`. Use `TestApplication.CreateBuilderAsync` and explicitly include exactly one `--server` argument, preserving the old helper's server-mode selection. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Remove the obsolete internal `Helpers.AppVersion.DefaultSemVer` shim. Use `PlatformVersion.Version` instead. CrashDump, HangDump, Retry, and TRX 2.2.1 binaries still bind this shim and must upgrade. The compatibility fixture retains HotReload/Telemetry 2.2.1 and TRX 2.3.0, using matching current CrashDump/HangDump/Retry/MSBuild builds where older versions also bind the removed cancellation state. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Remove the diagnostic environment-variable aliases `TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX` and `TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE`. Use `TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX` and `TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE`, respectively; the old names are now ignored. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Retire the old execution-orchestrator facade/concrete builder getter and parameterless internal process wait. Rebuild extensions against `ITestApplicationBuilder.TestHostOrchestrator` / `ITestHostExecutionOrchestrator` and pass an explicit cancellation token to `WaitForExitAsync`; these removals require Retry 2.3.0 or later, independently of other MTP 3 breaks. See [the migration boundaries](decisions/mtp-3-legacy-extension-contracts.md) and [#12314](https://github.com/microsoft/testfx/issues/12314).
+* Stop exporting legacy extension polyfills from the platform, while retaining supported legacy-target helpers in TRX/JUnit and other consumers. Upgrade affected Telemetry, TRX report/abstractions, and VSTestBridge legacy-target assets from 2.0.x to 2.1.0 or later. This does not retire all 2.x extension binaries; see [the package-specific evidence](decisions/mtp-3-legacy-extension-contracts.md).
+* End platform-internals friend access for the retired `Microsoft.Testing.Framework` and `MSTest.Engine` assemblies. Migrate those old engines to current `MSTest.SourceGeneration`; current source generation remains supported, tracked by [#12314](https://github.com/microsoft/testfx/issues/12314).
+* Remove the MTP application's `--no-ansi` option; use `--ansi off`. The native SDK's separate `--no-ansi` switch is unaffected. MTP's `--no-progress` removal remains blocked on the pinned Arcade producer migration; prefer `--progress off`, tracked in [#12314](https://github.com/microsoft/testfx/issues/12314).
+* Remove HangDump's legacy `%p` filename substitution; use `{pid}`. Other supported templates, configured root names, and results-directory path rules are preserved. CrashDump's .NET runtime-owned percent tokens are unaffected, tracked in [#12314](https://github.com/microsoft/testfx/issues/12314).
+* Emit only canonical OpenTelemetry attributes and instruments. Remove legacy test aliases, `Extension.*`, `SessionUid` / `RequestType` tags, `tests.*` instruments, and the `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES` switch. Migrate `passed` / `failed` to `pass` / `fail`, and `tests.duration` milliseconds to `test.case.duration` seconds; span durations remain in milliseconds. See the [complete migration map](decisions/canonical-telemetry.md#migration-map) and [#12314](https://github.com/microsoft/testfx/issues/12314).
 
 * Drop the dedicated .NET 8 and .NET 9 assets from Microsoft.Testing.Platform and its extensions, including the packaged-app controllers. The supported modern .NET targets are .NET 10 and .NET 11; existing .NET Standard and .NET Framework assets remain where provided, in [#12185](https://github.com/microsoft/testfx/pull/12185).
 * Retarget the modern `Microsoft.Testing.Platform.ServerMode.Client.Sources` source slice to .NET 10. Consumers below .NET 10, including .NET 8 and .NET 9, now select the preserved Jsonite fallback instead of the in-box System.Text.Json source slice; legacy source compilation remains covered, in [#12185](https://github.com/microsoft/testfx/pull/12185).
@@ -41,21 +53,26 @@ See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5
 * Preserve Azure DevOps data-row display names and their associated durations while retaining canonical method identities for history. Retry interrupted result-metadata updates without republishing accepted test results, by @Evangelink in [#12150](https://github.com/microsoft/testfx/pull/12150)
 * Detect OpenCode through its `OPENCODE` environment variable so AI-agent terminal defaults apply correctly, by @Evangelink in [#12174](https://github.com/microsoft/testfx/pull/12174)
 
-## <a name="2.5.3" />[2.5.3] - Unreleased
+## <a name="2.5.3" />[2.5.3] - 2026-11-11
 
-See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v4.5.2...rel/4.5)
+See full log [of v4.5.2...v4.5.3](https://github.com/microsoft/testfx/compare/v4.5.2...v4.5.3)
 
 ### Changed
 
 * Coalesce HangDump activity notifications instead of performing one IPC round trip per test result, while ensuring a dump is never triggered before the configured inactivity timeout, by @thomhurst and @Evangelink in [#12231](https://github.com/microsoft/testfx/pull/12231)
 * Distinguish elapsed time from cumulative test time in CI summaries, show bounded Azure DevOps skip-reason groups with platform context, and report authoritative runner-policy exits separately from failed test results, by @Evangelink in [#12149](https://github.com/microsoft/testfx/pull/12149)
 * Localize Azure DevOps live-publishing and history diagnostics, by @Evangelink in [#12209](https://github.com/microsoft/testfx/pull/12209)
+* Render Azure DevOps skip-reason groups as wrapping list entries rather than tables, and show shared module and platform context once for single-module summaries, by @Evangelink in [#12246](https://github.com/microsoft/testfx/pull/12246)
 
 ### Fixed
 
 * Include data-row arguments and custom display names in GitHub Actions failure, flaky-test and slowest-test summaries while retaining fully qualified method names, by @Evangelink in [#12144](https://github.com/microsoft/testfx/pull/12144)
 * Preserve Azure DevOps data-row display names and their associated durations while retaining canonical method identities for history. Retry interrupted result-metadata updates without republishing accepted test results, by @Evangelink in [#12163](https://github.com/microsoft/testfx/pull/12163)
 * Detect OpenCode through its `OPENCODE` environment variable so AI-agent terminal defaults apply correctly, by @Evangelink in [#12178](https://github.com/microsoft/testfx/pull/12178)
+* Diagnose uncorrelated JSON-RPC errors with `id: null` without ending server sessions, replying to the error or completing unrelated pending client requests, while preserving request accounting, by @Evangelink in [#12286](https://github.com/microsoft/testfx/pull/12286)
+* Correct TRX artifact publication with Retry, moving the final default or relative report to the results directory while retaining earlier attempt reports under `Retries`, preserving attachment paths and forwarding relocated artifacts through native `dotnet test` and packaged-app controllers, by @Evangelink in [#12290](https://github.com/microsoft/testfx/pull/12290)
+* Preserve nested and aggregate exception causes in CTRF, HTML and JUnit reports while retaining explicit failure explanations and existing simple-exception stack traces, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
+* Preserve complete CTRF attachment paths instead of truncating references longer than 4,096 characters, while retaining diagnostic size limits for attachment names and descriptions, by @Evangelink in [#12359](https://github.com/microsoft/testfx/pull/12359)
 
 ## <a name="2.5.2" />[2.5.2] - 2026-10-27
 

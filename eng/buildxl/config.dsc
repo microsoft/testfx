@@ -56,6 +56,7 @@ config({
             ["ProgramFiles", Environment.getStringValue("ProgramFiles")],
             ["ProgramFiles(x86)", Environment.getStringValue("ProgramFiles(x86)")],
             ["DOTNET_ROOT", Environment.getStringValue("DOTNET_ROOT")],
+            ["DOTNET_HOST_PATH", Environment.getStringValue("DOTNET_ROOT") + "/dotnet.exe"],
             ["DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR", Environment.getStringValue("DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR")],
             ["DOTNET_MULTILEVEL_LOOKUP", "0"],
             ["DOTNET_NOLOGO", "1"],
@@ -64,17 +65,22 @@ config({
         ),
         globalProperties: Map.empty<string, string>().addRange(
             ["Configuration", Environment.getStringValue("TESTFX_BUILDXL_CONFIGURATION")],
-            ["TargetFrameworks", Environment.getStringValue("TESTFX_BUILDXL_TFM")],
             ["ArtifactsBinDir", Environment.getStringValue("TESTFX_BUILDXL_BIN")],
             ["ArtifactsObjDir", Environment.getStringValue("TESTFX_BUILDXL_OBJ")],
+            ["CustomBeforeDirectoryBuildTargets", Environment.getStringValue("TESTFX_BUILDXL_ROOT") + "/eng/buildxl/msbuild.targets"],
+            ["SkipUapTargetFramework", "true"],
+            // BuildXL omits CurrentSolutionConfigurationContents from project command lines.
+            ["ShouldUnsetParentConfigurationAndPlatform", "false"],
             ["EnableProjectDataOnBuild", "false"],
-            ["UseSharedCompilation", "false"],
-            ["CustomAfterMicrosoftCommonTargets", Environment.hasVariable("TESTFX_BUILDXL_ADDITIONAL_TARGETS")
-                ? Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS") : ""]
+            ["UseSharedCompilation", "true"],
+            ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS") !== "*",
+                ["CustomAfterMicrosoftCommonTargets", Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS")]),
+            ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_TFM") !== "*",
+                ["TargetFrameworks", Environment.getStringValue("TESTFX_BUILDXL_TFM")])
         ),
         logVerbosity: "minimal",
         enableBinLogTracing: true,
         keepProjectGraphFile: true,
-        useManagedSharedCompilation: false
+        useManagedSharedCompilation: true
     }]
 });

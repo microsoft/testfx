@@ -119,7 +119,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         switch (executionState)
         {
             case DiscoveredTestNodeStateProperty:
-                _openTelemetryResultHandler?.NotifyDiscovered();
                 // In discovery mode, discovered tests count toward the "ran" total.
                 if (_isDiscovery)
                 {
@@ -136,9 +135,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
             case TimeoutTestNodeStateProperty:
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                 _openTelemetryResultHandler?.NotifyFailed(message.TestNode, executionState);
                 _failedTestsCount++;
                 _totalRanTests++;
@@ -169,10 +165,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
                     message.TestNode,
                     message.ParentTestNodeUid,
                     executionActivityContext);
-                break;
-
-            default:
-                _openTelemetryResultHandler?.NotifyUnknown();
                 break;
         }
 

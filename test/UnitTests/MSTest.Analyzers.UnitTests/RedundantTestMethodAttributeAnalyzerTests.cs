@@ -6,9 +6,6 @@ using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.RedundantTestMethodAttributeAnalyzer,
     MSTest.Analyzers.RedundantTestMethodAttributeFixer>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.RedundantTestMethodAttributeAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -1037,26 +1034,5 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenMethodConditionMatchesClassConditionInVisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <TestClass>
-            <OSCondition(OperatingSystems.Windows)>
-            Public NotInheritable Class MyTestClass
-                <TestMethod>
-                <{|#0:OSCondition(OperatingSystems.Windows)|}>
-                Public Sub TestMethod()
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic().WithLocation(0).WithArguments("[OSCondition]", "TestMethod"));
     }
 }

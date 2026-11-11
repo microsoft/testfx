@@ -56,12 +56,17 @@ consumers. It does not replace the MSBuild/Arcade shipping build or its complete
 framework/workload and acceptance matrix.
 
 An [experimental BuildXL build](decisions/buildxl-build.md) can schedule and
-cache the existing MSBuild projects on Windows x64. It is opt-in, uses isolated
-outputs, and currently validates the portable TRX reporter dependency graph;
-the Arcade build remains the shipping authority.
+cache the existing MSBuild projects on Windows x64. Its default entry point is
+`TestFx.slnx`, preserving project-specific target frameworks except classic UAP,
+which requires desktop MSBuild. Separate Debug and Release pipeline legs build
+the solution and retain engine counters and project binlogs for later analysis.
+Outputs are isolated; the Arcade build remains the shipping authority.
+The driver enables tracked shared compilation, sizes concurrency to the available
+CPUs, and automatically falls back to full input hashing when change journals
+are unavailable. CI persists the action cache between compatible runs.
 The [BuildXL performance comparison](decisions/buildxl-build.md#comparing-build-performance)
-measures matched cold, changed-input, and no-op builds locally and in its own
-Windows pipeline leg; raw samples and benchmark duration history are retained.
+remains an explicit local experiment for matched cold, changed-input, and no-op
+TRX builds. CI runs real solution builds, not repeated benchmark samples.
 
 The easiest and recommended solution is to build the repository with the provided scripts at the repo root.
 
@@ -174,6 +179,112 @@ For Linux and macOS:
 ```
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
+
+### Retained OpenTelemetry traces
+
+The Windows, Linux and macOS CI test jobs save existing MTP activities under
+`artifacts/TestResults/<Configuration>/OpenTelemetry`. Download the corresponding
+`TestResults_<OS>_<configuration or collection kind>_Attempt<job attempt>` build
+artifact to retrieve them. Failed jobs publish partial traces too. Availability
+follows the build's Azure Pipelines retention policy; no guaranteed number of days
+is configured in this repository.
+
+The Windows app-model job includes the same directory inside
+`Windows_App_Model_Diagnostics_Attempt<job attempt>/artifacts/TestResults/<Configuration>/OpenTelemetry`.
+
+Local collection is opt-in. After building the desired test host with the
+repository scripts, set `TESTFX_OTEL_TRACE_DIRECTORY` to an absolute directory
+before running it. For example, in PowerShell:
+
+```powershell
+$previous = $env:TESTFX_OTEL_TRACE_DIRECTORY
+try {
+    $env:TESTFX_OTEL_TRACE_DIRECTORY = Join-Path $PWD 'artifacts\TestResults\Debug\OpenTelemetry'
+    & .\artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net10.0\Microsoft.Testing.Extensions.UnitTests.exe --filter 'FullyQualifiedName~TestFxOpenTelemetryTests'
+} finally {
+    $env:TESTFX_OTEL_TRACE_DIRECTORY = $previous
+}
+```
+
+`OTEL_SDK_DISABLED=true` disables collection. Without the directory variable the
+existing instrumentation-only dogfooding remains active without writing files.
+The helper does not configure or contact an OTLP endpoint. The existing Native
+AOT exclusion remains unchanged.
+
+Each uniquely named `.jsonl` file is a UTF-8 **TestFx archive**, not an OTLP request:
+
+- The first `resource` record declares `format: "testfx-otel-jsonl"`,
+  `schemaVersion: 1`, a unique archive `runId`, and resource `attributes`.
+- Each `span` record preserves IDs/parents, trace state/flags, source, name/kind,
+  exact UTC start/end, `durationTicks` (100 ns ticks), status, attributes, events
+  and links. Attribute lists contain `{ "key": ..., "value": ... }` entries;
+  JSON strings, booleans, numbers and arrays retain their value types. Readers
+  must preserve 64-bit integers. Non-finite floats and unsupported attribute
+  types are represented as invariant strings.
+- The last `completion` record contains `status`, `spanCount` and `failedExports`.
+  Require `status: "complete"` and zero failures before treating a file as a
+  complete export. A crash/forced termination can leave no completion and a
+  partial last line; earlier complete lines remain useful, but are not a full run.
+
+Completion describes archive delivery, **not test-session success**. For example,
+`--help` and `--info` produce complete archives with an informative
+`TestHostBuilder` operation (`HostType: InformativeCommandLineHost`) but no test
+results or `test.run.exit_code` verdict. Do not count those as healthy execution
+samples. Likewise, a complete archive can describe a failed or zero-result run.
+
+CI checks completion with `eng/verify-test-traces.ps1` before the existing artifact
+upload. Incomplete files fail that check on successful jobs and remain diagnostic
+warnings on failed/canceled jobs. Empty selection or explicit disablement is not
+proof that traces were collected.
+
+Module version/binary MVID, build/SDK/TFM, machine/OS/runtime/CPU, CI/source, logical
+execution and supplied retry/job-attempt provenance are retained on the resource.
+Do not mix different attempts or use an absent phase duration as zero. Existing `test.step.*` attributes
+are preserved; canonical span elapsed time and reported result durations are not
+interchangeable, and fixture intervals may overlap.
+
+The sink omits captured stdout/stderr attributes, but names, parameter values,
+paths, metadata and exceptions can still contain sensitive information. Treat
+these files like the other test artifacts; do not upload them to a new destination
+without reviewing their contents. Synchronous span flushing adds collection
+overhead and uses no dropping batch queue. See the
+[research, contract and validation record](decisions/otel-trace-retention.md).
+
+#### Inspect the value of the retained data
+
+Generate an offline cost/coverage snapshot from downloaded test-artifact ZIPs,
+directories or individual JSONL archives (Python 3.12+, no additional packages):
+
+```powershell
+python .github\scripts\report_test_traces.py `
+    --input C:\evidence\TestResults_Windows_Release_Attempt1.zip `
+    --input C:\evidence\TestResults_Linux_Release_Attempt1.zip `
+    --output C:\evidence\report\test-traces
+```
+
+The command writes an HTML report, Markdown and JSON with the same filename
+prefix. It reads trace members in ZIPs without extracting or running artifact
+code. Failed/incomplete/unsupported archives are named and excluded; the command
+returns exit 2 when input was rejected or no executing workers were found.
+Root CTRF reports are selected consistently from an unwrapped artifact or a
+single common artifact wrapper, in ZIPs and extracted directories; child and
+merged reports are not included. A damaged trace member does not discard healthy
+members. Artifact labels remain literal in both Markdown and HTML output.
+
+The snapshot ranks existing fixture invocations and test-occurrence elapsed
+times, preserves TestContainer step timings, and shows the observation cohorts.
+Controllers and non-executing operations do not inflate test counts. Host protocol
+types are shown separately, but either protocol can be used by a test-launched
+subprocess; compare execution occurrences with the independent root CTRF counts.
+Shared fixture work and its overlapping interval union are distinct measures,
+neither CPU time nor time that can be subtracted to obtain native method-body
+duration.
+
+This is not yet a weekly regression detector. One build can expose expensive
+setup, but cannot distinguish a regression from machine load. Binary MVIDs keep
+platform-specific variants separate when their exported TFM labels are identical;
+those identifiers are not stable cross-build cohort keys. See the
+[first-report research and evidence](decisions/test-trace-report.md).
 
 ### Code coverage
 

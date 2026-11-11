@@ -71,13 +71,14 @@ public partial class AssertTests
             """);
     }
 
-    public void Scope_CollectionAssertAreEquivalent_ExpectedNull_CollectsFollowingFailure()
+    public void Scope_AreSequenceEqual_ExpectedNull_CollectsFollowingFailure()
     {
         Action action = () =>
         {
             using (Assert.Scope())
             {
-                CollectionAssert.AreEquivalent<int>(null, [1], EqualityComparer<int>.Default, "collection mismatch");
+                IEnumerable<int>? expected = null;
+                Assert.AreSequenceEqual(expected, [1], SequenceOrder.InAnyOrder, "collection mismatch");
                 Assert.AreEqual(1, 2);
             }
         };
@@ -88,7 +89,17 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be("CollectionAssert.AreEquivalent failed. collection mismatch");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected sequences to be equal (in any order).
+            one side is null, the other is not.
+            collection mismatch
+
+            expected: null
+            actual:   [1]
+
+            Assert.AreSequenceEqual(expected, [1], <order>)
+            """);
         innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
     }
 

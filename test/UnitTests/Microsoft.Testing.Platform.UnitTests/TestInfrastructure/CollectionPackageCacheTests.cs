@@ -26,7 +26,7 @@ public sealed class CollectionPackageCacheTests
             File.WriteAllText(Path.Combine(cache, CollectionPackageCache.MarkerFileName), CollectionPackageCache.MarkerContent);
             Assert.AreEqual(cache, CollectionPackageCache.Select(cache, "unused"));
             Assert.AreEqual(cache, CollectionPackageCache.Select(cache, "different-child"));
-            Assert.IsTrue(Directory.Exists(cache));
+            Assert.DirectoryExists(cache);
         }
         finally
         {

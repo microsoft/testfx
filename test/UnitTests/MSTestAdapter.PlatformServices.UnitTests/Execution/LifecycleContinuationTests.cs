@@ -144,6 +144,24 @@ public sealed class LifecycleContinuationTests : TestContainer
         harness.Class.IsClassCleanupExecuted.Should().BeTrue();
     }
 
+    public void ForceCleanupSkipsCachedAssembliesThatNeverInitialized()
+    {
+        using var harness = new LifecycleHarness(useCache: true);
+        // Make an erroneous cleanup executable without a missing-property exception,
+        // so removing the guard fails at the unexpected lifecycle-event assertion.
+        harness.SourceParameters["assembly"] = "uninitialized";
+        harness.SourceParameters["shared"] = "uninitialized";
+        harness.Cache!.AssemblyInfoListWithExecutableCleanupMethods.Should().ContainSingle().Which.Should().BeSameAs(harness.Assembly);
+        harness.Assembly.IsAssemblyInitializeExecuted.Should().BeFalse();
+        harness.Class.IsClassInitializeExecuted.Should().BeFalse();
+
+        ClassCleanupManager.ForceCleanup(harness.Cache!, harness.SourceParameters, Mock.Of<IAdapterMessageLogger>());
+
+        harness.Events.Should().BeEmpty("cached metadata is not evidence that an assembly or class initialized");
+        harness.Assembly.IsAssemblyInitializeExecuted.Should().BeFalse();
+        harness.Class.IsClassCleanupExecuted.Should().BeFalse();
+    }
+
     public async Task ForceCleanupFlowsClassAndAssemblyPropertiesWithoutLeakingClassScope()
     {
         using var harness = new LifecycleHarness(useCache: true);

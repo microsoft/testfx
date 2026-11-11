@@ -6,11 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="5.0.0" />[5.0.0] - Unreleased
 
-See full log [of v4.5.2...main](https://github.com/microsoft/testfx/compare/v4.5.2...main)
+See full log [of v4.5.3...main](https://github.com/microsoft/testfx/compare/v4.5.3...main)
 
 For the Microsoft.Testing.Platform changes included with this release, see [3.0.0](Changelog-Platform.md#3.0.0).
 
 ### Breaking changes
+
+* Remove `StringAssert` and `CollectionAssert`. Use the corresponding `Assert` APIs; the [complete migration table](decisions/legacy-assertion-removal.md#complete-collection-migration) covers every collection assertion, comparer differences, and custom extension hooks. See [#12354](https://github.com/microsoft/testfx/issues/12354).
+* Remove the obsolete, unused `TestResult.InnerResultsCount`, `DatarowIndex`, and `ReturnValue` properties. Stop reading or assigning these properties; they had no supported effect. See [#12312](https://github.com/microsoft/testfx/issues/12312).
+* Remove the deprecated `mstest:orderTestsByNameInClass` configuration fallback. Move the setting to `mstest:execution:orderTestsByNameInClass`; the flat key is now ignored. See [#12312](https://github.com/microsoft/testfx/issues/12312).
 
 * Seal `DiscoverInternalsAttribute`, `DoNotParallelizeAttribute`, `ParallelizeAttribute`, `TestDataSourceDiscoveryAttribute`, `STATestClassAttribute`, `WinUITestTargetAttribute`, and the UWP/WinUI `UITestMethodAttribute` implementations. Use `TestClassAttribute` or `TestMethodAttribute` for custom execution attributes. `DataRowAttribute` remains extensible, including its `GetDisplayName` override point. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
 * Remove `DataTestMethodAttribute`. Replace `[DataTestMethod]` with `[TestMethod]` for data-driven tests. Unlike `DataTestMethodAttribute`, `TestMethodAttribute` is not inherited: explicitly apply `[TestMethod]` to overrides that previously inherited `[DataTestMethod]` from a virtual base method, or those overrides will no longer be discovered. See [#7374](https://github.com/microsoft/testfx/issues/7374) and [#12212](https://github.com/microsoft/testfx/pull/12212).
@@ -33,17 +37,25 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 * Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12121](https://github.com/microsoft/testfx/pull/12121)
 * Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12134](https://github.com/microsoft/testfx/pull/12134)
 
-## <a name="4.5.3" />[4.5.3] - Unreleased
+## <a name="4.5.3" />[4.5.3] - 2026-11-11
 
-See full log [of v4.5.2...rel/4.5](https://github.com/microsoft/testfx/compare/v4.5.2...rel/4.5)
+See full log [of v4.5.2...v4.5.3](https://github.com/microsoft/testfx/compare/v4.5.2...v4.5.3)
 
 For the Microsoft.Testing.Platform changes included with this release, see [2.5.3](Changelog-Platform.md#2.5.3).
+
+### Changed
+
+* Inspect assembly metadata before loading dependencies during assembly-fixture provider discovery, avoiding unnecessary loads of unmarked libraries while preserving transitive providers, runtime binding and diagnosed fallback, by @Evangelink in [#12291](https://github.com/microsoft/testfx/pull/12291)
+* Update the `Microsoft.NET.Test.Sdk` dependency selected by `MSTest.Sdk` to 18.10.2, by @Evangelink in [#12366](https://github.com/microsoft/testfx/pull/12366)
 
 ### Fixed
 
 * Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12128](https://github.com/microsoft/testfx/pull/12128)
 * Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12145](https://github.com/microsoft/testfx/pull/12145)
-* Preserve global test cleanup after a locally canceled or timed-out test cleanup, without restarting an active test or run deadline or losing the original cleanup failure, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220)
+* Preserve global test cleanup after a locally canceled or timed-out test cleanup, retain original deadlines and cancellation-source ownership, and aggregate independent cleanup failures without losing timeout or inconclusive outcomes, including nested aggregate messages on .NET Framework, by @Evangelink in [#12220](https://github.com/microsoft/testfx/pull/12220) and [#12292](https://github.com/microsoft/testfx/pull/12292)
+* Keep `TestContext.AddResultFile` attachments readable after Microsoft.Testing.Platform host shutdown by retaining copied files in visible `MSTest-<random-id>` result folders, subject to the caller's results-retention policy, by @Evangelink in [#12247](https://github.com/microsoft/testfx/pull/12247)
+* Avoid duplicate Microsoft.Testing.Platform runtime DLLs in the classic UWP adapter payload by restoring dependencies from their owning NuGet packages and including the resolved assemblies in AppX deployment, by @Evangelink in [#12248](https://github.com/microsoft/testfx/pull/12248)
+* Await all scheduled workers when cancellation occurs during ordinary or dependency-ordered parallel execution, preventing canceled runs from returning before their workers finish, by @Evangelink in [#12297](https://github.com/microsoft/testfx/pull/12297)
 
 ## <a name="4.5.2" />[4.5.2] - 2026-10-27
 

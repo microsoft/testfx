@@ -25,7 +25,7 @@ public sealed class ConfigurationSourceDefaultsTests
             jsonConfigurationSource,
         ];
         string expectedVersion = commandLineSource.Version;
-        Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion));
+        Assert.IsNotNullOrWhiteSpace(expectedVersion);
         Assert.AreEqual(expectedVersion, environmentVariablesSource.Version);
         Assert.AreEqual(expectedVersion, jsonConfigurationSource.Version);
 

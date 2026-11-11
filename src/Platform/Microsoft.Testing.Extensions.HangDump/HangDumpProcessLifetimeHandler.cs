@@ -381,7 +381,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
             }
         }
 
-        if (!testHostProcessInformation.HasExitedGracefully)
+        if (!testHostProcessInformation.HasReceivedTestHostCompletedMessage)
         {
             await _logger.LogDebugAsync($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')").ConfigureAwait(false);
         }

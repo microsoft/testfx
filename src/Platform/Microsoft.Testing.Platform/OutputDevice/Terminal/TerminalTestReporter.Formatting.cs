@@ -124,31 +124,19 @@ internal sealed partial class TerminalTestReporter
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, TestProgressState assemblyRun)
-        => AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
+        => AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework);
 
-    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
+    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture, string? runtimeFramework = null)
     {
         terminal.AppendLink(assembly, lineNumber: null);
-        if (targetFramework is null && architecture is null)
+        string displayName = TestFrameworkDisplay.GetDisplayName(targetFramework, architecture, runtimeFramework);
+        if (displayName.Length == 0)
         {
             return;
         }
 
         terminal.Append(" (");
-        if (targetFramework is not null)
-        {
-            terminal.Append(targetFramework);
-            if (architecture is not null)
-            {
-                terminal.Append('|');
-            }
-        }
-
-        if (architecture is not null)
-        {
-            terminal.Append(architecture);
-        }
-
+        terminal.Append(displayName);
         terminal.Append(')');
     }
 
@@ -203,7 +191,7 @@ internal sealed partial class TerminalTestReporter
             return;
         }
 
-        if (!message.Contains('\n'))
+        if (message.IndexOf('\n') < 0)
         {
             terminal.Append(indent);
             terminal.AppendLine(message);

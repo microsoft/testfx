@@ -252,7 +252,7 @@ public class CtrfReportEngineTests
         JsonElement[] reportedTests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
         Assert.HasCount(2, reportedTests);
         Assert.AreSequenceEqual(["First", "Second"], reportedTests.Select(test => test.GetProperty("name").GetString()).ToArray());
-        Assert.IsTrue(reportedTests.All(test => test.GetProperty("retries").GetInt32() == 1));
+        Assert.ContainsOnly(test => test.GetProperty("retries").GetInt32() == 1, reportedTests);
         Assert.AreNotEqual(reportedTests[0].GetProperty("testId").GetString(), reportedTests[1].GetProperty("testId").GetString());
     }
 
@@ -360,7 +360,7 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public void TestResultCapture_TruncatesAttachmentFieldsWithoutSplittingSurrogatePairs()
+    public void TestResultCapture_TruncatesAttachmentMetadataWithoutSplittingSurrogatePairs()
     {
         string name = new string('n', MaxIdentityFieldLength - 1) + "\U0001F642-name";
         string path = new string('p', MaxIdentityFieldLength - 1) + "\U0001F642-path.json";
@@ -374,7 +374,7 @@ public class CtrfReportEngineTests
         Assert.IsNotNull(attachments);
         Assert.HasCount(1, attachments);
         AssertTruncated(attachments[0].Name, MaxIdentityFieldLength - 1);
-        AssertTruncated(attachments[0].Path, MaxIdentityFieldLength - 1);
+        Assert.AreEqual(path, attachments[0].Path);
         Assert.IsNotNull(attachments[0].Description);
         AssertTruncated(attachments[0].Description!, MaxMessageLength - 1);
 
@@ -385,6 +385,38 @@ public class CtrfReportEngineTests
             Assert.DoesNotContain("\uFFFD", value);
             Assert.Contains("[truncated, original length:", value);
         }
+    }
+
+    [TestMethod]
+    [DataRow(-1)]
+    [DataRow(0)]
+    [DataRow(1)]
+    public async Task TestResultCapture_PreservesAttachmentPathInFinalAndRetryReports(int lengthOffset)
+    {
+        string path = new string('p', MaxIdentityFieldLength + lengthOffset - ".json".Length) + ".json";
+        var properties = new PropertyBag(new FileArtifactProperty(new FileInfo("artifact.json"), "Evidence"));
+        IReadOnlyList<CapturedAttachment>? attachments = CaptureAttachmentsForTest(properties, _ => path);
+
+        Assert.IsNotNull(attachments);
+        Assert.AreEqual(path, Assert.ContainsSingle(attachments).Path);
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync(
+        [
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true, attachments: attachments),
+            Captured("retry", "Retrying", "passed", retryAttemptNumber: 2, attachments: attachments),
+        ]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("passed", test.GetProperty("status").GetString());
+        Assert.AreEqual(1, test.GetProperty("retries").GetInt32());
+        JsonElement finalAttachment = Assert.ContainsSingle(test.GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual(path, finalAttachment.GetProperty("path").GetString());
+        JsonElement priorAttempt = Assert.ContainsSingle(test.GetProperty("retryAttempts").EnumerateArray());
+        Assert.AreEqual("failed", priorAttempt.GetProperty("status").GetString());
+        JsonElement priorAttachment = Assert.ContainsSingle(priorAttempt.GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual(path, priorAttachment.GetProperty("path").GetString());
     }
 
     [DataRow("artifact.BMP", "image/bmp")]
@@ -522,7 +554,7 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(["First", "Second", "First"], tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
         Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => test.GetProperty("status").GetString()!).ToArray());
         Assert.HasCount(3, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
-        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+        Assert.ContainsOnly(test => !test.TryGetProperty("retryAttempts", out _), tests);
     }
 
     [TestMethod]
@@ -585,7 +617,7 @@ public class CtrfReportEngineTests
             priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
         Assert.IsTrue(retry.TryGetProperty("attemptId", out JsonElement finalAttemptId), "The final attempt must have a native CTRF identity.");
         string[] attemptIds = [finalAttemptId.GetString()!, .. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
-        Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+        Assert.ContainsOnly(attemptId => Guid.TryParse(attemptId, out _), attemptIds);
         Assert.HasCount(3, attemptIds.Distinct());
         Assert.DoesNotContain(executionId, attemptIds);
 

@@ -336,9 +336,6 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult? failed = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("failed", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), startTime, timing), "tests.dll")?.Result;
         AzureDevOpsTestCaseResult? skipped = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("skipped", new SkippedTestNodeStateProperty("skip"), startTime, timing), "tests.dll")?.Result;
         AzureDevOpsTestCaseResult? timeout = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("timeout", new TimeoutTestNodeStateProperty("too slow"), startTime, timing), "tests.dll")?.Result;
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        AzureDevOpsTestCaseResult? cancelled = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(CreateNode("cancelled", new CancelledTestNodeStateProperty("stopped"), startTime, timing), "tests.dll")?.Result;
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed?.Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, passed?.State);
@@ -353,9 +350,6 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, timeout?.Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, timeout?.State);
         Assert.AreEqual("Timeout: too slow", timeout?.ErrorMessage);
-        Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled?.Outcome);
-        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, cancelled?.State);
-        Assert.AreEqual("stopped", cancelled?.ErrorMessage);
     }
 
     [TestMethod]
@@ -3129,7 +3123,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual("row B first", created[1].ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[2].Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[3].Outcome);
-        Assert.IsTrue(created.All(result => result.SubResults is null));
+        Assert.ContainsOnly(result => result.SubResults is null, created);
         AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 100, 101, 102, 103);
         Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
         Assert.AreEqual(100, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);

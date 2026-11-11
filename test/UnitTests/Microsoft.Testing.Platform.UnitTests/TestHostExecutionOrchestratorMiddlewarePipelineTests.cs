@@ -725,8 +725,7 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
             rootCts.Token);
 
         await leafStarted.Task;
-        // This project consumes MSTest from NuGet; an object-valued check works with both API versions.
-        Assert.IsNotNull((object?)outerDownstream);
+        Assert.IsNotNull(outerDownstream);
 
         // The inner middleware has failed, but the leaf it started remains active and must still observe
         // the ancestor's later cancellation before linked token sources are disposed.

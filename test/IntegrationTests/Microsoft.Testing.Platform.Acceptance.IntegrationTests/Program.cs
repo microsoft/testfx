@@ -5,9 +5,6 @@ using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Services;
 
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
-
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 // Opt-out telemetry
@@ -30,13 +27,7 @@ builder.AddRetryProvider();
 builder.AddAzureDevOpsProvider();
 builder.AddCtrfReportProvider();
 
-// Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
-// and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter
-// is registered, so the recorded data is dropped by the SDK at the export stage — this keeps CI
-// logs clean while still flowing every test event through the OTel pipeline.
-builder.AddOpenTelemetryProvider(
-    tracing => tracing.AddTestingPlatformInstrumentation(),
-    metrics => metrics.AddTestingPlatformInstrumentation());
+using IDisposable? telemetry = builder.AddTestFxOpenTelemetry();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory

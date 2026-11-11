@@ -496,8 +496,7 @@ public sealed class FormatterUtilitiesTests
         ErrorMessage error = new(null, ErrorCodes.ParseError, "parse-error", null);
         IDictionary<string, object?> properties = SerializerUtilities.Serialize(error);
 
-        Assert.IsTrue(properties.TryGetValue(JsonRpcStrings.Id, out object? id));
-        Assert.IsNull(id);
+        Assert.ContainsEntry(JsonRpcStrings.Id, null, properties);
         Assert.AreEqual(
             """{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"data":{},"message":"parse-error"}}""",
             (await _formatter.SerializeAsync(error)).Replace(" ", string.Empty));
@@ -818,15 +817,12 @@ public sealed class FormatterUtilitiesTests
         string expectedMessage = $"explanation{Environment.NewLine} ---> {typeof(FixedStackTraceException).FullName}: inner";
         string expectedStackTrace = $"outer-stack{Environment.NewLine}--- Inner exception stack trace ({typeof(FixedStackTraceException).FullName}) ---{Environment.NewLine}inner-stack";
 
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
         (TestNodeStateProperty State, string ExecutionState)[] states =
         [
             (new FailedTestNodeStateProperty(exception, "explanation"), "failed"),
             (new ErrorTestNodeStateProperty(exception, "explanation"), "error"),
             (new TimeoutTestNodeStateProperty(exception, "explanation"), "timed-out"),
-            (new CancelledTestNodeStateProperty(exception, "explanation"), "canceled"),
         ];
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         foreach ((TestNodeStateProperty state, string executionState) in states)
         {

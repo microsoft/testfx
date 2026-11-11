@@ -58,14 +58,11 @@ internal sealed partial class ServerTestHost
                 || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid)),
             ];
 
-#pragma warning disable CS0618, MTP0001
         private static bool IsTerminalState(TestNodeStateProperty? state)
             => state is PassedTestNodeStateProperty
                 or SkippedTestNodeStateProperty
                 or FailedTestNodeStateProperty
                 or ErrorTestNodeStateProperty
-                or TimeoutTestNodeStateProperty
-                or CancelledTestNodeStateProperty;
-#pragma warning restore CS0618, MTP0001
+                or TimeoutTestNodeStateProperty;
     }
 }

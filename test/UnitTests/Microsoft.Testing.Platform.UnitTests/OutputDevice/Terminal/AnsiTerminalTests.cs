@@ -174,6 +174,39 @@ public sealed class AnsiTerminalTests
         Assert.AreEqual(4, rendered.RenderedDurationLength);
     }
 
+    [TestMethod]
+    [DataRow(48, "app.dll (net472|x64, runtime: net481)", DisplayName = "RuntimeExactlyFits")]
+    [DataRow(47, "app.dll (net472|x64)", DisplayName = "RuntimeOneColumnTooWide")]
+    [DataRow(31, "app.dll (net472|x64)", DisplayName = "PrimaryExactlyFits")]
+    [DataRow(30, "...dll (net472|x64)", DisplayName = "FilenameElidedFirst")]
+    [DataRow(27, "... (net472|x64)", DisplayName = "PrimaryWithMinimalFilename")]
+    [DataRow(26, "app.dll", DisplayName = "PrimaryCannotFit")]
+    public void AnsiProgress_RuntimeSuffixRespectsWidthAndPreservesPrimaryIdentity(int width, string expectedIdentity)
+    {
+        RecordingConsole console = new();
+        AnsiTerminal terminal = new(console.Mock.Object);
+        AnsiTerminalTestProgressFrame frame = new(width, 24);
+        AnsiTerminalTestProgressFrame.RenderedProgressItem rendered = new();
+        TestProgressState state = new(1, "app.dll", "net472", "x64", new ZeroStopwatch(), isDiscovery: true, runtimeFramework: "net481") { DiscoveredTests = 7 };
+
+        frame.AppendTestWorkerProgress(state, rendered, terminal);
+
+        Assert.AreEqual($"[\u001b[35m+7\u001b[m] {expectedIdentity}\u001b[{width - 4}G(0s)", console.Text.ToString());
+    }
+
+    [TestMethod]
+    public void AnsiProgress_LongFilenameCannotDisplaceTargetAndArchitecture()
+    {
+        RecordingConsole console = new();
+        AnsiTerminal terminal = new(console.Mock.Object);
+        AnsiTerminalTestProgressFrame frame = new(40, 24);
+        TestProgressState state = new(1, "very-long-assembly-name.dll", "net472", "x64", new ZeroStopwatch(), isDiscovery: true, runtimeFramework: "net481") { DiscoveredTests = 7 };
+
+        frame.AppendTestWorkerProgress(state, new(), terminal);
+
+        Assert.AreEqual("[\u001b[35m+7\u001b[m] ...mbly-name.dll (net472|x64)\u001b[36G(0s)", console.Text.ToString());
+    }
+
     private sealed class RecordingConsole
     {
         public RecordingConsole()

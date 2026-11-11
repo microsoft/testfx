@@ -1,4 +1,5 @@
 #nullable enable
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsAttachments = "report-gh-attachments" -> string!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAttachmentCollector
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAttachmentCollector.GitHubActionsAttachmentCollector(string! rootDirectory, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, System.Func<string!, System.Threading.Tasks.Task!>! warn) -> void
@@ -13,8 +14,3 @@ Microsoft.Testing.Extensions.TestFailureDetails.Attachments.set -> void
 *REMOVED*Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.GitHubActionsFailureEntry(string! fullyQualifiedName, System.TimeSpan duration, string? message = null, string? exceptionType = null, string? stackTrace = null, string? filePath = null, int lineNumber = 0) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.GitHubActionsFailureEntry(string! fullyQualifiedName, System.TimeSpan duration, string? message = null, string? exceptionType = null, string? stackTrace = null, string? filePath = null, int lineNumber = 0, Microsoft.Testing.Extensions.CiRunSummaryAttachment![]? attachments = null) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Attachments.get -> Microsoft.Testing.Extensions.CiRunSummaryAttachment![]?
-*REMOVED*Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure = null) -> void
-Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure) -> void
-Microsoft.Testing.Extensions.TestRecord.SkipReason.get -> string?
-Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure, string? skipReason) -> void
-static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(string! identity, string! displayName) -> string!

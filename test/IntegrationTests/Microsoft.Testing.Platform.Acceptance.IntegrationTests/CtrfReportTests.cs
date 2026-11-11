@@ -140,6 +140,35 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
     }
 
     [TestMethod]
+    public async Task Ctrf_LongAttachmentPath_IsPreserved()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        string attachmentPath = Path.Combine(
+            AssetFixture.TargetAssetPath,
+            string.Join(Path.DirectorySeparatorChar.ToString(), Enumerable.Repeat(new string('p', 200), 22)),
+            "failure & \U0001F642.log");
+        Assert.IsGreaterThan(4096, attachmentPath.Length);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename attachment.ctrf.json --results-directory \"{resultDirectory}\"",
+            new() { ["TESTFX_CTRF_ATTACHMENT_PATH"] = attachmentPath },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(resultDirectory, "attachment.ctrf.json")));
+        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(4, tests);
+        JsonElement failingTest = Assert.ContainsSingle(tests.Where(test => test.GetProperty("testId").GetString() == "test-2"));
+        Assert.AreEqual("FailingTest", failingTest.GetProperty("name").GetString());
+        Assert.AreEqual("failed", failingTest.GetProperty("status").GetString());
+        JsonElement attachment = Assert.ContainsSingle(failingTest.GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual("failure.log", attachment.GetProperty("name").GetString());
+        Assert.AreEqual("text/plain", attachment.GetProperty("contentType").GetString());
+        Assert.AreEqual(attachmentPath, attachment.GetProperty("path").GetString());
+    }
+
+    [TestMethod]
     public async Task Ctrf_WhenTestHostCrashes_RecoversCompletedResultsAndMarksReportIncomplete()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
@@ -322,7 +351,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             ["PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass", "PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass"],
             tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
         Assert.HasCount(8, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
-        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+        Assert.ContainsOnly(test => !test.TryGetProperty("retryAttempts", out _), tests);
     }
 
     [TestMethod]
@@ -405,10 +434,10 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
                 ["test-1", "test-2", "test-3", "test-3"],
                 tests.Select(test => test.GetProperty("testId").GetString()!).ToArray());
             string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
-            Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
+            Assert.ContainsOnly(executionId => Guid.TryParse(executionId, out _), executionIds);
             Assert.HasCount(4, executionIds.Distinct());
             string[] attemptIds = [.. tests.Select(test => test.GetProperty("attemptId").GetString()!)];
-            Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+            Assert.ContainsOnly(attemptId => Guid.TryParse(attemptId, out _), attemptIds);
             Assert.HasCount(4, attemptIds.Distinct());
             Assert.IsEmpty(attemptIds.Intersect(executionIds, StringComparer.Ordinal));
         }
@@ -637,8 +666,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        string attachmentPath = Path.Combine(AppContext.BaseDirectory, "failure.log");
-        File.WriteAllText(attachmentPath, "Failure diagnostics");
+        string? configuredAttachmentPath = Environment.GetEnvironmentVariable("TESTFX_CTRF_ATTACHMENT_PATH");
+        string attachmentPath = configuredAttachmentPath ?? Path.Combine(AppContext.BaseDirectory, "failure.log");
+        if (configuredAttachmentPath is null)
+        {
+            File.WriteAllText(attachmentPath, "Failure diagnostics");
+        }
 
         // 1) A plain passing test.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(

@@ -28,20 +28,17 @@ public sealed class GitHubActionsAnnotationReporterTests
     [DataRow("failed")]
     [DataRow("error")]
     [DataRow("timeout")]
-    [DataRow("cancelled")]
     public async Task ConsumeAsync_FailureStatesEmitEscapedSourceAnnotationAndOriginalToken(string kind)
     {
         AnnotationExecutionFixture fixture = new(trace: true);
         const string explanation = "boom\nnext%line";
-#pragma warning disable CS0618, MTP0001 // Exercise the supported legacy cancellation wire outcome.
         TestNodeStateProperty state = kind switch
         {
             "failed" => new FailedTestNodeStateProperty(explanation),
             "error" => new ErrorTestNodeStateProperty(explanation),
             "timeout" => new TimeoutTestNodeStateProperty(explanation),
-            _ => new CancelledTestNodeStateProperty(explanation),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
-#pragma warning restore CS0618, MTP0001
         TestNode node = fixture.CreateNode(state);
 
         await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);

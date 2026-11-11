@@ -21,7 +21,7 @@ public sealed class TerminalTestReporterTests
 
     [TestMethod]
     [DataRow(null, null, "")]
-    [DataRow("net8.0", null, " (net8.0|)")]
+    [DataRow("net8.0", null, " (net8.0)")]
     [DataRow(null, "x64", " (x64)")]
     [DataRow("net8.0", "x64", " (net8.0|x64)")]
     public void ActualSimpleTerminalProgressPinsCountsIdentityAndActiveDetail(string? framework, string? architecture, string identity)
@@ -57,6 +57,126 @@ public sealed class TerminalTestReporterTests
         fixture.Terminal.RenderProgress([null, discovery], []);
         Assert.AreEqual($"[+7] discovery.dll(0s){Environment.NewLine}{Environment.NewLine}", fixture.Text.ToString());
         Assert.AreSequenceEqual([ConsoleColor.DarkMagenta, ConsoleColor.DarkCyan], fixture.Colors);
+    }
+
+    [TestMethod]
+    public void ActualSimpleTerminalProgress_PreservesTargetAndSeparateRuntime()
+    {
+        var fixture = new SimpleTerminalFixture();
+        var state = new TestProgressState(1, "execution.dll", "net472", "x64", new StubStopwatch(), isDiscovery: false, runtimeFramework: "net481");
+
+        fixture.Terminal.RenderProgress([state], []);
+
+        const string expected = """
+            [+0/x0/?0] execution.dll (net472|x64, runtime: net481)(0s)
+
+
+            """;
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), fixture.Text.ToString().Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    [DataRow(null, "net472|x64", DisplayName = "StandaloneCompatibleOverload")]
+    [DataRow("net472", "net472|x64", DisplayName = "MatchingRuntime")]
+    [DataRow("net481", "net472|x64, runtime: net481", DisplayName = "DifferentRuntime")]
+    public void AssemblyRunStarted_RuntimeIdentityPersistsThroughStartCompletionAndSummary(string? runtimeFramework, string identity)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        if (runtimeFramework is null)
+        {
+            reporter.AssemblyRunStarted("execution.dll", "net472", "x64", "execution", "execution");
+        }
+        else
+        {
+            reporter.AssemblyRunStarted("execution.dll", "net472", "x64", "execution", "execution", attemptNumber: 1, runtimeFramework);
+        }
+
+        reporter.TestCompleted("execution", "test", "Passing test", TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.AssemblyRunCompleted("execution", 0, outputData: null, errorData: null);
+
+        string expected = $"""
+            Running tests from execution.dll ({identity})
+            execution.dll ({identity}) passed [+1/x0/?0] (0ms)
+
+            """;
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), console.Output.Replace("\r\n", "\n"));
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 0);
+        string summary = $"""
+            Test run summary: Passed! - execution.dll ({identity})
+              total: 1
+              failed: 0
+              succeeded: 1
+              skipped: 0
+              duration: 0ms
+
+            """;
+        Assert.AreEqual((expected + Environment.NewLine + summary).Replace("\r\n", "\n"), console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void AssemblyRunCompleted_ProcessFailureRecapKeepsRuntimeWithItsTarget()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("crash.dll", "net472", "x64", "execution", "execution", attemptNumber: null, runtimeFramework: "net481");
+        reporter.TestCompleted("execution", "test", "Passing test", TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.AssemblyRunCompleted("execution", 42, outputData: "crash output", errorData: null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 42);
+
+        string[] identityLines = console.Output.Replace("\r\n", "\n").Split('\n')
+            .Where(line => line.StartsWith("Running tests from", StringComparison.Ordinal)
+                || line.StartsWith("crash.dll", StringComparison.Ordinal)
+                || line.StartsWith("  crash.dll", StringComparison.Ordinal))
+            .ToArray();
+        Assert.AreSequenceEqual(
+            [
+                "Running tests from crash.dll (net472|x64, runtime: net481)",
+                "crash.dll (net472|x64, runtime: net481) failed [+1/x0/?0] (0ms)",
+                "  crash.dll (net472|x64, runtime: net481)",
+            ],
+            identityLines);
+    }
+
+    [TestMethod]
+    public void AssemblyRunStarted_DefaultLiteralStillSelectsExistingAttemptOverload()
+    {
+        using var reporter = new TerminalTestReporter(new StringBuilderConsole(), new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        ArgumentOutOfRangeException exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () => reporter.AssemblyRunStarted("application.dll", "net472", "x64", "execution", "instance", default));
+
+        Assert.AreEqual("attemptNumber", exception.ParamName);
     }
 
     [TestMethod]
@@ -258,7 +378,7 @@ public sealed class TerminalTestReporterTests
             ShowStdout = OutputShowMode.All,
             ShowStderr = OutputShowMode.All,
 
-            // Like --no-ansi in commandline, should disable ANSI altogether.
+            // Like --ansi off in commandline, should disable ANSI altogether.
             AnsiMode = AnsiMode.NoAnsi,
 
             ShowProgress = () => false,

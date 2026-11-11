@@ -5,9 +5,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal sealed class TestExecutionActivityBroker(
-    IPlatformOpenTelemetryServiceWithTestExecutionActivities otelService,
-    PlatformOpenTelemetryOptions options) : IDisposable
+internal sealed class TestExecutionActivityBroker(IPlatformOpenTelemetryServiceWithTestExecutionActivities otelService) : IDisposable
 {
 #if NET9_0_OR_GREATER
     private readonly Lock _syncRoot = new();
@@ -23,7 +21,7 @@ internal sealed class TestExecutionActivityBroker(
         string activityName = OpenTelemetryResultHandler.GetActivityName(testNode);
         KeyValuePair<string, object?>[] initialInfo =
         [
-            .. OpenTelemetryResultHandler.GetTestInitialInfo(testNode, parentUid, options),
+            .. OpenTelemetryResultHandler.GetTestInitialInfo(testNode, parentUid),
         ];
         string? parentId = otelService.TestFrameworkActivity?.Id;
         long token;
@@ -135,12 +133,13 @@ internal sealed class TestExecutionActivityBroker(
             }
 
             _disposed = true;
-            foreach ((long token, Entry entry) in _entries.ToArray())
+            foreach (KeyValuePair<long, Entry> pair in _entries.ToArray())
             {
+                Entry entry = pair.Value;
                 entry.Sealed = true;
                 if (!entry.ActivationInProgress)
                 {
-                    work.Add(ClaimFinalization(token, entry, DateTimeOffset.UtcNow));
+                    work.Add(ClaimFinalization(pair.Key, entry, DateTimeOffset.UtcNow));
                 }
             }
         }

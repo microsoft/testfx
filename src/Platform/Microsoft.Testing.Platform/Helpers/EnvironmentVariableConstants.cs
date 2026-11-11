@@ -37,12 +37,7 @@ internal static class EnvironmentVariableConstants
     public const string TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = nameof(TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
     public const string TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY = nameof(TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY);
 
-    [Obsolete("Use " + nameof(TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX) + " instead. This name matches the renamed --diagnostic-file-prefix CLI option (see https://github.com/microsoft/testfx/issues/7159). Kept for backward compatibility and may be removed in a future major version.", error: false)]
-    public const string TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = nameof(TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
     public const string TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX = nameof(TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
-
-    [Obsolete("Use " + nameof(TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE) + " instead. This name matches the renamed --diagnostic-synchronous-write CLI option (see https://github.com/microsoft/testfx/issues/7159). Kept for backward compatibility and may be removed in a future major version.", error: false)]
-    public const string TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = nameof(TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
     public const string TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE = nameof(TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
     public const string TESTINGPLATFORM_NOBANNER = nameof(TESTINGPLATFORM_NOBANNER);
     public const string TESTINGPLATFORM_EXITCODE_IGNORE = nameof(TESTINGPLATFORM_EXITCODE_IGNORE);
@@ -64,9 +59,6 @@ internal static class EnvironmentVariableConstants
 
     // Maximum number of characters kept for a single captured output/stack trace attribute.
     public const string TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT = nameof(TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT);
-
-    // Opts out of emitting the pre-4.x attribute and instrument names alongside the semantic-convention ones.
-    public const string TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES = nameof(TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES);
 
     // Debugging
     public const string TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER);

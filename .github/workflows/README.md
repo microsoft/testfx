@@ -397,6 +397,15 @@ build workaround is no longer needed. Regeneration must update generated
 manifests as well as executable steps; changing only `uses:` lines leaves the
 repository broken.
 
+Carry Dependabot action updates back into their authored `.md` sources before
+regenerating. For `actions/setup-dotnet`, update both references in
+[`unskip-closed-tests-prepare.md`](./unskip-closed-tests-prepare.md), then run
+`gh aw compile unskip-closed-tests --strict --no-check-update` with the pinned
+compiler. Commit the updated action cache and generated workflow together with
+the pin in [`test-unskip-closed-tests.yml`](./test-unskip-closed-tests.yml), and
+run the action-pin audit. The executable steps, generated action inventory, and
+`gh-aw-manifest` must all agree.
+
 Align mutable-name container cache entries with the release catalog too. This
 refresh updates `ghcr.io/github/gh-aw-node` to the v1.0.1 catalog's digest
 `sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f`;
@@ -682,6 +691,28 @@ emits only `noop` without a patch, ResourceLock uses the same eligibility guard
 as Pipeline Test Triage. Incomplete reports, other outputs, mixed outputs, and
 every patch still require detection.
 
+Expert Code Review hit the same eligibility defect in
+[run 42848192058](https://github.com/microsoft/testfx/actions/runs/42848192058),
+tracked by [#12320](https://github.com/microsoft/testfx/issues/12320).
+Its collector emitted only `noop` with `has_patch=false`, but detection still
+started. Unlike the download failures above, threat-detect v0.5.3 installed
+successfully and resolved `detection` to `claude-haiku-5.5`. The engine then
+timed out after five minutes without recording a verdict or inference usage.
+The tracker classified this as `detector_execution_failure` / `agent_failure`,
+not a threat finding; the assessment remained incomplete.
+
+The shared expert-review configuration now applies the same no-op exclusion to
+the ready-PR, `/review`, and after-autofix workflows. Real reviews, incomplete
+reports, mixed outputs such as `noop,submit_pull_request_review`, and every
+patch remain eligible. Existing runs
+[42886380382](https://github.com/microsoft/testfx/actions/runs/42886380382) and
+[42886933282](https://github.com/microsoft/testfx/actions/runs/42886933282)
+recorded verdicts for mixed review outputs using the same detector, CLI,
+firewall, and resolved model. The guard avoids unnecessary detection; it does
+not claim to repair the unproven cause of the engine stall. The failing run also
+had a separate unsupported reviewer subagent model error before its no-op;
+changing detection eligibility does not repair that delegation.
+
 **What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
 on the presence of an actual safe output or patch:
 
@@ -699,7 +730,13 @@ skipped conclusion behavior.
 The offline `CompiledWarningContractTests.test_pipeline_triage_detection_skips_noop_only_runs`
 case checks both the authored guard and the generated job condition.
 `test_pipeline_triage_noop_skip_preserves_detection_security_controls` keeps the detector
-and safe-output gates intact. On November 5, 2026, the same two retained tests ran against
+and safe-output gates intact. The equivalent expert-review cases are
+`test_expert_review_detection_skips_noop_only_runs` and
+`test_expert_review_noop_skip_preserves_detection_security_controls`; both cover
+all three consumers of `shared/review-shared.md`, including the no-op's
+non-publishing policy.
+
+On November 5, 2026, the same two retained Pipeline Test Triage tests ran against
 an isolated workflow archive of base `88a31ec394abe9f5c5dcf596f0a150ff998d3a0e`: the eligibility
 case failed both guard assertions and the security-controls case passed (exit 1).
 Both cases passed against the corrected source and regenerated lock (exit 0, no skips).

@@ -226,9 +226,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             case TimeoutTestNodeStateProperty:
                 AddOrUpdateTestNodeStateStatistics(testNodeUid, hasPassed: false);
                 break;

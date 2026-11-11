@@ -12,6 +12,19 @@ namespace Microsoft.Testing.Platform.TerminalReporterContract.UnitTests;
 public sealed class TestProgressStateTests
 {
     [TestMethod]
+    public void Constructor_PreservesSeparateRuntimeAndExistingCallShape()
+    {
+        TestProgressState legacy = CreateState();
+        TestProgressState state = new(1, "application.dll", "net472", "x64", legacy.Stopwatch, isDiscovery: false, runtimeFramework: "net481");
+
+        Assert.IsNull(legacy.RuntimeFramework);
+        Assert.AreEqual("net472", state.TargetFramework);
+        Assert.AreEqual("x64", state.Architecture);
+        Assert.AreEqual("net481", state.RuntimeFramework);
+        Assert.AreEqual("net472|x64, runtime: net481", TestFrameworkDisplay.GetDisplayName(state.TargetFramework, state.Architecture, state.RuntimeFramework));
+    }
+
+    [TestMethod]
     public void NotifyHandshake_LegacyAndExplicitInstances_PreserveAttemptAssignments()
     {
         TestProgressState state = CreateState();

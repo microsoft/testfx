@@ -201,7 +201,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
                 [TelemetryProperties.HostProperties.RunStart] = consoleRunStart,
                 [TelemetryProperties.HostProperties.RunStop] = consoleRunStop,
                 [TelemetryProperties.HostProperties.ExitCodePropertyName] = exitCode.ToString(CultureInfo.InvariantCulture),
-                [TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName] = testHostProcessInformation.HasExitedGracefully.AsTelemetryBool(),
+                [TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName] = testHostProcessInformation.HasReceivedTestHostCompletedMessage.AsTelemetryBool(),
                 [TelemetryProperties.HostProperties.ExtensionsPropertyName] = extensionInformation,
             }, cancellationToken).ConfigureAwait(false);
         }

@@ -232,9 +232,6 @@ public sealed class TestNodeStateChangeAggregatorTests
         yield return [new FailedTestNodeStateProperty()];
         yield return [new ErrorTestNodeStateProperty()];
         yield return [new TimeoutTestNodeStateProperty()];
-#pragma warning disable CS0618, MTP0001
-        yield return [new CancelledTestNodeStateProperty()];
-#pragma warning restore CS0618, MTP0001
     }
 
     public static IEnumerable<object[]> NonTerminalStates()

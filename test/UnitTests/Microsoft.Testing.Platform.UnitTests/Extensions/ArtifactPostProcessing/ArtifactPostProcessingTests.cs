@@ -149,7 +149,7 @@ public sealed class ArtifactPostProcessingTests
         if (mode == "none")
         {
             Assert.IsEmpty(fixture.Published);
-            Assert.IsFalse(File.Exists(outputPath));
+            Assert.FileDoesNotExist(outputPath);
         }
         else
         {
@@ -340,8 +340,8 @@ public sealed class ArtifactPostProcessingTests
         Assert.AreSequenceEqual([null, null, "paths", "mcdc"], entries.Select(entry => ReadModel<string>(entry, "CustomMetricName")));
         Assert.AreSequenceEqual<long?>([3_000_000_000L, 2, 0, 1], entries.Select(entry => ReadModel<long?>(entry, "CoveredCount")));
         Assert.AreSequenceEqual<long?>([long.MaxValue, 7, 0, 3], entries.Select(entry => ReadModel<long?>(entry, "CoverableCount")));
-        Assert.IsTrue(entries.All(entry => ReadModel<int?>(entry, "ScopeLevel") == 0));
-        Assert.IsTrue(entries.All(entry => ReadModel<string>(entry, "ScopeName") is null && ReadModel<string>(entry, "SessionUid") is null));
+        Assert.ContainsOnly(entry => ReadModel<int?>(entry, "ScopeLevel") == 0, entries);
+        Assert.ContainsOnly(entry => ReadModel<string>(entry, "ScopeName") is null && ReadModel<string>(entry, "SessionUid") is null, entries);
     }
 
     private static Mock<IArtifactPostProcessor> CreateCoverageProcessor(
@@ -371,7 +371,7 @@ public sealed class ArtifactPostProcessingTests
         Assert.Contains("pipe", error.Message, StringComparison.OrdinalIgnoreCase);
         Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.OutputTokens));
         Assert.IsEmpty(fixture.Published);
-        Assert.IsFalse(Directory.Exists(fixture.OutputDirectory));
+        Assert.DirectoryDoesNotExist(fixture.OutputDirectory);
     }
 
     [TestMethod]
@@ -468,7 +468,7 @@ public sealed class ArtifactPostProcessingTests
         else
         {
             Assert.IsEmpty(fixture.Published);
-            Assert.IsFalse(File.Exists(outputPath));
+            Assert.FileDoesNotExist(outputPath);
         }
     }
 

@@ -86,8 +86,8 @@ public sealed class CrashDumpEnvironmentVariableProviderMutationTests
         await provider.UpdateAsync(environmentVariables.Object);
 
         Assert.HasCount(7, variables);
-        Assert.IsTrue(variables.All(static variable => !variable.IsSecret));
-        Assert.IsTrue(variables.All(static variable => variable.IsLocked));
+        Assert.ContainsOnly(static variable => !variable.IsSecret, variables);
+        Assert.ContainsOnly(static variable => variable.IsLocked, variables);
         AssertVariable(variables, "DOTNET_DbgEnableMiniDump", "1");
         AssertVariable(variables, "COMPlus_DbgEnableMiniDump", "1");
         AssertVariable(variables, "DOTNET_DbgMiniDumpType", "4");
@@ -892,7 +892,7 @@ public sealed class CrashDumpArtifactPublisherMutationTests
 
         public int ExitCode => 1;
 
-        public bool HasExitedGracefully => false;
+        public bool HasReceivedTestHostCompletedMessage => false;
     }
 
     private sealed class TemporaryDirectory : IDisposable

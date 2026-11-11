@@ -11,6 +11,8 @@
     <CodeCoverageIncludeSourceLinkedProductionCode>true</CodeCoverageIncludeSourceLinkedProductionCode>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
+    <!-- Align the embedded PlatformVersion with the product under test, not the MSTest version. -->
+    <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
     <!-- OSCondition cannot express browser, so it cannot mirror [UnsupportedOSPlatform("browser")]. -->
     <NoWarn>$(NoWarn);MSTEST0084</NoWarn>
   </PropertyGroup>
@@ -56,6 +58,8 @@
     <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\SlowestTestsConsumer.cs" Link="TestInfrastructure\SlowestTestsConsumer.cs" />
     <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\AcceptanceDiagnostics.cs" Link="TestInfrastructure\AcceptanceDiagnostics.cs" />
     <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\TestAssertExtensions.cs" Link="TestInfrastructure\TestAssertExtensions.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\ValidationResultExtensions.cs" Link="TestInfrastructure\ValidationResultExtensions.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\CollectionPackageCache.cs"
              Link="TestInfrastructure\CollectionPackageCache.cs"
              Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />

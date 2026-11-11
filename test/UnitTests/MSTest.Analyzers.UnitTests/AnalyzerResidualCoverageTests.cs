@@ -1790,7 +1790,7 @@ public sealed class AnalyzerResidualCoverageTests
             Assert.AreEqual(value, diagnostic.Properties[key], key);
         }
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             additionalSpans ?? [],
             diagnostic.AdditionalLocations.Select(location => source.Substring(location.SourceSpan.Start, location.SourceSpan.Length)).ToArray());
         return diagnostic;

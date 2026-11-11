@@ -293,8 +293,8 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
 
         // The second run merged with the first, so both runs' samples for the passing test survive.
         Assert.HasCount(2, samples);
-        Assert.IsTrue(samples.All(sample => sample.GetProperty("displayName").GetString() == "PassingTest"));
-        Assert.IsTrue(samples.All(sample => sample.GetProperty("outcome").GetString() == "passed"));
+        Assert.ContainsOnly(sample => sample.GetProperty("displayName").GetString() == "PassingTest", samples);
+        Assert.ContainsOnly(sample => sample.GetProperty("outcome").GetString() == "passed", samples);
 
         string[] runIds = [.. samples.Select(sample => sample.GetProperty("runId").GetString()!).OrderBy(id => id, StringComparer.Ordinal)];
         Assert.AreEqual("run-1", runIds[0]);

@@ -20,12 +20,9 @@ group analyzers
     nuget Microsoft.CodeAnalysis == 4.14.0
     nuget Microsoft.CodeAnalysis.Common == 4.14.0
     nuget Microsoft.CodeAnalysis.CSharp.Workspaces == 4.14.0
-    nuget Microsoft.CodeAnalysis.CSharp.Analyzer.Testing == 1.1.3-beta1.26255.1
-    nuget Microsoft.CodeAnalysis.CSharp.CodeFix.Testing == 1.1.3-beta1.26255.1
-    nuget Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing == 1.1.3-beta1.26255.1
-    nuget Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing == 1.1.3-beta1.26255.1
-    nuget Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing == 1.1.3-beta1.26255.1
-    nuget Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing == 1.1.3-beta1.26255.1
+    nuget Microsoft.CodeAnalysis.CSharp.Analyzer.Testing == 1.1.4
+    nuget Microsoft.CodeAnalysis.CSharp.CodeFix.Testing == 1.1.4
+    nuget Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing == 1.1.4
 
 group benchmarks
     source https://api.nuget.org/v3/index.json

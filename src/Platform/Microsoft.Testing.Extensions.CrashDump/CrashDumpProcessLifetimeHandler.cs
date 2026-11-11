@@ -108,7 +108,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler : ITestHostProcess
             return;
         }
 
-        if (testHostProcessInformation.HasExitedGracefully
+        if (testHostProcessInformation.HasReceivedTestHostCompletedMessage
             || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
         {
             _sequenceFileHandler.TryDelete();

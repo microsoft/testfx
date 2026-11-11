@@ -74,7 +74,7 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
             .Returns(ChildLogger.Object);
         Configuration.SetupGet(value => value[PlatformConfigurationConstants.PlatformResultDirectory])
             .Returns("task-owned-virtual-hang-results");
-        ProcessInformation.SetupGet(value => value.HasExitedGracefully).Returns(() => GracefulExit);
+        ProcessInformation.SetupGet(value => value.HasReceivedTestHostCompletedMessage).Returns(() => CompletionMessageReceived);
         ProcessInformation.SetupGet(value => value.ExitCode).Returns(() => ExitCode);
         Scheduler.Setup(value => value.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<Task> callback, CancellationToken token) =>
@@ -134,7 +134,7 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
 
     public DateTimeOffset Now { get; } = new(2026, 10, 30, 12, 34, 56, TimeSpan.Zero);
 
-    public bool GracefulExit { get; set; } = true;
+    public bool CompletionMessageReceived { get; set; } = true;
 
     public int ExitCode { get; set; }
 
@@ -516,7 +516,7 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
             // The test already awaited and asserted these original injected lifecycle failures.
         }
 
-        Assert.IsTrue(operations.All(task => task.IsCompleted));
+        Assert.ContainsOnly(task => task.IsCompleted, operations);
     }
 
     private async Task DrainTransportAsync()
@@ -533,7 +533,7 @@ internal sealed class HangDumpInProcessProtocolFixture : IAsyncDisposable
                 // A never-connected accept task observes the fixture's canceled lifetime.
             }
 
-            Assert.IsTrue(tasks.All(task => task.IsCompleted));
+            Assert.ContainsOnly(task => task.IsCompleted, tasks);
             if (tasks.Length == _transportTasks.Count)
             {
                 return;

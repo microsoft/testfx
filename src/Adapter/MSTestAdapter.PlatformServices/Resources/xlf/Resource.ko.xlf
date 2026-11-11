@@ -216,11 +216,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">배포 항목 '{0}'(출력 디렉터리 '{1}')</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
-      <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
-        <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
-        <target state="translated">'mstest:orderTestsByNameInClass' 구성 키는 더 이상 사용되지 않으며 향후 버전에서 제거됩니다. 대신 'mstest:execution:orderTestsByNameInClass'를 사용하세요.</target>
-        <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
-      </trans-unit>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
@@ -622,17 +617,17 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_TestDurationExceeded">
         <source>Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</source>
-        <target state="new">Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</target>
+        <target state="translated">'{0}' 테스트가 {1:F4}ms 걸려 예상 최대 시간인 {2}ms를 초과했습니다.</target>
         <note>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestDurationWarningDeliveryFailed">
         <source>Failed to display the expected-duration warning for test '{0}': {1}</source>
-        <target state="new">Failed to display the expected-duration warning for test '{0}': {1}</target>
+        <target state="translated">테스트 '{0}'의 예상 시간 경고를 표시하지 못함: {1}</target>
         <note>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the formatted exception detail from the warning transport.</note>
       </trans-unit>
       <trans-unit id="UTA_TestDurationWarningTraceFailed">
         <source>Failed to trace the expected-duration warning delivery failure: {0}</source>
-        <target state="new">Failed to trace the expected-duration warning delivery failure: {0}</target>
+        <target state="translated">예상 시간 경고 전송 실패를 추적하지 못함: {0}</target>
         <note>{0} is the formatted exception detail from the diagnostic trace transport.</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderInstantiationFailed">

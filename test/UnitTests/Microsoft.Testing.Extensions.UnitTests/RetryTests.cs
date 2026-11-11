@@ -244,9 +244,11 @@ public class RetryTests
     {
         string[] values = [.. Enumerable.Range(0, 32).Select(_ => RandomId.Next())];
 
-        Assert.IsTrue(values.All(value => value.Length == 5));
-        Assert.IsTrue(values.All(value => value.All(character =>
-            "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".IndexOf(character) >= 0)));
+        Assert.ContainsOnly(value => value.Length == 5, values);
+        Assert.ContainsOnly(
+            value => value.All(character =>
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".IndexOf(character) >= 0),
+            values);
         Assert.IsGreaterThan(1, values.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -305,7 +307,7 @@ public class RetryTests
         initialize.Invoke(new RetryOrchestrator(serviceProvider), []);
 
         Assert.HasCount(2, executionIds);
-        Assert.IsTrue(executionIds.All(value => Guid.TryParse(value, out _)));
+        Assert.ContainsOnly(value => Guid.TryParse(value, out _), executionIds);
         Assert.HasCount(2, executionIds.Distinct(StringComparer.Ordinal));
         environment.Verify(value => value.SetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID", It.IsAny<string>()), Times.Never);
     }
@@ -1380,9 +1382,11 @@ public class RetryTests
         InvokeRemoveArtifactsOutsideControllerRoots(environment.Object, artifacts);
 
         Assert.HasCount(2, artifacts);
-        Assert.IsTrue(artifacts.All(artifact =>
-            artifact.Path.StartsWith(artifactRoot, StringComparison.Ordinal)
-            || artifact.Path.StartsWith(diagnosticArtifactRoot, StringComparison.Ordinal)));
+        Assert.ContainsOnly(
+            artifact =>
+                artifact.Path.StartsWith(artifactRoot, StringComparison.Ordinal)
+                || artifact.Path.StartsWith(diagnosticArtifactRoot, StringComparison.Ordinal),
+            artifacts);
     }
 
     [TestMethod]
@@ -1691,10 +1695,12 @@ public class RetryTests
             Assert.AreSequenceEqual([firstPath, finalPath], capturedInputs.Select(input => input.Path));
             Assert.AreSequenceEqual(["report", "report"], capturedInputs.Select(input => input.Kind));
             Assert.AreSequenceEqual(["1", "2"], capturedInputs.Select(input => input.ExecutionId));
-            Assert.IsTrue(capturedInputs.All(input =>
-                input.ProducingTestModule is null
-                && input.TargetFramework is null
-                && input.Architecture is null));
+            Assert.ContainsOnly(
+                input =>
+                    input.ProducingTestModule is null
+                    && input.TargetFramework is null
+                    && input.Architecture is null,
+                capturedInputs);
             Assert.AreEqual(outputDirectory, capturedOutputDirectory);
             Assert.IsNotNull(capturedContext);
             Assert.AreEqual(ArtifactPostProcessingMode.RetryAttempts, capturedContext.Mode);
@@ -2193,8 +2199,7 @@ public class RetryTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == optionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [retries]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "invalid")]
@@ -2293,8 +2298,7 @@ public class RetryTests
         }
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow("0")]
@@ -2311,8 +2315,7 @@ public class RetryTests
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [delay]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     [DataRow("invalid")]
@@ -2355,8 +2358,7 @@ public class RetryTests
         };
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        validateOptionsResult.AssertIsValid();
     }
 
     private static ServiceProvider CreateServiceProvider(params IArtifactPostProcessor[] processors)
@@ -2725,8 +2727,6 @@ public class RetryTests
         public IMainModule? MainModule => null;
 
         public DateTime StartTime => default;
-
-        public Task WaitForExitAsync() => Task.CompletedTask;
 
         public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 

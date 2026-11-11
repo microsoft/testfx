@@ -338,7 +338,7 @@ public sealed class AppInsightsProviderTests
         (Dictionary<string, string> properties, _) = await TrackEventAsync(
             new Dictionary<string, object> { ["custom"] = new StringValue("converted") });
 
-        Assert.AreEqual("converted", properties["custom"]);
+        Assert.ContainsEntry("custom", "converted", properties);
     }
 
     [TestMethod]
@@ -347,7 +347,7 @@ public sealed class AppInsightsProviderTests
         (Dictionary<string, string> properties, _) = await TrackEventAsync(
             new Dictionary<string, object> { ["custom"] = null! });
 
-        Assert.AreEqual(string.Empty, properties["custom"]);
+        Assert.ContainsEntry("custom", string.Empty, properties);
     }
 
     [TestMethod]

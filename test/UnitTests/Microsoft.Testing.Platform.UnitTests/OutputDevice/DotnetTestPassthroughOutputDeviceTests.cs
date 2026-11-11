@@ -177,7 +177,7 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         {
             Assert.AreSequenceEqual(new byte[] { 0, 0, 1, 2 }, displays.Select(message => message.Level));
             Assert.AreSequenceEqual(["durable session", "::group::exact workflow", "warning payload", "error payload"], displays.Select(message => message.Text));
-            Assert.IsTrue(displays.All(message => message.ExecutionId == "execution" && message.InstanceId == DotnetTestConnection.InstanceId));
+            Assert.ContainsOnly(message => message.ExecutionId == "execution" && message.InstanceId == DotnetTestConnection.InstanceId, displays);
         }
 
         if (expectedAzure > 0)

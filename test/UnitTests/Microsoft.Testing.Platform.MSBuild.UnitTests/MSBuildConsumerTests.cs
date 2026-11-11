@@ -105,7 +105,6 @@ public sealed class MSBuildConsumerTests
     [DataRow("failed")]
     [DataRow("error")]
     [DataRow("timeout")]
-    [DataRow("canceled")]
     public async Task ConsumeAsync_SupersededRetryAttempt_IsIgnoredBeforeCountingOrReporting(string state)
     {
         MSBuildConsumer consumer = CreateConsumer();
@@ -180,8 +179,6 @@ public sealed class MSBuildConsumerTests
     [DataRow("error", true)]
     [DataRow("timeout", false)]
     [DataRow("timeout", true)]
-    [DataRow("canceled", false)]
-    [DataRow("canceled", true)]
     public async Task ConsumeAsync_FailureWithoutInitializedPipe_CountsFailureThenRejectsInvalidLifecycle(string state, bool sessionStarted)
     {
         Mock<IServiceProvider> services = new();
@@ -275,8 +272,6 @@ public sealed class MSBuildConsumerTests
     [DataRow("error", true, DisplayName = "Error exception")]
     [DataRow("timeout", false, DisplayName = "Timeout explanation")]
     [DataRow("timeout", true, DisplayName = "Timeout exception")]
-    [DataRow("canceled", false, DisplayName = "Legacy cancellation explanation")]
-    [DataRow("canceled", true, DisplayName = "Legacy cancellation exception")]
     public async Task ConsumeAsync_TerminalFailure_SendsConcreteFailurePayload(string state, bool includeException)
     {
         await using MSBuildPipeFixture peer = new();
@@ -291,9 +286,6 @@ public sealed class MSBuildConsumerTests
             "failed" => includeException ? new FailedTestNodeStateProperty(exception, "explanation") : new FailedTestNodeStateProperty("explanation"),
             "error" => includeException ? new ErrorTestNodeStateProperty(exception, "explanation") : new ErrorTestNodeStateProperty("explanation"),
             "timeout" => includeException ? new TimeoutTestNodeStateProperty(exception, "explanation") : new TimeoutTestNodeStateProperty("explanation"),
-#pragma warning disable CS0618, MTP0001 // Preserve wire compatibility with legacy cancellation producers.
-            "canceled" => includeException ? new CancelledTestNodeStateProperty(exception, "explanation") : new CancelledTestNodeStateProperty("explanation"),
-#pragma warning restore CS0618, MTP0001
             _ => throw new ArgumentOutOfRangeException(nameof(state)),
         };
         TestNodeUpdateMessage update = CreateUpdate(
@@ -304,7 +296,7 @@ public sealed class MSBuildConsumerTests
         await consumer.ConsumeAsync(null!, update, operation.Token);
 
         MSBuildFailureInfo request = Assert.ContainsSingle(peer.Received<MSBuildFailureInfo>());
-        bool expectedCanceled = state is "timeout" or "canceled";
+        bool expectedCanceled = state == "timeout";
         string actualAssertionExpectation = request.Expected;
         Assert.AreEqual("Test", request.DisplayName);
         Assert.AreEqual(expectedCanceled, request.IsCanceled);
@@ -446,9 +438,6 @@ public sealed class MSBuildConsumerTests
             "failed" => new FailedTestNodeStateProperty("failure"),
             "error" => new ErrorTestNodeStateProperty("error"),
             "timeout" => new TimeoutTestNodeStateProperty("timeout"),
-#pragma warning disable CS0618, MTP0001 // Exercise compatibility with legacy producers of the obsolete cancellation state.
-            "canceled" => new CancelledTestNodeStateProperty("canceled"),
-#pragma warning restore CS0618, MTP0001
             _ => throw new ArgumentOutOfRangeException(nameof(state)),
         };
 

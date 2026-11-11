@@ -8,7 +8,7 @@ param(
     [ValidateRange(3, 10)]
     [int] $Samples = 3,
     [ValidateRange(1, 64)]
-    [int] $Jobs = 8,
+    [int] $Jobs = [Math]::Min(64, [Environment]::ProcessorCount),
     [string] $ResultsDirectory,
     [switch] $NoJournal,
     [switch] $SelfTest
@@ -193,12 +193,11 @@ function Get-SourceIdentity {
 }
 
 $source = Get-SourceIdentity
-$policy = if ($NoJournal) { 'FullHashing' } else { 'Journal' }
 $report = [ordered]@{
     SchemaVersion = 1; Complete = $false; CreatedUtc = [DateTimeOffset]::UtcNow.ToString('o')
     Source = $source; Samples = $Samples; Jobs = $Jobs; Configuration = 'Debug'; TargetFramework = 'net10.0'
     Project = 'src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
-    TrendSeries = "TestFx.BuildPerformance.Trx.Debug.net10.Jobs$Jobs.$policy.v1"
+    TrendSeries = "TestFx.BuildPerformance.Trx.Debug.net10.Jobs$Jobs.Auto.SharedCompilation.v2"
     Host = [ordered]@{ OS = [Environment]::OSVersion.Version.ToString(); Architecture = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString(); Processors = [Environment]::ProcessorCount; PowerShell = $PSVersionTable.PSVersion.ToString(); Image = $env:ImageVersion }
     Build = [ordered]@{ Id = $env:BUILD_BUILDID; Branch = $env:BUILD_SOURCEBRANCH; Reason = $env:BUILD_REASON; JobAttempt = $env:SYSTEM_JOBATTEMPT }
     Toolchain = $null; Commands = @(); Measurements = @(); Summary = @(); Problems = @()
@@ -209,7 +208,8 @@ $driver = Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1'
 function Invoke-PerfBuild([string] $OutputId, [string] $Engine, [string] $Name, [switch] $Prepare) {
     $directory = Join-Path $ResultsDirectory $Name
     New-Item -ItemType Directory -Path $directory | Out-Null
-    $arguments = @('-NoLogo', '-NoProfile', '-File', $driver, '-Engine', $Engine, '-OutputId', $OutputId, '-Jobs', [string] $Jobs, '-AdditionalTargets', $targets)
+    $arguments = @('-NoLogo', '-NoProfile', '-File', $driver, '-Project', $report.Project, '-TargetFramework', $report.TargetFramework,
+        '-Engine', $Engine, '-OutputId', $OutputId, '-Jobs', [string] $Jobs, '-AdditionalTargets', $targets)
     if ($NoJournal) { $arguments += '-NoJournal' }
     if ($Prepare) { $arguments += '-PrepareOnly' }
     $started = [DateTime]::UtcNow
@@ -287,6 +287,7 @@ try {
     Set-WorkloadMarker 'baseline'
     $preparation = Invoke-PerfBuild "perf-$runId-prepare" 'MSBuild' 'preparation' -Prepare
     $report.Toolchain = Get-Content -LiteralPath (Join-Path $preparation.OutputRoot 'toolchain.json') -Raw | ConvertFrom-Json
+    $report.TrendSeries = "TestFx.BuildPerformance.Trx.Debug.net10.Jobs$Jobs.$($report.Toolchain.FileSystemMode).SharedCompilation.v2"
     for ($pair = 1; $pair -le $Samples; $pair++) {
         $engines = if ($pair % 2) { @('MSBuild', 'BuildXL') } else { @('BuildXL', 'MSBuild') }
         foreach ($engine in $engines) {

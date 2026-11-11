@@ -6,10 +6,12 @@
 [CmdletBinding()]
 param(
     [switch] $NoJournal,
-    [ValidateSet('InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
-    [string[]] $Case = @('InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
+    [ValidateSet('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
+        'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
+    [string[]] $Case = @('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
+        'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
     [string] $BuildScript = (Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1')
 )
 
@@ -27,6 +29,7 @@ $results = [Collections.Generic.List[object]]::new()
 $commands = [Collections.Generic.List[object]]::new()
 [string[]] $commonArguments = if ($NoJournal) { @('-NoJournal') } else { @() }
 $statsPath = Join-Path $repo 'artifacts\buildxl\logs\BuildXL.stats'
+$trxProject = 'src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
 
 function Assert-Equal($Expected, $Actual) {
     if ($Expected -cne $Actual) {
@@ -34,7 +37,11 @@ function Assert-Equal($Expected, $Actual) {
     }
 }
 
-function Invoke-Build([string] $Name, [string[]] $BuildArguments = @()) {
+function Invoke-Build([string] $Name, [string[]] $BuildArguments = @(), [switch] $Repository) {
+    if (-not $Repository -and '-Project' -notin $BuildArguments) {
+        $BuildArguments += @('-Project', $trxProject, '-TargetFramework', 'net10.0')
+    }
+
     $log = Join-Path $evidence "$Name.log"
     $started = [DateTime]::UtcNow
     & $pwsh -NoLogo -NoProfile -File $BuildScript @commonArguments @BuildArguments *> $log
@@ -59,6 +66,32 @@ function Read-FreshStats($Run) {
 
     Assert-Equal 3 $stats.Count
     return $stats
+}
+
+function Read-Toolchain([string] $OutputId) {
+    $path = Join-Path $repo "artifacts\buildxl-runs\$OutputId\toolchain.json"
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "Expected PrepareOnly toolchain metadata at $path."
+    }
+
+    $toolchain = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+    foreach ($name in @(
+        'SourceRevision', 'Sdk', 'BuildXL', 'BuildXLPackageSha256', 'Engine', 'Project', 'Configuration',
+        'TargetFramework', 'SkipUapTargetFramework', 'Jobs', 'ProcessorCount', 'UseSharedCompilation',
+        'MSBuildRuntime', 'MSBuildPath', 'CompilerDirectory', 'FileSystemMode', 'NoJournal', 'NoJournalRequested'
+    )) {
+        if ($null -eq $toolchain -or $name -notin $toolchain.PSObject.Properties.Name) {
+            throw "Toolchain metadata at $path is missing required property '$name'."
+        }
+    }
+
+    foreach ($name in @('SkipUapTargetFramework', 'UseSharedCompilation', 'NoJournal', 'NoJournalRequested')) {
+        if ($toolchain.$name -isnot [bool]) {
+            throw "Toolchain metadata property '$name' must be a Boolean at $path."
+        }
+    }
+
+    return $toolchain
 }
 
 function Test-Case([string] $Name, [scriptblock] $Body) {
@@ -100,11 +133,138 @@ $probeProject = Join-Path $evidence 'cache-probe.csproj'
 '@ | Set-Content -LiteralPath $probeProject -Encoding utf8
 
 try {
+    Test-Case 'DefaultBuildSelectsRepositorySolution' {
+        $outputId = "validation-$([Guid]::NewGuid().ToString('N'))"
+        $run = Invoke-Build 'repository-selection' @('-PrepareOnly', '-SkipRestore', '-OutputId', $outputId) -Repository
+        Assert-Equal 0 $run.ExitCode
+        $toolchain = Read-Toolchain $outputId
+        Assert-Equal 'TestFx.slnx' $toolchain.Project
+        Assert-Equal 'Project defaults' $toolchain.TargetFramework
+        Assert-Equal $true $toolchain.SkipUapTargetFramework
+    }
+    Test-Case 'SettingsAndProvenance' {
+        $pinnedSdk = (Get-Content -LiteralPath (Join-Path $repo 'global.json') -Raw | ConvertFrom-Json).tools.dotnet
+        $defaultJobs = [Math]::Min(64, [Environment]::ProcessorCount)
+        $profiles = @(
+            @{ Name = 'default'; Jobs = $null; ForceNoJournal = $false },
+            @{ Name = 'one-job'; Jobs = 1; ForceNoJournal = $true },
+            @{ Name = 'maximum-jobs'; Jobs = 64; ForceNoJournal = $true }
+        )
+        foreach ($profile in $profiles) {
+            $outputId = "validation-settings-$([Guid]::NewGuid().ToString('N'))"
+            $expectedJobs = if ($null -eq $profile.Jobs) { $defaultJobs } else { $profile.Jobs }
+            $requestedNoJournal = $NoJournal.IsPresent -or $profile.ForceNoJournal
+            $baseline = $null
+            foreach ($engine in @('BuildXL', 'MSBuild')) {
+                $name = "settings-$($profile.Name)-$engine"
+                $arguments = @('-Engine', $engine, '-PrepareOnly', '-SkipRestore', '-OutputId', $outputId)
+                if ($null -ne $profile.Jobs) {
+                    $arguments += @('-Jobs', [string] $profile.Jobs)
+                }
+
+                if ($profile.ForceNoJournal -and -not $NoJournal) {
+                    $arguments += '-NoJournal'
+                }
+
+                $run = Invoke-Build $name $arguments -Repository
+                Assert-Equal 0 $run.ExitCode
+                $toolchain = Read-Toolchain $outputId
+                Copy-Item -LiteralPath (Join-Path $repo "artifacts\buildxl-runs\$outputId\toolchain.json") `
+                    -Destination (Join-Path $evidence "$name.toolchain.json")
+                Assert-Equal $engine $toolchain.Engine
+                Assert-Equal 'TestFx.slnx' $toolchain.Project
+                Assert-Equal 'Debug' $toolchain.Configuration
+                Assert-Equal 'Project defaults' $toolchain.TargetFramework
+                Assert-Equal $true $toolchain.SkipUapTargetFramework
+                Assert-Equal $expectedJobs $toolchain.Jobs
+                Assert-Equal ([Environment]::ProcessorCount) $toolchain.ProcessorCount
+                Assert-Equal $true $toolchain.UseSharedCompilation
+                Assert-Equal $pinnedSdk $toolchain.Sdk
+                Assert-Equal 'DotNetCore' $toolchain.MSBuildRuntime
+                if ([string]::IsNullOrWhiteSpace($toolchain.MSBuildPath) -or
+                    -not [IO.Path]::IsPathFullyQualified($toolchain.MSBuildPath)) {
+                    throw 'Toolchain metadata must identify an absolute SDK MSBuild.dll path.'
+                }
+
+                if ([string]::IsNullOrWhiteSpace($toolchain.CompilerDirectory) -or
+                    -not [IO.Path]::IsPathFullyQualified($toolchain.CompilerDirectory)) {
+                    throw 'Toolchain metadata must identify an absolute SDK compiler directory.'
+                }
+
+                $msbuildDirectory = Split-Path $toolchain.MSBuildPath -Parent
+                Assert-Equal 'MSBuild.dll' (Split-Path $toolchain.MSBuildPath -Leaf)
+                Assert-Equal $pinnedSdk (Split-Path $msbuildDirectory -Leaf)
+                Assert-Equal 'sdk' (Split-Path (Split-Path $msbuildDirectory -Parent) -Leaf)
+                Assert-Equal ([IO.Path]::GetFullPath((Join-Path $msbuildDirectory 'Roslyn\bincore'))) `
+                    ([IO.Path]::GetFullPath($toolchain.CompilerDirectory))
+                foreach ($path in @(
+                    $toolchain.MSBuildPath,
+                    (Join-Path $toolchain.CompilerDirectory 'csc.dll'),
+                    (Join-Path $toolchain.CompilerDirectory 'VBCSCompiler.dll')
+                )) {
+                    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                        throw "Expected pinned SDK toolchain file at $path."
+                    }
+                }
+
+                if ($toolchain.FileSystemMode -notin @('Journal', 'FullHashing')) {
+                    throw "Unexpected filesystem profile '$($toolchain.FileSystemMode)'."
+                }
+
+                Assert-Equal $requestedNoJournal $toolchain.NoJournalRequested
+                Assert-Equal ($toolchain.FileSystemMode -eq 'FullHashing') $toolchain.NoJournal
+                if ($requestedNoJournal) {
+                    Assert-Equal 'FullHashing' $toolchain.FileSystemMode
+                    Assert-Equal $true $toolchain.NoJournal
+                }
+
+                $logs = Join-Path $repo "artifacts\buildxl-runs\$outputId\logs"
+                Assert-Equal 0 (@(Get-ChildItem -LiteralPath $logs -File -Recurse).Count)
+                if ($null -ne $baseline) {
+                    foreach ($property in @(
+                        'SourceRevision', 'Sdk', 'BuildXL', 'BuildXLPackageSha256', 'Project', 'Configuration',
+                        'TargetFramework', 'SkipUapTargetFramework', 'Jobs', 'ProcessorCount', 'UseSharedCompilation',
+                        'MSBuildRuntime', 'MSBuildPath', 'CompilerDirectory', 'FileSystemMode', 'NoJournal', 'NoJournalRequested'
+                    )) {
+                        Assert-Equal $baseline.$property $toolchain.$property
+                    }
+                }
+
+                $baseline = $toolchain
+            }
+        }
+    }
+    Test-Case 'SolutionBuildPreservesProjectFrameworks' {
+        $fixture = @'
+<Project DefaultTargets="Build">
+  <PropertyGroup>
+    <TargetFrameworks>__FRAMEWORKS__</TargetFrameworks>
+  </PropertyGroup>
+  <Target Name="Restore" />
+  <Target Name="Build">
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\$(MSBuildProjectName).txt"
+                      Lines="$(TargetFrameworks)|$(SkipUapTargetFramework)|$(Configuration)|$(ShouldUnsetParentConfigurationAndPlatform)" Overwrite="true" />
+  </Target>
+</Project>
+'@
+        $fixture.Replace('__FRAMEWORKS__', 'net462;net10.0') |
+            Set-Content -LiteralPath (Join-Path $evidence 'first.csproj') -Encoding utf8
+        $fixture.Replace('__FRAMEWORKS__', 'netstandard2.0;net11.0') |
+            Set-Content -LiteralPath (Join-Path $evidence 'second.fsproj') -Encoding utf8
+        $solution = Join-Path $evidence 'fixture.slnx'
+        '<Solution><Project Path="first.csproj" /><Project Path="second.fsproj" /></Solution>' |
+            Set-Content -LiteralPath $solution -Encoding utf8
+        $relativeSolution = [IO.Path]::GetRelativePath($repo, $solution)
+        $stats = Read-FreshStats (Invoke-Build 'solution-frameworks' @('-Project', $relativeSolution, '-Configuration', 'Release', '-SkipRestore'))
+        Assert-Equal 2 $stats.TotalProcessPips
+        Assert-Equal "net462$([Environment]::NewLine)net10.0|true|Release|false$([Environment]::NewLine)" (Get-Content -LiteralPath (Join-Path $evidence 'first.txt') -Raw)
+        Assert-Equal "netstandard2.0$([Environment]::NewLine)net11.0|true|Release|false$([Environment]::NewLine)" (Get-Content -LiteralPath (Join-Path $evidence 'second.txt') -Raw)
+    }
     Test-Case 'InvalidProjectRejected' {
         $missing = [IO.Path]::GetRelativePath($repo, (Join-Path $evidence 'missing.csproj'))
         $run = Invoke-Build 'invalid-project' @('-Project', $missing)
         Assert-Equal 1 $run.ExitCode
-        Assert-Equal $true $run.Output.Contains('Project must name an existing .csproj inside this checkout.')
+        Assert-Equal $true $run.Output.Contains('Project must name an existing MSBuild project or solution inside this checkout.')
     }
     Test-Case 'BuildFailurePropagates' {
         $project = [IO.Path]::GetRelativePath($repo, $failureProject)
@@ -130,6 +290,70 @@ try {
         Assert-Equal 1 $after.ProcessPipCacheMisses
         Assert-Equal 0 $after.ProcessPipCacheHits
         Assert-Equal "bravo$([Environment]::NewLine)" (Get-Content -LiteralPath $outputPath -Raw)
+    }
+    Test-Case 'SharedCompilerTracksChangedInputs' {
+        $fixture = Join-Path $evidence 'shared-compiler'
+        New-Item -ItemType Directory -Path $fixture | Out-Null
+        # Isolate the fixture from Arcade policies, not from SDK analyzers.
+        foreach ($file in @('Directory.Build.props', 'Directory.Build.targets')) {
+            '<Project />' | Set-Content -LiteralPath (Join-Path $fixture $file) -Encoding utf8
+        }
+
+        $projectPath = Join-Path $fixture 'BuildXL.SharedCompilerProbe.csproj'
+        @'
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <RunAnalyzers>true</RunAnalyzers>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+  </PropertyGroup>
+  <Target Name="CompileWhenNativePipExecutes" BeforeTargets="CoreCompile">
+    <Error Condition="'$(UseSharedCompilation)' != 'true'"
+           Text="The input-tracking fixture requires shared compilation." />
+    <Error Condition="'$(EnableNETAnalyzers)' != 'true' or '$(RunAnalyzers)' != 'true' or '$(RunAnalyzersDuringBuild)' != 'true'"
+           Text="The input-tracking fixture requires SDK analyzers." />
+    <!-- Preserve the source timestamp: let the action cache, not MSBuild's timestamp check, decide whether to execute. -->
+    <Delete Files="@(IntermediateAssembly)" />
+  </Target>
+</Project>
+'@ | Set-Content -LiteralPath $projectPath -Encoding utf8
+        $sourcePath = Join-Path $fixture 'AssemblyVersion.cs'
+        $source = @'
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Reflection;
+
+[assembly: AssemblyVersion("__VERSION__")]
+'@
+        $source.Replace('__VERSION__', '1.0.0.0') |
+            Set-Content -LiteralPath $sourcePath -Encoding utf8BOM
+        $stamp = (Get-Item -LiteralPath $sourcePath).LastWriteTimeUtc
+        $project = [IO.Path]::GetRelativePath($repo, $projectPath)
+        $assembly = Join-Path $fixture 'bin\Debug\net10.0\BuildXL.SharedCompilerProbe.dll'
+        $before = Read-FreshStats (Invoke-Build 'shared-compiler-before' @('-Project', $project))
+        Assert-Equal 1 $before.TotalProcessPips
+        Assert-Equal 1 $before.ProcessPipCacheMisses
+        Assert-Equal 0 $before.ProcessPipCacheHits
+        Assert-Equal '1.0.0.0' ([Reflection.AssemblyName]::GetAssemblyName($assembly).Version.ToString())
+
+        $source.Replace('__VERSION__', '2.0.0.0') |
+            Set-Content -LiteralPath $sourcePath -Encoding utf8BOM
+        (Get-Item -LiteralPath $sourcePath).LastWriteTimeUtc = $stamp
+        Assert-Equal $stamp (Get-Item -LiteralPath $sourcePath).LastWriteTimeUtc
+        $after = Read-FreshStats (Invoke-Build 'shared-compiler-after' @('-Project', $project, '-SkipRestore'))
+        Assert-Equal 1 $after.TotalProcessPips
+        Assert-Equal 1 $after.ProcessPipCacheMisses
+        Assert-Equal 0 $after.ProcessPipCacheHits
+        Assert-Equal '2.0.0.0' ([Reflection.AssemblyName]::GetAssemblyName($assembly).Version.ToString())
+
+        $warm = Read-FreshStats (Invoke-Build 'shared-compiler-warm' @('-Project', $project, '-SkipRestore'))
+        Assert-Equal 1 $warm.TotalProcessPips
+        Assert-Equal 1 $warm.ProcessPipCacheHits
+        Assert-Equal 0 $warm.ProcessPipCacheMisses
+        Assert-Equal '2.0.0.0' ([Reflection.AssemblyName]::GetAssemblyName($assembly).Version.ToString())
     }
     Test-Case 'NativeBuildProducesClosure' {
         $stats = Read-FreshStats (Invoke-Build 'native-build')
@@ -171,9 +395,10 @@ try {
             }
 
             $log = Join-Path $evidence 'caller-state.log'
-            & $BuildScript -NoJournal:$NoJournal *> $log
+            $callerBuildArguments = @('-Project', $trxProject, '-TargetFramework', 'net10.0') + $commonArguments
+            & $BuildScript -Project $trxProject -TargetFramework net10.0 -NoJournal:$NoJournal *> $log
             $code = $LASTEXITCODE
-            $commands.Add([pscustomobject]@{ Name = 'caller-state'; Arguments = $commonArguments; ExitCode = $code; Log = $log })
+            $commands.Add([pscustomobject]@{ Name = 'caller-state'; Arguments = $callerBuildArguments; ExitCode = $code; Log = $log })
             Assert-Equal 0 $code
             Assert-Equal (Join-Path $repo 'docs') $PWD.Path
             foreach ($name in $names) {

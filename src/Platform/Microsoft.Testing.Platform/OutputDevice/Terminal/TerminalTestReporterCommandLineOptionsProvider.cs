@@ -14,7 +14,6 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
 {
     public const string NoProgressOption = "no-progress";
     public const string ProgressOption = "progress";
-    public const string NoAnsiOption = "no-ansi";
     public const string AnsiOption = "ansi";
     public const string OutputOption = "output";
     public const string OutputOptionMinimalArgument = "minimal";
@@ -43,9 +42,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             TerminalResources.TerminalTestReporterDescription,
             [
                 new(NoProgressOption, TerminalResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-                new(ProgressOption, TerminalResources.TerminalProgressOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-                new(NoAnsiOption, TerminalResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-                new(AnsiOption, TerminalResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ProgressOption, TerminalResources.TerminalProgressModeOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(AnsiOption, TerminalResources.TerminalAnsiModeOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(OutputOption, TerminalResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStdoutOption, TerminalResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStderrOption, TerminalResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
@@ -63,7 +61,6 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             ProgressOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalProgressOptionInvalidArgument),
-            NoAnsiOption => ValidationResult.ValidTask,
             AnsiOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalAnsiOptionInvalidArgument),

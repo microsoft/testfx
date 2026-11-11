@@ -95,7 +95,7 @@ internal static class TestResultCapture
 
     // CTRF status enum: passed, failed, skipped, pending, other.
     // Returns the CTRF status plus an optional `rawStatus` preserving the original
-    // MTP outcome when it doesn't map 1:1 (timedOut, errored, cancelled).
+    // MTP outcome when it doesn't map 1:1 (timedOut, errored).
     private static (string Status, string? RawStatus) ClassifyStatus(TestNodeStateProperty state)
         => state switch
         {
@@ -104,9 +104,6 @@ internal static class TestResultCapture
             TimeoutTestNodeStateProperty => ("failed", "timedOut"),
             ErrorTestNodeStateProperty => ("failed", "errored"),
             FailedTestNodeStateProperty => ("failed", null),
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-            CancelledTestNodeStateProperty => ("other", "cancelled"),
-#pragma warning restore CS0618, MTP0001
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
@@ -153,7 +150,7 @@ internal static class TestResultCapture
             {
                 Name = TestResultCaptureHelper.Truncate(name, TestResultCaptureHelper.MaxIdentityFieldLength)!,
                 ContentType = GetAttachmentContentType(fullPath),
-                Path = TestResultCaptureHelper.Truncate(fullPath, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+                Path = fullPath,
                 Description = TestResultCaptureHelper.Truncate(artifact.Description, TestResultCaptureHelper.MaxMessageLength),
             });
         }

@@ -34,35 +34,18 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    public async Task AddTestHostOrchestrator_ViaBackCompatInterface_RegistersAndBuildsOrchestrator()
-    {
-        PublicApi.TestHostOrchestratorManager manager = new();
-
-        // Simulate what old extensions compiled against the old namespace do:
-        // they cast to the back-compat ITestHostOrchestratorManager interface.
-        BackCompat.ITestHostOrchestratorManager backCompatManager = manager;
-        backCompatManager.AddTestHostOrchestrator(_ => new FakeOrchestrator("orch-backcompat"));
-
-        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
-
-        Assert.HasCount(1, config.TestHostOrchestrators);
-        Assert.AreEqual("orch-backcompat", config.TestHostOrchestrators[0].Uid);
-    }
-
-    [TestMethod]
-    public async Task AddTestHostOrchestrator_BothPublicAndBackCompat_RegistersBoth()
+    public async Task AddTestHostOrchestrator_ViaInterfaceAndConcreteManager_PreservesRegistrationOrder()
     {
         PublicApi.TestHostOrchestratorManager manager = new();
 
         PublicApi.ITestHostOrchestratorManager publicManager = manager;
         publicManager.AddTestHostOrchestrator(_ => new FakeOrchestrator("public"));
 
-        BackCompat.ITestHostOrchestratorManager backCompatManager = manager;
-        backCompatManager.AddTestHostOrchestrator(_ => new FakeOrchestrator("backcompat"));
+        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("concrete"));
 
         PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
 
-        Assert.HasCount(2, config.TestHostOrchestrators);
+        Assert.AreSequenceEqual(new[] { "public", "concrete" }, config.TestHostOrchestrators.Select(orchestrator => orchestrator.Uid));
     }
 
     [TestMethod]
@@ -115,41 +98,6 @@ public sealed class TestHostOrchestratorManagerTests
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildTestHostOrchestratorApplicationLifetimesAsync(_serviceProvider));
 
         Assert.IsTrue(exception.Message.Contains("duplicatedId") && exception.Message.Contains(typeof(FakeOrchestratorLifetime).ToString()));
-    }
-
-    [TestMethod]
-    public void BackCompatTestHostOrchestratorManager_IsAssignableToPublicManager()
-    {
-        // The back-compat subclass should be a valid TestHostOrchestratorManager
-        BackCompat.TestHostOrchestratorManager backCompatManager = new();
-        Assert.IsInstanceOfType<PublicApi.TestHostOrchestratorManager>(backCompatManager);
-    }
-
-    [TestMethod]
-    public void TestHostBuilder_TestHostOrchestrator_ImplementsBackCompatInterface()
-    {
-        // TestHostBuilder creates a BackCompat.TestHostOrchestratorManager
-        // which must implement both the public and back-compat interfaces.
-        var manager = new BackCompat.TestHostOrchestratorManager();
-
-        Assert.IsInstanceOfType<PublicApi.ITestHostOrchestratorManager>(manager);
-        Assert.IsInstanceOfType<BackCompat.ITestHostOrchestratorManager>(manager);
-    }
-
-    [TestMethod]
-    public async Task BackCompatTestHostOrchestratorManager_AddViaBackCompat_BuildsViaBase()
-    {
-        // End-to-end test: use the back-compat subclass and register through the back-compat interface,
-        // then build through the base class method.
-        var backCompatManager = new BackCompat.TestHostOrchestratorManager();
-
-        BackCompat.ITestHostOrchestratorManager backCompatInterface = backCompatManager;
-        backCompatInterface.AddTestHostOrchestrator(_ => new FakeOrchestrator("e2e-compat"));
-
-        PublicApi.TestHostOrchestratorConfiguration config = await backCompatManager.BuildAsync(_serviceProvider);
-
-        Assert.HasCount(1, config.TestHostOrchestrators);
-        Assert.AreEqual("e2e-compat", config.TestHostOrchestrators[0].Uid);
     }
 
     [TestMethod]
@@ -209,22 +157,6 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    public async Task AddTestHostExecutionOrchestratorMiddleware_ViaBackCompatConcreteManager_RegistersAndBuilds()
-    {
-        // TestHostBuilder constructs the back-compat subclass at runtime; it must inherit the middleware
-        // capability from the base class unchanged.
-        var backCompatManager = new BackCompat.TestHostOrchestratorManager();
-
-        PublicApi.ITestHostOrchestratorManager publicManager = backCompatManager;
-        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("via-backcompat-concrete-type"));
-
-        PublicApi.TestHostOrchestratorConfiguration config = await backCompatManager.BuildAsync(_serviceProvider);
-
-        Assert.HasCount(1, config.Middleware);
-        Assert.AreEqual("via-backcompat-concrete-type", config.Middleware[0].Uid);
-    }
-
-    [TestMethod]
     public async Task AddTestHostExecutionOrchestratorMiddleware_ExtensionMethod_SupportedManager_Registers()
     {
         PublicApi.TestHostOrchestratorManager manager = new();
@@ -250,12 +182,12 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    public async Task BackCompatConcreteOverload_ForwardsFactoryAndProvider()
+    public async Task AddTestHostOrchestrator_ForwardsFactoryAndProvider()
     {
-        var manager = new BackCompat.TestHostOrchestratorManager();
-        var orchestrator = new FakeOrchestrator("concrete-compat");
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var orchestrator = new FakeOrchestrator("concrete");
         IServiceProvider? observedProvider = null;
-        Func<IServiceProvider, BackCompat.ITestHostOrchestrator> factory = provider =>
+        Func<IServiceProvider, BackCompat.ITestHostExecutionOrchestrator> factory = provider =>
         {
             observedProvider = provider;
             return orchestrator;
@@ -270,50 +202,23 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    [DataRow("public")]
-    [DataRow("legacy-interface")]
-    [DataRow("legacy-concrete")]
-    public void AddTestHostOrchestrator_NullFactory_ThrowsWithParameterName(string registration)
+    public void AddTestHostOrchestrator_NullFactory_ThrowsWithParameterName()
     {
-        var manager = new BackCompat.TestHostOrchestratorManager();
+        var manager = new PublicApi.TestHostOrchestratorManager();
 
-        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(() =>
-        {
-            switch (registration)
-            {
-                case "public":
-                    ((PublicApi.ITestHostOrchestratorManager)manager).AddTestHostOrchestrator(null!);
-                    break;
-                case "legacy-interface":
-                    ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestrator(null!);
-                    break;
-                default:
-                    manager.AddTestHostOrchestrator(null!);
-                    break;
-            }
-        });
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddTestHostOrchestrator(null!));
 
         Assert.AreEqual("factory", exception.ParamName);
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void AddTestHostOrchestratorApplicationLifetime_NullFactory_ThrowsWithParameterName(bool legacy)
+    public void AddTestHostOrchestratorApplicationLifetime_NullFactory_ThrowsWithParameterName()
     {
         var manager = new PublicApi.TestHostOrchestratorManager();
 
-        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(() =>
-        {
-            if (legacy)
-            {
-                ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestratorApplicationLifetime(null!);
-            }
-            else
-            {
-                manager.AddTestHostOrchestratorApplicationLifetime(null!);
-            }
-        });
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddTestHostOrchestratorApplicationLifetime(null!));
 
         Assert.AreEqual("testHostOrchestratorApplicationLifetimeFactory", exception.ParamName);
     }
@@ -330,12 +235,12 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    public async Task BackCompatLifetimeRegistration_ForwardsFactoryAndProvider()
+    public async Task AddTestHostOrchestratorApplicationLifetime_ForwardsFactoryAndProvider()
     {
         var manager = new PublicApi.TestHostOrchestratorManager();
-        var lifetime = new FakeOrchestratorLifetime("legacy-lifetime");
+        var lifetime = new FakeOrchestratorLifetime("lifetime");
         IServiceProvider? observedProvider = null;
-        ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestratorApplicationLifetime(provider =>
+        manager.AddTestHostOrchestratorApplicationLifetime(provider =>
         {
             observedProvider = provider;
             return lifetime;
@@ -630,20 +535,6 @@ public sealed class TestHostOrchestratorManagerTests
         Assert.AreSequenceEqual(new[] { "enabled:shared-uid", "enabled:shared-uid", "initialize:shared-uid" }, events);
     }
 
-    [TestMethod]
-    public async Task BuildAsync_PublicAndLegacyRegistrationsShareDuplicateIdentityValidation()
-    {
-        PublicApi.TestHostOrchestratorManager manager = new();
-        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("same-identity"));
-        ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestrator(_ => new FakeOrchestrator("same-identity"));
-
-        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
-            () => manager.BuildAsync(_serviceProvider));
-
-        Assert.Contains("same-identity", exception.Message);
-        Assert.Contains(typeof(FakeOrchestrator).ToString(), exception.Message);
-    }
-
     private static async Task JoinForCleanupAsync(Task work, Exception? assertionFailure)
     {
         try
@@ -695,7 +586,7 @@ public sealed class TestHostOrchestratorManagerTests
         Exception? failure = null,
         Task<bool>? enablement = null,
         Task? initialization = null) :
-        BackCompat.ITestHostOrchestrator,
+        BackCompat.ITestHostExecutionOrchestrator,
         BackCompat.ITestHostOrchestratorApplicationLifetime,
         BackCompat.ITestHostExecutionOrchestratorMiddleware,
         IAsyncInitializableExtension
@@ -730,7 +621,7 @@ public sealed class TestHostOrchestratorManagerTests
         public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    private sealed class FakeOrchestrator : BackCompat.ITestHostOrchestrator
+    private sealed class FakeOrchestrator : BackCompat.ITestHostExecutionOrchestrator
     {
         public FakeOrchestrator(string uid) => Uid = uid;
 

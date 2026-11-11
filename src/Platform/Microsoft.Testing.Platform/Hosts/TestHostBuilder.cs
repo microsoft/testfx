@@ -51,7 +51,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
     public IArtifactPostProcessingManager ArtifactPostProcessing { get; } = new ArtifactPostProcessingManager();
 
-    private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
+    private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new();
 
     public ITestHostOrchestratorManager TestHostOrchestrator => _testHostOrchestratorManager;
 

@@ -47,7 +47,7 @@ public sealed class GitHubActionsExitCodeTests
     {
         // 255 is outside the documented ExitCode set: it must not throw and must fall back to the generic reason.
         string reason = GitHubActionsExitCode.GetReason(255);
-        Assert.IsFalse(string.IsNullOrWhiteSpace(reason));
+        Assert.IsNotNullOrWhiteSpace(reason);
     }
 
     [TestMethod]
@@ -69,7 +69,7 @@ public sealed class GitHubActionsExitCodeTests
         Assert.AreNotEqual(GitHubActionsExitCode.GetReason(255), deadlineReason);
         Assert.AreNotEqual(GitHubActionsExitCode.GetReason(13), deadlineReason);
         Assert.Contains("deadline", deadlineReason);
-        Assert.IsFalse(string.IsNullOrWhiteSpace(deadlineReason));
+        Assert.IsNotNullOrWhiteSpace(deadlineReason);
         Assert.AreEqual("TestExecutionStoppedAtDeadline", GitHubActionsExitCode.GetName(15));
     }
 

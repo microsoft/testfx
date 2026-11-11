@@ -18,6 +18,32 @@ steps:
       & .\eng\collect-affected-test-maps.ps1 -Configuration '$(_BuildConfig)'
       exit $LASTEXITCODE
     }
+    if ($affectedTestsMode -eq 'run') {
+      $PSNativeCommandUseErrorActionPreference = $false
+      Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]false"
+      $repository = '$(Build.SourcesDirectory)'
+      $shallow = & git -C $repository rev-parse --is-shallow-repository
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "##vso[task.logissue type=warning]Cannot inspect affected-test Git history; running the full test suite."
+        exit 0
+      }
+      $fetchArguments = @('-C', $repository, 'fetch', '--no-tags', '--no-recurse-submodules')
+      if ($shallow -eq 'true') {
+        $fetchArguments += '--unshallow'
+      }
+      $fetchArguments += @('origin', '+refs/heads/main:refs/remotes/origin/main')
+      & git @fetchArguments
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "##vso[task.logissue type=warning]Cannot fetch the affected-test main baseline; running the full test suite."
+        exit 0
+      }
+      $baseline = & git -C $repository merge-base HEAD refs/remotes/origin/main
+      if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($baseline)) {
+        Write-Host "##vso[task.logissue type=warning]No common affected-test main baseline is available; running the full test suite."
+        exit 0
+      }
+      Write-Host "Affected-test Git baseline: $($baseline.Trim())."
+    }
     $binlogName = switch ($affectedTestsMode) {
       'collect' { 'TestCollect' }
       default { 'TestAffected' }

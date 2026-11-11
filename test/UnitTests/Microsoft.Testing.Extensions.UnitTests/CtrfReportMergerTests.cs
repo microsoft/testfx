@@ -1167,7 +1167,7 @@ public sealed class CtrfReportMergerTests
         else
         {
             Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => (string)test!["status"]!).ToArray());
-            Assert.IsTrue(tests.All(test => test!["retryAttempts"] is null));
+            Assert.ContainsOnly(test => test!["retryAttempts"] is null, tests);
         }
     }
 
@@ -1186,7 +1186,7 @@ public sealed class CtrfReportMergerTests
 
         Assert.HasCount(3, tests);
         Assert.AreSequenceEqual(["First", "Unknown", "Second"], tests.Select(test => (string)test!["name"]!).ToArray());
-        Assert.IsTrue(tests.All(test => test!["retryAttempts"] is null));
+        Assert.ContainsOnly(test => test!["retryAttempts"] is null, tests);
         Assert.IsNull(tests[1]!["executionId"]);
     }
 
@@ -1205,7 +1205,7 @@ public sealed class CtrfReportMergerTests
 
         Assert.HasCount(3, tests);
         Assert.AreSequenceEqual(["First", "Second", "Retry"], tests.Select(test => (string)test!["name"]!).ToArray());
-        Assert.IsTrue(tests.All(test => test!["retryAttempts"] is null));
+        Assert.ContainsOnly(test => test!["retryAttempts"] is null, tests);
     }
 
     [TestMethod]

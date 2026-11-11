@@ -17,6 +17,12 @@ internal static class AnalyzerTestReferenceAssemblies
         ReferenceAssemblies.NetStandard.NetStandard20.WithNuGetConfigFilePath(NuGetConfigFilePath)
             .AddPackages([new PackageIdentity("MSTest.TestFramework", "4.0.2")]);
 
+    // Migration inputs and intermediate fixes need both legacy assertions and their modern replacements.
+    // Keep this separate from MSTestV4 so tests of older APIs retain their original reference contract.
+    public static ReferenceAssemblies MSTestWithLegacyAssertions { get; } =
+        ReferenceAssemblies.NetStandard.NetStandard20.WithNuGetConfigFilePath(NuGetConfigFilePath)
+            .AddPackages([new PackageIdentity("MSTest.TestFramework", "4.5.2")]);
+
     public static ReferenceAssemblies Net100OrLater { get; } =
 #if NET11_0
         Default;

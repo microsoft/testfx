@@ -5,18 +5,18 @@
 
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [string] $Project = 'src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj',
+    [string] $Project = 'TestFx.slnx',
     [ValidateSet('Debug', 'Release')]
     [Alias('c')]
     [string] $Configuration = 'Debug',
-    [ValidateSet('net10.0', 'net11.0', 'netstandard2.0')]
-    [string] $TargetFramework = 'net10.0',
+    [ValidateSet('', 'net10.0', 'net11.0', 'netstandard2.0')]
+    [string] $TargetFramework = '',
     [ValidateSet('BuildXL', 'MSBuild')]
     [string] $Engine = 'BuildXL',
     [ValidatePattern('^$|^[a-z0-9][a-z0-9-]{0,80}$')]
     [string] $OutputId = '',
     [ValidateRange(1, 64)]
-    [int] $Jobs = 8,
+    [int] $Jobs = [Math]::Min(64, [Environment]::ProcessorCount),
     [string] $AdditionalTargets = '',
     [switch] $PrepareOnly,
     [switch] $SkipRestore,
@@ -24,7 +24,28 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 Set-StrictMode -Version 2.0
+
+function Get-BuildXLFileSystemMode([string[]] $Paths, [switch] $NoJournal) {
+    if ($NoJournal) {
+        Write-Host 'BuildXL filesystem mode: full input hashing without hardlinks (-NoJournal).'
+        return 'FullHashing'
+    }
+
+    $volumes = @($Paths | Where-Object { $_ } | ForEach-Object { [IO.Path]::GetPathRoot($_) } | Sort-Object -Unique)
+    foreach ($volume in $volumes) {
+        $diagnostics = & fsutil.exe usn queryjournal $volume 2>&1
+        $code = $LASTEXITCODE
+        if ($code -ne 0) {
+            Write-Host "BuildXL filesystem mode: full input hashing without hardlinks; journal unavailable on $volume (exit $code): $($diagnostics -join ' ')"
+            return 'FullHashing'
+        }
+    }
+
+    Write-Host 'BuildXL filesystem mode: journal-backed input tracking and hardlinks.'
+    return 'Journal'
+}
 
 if ($env:OS -ne 'Windows_NT' -or $env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
     throw 'The experimental BuildXL build requires Windows x64 and PowerShell 7.'
@@ -34,9 +55,9 @@ $repo = Split-Path $PSScriptRoot -Parent
 $projectPath = [IO.Path]::GetFullPath((Join-Path $repo $Project))
 $relativeProject = [IO.Path]::GetRelativePath($repo, $projectPath)
 if ($relativeProject.StartsWith('..', [StringComparison]::Ordinal) -or
-    [IO.Path]::GetExtension($projectPath) -ne '.csproj' -or
+    [IO.Path]::GetExtension($projectPath) -notin @('.csproj', '.fsproj', '.sln', '.slnx', '.slnf') -or
     -not (Test-Path -LiteralPath $projectPath -PathType Leaf)) {
-    throw 'Project must name an existing .csproj inside this checkout.'
+    throw 'Project must name an existing MSBuild project or solution inside this checkout.'
 }
 
 if ($AdditionalTargets) {
@@ -133,12 +154,18 @@ try {
     New-Item -ItemType Directory -Path $logs -Force | Out-Null
     $properties = @(
         "/p:Configuration=$Configuration",
-        "/p:TargetFrameworks=$TargetFramework",
         "/p:ArtifactsBinDir=$bin",
         "/p:ArtifactsObjDir=$obj",
+        "/p:CustomBeforeDirectoryBuildTargets=$(Join-Path $PSScriptRoot 'buildxl\msbuild.targets')",
+        '/p:SkipUapTargetFramework=true',
+        '/p:ShouldUnsetParentConfigurationAndPlatform=false',
         '/p:EnableProjectDataOnBuild=false',
-        '/p:UseSharedCompilation=false'
+        '/p:UseSharedCompilation=true'
     )
+    if ($TargetFramework) {
+        $properties += "/p:TargetFrameworks=$TargetFramework"
+    }
+
     if ($AdditionalTargets) {
         $properties += "/p:CustomAfterMicrosoftCommonTargets=$AdditionalTargets"
     }
@@ -150,22 +177,37 @@ try {
     $env:TESTFX_BUILDXL_ROOT = $repo
     $env:TESTFX_BUILDXL_PROJECT = $relativeProject
     $env:TESTFX_BUILDXL_CONFIGURATION = $Configuration
-    $env:TESTFX_BUILDXL_TFM = $TargetFramework
+    $env:TESTFX_BUILDXL_TFM = if ($TargetFramework) { $TargetFramework } else { '*' }
     $env:TESTFX_BUILDXL_MSBUILD = Join-Path $sdk "sdk\$sdkVersion"
     $env:TESTFX_BUILDXL_BIN = $bin
     $env:TESTFX_BUILDXL_OBJ = $obj
-    $env:TESTFX_BUILDXL_ADDITIONAL_TARGETS = $AdditionalTargets
+    $env:TESTFX_BUILDXL_ADDITIONAL_TARGETS = if ($AdditionalTargets) { $AdditionalTargets } else { '*' }
 
+    $revision = & git -C $repo rev-parse HEAD
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Cannot identify the BuildXL source revision.'
+    }
+
+    $fileSystemMode = Get-BuildXLFileSystemMode -Paths @($repo, $sdk, $env:NUGET_PACKAGES, $output) -NoJournal:$NoJournal
     [ordered]@{
+        SourceRevision = $revision.Trim()
         Sdk = $sdkVersion
         BuildXL = $version
         BuildXLPackageSha256 = $packageHash
         Engine = $Engine
         Project = $relativeProject
         Configuration = $Configuration
-        TargetFramework = $TargetFramework
+        TargetFramework = if ($TargetFramework) { $TargetFramework } else { 'Project defaults' }
+        SkipUapTargetFramework = $true
         Jobs = $Jobs
-        NoJournal = $NoJournal.IsPresent
+        ProcessorCount = [Environment]::ProcessorCount
+        UseSharedCompilation = $true
+        MSBuildRuntime = 'DotNetCore'
+        MSBuildPath = Join-Path $env:TESTFX_BUILDXL_MSBUILD 'MSBuild.dll'
+        CompilerDirectory = Join-Path $env:TESTFX_BUILDXL_MSBUILD 'Roslyn\bincore'
+        FileSystemMode = $fileSystemMode
+        NoJournal = $fileSystemMode -eq 'FullHashing'
+        NoJournalRequested = $NoJournal.IsPresent
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'toolchain.json') -Encoding utf8
 
     Push-Location $repo
@@ -189,12 +231,13 @@ try {
         $config = Join-Path $output 'config.dsc'
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'buildxl\config.dsc') -Destination $config -Force
         $journalArguments = @()
-        if ($NoJournal) {
+        if ($fileSystemMode -eq 'FullHashing') {
             # Rehash inputs instead of relying on journal-backed file identities.
             $journalArguments = @('/verifyJournalForEngineVolumes-', '/scanChangeJournal-', '/useFileContentTable-', '/useHardlinks-')
         }
 
-        Write-Host "BuildXL: $relativeProject ($Configuration, $TargetFramework). Outputs: $output"
+        $frameworkDescription = if ($TargetFramework) { $TargetFramework } else { 'project target frameworks; classic UAP excluded' }
+        Write-Host "BuildXL: $relativeProject ($Configuration, $frameworkDescription). Outputs: $output"
         & $bxl "/config:$config" "/objectDirectory:$output\engine" `
             "/cacheDirectory:$output\cache" "/logsDirectory:$logs" "/maxProc:$Jobs" /server- /remoteTelemetry- /trackBuildsInUserFolder- @journalArguments
         exit $LASTEXITCODE

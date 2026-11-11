@@ -25,7 +25,7 @@ public sealed class HangDumpInProcessLifecycleTests
     {
         var fixture = new HangDumpInProcessProtocolFixture(TestContext.CancellationToken, traceEnabled)
         {
-            GracefulExit = graceful,
+            CompletionMessageReceived = graceful,
             ExitCode = exitCode,
         };
         try
@@ -75,7 +75,7 @@ public sealed class HangDumpInProcessLifecycleTests
             Assert.HasCount(logCount, fixture.Logs);
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
-            fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
+            fixture.ProcessInformation.VerifyGet(value => value.HasReceivedTestHostCompletedMessage, Times.Once);
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, graceful ? Times.Never() : Times.Once());
             Assert.AreSequenceEqual(
                 graceful ? [] : new[] { "Testhost didn't exit gracefully '27')" },
@@ -368,7 +368,7 @@ public sealed class HangDumpInProcessLifecycleTests
             await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
-            fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
+            fixture.ProcessInformation.VerifyGet(value => value.HasReceivedTestHostCompletedMessage, Times.Once);
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, Times.Never);
             fixture.AssertNoDumpWork();
         }
@@ -437,7 +437,7 @@ public sealed class HangDumpInProcessLifecycleTests
             await fixture.FlushActivityAsync();
             fixture.AssertSignalCount(1);
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
-            fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
+            fixture.ProcessInformation.VerifyGet(value => value.HasReceivedTestHostCompletedMessage, Times.Once);
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, Times.Never);
             fixture.AssertNoDumpWork();
         }
@@ -452,7 +452,7 @@ public sealed class HangDumpInProcessLifecycleTests
     {
         var fixture = new HangDumpInProcessProtocolFixture(TestContext.CancellationToken)
         {
-            GracefulExit = false,
+            CompletionMessageReceived = false,
             ExitCode = 27,
         };
         var failure = new IOException("The nongraceful-exit diagnostic failed.");
@@ -466,12 +466,12 @@ public sealed class HangDumpInProcessLifecycleTests
             IOException actual = await Assert.ThrowsExactlyAsync<IOException>(
                 () => fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
             Assert.AreSame(failure, actual);
-            fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
+            fixture.ProcessInformation.VerifyGet(value => value.HasReceivedTestHostCompletedMessage, Times.Once);
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, Times.Once);
             fixture.AssertNoDumpWork();
             fixture.ControllerLogAsync = null;
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
-            fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Exactly(2));
+            fixture.ProcessInformation.VerifyGet(value => value.HasReceivedTestHostCompletedMessage, Times.Exactly(2));
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, Times.Exactly(2));
             Assert.AreSequenceEqual(
                 new[] { "Testhost didn't exit gracefully '27')", "Testhost didn't exit gracefully '27')" },
@@ -562,7 +562,7 @@ public sealed class HangDumpInProcessLifecycleTests
             Assert.IsEmpty(fixture.ChildMessages);
             Assert.IsEmpty(fixture.ControllerMessages.Where(message => message.StartsWith("Consumer pipe name received '", StringComparison.Ordinal)
                 || message.StartsWith("Connected to the test host server pipe '", StringComparison.Ordinal)));
-            fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Once);
+            fixture.ProcessInformation.VerifyGet(value => value.HasReceivedTestHostCompletedMessage, Times.Once);
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, Times.Never);
             fixture.ControllerClock.VerifyGet(value => value.UtcNow, Times.Never);
             fixture.ChildClock.VerifyGet(value => value.UtcNow, Times.Never);

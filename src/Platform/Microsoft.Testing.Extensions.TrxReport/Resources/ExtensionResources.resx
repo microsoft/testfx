@@ -200,6 +200,22 @@
   <data name="TrxReportArtifactDescription" xml:space="preserve">
     <value>Test session</value>
   </data>
+  <data name="TrxModeOptionDescription" xml:space="preserve">
+    <value>TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</value>
+    <comment>Do not localize format name {Locked="TRX"}, mode names {Locked="in-process"}{Locked="out-of-process"}, or option name {Locked="--report-trx"}.</comment>
+  </data>
+  <data name="TrxModeInvalidValue" xml:space="preserve">
+    <value>'--trx-mode' expects 'in-process' or 'out-of-process'</value>
+    <comment>Do not localize option name {Locked="--trx-mode"} or mode names {Locked="in-process"}{Locked="out-of-process"}.</comment>
+  </data>
+  <data name="TrxModeRequiresTrxReport" xml:space="preserve">
+    <value>'--trx-mode' requires '--report-trx' to be enabled</value>
+    <comment>Do not localize option names {Locked="--trx-mode"}{Locked="--report-trx"}.</comment>
+  </data>
+  <data name="TrxModeOutOfProcessNotSupported" xml:space="preserve">
+    <value>'--trx-mode out-of-process' is not supported on this platform</value>
+    <comment>Do not localize option and value {Locked="--trx-mode out-of-process"}.</comment>
+  </data>
   <data name="TrxReportArtifactDisplayName" xml:space="preserve">
     <value>TRX Report</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>

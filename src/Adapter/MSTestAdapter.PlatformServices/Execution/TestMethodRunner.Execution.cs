@@ -39,6 +39,7 @@ internal sealed partial class TestMethodRunner
             else
             {
                 var tcs = new TaskCompletionSource<TestResult[]>();
+#pragma warning disable VSTHRD103 // RunOnContext only starts the callback; asynchronous completion is awaited below.
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
                 ExecutionContextHelpers.RunOnContext(
                     capturedContext,
@@ -62,6 +63,7 @@ internal sealed partial class TestMethodRunner
                         }
                     });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                 results = await tcs.Task.ConfigureAwait(false);
             }
         }

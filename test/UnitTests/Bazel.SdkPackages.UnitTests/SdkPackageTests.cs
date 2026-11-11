@@ -46,12 +46,13 @@ public sealed class SdkPackageTests(TestContext context)
         Assert.AreEqual("PACKAGE.md", metadata.GetProperty("readme").GetString());
         Assert.AreEqual("MIT", metadata.GetProperty("license").GetProperty("value").GetString());
         Assert.IsTrue(metadata.GetProperty("requireLicenseAcceptance").GetBoolean());
-        CollectionAssert.AreEqual(new[] { "Microsoft", "testing", "SDK" }, metadata.GetProperty("tags").EnumerateArray().Select(item => item.GetString()).ToArray());
+        Assert.AreSequenceEqual(new[] { "Microsoft", "testing", "SDK" }, metadata.GetProperty("tags").EnumerateArray().Select(item => item.GetString()).ToArray());
         Assert.StartsWith("Notes for 7.8.9.", metadata.GetProperty("releaseNotes").GetString());
         Assert.HasCount(0, request.RootElement.GetProperty("dependencyGroups").EnumerateArray().ToArray());
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[] { "PACKAGE.md", "Sdk/Sdk.props", "Sdk/Runner/Runner.targets" },
-            request.RootElement.GetProperty("files").EnumerateArray().Select(item => item.GetProperty("target").GetString()).ToArray());
+            request.RootElement.GetProperty("files").EnumerateArray().Select(item => item.GetProperty("target").GetString()).ToArray(),
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -66,13 +67,14 @@ public sealed class SdkPackageTests(TestContext context)
         using JsonDocument request = JsonDocument.Parse(File.ReadAllText(PathFor("pack.json")));
         Assert.AreEqual("MSTest", request.RootElement.GetProperty("metadata").GetProperty("id").GetString());
         JsonElement[] groups = request.RootElement.GetProperty("dependencyGroups").EnumerateArray().ToArray();
-        CollectionAssert.AreEqual(new[] { "net8.0", "net9.0", "net10.0", "net11.0" }, groups.Select(group => group.GetProperty("targetFramework").GetString()).ToArray());
+        Assert.AreSequenceEqual(new[] { "net8.0", "net9.0", "net10.0", "net11.0" }, groups.Select(group => group.GetProperty("targetFramework").GetString()).ToArray());
         foreach (JsonElement group in groups)
         {
             Dictionary<string, JsonElement> dependencies = group.GetProperty("dependencies").EnumerateArray().ToDictionary(item => item.GetProperty("id").GetString()!);
-            CollectionAssert.AreEquivalent(
+            Assert.AreSequenceEqual(
                 new[] { "MSTest.TestFramework", "MSTest.TestAdapter", "Microsoft.Testing.Extensions.TrxReport", "Microsoft.NET.Test.Sdk", "Microsoft.Testing.Extensions.CodeCoverage" },
-                dependencies.Keys.ToArray());
+                dependencies.Keys.ToArray(),
+                SequenceOrder.InAnyOrder);
             Assert.AreEqual("7.8.9-preview.bazel", dependencies["MSTest.TestFramework"].GetProperty("version").GetString());
             Assert.AreEqual("7.8.9-preview.bazel", dependencies["MSTest.TestAdapter"].GetProperty("version").GetString());
             Assert.AreEqual("2.3.4-preview.bazel", dependencies["Microsoft.Testing.Extensions.TrxReport"].GetProperty("version").GetString());
@@ -81,13 +83,14 @@ public sealed class SdkPackageTests(TestContext context)
             foreach ((string id, JsonElement dependency) in dependencies)
             {
                 string[] expected = id == "Microsoft.NET.Test.Sdk" ? [] : ["Build", "Analyzers"];
-                CollectionAssert.AreEqual(expected, dependency.GetProperty("exclude").EnumerateArray().Select(item => item.GetString()).ToArray(), id);
+                Assert.AreSequenceEqual(expected, dependency.GetProperty("exclude").EnumerateArray().Select(item => item.GetString()).ToArray(), id);
             }
         }
 
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[] { "PACKAGE.md", "lib/net8.0/_._", "lib/net9.0/_._", "lib/net10.0/_._", "lib/net11.0/_._" },
-            request.RootElement.GetProperty("files").EnumerateArray().Select(item => item.GetProperty("target").GetString()).ToArray());
+            request.RootElement.GetProperty("files").EnumerateArray().Select(item => item.GetProperty("target").GetString()).ToArray(),
+            SequenceOrder.InAnyOrder);
         Assert.IsFalse(File.Exists(PathFor("generated.props")));
     }
 
