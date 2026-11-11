@@ -111,6 +111,28 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void LiteralSegment_CultureChangedToTurkishAfterConstruction_MatchesLikeRegex()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            TreeNodeFilter filter = new("/file");
+            Regex regex = new("^file$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            // On .NET Framework, the regex uses the current culture when matching, so 'I' no longer matches 'i'.
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+
+            Assert.AreEqual(regex.IsMatch("FILE"), filter.MatchesFilter("/FILE", new PropertyBag()));
+            Assert.IsTrue(filter.MatchesFilter("/file", new PropertyBag()));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
     public void EscapeSequences_SupportsWildcard()
     {
         TreeNodeFilter filter = new("/*.\\*UnitTests");

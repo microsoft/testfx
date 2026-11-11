@@ -46,7 +46,12 @@ internal sealed class ValueExpression : FilterExpression
                 return true;
             }
 
+#if NETCOREAPP
             if (_asciiLiteral is not null)
+#else
+            // On .NET Framework, the regex also uses the current culture when matching.
+            if (_asciiLiteral is not null && !HasTurkishCasing(CultureInfo.CurrentCulture))
+#endif
             {
                 if (input.Length != _asciiLiteral.Length)
                 {
