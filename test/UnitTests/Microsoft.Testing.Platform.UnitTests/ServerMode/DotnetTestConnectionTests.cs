@@ -27,6 +27,39 @@ public sealed class DotnetTestConnectionTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow("TestHost", true)]
+    [DataRow("ServerTestHost", true)]
+    [DataRow("TestHostOrchestrator", true)]
+    [DataRow("TestHostController", false)]
+    [DataRow("ArtifactPostProcessor", false)]
+    public async Task IsCompatibleProtocolAsync_SeparatesDeclaredTargetFromExecutingRuntime(string hostType, bool hasApplicationTarget)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        HandshakeMessage? sent = null;
+        fixture.Client.Respond(
+            new HandshakeMessage(new() { [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.0.0" }),
+            TestContext.CancellationToken,
+            message => sent = message);
+
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(hostType));
+
+        Assert.IsNotNull(sent?.Properties);
+        Assert.AreEqual(RuntimeInformation.FrameworkDescription, sent.Properties[HandshakeMessagePropertyNames.Framework]);
+        Assert.AreEqual(RuntimeInformation.ProcessArchitecture.ToString(), sent.Properties[HandshakeMessagePropertyNames.Architecture]);
+        Assert.AreEqual(hasApplicationTarget, sent.Properties.TryGetValue(21, out string? targetFramework));
+        if (hasApplicationTarget)
+        {
+#if NETFRAMEWORK
+            Assert.AreEqual("net462", targetFramework);
+#elif NET10_0
+            Assert.AreEqual("net10.0", targetFramework);
+#else
+            Assert.AreEqual("net11.0", targetFramework);
+#endif
+        }
+    }
+
+    [TestMethod]
     public async Task AuxiliaryCancellationOnlyOwnsOneCallbackWhileTheOriginalIsStillPending()
     {
         using CancellationTokenSource application = new();

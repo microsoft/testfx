@@ -241,7 +241,9 @@ function Invoke-CollectionModulePool {
                     "--root-directory", $Repository,
                     "--no-build", "--collect-test-map",
                     "--results-directory", $moduleDirectory,
-                    "--show-test-results", "failed", "--no-progress", "--no-ansi"
+                    "--show-test-results", "failed", "--progress", "off",
+                    # The native SDK owns this option; MTP's --ansi off does not configure its renderer.
+                    "--no-ansi"
                 )) {
                     $startInfo.ArgumentList.Add($argument)
                 }

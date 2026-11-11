@@ -171,10 +171,10 @@ Disk info:
 {1}</value>
     <comment>{0} is the exception that occurred. {1} is disk information detailing free space.</comment>
   </data>
-  <data name="HangDumpFileNameOptionDescription" xml:space="preserve">
+  <data name="HangDumpFileNameTemplateOptionDescription" xml:space="preserve">
     <value>Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</value>
-    <comment>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"} or legacy token {Locked="%p"}.</comment>
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</value>
+    <comment>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</comment>
   </data>
   <data name="HangDumpOptionDescription" xml:space="preserve">
     <value>Generate a dump file if the test process hangs.</value>

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="12.0.0-beta.26556.2">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="12.0.0-beta.26560.9">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>bd945b47c51da25b17dde4e8e0f8066ad001d05f</Sha>
+      <Sha>305558e284ce35e7b35ac9ebd75802915394fd3e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="12.0.0-beta.26556.2">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="12.0.0-beta.26560.9">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>bd945b47c51da25b17dde4e8e0f8066ad001d05f</Sha>
+      <Sha>305558e284ce35e7b35ac9ebd75802915394fd3e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="12.0.0-beta.26556.2">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="12.0.0-beta.26560.9">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>bd945b47c51da25b17dde4e8e0f8066ad001d05f</Sha>
+      <Sha>305558e284ce35e7b35ac9ebd75802915394fd3e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.13.0-preview.26559.2">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.13.0-preview.26560.2">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>3d593e008169bb3df357f337df901cea95a7c727</Sha>
+      <Sha>327cf934d064b20316fcd0d4bbb833b2f1635044</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.AffectedTests" Version="18.13.0-preview.26559.2">
+    <Dependency Name="Microsoft.Testing.Extensions.AffectedTests" Version="18.13.0-preview.26560.2">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>3d593e008169bb3df357f337df901cea95a7c727</Sha>
+      <Sha>327cf934d064b20316fcd0d4bbb833b2f1635044</Sha>
     </Dependency>
     <Dependency Name="MSTest" Version="5.0.0-preview.26559.7">
       <Uri>https://github.com/microsoft/testfx</Uri>

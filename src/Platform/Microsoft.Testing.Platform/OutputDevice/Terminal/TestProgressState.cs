@@ -65,10 +65,16 @@ internal sealed partial class TestProgressState
 #pragma warning restore IDE0032
 
     public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery)
+        : this(id, assembly, targetFramework, architecture, stopwatch, isDiscovery, runtimeFramework: null)
+    {
+    }
+
+    public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery, string? runtimeFramework)
     {
         Id = id;
         TargetFramework = targetFramework;
         Architecture = architecture;
+        RuntimeFramework = runtimeFramework;
         Stopwatch = stopwatch;
         Assembly = assembly;
         AssemblyName = Path.GetFileName(assembly);
@@ -83,6 +89,8 @@ internal sealed partial class TestProgressState
     public string? TargetFramework { get; }
 
     public string? Architecture { get; }
+
+    public string? RuntimeFramework { get; }
 
     public IStopwatch Stopwatch { get; }
 

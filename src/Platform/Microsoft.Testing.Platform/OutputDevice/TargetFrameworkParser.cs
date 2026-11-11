@@ -79,6 +79,38 @@ internal static class TargetFrameworkParser
     }
 
     /// <summary>
+    /// Reads the declared assembly target, including its platform, without substituting the executing runtime
+    /// when target metadata is absent or unrecognized.
+    /// </summary>
+    public static string? GetTargetFrameworkFromAssembly(Assembly? entryAssembly)
+    {
+        string? frameworkName = entryAssembly?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
+        if (RoslynString.IsNullOrWhiteSpace(frameworkName))
+        {
+            return null;
+        }
+
+        string[] components = frameworkName.Split(',');
+        const string VersionPrefix = "Version=v";
+        if (components.Length != 2
+            || !components[1].Trim().StartsWith(VersionPrefix, StringComparison.OrdinalIgnoreCase)
+            || !Version.TryParse(components[1].Trim()[VersionPrefix.Length..], out Version? version))
+        {
+            return null;
+        }
+
+        string? shortTargetFramework = components[0].Trim() switch
+        {
+            ".NETFramework" => GetShortTargetFramework($".NET Framework {(version.Build < 0 ? $"{version}.0" : version.ToString())}"),
+            ".NETCoreApp" => GetShortTargetFramework($"{(version.Major >= 5 ? ".NET" : ".NET Core")} {version}"),
+            ".NETStandard" => $"netstandard{version}",
+            _ => null,
+        };
+
+        return BuildTargetFrameworkMoniker(shortTargetFramework, GetTargetPlatformName(entryAssembly));
+    }
+
+    /// <summary>
     /// Resolves the short target framework moniker of <paramref name="entryAssembly"/>, including the
     /// platform component (e.g. <c>net8.0-windows10.0.18362.0</c>) when the assembly was built for a
     /// platform-specific TFM, including non-OS / custom platform identifiers such as Uno's <c>browserwasm</c>.

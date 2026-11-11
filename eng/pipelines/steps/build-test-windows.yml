@@ -59,8 +59,23 @@ steps:
       if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
       Write-Host "Test results under '$testResults': $hasTestResults"
       Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+
+      # Preserve artifact publication even when report classification fails.
+      . ./eng/compare-test-reports.ps1
+      $hasTestReports = 'false'
+      if ($hasTestResults -eq 'true') {
+        $report = Get-TestReportInput -Directory $testResults | Select-Object -First 1
+        if ($null -ne $report) { $hasTestReports = 'true' }
+      }
+      Write-Host "Raw reports to compare: $hasTestReports"
+      Write-Host "##vso[task.setvariable variable=HasTestReports]$hasTestReports"
     displayName: 'Check for Test Results folders'
     condition: always()
+
+  - ${{ if eq(parameters.CollectCTS, false) }}:
+    - pwsh: ./eng/compare-test-reports.ps1 -ResultsDirectory "$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)"
+      displayName: Compare TRX, CTRF, and JUnit reports
+      condition: and(succeededOrFailed(), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'), eq(variables.HasTestReports, 'true'))
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Test Results folders'

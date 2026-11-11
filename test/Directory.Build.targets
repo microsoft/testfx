@@ -23,7 +23,8 @@
          the expected runs with results. Fork builds and any publication failures retain the traditional TRX
          push as a fallback. -->
     <TestingPlatformCommandLineArguments Condition=" '$(TESTFX_AZDO_LIVE_PUBLISHING)' == 'true' ">$(TestingPlatformCommandLineArguments) --publish-azdo-test-results --publish-azdo-run-name $(AZDO_LIVE_PUBLISHING_RUN_NAME)</TestingPlatformCommandLineArguments>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
+    <!-- Keep the raw report triplet on one stem so the post-test consistency gate can pair it exactly. -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework)_$(Architecture).ctrf.json</TestingPlatformCommandLineArguments>
     <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
          output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
          so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
@@ -50,7 +51,7 @@
     <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
          $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
          PublishTestResults task and any external JUnit consumer. -->
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit --report-junit-filename $(MSBuildProjectName)_$(TargetFramework)_$(Architecture).xml</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(CodeCoverageSettingsFile) --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
 
   </PropertyGroup>
@@ -73,8 +74,6 @@
     <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
     <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).trx --results-directory $(ArtifactsTestResultsDir)</TestingPlatformCommandLineArguments>
-    <!-- Match the TRX filename pattern so the JUnit XML report sits next to its TRX twin per (project x TFM x arch). -->
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).xml</TestingPlatformCommandLineArguments>
   </PropertyGroup>
   <PropertyGroup>
     <_CodeCoverageSourceRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)src'))</_CodeCoverageSourceRoot>

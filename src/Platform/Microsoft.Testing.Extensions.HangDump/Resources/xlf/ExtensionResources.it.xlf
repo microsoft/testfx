@@ -80,12 +80,12 @@ Informazioni sul disco:
 {1}</target>
         <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
-      <trans-unit id="HangDumpFileNameOptionDescription">
+      <trans-unit id="HangDumpFileNameTemplateOptionDescription">
         <source>Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="translated">Specificare il nome del file di dump.
-Supporta i seguenti segnaposto: {pname} (nome dell'applicazione di test), {pid} (ID processo), {asm} (nome dell'assembly di immissione), {tfm} (moniker framework di destinazione), {arch} (architettura processo), {time} (timestamp). Il token legacy %p (ID processo) è supportato anche per la compatibilità con le versioni precedenti.</target>
-        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"} or legacy token {Locked="%p"}.</note>
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</source>
+        <target state="new">Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</target>
+        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs.</source>

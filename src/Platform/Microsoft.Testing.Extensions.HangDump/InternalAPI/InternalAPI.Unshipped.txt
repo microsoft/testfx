@@ -1,6 +1,7 @@
 #nullable enable
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetActivitySignalInterval(System.TimeSpan hangTimeout) -> System.TimeSpan
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetInactivityTimerDueTime(System.TimeSpan hangTimeout) -> System.TimeSpan
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetTimeout(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.TimeSpan
