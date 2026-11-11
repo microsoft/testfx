@@ -244,6 +244,8 @@ build-only jobs.
 Each entry invokes `eng/buildxl.ps1 -Project TestFx.slnx` with its configuration,
 eight workers, and `-NoJournal`. There is one normal restore/build, no warm-up,
 synthetic source marker, benchmark repetition, or comparison threshold.
+A failed task can retry the same native build once to recover from the observed
+Windows child-process teardown race; a second failure still fails the job.
 The native engine's stdout/stderr reaches the Azure task directly instead of
 being redirected to a benchmark sample log. Tests are compiled as part of the
 solution; they are not executed or represented as synthetic benchmark tests.
@@ -354,6 +356,53 @@ repository artifact directory instead. That failed setup attempt is not
 counted as red-phase behavioral evidence.
 
 ## Research and experiments
+
+### 2026-11-11: hosted child-process cleanup failure
+
+[Azure build 1674906](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1674906)
+tested merge `e31e4478f393a724d4f93d7ad98991f575b1e4b1` for PR head
+`5c5201ff95c01ab7b0ed9f756f02ebc613bbdad9`. The full BuildXL Release job
+passed. Debug's WinUI framework compilation exited 0 and produced the assembly,
+but BuildXL rejected a surviving `C:\Windows\System32\getmac.exe` child.
+The Debug graph therefore finished with 165 successful, one failed, and
+60 skipped processes, rather than a successful full build.
+
+The pinned native resolver sets a fixed 500 ms nested-process termination
+timeout in `PipConstructor.TryConfigureProcessBuilder`. Its implementation does
+not consume the similarly named generic resolver timeout setting, so adding
+that setting here would not fix this deployment. Do not allowlist `getmac`,
+break it away from the sandbox, suppress the error, or disable build tooling.
+The chosen bounded recovery is one Azure task retry of the same native build.
+Successful cached projects can be recovered; the failed project must complete
+normally. Both attempts retain failure semantics, and a second failure still
+fails the job. This is a retry for an observed teardown race, not a benchmark
+sample or a claim that the upstream process-lifetime issue is fixed.
+
+The ordinary Windows/Linux jobs failed in `TestFxOpenTelemetryTests`, which
+was added on the base side of the merge and is unchanged by this PR. Its child
+host receives unsupported `--no-ansi` arguments. Those independent product-test
+failures must not be hidden or patched into this build-infrastructure change.
+The GitHub analysis upload and review activation also hit installation API
+quota limits. A manual retry of the dynamic code-quality run was rejected by
+GitHub; a pushed correction will start fresh checks instead.
+
+Local regression coverage checks the bounded retry and preserved final exit
+code in the parsed pipeline, alongside the existing native-command and
+failure-publication checks. Actual automatic retry behavior remains a hosted
+CI validation gap until the changed task runs.
+
+**Test-value evidence:** against base
+`5c5201ff95c01ab7b0ed9f756f02ebc613bbdad9`, the retained command
+`python .github\scripts\test_buildxl_pipeline.py
+BuildXLPipelineTests.test_native_build_retry_is_bounded_and_preserves_failure`
+executed one case and exited 1 at `1 != 0` without the retry setting.
+After adding the setting, `python .github\scripts\test_buildxl_pipeline.py`
+exited 0 with all 17 cases executed/passed and no failures/errors/skips.
+This proves the pipeline contract, not execution of Azure's task-retry engine.
+The YAML SHA-256 is
+`C719704B9CF8D6558C1DE98FB3A4453704B7FFD57AE2527E2F11C4012BEA08D4`;
+the retained test SHA-256 is
+`CCA770D92B47F67D45ACE75BBF3E4C26D3D57A698578EE7DCFB3DF78FB4F110F`.
 
 ### 2026-11-10: native full-solution integration
 

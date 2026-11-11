@@ -168,6 +168,16 @@ class BuildXLPipelineTests(unittest.TestCase):
                         r"|(?:^|[\s;&|])(?:dotnet\s+)?msbuild(?:\.exe)?\b",
                     )
 
+    def test_native_build_retry_is_bounded_and_preserves_failure(self) -> None:
+        build = self.step(BUILD_STEP)
+        self.assertEqual(1, build.get("retryCountOnTaskFailure", 0))
+        self.assertNotIn("continueOnError", build)
+        self.assertEqual("exit $LASTEXITCODE", build["pwsh"].strip().splitlines()[-1])
+        self.assertEqual(
+            [build],
+            [step for step in self.steps if step.get("retryCountOnTaskFailure", 0)],
+        )
+
     def test_buildxl_does_not_publish_synthetic_test_results(self) -> None:
         for node in mappings(self.job):
             self.assertNotRegex(node.get("task", ""), r"(?i)^PublishTestResults(?:@|$)")

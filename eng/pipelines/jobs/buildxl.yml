@@ -34,6 +34,8 @@ jobs:
       exit $LASTEXITCODE
     displayName: Build repository with BuildXL
     # Restore uses the pinned SDK; BuildXL schedules the solution's native MSBuild graph.
+    # Native MSBuild gives terminating Windows SDK children only 500 ms to exit.
+    retryCountOnTaskFailure: 1
 
   - pwsh: |
       $root = '$(Build.SourcesDirectory)\artifacts\buildxl'
