@@ -53,6 +53,13 @@ internal static partial class CommandLineOptionsValidator
             return InvalidWithCommandLine(commandLineParseResult, stringBuilder.ToTrimmedString());
         }
 
+        ICommandLineOptionsProvider[]? providersForDefaults = null;
+        if (commandLineParseResult.HasTool && jsonCommandLineOptionDefaults is { Count: > 0 })
+        {
+            providersForDefaults = [.. extensionCommandLineOptionsProviders];
+            extensionCommandLineOptionsProviders = providersForDefaults;
+        }
+
         extensionCommandLineOptionsProviders = commandLineParseResult.ToolName is string toolName
             ? extensionCommandLineOptionsProviders
                 .OfType<IToolCommandLineOptionsProvider>()
@@ -76,7 +83,10 @@ internal static partial class CommandLineOptionsValidator
             return result3;
         }
 
-        if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
+        HashSet<string>? registeredDefaultOptionNames = providersForDefaults is null
+            ? null
+            : new(providersForDefaults.SelectMany(provider => provider.GetCommandLineOptions()).Select(option => option.Name), StringComparer.OrdinalIgnoreCase);
+        if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, extensionOptionsByProvider, systemOptionsByProvider, registeredDefaultOptionNames) is { IsValid: false } result4)
         {
             return AddCommandLine(commandLineParseResult, result4);
         }
