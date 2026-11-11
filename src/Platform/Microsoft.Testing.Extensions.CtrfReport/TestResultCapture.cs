@@ -153,7 +153,7 @@ internal static class TestResultCapture
             {
                 Name = TestResultCaptureHelper.Truncate(name, TestResultCaptureHelper.MaxIdentityFieldLength)!,
                 ContentType = GetAttachmentContentType(fullPath),
-                Path = TestResultCaptureHelper.Truncate(fullPath, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+                Path = fullPath,
                 Description = TestResultCaptureHelper.Truncate(artifact.Description, TestResultCaptureHelper.MaxMessageLength),
             });
         }
