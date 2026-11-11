@@ -617,7 +617,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_TestDurationExceeded">
         <source>Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</source>
-        <target state="new">Test '{0}' took {1:F4} ms, exceeding its expected maximum duration of {2} ms.</target>
+        <target state="translated">テスト '{0}' に {1:F4} ms かかり、予想される最大期間の {2} ms を超えています。</target>
         <note>{0} is the fully qualified test name including any distinct data-row or custom display label. {1} is the actual duration in milliseconds. {2} is the expected maximum in milliseconds. {Locked="ms"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestDurationWarningDeliveryFailed">
@@ -627,7 +627,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_TestDurationWarningTraceFailed">
         <source>Failed to trace the expected-duration warning delivery failure: {0}</source>
-        <target state="new">Failed to trace the expected-duration warning delivery failure: {0}</target>
+        <target state="translated">予想される期間の警告配信エラーをトレースできませんでした: {0}</target>
         <note>{0} is the formatted exception detail from the diagnostic trace transport.</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
