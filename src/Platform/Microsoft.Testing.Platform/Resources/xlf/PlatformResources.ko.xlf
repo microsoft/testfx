@@ -402,6 +402,11 @@
         <target state="translated">'--{0}'에 대한 적용 범위 임계값이 실패했습니다. {1}% &lt; {2}%.</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
+      <trans-unit id="DeprecatedEnvironmentVariableWarning">
+        <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
+        <target state="translated">경고: 환경 변수 '{0}'은(는) 더 이상 사용되지 않으며 향후 주 버전에서 제거됩니다. 대신 '{1}'을(를) 사용합니다.</target>
+        <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
+      </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">진단 파일(비동기 플러시를 사용한 수준 '{0}'): {1}</target>

@@ -402,6 +402,11 @@
         <target state="translated">Soglia di copertura per '--{0}' non riuscita: {1}% &lt; {2}%.</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
+      <trans-unit id="DeprecatedEnvironmentVariableWarning">
+        <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
+        <target state="translated">Avviso: la variabile di ambiente '{0}' è deprecata e verrà rimossa in una futura versione principale. In alternativa, usare '{1}'.</target>
+        <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
+      </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">File di diagnostica (livello '{0}' con scaricamento asincrono): {1}</target>
