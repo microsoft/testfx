@@ -187,6 +187,8 @@ internal static partial class TerminalResources
 
     internal static string @RunningTestsFrom => GetResourceString("RunningTestsFrom");
 
+    internal static string @RuntimeFramework => GetResourceString("RuntimeFramework");
+
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
 
     internal static string @SlowestTests => GetResourceString("SlowestTests");

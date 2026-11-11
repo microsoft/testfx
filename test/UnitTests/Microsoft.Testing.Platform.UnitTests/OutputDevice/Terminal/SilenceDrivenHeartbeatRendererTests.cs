@@ -14,6 +14,27 @@ public sealed class SilenceDrivenHeartbeatRendererTests
     private static readonly TimeSpan Slow60s = TimeSpan.FromSeconds(60);
 
     [TestMethod]
+    public void SlowTest_PreservesSeparateTargetAndRuntimeIdentity()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(TimeSpan.Zero, Slow60s, clock.CreateStopwatch);
+        var state = new TestProgressState(1, "application.dll", "net472", "x64", clock.CreateStopwatch(), isDiscovery: false, runtimeFramework: "net481");
+        state.GetOrCreateTestNodeResultsState(() => new(1))
+            .AddRunningTestNode(1, "slow", "Slow test", clock.CreateStopwatch());
+        renderer.OnStart();
+        clock.Advance(Slow60s);
+
+        renderer.OnTick(terminal, [state]);
+
+        const string expected = """
+            [slow] still running after 1m 00s: Slow test (application.dll|net472|x64, runtime: net481)
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
     public void SilenceHeartbeat_WhenNoCompletionForThreshold_EmitsSingleSummaryLine()
     {
         var clock = new FakeClock();

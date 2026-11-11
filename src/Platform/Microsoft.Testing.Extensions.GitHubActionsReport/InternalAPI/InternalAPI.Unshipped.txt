@@ -1,4 +1,5 @@
 #nullable enable
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsAttachments = "report-gh-attachments" -> string!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAttachmentCollector
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAttachmentCollector.GitHubActionsAttachmentCollector(string! rootDirectory, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, System.Func<string!, System.Threading.Tasks.Task!>! warn) -> void
