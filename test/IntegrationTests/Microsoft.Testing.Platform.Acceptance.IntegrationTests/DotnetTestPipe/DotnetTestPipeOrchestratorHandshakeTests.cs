@@ -72,8 +72,9 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
             testHostHandshakes[0][DotnetTestPipeProtocol.HandshakeProperties.InstanceId],
             testHostHandshakes[1][DotnetTestPipeProtocol.HandshakeProperties.InstanceId],
             "Each retry attempt runs in a distinct test-host process.");
-        Assert.IsTrue(
-            testHostHandshakes.All(handshake => !handshake.ContainsKey(DotnetTestPipeProtocol.HandshakeProperties.OrchestratorFeature)),
+        Assert.ContainsOnly(
+            handshake => !handshake.ContainsKey(DotnetTestPipeProtocol.HandshakeProperties.OrchestratorFeature),
+            testHostHandshakes,
             "Test host handshakes should not carry the OrchestratorFeature property.");
     }
 

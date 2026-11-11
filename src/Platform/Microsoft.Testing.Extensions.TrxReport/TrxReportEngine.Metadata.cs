@@ -74,6 +74,9 @@ internal sealed partial class TrxReportEngine
     }
 
     private void AddRunInfo(XElement resultSummary, ref XElement? runInfos, string outcome, string text)
+        => AddRunInfo(resultSummary, ref runInfos, outcome, text, _environment, _clock);
+
+    private static void AddRunInfo(XElement resultSummary, ref XElement? runInfos, string outcome, string text, IEnvironment environment, IClock clock)
     {
         if (runInfos is null)
         {
@@ -83,9 +86,9 @@ internal sealed partial class TrxReportEngine
 
         var runInfo = new XElement(
             NamespaceUri + "RunInfo",
-            new XAttribute("computerName", _environment.MachineName),
+            new XAttribute("computerName", environment.MachineName),
             new XAttribute("outcome", outcome),
-            new XAttribute("timestamp", _clock.UtcNow.DateTime));
+            new XAttribute("timestamp", clock.UtcNow.DateTime));
         runInfo.Add(new XElement(NamespaceUri + "Text", RemoveInvalidXmlChar(text)));
         runInfos.Add(runInfo);
     }

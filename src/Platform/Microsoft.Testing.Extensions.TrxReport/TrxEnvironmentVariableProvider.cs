@@ -33,9 +33,8 @@ internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing
         => Task.FromResult(
             // TrxReportGenerator is enabled only when trx report is enabled
             _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
-            // TRX requires (and will trigger) a controller-managed test host whenever the current
-            // platform supports process restart; this is what makes plain --report-trx controller-backed.
-            && TrxModeHelpers.IsTestHostControllerSupported);
+            // In-process mode must not request a controller or establish a TRX pipe.
+            && TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(_commandLineOptions));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)

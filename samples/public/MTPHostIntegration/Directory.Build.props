@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <MicrosoftTestingPlatformVersion>$(MTPVersion)</MicrosoftTestingPlatformVersion>
-    <AspireVersion>13.5.3</AspireVersion>
+    <AspireVersion>$(AspireTestingVersion)</AspireVersion>
     <OpenTelemetryVersion>1.19.1</OpenTelemetryVersion>
     <OpenTelemetryInstrumentationVersion>1.19.0</OpenTelemetryInstrumentationVersion>
     <OpenTelemetryConsoleExporterVersion>1.19.0</OpenTelemetryConsoleExporterVersion>

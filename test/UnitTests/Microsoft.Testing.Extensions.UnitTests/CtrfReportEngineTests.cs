@@ -252,7 +252,7 @@ public class CtrfReportEngineTests
         JsonElement[] reportedTests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
         Assert.HasCount(2, reportedTests);
         Assert.AreSequenceEqual(["First", "Second"], reportedTests.Select(test => test.GetProperty("name").GetString()).ToArray());
-        Assert.IsTrue(reportedTests.All(test => test.GetProperty("retries").GetInt32() == 1));
+        Assert.ContainsOnly(test => test.GetProperty("retries").GetInt32() == 1, reportedTests);
         Assert.AreNotEqual(reportedTests[0].GetProperty("testId").GetString(), reportedTests[1].GetProperty("testId").GetString());
     }
 
@@ -554,7 +554,7 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(["First", "Second", "First"], tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
         Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => test.GetProperty("status").GetString()!).ToArray());
         Assert.HasCount(3, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
-        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+        Assert.ContainsOnly(test => !test.TryGetProperty("retryAttempts", out _), tests);
     }
 
     [TestMethod]
@@ -617,7 +617,7 @@ public class CtrfReportEngineTests
             priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
         Assert.IsTrue(retry.TryGetProperty("attemptId", out JsonElement finalAttemptId), "The final attempt must have a native CTRF identity.");
         string[] attemptIds = [finalAttemptId.GetString()!, .. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
-        Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+        Assert.ContainsOnly(attemptId => Guid.TryParse(attemptId, out _), attemptIds);
         Assert.HasCount(3, attemptIds.Distinct());
         Assert.DoesNotContain(executionId, attemptIds);
 

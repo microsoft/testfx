@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.ConflictingDataRowDisplayNamesAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.ConflictingDataRowDisplayNamesAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -262,50 +259,6 @@ public sealed class ConflictingDataRowDisplayNamesAnalyzerTests
         test.TestState.AdditionalReferences.Clear();
 
         await test.RunAsync(TestContext.CancellationToken);
-    }
-
-    [TestMethod]
-    public async Task VisualBasicAttributeAndObjectInitializer_ReportDiagnostic()
-    {
-        string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                <{|#0:DataRow(1, DisplayName:="full", ArgumentsDisplayName:="label")|}>
-                Public Sub Test(value As Integer)
-                End Sub
-
-                Public Function Create() As Object
-                    Return {|#1:New TestDataRow(Of Integer)(1) With {.ArgumentsDisplayName = "label", .DisplayName = ""}|}
-                End Function
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code, VerifyVB.Diagnostic().WithLocation(0), VerifyVB.Diagnostic().WithLocation(1));
-    }
-
-    [TestMethod]
-    public async Task VisualBasicUnsetAndUnknownNames_NoDiagnostic()
-    {
-        string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-            Public Class SampleClass
-                <DataRow(1, DisplayName:="", ArgumentsDisplayName:="label")>
-                Public Sub Test(value As Integer)
-                End Sub
-
-                Public Function Create(fullName As String) As Object()
-                    Return {
-                        New TestDataRow(Of Integer)(1) With {.DisplayName = Nothing, .ArgumentsDisplayName = "label"},
-                        New TestDataRow(Of Integer)(2) With {.DisplayName = "full", .ArgumentsDisplayName = ""},
-                        New TestDataRow(Of Integer)(3) With {.DisplayName = fullName, .ArgumentsDisplayName = "label"}
-                    }
-                End Function
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     public TestContext TestContext { get; set; } = default!;

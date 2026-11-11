@@ -350,4 +350,27 @@ public sealed class TestCoverageResultTests
         await ConsumeAsync(result, first);
         Assert.IsEmpty(result.ControllerSummaryArtifacts);
     }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerTrxArtifact_DoesNotRequireCoverageDeferral(bool deferCoverage)
+    {
+        TestCoverageResult result = new();
+        if (deferCoverage)
+        {
+            result.DeferToController();
+        }
+
+        SessionUid session = new("controller-session");
+        SessionFileArtifact report = new(session, new FileInfo("report.trx"), "TRX report", null, "microsoft.testing.trx");
+
+        await ConsumeAsync(result, report);
+        await ConsumeAsync(result, new SessionFileArtifact(session, new FileInfo("ignored.trx"), "wrong kind", null, "microsoft.testing.TRX"));
+        await ConsumeAsync(result, new SessionFileArtifact(session, new FileInfo("ignored.trx"), "missing kind"));
+
+        Assert.AreSame(report, Assert.ContainsSingle(result.ControllerSummaryArtifacts));
+        result.Reset();
+        Assert.IsEmpty(result.ControllerSummaryArtifacts);
+    }
 }

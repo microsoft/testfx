@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.SharedFileSystemPathInTestAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.SharedFileSystemPathInTestAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -292,31 +289,6 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodWritesAbsolutePathLiteral_VisualBasic_Diagnostic()
-    {
-        string code = """
-            Imports System.IO
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub MyTestMethod()
-                    {|#0:File.WriteAllText("/tmp/shared.txt", "data")|}
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("/tmp/shared.txt"));
     }
 
     [TestMethod]

@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// An enum that is used with <see cref="OSConditionAttribute"/> to control which operating systems a test method or test class supports or doesn't support.
+/// An enum that is used with <see cref="OSConditionAttribute"/> to control which operating systems a test assembly, test class, or test method supports or doesn't support.
 /// </summary>
 [Flags]
 public enum OperatingSystems

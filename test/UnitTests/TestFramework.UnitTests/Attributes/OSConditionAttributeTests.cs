@@ -43,7 +43,7 @@ public sealed class OSConditionAttributeTests : TestContainer
         include.Mode.Should().Be(ConditionMode.Include);
 
         AttributeUsageAttribute usage = typeof(OSConditionAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
-        usage.ValidOn.Should().Be(AttributeTargets.Class | AttributeTargets.Method);
+        usage.ValidOn.Should().Be(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method);
         usage.AllowMultiple.Should().BeFalse();
         usage.Inherited.Should().BeFalse();
     }

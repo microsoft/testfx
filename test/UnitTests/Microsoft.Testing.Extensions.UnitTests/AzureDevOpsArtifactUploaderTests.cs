@@ -188,7 +188,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
 
         string[] lines = GetCommandLines();
         Assert.HasCount(2, lines);
-        Assert.IsTrue(lines.All(line => line.StartsWith("##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]", StringComparison.Ordinal)));
+        Assert.ContainsOnly(line => line.StartsWith("##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]", StringComparison.Ordinal), lines);
         Assert.DoesNotContain(line => line.Contains("build.addbuildtag", StringComparison.Ordinal), lines);
     }
 

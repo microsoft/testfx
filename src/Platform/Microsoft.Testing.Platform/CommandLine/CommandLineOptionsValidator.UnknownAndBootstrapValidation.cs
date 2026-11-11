@@ -115,7 +115,8 @@ internal static partial class CommandLineOptionsValidator
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
-        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider,
+        HashSet<string>? registeredDefaultOptionNames)
     {
         // Use OrdinalIgnoreCase so a JSON entry like "Timeout" resolves to the registered "timeout"
         // option (testconfig.json keys are case-insensitive everywhere else in the platform). CLI
@@ -138,7 +139,7 @@ internal static partial class CommandLineOptionsValidator
         }
 
         ValidateJsonEntries(jsonCommandLineOptions, PlatformConfigurationConstants.CommandLineOptionsSectionName);
-        ValidateJsonEntries(jsonCommandLineOptionDefaults, PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName);
+        ValidateJsonEntries(jsonCommandLineOptionDefaults, PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName, registeredDefaultOptionNames);
 
         if (stringBuilder?.Length > 0)
         {
@@ -149,7 +150,7 @@ internal static partial class CommandLineOptionsValidator
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
 
-        void ValidateJsonEntries(IReadOnlyList<JsonCommandLineOptionEntry>? entries, string sectionName)
+        void ValidateJsonEntries(IReadOnlyList<JsonCommandLineOptionEntry>? entries, string sectionName, HashSet<string>? additionalValidOptionNames = null)
         {
             if (entries is null)
             {
@@ -158,7 +159,8 @@ internal static partial class CommandLineOptionsValidator
 
             foreach (JsonCommandLineOptionEntry entry in entries)
             {
-                if (!validOptionNames.Contains(entry.OptionName))
+                if (!validOptionNames.Contains(entry.OptionName)
+                    && (additionalValidOptionNames is null || !additionalValidOptionNames.Contains(entry.OptionName)))
                 {
                     stringBuilder ??= new();
                     StringBuilder innerErrorBuilder = new();
