@@ -186,3 +186,5 @@ static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator !=
 static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.ReadSummariesPayload(System.IO.Stream! stream) -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
 static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.WriteSummariesPayload(System.IO.Stream! stream, ushort fieldId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? summaries) -> void
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TelemetryProperties.VersionValue = "20" -> string!
+const Microsoft.Testing.Platform.Telemetry.TelemetryProperties.VersionValue = "21" -> string!
