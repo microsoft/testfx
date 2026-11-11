@@ -340,8 +340,8 @@ public sealed class ArtifactPostProcessingTests
         Assert.AreSequenceEqual([null, null, "paths", "mcdc"], entries.Select(entry => ReadModel<string>(entry, "CustomMetricName")));
         Assert.AreSequenceEqual<long?>([3_000_000_000L, 2, 0, 1], entries.Select(entry => ReadModel<long?>(entry, "CoveredCount")));
         Assert.AreSequenceEqual<long?>([long.MaxValue, 7, 0, 3], entries.Select(entry => ReadModel<long?>(entry, "CoverableCount")));
-        Assert.IsTrue(entries.All(entry => ReadModel<int?>(entry, "ScopeLevel") == 0));
-        Assert.IsTrue(entries.All(entry => ReadModel<string>(entry, "ScopeName") is null && ReadModel<string>(entry, "SessionUid") is null));
+        Assert.ContainsOnly(entry => ReadModel<int?>(entry, "ScopeLevel") == 0, entries);
+        Assert.ContainsOnly(entry => ReadModel<string>(entry, "ScopeName") is null && ReadModel<string>(entry, "SessionUid") is null, entries);
     }
 
     private static Mock<IArtifactPostProcessor> CreateCoverageProcessor(

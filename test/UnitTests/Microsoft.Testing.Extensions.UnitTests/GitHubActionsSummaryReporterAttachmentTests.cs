@@ -560,7 +560,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
         using JsonDocument manifest = ReadAttachmentManifest(fixture);
         JsonElement[] rows = manifest.RootElement.GetProperty("tests").EnumerateArray().ToArray();
         Assert.HasCount(2, rows);
-        Assert.IsTrue(rows.All(row => row.GetProperty("uid").GetString() == "shared-uid"));
+        Assert.ContainsOnly(row => row.GetProperty("uid").GetString() == "shared-uid", rows);
         Assert.AreSequenceEqual(
             new[] { "Rows (one)", "Rows (two)" },
             rows.Select(row => row.GetProperty("displayName").GetString()).OrderBy(name => name, StringComparer.Ordinal));

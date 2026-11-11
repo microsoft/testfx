@@ -377,7 +377,7 @@ public sealed class RunSettingsEnvironmentVariableProviderTests
         Assert.HasCount(2, capturedVariables);
         Assert.Contains(v => v.Variable == "TEST_ENV" && v.Value == "TestValue", capturedVariables);
         Assert.Contains(v => v.Variable == "ANOTHER_VAR" && v.Value == "AnotherValue", capturedVariables);
-        Assert.IsTrue(capturedVariables.All(static variable => variable.IsSecret));
-        Assert.IsTrue(capturedVariables.All(static variable => variable.IsLocked));
+        Assert.ContainsOnly(static variable => variable.IsSecret, capturedVariables);
+        Assert.ContainsOnly(static variable => variable.IsLocked, capturedVariables);
     }
 }

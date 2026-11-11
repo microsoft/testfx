@@ -79,7 +79,7 @@ public sealed class DotnetTestDataConsumerTests
                 new CoverageSummaryMessage("s1", "p1", 0, null, 255, "paths", 0, 0),
             ],
             sent.Select(batch => Assert.ContainsSingle(batch.Summaries)));
-        Assert.IsTrue(sent.All(batch => batch.ExecutionId == "execution" && batch.InstanceId == DotnetTestConnection.InstanceId));
+        Assert.ContainsOnly(batch => batch.ExecutionId == "execution" && batch.InstanceId == DotnetTestConnection.InstanceId, sent);
     }
 
     [TestMethod]
