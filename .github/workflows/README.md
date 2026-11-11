@@ -397,6 +397,15 @@ build workaround is no longer needed. Regeneration must update generated
 manifests as well as executable steps; changing only `uses:` lines leaves the
 repository broken.
 
+Carry Dependabot action updates back into their authored `.md` sources before
+regenerating. For `actions/setup-dotnet`, update both references in
+[`unskip-closed-tests-prepare.md`](./unskip-closed-tests-prepare.md), then run
+`gh aw compile unskip-closed-tests --strict --no-check-update` with the pinned
+compiler. Commit the updated action cache and generated workflow together with
+the pin in [`test-unskip-closed-tests.yml`](./test-unskip-closed-tests.yml), and
+run the action-pin audit. The executable steps, generated action inventory, and
+`gh-aw-manifest` must all agree.
+
 Align mutable-name container cache entries with the release catalog too. This
 refresh updates `ghcr.io/github/gh-aw-node` to the v1.0.1 catalog's digest
 `sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f`;
