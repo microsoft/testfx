@@ -245,6 +245,42 @@ without reviewing their contents. Synchronous span flushing adds collection
 overhead and uses no dropping batch queue. See the
 [research, contract and validation record](decisions/otel-trace-retention.md).
 
+#### Inspect the value of the retained data
+
+Generate an offline cost/coverage snapshot from downloaded test-artifact ZIPs,
+directories or individual JSONL archives (Python 3.12+, no additional packages):
+
+```powershell
+python .github\scripts\report_test_traces.py `
+    --input C:\evidence\TestResults_Windows_Release_Attempt1.zip `
+    --input C:\evidence\TestResults_Linux_Release_Attempt1.zip `
+    --output C:\evidence\report\test-traces
+```
+
+The command writes an HTML report, Markdown and JSON with the same filename
+prefix. It reads trace members in ZIPs without extracting or running artifact
+code. Failed/incomplete/unsupported archives are named and excluded; the command
+returns exit 2 when input was rejected or no executing workers were found.
+Root CTRF reports are selected consistently from an unwrapped artifact or a
+single common artifact wrapper, in ZIPs and extracted directories; child and
+merged reports are not included. A damaged trace member does not discard healthy
+members. Artifact labels remain literal in both Markdown and HTML output.
+
+The snapshot ranks existing fixture invocations and test-occurrence elapsed
+times, preserves TestContainer step timings, and shows the observation cohorts.
+Controllers and non-executing operations do not inflate test counts. Host protocol
+types are shown separately, but either protocol can be used by a test-launched
+subprocess; compare execution occurrences with the independent root CTRF counts.
+Shared fixture work and its overlapping interval union are distinct measures,
+neither CPU time nor time that can be subtracted to obtain native method-body
+duration.
+
+This is not yet a weekly regression detector. One build can expose expensive
+setup, but cannot distinguish a regression from machine load. Binary MVIDs keep
+platform-specific variants separate when their exported TFM labels are identical;
+those identifiers are not stable cross-build cohort keys. See the
+[first-report research and evidence](decisions/test-trace-report.md).
+
 ### Code coverage
 
 Code coverage is enabled by default for repository tests. Each test project's generated `coverage.config` includes only its directly referenced production assemblies, excluding shared test-host infrastructure, NuGet package sources, and generated artifacts. `Microsoft.Testing.TestInfrastructure` is explicitly excluded at both the assembly and source levels.
