@@ -15,7 +15,7 @@ public sealed class ResponseFileHelperTests
         // Guarantee the path does not exist (avoid collisions / leftover temp files).
         string path = Path.GetTempFileName();
         File.Delete(path);
-        Assert.IsFalse(File.Exists(path));
+        Assert.FileDoesNotExist(path);
 
         var errors = new List<string>();
 

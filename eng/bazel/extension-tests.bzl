@@ -27,6 +27,7 @@ def extension_unit_tests():
         linked_srcs = [
             "//eng/bazel:NativeUnitTestMain.cs",
             "//eng/bazel:PortableTestFrameworkMetadata.cs",
+            "test/Utilities/TestAssertExtensions.cs",
             "test/Utilities/ValidationResultExtensions.cs",
         ],
         defines = ["TESTFX_TELEMETRY", "TESTFX_CRASHDUMP_IGNORE_UNSUPPORTED"],
