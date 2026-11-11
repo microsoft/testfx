@@ -6,9 +6,11 @@
 [CmdletBinding()]
 param(
     [switch] $NoJournal,
-    [ValidateSet('InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
+    [ValidateSet('DefaultBuildSelectsRepositorySolution', 'SolutionBuildPreservesProjectFrameworks',
+        'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
         'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
-    [string[]] $Case = @('InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
+    [string[]] $Case = @('DefaultBuildSelectsRepositorySolution', 'SolutionBuildPreservesProjectFrameworks',
+        'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
         'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
     [string] $BuildScript = (Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1')
 )
@@ -27,6 +29,7 @@ $results = [Collections.Generic.List[object]]::new()
 $commands = [Collections.Generic.List[object]]::new()
 [string[]] $commonArguments = if ($NoJournal) { @('-NoJournal') } else { @() }
 $statsPath = Join-Path $repo 'artifacts\buildxl\logs\BuildXL.stats'
+$trxProject = 'src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
 
 function Assert-Equal($Expected, $Actual) {
     if ($Expected -cne $Actual) {
@@ -34,7 +37,11 @@ function Assert-Equal($Expected, $Actual) {
     }
 }
 
-function Invoke-Build([string] $Name, [string[]] $BuildArguments = @()) {
+function Invoke-Build([string] $Name, [string[]] $BuildArguments = @(), [switch] $Repository) {
+    if (-not $Repository -and '-Project' -notin $BuildArguments) {
+        $BuildArguments += @('-Project', $trxProject, '-TargetFramework', 'net10.0')
+    }
+
     $log = Join-Path $evidence "$Name.log"
     $started = [DateTime]::UtcNow
     & $pwsh -NoLogo -NoProfile -File $BuildScript @commonArguments @BuildArguments *> $log
@@ -100,11 +107,46 @@ $probeProject = Join-Path $evidence 'cache-probe.csproj'
 '@ | Set-Content -LiteralPath $probeProject -Encoding utf8
 
 try {
+    Test-Case 'DefaultBuildSelectsRepositorySolution' {
+        $outputId = "validation-$([Guid]::NewGuid().ToString('N'))"
+        $run = Invoke-Build 'repository-selection' @('-PrepareOnly', '-SkipRestore', '-OutputId', $outputId) -Repository
+        Assert-Equal 0 $run.ExitCode
+        $toolchain = Get-Content -LiteralPath (Join-Path $repo "artifacts\buildxl-runs\$outputId\toolchain.json") -Raw | ConvertFrom-Json
+        Assert-Equal 'TestFx.slnx' $toolchain.Project
+        Assert-Equal 'Project defaults' $toolchain.TargetFramework
+        Assert-Equal $true $toolchain.SkipUapTargetFramework
+    }
+    Test-Case 'SolutionBuildPreservesProjectFrameworks' {
+        $fixture = @'
+<Project DefaultTargets="Build">
+  <PropertyGroup>
+    <TargetFrameworks>__FRAMEWORKS__</TargetFrameworks>
+  </PropertyGroup>
+  <Target Name="Restore" />
+  <Target Name="Build">
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\$(MSBuildProjectName).txt"
+                      Lines="$(TargetFrameworks)|$(SkipUapTargetFramework)|$(Configuration)|$(ShouldUnsetParentConfigurationAndPlatform)" Overwrite="true" />
+  </Target>
+</Project>
+'@
+        $fixture.Replace('__FRAMEWORKS__', 'net462;net10.0') |
+            Set-Content -LiteralPath (Join-Path $evidence 'first.csproj') -Encoding utf8
+        $fixture.Replace('__FRAMEWORKS__', 'netstandard2.0;net11.0') |
+            Set-Content -LiteralPath (Join-Path $evidence 'second.fsproj') -Encoding utf8
+        $solution = Join-Path $evidence 'fixture.slnx'
+        '<Solution><Project Path="first.csproj" /><Project Path="second.fsproj" /></Solution>' |
+            Set-Content -LiteralPath $solution -Encoding utf8
+        $relativeSolution = [IO.Path]::GetRelativePath($repo, $solution)
+        $stats = Read-FreshStats (Invoke-Build 'solution-frameworks' @('-Project', $relativeSolution, '-Configuration', 'Release', '-SkipRestore'))
+        Assert-Equal 2 $stats.TotalProcessPips
+        Assert-Equal "net462$([Environment]::NewLine)net10.0|true|Release|false$([Environment]::NewLine)" (Get-Content -LiteralPath (Join-Path $evidence 'first.txt') -Raw)
+        Assert-Equal "netstandard2.0$([Environment]::NewLine)net11.0|true|Release|false$([Environment]::NewLine)" (Get-Content -LiteralPath (Join-Path $evidence 'second.txt') -Raw)
+    }
     Test-Case 'InvalidProjectRejected' {
         $missing = [IO.Path]::GetRelativePath($repo, (Join-Path $evidence 'missing.csproj'))
         $run = Invoke-Build 'invalid-project' @('-Project', $missing)
         Assert-Equal 1 $run.ExitCode
-        Assert-Equal $true $run.Output.Contains('Project must name an existing .csproj inside this checkout.')
+        Assert-Equal $true $run.Output.Contains('Project must name an existing MSBuild project or solution inside this checkout.')
     }
     Test-Case 'BuildFailurePropagates' {
         $project = [IO.Path]::GetRelativePath($repo, $failureProject)
@@ -171,9 +213,10 @@ try {
             }
 
             $log = Join-Path $evidence 'caller-state.log'
-            & $BuildScript -NoJournal:$NoJournal *> $log
+            $callerBuildArguments = @('-Project', $trxProject, '-TargetFramework', 'net10.0') + $commonArguments
+            & $BuildScript -Project $trxProject -TargetFramework net10.0 -NoJournal:$NoJournal *> $log
             $code = $LASTEXITCODE
-            $commands.Add([pscustomobject]@{ Name = 'caller-state'; Arguments = $commonArguments; ExitCode = $code; Log = $log })
+            $commands.Add([pscustomobject]@{ Name = 'caller-state'; Arguments = $callerBuildArguments; ExitCode = $code; Log = $log })
             Assert-Equal 0 $code
             Assert-Equal (Join-Path $repo 'docs') $PWD.Path
             foreach ($name in $names) {

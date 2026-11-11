@@ -209,7 +209,8 @@ $driver = Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1'
 function Invoke-PerfBuild([string] $OutputId, [string] $Engine, [string] $Name, [switch] $Prepare) {
     $directory = Join-Path $ResultsDirectory $Name
     New-Item -ItemType Directory -Path $directory | Out-Null
-    $arguments = @('-NoLogo', '-NoProfile', '-File', $driver, '-Engine', $Engine, '-OutputId', $OutputId, '-Jobs', [string] $Jobs, '-AdditionalTargets', $targets)
+    $arguments = @('-NoLogo', '-NoProfile', '-File', $driver, '-Project', $report.Project, '-TargetFramework', $report.TargetFramework,
+        '-Engine', $Engine, '-OutputId', $OutputId, '-Jobs', [string] $Jobs, '-AdditionalTargets', $targets)
     if ($NoJournal) { $arguments += '-NoJournal' }
     if ($Prepare) { $arguments += '-PrepareOnly' }
     $started = [DateTime]::UtcNow

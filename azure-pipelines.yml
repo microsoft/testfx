@@ -69,8 +69,8 @@ parameters:
   displayName: "Compare CTS collection on main (requires public CTS package)"
   type: boolean
   default: false
-- name: EnableBuildXLPerformance
-  displayName: "Compare BuildXL and MSBuild performance in a separate Windows leg"
+- name: EnableBuildXL
+  displayName: "Build the repository with BuildXL in separate Windows legs"
   type: boolean
   default: true
 
@@ -225,9 +225,9 @@ stages:
       name: detect
       displayName: Classify changed files
 
-  # This is a build benchmark, independent of SkipTests and the product test matrix.
-  - ${{ if eq(parameters.EnableBuildXLPerformance, true) }}:
-    - template: /eng/pipelines/jobs/buildxl-performance.yml
+  # Native BuildXL builds are independent of SkipTests and the product test matrix.
+  - ${{ if eq(parameters.EnableBuildXL, true) }}:
+    - template: /eng/pipelines/jobs/buildxl.yml
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
