@@ -32,6 +32,9 @@ steps:
       '-p:UsingDotNetTest=true'
       '-p:TestingPlatformCaptureOutput=false'
     )
+    if ('$(_WindowsBuildOutputTestArgs)' -eq '-p:UseAppHost=false') {
+      $testArguments += '-p:UseAppHost=false'
+    }
 
     if ($affectedTestsMode -eq 'collect') {
       $testArguments += @(

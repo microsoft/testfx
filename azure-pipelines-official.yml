@@ -37,6 +37,10 @@ parameters:
   displayName: "Skip tests"
   type: boolean
   default: False
+- name: UseWindowsBuildOutputs
+  displayName: "Trial Linux tests using Windows Release outputs (all products)"
+  type: boolean
+  default: false
 - name: codeQLForce
   displayName: "Try collecting CodeQL before default CodeQL cadence"
   type: boolean
@@ -57,6 +61,8 @@ variables:
     value: Release
   - name: _Products
     value: ${{parameters.products}}
+  - name: _WindowsBuildOutputTestArgs
+    value: ''
   # _SignType and _Sign are required for signing even if not used directly here
   - name: _SignType
     value: real
@@ -153,6 +159,11 @@ extends:
                 DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - ${{ if and(parameters.UseWindowsBuildOutputs, eq(parameters.products, 'all')) }}:
+                - template: /eng/pipelines/steps/publish-windows-build-outputs.yml@self
+                  parameters:
+                    official: true
+
               - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
                 displayName: Validate generated coverage settings
 
@@ -287,26 +298,39 @@ extends:
                   publishVstsFeed: 'public/test-tools'
 
           - job: Linux
+            ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests), eq(parameters.products, 'all')) }}:
+              dependsOn: Windows
+              condition: and(succeededOrFailed(), ne(dependencies.Windows.outputs['ExportWindowsBuildOutputs.ArtifactName'], ''))
+              variables:
+                - template: /eng/pipelines/variables/test-env-vars.yml@self
+                - name: _WindowsBuildOutputsArtifact
+                  value: $[ dependencies.Windows.outputs['ExportWindowsBuildOutputs.ArtifactName'] ]
             timeoutInMinutes: 90
             pool:
               name: $(DncEngInternalBuildPool)
               image: 1es-ubuntu-2204
               os: linux
             steps:
+            - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests), eq(parameters.products, 'all')) }}:
+              - checkout: self
+                clean: true
             - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
               parameters:
                 enabled: false
 
-            - script: eng/common/build.sh
-                -configuration $(_BuildConfig)
-                -prepareMachine
-                --ci
-                --restore
-                --build
-                --pack
-                /p:Test=false
-                /p:NonWindowsBuild=true
-              displayName: Build
+            - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests), eq(parameters.products, 'all')) }}:
+              - template: /eng/pipelines/steps/restore-windows-build-outputs.yml@self
+            - ${{ else }}:
+              - script: eng/common/build.sh
+                  -configuration $(_BuildConfig)
+                  -prepareMachine
+                  --ci
+                  --restore
+                  --build
+                  --pack
+                  /p:Test=false
+                  /p:NonWindowsBuild=true
+                displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
@@ -315,7 +339,7 @@ extends:
               # -ci is allowing to import some environment variables and some required configurations
               - script: |
                   chmod +x ./test.sh
-                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl $(_WindowsBuildOutputTestArgs) /bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog
                 name: Test
                 displayName: Tests
                 env:
