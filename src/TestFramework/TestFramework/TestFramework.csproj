@@ -38,6 +38,15 @@
     <AdditionalFiles Include="PublicAPI\net10.0\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
     <AdditionalFiles Include="InternalAPI\net10.0\InternalAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
     <AdditionalFiles Include="InternalAPI\net10.0\InternalAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+
+    <AdditionalFiles Include="PublicAPI\net462\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " />
+    <AdditionalFiles Include="PublicAPI\net462\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\net462\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\net462\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <Reference Include="System.Configuration" />
   </ItemGroup>
 
   <ItemGroup>

@@ -251,7 +251,7 @@ snapshot until replacement in the same process/AppDomain. Subsequent programmati
 dependency failures, skips and cancellation can prevent planned tests from executing.
 The planned snapshot shall not be interpreted as running/completed state or cleanup-time proof
 that a test actually ran.
-Checked: [TestRun](../../src/TestFramework/TestFramework.Extensions/TestRun.cs),
+Checked: [TestRun](../../src/TestFramework/TestFramework/TestRun.cs),
 [UnitTestRunner](../../src/Adapter/MSTestAdapter.PlatformServices/Execution/UnitTestRunner.cs) and
 [source execution](../../src/Adapter/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.SourceExecution.cs).
 Existing tests: [TestRunInfoTests](../../test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestRunInfoTests.cs),

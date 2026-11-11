@@ -13,6 +13,30 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Extensions
 
 public sealed class ExtensionsContractTests : TestContainer
 {
+    public void CommonDefinitionsAreOwnedByCoreFramework()
+    {
+        Type[] commonTypes =
+        [
+            typeof(MessageLevel),
+            typeof(ITestRunInfo),
+            typeof(PlannedTest),
+            typeof(TestRun),
+#if NETFRAMEWORK
+            typeof(PrivateObject),
+            typeof(PrivateType),
+            typeof(DataSourceElement),
+            typeof(DataSourceElementCollection),
+            typeof(TestConfiguration),
+            typeof(TestConfigurationSection),
+#endif
+        ];
+
+        foreach (Type type in commonTypes)
+        {
+            type.Assembly.Should().BeSameAs(typeof(TestMethodAttribute).Assembly, $"{type.Name} belongs to the core framework");
+        }
+    }
+
     public void PlannedTestCopiesMetadataAndCollections()
     {
         string[] categories = ["fast", "database"];
