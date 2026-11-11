@@ -1,4 +1,15 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestHostOrchestrator.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager!
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator!>! factory) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime!>! testHostOrchestratorApplicationLifetimeFactory) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostOrchestratorManager
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostOrchestratorManager.AddTestHostOrchestrator(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator!>! factory) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostOrchestratorManager.TestHostOrchestratorManager() -> void
+*REMOVED*Microsoft.Testing.Platform.Helpers.IProcess.WaitForExitAsync() -> System.Threading.Tasks.Task!
+*REMOVED*Microsoft.Testing.Platform.Helpers.SystemProcess.WaitForExitAsync() -> System.Threading.Tasks.Task!
+*REMOVED*Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.WaitForExitAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestFrameworkDisplay
 static Microsoft.Testing.Platform.OutputDevice.Terminal.TestFrameworkDisplay.GetDisplayName(string? targetFramework, string? architecture, string? runtimeFramework = null) -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.TargetFramework = 21 -> byte

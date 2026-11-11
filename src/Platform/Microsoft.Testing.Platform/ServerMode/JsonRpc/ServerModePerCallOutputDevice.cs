@@ -177,7 +177,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
         string indent = new(' ', paddingValue);
 
-        if (!message.Contains('\n'))
+        if (message.IndexOf('\n') < 0)
         {
             return indent + message;
         }

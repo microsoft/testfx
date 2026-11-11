@@ -2722,8 +2722,6 @@ public class RetryTests
 
         public DateTime StartTime => default;
 
-        public Task WaitForExitAsync() => Task.CompletedTask;
-
         public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public void WaitForExit()

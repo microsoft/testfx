@@ -71,7 +71,7 @@ public sealed partial class TreeNodeFilter : ITestExecutionFilter
 
                 break;
 
-            case ValueExpression vExpr when vExpr.Value.Contains(PathSeparator):
+            case ValueExpression vExpr when vExpr.Value.IndexOf(PathSeparator) >= 0:
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterCannotContainSlashCharacterErrorMessage, vExpr.Value));
 
             case ValueExpression vExpr when vExpr.Value.Equals(AllNodesBelowRegexString, StringComparison.Ordinal) && !isMatchAllAllowed:
