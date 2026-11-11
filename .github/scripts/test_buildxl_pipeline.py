@@ -151,8 +151,7 @@ class BuildXLPipelineTests(unittest.TestCase):
         # Pin the complete command: no redirection, wrapper, or fallback can replace it.
         self.assertEqual(
             [
-                r".\eng\buildxl.ps1 -Project TestFx.slnx "
-                r"-Configuration '$(BuildXLConfiguration)' -Jobs 8 -NoJournal",
+                r".\eng\buildxl.ps1 -Project TestFx.slnx -Configuration '$(BuildXLConfiguration)' -Jobs 8 -NoJournal",
                 "exit $LASTEXITCODE",
             ],
             self.step(BUILD_STEP)["pwsh"].strip().splitlines(),
