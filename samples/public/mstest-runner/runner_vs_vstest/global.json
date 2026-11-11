@@ -3,6 +3,6 @@
     "runner": "VSTest"
   },
   "msbuild-sdks": {
-    "MSTest.Sdk": "4.5.2"
+    "MSTest.Sdk": "4.5.3"
   }
 }
