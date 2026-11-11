@@ -402,11 +402,6 @@
         <target state="translated">Порог покрытия для "--{0}" не пройден: {1}% &lt; {2}%.</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
-      <trans-unit id="DeprecatedEnvironmentVariableWarning">
-        <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="translated">Внимание! Переменная среды "{0}" является нерекомендуемой и будет удалена в будущей основной версии. Вместо него используйте '{1}'.</target>
-        <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
-      </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Файл диагностики (уровень '{0}' асинхронной очисткой): {1}</target>
