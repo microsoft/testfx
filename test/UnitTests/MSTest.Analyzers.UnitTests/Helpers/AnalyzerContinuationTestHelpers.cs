@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Text;
 
 namespace MSTest.Analyzers.Test;
@@ -21,10 +22,14 @@ internal static class AnalyzerContinuationTestHelpers
         string source,
         bool includeMSTest = true,
         IEnumerable<MetadataReference>? additionalReferences = null,
-        CSharpCompilationOptions? options = null)
+        CSharpCompilationOptions? options = null,
+        bool useMSTestV4 = false)
     {
-        ImmutableArray<MetadataReference> references = await AnalyzerTestReferenceAssemblies.Default.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);
-        if (includeMSTest)
+        ReferenceAssemblies referenceAssemblies = includeMSTest && useMSTestV4
+            ? AnalyzerTestReferenceAssemblies.MSTestV4
+            : AnalyzerTestReferenceAssemblies.Default;
+        ImmutableArray<MetadataReference> references = await referenceAssemblies.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);
+        if (includeMSTest && !useMSTestV4)
         {
             references = references.AddRange(
                 new[] { typeof(TestClassAttribute).Assembly.Location, typeof(TestContext).Assembly.Location }
@@ -87,7 +92,7 @@ internal static class AnalyzerContinuationTestHelpers
             .Select(diagnostic => diagnostic.Id)
             .OrderBy(id => id, StringComparer.Ordinal)
             .ToArray();
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             expectedIds.OrderBy(id => id, StringComparer.Ordinal).ToArray(),
             actualIds,
             string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)));

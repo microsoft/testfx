@@ -24,30 +24,34 @@ namespace MSTest.Analyzers;
 /// <item><description><c>CollectionAssert.AreNotEqual(a, b)</c> → <c>Assert.AreNotSequenceEqual(a, b)</c></description></item>
 /// <item><description><c>CollectionAssert.AreEquivalent(a, b)</c> → <c>Assert.AreSequenceEqual(a, b, SequenceOrder.InAnyOrder)</c></description></item>
 /// <item><description><c>CollectionAssert.AreNotEquivalent(a, b)</c> → <c>Assert.AreNotSequenceEqual(a, b, SequenceOrder.InAnyOrder)</c></description></item>
+/// <item><description><c>CollectionAssert.IsSubsetOf(subset, superset)</c> → <c>Assert.ContainsAll(subset, superset)</c></description></item>
+/// <item><description><c>CollectionAssert.IsNotSubsetOf(subset, superset)</c> → <c>Assert.DoesNotContainAll(subset, superset)</c></description></item>
 /// <item><description><c>CollectionAssert.AllItemsAreNotNull(a)</c> → <c>Assert.AreAllNotNull(a)</c></description></item>
 /// <item><description><c>CollectionAssert.AllItemsAreUnique(a)</c> → <c>Assert.AreAllDistinct(a)</c></description></item>
-/// <item><description><c>CollectionAssert.AllItemsAreInstancesOfType(coll, typeof(T))</c> → <c>Assert.AreAllOfType&lt;T&gt;(coll)</c> (uses the generic <c>Assert</c> overload when the type expression is a <c>typeof</c>; otherwise falls back to <c>Assert.AreAllOfType(t, coll)</c> with an argument-order swap)</description></item>
 /// <item><description><c>CollectionAssert.Contains(coll, x)</c> → <c>Assert.Contains(x, coll)</c> (argument order swap)</description></item>
 /// <item><description><c>CollectionAssert.DoesNotContain(coll, x)</c> → <c>Assert.DoesNotContain(x, coll)</c> (argument order swap)</description></item>
 /// </list>
 /// Overloads of <c>AreEqual</c>/<c>AreNotEqual</c> that take an <c>IComparer</c> are skipped because
 /// <c>Assert.AreSequenceEqual</c> expects an <c>IEqualityComparer&lt;T&gt;</c> (different semantics).
-/// Overloads of <c>AreEquivalent</c>/<c>AreNotEquivalent</c> that take an <c>IEqualityComparer&lt;T&gt;</c>
-/// are also skipped (out of scope for this analyzer). <c>IsSubsetOf</c>/<c>IsNotSubsetOf</c> have no
-/// direct <c>Assert</c> equivalent today and are not handled.
+/// Comparer-bearing equivalence overloads are not migrated because they reject null comparers,
+/// while sequence assertions use the default comparer.
+/// Recursive equality of nested collections requires manual review; shallow sequence equality is not equivalent.
+/// <c>AllItemsAreInstancesOfType</c> is not migrated because it accepts null elements,
+/// while <c>Assert.AreAllOfType</c> rejects them.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     /// <summary>
     /// Key used by the code-fix to recover the rewrite strategy from the diagnostic properties.
-    /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, <see cref="FixKindAddInAnyOrder"/>, or <see cref="FixKindInstanceOfType"/>.
+    /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, or <see cref="FixKindAddInAnyOrder"/>.
     /// </summary>
     internal const string FixKindKey = nameof(FixKindKey);
 
     internal const string FixKindSimple = "Simple";
     internal const string FixKindSwapTwoArgs = "SwapTwoArgs";
     internal const string FixKindAddInAnyOrder = "AddInAnyOrder";
+    // Retain the old discriminator so the fixer can reject diagnostics from earlier analyzer versions.
     internal const string FixKindInstanceOfType = "InstanceOfType";
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.CollectionAssertToAssertTitle), Resources.ResourceManager, typeof(Resources));
@@ -90,9 +94,10 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
             "AreNotEqual" when !HasIComparerParameter(targetMethod) => ("AreNotSequenceEqual", FixKindSimple),
             "AreEquivalent" when !targetMethod.IsGenericMethod && !HasIComparerParameter(targetMethod) => ("AreSequenceEqual", FixKindAddInAnyOrder),
             "AreNotEquivalent" when !targetMethod.IsGenericMethod && !HasIComparerParameter(targetMethod) => ("AreNotSequenceEqual", FixKindAddInAnyOrder),
+            "IsSubsetOf" => ("ContainsAll", FixKindSimple),
+            "IsNotSubsetOf" => ("DoesNotContainAll", FixKindSimple),
             "AllItemsAreNotNull" => ("AreAllNotNull", FixKindSimple),
             "AllItemsAreUnique" => ("AreAllDistinct", FixKindSimple),
-            "AllItemsAreInstancesOfType" => ("AreAllOfType", FixKindInstanceOfType),
             "Contains" => ("Contains", FixKindSwapTwoArgs),
             "DoesNotContain" => ("DoesNotContain", FixKindSwapTwoArgs),
             _ => null,
@@ -104,7 +109,7 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
         }
 
         // Sanity-check the operand count for the rewrite strategies that require it.
-        if ((map.FixKind is FixKindSwapTwoArgs or FixKindAddInAnyOrder or FixKindInstanceOfType)
+        if ((map.FixKind is FixKindSwapTwoArgs or FixKindAddInAnyOrder)
             && operation.Arguments.Length < 2)
         {
             return;

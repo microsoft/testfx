@@ -564,7 +564,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
             }
             """;
 
-        await new VerifyCS.Test
+        await new VerifyCS.Test(useMSTestV4: true)
         {
             TestCode = code,
             FixedCode = fixedCode,
@@ -714,7 +714,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
             }
             """;
 
-        await new VerifyCS.Test
+        await new VerifyCS.Test(useMSTestV4: true)
         {
             TestCode = code,
             FixedCode = fixedCode,

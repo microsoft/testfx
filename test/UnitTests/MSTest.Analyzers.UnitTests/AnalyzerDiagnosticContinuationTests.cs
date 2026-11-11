@@ -351,7 +351,7 @@ public sealed class AnalyzerDiagnosticContinuationTests
         using var workspace = new AdhocWorkspace();
         Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
         ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new PreferAssertFailOverAlwaysFalseConditionsAnalyzer());
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { "Assert.IsNull(Number)", "Assert.IsNull(_number)", "Assert.IsNull(local)" },
             diagnostics.Select(diagnostic => source.Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length)).ToArray());
         foreach (Diagnostic diagnostic in diagnostics)
@@ -389,7 +389,7 @@ public sealed class AnalyzerDiagnosticContinuationTests
         ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(
             document, new PreferTestCleanupOverDisposeAnalyzer(), enableDisabledRules: true);
         Assert.HasCount(2, diagnostics);
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { "Dispose", "DisposeAsync" },
             diagnostics.Select(diagnostic => source.Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length)).ToArray());
         foreach (Diagnostic diagnostic in diagnostics)
@@ -454,7 +454,7 @@ public sealed class AnalyzerDiagnosticContinuationTests
         using var workspace = new AdhocWorkspace();
         Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
         ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new TestMethodShouldBeValidAnalyzer());
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             discoverInternals ? new[] { "HiddenTest" } : ["HiddenTest", "InternalTest"],
             diagnostics.Select(diagnostic => source.Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length)).ToArray());
         foreach (Diagnostic diagnostic in diagnostics)

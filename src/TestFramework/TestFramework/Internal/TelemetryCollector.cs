@@ -24,7 +24,7 @@ internal static class TelemetryCollector
     /// Any unexpected exception (e.g. <see cref="OutOfMemoryException"/>) is swallowed so
     /// telemetry never alters user-visible test behavior.
     /// </summary>
-    /// <param name="assertionName">The full name of the assertion (e.g. "Assert.AreEqual", "CollectionAssert.Contains").</param>
+    /// <param name="assertionName">The full name of the assertion (e.g. "Assert.AreEqual", "Assert.Contains").</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void TrackAssertionCall(string assertionName) =>
         TrackAssertionCall(assertionName, IsEnabled.Value);

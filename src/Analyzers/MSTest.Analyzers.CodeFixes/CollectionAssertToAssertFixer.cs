@@ -35,12 +35,23 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
 
     /// <inheritdoc />
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
-        => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
-            context,
-            AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
-            CodeFixResources.CollectionAssertToAssertTitle,
-            CollectionAssertToAssertAnalyzer.FixKindKey,
-            FixAssertAsync);
+    {
+        Diagnostic diagnostic = context.Diagnostics[0];
+        diagnostic.Properties.TryGetValue(AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey, out string? properAssertMethodName);
+        diagnostic.Properties.TryGetValue(CollectionAssertToAssertAnalyzer.FixKindKey, out string? fixKind);
+        return IsUnsupportedTypeMigration(properAssertMethodName, fixKind)
+            ? Task.CompletedTask
+            : AssertToAssertFixerHelpers.RegisterCodeFixAsync(
+                context,
+                AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
+                CodeFixResources.CollectionAssertToAssertTitle,
+                CollectionAssertToAssertAnalyzer.FixKindKey,
+                FixAssertAsync);
+    }
+
+    private static bool IsUnsupportedTypeMigration(string? properAssertMethodName, string? fixKind)
+        => properAssertMethodName == "AreAllOfType"
+            || fixKind == CollectionAssertToAssertAnalyzer.FixKindInstanceOfType;
 
     private static Task<Document> FixAssertAsync(
         Document document,
@@ -59,7 +70,8 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
         string fixKind,
         CancellationToken cancellationToken)
     {
-        if (invocationExpr.Expression is not MemberAccessExpressionSyntax memberAccessExpr)
+        if (IsUnsupportedTypeMigration(properAssertMethodName, fixKind)
+            || invocationExpr.Expression is not MemberAccessExpressionSyntax memberAccessExpr)
         {
             return document;
         }
@@ -78,19 +90,25 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
-        // FixKindInstanceOfType prefers the generic `Assert.AreAllOfType<T>(coll, ...)` overload
-        // when the `expectedType` argument is a `typeof(T)` literal. When it isn't (e.g. a
-        // runtime `Type` expression like `GetType()` or a local variable), we fall back to the
-        // non-generic overload with swapped arguments.
-        bool useGenericAreAllOfType =
-            fixKind == CollectionAssertToAssertAnalyzer.FixKindInstanceOfType
-            && orderedArguments![1].Expression is TypeOfExpressionSyntax;
+        // A null element must not bind to Assert's predicate overload after the argument swap.
+        if (fixKind == CollectionAssertToAssertAnalyzer.FixKindSwapTwoArgs
+            && properAssertMethodName is "Contains" or "DoesNotContain"
+            && invocationOperation.Arguments.Any(argument => argument.Parameter?.Ordinal == 1
+                && argument.Value.ConstantValue.HasValue
+                && argument.Value.ConstantValue.Value is null))
+        {
+            TypeSyntax objectType = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword));
+            if ((semanticModel.GetNullableContext(invocationExpr.SpanStart) & NullableContext.AnnotationsEnabled) != 0)
+            {
+                objectType = SyntaxFactory.NullableType(objectType);
+            }
 
-        string effectiveFixKind = fixKind == CollectionAssertToAssertAnalyzer.FixKindInstanceOfType && !useGenericAreAllOfType
-            ? CollectionAssertToAssertAnalyzer.FixKindSwapTwoArgs
-            : fixKind;
+            ExpressionSyntax element = orderedArguments![1].Expression;
+            orderedArguments[1] = orderedArguments[1].WithExpression(
+                SyntaxFactory.CastExpression(objectType, element.WithoutTrivia()).WithTriviaFrom(element));
+        }
 
-        List<ArgumentSyntax> newArguments = BuildNewArguments(orderedArguments!, effectiveFixKind, useGenericAreAllOfType);
+        List<ArgumentSyntax> newArguments = BuildNewArguments(orderedArguments!, fixKind);
 
         ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
 
@@ -113,12 +131,7 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
             _ => SyntaxFactory.IdentifierName("Assert"),
         };
 
-        SimpleNameSyntax newMethodName = useGenericAreAllOfType
-            ? SyntaxFactory.GenericName(
-                SyntaxFactory.Identifier(properAssertMethodName),
-                SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(
-                    ((TypeOfExpressionSyntax)orderedArguments![1].Expression).Type)))
-            : SyntaxFactory.IdentifierName(properAssertMethodName);
+        SimpleNameSyntax newMethodName = SyntaxFactory.IdentifierName(properAssertMethodName);
 
         MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr
             .WithExpression(newAssertExpression)
@@ -164,7 +177,7 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
         return true;
     }
 
-    private static List<ArgumentSyntax> BuildNewArguments(ArgumentSyntax[] orderedArguments, string fixKind, bool useGenericAreAllOfType)
+    private static List<ArgumentSyntax> BuildNewArguments(ArgumentSyntax[] orderedArguments, string fixKind)
     {
         var newArguments = new List<ArgumentSyntax>(orderedArguments.Length + 1);
         switch (fixKind)
@@ -183,17 +196,6 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
                 newArguments.Add(orderedArguments[0]);
                 newArguments.Add(orderedArguments[1]);
                 newArguments.Add(SyntaxFactory.Argument(CreateInAnyOrderExpression()));
-                for (int i = 2; i < orderedArguments.Length; i++)
-                {
-                    newArguments.Add(orderedArguments[i]);
-                }
-
-                break;
-
-            case CollectionAssertToAssertAnalyzer.FixKindInstanceOfType when useGenericAreAllOfType:
-                // Generic `Assert.AreAllOfType<T>(coll, ...)`: drop the `typeof(T)` (ordinal 1)
-                // and keep the collection plus any remaining trailing arguments (e.g. message).
-                newArguments.Add(orderedArguments[0]);
                 for (int i = 2; i < orderedArguments.Length; i++)
                 {
                     newArguments.Add(orderedArguments[i]);

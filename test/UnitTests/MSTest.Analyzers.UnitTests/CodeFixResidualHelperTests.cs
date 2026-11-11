@@ -133,7 +133,7 @@ public sealed class CodeFixResidualHelperTests
             [typeof(Document), typeof(MethodDeclarationSyntax), typeof(IfStatementSyntax), typeof(string), typeof(string[]), typeof(CancellationToken), typeof(bool)],
             document, method, method.Body!.Statements.OfType<IfStatementSyntax>().Single(), "IgnoreAttribute",
             new[] { "\"maintenance\"" }, CancellationToken.None, false)!;
-        StringAssert.Contains((await changed.GetTextAsync()).ToString().Replace("\r\n", "\n"), "// Retain the assertion.\n");
+        Assert.Contains("// Retain the assertion.\n", (await changed.GetTextAsync()).ToString().Replace("\r\n", "\n"));
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(changed, expected);
     }
 
@@ -179,7 +179,7 @@ public sealed class CodeFixResidualHelperTests
               }
               """;
         using var workspace = new AdhocWorkspace();
-        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, useMSTestV4: true);
         SyntaxNode root = (await document.GetSyntaxRootAsync())!;
         InvocationExpressionSyntax invocation = root.DescendantNodes().OfType<InvocationExpressionSyntax>().Single();
         Task<Document> operation = stringAssertion
@@ -207,7 +207,7 @@ public sealed class CodeFixResidualHelperTests
             }
             """;
         using var workspace = new AdhocWorkspace();
-        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, useMSTestV4: true);
         SyntaxNode root = (await document.GetSyntaxRootAsync())!;
         Document changed = await (Task<Document>)ProductReflection.Call(
             typeof(CollectionAssertToAssertFixer), null, "FixAssertAsync",
