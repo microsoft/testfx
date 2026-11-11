@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup Condition=" '$(WinUiMinimum)' != '' and '$(TargetFramework)' == '$(WinUiMinimum)' ">
+    <!-- The WinUI resource targets query this target on project references during Build. -->
+    <ProjectReferenceTargets Include="Build" Targets="GetPackagingOutputs" />
+  </ItemGroup>
+</Project>
