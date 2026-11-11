@@ -110,6 +110,11 @@ steps:
   displayName: 'Ensure app-model diagnostics directory exists'
   condition: always()
 
+- pwsh: |
+    ./eng/verify-test-traces.ps1 -TraceDirectory '$(TESTFX_OTEL_TRACE_DIRECTORY)' -AllowIncomplete:('$(Agent.JobStatus)' -in @('Failed', 'Canceled'))
+  displayName: Verify OpenTelemetry trace completion
+  condition: always()
+
 - task: CopyFiles@2
   displayName: 'Collect app-model diagnostics'
   condition: always()

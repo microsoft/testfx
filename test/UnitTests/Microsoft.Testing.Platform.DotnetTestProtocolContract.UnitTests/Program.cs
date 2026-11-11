@@ -3,9 +3,6 @@
 
 using Microsoft.Testing.Extensions;
 
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
-
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
@@ -35,9 +32,7 @@ builder.AddJUnitReportProvider();
 builder.AddAzureDevOpsProvider();
 builder.AddCtrfReportProvider();
 
-builder.AddOpenTelemetryProvider(
-    tracing => tracing.AddTestingPlatformInstrumentation(),
-    metrics => metrics.AddTestingPlatformInstrumentation());
+using IDisposable? telemetry = builder.AddTestFxOpenTelemetry();
 
-ITestApplication app = await builder.BuildAsync();
+using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
