@@ -258,6 +258,14 @@ pre-fix and passing final runs. The final message and evaluation-order cases
 also pass, but their final formatting expectations did not receive another
 isolated counterfactual run.
 
+A further top-level review identified the independently updated analyzer running
+against MSTest 4.0.2, which lacks the subset replacements. The analyzer now checks
+for the compatible public non-generic replacement before reporting either subset
+migration. Two real-4.0.2 cases executed and failed on the unsafe diagnostics
+before the guard, then passed unchanged with it. The complete final net10.0
+analyzer run passes 3,100 cases with the same Unix-only skip; all 33 collection
+migration cases pass. Evidence is retained as `review-availability-*`.
+
 #### Base integration validation (2026-11-11)
 
 Integrated `main` at `f94fa2bbaa1153a3525e4711f13342863c6ea4d0` into the

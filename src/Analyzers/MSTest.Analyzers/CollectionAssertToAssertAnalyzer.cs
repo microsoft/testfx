@@ -108,6 +108,20 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        if (map.AssertMethodName is "ContainsAll" or "DoesNotContainAll"
+            && (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertType)
+                || !assertType.GetMembers(map.AssertMethodName).OfType<IMethodSymbol>().Any(method =>
+                    method.IsStatic
+                    && !method.IsGenericMethod
+                    && method.DeclaredAccessibility == Accessibility.Public
+                    && method.Parameters.Length >= 3
+                    && method.Parameters[0].Type.SpecialType == SpecialType.System_Collections_IEnumerable
+                    && method.Parameters[1].Type.SpecialType == SpecialType.System_Collections_IEnumerable
+                    && method.Parameters[2].Type.SpecialType == SpecialType.System_String)))
+        {
+            return;
+        }
+
         // Sanity-check the operand count for the rewrite strategies that require it.
         if ((map.FixKind is FixKindSwapTwoArgs or FixKindAddInAnyOrder)
             && operation.Arguments.Length < 2)

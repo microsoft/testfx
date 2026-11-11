@@ -661,6 +661,30 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     }
 
     [TestMethod]
+    [DataRow("IsSubsetOf", DisplayName = "OlderFrameworkHasNoContainsAll")]
+    [DataRow("IsNotSubsetOf", DisplayName = "OlderFrameworkHasNoDoesNotContainAll")]
+    public async Task WhenCollectionAssertSubsetReplacementIsUnavailable_NoDiagnostic(string legacyMethod)
+    {
+        string code = $$"""
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    ICollection subset = new[] { 1 };
+                    ICollection superset = new[] { 1, 2 };
+                    CollectionAssert.{{legacyMethod}}(subset, superset);
+                    CollectionAssert.{{legacyMethod}}(subset, superset, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, useMSTestV4: true);
+    }
+
+    [TestMethod]
     [DataRow("IsSubsetOf", "ContainsAll", DisplayName = "TypedSubsetKeepsObjectEquality")]
     [DataRow("IsNotSubsetOf", "DoesNotContainAll", DisplayName = "TypedNotSubsetKeepsObjectEquality")]
     public async Task WhenCollectionAssertSubsetUsesTypedCollections_PreservesObjectEquality(string legacyMethod, string assertMethod)
