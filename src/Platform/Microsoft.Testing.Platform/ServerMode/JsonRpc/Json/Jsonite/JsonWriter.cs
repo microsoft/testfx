@@ -85,7 +85,6 @@ namespace Jsonite
                 {typeof (StringBuilder), static (w, value) => w.WriteString(((StringBuilder) value).ToString())}, // TODO: Could be optimized but it is a very uncommon case, so...
                 {typeof (DateTime), static (w, value) => { w.WriteString(((DateTime)value).ToString("o")); }},
                 {typeof (DateTimeOffset), static (w, value) => { w.WriteString(((DateTimeOffset)value).ToString("o")); }},
-                // {typeof (TimeSpan), static (w, value) => { w.WriteString(((TimeSpan)value).ToString()); }}, // TODO: handle correctly, remove for now
             };
 
             private readonly TextWriter writer;
