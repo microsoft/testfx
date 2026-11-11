@@ -68,14 +68,11 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
                 : ValidationResult.Valid();
         }
 
-        if (commandLineOptions.TryGetOptionArgumentListOrDefault(TrxModeOptionName, out string[]? arguments)
+        return commandLineOptions.TryGetOptionArgumentListOrDefault(TrxModeOptionName, out string[]? arguments)
             && arguments is [string mode]
             && OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)
-            && !TrxModeHelpers.IsTestHostControllerSupported)
-        {
-            return ValidationResult.Invalid(ExtensionResources.TrxModeOutOfProcessNotSupported);
-        }
-
-        return ValidationResult.Valid();
+            && !TrxModeHelpers.IsTestHostControllerSupported
+                ? ValidationResult.Invalid(ExtensionResources.TrxModeOutOfProcessNotSupported)
+                : ValidationResult.Valid();
     }
 }
