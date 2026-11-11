@@ -402,6 +402,11 @@
         <target state="translated">“--{0}”的覆盖率阈值未达到: {1}% &lt; {2}%。</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
+      <trans-unit id="DeprecatedEnvironmentVariableWarning">
+        <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
+        <target state="translated">警告: 环境变量“{0}”已弃用，将在未来的主要版本中移除。请改用“{1}”。</target>
+        <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
+      </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}</target>
