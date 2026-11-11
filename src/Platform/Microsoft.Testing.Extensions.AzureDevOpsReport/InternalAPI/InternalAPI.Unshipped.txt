@@ -1,4 +1,5 @@
 #nullable enable
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
 Microsoft.Testing.Extensions.TestFailureDetails.Attachments.get -> Microsoft.Testing.Extensions.CiRunSummaryAttachment![]?
 Microsoft.Testing.Extensions.TestFailureDetails.Attachments.set -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!

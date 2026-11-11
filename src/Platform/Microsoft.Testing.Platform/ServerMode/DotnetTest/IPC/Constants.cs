@@ -114,6 +114,10 @@ internal static class HandshakeMessagePropertyNames
     // Missing or unknown versions mean unsupported, not zero coverage. This capability is independent
     // of the base protocol version and does not enable the server-control channel.
     internal const byte CoverageSummaryVersion = 20;
+
+    // The test application's declared target TFM, including a platform suffix when available. Omitted when
+    // assembly metadata is unknown. Framework remains the executing runtime; older peers ignore this property.
+    internal const byte TargetFramework = 21;
 }
 
 [Embedded]

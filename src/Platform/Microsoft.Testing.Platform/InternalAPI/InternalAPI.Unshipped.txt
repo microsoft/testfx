@@ -10,6 +10,14 @@
 *REMOVED*Microsoft.Testing.Platform.Helpers.IProcess.WaitForExitAsync() -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.Helpers.SystemProcess.WaitForExitAsync() -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.WaitForExitAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestFrameworkDisplay
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TestFrameworkDisplay.GetDisplayName(string? targetFramework, string? architecture, string? runtimeFramework = null) -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.TargetFramework = 21 -> byte
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RuntimeFramework.get -> string?
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.TestProgressState(long id, string! assembly, string? targetFramework, string? architecture, Microsoft.Testing.Platform.Helpers.IStopwatch! stopwatch, bool isDiscovery, string? runtimeFramework) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunStarted(string! assembly, string? targetFramework, string? architecture, string! executionId, string! instanceId, int? attemptNumber, string? runtimeFramework) -> void
+*REMOVED*const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption = "no-ansi" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly = "test.assembly" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestClass = "test.class" -> string!
 *REMOVED*const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestDuration = "test.duration.ms" -> string!

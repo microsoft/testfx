@@ -144,6 +144,8 @@ stages:
       displayName: Validate CTS module selection
     - pwsh: ./eng/validate-collection-module-pool.ps1
       displayName: Validate bounded collection scheduling
+    - pwsh: ./eng/test-report-comparison.ps1
+      displayName: Validate report comparison
     - bash: |
         set -euo pipefail
 
