@@ -189,7 +189,7 @@ public sealed class AnalyzerRoslynHelperTests
             expectedTags.Add("DisableInAllMode");
         }
 
-        CollectionAssert.AreEqual(expectedTags.ToArray(), descriptor.CustomTags.ToArray());
+        Assert.AreSequenceEqual(expectedTags.ToArray(), descriptor.CustomTags.ToArray());
         Assert.AreEqual("MSTEST9999", descriptor.Id);
         Assert.AreEqual("Usage", descriptor.Category);
         Assert.AreEqual(DiagnosticSeverity.Info, descriptor.DefaultSeverity);
@@ -255,7 +255,7 @@ public sealed class AnalyzerRoslynHelperTests
     {
         Type type = ProductReflection.Type(false, "Analyzer.Utilities.WellKnownTypeProvider");
         var result = (ImmutableArray<string>)ProductReflection.Call(type, null, "GetNamespaceNamesFromFullTypeName", [typeof(string)], metadataName)!;
-        CollectionAssert.AreEqual(new[] { first, second }, result.ToArray());
+        Assert.AreSequenceEqual(new[] { first, second }, result.ToArray());
     }
 
     [TestMethod]
@@ -410,7 +410,7 @@ public sealed class AnalyzerRoslynHelperTests
         for (int selected = 0; selected < flags.Length; selected++)
         {
             type.GetProperty(flags[selected])!.SetValue(attribute, true);
-            CollectionAssert.AreEqual(
+            Assert.AreSequenceEqual(
                 Enumerable.Range(0, flags.Length).Select(index => index == selected).ToArray(),
                 flags.Select(flag => ProductReflection.Get<bool>(attribute, flag)).ToArray());
             type.GetProperty(flags[selected])!.SetValue(attribute, false);

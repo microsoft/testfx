@@ -12,6 +12,7 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 
 ### Breaking changes
 
+* Remove `StringAssert` and `CollectionAssert`. Use the corresponding `Assert` APIs; the [complete migration table](decisions/legacy-assertion-removal.md#complete-collection-migration) covers every collection assertion, comparer differences, and custom extension hooks. See [#12354](https://github.com/microsoft/testfx/issues/12354).
 * Remove the obsolete, unused `TestResult.InnerResultsCount`, `DatarowIndex`, and `ReturnValue` properties. Stop reading or assigning these properties; they had no supported effect. See [#12312](https://github.com/microsoft/testfx/issues/12312).
 * Remove the deprecated `mstest:orderTestsByNameInClass` configuration fallback. Move the setting to `mstest:execution:orderTestsByNameInClass`; the flat key is now ignored. See [#12312](https://github.com/microsoft/testfx/issues/12312).
 

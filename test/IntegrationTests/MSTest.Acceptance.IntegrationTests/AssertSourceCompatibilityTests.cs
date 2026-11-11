@@ -971,6 +971,157 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         }
         """";
 
+    private const string LegacyAssertionReplacementsConsumerSource = """
+        #file LegacyAssertionReplacements.csproj
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>$TargetFrameworks$</TargetFramework>
+            <OutputType>Exe</OutputType>
+            <ImplicitUsings>disable</ImplicitUsings>
+            <Nullable>enable</Nullable>
+            <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+            <LangVersion>12.0</LangVersion>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+          </ItemGroup>
+        </Project>
+
+        #file Program.cs
+        using System;
+        using System.Collections;
+        using System.Collections.Generic;
+        using System.Linq;
+        using System.Text.RegularExpressions;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        internal static class Program
+        {
+            private static void Main()
+            {
+                ICollection expected = new ArrayList { "a", null, "a" };
+                ICollection equal = new ArrayList { "a", null, "a" };
+                ICollection reordered = new ArrayList { null, "a", "a" };
+                ICollection different = new ArrayList { "a", null, "b" };
+                ICollection empty = new ArrayList();
+                const string message = "replacement consumer";
+
+                Assert.AreSequenceEqual(expected, equal, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreSequenceEqual(expected, reordered, message));
+                Assert.AreNotSequenceEqual(expected, different, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreNotSequenceEqual(expected, equal, message));
+
+                Assert.AreSequenceEqual(expected, reordered, SequenceOrder.InAnyOrder, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreSequenceEqual(expected, different, SequenceOrder.InAnyOrder, message));
+                Assert.AreNotSequenceEqual(expected, different, SequenceOrder.InAnyOrder, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreNotSequenceEqual(expected, reordered, SequenceOrder.InAnyOrder, message));
+                Assert.AreSequenceEqual(empty, new ArrayList(), message);
+                Assert.AreSequenceEqual((IEnumerable?)null, null, message);
+
+                Assert.Contains((object?)null, expected, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.Contains("b", expected, message));
+                Assert.DoesNotContain("b", expected, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.DoesNotContain((object?)null, expected, message));
+
+                Assert.AreAllNotNull(new ArrayList { "a", "b" }, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllNotNull(expected, message));
+                Assert.AreAllDistinct(new ArrayList { "a", null, "b" }, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllDistinct(expected, message));
+                Assert.AreAllOfType(typeof(string), new ArrayList { "a", "b" }, message);
+                Assert.AreAllOfType<string>(new ArrayList { "a", "b" }, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllOfType(typeof(string), expected, message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllOfType<string>(new ArrayList { "a", 1 }, message));
+
+                Assert.ContainsOnly(item => item is null || item is string, expected, message);
+                IEnumerable<object?> nonNullItems = expected.Cast<object?>().Where(item => item is not null);
+                Assert.AreAllOfType(typeof(string), nonNullItems, message);
+                Assert.AreAllOfType<string>(nonNullItems, message);
+                ICollection wrongType = new ArrayList { "a", null, 1 };
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsOnly(item => item is null || item is string, wrongType, message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllOfType(typeof(string), wrongType.Cast<object?>().Where(item => item is not null), message));
+                ICollection? missingCollection = null;
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllOfType(typeof(string), missingCollection?.Cast<object?>().Where(item => item is not null), message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreAllOfType(null, empty, message));
+
+                Assert.ContainsAll(new ArrayList { "a", "a" }, expected, message);
+                Assert.ContainsAll(new ArrayList { null }, expected, message);
+                Assert.ContainsAll(empty, expected, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsAll(new ArrayList { "a", "a", "a" }, expected, message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsAll(new ArrayList { null, null }, expected, message));
+                Assert.DoesNotContainAll(new ArrayList { "a", "b" }, expected, message);
+                Assert.DoesNotContainAll(new ArrayList { "a", "a", "a" }, expected, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.DoesNotContainAll(new ArrayList { "a", "a" }, expected, message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.DoesNotContainAll(empty, expected, message));
+
+                IEqualityComparer<string> comparer = StringComparer.OrdinalIgnoreCase;
+                Assert.AreSequenceEqual(new[] { "a", "B" }, new[] { "A", "b" }, comparer, message);
+                Assert.AreNotSequenceEqual(new[] { "a" }, new[] { "B" }, comparer, message);
+                Assert.AreSequenceEqual(new[] { "a", "B", "a" }, new[] { "A", "A", "b" }, comparer, SequenceOrder.InAnyOrder, message);
+                Assert.AreNotSequenceEqual(new[] { "a", "a" }, new[] { "a", "b" }, comparer, SequenceOrder.InAnyOrder, message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreSequenceEqual(new[] { "a", "a" }, new[] { "a", "b" }, comparer, SequenceOrder.InAnyOrder, message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.AreNotSequenceEqual(new[] { "a", "B" }, new[] { "b", "A" }, comparer, SequenceOrder.InAnyOrder, message));
+
+                IEqualityComparer<string>? missingComparer = null;
+                Assert.ThrowsExactly<AssertFailedException>(() =>
+                {
+                    Assert.IsNotNull(missingComparer);
+                    Assert.AreSequenceEqual(new[] { "a" }, new[] { "a" }, missingComparer, SequenceOrder.InAnyOrder, message);
+                });
+                IComparer ordering = Comparer<int>.Create((left, right) => (left % 10).CompareTo(right % 10));
+                IEqualityComparer orderingComparer = new OrderingEqualityComparer(ordering);
+                Assert.AreSequenceEqual(new ArrayList { 1, 2 }, new ArrayList { 11, 12 }, orderingComparer, message);
+                Assert.AreNotSequenceEqual(new ArrayList { 1 }, new ArrayList { 12 }, orderingComparer, message);
+                Assert.AreSequenceEqual(
+                    new ArrayList { new[] { 1, 2 }, new[] { 3 } },
+                    new ArrayList { new[] { 1, 2 }, new[] { 3 } },
+                    StructuralComparisons.StructuralEqualityComparer,
+                    message);
+                Assert.AreNotSequenceEqual(
+                    new ArrayList { new[] { 1, 2 } },
+                    new ArrayList { new[] { 2, 1 } },
+                    StructuralComparisons.StructuralEqualityComparer,
+                    message);
+
+                Assert.Contains("b", "ABC", StringComparison.OrdinalIgnoreCase, message);
+                Assert.StartsWith("a", "ABC", StringComparison.OrdinalIgnoreCase, message);
+                Assert.EndsWith("c", "ABC", StringComparison.OrdinalIgnoreCase, message);
+                Regex pattern = new Regex("^abc$", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+                Assert.MatchesRegex(pattern, "ABC", message);
+                Assert.DoesNotMatchRegex(pattern, "other", message);
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.Contains("b", "ABC", message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.StartsWith("a", "ABC", message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.EndsWith("c", "ABC", message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.MatchesRegex(pattern, "other", message));
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.DoesNotMatchRegex(pattern, "ABC", message));
+                Assert.That.HasTwoItems(new ArrayList { "a", "b" });
+                Assert.ThrowsExactly<AssertFailedException>(() => Assert.That.HasTwoItems(empty));
+
+                Console.WriteLine("All replacement assertions passed.");
+                Assert.IsNull(typeof(Assert).Assembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert"));
+                Assert.IsNull(typeof(Assert).Assembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert"));
+                Console.WriteLine(typeof(Assert).Assembly.Location);
+                Console.WriteLine("Legacy assertion replacements consumer passed.");
+            }
+        }
+
+        internal sealed class OrderingEqualityComparer : IEqualityComparer
+        {
+            private readonly IComparer _comparer;
+
+            internal OrderingEqualityComparer(IComparer comparer) => _comparer = comparer;
+
+            public new bool Equals(object? x, object? y) => _comparer.Compare(x, y) == 0;
+
+            public int GetHashCode(object value) => 0;
+        }
+
+        internal static class CustomAssertions
+        {
+            internal static void HasTwoItems(this Assert assert, ICollection collection)
+                => Assert.HasCount(2, collection);
+        }
+        """;
+
     private static readonly Regex PublicAssertMethodRegex = new(
         @"^(?:\[[^\]]+\])*\s*static Microsoft\.VisualStudio\.TestTools\.UnitTesting\.Assert\.(?<name>[A-Za-z0-9]+)(?:<|\()",
         RegexOptions.CultureInvariant);
@@ -1101,6 +1252,45 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             $"""
             {Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll")}
             IsNotNull Task consumer passed.
+            """.ReplaceLineEndings(),
+            muxer.StandardOutput.ReplaceLineEndings());
+        TestContext.WriteLine(muxer.StandardOutput);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetSourceCompatibilityTargetFrameworks))]
+    public async Task LegacyAssertionReplacements_ExecuteFromPackedFrameworkWithCSharp12(string targetFramework)
+    {
+        string source = LegacyAssertionReplacementsConsumerSource
+            .PatchTargetFrameworks(targetFramework)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("Legacy assertion replacements consumer", source);
+        string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
+        var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["NUGET_PACKAGES"] = isolatedPackages,
+        };
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            "build -c Release -bl:consumer.binlog",
+            environmentVariables: environmentVariables,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+        VerifyPackedPredicateConsumerProvenance(testAsset, targetFramework, isolatedPackages, verifyRuntimeCopy: true);
+
+        string consumerDll = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "LegacyAssertionReplacements.dll");
+        using DotnetMuxer muxer = new(environmentVariables);
+        int exitCode = await muxer.ExecuteAsync(
+            $"\"{consumerDll}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exitCode, $"{muxer.StandardOutput}{muxer.StandardError}");
+        Assert.AreEqual(
+            $"""
+            All replacement assertions passed.
+            {Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework, "MSTest.TestFramework.dll")}
+            Legacy assertion replacements consumer passed.
             """.ReplaceLineEndings(),
             muxer.StandardOutput.ReplaceLineEndings());
         TestContext.WriteLine(muxer.StandardOutput);

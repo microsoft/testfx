@@ -201,7 +201,7 @@ public sealed class CodeFixResidualCoverageTests
         var fixer = new AvoidAssertAreEqualOnCollectionsFixer();
         List<CodeAction> actions = await AnalyzerContinuationTestHelpers.GetActionsAsync(document, diagnostic, fixer);
         Assert.HasCount(2, actions);
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { $"{nameof(AvoidAssertAreEqualOnCollectionsFixer)}.Ordered", $"{nameof(AvoidAssertAreEqualOnCollectionsFixer)}.Equivalent" },
             actions.Select(action => action.EquivalenceKey).ToArray());
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(
@@ -270,7 +270,7 @@ public sealed class CodeFixResidualCoverageTests
             }
             """;
         using var workspace = new AdhocWorkspace();
-        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, useMSTestV4: true);
         Diagnostic diagnostic = Assert.ContainsSingle(await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new CollectionAssertToAssertAnalyzer()));
         AnalyzerContinuationTestHelpers.AssertDiagnostic(diagnostic, "MSTEST0068", DiagnosticSeverity.Info, source,
             "Testing::CollectionAssert.Contains(new[] { 17, 29 }, 17, \"context\")", "Use 'Assert.Contains' instead of 'CollectionAssert.Contains'");
@@ -719,8 +719,8 @@ public sealed class CodeFixResidualCoverageTests
         CodeAction action = await GetSingleActionAsync(document, DiagnosticAt(fixer, argument), fixer);
         Exception exception = await Assert.ThrowsAsync<Exception>(() => action.GetOperationsAsync(CancellationToken.None));
         Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
-        StringAssert.StartsWith(exception.Message, "This program location is thought to be unreachable. File='");
-        StringAssert.EndsWith(exception.Message.Replace('\\', '/'), "/src/Analyzers/MSTest.Analyzers.CodeFixes/TestMethodAttributeShouldSetDisplayNameCorrectlyFixer.cs' Line=81");
+        Assert.StartsWith("This program location is thought to be unreachable. File='", exception.Message);
+        Assert.EndsWith("/src/Analyzers/MSTest.Analyzers.CodeFixes/TestMethodAttributeShouldSetDisplayNameCorrectlyFixer.cs' Line=81", exception.Message.Replace('\\', '/'));
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
     }
 
@@ -1151,7 +1151,7 @@ public sealed class CodeFixResidualCoverageTests
             }
             """;
         using var workspace = new AdhocWorkspace();
-        Document original = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, originalSource);
+        Document original = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, originalSource, useMSTestV4: true);
         Diagnostic prior = Assert.ContainsSingle(await AnalyzerContinuationTestHelpers.AnalyzeAsync(original, new CollectionAssertToAssertAnalyzer()));
         AnalyzerContinuationTestHelpers.AssertDiagnostic(prior, "MSTEST0068", DiagnosticSeverity.Info, originalSource,
             "CollectionAssert.Contains(new[] { 17, 29 }, 17, \"context\")", "Use 'Assert.Contains' instead of 'CollectionAssert.Contains'");

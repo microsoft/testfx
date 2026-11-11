@@ -1,4 +1,9 @@
 #nullable enable
+*REMOVED*const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseCollectionAssertEquals = "CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual & overloads instead." -> string!
+*REMOVED*const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseCollectionAssertReferenceEquals = "CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame & overloads instead." -> string!
+*REMOVED*const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseStringAssertEquals = "StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual & overloads instead." -> string!
+*REMOVED*const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseStringAssertReferenceEquals = "StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame & overloads instead." -> string!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOfHelper(System.Collections.ICollection! subset, System.Collections.ICollection! superset) -> System.Tuple<bool, System.Collections.Generic.ICollection<object?>!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueRenderer.RenderValueWithoutEnumeratingCollections(object? value) -> string!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.GetDataParameterCount(System.Reflection.ParameterInfo![]! parameters) -> int
 static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.IsDataWithExplicitCancellationToken(object?[]! data, System.Reflection.ParameterInfo![]! parameters) -> bool

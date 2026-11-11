@@ -50,8 +50,8 @@ public sealed partial class Assert
     /// <remarks>
     /// <para>
     /// This assertion performs a deep, order-sensitive structural comparison of two object graphs.
-    /// It differs from <see cref="CollectionAssert.AreEquivalent(System.Collections.ICollection?, System.Collections.ICollection?)"/>,
-    /// which checks only top-level collection equivalence without regard to element order.
+    /// It differs from <see cref="AreSequenceEqual(IEnumerable?, IEnumerable?, SequenceOrder, string?, string, string)"/>
+    /// with <see cref="SequenceOrder.InAnyOrder"/>, which checks only top-level collection equivalence without regard to element order.
     /// </para>
     /// <para>
     /// The comparison rules are:
@@ -92,8 +92,8 @@ public sealed partial class Assert
     ///     <description>
     ///     Other enumerables (excluding <see cref="string"/>) are compared element-by-element in the
     ///     iteration order. Comparison is <b>order-sensitive</b>; if order is irrelevant, use
-    ///     <see cref="CollectionAssert.AreEquivalent(System.Collections.ICollection?, System.Collections.ICollection?)"/>
-    ///     on the collection itself.
+    ///     <see cref="AreSequenceEqual(IEnumerable?, IEnumerable?, SequenceOrder, string?, string, string)"/>
+    ///     with <see cref="SequenceOrder.InAnyOrder"/> on the collection itself.
     ///     </description>
     ///   </item>
     ///   <item>
