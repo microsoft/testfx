@@ -70,6 +70,67 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    [DataRow("none", "ConditionMode.Include", true, DisplayName = "AssemblyAlternative_IncludeNeedsGuard")]
+    [DataRow("none", "ConditionMode.Exclude", false, DisplayName = "AssemblyAlternative_ExcludeNeedsGuard")]
+    [DataRow("class", "ConditionMode.Include", true, DisplayName = "AssemblyAlternative_ClassGuardIsIndependent")]
+    [DataRow("method", "ConditionMode.Include", true, DisplayName = "AssemblyAlternative_MethodGuardIsIndependent")]
+    public async Task WhenAssemblyHasUnmodeledCondition_RequiresIndependentOSGuard(string guardScope, string mode, bool conditionMet)
+    {
+        string code = $$"""
+            using System;
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: OSCondition(OperatingSystems.Windows)]
+            [assembly: AlternativeCondition({{mode}}, {{(conditionMet ? "true" : "false")}})]
+
+            [AttributeUsage(AttributeTargets.Assembly)]
+            public sealed class AlternativeConditionAttribute : ConditionBaseAttribute
+            {
+                private readonly bool _conditionMet;
+
+                public AlternativeConditionAttribute(ConditionMode mode, bool conditionMet) : base(mode)
+                    => _conditionMet = conditionMet;
+
+                public override bool IsConditionMet => _conditionMet;
+                public override string GroupName => "OSCondition";
+            }
+
+            [TestClass]
+            {{(guardScope == "method" ? string.Empty : "[SupportedOSPlatform(\"windows\")]")}}
+            {{(guardScope == "class" ? "[OSCondition(OperatingSystems.Windows)]" : string.Empty)}}
+            public class Tests
+            {
+                [TestMethod]
+                {{(guardScope == "method" ? "[SupportedOSPlatform(\"windows\")]" : string.Empty)}}
+                {{(guardScope == "method" ? "[OSCondition(OperatingSystems.Windows)]" : string.Empty)}}
+                public void Check() { }
+            }
+            """;
+        using var workspace = new AdhocWorkspace();
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, code);
+        ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(
+            document, new OSPlatformAttributesShouldBeConsistentAnalyzer());
+
+        if (guardScope == "none")
+        {
+            Diagnostic diagnostic = Assert.ContainsSingle(diagnostics);
+            AnalyzerContinuationTestHelpers.AssertDiagnostic(
+                diagnostic, "MSTEST0084", DiagnosticSeverity.Info, code, "SupportedOSPlatform(\"windows\")",
+                "Platform compatibility attributes on test 'Tests' are not represented by a compatible '[OSCondition]' attribute");
+            Assert.IsEmpty(diagnostic.Properties);
+            Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(
+                document, diagnostic, new OSPlatformAttributesShouldBeConsistentFixer()));
+        }
+        else
+        {
+            Assert.IsEmpty(diagnostics);
+        }
+
+        await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, code);
+    }
+
+    [TestMethod]
     [DataRow(true, DisplayName = "AssemblyGuard_ClassNarrows")]
     [DataRow(false, DisplayName = "AssemblyGuard_MethodNarrows")]
     public async Task WhenAssemblyAndNarrowerOSConditionsComposeToMetadata_NoDiagnostic(bool narrowClass)

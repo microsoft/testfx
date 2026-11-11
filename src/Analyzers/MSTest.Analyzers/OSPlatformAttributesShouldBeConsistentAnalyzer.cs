@@ -147,10 +147,17 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             out int operatingSystems,
             out string? operatingSystemsExpression);
 
+        // GroupName is evaluated at runtime, so another condition may OR with the assembly OS guard.
+        bool hasUnmodeledAssemblyConditions = assemblyOSConditionAttribute is not null
+            && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, out INamedTypeSymbol? conditionBaseAttributeSymbol)
+            && assemblyAttributes.Any(attribute =>
+                !SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol)
+                && attribute.AttributeClass.Inherits(conditionBaseAttributeSymbol));
+
         if (canFix && IsEquivalentOSCondition(
             localOSConditionAttribute,
             containingClassOSConditionAttribute,
-            assemblyOSConditionAttribute,
+            hasUnmodeledAssemblyConditions ? null : assemblyOSConditionAttribute,
             includeMode,
             operatingSystems))
         {

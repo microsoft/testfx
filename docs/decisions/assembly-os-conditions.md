@@ -103,6 +103,38 @@ Starting revision: `e84b5554dd59e80d27c6480ef63284b5d34cc2a9`.
   control. Final focused execution passed all 43 planned cases. Earlier harness
   compilation/style failures and that invalid setup are not behavioral red proof.
 
+### 2026-11-11: assembly condition-group review correction
+
+Review exposed a concrete MSTEST0084 false negative in
+`730ec3b21fcdb4287cb9b6861b6198fbeac86d7d`: another assembly condition can share
+`GroupName = "OSCondition"` and satisfy that OR group, allowing an operating
+system excluded by the assembly's OS attribute. The analyzer must not treat that
+attribute alone as a definitive restriction.
+
+Do not execute user condition getters or add a source evaluator. Conservatively
+withhold the assembly OS mask when another condition attribute may participate
+in its group. Independent class/method OS guards still establish a verifiable
+restriction; runtime grouping and execution behavior are unchanged. Fix
+properties remain withheld under the actual assembly guard.
+
+`WhenAssemblyHasUnmodeledCondition_RequiresIndependentOSGuard` covers satisfied
+Include and Exclude alternatives plus independent class/method controls. With
+the same four cases retained, the original analyzer executes two intended
+missing-diagnostic assertion failures and two passing controls; the correction
+passes all four. The complete affected analyzer class then passes 56/56 on each
+of `net11.0`, `net10.0`, and `net472` (168 executions, no skips). The paired filter
+is `FullyQualifiedName~WhenAssemblyHasUnmodeledCondition_RequiresIndependentOSGuard`;
+the full-class filter is
+`FullyQualifiedName~MSTest.Analyzers.Test.OSPlatformAttributesShouldBeConsistentAnalyzerTests`.
+
+A real C# 12 / net11.0 consumer, with MSTEST0084 configured as an error, also
+compiles with the original shipping package (exit 0, missing diagnostic) and
+reports the intended MSTEST0084 with the repacked analyzer (exit 1, no unrelated
+errors). Separate package caches and exact nupkg/payload hashes were verified.
+Both use `MSTest.Analyzers` 5.0.0-dev; the source/test correction patch SHA-256 is
+`90C074097C30CF555E063471FB6C8DDE3607AFC1044A799E630BD94039CC6A31`.
+The original feature evidence below remains bound to its recorded source state.
+
 ## Alternatives and decision
 
 1. Keep class-level guards: correct today, but repeats an assembly-wide policy
