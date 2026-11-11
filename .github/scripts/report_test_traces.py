@@ -146,6 +146,17 @@ def trace_inputs(paths: list[Path]):
                 yield path.name, stream, path.stat().st_size
 
 
+def artifact_root_parts(members: list[tuple[str, ...]]) -> tuple[str, ...]:
+    if not members:
+        return ()
+    wrapper = members[0][0]
+    if wrapper in ("OpenTelemetry", "merged") or any(
+        len(parts) == 1 or parts[0] != wrapper for parts in members
+    ):
+        return ()
+    return (wrapper,)
+
+
 def published_results(paths: list[Path]) -> dict | None:
     seen = set()
     statuses = collections.Counter()
@@ -178,15 +189,25 @@ def published_results(paths: list[Path]) -> dict | None:
     for path in paths:
         if path.suffix.lower() == ".zip":
             with zipfile.ZipFile(path) as archive:
-                for entry in archive.infolist():
-                    parts = entry.filename.replace("\\", "/").split("/")
-                    if len(parts) <= 2 and parts[-1].endswith(".ctrf.json"):
+                members = [
+                    (tuple(entry.filename.replace("\\", "/").split("/")), entry)
+                    for entry in archive.infolist() if not entry.is_dir()
+                ]
+                root = artifact_root_parts([parts for parts, _ in members])
+                for parts, entry in members:
+                    if parts[:-1] == root and parts[-1].endswith(".ctrf.json"):
                         with archive.open(entry) as stream:
                             consume(stream)
         elif path.is_dir():
-            for result in sorted(path.glob("*.ctrf.json")):
-                with result.open("rb") as stream:
-                    consume(stream)
+            members = [
+                (result.relative_to(path).parts, result)
+                for result in sorted(path.rglob("*")) if result.is_file()
+            ]
+            root = artifact_root_parts([parts for parts, _ in members])
+            for parts, result in members:
+                if parts[:-1] == root and parts[-1].endswith(".ctrf.json"):
+                    with result.open("rb") as stream:
+                        consume(stream)
     if not seen:
         return None
     return {"reports": len(seen), "tests": count, "statuses": dict(statuses)}
@@ -429,7 +450,7 @@ def build_report(paths: list[Path], top: int = 15) -> dict:
             if not isinstance(module, str) or not module:
                 raise ValueError("missing test module identity")
             scopes, excluded = execution_scopes(archive)
-        except (ValueError, UnicodeError) as error:
+        except (ValueError, UnicodeError, zipfile.BadZipFile) as error:
             coverage["rejected"].append({"source": source, "reason": str(error)})
             continue
         seen[archive["id"]] = archive["sha256"]
@@ -622,6 +643,15 @@ def display(value) -> str:
     return "".join(character if character.isprintable() else " " for character in text)
 
 
+def html_text(value) -> str:
+    return html.escape(display(value))
+
+
+def markdown_text(value) -> str:
+    text = re.sub(r"([\\`*_{}\[\]()#+.!$~-])", r"\\\1", display(value))
+    return html.escape(text, quote=False).replace("|", "&#124;")
+
+
 def cohort_label(cohort: dict) -> str:
     env = cohort["environment"]
     tfm = display(env["testfx.target.framework"]).replace(",Version=v", " ")
@@ -735,8 +765,10 @@ def report_sections(report: dict) -> list[tuple[str, list[str], list[list]]]:
     ]
 
 
-def introduction(report: dict) -> list[str]:
+def introduction(report: dict, *, markdown: bool = True) -> list[str]:
     coverage = report["coverage"]
+    text = markdown_text if markdown else html_text
+    emphasis = "**" if markdown else ""
     result = [
         "# TestFx trace value report",
         (
@@ -749,7 +781,7 @@ def introduction(report: dict) -> list[str]:
             f"{coverage['duplicateCopies']} duplicate copies ignored; "
             f"{len(coverage['rejected'])} rejected archives; "
             f"{coverage['excludedTestSpans']} test spans outside attributed frameworks excluded. "
-            f"Archive roles: {json.dumps(coverage['roles'], sort_keys=True)}."
+            f"Archive roles: {text(json.dumps(coverage['roles'], sort_keys=True))}."
         ),
         (
             f"Controlled-protocol workers: {coverage['controlledWorkers']} processes / "
@@ -761,12 +793,12 @@ def introduction(report: dict) -> list[str]:
             "These are execution occurrences, not distinct suite-test counts."
         ),
         (
-            "Build IDs: " + (", ".join(coverage["builds"]) or "not recorded")
+            "Build IDs: " + (", ".join(text(value) for value in coverage["builds"]) or "not recorded")
             + ". Source revisions: "
-            + (", ".join(coverage["revisions"]) or "not recorded") + "."
+            + (", ".join(text(value) for value in coverage["revisions"]) or "not recorded") + "."
         ),
         (
-            "**No regression or machine-load-adjusted trend is claimed.** "
+            f"{emphasis}No regression or machine-load-adjusted trend is claimed.{emphasis} "
             "Different OS/TFM/configuration cohorts are not baselines for each other. "
             "Binary MVIDs keep otherwise indistinguishable target-platform variants "
             "separate in this snapshot; they are not stable cross-build cohort keys. "
@@ -790,9 +822,9 @@ def introduction(report: dict) -> list[str]:
         result.insert(
             2,
             "Largest measured fixture invocation: "
-            f"{shorten_fixture(largest['owner'])}, "
-            f"{largest['phase'].removeprefix('MSTest.')} "
-            f"{largest['maxMs'] / 1000:.2f} s ({cohort_label(cohort)}). "
+            f"{text(shorten_fixture(largest['owner']))}, "
+            f"{text(largest['phase'].removeprefix('MSTest.'))} "
+            f"{largest['maxMs'] / 1000:.2f} s ({text(cohort_label(cohort))}). "
             "This identifies an investigation target, not a proven regression "
             "or a claim that the work is avoidable.",
         )
@@ -818,20 +850,17 @@ def markdown_report(report: dict) -> str:
             parts.append("No observations in the supplied archives.")
             continue
 
-        def cell(value):
-            return html.escape(display(value), quote=False).replace("|", "&#124;")
-
         parts.append(
             "\n".join([
                 "| " + " | ".join(headers) + " |",
                 "| " + " | ".join("---" for _ in headers) + " |",
-                *["| " + " | ".join(cell(value) for value in row) + " |" for row in rows],
+                *["| " + " | ".join(markdown_text(value) for value in row) + " |" for row in rows],
             ])
         )
     if report["coverage"]["rejected"]:
         parts.append("## Rejected input (excluded from all cost rankings)")
         parts.extend(
-            f"- {html.escape(display(row['source']))}: {html.escape(display(row['reason']))}"
+            f"- {markdown_text(row['source'])}: {markdown_text(row['reason'])}"
             for row in report["coverage"]["rejected"]
         )
     return "\n\n".join(parts) + "\n"
@@ -851,11 +880,11 @@ def html_report(report: dict) -> str:
         "summary{cursor:pointer;padding:12px;background:#edf2f7;font-weight:600}"
         "details{margin-top:24px}</style><main>",
     ]
-    for index, text in enumerate(introduction(report)):
+    for index, text in enumerate(introduction(report, markdown=False)):
         if index == 0:
             parts.append("<h1>TestFx trace value report</h1>")
         else:
-            parts.append("<p>" + html.escape(text.replace("**", "")) + "</p>")
+            parts.append("<p>" + text + "</p>")
     for title, headers, rows in report_sections(report):
         collapsed = len(rows) > 20
         if collapsed:
@@ -876,13 +905,15 @@ def html_report(report: dict) -> str:
         parts.append("</tr></thead><tbody>")
         for row in rows:
             parts.append("<tr>")
-            parts.extend("<td>" + html.escape(display(value)) + "</td>" for value in row)
+            parts.extend("<td>" + html_text(value) + "</td>" for value in row)
             parts.append("</tr>")
         parts.append("</tbody></table></div>")
         if collapsed:
             parts.append("</details>")
     for rejected in report["coverage"]["rejected"]:
-        parts.append("<p>Rejected: " + html.escape(display(rejected)) + "</p>")
+        parts.append(
+            f"<p>Rejected: {html_text(rejected['source'])}: {html_text(rejected['reason'])}</p>"
+        )
     parts.append("</main></html>")
     return "\n".join(parts) + "\n"
 

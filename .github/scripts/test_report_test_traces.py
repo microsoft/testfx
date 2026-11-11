@@ -19,6 +19,9 @@ assert SPEC.loader is not None
 REPORT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REPORT)
 
+# Allow process startup, file I/O and teardown on loaded CI; this is not a timing assertion.
+CLI_TIMEOUT_SECONDS = 60
+
 
 def attrs(values):
     return [{"key": key, "value": value} for key, value in values.items()]
@@ -293,6 +296,86 @@ class ReportTestTracesTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "invalid published CTRF"):
                 REPORT.build_report([root])
 
+    def test_ctrf_coverage_uses_same_artifact_root_in_zip_and_directory_layouts(self):
+        expected = {
+            "reports": 2, "tests": 3, "statuses": {"passed": 2, "failed": 1},
+        }
+        for wrapped in (False, True):
+            for zipped in (False, True):
+                with self.subTest(wrapped=wrapped, zipped=zipped), tempfile.TemporaryDirectory() as directory:
+                    root = pathlib.Path(directory)
+                    extracted = root / "input"
+                    artifact = extracted / "TestResults_Linux_Release_Attempt1" if wrapped else extracted
+                    telemetry = artifact / "OpenTelemetry"
+                    telemetry.mkdir(parents=True)
+                    write_records(telemetry, "worker.jsonl", records())
+                    for parts, statuses in (
+                        (("first.ctrf.json",), ["passed", "failed"]),
+                        (("second.ctrf.json",), ["passed"]),
+                        (("child", "child.ctrf.json"), ["skipped"]),
+                        (("merged", "merged.ctrf.json"), ["passed", "failed", "skipped"]),
+                    ):
+                        result = artifact.joinpath(*parts)
+                        result.parent.mkdir(parents=True, exist_ok=True)
+                        result.write_text(json.dumps({
+                            "results": {"tests": [{"status": status} for status in statuses]},
+                        }), encoding="utf-8")
+                    source = extracted
+                    if zipped:
+                        source = root / "results.zip"
+                        with zipfile.ZipFile(source, "w") as archive:
+                            for member in sorted(extracted.rglob("*")):
+                                if member.is_file():
+                                    archive.write(member, member.relative_to(extracted).as_posix())
+                    report = REPORT.build_report([source])
+
+                    self.assertEqual(expected, report["publishedResults"])
+                    self.assertEqual(1, report["coverage"]["completeArchives"])
+                    self.assertEqual(2, report["coverage"]["selectedOccurrences"])
+                    self.assertEqual([], report["coverage"]["rejected"])
+
+    def test_cli_retains_healthy_members_and_names_crc_damaged_trace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            archive = root / "results.zip"
+            damaged_name = "OpenTelemetry/damaged.jsonl"
+            with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_STORED) as zipped:
+                for name, identity in ((damaged_name, "damaged"), ("OpenTelemetry/healthy.jsonl", "healthy")):
+                    zipped.writestr(
+                        name, "".join(json.dumps(row) + "\n" for row in records(identity)),
+                    )
+                damaged = zipped.getinfo(damaged_name)
+            contents = bytearray(archive.read_bytes())
+            payload = damaged.header_offset + 30 + len(damaged.filename.encode("utf-8"))
+            # Change valid JSON whitespace without updating the ZIP's recorded CRC.
+            contents[payload + damaged.file_size - 1] = ord(" ")
+            archive.write_bytes(contents)
+            output = root / "report"
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "--input", str(archive), "--output", str(output)],
+                capture_output=True, text=True, timeout=CLI_TIMEOUT_SECONDS,
+            )
+
+            self.assertEqual(2, result.returncode, result.stderr)
+            for suffix in (".json", ".md", ".html"):
+                self.assertTrue(output.with_suffix(suffix).is_file(), result.stderr)
+            report = json.loads(output.with_suffix(".json").read_text(encoding="utf-8"))
+            coverage = report["coverage"]
+            self.assertEqual(2, coverage["archives"])
+            self.assertEqual(1, coverage["completeArchives"])
+            self.assertEqual(2, coverage["selectedOccurrences"])
+            self.assertEqual(
+                [{"source": f"results.zip!{damaged_name}", "reason": f"Bad CRC-32 for file '{damaged_name}'"}],
+                coverage["rejected"],
+            )
+            self.assertEqual(["healthy"], [row["archiveId"] for row in report["executions"]])
+            self.assertEqual({"pass": 1, "fail": 1}, report["executions"][0]["statuses"])
+            for suffix in (".md", ".html"):
+                expected_name = (
+                    r"OpenTelemetry/damaged\.jsonl" if suffix == ".md" else damaged_name
+                )
+                self.assertIn(expected_name, output.with_suffix(suffix).read_text(encoding="utf-8"))
+
     def test_exact_timestamp_ticks_and_percentiles_preserve_units(self):
         self.assertEqual(
             1_234_567,
@@ -309,30 +392,143 @@ class ReportTestTracesTests(unittest.TestCase):
                 REPORT.duration_ms(value)
 
     def test_rendered_tables_keep_identity_and_escape_untrusted_names(self):
+        from html.parser import HTMLParser
+
+        name = (
+            'First | <script>alert("x")</script>\n'
+            r"**literal** _name_ ~~strike~~ `code` [link](target) \path"
+        )
         data = records()
         data[3]["attributes"] = attrs({
             "test.case.id": "first",
-            "test.case.name": 'First | <script>alert("x")</script>\ncontinued',
+            "test.case.name": name,
             "code.function.name": "Example." + "LongName" * 30,
             "test.case.result.status": "pass",
         })
         with tempfile.TemporaryDirectory() as directory:
             path = write_records(pathlib.Path(directory), "trace.jsonl", data)
             report = REPORT.build_report([path])
+        original = json.dumps(report, sort_keys=True)
         markdown = REPORT.markdown_report(report)
         document = REPORT.html_report(report)
         self.assertNotIn("<script>", document)
         self.assertIn("&lt;script&gt;", document)
-        self.assertIn("First &#124; &lt;script&gt;", markdown)
+        self.assertIn(
+            r'| First &#124; &lt;script&gt;alert\("x"\)&lt;/script&gt; '
+            r'\*\*literal\*\* \_name\_ \~\~strike\~\~ \`code\` \[link\]\(target\) \\path | pass | 6\.00 |',
+            markdown,
+        )
+        self.assertIn(r"| Second | Second | fail | 3\.00 |", markdown)
         self.assertIn(
             "| Cohort | Module | Trace | Host s | Occurrences | Non-pass | Skipped | Fixture work s | Fixture active s | With steps |\n| ---",
             markdown,
         )
+        text = []
+        parser = HTMLParser()
+        parser.handle_data = text.append
+        parser.feed(document)
+        self.assertIn(name.replace("\n", " "), text)
+        self.assertEqual(name, report["slowestOccurrences"][0]["name"])
+        self.assertEqual(original, json.dumps(report, sort_keys=True))
         self.assertIn('overflow-x:auto', document)
         self.assertIn('min-width:900px', document)
         self.assertIn('tabindex="0" role="region"', document)
         self.assertIn('scope="col"', document)
         self.assertIn("LongName" * 30, document)
+
+    def test_introduction_escapes_dynamic_labels_before_intentional_formatting(self):
+        from html.parser import HTMLParser
+
+        fixture = "Fixture **literal** & <b>name</b>\n# injected"
+        build = "build **label** & <build>\n# injected"
+        revision = r"`rev` [branch](target) \revision"
+        data = records(environment={
+            "os.type": "linux **literal** & <os>",
+            "cicd.pipeline.run.id": build,
+            "vcs.ref.head.revision": revision,
+        })
+        data[5]["attributes"] = attrs({"test.suite.name": fixture})
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_records(pathlib.Path(directory), "trace.jsonl", data)
+            report = REPORT.build_report([path])
+        original = json.dumps(report, sort_keys=True)
+        markdown = REPORT.markdown_report(report)
+        document = REPORT.html_report(report)
+        with self.subTest(surface="markdown"):
+            self.assertIn(
+                r"Largest measured fixture invocation: Fixture \*\*literal\*\* &amp; "
+                r"&lt;b&gt;name&lt;/b&gt; \# injected, ClassInitialize 4.00 s "
+                r"(linux \*\*literal\*\* &amp; &lt;os&gt; / Release / \.NETCoreApp 10\.0 / X64).",
+                markdown,
+            )
+            self.assertIn(
+                r"Build IDs: build \*\*label\*\* &amp; &lt;build&gt; \# injected. "
+                r"Source revisions: \`rev\` \[branch\]\(target\) \\revision.",
+                markdown,
+            )
+            self.assertTrue(markdown.startswith("# TestFx trace value report\n\n"))
+            self.assertIn("**No regression or machine-load-adjusted trend is claimed.**", markdown)
+        with self.subTest(surface="html"):
+            text = []
+            parser = HTMLParser()
+            parser.handle_data = text.append
+            parser.feed(document)
+            self.assertIn(
+                "Largest measured fixture invocation: Fixture **literal** & <b>name</b> "
+                "# injected, ClassInitialize 4.00 s "
+                "(linux **literal** & <os> / Release / .NETCoreApp 10.0 / X64). "
+                "This identifies an investigation target, not a proven regression "
+                "or a claim that the work is avoidable.",
+                text,
+            )
+            self.assertIn(
+                r"Build IDs: build **label** & <build> # injected. "
+                r"Source revisions: `rev` [branch](target) \revision.",
+                text,
+            )
+            self.assertNotIn("<b>", document)
+            self.assertNotIn("<build>", document)
+            self.assertNotIn("&amp;lt;", document)
+        self.assertEqual(fixture, report["fixtures"][0]["owner"])
+        self.assertEqual([build], report["coverage"]["builds"])
+        self.assertEqual([revision], report["coverage"]["revisions"])
+        self.assertEqual(original, json.dumps(report, sort_keys=True))
+
+    def test_rejected_inputs_render_literal_source_and_reason(self):
+        from html.parser import HTMLParser
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_records(pathlib.Path(directory), "trace.jsonl", records())
+            report = REPORT.build_report([path])
+        source = "archive **literal** [link](target) | & <b>bad</b>\n# extra"
+        reason = r"duplicate **key**: _field_ `code` [link](target) \path & <node>"
+        report["coverage"]["rejected"].append({"source": source, "reason": reason})
+        original = json.dumps(report, sort_keys=True)
+        markdown = REPORT.markdown_report(report)
+        document = REPORT.html_report(report)
+        with self.subTest(surface="markdown"):
+            self.assertIn(
+                r"- archive \*\*literal\*\* \[link\]\(target\) &#124; &amp; "
+                r"&lt;b&gt;bad&lt;/b&gt; \# extra: duplicate \*\*key\*\*: "
+                r"\_field\_ \`code\` \[link\]\(target\) \\path &amp; &lt;node&gt;",
+                markdown,
+            )
+            self.assertNotIn("\n# extra", markdown)
+        with self.subTest(surface="html"):
+            text = []
+            parser = HTMLParser()
+            parser.handle_data = text.append
+            parser.feed(document)
+            self.assertIn(
+                "Rejected: archive **literal** [link](target) | & <b>bad</b> "
+                r"# extra: duplicate **key**: _field_ `code` [link](target) \path & <node>",
+                text,
+            )
+            self.assertNotIn("<b>", document)
+            self.assertNotIn("<node>", document)
+            self.assertNotIn("&amp;lt;", document)
+        self.assertEqual({"source": source, "reason": reason}, report["coverage"]["rejected"][0])
+        self.assertEqual(original, json.dumps(report, sort_keys=True))
 
     def test_cli_writes_real_outputs_and_reports_partial_input_with_nonzero_exit(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -340,13 +536,16 @@ class ReportTestTracesTests(unittest.TestCase):
             good = write_records(root, "good.jsonl", records())
             output = root / "report"
             command = [sys.executable, str(SCRIPT), "--input", str(good), "--output", str(output)]
-            result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+            result = subprocess.run(
+                command, capture_output=True, text=True, timeout=CLI_TIMEOUT_SECONDS
+            )
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(2, json.loads(output.with_suffix(".json").read_text())["coverage"]["selectedOccurrences"])
             self.assertIn("<table>", output.with_suffix(".html").read_text())
             bad = write_records(root, "bad.jsonl", records("partial")[:-1])
             result = subprocess.run(
-                command + ["--input", str(bad)], capture_output=True, text=True, timeout=15
+                command + ["--input", str(bad)],
+                capture_output=True, text=True, timeout=CLI_TIMEOUT_SECONDS,
             )
             self.assertEqual(2, result.returncode, result.stderr)
             parsed = json.loads(output.with_suffix(".json").read_text())

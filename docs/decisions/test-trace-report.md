@@ -187,6 +187,93 @@ task artifact `trace-report/1673649/input-manifest.json`; test logs and comparis
 patches are retained beside the report. Nothing was published to GitHub or to
 an external telemetry service.
 
+### Review follow-up: input layouts, partial ZIP data and literal labels
+
+The requested review batch is scoped to three concrete report-consumer defects,
+without changing telemetry production or the report's intended UX:
+
+- Root CTRF selection must mean the same thing for wrapped/unwrapped ZIPs and
+  their extracted directory equivalents. A one-level child or merged report is
+  not an independent root report.
+- A CRC failure in one JSONL ZIP member must name that member in rejected
+  coverage while preserving healthy observations and the existing partial-report
+  exit code.
+- Artifact-derived labels and provenance must remain literal in Markdown as
+  well as HTML, including introductions and rejection diagnostics. Escaping
+  must not change raw JSON identities or the report's intentional formatting.
+
+The pre-fix report from `d004eedc201e17e7a73dc3113a11f1d8534ad0d3` provides
+the real-input baseline: 271 complete archives, 114 executing processes,
+137,832 attributed occurrences and 137,818 published CTRF results. Its JSON
+SHA-256 is recorded above. Two parallel workers own the ingestion and
+presentation corrections; the parent reviewed their combined diff and owns
+validation and publication.
+
+All three comments were accepted. ZIP and directory processing now share a
+single common-wrapper rule and select CTRF reports only directly under that
+artifact root. Member-level `BadZipFile` errors use the existing rejected-input
+path. Dynamic presentation values are escaped before composition for each
+output context, leaving JSON identities and intentional headings/emphasis
+unchanged.
+
+| Comment / requirement | Exact regression evidence |
+| --- | --- |
+| Comment 4536620612: equivalent artifact roots | `test_ctrf_coverage_uses_same_artifact_root_in_zip_and_directory_layouts` expects two root reports with three associated outcomes in four layouts, excluding distinct child and merged reports. The pre-fix unwrapped ZIP inflates the counts, and the wrapped directory misses them. |
+| Comment 4536620700: recover healthy members after a CRC error | `test_cli_retains_healthy_members_and_names_crc_damaged_trace` changes a real stored member's trailing JSON whitespace without changing its recorded CRC. The healthy member and all three report files survive; the exact damaged member is rejected and CLI exit remains 2. |
+| Comment 4536620757: preserve literal Markdown/HTML labels | `test_rendered_tables_keep_identity_and_escape_untrusted_names`, `test_introduction_escapes_dynamic_labels_before_intentional_formatting`, and `test_rejected_inputs_render_literal_source_and_reason` cover markup delimiters, introduction provenance, literal `**`, diagnostic labels, unchanged JSON and intended report formatting. |
+
+Parent integration corrected the CRC test's Markdown diagnostic expectation to
+the newly escaped literal filename, while retaining the exact raw identity in
+JSON and HTML. An initial combined run also encountered the existing 15-second
+child-process timeout under machine load. The three CLI launches now share a
+named 60-second startup/I/O/teardown bound; this is not a performance assertion,
+and no result assertion was removed.
+
+Final validation on Python 3.12.10:
+
+```powershell
+python -B .github\scripts\test_report_test_traces.py -v
+```
+
+Result: **14 executed, 14 passed, zero skipped, exit 0**. The parent reran the
+same five regression methods against an isolated copy of the exact
+`d004eedc201e17e7a73dc3113a11f1d8534ad0d3` production file, then the corrected
+file. Test bytes and assertions were identical:
+
+| State | Executed methods | Result |
+| --- | --- | --- |
+| Pre-fix source | 5 | Eight intended assertion failures across layout, CRC output and literal-rendering contracts; zero setup errors/skips, exit 1. |
+| Corrected source | 5 | Five passed, zero skipped, exit 0. |
+| Combined final suite | 14 | Fourteen passed, zero skipped, exit 0. |
+
+The paired selector is:
+
+```powershell
+python -B .github\scripts\test_report_test_traces.py `
+    ReportTestTracesTests.test_ctrf_coverage_uses_same_artifact_root_in_zip_and_directory_layouts `
+    ReportTestTracesTests.test_cli_retains_healthy_members_and_names_crc_damaged_trace `
+    ReportTestTracesTests.test_rendered_tables_keep_identity_and_escape_untrusted_names `
+    ReportTestTracesTests.test_introduction_escapes_dynamic_labels_before_intentional_formatting `
+    ReportTestTracesTests.test_rejected_inputs_render_literal_source_and_reason -v
+```
+
+The red command uses the same test file in the task-owned
+`trace-report/review-batch/baseline` directory. Relevant source identities:
+
+| File/state | SHA-256 |
+| --- | --- |
+| Exact pre-fix production snapshot | `4124A9005969CC2AA48E0902A0E7F0B808DC1E2D3DDA8B8A54A03827FF1ACC41` |
+| Corrected `report_test_traces.py` | `9BDD1035CEC2833A085EC58DF005170BF7D5ECD66E60D1CB48E2331C1F95064C` |
+| Final regression test file, identical in both states | `B765809691840C7F6CBFA437D97B49BC456FEF627D2A663374AE377B3AA109C8` |
+
+The real three-artifact CLI command above was rerun with the combined fixes:
+exit 0, no rejected archives, and **byte-equivalent analytical JSON** with the
+same SHA-256, counts, identities and largest fixture timings. Corrected HTML
+and rendered Markdown retain the measured table values; escaping changes
+presentation serialization, not analytical data. Focused literal-label/empty
+rendering was inspected locally at 1280/480-pixel widths, including disclosures
+and keyboard scrolling. Hosted GitHub page CSS remains an explicit gap.
+
 ## Open questions
 
 - No multi-week history, effective server-side retention period, CPU/load

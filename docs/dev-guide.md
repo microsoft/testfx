@@ -261,6 +261,10 @@ The command writes an HTML report, Markdown and JSON with the same filename
 prefix. It reads trace members in ZIPs without extracting or running artifact
 code. Failed/incomplete/unsupported archives are named and excluded; the command
 returns exit 2 when input was rejected or no executing workers were found.
+Root CTRF reports are selected consistently from an unwrapped artifact or a
+single common artifact wrapper, in ZIPs and extracted directories; child and
+merged reports are not included. A damaged trace member does not discard healthy
+members. Artifact labels remain literal in both Markdown and HTML output.
 
 The snapshot ranks existing fixture invocations and test-occurrence elapsed
 times, preserves TestContainer step timings, and shows the observation cohorts.
