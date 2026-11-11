@@ -1,4 +1,11 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.TestHostControllers.TestHostProcessInformation.HasExitedGracefully.get -> bool
+Microsoft.Testing.Platform.TestHostControllers.TestHostProcessInformation.HasReceivedTestHostCompletedMessage.get -> bool
+*REMOVED*Microsoft.Testing.Platform.Helpers.AppVersion
+*REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
+*REMOVED*const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
+*REMOVED*override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.PrintMembers(System.Text.StringBuilder! builder) -> void
+*REMOVED*static readonly Microsoft.Testing.Platform.Helpers.AppVersion.DefaultSemVer -> string!
 *REMOVED*Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestHostOrchestrator.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager!
 *REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator
 *REMOVED*Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorManager

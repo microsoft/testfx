@@ -149,14 +149,13 @@ The root `<testsuites>` `name` attribute is the module file name without extensi
 | `FailedTestNodeStateProperty`                  | `<failure message="..." type="...">body</failure>` |
 | `TimeoutTestNodeStateProperty`                 | `<error message="..." type="...">body</error>`  |
 | `ErrorTestNodeStateProperty`                   | `<error message="..." type="...">body</error>`  |
-| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="...">body</error>`  |
 | Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="...">body</failure>` |
 | `DiscoveredTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 | `InProgressTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 
 `body` is the composed failure text described in [Failure and error body format](#failure-and-error-body-format); the element is written with explicit start/end tags whenever that text is non-empty.
 
-`Cancelled` becomes `<error>` rather than `<failure>` because cancellation indicates an interruption, not an assertion failure — `<error>` is the schema-correct bucket for "the test could not be evaluated".
+Microsoft.Testing.Platform 3 removes `CancelledTestNodeStateProperty`. Frameworks cancel by throwing `OperationCanceledException` with the platform-supplied token, not by publishing a test outcome. Historical journal results with a `cancelled` outcome still become `<error>` rather than `<failure>` when replayed.
 
 ### Failure and error body format
 
@@ -315,5 +314,5 @@ A fresh GUID is generated for the `<TestingPlatformBuilderHook Include>` attribu
   - Duplicate `(classname, name)` uniquification.
   - Parent-chain resolution with missing intermediate parents.
   - Counters at the suite and root level.
-  - Outcome mapping (skipped/failed/error/timeout/cancelled).
+  - Outcome mapping (skipped/failed/error/timeout), including historical cancelled journal results.
   - Failure/error body composition across every combination of present/absent exception type, message and stack trace, plus the `type` attribute fallback to the element name.

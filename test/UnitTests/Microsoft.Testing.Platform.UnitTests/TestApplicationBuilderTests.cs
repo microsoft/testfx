@@ -107,9 +107,10 @@ public sealed class TestApplicationBuilderTests
                 fixture.Events.Where(value => !value.StartsWith("dispose-", StringComparison.Ordinal)));
             Assert.AreEqual(606, fixture.StartedInformation!.PID);
             Assert.ThrowsExactly<InvalidOperationException>(() => fixture.StartedInformation.ExitCode);
+            Assert.ThrowsExactly<InvalidOperationException>(() => fixture.StartedInformation.HasReceivedTestHostCompletedMessage);
             Assert.AreEqual(606, fixture.ExitedInformation!.PID);
             Assert.AreEqual(0, fixture.ExitedInformation.ExitCode);
-            Assert.IsTrue(fixture.ExitedInformation.HasExitedGracefully);
+            Assert.IsTrue(fixture.ExitedInformation.HasReceivedTestHostCompletedMessage);
             Assert.AreEqual(0, fixture.CompletionExitCode);
             SessionFileArtifact artifact = Assert.ContainsSingle(fixture.CompletionArtifacts);
             Assert.AreEqual("child summary", artifact.DisplayName);
@@ -223,7 +224,7 @@ public sealed class TestApplicationBuilderTests
             await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
             Assert.AreEqual(nonauthoritative ? 0 : 7, await run);
             Assert.AreEqual(nonauthoritative ? 0 : 7, fixture.CompletionExitCode);
-            Assert.IsTrue(fixture.ExitedInformation!.HasExitedGracefully);
+            Assert.IsTrue(fixture.ExitedInformation!.HasReceivedTestHostCompletedMessage);
             if (nonauthoritative)
             {
                 Assert.IsEmpty(fixture.OutputMessages);
@@ -248,7 +249,7 @@ public sealed class TestApplicationBuilderTests
             Task<int> run = fixture.RunAsync();
             await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
             Assert.AreEqual(7, await run);
-            Assert.IsFalse(fixture.ExitedInformation!.HasExitedGracefully);
+            Assert.IsFalse(fixture.ExitedInformation!.HasReceivedTestHostCompletedMessage);
             Assert.AreEqual(7, fixture.CompletionExitCode);
             Assert.HasCount(1, fixture.OutputMessages);
         }
@@ -636,7 +637,7 @@ public sealed class TestApplicationBuilderTests
         Assert.AreEqual(1, exit);
         Assert.AreEqual(pidUnavailable ? 0 : 37, info.PID);
         Assert.AreEqual(1, info.ExitCode);
-        Assert.IsFalse(info.HasExitedGracefully);
+        Assert.IsFalse(info.HasReceivedTestHostCompletedMessage);
         Assert.AreEqual(telemetry ? "[]" : null, extensions);
         Assert.AreEqual(
             "The test host process did not connect to the controller's named pipe after '0' seconds. The test host process exited with code '17'.",
@@ -722,7 +723,7 @@ public sealed class TestApplicationBuilderTests
 
         Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
         Assert.AreEqual((int)ExitCode.GenericFailure, processInformation.ExitCode);
-        Assert.IsFalse(processInformation.HasExitedGracefully);
+        Assert.IsFalse(processInformation.HasReceivedTestHostCompletedMessage);
         handle.Verify(x => x.Terminate(), Times.Once);
         handle.Verify(x => x.Dispose(), Times.Never);
 

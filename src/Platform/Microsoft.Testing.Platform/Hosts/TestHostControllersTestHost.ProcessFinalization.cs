@@ -198,7 +198,7 @@ internal sealed partial class TestHostControllersTestHost
             // If there is another exit code indicating another failure, we prefer it over the cancellation.
             exitCode = (int)ExitCode.TestSessionAborted;
         }
-        else if (!testHostProcessInformation.HasExitedGracefully
+        else if (!testHostProcessInformation.HasReceivedTestHostCompletedMessage
             || (testHostProcessExitCodeIsAuthoritative && _testHostExitCodeReceived != testHostProcessExitCode))
         {
             await _logger.LogWarningAsync(

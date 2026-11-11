@@ -154,9 +154,7 @@ internal static class TrxTestResultExtractor
             SkippedTestNodeStateProperty => TrxTestOutcome.Skipped,
             PassedTestNodeStateProperty => TrxTestOutcome.Passed,
             TimeoutTestNodeStateProperty => TrxTestOutcome.Timeout,
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-            CancelledTestNodeStateProperty or ErrorTestNodeStateProperty or FailedTestNodeStateProperty => TrxTestOutcome.Failed,
-#pragma warning restore CS0618, MTP0001
+            ErrorTestNodeStateProperty or FailedTestNodeStateProperty => TrxTestOutcome.Failed,
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 }

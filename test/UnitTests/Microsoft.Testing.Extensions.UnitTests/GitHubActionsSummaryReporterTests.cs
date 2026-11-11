@@ -1841,9 +1841,6 @@ public sealed partial class GitHubActionsSummaryReporterTests
         AssertCarries(new FailedTestNodeStateProperty(exception, "failed explanation"), "failed explanation");
         AssertCarries(new ErrorTestNodeStateProperty(exception, "error explanation"), "error explanation");
         AssertCarries(new TimeoutTestNodeStateProperty(exception, "timeout explanation"), "timeout explanation");
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-        AssertCarries(new CancelledTestNodeStateProperty(exception, "cancelled explanation"), "cancelled explanation");
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         // A passing test carries nothing to report.
         Assert.IsNull(GitHubActionsSummaryReporter.TryGetFailureInfo(new PassedTestNodeStateProperty()));

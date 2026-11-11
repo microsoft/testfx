@@ -104,7 +104,6 @@ internal sealed class TestNodeTimingData
             "StateFailed",
             "StateError",
             "StateTimedOut",
-            "StateCanceled",
             "StateExecutionCompleted",
         }.Select(caseName => new object[] { caseName });
 
@@ -122,7 +121,6 @@ internal sealed class TestNodeTimingData
         // Deliberately not stop-start. The producer must retain the independently supplied duration.
         TimingInfo knownTiming = new(start, stop, TimeSpan.FromTicks(372500));
 
-#pragma warning disable CS0618, MTP0001 // Exercise the existing canceled wire state while it remains supported.
         return caseName switch
         {
             "OffsetsFrench" => WithTiming(knownTiming, 37.25, StartUtc, StopUtc, cultureName: "fr-FR"),
@@ -140,7 +138,7 @@ internal sealed class TestNodeTimingData
                 InProgressTestNodeStateProperty.CachedInstance, "in-progress"),
             "StopOnly" => WithTiming(
                 new TimingInfo(default, stop, TimeSpan.FromTicks(255000)), 25.5, null, StopUtc,
-                new CancelledTestNodeStateProperty("timing cancellation"), "canceled", "timing cancellation"),
+                new TimeoutTestNodeStateProperty("timing timeout"), "timed-out", "timing timeout"),
             "ZeroDurationWithKnownTimes" => WithTiming(new TimingInfo(start, stop, TimeSpan.Zero), 0, StartUtc, StopUtc),
             "NegativeDurationWithKnownTimes" => WithTiming(new TimingInfo(start, stop, TimeSpan.FromTicks(-75000)), -7.5, StartUtc, StopUtc),
             "ReversedInterval" => WithTiming(
@@ -159,11 +157,9 @@ internal sealed class TestNodeTimingData
             "StateFailed" => WithTiming(knownTiming, 37.25, StartUtc, StopUtc, new FailedTestNodeStateProperty("timing failure"), "failed", "timing failure"),
             "StateError" => WithTiming(knownTiming, 37.25, StartUtc, StopUtc, new ErrorTestNodeStateProperty("timing error"), "error", "timing error"),
             "StateTimedOut" => WithTiming(knownTiming, 37.25, StartUtc, StopUtc, new TimeoutTestNodeStateProperty("timing timeout"), "timed-out", "timing timeout"),
-            "StateCanceled" => WithTiming(knownTiming, 37.25, StartUtc, StopUtc, new CancelledTestNodeStateProperty("timing cancellation"), "canceled", "timing cancellation"),
             "StateExecutionCompleted" => WithTiming(knownTiming, 37.25, StartUtc, StopUtc, TestNodeExecutionCompletedProperty.CachedInstance, "discovered"),
             _ => throw new ArgumentOutOfRangeException(nameof(caseName), caseName, "Unknown timing test case."),
         };
-#pragma warning restore CS0618, MTP0001
     }
 
     public static string EscapeUtcOffsets(string expectedJson)

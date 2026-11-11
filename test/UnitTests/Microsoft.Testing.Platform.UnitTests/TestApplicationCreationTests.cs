@@ -36,9 +36,12 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class TestApplicationCreationTests
 {
     [TestMethod]
-    [DataRow("builder-diagnostics-preferred", "preferred")]
-    [DataRow("builder-diagnostics-legacy", "legacy")]
-    public async Task CreateBuilder_DiagnosticsHonorsLayeredOverridesAndLegacyCompatibility(string mode, string expectedPrefix)
+    [DataRow("builder-diagnostics-supported", "preferred", "synchronous")]
+    [DataRow("builder-diagnostics-removed-prefix", "cli", "asynchronous")]
+    [DataRow("builder-diagnostics-removed-sync", "cli", "asynchronous")]
+    [DataRow("builder-diagnostics-cli-sync", "cli", "synchronous")]
+    [DataRow("builder-diagnostics-supported-async", "preferred", "asynchronous")]
+    public async Task CreateBuilder_DiagnosticsIgnoresRemovedAliasesAndHonorsSupportedEnvironmentAndCli(string mode, string expectedPrefix, string expectedLoggingMode)
     {
         SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync(mode);
         Assert.AreEqual(0, child.ExitCode, child.Error);
@@ -47,14 +50,13 @@ public sealed class TestApplicationCreationTests
         Assert.StartsWith(
             "log-name:" + expectedPrefix + "_",
             Assert.ContainsSingle(records.Where(record => record.StartsWith("log-name:", StringComparison.Ordinal))));
-        Assert.Contains("log:Logging mode: synchronous", records);
+        Assert.Contains("log:Logging mode: " + expectedLoggingMode, records);
         Assert.Contains("log:Logging level: Debug", records);
         Assert.Contains("log:TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID_17 'correlation-value'", records);
         Assert.Contains("log:TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID_17 'parent-value'", records);
         Assert.Contains("log:TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME_17 'start-value'", records);
         Assert.Contains("log-released:True", records);
-        Assert.Contains("TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX", child.Output);
-        Assert.Contains("TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE", child.Output);
+        Assert.DoesNotContain("is deprecated and will be removed in a future major version", child.Output);
     }
 
     [TestMethod]
@@ -79,9 +81,8 @@ public sealed class TestApplicationCreationTests
     [DataRow("invalid-json", 5)]
     [DataRow("tool", 43)]
     [DataRow("tool-invalid-json", 43)]
-    [DataRow("server-build", 0)]
-    [DataRow("legacy-long", 0)]
-    [DataRow("legacy-short", 0)]
+    [DataRow("server-help", 0)]
+    [DataRow("server-info", 0)]
     public async Task BuildAsync_InformationalInvalidAndToolModesPreserveExitAndLazyFramework(string mode, int expectedExit)
     {
         SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("builder-mode-" + mode);
@@ -91,6 +92,19 @@ public sealed class TestApplicationCreationTests
         Assert.Contains("framework-created:0", records);
         Assert.Contains("capability-initialized:1", records);
         Assert.Contains(mode.StartsWith("tool", StringComparison.Ordinal) ? "tool-called:1" : "tool-called:0", records);
+    }
+
+    [TestMethod]
+    public async Task CreateBuilder_WithExplicitServerOption_PreservesJsonRpcProtocolAndLazyFramework()
+    {
+        SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("builder-mode-server-build");
+        Assert.AreEqual(0, child.ExitCode, child.Error);
+        string[] records = ReadRecords(child.Output);
+        Assert.Contains("result:0", records);
+        Assert.Contains("server-protocol:jsonrpc", records);
+        Assert.Contains("framework-created:0", records);
+        Assert.Contains("capability-initialized:1", records);
+        Assert.Contains("tool-called:0", records);
     }
 
     [TestMethod]
@@ -232,12 +246,18 @@ public sealed class TestApplicationCreationTests
         Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC", "1");
         Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY", "debug");
         Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY", Path.Combine(root, "environment"));
-        Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX", "legacy");
-        Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE", "1");
-        if (mode != "builder-diagnostics-legacy")
+        Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX", mode == "builder-diagnostics-removed-sync" ? null : "legacy");
+        Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE", mode switch
+        {
+            "builder-diagnostics-removed-prefix" => null,
+            "builder-diagnostics-cli-sync" => "0",
+            _ => "1",
+        });
+        bool supportedOverrides = mode is "builder-diagnostics-supported" or "builder-diagnostics-supported-async" or "builder-dynamic-failure";
+        if (supportedOverrides)
         {
             Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX", "preferred");
-            Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE", "1");
+            Environment.SetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE", mode == "builder-diagnostics-supported-async" ? "0" : "1");
         }
 
         Environment.SetEnvironmentVariable("TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID_17", "correlation-value");
@@ -250,9 +270,14 @@ public sealed class TestApplicationCreationTests
             "--diagnostic-file-prefix", "cli", "--diagnostic-verbosity", "warning",
             "--internal-testhostcontroller-pid", "17",
         ];
-        if (mode != "builder-diagnostics-legacy")
+        if (supportedOverrides)
         {
             args.Add("--diagnostic");
+        }
+
+        if (mode is "builder-diagnostics-cli-sync" or "builder-diagnostics-supported-async")
+        {
+            args.Add("--diagnostic-synchronous-write");
         }
 
         if (mode == "builder-dynamic-failure")
@@ -317,39 +342,29 @@ public sealed class TestApplicationCreationTests
         }
 
         args.AddRange(["--no-banner", "--config-file", configuration, "--results-directory", Path.Combine(root, "results")]);
-        if (mode is "help" or "legacy-long" or "legacy-short")
+        if (mode is "help" or "server-help")
         {
             args.Add("--help");
         }
-        else if (mode == "info")
+        else if (mode is "info" or "server-info")
         {
             args.Add("--info");
-        }
-        else if (mode == "server-build")
-        {
-            args.AddRange(["--server", "jsonrpc", "--client-port", "1"]);
         }
         else if (mode == "long-timeout")
         {
             args.AddRange(["--timeout", "1h"]);
         }
 
+        if (mode is "server-build" or "server-help" or "server-info")
+        {
+            args.AddRange(["--server", "jsonrpc", "--client-port", "1"]);
+        }
+
         args.AddRange(extraArguments ?? []);
         using CancellationTokenSource external = new();
         TestApplicationOptions options = new() { EnableTelemetry = false, CancellationToken = mode == "external-cancel" ? external.Token : default };
         options.Configuration.ConfigurationSources.RegisterEnvironmentVariablesConfigurationSource = false;
-        ITestApplicationBuilder builder;
-        if (mode is "legacy-long" or "legacy-short")
-        {
-            args.Add(mode == "legacy-long" ? "--server" : "-server");
-#pragma warning disable CS0618, MTP0002 // Verify the retained legacy public entry point.
-            builder = await TestApplication.CreateServerModeBuilderAsync([.. args], options);
-#pragma warning restore CS0618, MTP0002
-        }
-        else
-        {
-            builder = await TestApplication.CreateBuilderAsync([.. args], options);
-        }
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([.. args], options);
 
         int initialized = 0;
         int created = 0;
@@ -414,6 +429,15 @@ public sealed class TestApplicationCreationTests
         ((TestApplicationBuilder)builder).Tools.AddTool(_ => tool.Object);
         configureBuilder?.Invoke(builder);
         using ITestApplication application = await builder.BuildAsync();
+        // Routed hosts also reuse this mode; inspect only the standalone CommonHost-backed probe.
+        if (mode == "server-build" && extraArguments is null && configureBuilder is null)
+        {
+            ICommandLineOptions commandLineOptions = ((TestApplication)application).ServiceProvider.GetCommandLineOptions();
+            Assert.IsTrue(commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocols));
+            Assert.IsNotNull(protocols);
+            record("server-protocol:" + Assert.ContainsSingle(protocols));
+        }
+
         int result = mode is "server-build" or "build-only" ? 0 : await application.RunAsync();
         record("result:" + result.ToString(CultureInfo.InvariantCulture));
         record("framework-created:" + created.ToString(CultureInfo.InvariantCulture));

@@ -55,7 +55,7 @@ public sealed class ExtensionVersionTests
 
     private static void AssertVersionMatchesAssembly(string reportedVersion, Assembly extensionAssembly)
     {
-        Assert.IsFalse(string.IsNullOrEmpty(reportedVersion), "Reported version should not be null or empty.");
+        Assert.IsNotNullOrEmpty(reportedVersion, "Reported version should not be null or empty.");
 
         string expectedVersion = extensionAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? extensionAssembly.GetName().Version?.ToString()

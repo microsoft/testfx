@@ -27,6 +27,7 @@ public sealed class TestCoverageResultTests
 
         CoverageScopeSummary overall = Assert.ContainsSingle(result.Scopes);
         Assert.HasCount(2, overall.Metrics);
+        using IDisposable scope = Assert.Scope();
         Assert.AreEqual(CoverageMetric.Line, overall.Metrics[0].Metric);
         Assert.AreEqual(9, overall.Metrics[0].CoveredCount);
         Assert.AreEqual(10, overall.Metrics[0].CoverableCount);
@@ -47,15 +48,20 @@ public sealed class TestCoverageResultTests
         await ConsumeAsync(result, new TestCoverageMessage(firstSession, CoverageScope.Overall, CoverageMetric.Statement, 9, 10, "producer"));
 
         Assert.HasCount(3, result.Scopes);
-        Assert.AreEqual(firstSession, result.Scopes[0].SessionUid);
-        Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[0].Scope.Level);
         Assert.HasCount(2, result.Scopes[0].Metrics);
-        Assert.AreEqual(CoverageMetric.Line, result.Scopes[0].Metrics[0].Metric);
-        Assert.AreEqual(CoverageMetric.Statement, result.Scopes[0].Metrics[1].Metric);
-        Assert.AreEqual(secondSession, result.Scopes[1].SessionUid);
-        Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[1].Scope.Level);
-        Assert.AreEqual(CoverageMetric.Branch, Assert.ContainsSingle(result.Scopes[1].Metrics).Metric);
-        Assert.AreEqual(module, result.Scopes[2].Scope);
+        CoverageMetricResult secondScopeMetric = Assert.ContainsSingle(result.Scopes[1].Metrics);
+        using (Assert.Scope())
+        {
+            Assert.AreEqual(firstSession, result.Scopes[0].SessionUid);
+            Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[0].Scope.Level);
+            Assert.AreEqual(CoverageMetric.Line, result.Scopes[0].Metrics[0].Metric);
+            Assert.AreEqual(CoverageMetric.Statement, result.Scopes[0].Metrics[1].Metric);
+            Assert.AreEqual(secondSession, result.Scopes[1].SessionUid);
+            Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[1].Scope.Level);
+            Assert.AreEqual(CoverageMetric.Branch, secondScopeMetric.Metric, "Scope 1 metric.");
+            Assert.AreEqual(module, result.Scopes[2].Scope);
+        }
+
         CoverageScopeSummary? firstOverall = result.GetOverall(firstSession);
         CoverageScopeSummary? secondOverall = result.GetOverall(secondSession);
         Assert.IsNotNull(firstOverall);
@@ -79,6 +85,7 @@ public sealed class TestCoverageResultTests
 
         CoverageScopeSummary overall = Assert.ContainsSingle(result.Scopes);
         Assert.HasCount(4, overall.Metrics);
+        using IDisposable scope = Assert.Scope();
         Assert.AreEqual("producer-a", overall.Metrics[0].ProducerId);
         Assert.AreEqual("producer-b", overall.Metrics[1].ProducerId);
         Assert.AreEqual("mcdc", overall.Metrics[2].CustomMetricName);
@@ -114,6 +121,7 @@ public sealed class TestCoverageResultTests
         await ConsumeAsync(result, new TestCoverageReportMessage(new SessionUid("other-session"), "first.xml", CoverageReportFormat.Lcov, "producer"));
 
         Assert.HasCount(4, result.Reports);
+        using IDisposable scope = Assert.Scope();
         Assert.AreEqual("first.xml", result.Reports[0].Path);
         Assert.AreEqual(CoverageReportFormat.OpenCover, result.Reports[0].Format);
         Assert.AreEqual(session, result.Reports[0].SessionUid);
@@ -137,6 +145,7 @@ public sealed class TestCoverageResultTests
         await ConsumeAsync(result, CreateThreshold(session, CoverageMetric.Line, actualPercentage: 90));
 
         Assert.HasCount(2, result.Thresholds);
+        using IDisposable scope = Assert.Scope();
         Assert.AreEqual(CoverageMetric.Line, result.Thresholds[0].Metric);
         Assert.AreEqual(90, result.Thresholds[0].ActualPercentage);
         Assert.IsTrue(result.Thresholds[0].Passed);

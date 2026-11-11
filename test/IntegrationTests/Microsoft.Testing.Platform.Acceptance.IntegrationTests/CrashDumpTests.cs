@@ -219,6 +219,9 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
             },
             cancellationToken: TestContext.CancellationToken);
 
+        // The fixture sends completion without any terminal test results, so the zero-tests policy still applies.
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+
         // Even though tests were "started", the testhost exited cleanly so the sequence file has no
         // diagnostic value and must be cleaned up to avoid polluting the results directory.
         Assert.IsEmpty(

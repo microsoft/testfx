@@ -78,9 +78,6 @@ internal static class TestResultCaptureHelper
             FailedTestNodeStateProperty f => f.Exception,
             ErrorTestNodeStateProperty e => e.Exception,
             TimeoutTestNodeStateProperty t => t.Exception,
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-            CancelledTestNodeStateProperty c => c.Exception,
-#pragma warning restore CS0618, MTP0001
             _ => null,
         };
 
@@ -103,9 +100,6 @@ internal static class TestResultCaptureHelper
             TimeoutTestNodeStateProperty => "timedOut",
             ErrorTestNodeStateProperty => "errored",
             FailedTestNodeStateProperty => "failed",
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-            CancelledTestNodeStateProperty => "failed",
-#pragma warning restore CS0618, MTP0001
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 

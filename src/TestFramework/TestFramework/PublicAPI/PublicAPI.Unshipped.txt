@@ -3,6 +3,12 @@
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.DatarowIndex.get -> int
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.DatarowIndex.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.InnerResultsCount.get -> int
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.InnerResultsCount.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ReturnValue.get -> object?
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ReturnValue.set -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType, string? message) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection, string? message) -> void

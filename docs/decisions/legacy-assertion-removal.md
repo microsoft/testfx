@@ -229,6 +229,26 @@ Neither infrastructure failure is counted as regression-sensitivity evidence.
 
 ### Test-value evidence
 
+#### Base integration validation (2026-11-11)
+
+Integrated `main` at `f94fa2bbaa1153a3525e4711f13342863c6ea4d0` into the
+published removal branch. The Azure Pipelines check had been skipped because
+of merge conflicts, not because a build or test had failed. Resolved the two
+additive conflicts by retaining both changelog entries and the exact union of
+the public API removal records, including the upstream `TestResult` removals.
+No assertion implementation or migration behavior was changed by the resolution.
+
+The incoming dependency updates, including Roslyn testing 1.1.4, were retained.
+The same repository-pinned restore/build/pack command for `MSTest.slnf` passed
+with zero errors and eight upstream dependency-audit warnings. Post-integration
+net10.0 framework tests passed 1,678/1,678; the full net10.0 analyzer suite passed
+3,092 with the same existing Unix-only skip; all eight packed C# 12 consumer
+cases passed on net10.0/net11.0. All test processes exited 0. Reports and the
+build binlog are retained as `merge-main-*` session artifacts.
+
+The paired counterfactual results below remain bound to their original source
+identities; they were not relabeled as having run on this base integration.
+
 | Contract / case | Counterfactual | Without behavior | Correct implementation |
 | --- | --- | --- | --- |
 | `LegacyAssertionReplacements_ExecuteFromPackedFrameworkWithCSharp12`, both TFMs | Keep the final compiled consumer unchanged and substitute the baseline package's framework DLL in an isolated copied layout | Both invocations execute all replacement assertions, then fail because `StringAssert` remains exported; child exit `-532462766` | Restore the current packed DLL: both identical consumers pass, exit 0 |

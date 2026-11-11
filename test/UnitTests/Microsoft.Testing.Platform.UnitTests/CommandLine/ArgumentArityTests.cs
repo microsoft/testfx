@@ -230,9 +230,9 @@ public sealed class ArgumentArityTests
             [new(3, 5)] = "different minimum",
             [new(2, 6)] = "different maximum",
         };
-        Assert.AreEqual("bounded", values[new(2, 5)]);
-        Assert.AreEqual("different minimum", values[new(3, 5)]);
-        Assert.AreEqual("different maximum", values[new(2, 6)]);
+        Assert.ContainsEntry(new ArgumentArity(2, 5), "bounded", values);
+        Assert.ContainsEntry(new ArgumentArity(3, 5), "different minimum", values);
+        Assert.ContainsEntry(new ArgumentArity(2, 6), "different maximum", values);
         Assert.HasCount(3, values);
     }
 }

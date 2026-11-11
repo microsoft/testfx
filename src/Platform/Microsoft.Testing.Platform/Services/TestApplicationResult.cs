@@ -135,9 +135,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
             case TimeoutTestNodeStateProperty:
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                 _openTelemetryResultHandler?.NotifyFailed(message.TestNode, executionState);
                 _failedTestsCount++;
                 _totalRanTests++;

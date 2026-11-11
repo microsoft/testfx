@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
 #if NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
@@ -184,31 +183,9 @@ public class TestResult
     public Guid ParentExecId { get; set; }
 
     /// <summary>
-    /// Gets or sets the inner results count of the result.
-    /// </summary>
-    [Obsolete("This API is unused and has no effect.", error: true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public int InnerResultsCount { get; set; }
-
-    /// <summary>
     /// Gets or sets the duration of test execution.
     /// </summary>
     public TimeSpan Duration { get; set; }
-
-    /// <summary>
-    /// Gets or sets the data row index in data source. Set only for results of individual
-    /// run of data row of a data driven test.
-    /// </summary>
-    [Obsolete("This API is unused and has no effect.", error: true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public int DatarowIndex { get; set; } = -1;
-
-    /// <summary>
-    /// Gets or sets the return value of the test method. (Currently null always).
-    /// </summary>
-    [Obsolete("This API is unused and has no effect.", error: true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public object? ReturnValue { get; set; }
 
     /// <summary>
     /// Gets or sets the result files attached by the test.

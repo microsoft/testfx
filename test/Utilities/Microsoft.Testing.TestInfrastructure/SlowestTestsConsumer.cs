@@ -84,9 +84,6 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
         {
             PassedTestNodeStateProperty => "passed",
             FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty => "failed",
-#pragma warning disable CS0618, MTP0001
-            CancelledTestNodeStateProperty => "failed",
-#pragma warning restore CS0618, MTP0001
             SkippedTestNodeStateProperty => "skipped",
             _ => null,
         };

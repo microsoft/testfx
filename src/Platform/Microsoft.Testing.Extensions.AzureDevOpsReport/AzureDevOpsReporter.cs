@@ -135,11 +135,6 @@ internal sealed class AzureDevOpsReporter :
             case ErrorTestNodeStateProperty error:
                 await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty cancelled:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
-                break;
             case TimeoutTestNodeStateProperty timeout:
                 await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;

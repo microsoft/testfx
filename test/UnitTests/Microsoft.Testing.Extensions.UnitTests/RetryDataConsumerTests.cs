@@ -229,7 +229,6 @@ public sealed class RetryDataConsumerTests
     [DataRow("failed")]
     [DataRow("error")]
     [DataRow("timeout")]
-    [DataRow("cancelled")]
     [TestMethod]
     public async Task ConsumeAsync_NonPassingState_ReportsFailureAndDoesNotRecover(string state)
     {
@@ -533,9 +532,6 @@ public sealed class RetryDataConsumerTests
             "failed" => new FailedTestNodeStateProperty(),
             "error" => new ErrorTestNodeStateProperty(),
             "timeout" => new TimeoutTestNodeStateProperty(),
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            "cancelled" => new CancelledTestNodeStateProperty(),
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Unexpected test state."),
         };
 
