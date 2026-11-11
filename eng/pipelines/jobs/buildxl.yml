@@ -29,6 +29,24 @@ jobs:
     clean: true
     persistCredentials: false
 
+  # Provision only the CI workspace volume; the local driver remains read-only.
+  - pwsh: |
+      $PSNativeCommandUseErrorActionPreference = $false
+      $volume = [IO.Path]::GetPathRoot($env:BUILD_SOURCESDIRECTORY).TrimEnd('\')
+      & fsutil.exe usn queryjournal $volume
+      if ($LASTEXITCODE -ne 0) {
+        & fsutil.exe usn createjournal m=0x20000000 a=0x8000000 $volume
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to enable the BuildXL change journal on $volume (exit $LASTEXITCODE). The CI agent must run elevated."
+        }
+
+        & fsutil.exe usn queryjournal $volume
+        if ($LASTEXITCODE -ne 0) {
+          throw "The BuildXL change journal is unavailable on $volume after creation (exit $LASTEXITCODE)."
+        }
+      }
+    displayName: Initialize BuildXL change journal
+
   # Cache@2 enforces branch isolation. Each immutable snapshot restores the latest
   # compatible actions, while BuildXL still validates every action's actual inputs.
   - task: Cache@2
