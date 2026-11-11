@@ -163,7 +163,8 @@ public sealed class RetryTrxRegistrationBehaviorTests
         Assert.AreEqual(string.Empty, controller.Description);
         Assert.AreSequenceEqual(new[] { typeof(FileArtifact) }, controller.DataTypesConsumed);
         Assert.AreSequenceEqual(new[] { typeof(FileArtifact) }, controller.DataTypesProduced);
-        ITestHostEnvironmentVariableProvider environment = Assert.ContainsSingle(configuration.EnvironmentVariableProviders);
+        Assert.HasCount(2, configuration.EnvironmentVariableProviders);
+        ITestHostEnvironmentVariableProvider environment = Assert.ContainsSingle(configuration.EnvironmentVariableProviders.OfType<TrxEnvironmentVariableProvider>());
         Assert.IsInstanceOfType<TrxEnvironmentVariableProvider>(environment);
         Assert.IsTrue(await environment.IsEnabledAsync());
         var variables = new EnvironmentVariables(fixture.LoggerFactory.Object) { CurrentProvider = environment };
@@ -175,10 +176,17 @@ public sealed class RetryTrxRegistrationBehaviorTests
         Assert.IsTrue(pipe.IsLocked);
         Assert.IsFalse(pipe.IsSecret);
         Assert.IsTrue((await environment.ValidateTestHostEnvironmentVariablesAsync(variables)).IsValid);
+        ITestHostEnvironmentVariableProvider modeProvider = Assert.ContainsSingle(configuration.EnvironmentVariableProviders.Where(provider => provider is not TrxEnvironmentVariableProvider));
+        variables.CurrentProvider = modeProvider;
+        await modeProvider.UpdateAsync(variables);
+        Assert.IsTrue((await modeProvider.ValidateTestHostEnvironmentVariablesAsync(variables)).IsValid);
+        Assert.IsTrue(variables.TryGetVariable(TrxReport.TrxModeHelpers.GetControllerModeEnvironmentVariableName("42"), out OwnedEnvironmentVariable? mode));
+        Assert.AreEqual("out-of-process", mode.Value);
+        Assert.IsTrue(mode.IsLocked);
 
         ICommandLineOptionsProvider[] providers = [.. commands.Select(factory => factory())];
         Assert.HasCount(3, providers);
-        Assert.AreSequenceEqual(["report-trx", "report-trx-filename"], providers[0].GetCommandLineOptions().Select(value => value.Name));
+        Assert.AreSequenceEqual(["report-trx", "report-trx-filename", "trx-mode"], providers[0].GetCommandLineOptions().Select(value => value.Name));
         ITool[] registeredTools = [.. toolFactories.Select(factory => factory(fixture.Services))];
         Assert.AreSequenceEqual([TrxCompareTool.ToolName, TrxMergeTool.ToolName], registeredTools.Select(value => value.Name));
         Assert.AreSequenceEqual(registeredTools.Select(value => value.Uid), providers.Skip(1).Select(value => value.Uid));
@@ -245,6 +253,50 @@ public sealed class RetryTrxRegistrationBehaviorTests
     }
 
     [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task Trx_InProcessControllerArtifactsObserveOnlyExistingController(bool report, bool otherController)
+    {
+        using var fixture = new TrxBehaviorFixture();
+        fixture.Options[TrxReportGeneratorCommandLine.TrxModeOptionName] = ["in-process"];
+        if (!report)
+        {
+            fixture.Options.Remove(TrxReportGeneratorCommandLine.TrxReportOptionName);
+        }
+
+        var controllers = new TestHostControllersManager();
+        var builder = new Mock<IArtifactPostProcessingApplicationBuilder>();
+        builder.SetupGet(value => value.TestHost).Returns(Mock.Of<ITestHostManager>());
+        builder.SetupGet(value => value.TestHostControllers).Returns(controllers);
+        builder.SetupGet(value => value.CommandLine).Returns(Mock.Of<ICommandLineManager>());
+        builder.SetupGet(value => value.Tools).Returns(Mock.Of<IToolsManager>());
+        builder.SetupGet(value => value.ArtifactPostProcessing).Returns(Mock.Of<IArtifactPostProcessingManager>());
+        builder.Object.AddTrxReportProvider();
+        if (otherController)
+        {
+            var otherHandler = new Mock<ITestHostProcessLifetimeHandler>();
+            otherHandler.SetupGet(value => value.Uid).Returns("OtherController");
+            otherHandler.Setup(value => value.IsEnabledAsync()).ReturnsAsync(true);
+            controllers.AddProcessLifetimeHandler(_ => otherHandler.Object);
+        }
+
+        TestHostControllerConfiguration configuration = await controllers.BuildAsync(fixture.Services);
+
+        Assert.AreEqual(otherController, configuration.RequireProcessRestart);
+        Assert.HasCount(otherController ? 1 : 0, configuration.LifetimeHandlers);
+        Assert.IsEmpty(configuration.EnvironmentVariableProviders.OfType<TrxEnvironmentVariableProvider>());
+        int observerCount = report && otherController ? 1 : 0;
+        Assert.HasCount(observerCount, configuration.DataConsumer);
+        Assert.HasCount(observerCount, configuration.RunCompletionHandlers);
+        if (observerCount == 1)
+        {
+            Assert.AreSame<IExtension>(configuration.DataConsumer[0], configuration.RunCompletionHandlers[0]);
+        }
+    }
+
+    [TestMethod]
     public async Task Trx_EnvironmentProviderTracksEndpointAndValidatesPresenceOnly()
     {
         using var fixture = new TrxBehaviorFixture();
@@ -296,6 +348,8 @@ public sealed class RetryTrxRegistrationBehaviorTests
         }
 
         var environment = new Mock<Microsoft.Testing.Platform.Helpers.IEnvironment>(MockBehavior.Strict);
+        environment.Setup(value => value.GetEnvironmentVariable(TrxReport.TrxModeHelpers.GetControllerModeEnvironmentVariableName("42")))
+            .Returns((string?)null);
         using var lifecycle = new TrxTestApplicationLifecycleCallbacks(fixture.CommandLine, environment.Object);
         using var cancellation = new CancellationTokenSource();
         Assert.AreEqual(report && controller, await lifecycle.IsEnabledAsync());
@@ -313,6 +367,9 @@ public sealed class RetryTrxRegistrationBehaviorTests
 
         await lifecycle.AfterRunAsync(17, cancellation.Token);
         Assert.IsNull(lifecycle.NamedPipeClient);
+        environment.Verify(
+            value => value.GetEnvironmentVariable(TrxReport.TrxModeHelpers.GetControllerModeEnvironmentVariableName("42")),
+            report && controller ? Times.Once() : Times.Never());
         environment.VerifyNoOtherCalls();
     }
 

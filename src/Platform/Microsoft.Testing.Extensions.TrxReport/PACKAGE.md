@@ -22,9 +22,21 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable TRX report generation via the `--report-trx` command line option.
 
-On platforms that can launch a test-host process (all except Android, browser, iOS, tvOS, and WASI), TRX uses controller-backed recovery by default: the test host still streams results and generates the report during normal execution, but a surviving controller process can recover completed results into a TRX report if the test host crashes, hangs, or is stopped by `--timeout`. Android, browser, iOS, tvOS, and WASI cannot launch a test-host process, so TRX automatically falls back to its original in-process implementation there — no controller-backed recovery is attempted, and no configuration is required to get this fallback.
+On macOS, Windows, Linux, and other platforms that support a controller process, TRX uses one by default. The test host generates the report during normal execution; the controller can recover completed results if the host crashes, hangs, or is stopped by `--timeout`. On Android, iOS, Mac Catalyst, tvOS, WASI, and in browsers, TRX always runs in-process, without controller-backed recovery.
 
-The extra process has a measurable startup cost, which varies by target framework: for a trivial single-test run, launching the controller added no statistically measurable overhead on .NET (differences were within normal process-launch noise) but added roughly 700-800ms on .NET Framework in local measurements. Weigh this against the reliability benefit for your scenario, especially on .NET Framework or in tight inner-loop test runs.
+The controller adds another process and may increase startup time.
+
+Use `--report-trx --trx-mode:in-process` to generate a report without starting a controller for TRX. This can be useful when a launcher runs tests in a separate app, for example on a device or simulator.
+
+In-process mode cannot recover a report if the test host crashes, hangs, or is terminated. Other options, such as `--crashdump` or `--hangdump`, may still start a controller, but TRX recovery remains disabled.
+
+Use `--trx-mode:out-of-process` to explicitly request controller-backed recovery. This mode is unavailable on Android, iOS, Mac Catalyst, tvOS, WASI, and in browsers. Both modes require `--report-trx`; leaving `--trx-mode` unspecified preserves the default behavior.
+
+To make in-process mode the passive default, set `"commandLineOptionDefaults": { "trx-mode": "in-process" }` in `testconfig.json`. It takes effect only with `--report-trx`, and an explicit `--trx-mode` overrides it.
+
+The controller passes its selected mode to the test host, so a custom launcher can use a child application with different configuration defaults. Configured run defaults remain passive when invoking `merge-trx` or `ms-trxcompare`.
+
+When another extension starts a controller, in-process mode still includes that controller's file attachments in the completed TRX. This does not enable crash recovery or make TRX request a controller.
 
 ## Related packages
 
