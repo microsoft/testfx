@@ -253,6 +253,50 @@ public sealed class RetryTrxRegistrationBehaviorTests
     }
 
     [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task Trx_InProcessControllerArtifactsObserveOnlyExistingController(bool report, bool otherController)
+    {
+        using var fixture = new TrxBehaviorFixture();
+        fixture.Options[TrxReportGeneratorCommandLine.TrxModeOptionName] = ["in-process"];
+        if (!report)
+        {
+            fixture.Options.Remove(TrxReportGeneratorCommandLine.TrxReportOptionName);
+        }
+
+        var controllers = new TestHostControllersManager();
+        var builder = new Mock<IArtifactPostProcessingApplicationBuilder>();
+        builder.SetupGet(value => value.TestHost).Returns(Mock.Of<ITestHostManager>());
+        builder.SetupGet(value => value.TestHostControllers).Returns(controllers);
+        builder.SetupGet(value => value.CommandLine).Returns(Mock.Of<ICommandLineManager>());
+        builder.SetupGet(value => value.Tools).Returns(Mock.Of<IToolsManager>());
+        builder.SetupGet(value => value.ArtifactPostProcessing).Returns(Mock.Of<IArtifactPostProcessingManager>());
+        builder.Object.AddTrxReportProvider();
+        if (otherController)
+        {
+            var otherHandler = new Mock<ITestHostProcessLifetimeHandler>();
+            otherHandler.SetupGet(value => value.Uid).Returns("OtherController");
+            otherHandler.Setup(value => value.IsEnabledAsync()).ReturnsAsync(true);
+            controllers.AddProcessLifetimeHandler(_ => otherHandler.Object);
+        }
+
+        TestHostControllerConfiguration configuration = await controllers.BuildAsync(fixture.Services);
+
+        Assert.AreEqual(otherController, configuration.RequireProcessRestart);
+        Assert.HasCount(otherController ? 1 : 0, configuration.LifetimeHandlers);
+        Assert.IsEmpty(configuration.EnvironmentVariableProviders.OfType<TrxEnvironmentVariableProvider>());
+        int observerCount = report && otherController ? 1 : 0;
+        Assert.HasCount(observerCount, configuration.DataConsumer);
+        Assert.HasCount(observerCount, configuration.RunCompletionHandlers);
+        if (observerCount == 1)
+        {
+            Assert.AreSame<IExtension>(configuration.DataConsumer[0], configuration.RunCompletionHandlers[0]);
+        }
+    }
+
+    [TestMethod]
     public async Task Trx_EnvironmentProviderTracksEndpointAndValidatesPresenceOnly()
     {
         using var fixture = new TrxBehaviorFixture();

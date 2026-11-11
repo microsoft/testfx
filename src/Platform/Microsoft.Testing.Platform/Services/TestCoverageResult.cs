@@ -233,9 +233,10 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer, I
     {
         switch (value)
         {
-            case SessionFileArtifact artifact when _deferToController
-                && artifact.Kind is string kind
-                && kind.EndsWith("-summary-fragment", StringComparison.Ordinal):
+            // TRX completion observers need the child report even when coverage stays in process.
+            case SessionFileArtifact artifact when artifact.Kind is string kind
+                && (kind == "microsoft.testing.trx"
+                    || (_deferToController && kind.EndsWith("-summary-fragment", StringComparison.Ordinal))):
                 lock (_lock)
                 {
                     _controllerSummaryArtifacts.Add(artifact);

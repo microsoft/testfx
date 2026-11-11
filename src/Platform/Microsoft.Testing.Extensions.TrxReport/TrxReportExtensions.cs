@@ -6,11 +6,16 @@ using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
@@ -118,6 +123,77 @@ public static class TrxReportExtensions
         });
         ((TestHostControllersManager)builder.TestHostControllers).AddEnvironmentVariableProviderWhenControllerStarts(serviceProvider =>
             new TrxModeEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment()));
+
+        var inProcessArtifacts = new CompositeExtensionFactory<TrxInProcessControllerArtifactHandler>(serviceProvider =>
+            new TrxInProcessControllerArtifactHandler(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetRequiredService<IFileSystem>(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetConfiguration(),
+                serviceProvider.GetSystemClock(),
+                serviceProvider.GetOutputDevice()));
+        ((TestHostControllersManager)builder.TestHostControllers).AddDataConsumerWhenControllerStarts(inProcessArtifacts);
+        ((TestHostControllersManager)builder.TestHostControllers).AddRunCompletionHandler(serviceProvider =>
+            (TrxInProcessControllerArtifactHandler)((ICompositeExtensionFactory)inProcessArtifacts).GetInstance(serviceProvider));
+    }
+
+    private sealed class TrxInProcessControllerArtifactHandler(
+        ICommandLineOptions commandLineOptions,
+        IFileSystem fileSystem,
+        IEnvironment environment,
+        IConfiguration configuration,
+        IClock clock,
+        IOutputDevice outputDevice)
+        : IDataConsumer, ITestHostControllerRunCompletionHandler, IOutputDeviceDataProducer
+    {
+        private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifacts = [];
+
+        public string Uid => nameof(TrxInProcessControllerArtifactHandler);
+
+        public string Version => ExtensionVersion.DefaultSemVer;
+
+        public string DisplayName => ExtensionResources.TrxReportGeneratorDisplayName;
+
+        public string Description => ExtensionResources.TrxReportGeneratorDescription;
+
+        public Type[] DataTypesConsumed => [typeof(FileArtifact)];
+
+        public Task<bool> IsEnabledAsync()
+            => Task.FromResult(commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
+                && !TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(commandLineOptions));
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            if (!_artifacts.TryGetValue(dataProducer, out List<SessionFileArtifact>? artifacts))
+            {
+                artifacts = [];
+                _artifacts.Add(dataProducer, artifacts);
+            }
+
+            var artifact = (FileArtifact)value;
+            artifacts.Add(new SessionFileArtifact(
+                new SessionUid(Guid.Empty.ToString()), artifact.FileInfo, artifact.DisplayName, artifact.Description, artifact.Kind));
+            return Task.CompletedTask;
+        }
+
+        public async Task OnRunCompletedAsync(int exitCode, IReadOnlyList<SessionFileArtifact> artifacts, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_artifacts.Count == 0)
+            {
+                return;
+            }
+
+            foreach (SessionFileArtifact artifact in artifacts.Where(artifact => artifact.Kind == TrxReportEngine.TrxArtifactKind))
+            {
+                IReadOnlyList<string> warnings = await TrxReportEngine.AddArtifactsAsync(
+                    artifact.FileInfo, _artifacts, fileSystem, environment, configuration, clock, cancellationToken).ConfigureAwait(false);
+                foreach (string warning in warnings)
+                {
+                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
     }
 
     private sealed class TrxModeEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, IEnvironment environment)

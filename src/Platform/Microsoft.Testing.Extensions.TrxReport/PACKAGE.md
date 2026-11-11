@@ -36,6 +36,8 @@ To make in-process mode the passive default, set `"commandLineOptionDefaults": {
 
 The controller passes its selected mode to the test host, so a custom launcher can use a child application with different configuration defaults. Configured run defaults remain passive when invoking `merge-trx` or `ms-trxcompare`.
 
+When another extension starts a controller, in-process mode still includes that controller's file attachments in the completed TRX. This does not enable crash recovery or make TRX request a controller.
+
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport.Abstractions](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions): interfaces for extensions interoperating with TRX reports

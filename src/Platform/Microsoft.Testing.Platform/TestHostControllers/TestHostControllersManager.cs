@@ -24,6 +24,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     private readonly List<ICompositeExtensionFactory> _testHostLauncherCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _alreadyBuiltServices = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
+    private readonly List<ICompositeExtensionFactory> _controllerObserverDataConsumersCompositeServiceFactories = [];
 
     private static void ThrowIfBrowserPlatform()
     {
@@ -169,6 +170,10 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             return new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false);
         }
 
+        await ExtensionBuilderHelper.BuildAndRegisterCompositeExtensionsInPlaceAsync<IDataConsumer>(
+            _controllerObserverDataConsumersCompositeServiceFactories, serviceProvider, dataConsumers,
+            _alreadyBuiltServices, _factoryOrdering).ConfigureAwait(false);
+
         await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(
             _controllerObserverEnvironmentVariableProviderFactories, serviceProvider, environmentVariableProviders,
             _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
@@ -198,6 +203,22 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     {
         _controllerObserverEnvironmentVariableProviderFactories.Add(factory);
         _factoryOrdering.Add(factory);
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    internal void AddDataConsumerWhenControllerStarts<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+        where T : class, IDataConsumer
+    {
+        ThrowIfBrowserPlatform();
+
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
+        if (_controllerObserverDataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
+        {
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
+        }
+
+        _controllerObserverDataConsumersCompositeServiceFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
     }
 
     internal async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)

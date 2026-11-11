@@ -42,6 +42,60 @@ public sealed class TestHostLauncherTests : AcceptanceTestBase<TestHostLauncherT
     public Task CustomLauncher_ControllerOutOfProcessModeOverridesChildDefault(string tfm)
         => AssertTrxModeAcrossLauncherAsync(tfm, "out-of-process", "in-process", controllerReportsTrx: true);
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public Task CustomLauncher_InProcessTrxIncludesControllerArtifacts(string tfm)
+        => AssertTrxIncludesControllerArtifactsAsync(tfm, "in-process");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public Task CustomLauncher_OutOfProcessTrxIncludesControllerArtifacts(string tfm)
+        => AssertTrxIncludesControllerArtifactsAsync(tfm, "out-of-process");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public Task CustomLauncher_DefaultTrxIncludesControllerArtifacts(string tfm)
+        => AssertTrxIncludesControllerArtifactsAsync(tfm, null);
+
+    private async Task AssertTrxIncludesControllerArtifactsAsync(string tfm, string? mode)
+    {
+        var originalHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        using TempDirectory controller = new();
+        TestInfrastructure.TestHost host = await CloneTestHostAsync(originalHost, controller, AssetName);
+        string resultsDirectory = Path.Combine(controller.Path, "results");
+        string artifactPath = Path.Combine(controller.Path, "controller.txt");
+        string modeOption = mode is null ? string.Empty : $" --trx-mode {mode}";
+        TestHostResult result = await host.ExecuteAsync(
+            $"--report-trx --report-trx-filename controller-artifacts.trx --results-directory \"{resultsDirectory}\"{modeOption}",
+            new()
+            {
+                ["TRX_LAUNCHER_CONTROLLER_ARTIFACT"] = artifactPath,
+                ["TRACE_TRX_STARTUP"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(2, Regex.Matches(result.StandardOutput, @"CUSTOM_TRX_STARTUP:(\d+)"), result.StandardOutput);
+        Assert.HasCount(1, Directory.GetFiles(resultsDirectory, "*.trx"));
+        var report = XDocument.Load(Path.Combine(resultsDirectory, "controller-artifacts.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement testResult = Assert.ContainsSingle(report.Descendants(ns + "UnitTestResult"));
+        Assert.AreEqual("Test1", testResult.Attribute("testName")?.Value);
+        Assert.AreEqual("Passed", testResult.Attribute("outcome")?.Value);
+        XElement counters = Assert.ContainsSingle(report.Descendants(ns + "Counters"));
+        Assert.AreEqual("1", counters.Attribute("total")?.Value);
+        Assert.AreEqual("1", counters.Attribute("passed")?.Value);
+        XElement collector = Assert.ContainsSingle(
+            report.Descendants(ns + "Collector").Where(element =>
+                element.Attribute("uri")?.Value == "datacollector://ControllerArtifactProducer/1.0.0"));
+        Assert.AreEqual("Controller artifact producer", collector.Attribute("collectorDisplayName")?.Value);
+        string href = Assert.ContainsSingle(collector.Descendants(ns + "A")).Attribute("href")!.Value;
+        string deploymentRoot = report.Descendants(ns + "Deployment").Single().Attribute("runDeploymentRoot")!.Value;
+        Assert.AreEqual(
+            "controller-owned attachment",
+            await File.ReadAllTextAsync(Path.Combine(resultsDirectory, deploymentRoot, "In", href), TestContext.CancellationToken));
+    }
+
     private async Task AssertTrxModeAcrossLauncherAsync(string tfm, string controllerMode, string? childMode, bool controllerReportsTrx)
     {
         var originalHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -126,6 +180,7 @@ public sealed class TestHostLauncherTests : AcceptanceTestBase<TestHostLauncherT
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Testing.Extensions;
@@ -137,6 +192,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 public class Startup
@@ -151,6 +207,12 @@ public class Startup
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(new TrxCapability()), (_,__) => new DummyTestFramework());
         testApplicationBuilder.TestHostControllers.AddTestHostLauncher(_ => new TestHostLauncher());
+        if (Environment.GetEnvironmentVariable("TRX_LAUNCHER_CONTROLLER_ARTIFACT") is string artifactPath)
+        {
+            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(
+                serviceProvider => new ControllerArtifactProducer(serviceProvider.GetMessageBus(), artifactPath));
+        }
+
         testApplicationBuilder.AddTrxReportProvider();
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         return await app.RunAsync();
@@ -202,6 +264,32 @@ public sealed class TestHostLauncher : ITestHostLauncher
 
         Process process = Process.Start(startInfo)!;
         return Task.FromResult<ITestHostHandle>(new ProcessTestHostHandle(process));
+    }
+}
+
+public sealed class ControllerArtifactProducer(IMessageBus messageBus, string artifactPath)
+    : ITestHostProcessLifetimeHandler, IDataProducer
+{
+    public string Uid => nameof(ControllerArtifactProducer);
+
+    public string Version => "1.0.0";
+
+    public string DisplayName => "Controller artifact producer";
+
+    public string Description => "Publishes an artifact after the child exits.";
+
+    public Type[] DataTypesProduced => new[] { typeof(FileArtifact) };
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation process, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation process, CancellationToken cancellationToken)
+    {
+        await File.WriteAllTextAsync(artifactPath, "controller-owned attachment", cancellationToken);
+        await messageBus.PublishAsync(this, new FileArtifact(new FileInfo(artifactPath), "controller attachment"));
     }
 }
 
