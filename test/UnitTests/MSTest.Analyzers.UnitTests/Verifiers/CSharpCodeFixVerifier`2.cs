@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 
+using TestContext = Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
+
 namespace MSTest.Analyzers.Test;
 
 public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
@@ -98,6 +100,45 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
             FixedCode = fixedSource,
         };
 
+        test.ExpectedDiagnostics.AddRange(expected);
+        await test.RunAsync(CancellationToken.None);
+    }
+
+    public static Task VerifyCodeFixWithLegacyMSTestAsync(
+#if NETCOREAPP
+        [StringSyntax("C#-test")]
+#endif
+        string source,
+        DiagnosticResult expected,
+#if NETCOREAPP
+        [StringSyntax("C#-test")]
+#endif
+        string fixedSource)
+        => VerifyCodeFixWithLegacyMSTestAsync(source, [expected], fixedSource);
+
+    // Bind legacy calls to a published contract, but check the final migration against the current framework.
+    // Intermediate fixes still need the old types, so their package also includes the modern Assert targets.
+    public static async Task VerifyCodeFixWithLegacyMSTestAsync(
+#if NETCOREAPP
+        [StringSyntax("C#-test")]
+#endif
+        string source,
+        DiagnosticResult[] expected,
+#if NETCOREAPP
+        [StringSyntax("C#-test")]
+#endif
+        string fixedSource)
+    {
+        var test = new Test(useMSTestV4: true)
+        {
+            ReferenceAssemblies = AnalyzerTestReferenceAssemblies.MSTestWithLegacyAssertions,
+            TestCode = source,
+            FixedCode = fixedSource,
+        };
+
+        test.FixedState.ReferenceAssemblies = AnalyzerTestReferenceAssemblies.Default;
+        test.FixedState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
+        test.FixedState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));
         test.ExpectedDiagnostics.AddRange(expected);
         await test.RunAsync(CancellationToken.None);
     }

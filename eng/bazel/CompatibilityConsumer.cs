@@ -26,7 +26,7 @@ internal static class CompatibilityConsumer
             Assert.AreEqual("b03f5f7f11d50a3a", publicKeyToken);
             Assembly satellite = framework.GetSatelliteAssembly(CultureInfo.GetCultureInfo("ko"));
             Assert.AreEqual("ko", satellite.GetName().CultureName);
-            CollectionAssert.AreEqual(framework.GetName().GetPublicKey(), satellite.GetName().GetPublicKey());
+            Assert.AreSequenceEqual(framework.GetName().GetPublicKey(), satellite.GetName().GetPublicKey());
 #if NETFRAMEWORK
             Assert.AreEqual("mscorlib", typeof(object).Assembly.GetName().Name);
 #else

@@ -356,6 +356,10 @@ Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.IsHangDumpTypeSupportedOnCurrentRuntime(string! value) -> bool
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.MapToSupportedDumpType(string! requested) -> string!
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetActivitySignalInterval(System.TimeSpan hangTimeout) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetInactivityTimerDueTime(System.TimeSpan hangTimeout) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetTimeout(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetTimerPeriod(System.TimeSpan dueTime, out System.TimeSpan remainingDueTime) -> System.TimeSpan
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.IsEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.operator !=(Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames left, Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames right) -> bool
 static Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.operator ==(Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames left, Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames right) -> bool
@@ -453,6 +457,7 @@ static Polyfills.Polyfill.IsBrowser() -> bool
 static Polyfills.Polyfill.IsIOS() -> bool
 static Polyfills.Polyfill.IsTvOS() -> bool
 static Polyfills.Polyfill.IsWasi() -> bool
+static readonly Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.MaxTimerPeriod -> System.TimeSpan
 static readonly Microsoft.Testing.Platform.IPC.Models.VoidResponse.CachedInstance -> Microsoft.Testing.Platform.IPC.Models.VoidResponse!
 static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
 System.Numerics.Hashing.HashHelpers

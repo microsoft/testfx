@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@v6.0.0
+        uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: "8.0.x"
 
@@ -121,7 +121,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@v6.0.0
+        uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: "8.0.x"
 

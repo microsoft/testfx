@@ -118,7 +118,7 @@ public sealed class CodeFixRegistrationContinuationTests
             }
             """;
         using var workspace = new AdhocWorkspace();
-        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source, useMSTestV4: true);
         DiagnosticAnalyzer analyzer = collection ? new CollectionAssertToAssertAnalyzer() : new StringAssertToAssertAnalyzer();
         CodeFixProvider fixer = collection ? new CollectionAssertToAssertFixer() : new StringAssertToAssertFixer();
         ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, analyzer);
@@ -567,7 +567,7 @@ public sealed class CodeFixRegistrationContinuationTests
                 null, new TestContextPropertiesContainsKeyFixer()),
             _ => throw new ArgumentOutOfRangeException(nameof(scenario)),
         };
-        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, setup.Source);
+        Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, setup.Source, useMSTestV4: scenario is "String" or "Collection");
         if (setup.Analyzer is null)
         {
             Compilation compilation = (await document.Project.GetCompilationAsync())!;
@@ -613,8 +613,8 @@ public sealed class CodeFixRegistrationContinuationTests
         Exception exception = await Assert.ThrowsAsync<Exception>(() => fixer.RegisterCodeFixesAsync(
             new CodeFixContext(document, invalid, (action, _) => unsafeActions.Add(action), CancellationToken.None)));
         Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
-        StringAssert.StartsWith(exception.Message, "This program location is thought to be unreachable. File='");
-        StringAssert.EndsWith(exception.Message.Replace('\\', '/'), "/src/Analyzers/MSTest.Analyzers.CodeFixes/AvoidAssertAreSameWithValueTypesFixer.cs' Line=43");
+        Assert.StartsWith("This program location is thought to be unreachable. File='", exception.Message);
+        Assert.EndsWith("/src/Analyzers/MSTest.Analyzers.CodeFixes/AvoidAssertAreSameWithValueTypesFixer.cs' Line=43", exception.Message.Replace('\\', '/'));
         Assert.IsEmpty(unsafeActions);
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
     }

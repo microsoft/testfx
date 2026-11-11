@@ -452,7 +452,7 @@ public sealed class CodeFixContinuationTests
         Document document = await AnalyzerContinuationTestHelpers.CreateDocumentAsync(workspace, source);
         ImmutableArray<Diagnostic> diagnostics = await AnalyzerContinuationTestHelpers.AnalyzeAsync(document, new FlowTestContextCancellationTokenAnalyzer());
         Assert.HasCount(2, diagnostics);
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { "Task.Delay(17)", "Task.Delay(29)" },
             diagnostics.Select(diagnostic => source.Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length)).ToArray());
         Assert.IsTrue(diagnostics.All(diagnostic => diagnostic.Id == "MSTEST0049"

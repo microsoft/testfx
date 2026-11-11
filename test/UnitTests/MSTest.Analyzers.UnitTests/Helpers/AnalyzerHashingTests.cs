@@ -129,7 +129,7 @@ public sealed class AnalyzerHashingTests
         {
             set.Add(new PooledValue(17));
             ProductReflection.Call(type, lease, "Free", [typeof(CancellationToken)], new CancellationToken(canceled: true));
-            CollectionAssert.AreEqual(new[] { new PooledValue(17) }, set.ToArray());
+            Assert.AreSequenceEqual(new[] { new PooledValue(17) }, set.ToArray());
             ProductReflection.Call(type, lease, "Free", [typeof(CancellationToken)], CancellationToken.None);
             returned = true;
             Assert.IsEmpty(set);
@@ -161,7 +161,7 @@ public sealed class AnalyzerHashingTests
         ProductReflection.Call(type, lease, "Free", [typeof(CancellationToken)], CancellationToken.None);
         Assert.IsEmpty(values);
         values.Add(new PooledValue(43));
-        CollectionAssert.AreEqual(new[] { new PooledValue(43) }, values.ToArray());
+        Assert.AreSequenceEqual(new[] { new PooledValue(43) }, values.ToArray());
     }
 
     [TestMethod]
