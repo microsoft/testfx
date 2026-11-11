@@ -45,7 +45,7 @@ internal static class TrxModeHelpers
     [UnsupportedOSPlatformGuard("wasi")]
     public static bool ShouldUseControllerBackedTrxGeneration(ICommandLineOptions commandLineOptions)
         => IsTestHostControllerSupported
-        && (!commandLineOptions.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxModeOptionName, out string[]? arguments)
+        && (!commandLineOptions.TryGetOptionArgumentListOrDefault(TrxReportGeneratorCommandLine.TrxModeOptionName, out string[]? arguments)
             || (arguments is [string mode] && TrxReportGeneratorCommandLine.OutOfProcessMode.Equals(mode, StringComparison.OrdinalIgnoreCase)));
 
     // Another extension can still require a controller when TRX recovery is explicitly disabled.

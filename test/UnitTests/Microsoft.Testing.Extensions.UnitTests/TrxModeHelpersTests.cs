@@ -41,4 +41,35 @@ public sealed class TrxModeHelpersTests
         Assert.AreEqual(requestController, TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(commandLineOptions));
         Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions));
     }
+
+    [TestMethod]
+    [DataRow("in-process", null, false, false, false)]
+    [DataRow("in-process", null, true, false, false)]
+    [DataRow("out-of-process", null, false, true, false)]
+    [DataRow("out-of-process", null, true, true, true)]
+    [DataRow("in-process", "out-of-process", true, true, true)]
+    [DataRow("out-of-process", "in-process", true, false, false)]
+    public void Mode_UsesConfiguredDefaultUnlessExplicitValueIsSet(string defaultMode, string? explicitMode, bool hasController, bool requestController, bool usePipe)
+    {
+        var options = new Dictionary<string, string[]>
+        {
+            [TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
+        };
+        if (explicitMode is not null)
+        {
+            options.Add(TrxReportGeneratorCommandLine.TrxModeOptionName, [explicitMode]);
+        }
+
+        if (hasController)
+        {
+            options.Add(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, ["42"]);
+        }
+
+        var commandLineOptions = new TestCommandLineOptions(
+            options,
+            new() { [TrxReportGeneratorCommandLine.TrxModeOptionName] = [defaultMode] });
+
+        Assert.AreEqual(requestController, TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(commandLineOptions));
+        Assert.AreEqual(usePipe, TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions));
+    }
 }

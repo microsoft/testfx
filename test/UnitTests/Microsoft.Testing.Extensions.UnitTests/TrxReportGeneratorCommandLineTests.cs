@@ -68,6 +68,21 @@ public sealed class TrxReportGeneratorCommandLineTests
     }
 
     [TestMethod]
+    [DataRow("in-process")]
+    [DataRow("out-of-process")]
+    public async Task ConfiguredMode_IsPassiveWithoutReportTrx(string mode)
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        var options = new TestCommandLineOptions(
+            [],
+            new() { [TrxReportGeneratorCommandLine.TrxModeOptionName] = [mode] });
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(options).ConfigureAwait(false);
+
+        result.AssertIsValid();
+    }
+
+    [TestMethod]
     [DataRow("foo.trx")]
     [DataRow("sub/foo.trx")]
     [DataRow("sub\\foo.trx")]

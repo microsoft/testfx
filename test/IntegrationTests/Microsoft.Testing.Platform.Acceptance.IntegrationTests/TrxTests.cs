@@ -39,9 +39,16 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public static IEnumerable<(string TargetFramework, string ControllerOptions, int ProcessCount)> TrxModeDefaultsData =>
+        TargetFrameworks.All.SelectMany(tfm => new[]
+        {
+            (tfm, string.Empty, 1),
+            (tfm, "--hangdump", 2),
+        });
+
+    [DynamicData(nameof(TrxModeDefaultsData))]
     [TestMethod]
-    public async Task Trx_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm)
+    public async Task Trx_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm, string controllerOptions, int processCount)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         using TempDirectory clone = new();
@@ -52,31 +59,43 @@ Out of process file artifacts produced:
             """
             {
               "commandLineOptionDefaults": {
-                "report-trx-filename": "configured-{asm}.trx"
+                "report-trx-filename": "configured-{asm}.trx",
+                "trx-mode": "in-process"
               }
             }
             """,
             TestContext.CancellationToken);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            controllerOptions,
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(processCount, Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)"), testHostResult.StandardOutput);
+        testHostResult.AssertOutputDoesNotContain("Out of process file artifacts produced:");
         Assert.IsEmpty(Directory.GetFiles(testHost.DirectoryName, "configured-*.trx", SearchOption.AllDirectories));
 
         string defaultResultsPath = Path.Combine(testHost.DirectoryName, "default-results");
         testHostResult = await testHost.ExecuteAsync(
-            $"--report-trx --results-directory \"{defaultResultsPath}\"",
+            $"--report-trx --results-directory \"{defaultResultsPath}\" {controllerOptions}",
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(processCount, Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)"), testHostResult.StandardOutput);
+        testHostResult.AssertOutputDoesNotContain("Out of process file artifacts produced:");
         Assert.IsTrue(File.Exists(Path.Combine(defaultResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
 
         string explicitResultsPath = Path.Combine(testHost.DirectoryName, "explicit-results");
         testHostResult = await testHost.ExecuteAsync(
-            $"--report-trx --report-trx-filename explicit.trx --results-directory \"{explicitResultsPath}\"",
+            $"--report-trx --report-trx-filename explicit.trx --trx-mode out-of-process --results-directory \"{explicitResultsPath}\" {controllerOptions}",
+            new() { ["TRACE_TRX_STARTUP"] = "1" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.HasCount(2, Regex.Matches(testHostResult.StandardOutput, @"TRX startup pid: (\d+)"), testHostResult.StandardOutput);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
         Assert.IsTrue(File.Exists(Path.Combine(explicitResultsPath, "explicit.trx")));
         Assert.IsFalse(File.Exists(Path.Combine(explicitResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
     }

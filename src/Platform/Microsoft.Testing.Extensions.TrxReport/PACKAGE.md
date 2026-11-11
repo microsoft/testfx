@@ -32,6 +32,8 @@ In-process mode cannot recover a report if the test host crashes, hangs, or is t
 
 Use `--trx-mode:out-of-process` to explicitly request controller-backed recovery. This mode is unavailable on Android, iOS, Mac Catalyst, tvOS, WASI, and in browsers. Both modes require `--report-trx`; leaving `--trx-mode` unspecified preserves the default behavior.
 
+To make in-process mode the passive default, set `"commandLineOptionDefaults": { "trx-mode": "in-process" }` in `testconfig.json`. It takes effect only with `--report-trx`, and an explicit `--trx-mode` overrides it.
+
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport.Abstractions](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions): interfaces for extensions interoperating with TRX reports
