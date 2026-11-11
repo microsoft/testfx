@@ -177,7 +177,7 @@ The same call works from a helper class, a fixture, or any other code reachable 
 
 ## Compatibility
 
-- **Not a breaking change.** All additions; no existing types are modified.
+- **Assembly identity.** The initial API addition was additive. Moving these types from `MSTest.TestFramework.Extensions` to `MSTest.TestFramework` for MSTest 5 changes their assembly identity and requires existing consumers to recompile; this move is not binary-compatible.
 - **Experimental.** The whole surface is annotated with `[Experimental("MSTESTEXP")]`. Consumers must explicitly opt in with `#pragma warning disable MSTESTEXP` (or equivalent). This lets us evolve the shape based on early feedback before locking it.
 - **TFM coverage.** The run-state types compile in the core framework for `netstandard2.0`, `net462`, `net10.0` and `net11.0`. The existing UWP and WinUI Extensions builds reference the core framework; their targets and package selection are unchanged.
 - **Source compatibility for derived `TestContext`s.** None affected; we did not touch `TestContext`.
