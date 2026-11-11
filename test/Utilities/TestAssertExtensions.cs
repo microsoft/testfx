@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.Testing.TestInfrastructure;
 
 /// <summary>
-/// Test-only assertions using the BCL filesystem and string predicates.
+/// Test-only assertions for filesystem paths, strings, and dictionary entries.
 /// </summary>
 /// <remarks>
 /// Like other assertions, nonnull postconditions apply to successful assertions, not failures collected by an assertion scope.
@@ -52,6 +52,61 @@ internal static class TestAssertExtensions
             => Check(!Directory.Exists(path), nameof(DirectoryDoesNotExist), path, pathExpression, message);
 
         /// <summary>
+        /// Asserts that the dictionary contains the key and its value equals the expected value.
+        /// </summary>
+        /// <remarks>
+        /// Uses the dictionary's own key lookup and <see cref="EqualityComparer{T}.Default"/> for value equality.
+        /// Accepts <see cref="IDictionary{TKey, TValue}"/> without modifying it; readonly-interface-only dictionaries are not supported.
+        /// </remarks>
+        public static void ContainsEntry<TKey, TValue>(
+            TKey key,
+            TValue expectedValue,
+            IDictionary<TKey, TValue>? dictionary,
+            string? message = null,
+            [CallerArgumentExpression(nameof(key))] string keyExpression = "",
+            [CallerArgumentExpression(nameof(expectedValue))] string expectedValueExpression = "",
+            [CallerArgumentExpression(nameof(dictionary))] string dictionaryExpression = "")
+        {
+            if (dictionary is null)
+            {
+                ReportFailure(dictionary is not null, "Dictionary is <null>.");
+                return;
+            }
+
+            bool found = dictionary.TryGetValue(key, out TValue? actualValue);
+            if (!found)
+            {
+                int count = dictionary.Count;
+                ReportFailure(found, count is 0 ? "Dictionary is empty." : $"Key was not found (dictionary count: {count}).");
+                return;
+            }
+
+            bool equal = EqualityComparer<TValue>.Default.Equals(expectedValue, actualValue);
+            if (equal)
+            {
+                return;
+            }
+
+            string mismatch = actualValue is null
+                ? "Key is present, but its value is <null>."
+                : expectedValue is null
+                    ? "Key is present, but a <null> value was expected."
+                    : "Key is present, but its value differs.";
+            ReportFailure(equal, mismatch, $" Actual: {FormatValue(actualValue)}.");
+
+            void ReportFailure(bool condition, string reason, string actual = "")
+            {
+                string details = $"Assert.ContainsEntry({keyExpression}, {expectedValueExpression}, {dictionaryExpression}) failed. Key: {FormatValue(key)}. {reason} Expected: {FormatValue(expectedValue)}.{actual}";
+                if (message is not null)
+                {
+                    details += $" {message}";
+                }
+
+                Assert.IsTrue(condition, details, conditionExpression: string.Empty);
+            }
+        }
+
+        /// <summary>
         /// Asserts that the value is null or empty, without treating whitespace as empty.
         /// </summary>
         public static void IsNullOrEmpty(string? value, string? message = null, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
@@ -87,15 +142,20 @@ internal static class TestAssertExtensions
         Assert.IsTrue(condition, details, conditionExpression: string.Empty);
     }
 
-    private static string FormatValue(string? value)
+    private static string FormatValue(object? value)
     {
         if (value is null)
         {
             return "<null>";
         }
 
+        if (value is not string text)
+        {
+            return $"{FormatValue(Convert.ToString(value, CultureInfo.InvariantCulture))} ({value.GetType().FullName})";
+        }
+
         StringBuilder builder = new("\"");
-        foreach (char character in value)
+        foreach (char character in text)
         {
             switch (character)
             {

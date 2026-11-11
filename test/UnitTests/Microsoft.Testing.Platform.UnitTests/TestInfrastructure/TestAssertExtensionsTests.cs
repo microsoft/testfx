@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Moq;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -332,8 +334,285 @@ public sealed class TestAssertExtensionsTests : IDisposable
         }
     }
 
+    [TestMethod]
+    [DataRow(null, DisplayName = "ContainsEntry_Equal_Null")]
+    [DataRow("", DisplayName = "ContainsEntry_Equal_Empty")]
+    [DataRow(" ", DisplayName = "ContainsEntry_Equal_Space")]
+    [DataRow("\t\r\n", DisplayName = "ContainsEntry_Equal_Controls")]
+    [DataRow("value", DisplayName = "ContainsEntry_Equal_Text")]
+    public void ContainsEntry_EqualEntries_Succeed(string? value)
+    {
+        IDictionary<string, string?> dictionary = new Dictionary<string, string?> { ["key"] = value };
+
+        Assert.ContainsEntry("key", value, dictionary);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(42)]
+    public void ContainsEntry_ValueTypeEntries_Succeed(int value)
+    {
+        Dictionary<string, int> dictionary = new() { ["key"] = value };
+
+        Assert.ContainsEntry("key", value, dictionary);
+    }
+
+    [TestMethod]
+    public void ContainsEntry_UsesDictionaryKeyComparer()
+    {
+        Dictionary<string, string> dictionary = new(StringComparer.OrdinalIgnoreCase) { ["Stored"] = "value" };
+
+        Assert.ContainsEntry("sToReD", "value", dictionary);
+    }
+
+    [TestMethod]
+    public void ContainsEntry_Success_UsesValueEqualityAndOneLookupWithoutFormatting()
+    {
+        object key = new UnformattableValue(1);
+        object expected = new UnformattableValue(2);
+        object? actual = new UnformattableValue(2);
+        Mock<IDictionary<object, object>> dictionary = new(MockBehavior.Strict);
+        dictionary.Setup(d => d.TryGetValue(key, out actual)).Returns(true);
+
+        Assert.ContainsEntry(key, expected, dictionary.Object);
+
+        dictionary.Verify(d => d.TryGetValue(key, out actual), Times.Once);
+        dictionary.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public void ContainsEntry_DoesNotUseStructuralValueEquality()
+    {
+        Dictionary<string, int[]> dictionary = new() { ["key"] = [1, 2] };
+
+        Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsEntry("key", new[] { 1, 2 }, dictionary));
+    }
+
+    [TestMethod]
+    [DataRow(null, "Dictionary is <null>.", DisplayName = "ContainsEntry_Missing_NullDictionary")]
+    [DataRow(0, "Dictionary is empty.", DisplayName = "ContainsEntry_Missing_EmptyDictionary")]
+    [DataRow(2, "Key was not found (dictionary count: 2).", DisplayName = "ContainsEntry_Missing_PopulatedDictionary")]
+    public void ContainsEntry_MissingKey_DistinguishesDictionaryStates(int? count, string reason)
+    {
+        Dictionary<string, string?>? dictionary = null;
+        if (count is { } entryCount)
+        {
+            dictionary = [];
+            for (int i = 0; i < entryCount; i++)
+            {
+                dictionary.Add($"other-{i}", null);
+            }
+        }
+
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(
+            () => Assert.ContainsEntry("missing", null, dictionary, "custom"));
+
+        AssertFailureMessage(
+            $"""
+            Assertion failed. Expected condition to be true.
+            Assert.ContainsEntry("missing", null, dictionary) failed. Key: "missing". {reason} Expected: <null>. custom
+
+            actual: false
+            """,
+            failure);
+    }
+
+    [TestMethod]
+    public void ContainsEntry_MissingKey_DoesNotAcceptDefaultValue()
+    {
+        Dictionary<string, int> dictionary = [];
+
+        Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsEntry("missing", 0, dictionary));
+    }
+
+    [TestMethod]
+    [DataRow("expected", null, "Key is present, but its value is <null>.", "\"expected\"", "<null>", DisplayName = "ContainsEntry_Mismatch_ActualNull")]
+    [DataRow(null, "actual", "Key is present, but a <null> value was expected.", "<null>", "\"actual\"", DisplayName = "ContainsEntry_Mismatch_ExpectedNull")]
+    [DataRow(null, "", "Key is present, but a <null> value was expected.", "<null>", "\"\"", DisplayName = "ContainsEntry_Mismatch_NullVersusEmpty")]
+    [DataRow("expected", "actual", "Key is present, but its value differs.", "\"expected\"", "\"actual\"", DisplayName = "ContainsEntry_Mismatch_Text")]
+    [DataRow("", " ", "Key is present, but its value differs.", "\"\"", "\" \"", DisplayName = "ContainsEntry_Mismatch_EmptyVersusSpace")]
+    [DataRow("value", "VALUE", "Key is present, but its value differs.", "\"value\"", "\"VALUE\"", DisplayName = "ContainsEntry_Mismatch_CaseSensitive")]
+    [DataRow(42, 42L, "Key is present, but its value differs.", "\"42\" (System.Int32)", "\"42\" (System.Int64)", DisplayName = "ContainsEntry_Mismatch_BoxedNumericTypes")]
+    [DataRow("42", 42, "Key is present, but its value differs.", "\"42\"", "\"42\" (System.Int32)", DisplayName = "ContainsEntry_Mismatch_StringVersusNumber")]
+    public void ContainsEntry_ValueMismatch_DistinguishesValuesAndTypes(
+        object? expectedValue, object? actualValue, string reason, string expected, string actual)
+    {
+        Dictionary<string, object?> dictionary = new() { ["key"] = actualValue };
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(
+            () => Assert.ContainsEntry("key", expectedValue, dictionary, "custom"));
+
+        AssertFailureMessage(
+            $"""
+            Assertion failed. Expected condition to be true.
+            Assert.ContainsEntry("key", expectedValue, dictionary) failed. Key: "key". {reason} Expected: {expected}. Actual: {actual}. custom
+
+            actual: false
+            """,
+            failure);
+    }
+
+    [TestMethod]
+    public void ContainsEntry_Failure_EscapesKeyAndValues()
+    {
+        const string Key = "key\t\"\\\r\n";
+        const string Expected = "\u2003\0";
+        Dictionary<string, string> dictionary = new() { [Key] = "\ud800\b\f\u001b" };
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(
+            () => Assert.ContainsEntry(Key, Expected, dictionary));
+
+        AssertFailureMessage(
+            """
+            Assertion failed. Expected condition to be true.
+            Assert.ContainsEntry(Key, Expected, dictionary) failed. Key: "key\t\"\\\r\n". Key is present, but its value differs. Expected: "\u2003\u0000". Actual: "\ud800\u0008\u000c\u001b".
+
+            actual: false
+            """,
+            failure);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "ContainsEntry_Lookup_Missing")]
+    [DataRow(true, DisplayName = "ContainsEntry_Lookup_Mismatch")]
+    public void ContainsEntry_Failure_UsesOneLookupWithoutEnumerationOrIndexer(bool found)
+    {
+        string? actual = found ? "actual" : null;
+        Mock<IDictionary<string, string?>> dictionary = new(MockBehavior.Strict);
+        dictionary.Setup(d => d.TryGetValue("key", out actual)).Returns(found);
+        if (!found)
+        {
+            dictionary.SetupGet(d => d.Count).Returns(1);
+        }
+
+        Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsEntry("key", "expected", dictionary.Object));
+
+        dictionary.Verify(d => d.TryGetValue("key", out actual), Times.Once);
+        if (!found)
+        {
+            dictionary.VerifyGet(d => d.Count, Times.Once);
+        }
+
+        dictionary.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public void ContainsEntry_PreservesLookupExceptions()
+    {
+        InvalidOperationException expected = new("lookup failed");
+        Mock<IDictionary<string, string>> dictionary = new(MockBehavior.Strict);
+        string? actual = string.Empty;
+        dictionary.Setup(d => d.TryGetValue("key", out actual)).Throws(expected);
+
+        Assert.AreSame(expected, Assert.ThrowsExactly<InvalidOperationException>(() => Assert.ContainsEntry("key", "value", dictionary.Object)));
+        dictionary.Verify(d => d.TryGetValue("key", out actual), Times.Once);
+        dictionary.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public void ContainsEntry_PreservesKeyComparerExceptions()
+    {
+        InvalidOperationException expected = new("comparer failed");
+        Mock<IEqualityComparer<string>> comparer = new(MockBehavior.Strict);
+        comparer.Setup(c => c.GetHashCode("key")).Returns(1);
+        Dictionary<string, string> dictionary = new(comparer.Object) { ["key"] = "value" };
+        comparer.Setup(c => c.GetHashCode("key")).Throws(expected);
+
+        Assert.AreSame(expected, Assert.ThrowsExactly<InvalidOperationException>(() => Assert.ContainsEntry("key", "value", dictionary)));
+    }
+
+    [TestMethod]
+    public void ContainsEntry_Failure_PreservesCallerExpressionsAndEvaluationOrder()
+    {
+        List<string> evaluations = [];
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(
+            () => Assert.ContainsEntry(GetKey(), GetExpected(), GetDictionary(), GetMessage()));
+
+        Assert.AreSequenceEqual(["key", "expected", "dictionary", "message"], evaluations);
+        AssertFailureMessage(
+            """
+            Assertion failed. Expected condition to be true.
+            Assert.ContainsEntry(GetKey(), GetExpected(), GetDictionary()) failed. Key: "key". Key is present, but its value differs. Expected: "expected". Actual: "actual". custom
+
+            actual: false
+            """,
+            failure);
+
+        string GetKey()
+        {
+            evaluations.Add("key");
+            return "key";
+        }
+
+        string GetExpected()
+        {
+            evaluations.Add("expected");
+            return "expected";
+        }
+
+        Dictionary<string, string> GetDictionary()
+        {
+            evaluations.Add("dictionary");
+            return new() { ["key"] = "actual" };
+        }
+
+        string GetMessage()
+        {
+            evaluations.Add("message");
+            return "custom";
+        }
+    }
+
+    [TestMethod]
+    public void ContainsEntry_WithinScope_RecordsOneFailurePerCallAndContinues()
+    {
+        IDictionary<string, string?>? absent = null;
+        Dictionary<string, string?> empty = [];
+        Dictionary<string, string?> dictionary = new() { ["null"] = null, ["text"] = "actual" };
+        int completed = 0;
+        AssertFailedException failure = Assert.ThrowsExactly<AssertFailedException>(() =>
+        {
+#pragma warning disable MSTESTEXP // Exercise the current framework's experimental assertion scope.
+            using (Assert.Scope())
+#pragma warning restore MSTESTEXP
+            {
+                Assert.ContainsEntry("key", "expected", absent);
+                completed++;
+                Assert.ContainsEntry("key", null, empty);
+                completed++;
+                Assert.ContainsEntry("missing", null, dictionary);
+                completed++;
+                Assert.ContainsEntry("null", "expected", dictionary);
+                completed++;
+                Assert.ContainsEntry("text", null, dictionary);
+                completed++;
+                Assert.ContainsEntry("text", "expected", dictionary);
+                completed++;
+                Assert.ContainsEntry("null", null, dictionary);
+                completed++;
+            }
+        });
+
+        Assert.AreEqual(7, completed);
+        AggregateException failures = Assert.IsInstanceOfType<AggregateException>(failure.InnerException);
+        Assert.HasCount(6, failures.InnerExceptions);
+        Assert.AreEqual("6 assertion(s) failed within the assert scope.", failure.Message);
+        Assert.ThrowsExactly<AssertFailedException>(() => Assert.ContainsEntry("key", null, empty));
+    }
+
     public void Dispose() => CultureInfo.CurrentUICulture = _originalUICulture;
 
     private static void AssertFailureMessage(string expected, AssertFailedException failure)
         => Assert.AreEqual(expected.Replace("\r\n", "\n"), failure.Message.Replace("\r\n", "\n"));
+
+    private sealed class UnformattableValue(int value) : IEquatable<UnformattableValue>
+    {
+        public bool Equals(UnformattableValue? other) => other is not null && value == other.Value;
+
+        public override bool Equals(object? obj) => obj is UnformattableValue other && Equals(other);
+
+        public override int GetHashCode() => value;
+
+        public override string ToString() => throw new InvalidOperationException("Successful assertions must not format keys or values.");
+
+        private int Value => value;
+    }
 }
