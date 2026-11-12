@@ -1,5 +1,13 @@
 <Project>
 
+  <Target Name="_AlignMSTestPlatformPackageCoreVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Condition=" '%(Filename)' == 'TestFramework' ">
+        <ProjectVersion>[$(PackageVersion)]</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AddMSTestPlatformPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
     <PropertyGroup>
       <_PlatformPackageTfm Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">uap10.0.16299</_PlatformPackageTfm>

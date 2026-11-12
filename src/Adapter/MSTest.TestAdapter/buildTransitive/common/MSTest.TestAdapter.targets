@@ -17,11 +17,17 @@
   <PropertyGroup>
     <_MSTestAdapterPayloadRoot Condition=" '$(_MSTestAdapterPayloadRoot)' == '' ">$(MSBuildThisFileDirectory)</_MSTestAdapterPayloadRoot>
     <_MSTestAdapterLocalizationRoot Condition=" '$(_MSTestAdapterLocalizationRoot)' == '' ">$(MSBuildThisFileDirectory)..\_localization\</_MSTestAdapterLocalizationRoot>
+    <_MSTestAdapterCompositionDependsOn Condition=" '$(UsingMicrosoftNETSdk)' == 'true' AND '$(TargetFramework)' != '' ">ResolvePackageAssets</_MSTestAdapterCompositionDependsOn>
   </PropertyGroup>
 
-  <Target Name="_MSTestValidateAdapterComposition" BeforeTargets="PrepareForBuild">
-    <!-- NuGet imports these markers from the current inner TFM's buildTransitive closure. -->
-    <Error Condition=" ('$(_MSTestUwpAdapterReferenced)' == 'true' AND ('$(_MSTestWinUIAdapterReferenced)' == 'true' OR '$(_MSTestOrdinaryAdapterReferenced)' == 'true'))
+  <Target Name="_MSTestValidateAdapterComposition" BeforeTargets="PrepareForBuild" DependsOnTargets="$(_MSTestAdapterCompositionDependsOn)">
+    <!-- Resolve the current inner TFM even when a package's build assets are excluded. -->
+    <ItemGroup>
+      <_MSTestResolvedAdapterComposition Include="@(PackageDependencies)"
+                                         Condition=" '%(PackageDependencies.Identity)' == 'MSTest.TestAdapter' OR '%(PackageDependencies.Identity)' == 'MSTest.Uwp' OR '%(PackageDependencies.Identity)' == 'MSTest.WinUI' " />
+    </ItemGroup>
+    <Error Condition=" @(_MSTestResolvedAdapterComposition->Count()) &gt; 1
+                       OR ('$(_MSTestUwpAdapterReferenced)' == 'true' AND ('$(_MSTestWinUIAdapterReferenced)' == 'true' OR '$(_MSTestOrdinaryAdapterReferenced)' == 'true'))
                        OR ('$(_MSTestWinUIAdapterReferenced)' == 'true' AND '$(_MSTestOrdinaryAdapterReferenced)' == 'true') "
            Text="Reference exactly one MSTest adapter composition: MSTest.TestAdapter, MSTest.Uwp, or MSTest.WinUI. Do not combine a UI package with the MSTest metapackage or another adapter package." />
     <Error Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND ('$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true') "

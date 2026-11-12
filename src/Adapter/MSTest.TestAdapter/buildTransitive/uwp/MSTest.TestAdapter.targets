@@ -6,6 +6,7 @@
     <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
 
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+    <_MSTestAdapterCompositionDependsOn Condition=" '$(UsingMicrosoftNETSdk)' == 'true' AND '$(TargetFramework)' != '' ">ResolvePackageAssets</_MSTestAdapterCompositionDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,8 +28,12 @@
     </TestingPlatformBuilderHook>
   </ItemGroup>
 
-  <Target Name="_MSTestValidateAdapterComposition" BeforeTargets="PrepareForBuild">
-    <Error Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' OR '$(_MSTestWinUIAdapterReferenced)' == 'true' "
+  <Target Name="_MSTestValidateAdapterComposition" BeforeTargets="PrepareForBuild" DependsOnTargets="$(_MSTestAdapterCompositionDependsOn)">
+    <ItemGroup>
+      <_MSTestResolvedAdapterComposition Include="@(PackageDependencies)"
+                                         Condition=" '%(PackageDependencies.Identity)' == 'MSTest.TestAdapter' OR '%(PackageDependencies.Identity)' == 'MSTest.Uwp' OR '%(PackageDependencies.Identity)' == 'MSTest.WinUI' " />
+    </ItemGroup>
+    <Error Condition=" @(_MSTestResolvedAdapterComposition->Count()) &gt; 1 OR '$(_MSTestOrdinaryAdapterReferenced)' == 'true' OR '$(_MSTestWinUIAdapterReferenced)' == 'true' "
            Text="Classic UWP tests require MSTest.Uwp and cannot combine it with another MSTest adapter package." />
   </Target>
 

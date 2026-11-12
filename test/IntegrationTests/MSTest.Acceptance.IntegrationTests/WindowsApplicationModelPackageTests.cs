@@ -264,7 +264,7 @@ public sealed class WindowsApplicationModelPackageTests
         Assert.IsNotEmpty(core);
         foreach (XElement dependency in core)
         {
-            Assert.AreEqual(AcceptanceTestBase.MSTestVersion, (string?)dependency.Attribute("version"));
+            Assert.AreEqual($"[{AcceptanceTestBase.MSTestVersion}]", (string?)dependency.Attribute("version"));
         }
     }
 

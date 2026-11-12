@@ -56,14 +56,20 @@ public sealed partial class SdkTests
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
-    [DataRow("MSTest.TestAdapter", "MSTest.Uwp")]
-    [DataRow("MSTest.TestAdapter", "MSTest.WinUI")]
-    [DataRow("MSTest.Uwp", "MSTest.WinUI")]
-    public async Task ExplicitPackages_RejectConflictingAdaptersBeforeCompilation(string firstPackage, string secondPackage)
+    [DataRow("MSTest.TestAdapter", "MSTest.Uwp", "Direct")]
+    [DataRow("MSTest.TestAdapter", "MSTest.WinUI", "Direct")]
+    [DataRow("MSTest.Uwp", "MSTest.WinUI", "Direct")]
+    [DataRow("MSTest.TestAdapter", "MSTest.Uwp", "ExcludedBuildAssets")]
+    [DataRow("MSTest.TestAdapter", "MSTest.WinUI", "ExcludedBuildAssets")]
+    [DataRow("MSTest.Uwp", "MSTest.WinUI", "ExcludedBuildAssets")]
+    [DataRow("MSTest.TestAdapter", "MSTest.Uwp", "ProjectReferenceWithExcludedBuildAssets")]
+    [DataRow("MSTest.TestAdapter", "MSTest.WinUI", "ProjectReferenceWithExcludedBuildAssets")]
+    [DataRow("MSTest.Uwp", "MSTest.WinUI", "ProjectReferenceWithExcludedBuildAssets")]
+    public async Task ExplicitPackages_RejectConflictingAdaptersBeforeCompilation(string firstPackage, string secondPackage, string referenceKind)
     {
-        using TestAsset asset = await TestAsset.GenerateAssetAsync(
-            "ConflictingMSTestPackages",
-            $$"""
+        string excludedAssets = referenceKind == "Direct" ? string.Empty : " ExcludeAssets=\"build;buildTransitive\"";
+        string secondReference = $"""<PackageReference Include="{secondPackage}" Version="{MSTestVersion}"{excludedAssets} />""";
+        string source = $$"""
             #file ConflictingMSTestPackages.csproj
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
@@ -71,15 +77,40 @@ public sealed partial class SdkTests
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="{{firstPackage}}" Version="{{MSTestVersion}}" />
-                <PackageReference Include="{{secondPackage}}" Version="{{MSTestVersion}}" />
+                {{(referenceKind == "ProjectReferenceWithExcludedBuildAssets" ? """<ProjectReference Include="Dependency/Dependency.csproj" />""" : secondReference)}}
               </ItemGroup>
             </Project>
-            """);
+            """;
+        if (referenceKind == "ProjectReferenceWithExcludedBuildAssets")
+        {
+            source += $$"""
+
+                #file Dependency/Dependency.csproj
+                <Project Sdk="Microsoft.NET.Sdk">
+                  <PropertyGroup>
+                    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
+                  </PropertyGroup>
+                  <ItemGroup>
+                    {{secondReference}}
+                  </ItemGroup>
+                </Project>
+                """;
+        }
+
+        using TestAsset asset = await TestAsset.GenerateAssetAsync(
+            "ConflictingMSTestPackages",
+            source);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            "msbuild -restore -t:PrepareForBuild -bl:conflicting-adapters.binlog",
+            "msbuild ConflictingMSTestPackages.csproj -restore -t:PrepareForBuild -bl:conflicting-adapters.binlog",
             workingDirectory: asset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
+        using var assets = JsonDocument.Parse(
+            await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "obj", "project.assets.json"), TestContext.CancellationToken));
+        string[] packages = Assert.ContainsSingle(assets.RootElement.GetProperty("targets").EnumerateObject()).Value
+            .EnumerateObject().Select(package => package.Name).ToArray();
+        Assert.Contains($"{firstPackage}/{MSTestVersion}", packages);
+        Assert.Contains($"{secondPackage}/{MSTestVersion}", packages);
         result.AssertExitCodeIs(1);
         result.AssertOutputContains("Reference exactly one MSTest adapter composition: MSTest.TestAdapter, MSTest.Uwp, or MSTest.WinUI.");
     }
