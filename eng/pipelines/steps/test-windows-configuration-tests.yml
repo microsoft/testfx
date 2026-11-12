@@ -21,6 +21,10 @@ steps:
   displayName: Validate generated coverage settings
   condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
 
+- pwsh: .\eng\test-build-incrementality.ps1 -ArtifactsDirectory "$(Agent.TempDirectory)\testfx-build-incrementality" -PackageRoot "$(Build.SourcesDirectory)\.packages"
+  displayName: Validate coverage and WinUI build incrementality
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
+
 # Because the build step is using -ci, restore is done in a local .packages directory.
 # NUGET_PACKAGES must point to that directory so test project evaluation imports the restored package props/targets.
 #
