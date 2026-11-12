@@ -459,7 +459,7 @@ public sealed class TerminalTestReporterTests
 
             """;
 
-        Assert.AreEqual(expected, ShowEscape(output));
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), ShowEscape(output.Replace("\r\n", "\n")));
     }
 
     [TestMethod]
@@ -516,7 +516,7 @@ public sealed class TerminalTestReporterTests
 
             """;
 
-        Assert.AreEqual(expected, ShowEscape(stringBuilderConsole.Output));
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), ShowEscape(stringBuilderConsole.Output.Replace("\r\n", "\n")));
     }
 
     [TestMethod]
@@ -614,7 +614,7 @@ public sealed class TerminalTestReporterTests
 
             """;
 
-        Assert.AreEqual(expected, ShowEscape(output));
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), ShowEscape(output.Replace("\r\n", "\n")));
     }
 
     [TestMethod]
@@ -714,7 +714,7 @@ public sealed class TerminalTestReporterTests
 
             """;
 
-        Assert.AreEqual(expected, ShowEscape(output));
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), ShowEscape(output.Replace("\r\n", "\n")));
     }
 
     [TestMethod]
@@ -843,7 +843,7 @@ public sealed class TerminalTestReporterTests
 
             """;
 
-        Assert.AreEqual(expected, ShowEscape(output));
+        Assert.AreEqual(expected.Replace("\r\n", "\n"), ShowEscape(output.Replace("\r\n", "\n")));
     }
 
     [TestMethod]

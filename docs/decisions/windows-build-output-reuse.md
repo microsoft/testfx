@@ -17,6 +17,9 @@ The primary Windows Release job owns a versioned archive containing:
 - Configuration-matched `artifacts/bin` outputs, including dependencies, test
   data, runtime configuration files, and both product and test assemblies.
 - Configuration-matched Shipping and NonShipping packages.
+- The staged acceptance dependency feed under `artifacts/tmp/<Configuration>/packages`,
+  including the downloaded CodeCoverage and Aspire packages. Other temporary
+  directories are not transported.
 - Generated `coverage.config` files, but no other intermediates, restore caches,
   SDKs, workloads, test results, or credentials.
 - A manifest binding the payload to the source commit, configuration, original
@@ -172,6 +175,99 @@ This corrects the earlier diagnosis: `no_symbols` was the final skip category,
 but the detailed cause was unresolved source paths, not unsupported Windows
 PDBs. The focused Linux coverage blocker is resolved. Full acceptance, macOS,
 and live pipeline transport still need validation; the trial remains off.
+
+### 2026-11-12: review corrections for the consuming graph
+
+Three additional, concrete consumer-boundary gaps were confirmed:
+
+- The official reuse leg imported Windows-only coverage settings but restored
+  only `NonWindowsTests.slnf`. Coverage validation now takes that explicit
+  solution filter for the reuse path; it does not infer selection by checking
+  whether assets happen to exist. Selected projects still require restore
+  provenance. The native-build path and Windows validation keep their scope.
+- Raw multiline reporter expectations in a CRLF Windows checkout are compiled
+  into the test DLL, while runtime `AppendLine` follows the execution OS. The
+  five remaining exact multiline comparisons now normalize CRLF to LF on both
+  sides, matching existing assertions in the same file. All other characters,
+  ordering, indentation, and blank lines remain part of the equality checks.
+- `MSTest.Acceptance.IntegrationTests` stages downloaded CodeCoverage and Aspire
+  packages in `CopyNuGetPackagesForTestAssets` during `BeforeBuild`. A
+  restore-only consumer does not run that target. The archive now transports
+  that existing local feed rather than rebuilding the acceptance projects or
+  adding a fallback public feed.
+
+The comparison base is `d73ad4e8c3cb942a00ef547f9849dbb2f081dc2d`.
+The tested implementation/test diff, excluding this decision record, has
+SHA-256 `C3D3ABBCC2EDDA8A369AFCB2EC95E34510402C84598AA9E31DCCA1847ADD446B`.
+The fixed helper, validator, and C# source were checked byte-for-byte against
+their retained validation copies before publication. The C# source retained its
+UTF-8 BOM and Windows CRLF line endings; this was not an LF-checkout simulation.
+SDK, configuration, framework, and coverage collector match the preceding
+source-root experiment.
+
+#### Test-value evidence
+
+| Contract / case | Without correction | With correction |
+| --- | --- | --- |
+| Consumer coverage scope / `CoverageValidationScopesToConsumerProjects` | Removing only filter application, while retaining the parameter and regression, fails because `WindowsOnly.UnitTests` has no restored assets. | All 17 transport cases pass on Windows and Linux; `SelectedCoverageProjectStillRequiresRestore` still rejects missing selected-project assets. |
+| Windows-built reporter expectations / `TerminalTestReporterTests` | Linux executes 244 cases: 239 pass and exactly the five edited multiline assertions fail, exit 2. Windows passes all 244. | The same 244 identities pass on both Windows and Linux, with zero failures/skips and exit 0. |
+| Staged acceptance feed / `ExportContainsOnlyConfigurationOutputs` | Removing only staged-feed collection fails the independent inventory assertion: expected 10 payload files, got 8. | The preview/Aspire byte-preservation and unrelated-tmp rejection cases pass; fresh Windows and Linux consumers resolve the real preview package from the transported feed. |
+
+The original coverage validator also reproduced the actual Linux failure on
+imported `TestFramework.UnitTests` settings after the non-Windows restore.
+The scoped validator then validated seven settings files. The official Windows
+step and native Linux path are unchanged.
+
+The exact reporter invocation, run against separate baseline/fixed Windows-built
+outputs on each OS, was:
+
+```text
+dotnet test --project <consumer>/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj -c Release --framework net11.0 --no-build -p:UseAppHost=false -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=<results> -bl:<results>/test.binlog --filter FullyQualifiedName~TerminalTestReporterTests --show-test-results failed
+```
+
+All 2,836 transported DLL/PDB files stayed unchanged during each Linux execution.
+Inspection of the restore, both no-build test, and fresh-consumer restore binlogs
+found no compiler invocations. These are local Linux-container results, not
+hosted CI or macOS evidence.
+
+The producer's real `CopyNuGetPackagesForTestAssets` target staged
+`Aspire.Hosting.Testing` 13.6.5 and
+`Microsoft.Testing.Extensions.CodeCoverage` 18.13.0-preview.26560.2.
+After artifact import, a net10.0 consumer used an initially empty private cache
+and only the transported tmp/Shipping feeds plus `dotnet-public`, without
+`test-tools`. On both OSes this command passed, exit 0:
+
+```text
+<repo-local-dotnet> restore Consumer.csproj --configfile NuGet.config -bl:<results>/staged-package-restore.binlog -v:minimal
+```
+
+`project.assets.json` selected that exact CodeCoverage version,
+`.nupkg.metadata.source` identified the transported tmp feed, and its cached
+package matched SHA-256
+`2A44232D212D5DB528D0C5148F34BC28FDFDED20AC7576D49A4708E97EC2D849`.
+The consumer explicitly selected the local Platform 3.0.0-ci dependency and
+used the existing generated-asset convention for NU1605; no production warning
+suppression or fallback feed was added. This proves feed transport/resolution,
+not the full generated-application acceptance matrix.
+
+Additional checks passed: 80 affected-test self-tests, parsing all 13
+pipeline/template YAML files, and structural checks that only the official
+Linux reuse path selects `NonWindowsTests.slnf` for coverage validation.
+Test scheduling remains assembly-level MethodLevel with CPU-count workers;
+the five assertions use per-test output instances. The PowerShell harness owns
+a GUID-named temporary root and runs its fixture cases sequentially.
+
+Reports, exact commands, manifests, counterfactuals, patch, and binlogs are
+retained in the session's `review-12410` evidence. Early scratch attempts failed
+while serializing an empty failed-test list, selecting an image SDK for workload
+setup, and referencing an unproduced NonShipping directory in the narrow
+consumer. A full rerun was stopped after successful restore; the remaining
+fresh-cache Linux restore then passed in a bounded stage-only run. These setup
+failures and the stopped run are not red-phase proof.
+
+These corrections do not enable the trial or change unrelated baseline-test
+repair ownership. Full acceptance, macOS, and hosted opt-in artifact transport
+remain unvalidated; computational or elapsed-time savings remain unmeasured.
 
 ## Alternatives and decision
 

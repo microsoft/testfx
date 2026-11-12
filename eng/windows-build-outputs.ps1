@@ -45,6 +45,11 @@ function Get-OutputFiles {
         $files.AddRange([IO.FileInfo[]]@(Get-ChildItem -LiteralPath $packages -File -Recurse))
     }
 
+    $stagedPackages = Join-Path $RepositoryRoot "artifacts/tmp/$Configuration/packages"
+    if (Test-Path -LiteralPath $stagedPackages) {
+        $files.AddRange([IO.FileInfo[]]@(Get-ChildItem -LiteralPath $stagedPackages -Filter *.nupkg -File -Recurse))
+    }
+
     $objRoot = Join-Path $RepositoryRoot "artifacts/obj"
     if (Test-Path -LiteralPath $objRoot) {
         foreach ($project in Get-ChildItem -LiteralPath $objRoot -Directory) {
@@ -163,7 +168,7 @@ try {
 
     $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     $configurationPattern = [regex]::Escape($Configuration)
-    $allowedPath = "\Aartifacts/(?:bin/[^/]+/$configurationPattern/.+|packages/$configurationPattern/.+|obj/[^/]+/$configurationPattern/(?:[^/]+/)*coverage\.config)\z"
+    $allowedPath = "\Aartifacts/(?:bin/[^/]+/$configurationPattern/.+|packages/$configurationPattern/.+|tmp/$configurationPattern/packages/.+|obj/[^/]+/$configurationPattern/(?:[^/]+/)*coverage\.config)\z"
     foreach ($file in $manifest.files) {
         if ($file.path -cnotmatch $allowedPath -or $file.path.Contains("\") -or
             @($file.path.Split("/") | Where-Object { $_ -in ".", "..", "" }).Count -ne 0 -or

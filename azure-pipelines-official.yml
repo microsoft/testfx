@@ -333,7 +333,12 @@ extends:
                 displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
-              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+              - pwsh: |
+                  $coverageScope = @{}
+                  if ('${{ and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests), eq(parameters.products, 'all')) }}' -eq 'true') {
+                    $coverageScope.SolutionFilter = 'NonWindowsTests.slnf'
+                  }
+                  ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig) @coverageScope
                 displayName: Validate generated coverage settings
 
               # -ci is allowing to import some environment variables and some required configurations

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$HelperPath = (Join-Path $PSScriptRoot "windows-build-outputs.ps1")
+    [string]$HelperPath = (Join-Path $PSScriptRoot "windows-build-outputs.ps1"),
+    [string]$CoverageValidatorPath = (Join-Path $PSScriptRoot "validate-code-coverage-settings.ps1")
 )
 
 $ErrorActionPreference = "Stop"
@@ -102,6 +103,11 @@ try {
     Write-FixtureFile (Join-Path $producer "artifacts/bin/Portable.UnitTests/Release/net10.0/data/input.txt") "test-data-marker"
     Write-FixtureFile (Join-Path $producer $packagePath) "shipping-package-marker"
     Write-FixtureFile (Join-Path $producer "artifacts/packages/Release/NonShipping/Fixture.1.0.0.nupkg") "nonshipping-package-marker"
+    $previewPackagePath = "artifacts/tmp/Release/packages/microsoft.testing.extensions.codecoverage.1.0.0-preview.nupkg"
+    $aspirePackagePath = "artifacts/tmp/Release/packages/aspire.hosting.testing.1.0.0.nupkg"
+    Write-FixtureFile (Join-Path $producer $previewPackagePath) "staged-preview-package-marker"
+    Write-FixtureFile (Join-Path $producer $aspirePackagePath) "staged-aspire-package-marker"
+    Write-FixtureFile (Join-Path $producer "artifacts/tmp/Release/testsuite/temporary.dll") "excluded-generated-asset"
     Write-FixtureFile (Join-Path $producer "artifacts/bin/Portable.UnitTests/Debug/net10.0/stale.dll") "excluded-debug-output"
     Write-FixtureFile (Join-Path $producer ".dotnet/sdk/sdk-marker.txt") "excluded-sdk"
     $producerPackages = Join-Path $producer ".packages & original"
@@ -129,9 +135,9 @@ try {
             $manifest = Read-Manifest $zip
             Assert-Equal 1 $manifest.formatVersion "Manifest format."
             Assert-Equal $sourceVersion $manifest.sourceVersion "Source identity."
-            Assert-Equal 8 $manifest.files.Count "Payload inventory."
-            Assert-Equal 9 $zip.Entries.Count "Archive inventory including manifest."
-            if ($zip.Entries.FullName -match 'Debug|project\.assets\.json|sdk-marker') {
+            Assert-Equal 10 $manifest.files.Count "Payload inventory."
+            Assert-Equal 11 $zip.Entries.Count "Archive inventory including manifest."
+            if ($zip.Entries.FullName -match 'Debug|project\.assets\.json|sdk-marker|testsuite') {
                 throw "Restore state, SDKs, or another configuration entered the payload."
             }
         }
@@ -147,6 +153,12 @@ try {
         Assert-Equal "nonshipping-package-marker" ([IO.File]::ReadAllText((Join-Path $consumer "artifacts/packages/Release/NonShipping/Fixture.1.0.0.nupkg"))) "NonShipping package bytes."
         Assert-Equal "test-data-marker" ([IO.File]::ReadAllText((Join-Path $consumer "artifacts/bin/Portable.UnitTests/Release/net10.0/data/input.txt"))) "Test data."
         Assert-CoverageRoots $consumer
+    }
+
+    Invoke-Case "StagedAcceptanceFeedPreservesPackageBytes" {
+        $consumer = Join-Path $root "round-trip & relocated"
+        Assert-Equal "staged-preview-package-marker" ([IO.File]::ReadAllText((Join-Path $consumer $previewPackagePath))) "Staged preview package."
+        Assert-Equal "staged-aspire-package-marker" ([IO.File]::ReadAllText((Join-Path $consumer $aspirePackagePath))) "Staged Aspire package."
     }
 
     Invoke-Case "CoverageSourceMappingsUseConsumerPaths" {
@@ -255,6 +267,20 @@ try {
         $path = Edit-Archive "duplicate" { param($zip) $zip.CreateEntry($binaryPath) | Out-Null }
         Assert-Failure { Import-Fixture "duplicate" -Path $path } "Duplicate archive entry"
     }
+    Invoke-Case "RejectsTmpFilesOutsideStagedFeed" {
+        $path = Edit-Archive "unrelated-tmp" {
+            param($zip)
+            $manifest = Read-Manifest $zip
+            $file = @($manifest.files | Where-Object { $_.path -eq $previewPackagePath })[0]
+            $file.path = "artifacts/tmp/Release/testsuite/unrelated.nupkg"
+            $zip.GetEntry($previewPackagePath).Delete()
+            $writer = [IO.StreamWriter]::new($zip.CreateEntry($file.path).Open())
+            try { $writer.Write("staged-preview-package-marker") }
+            finally { $writer.Dispose() }
+            Write-Manifest $zip $manifest
+        }
+        Assert-Failure { Import-Fixture "unrelated-tmp" -Path $path } "Invalid payload entry"
+    }
     Invoke-Case "RejectsExistingOutputsWithoutOverwriting" {
         Assert-Failure { Import-Fixture "round-trip & relocated" } "requires clean"
         Assert-Equal "assembly-marker" ([IO.File]::ReadAllText((Join-Path $root "round-trip & relocated/$binaryPath"))) "Existing output must remain intact."
@@ -263,6 +289,47 @@ try {
         Assert-Failure {
             & $HelperPath -Action Export -ArchivePath (Join-Path $root "empty.zip") -RepositoryRoot (Join-Path $root "empty") -SourceVersion $sourceVersion
         } "No Release binaries"
+    }
+    Invoke-Case "CoverageValidationScopesToConsumerProjects" {
+        $validationRoot = Join-Path $root "coverage-validation"
+        $packageRoot = Join-Path $validationRoot ".packages"
+        $selectedProject = Join-Path $validationRoot "test/Portable.UnitTests/Portable.UnitTests.csproj"
+        Write-FixtureFile $selectedProject "<Project />"
+        Write-FixtureFile (Join-Path $validationRoot "artifacts/obj/Portable.UnitTests/project.assets.json") `
+            (@{ project = @{ restore = @{ projectPath = $selectedProject; packagesPath = $packageRoot } } } | ConvertTo-Json -Depth 4)
+        $excludes = @(
+            (Join-Path $validationRoot "artifacts")
+            (Join-Path $validationRoot "test/Utilities/Microsoft.Testing.TestInfrastructure")
+            $packageRoot
+        ) | ForEach-Object {
+            "<Source>" + [Security.SecurityElement]::Escape("^" + [regex]::Escape($_ + [IO.Path]::DirectorySeparatorChar) + ".*") + "</Source>"
+        }
+        $settings = @"
+<Configuration>
+  <DoesNotReturnAttribute>None</DoesNotReturnAttribute>
+  <CodeCoverage>
+    <Attributes mergeDefaults="False"><Exclude /></Attributes>
+    <ModulePaths><Include><ModulePath>.*Product\.dll$</ModulePath></Include><Exclude><ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath></Exclude></ModulePaths>
+    <Sources><Exclude>$($excludes -join "")</Exclude></Sources>
+  </CodeCoverage>
+</Configuration>
+"@
+        foreach ($project in @("Portable.UnitTests", "WindowsOnly.UnitTests")) {
+            Write-FixtureFile (Join-Path $validationRoot "artifacts/obj/$project/Release/net10.0/coverage.config") $settings
+        }
+        Write-FixtureFile (Join-Path $validationRoot "Consumer.slnf") `
+            (@{ solution = @{ path = "TestFx.slnx"; projects = @("test\Portable.UnitTests\Portable.UnitTests.csproj") } } | ConvertTo-Json -Depth 4)
+        Assert-Failure {
+            & $CoverageValidatorPath -Configuration Release -RepositoryRoot $validationRoot
+        } "Coverage validation requires the restored project identity"
+        & $CoverageValidatorPath -Configuration Release -RepositoryRoot $validationRoot -SolutionFilter Consumer.slnf
+    }
+    Invoke-Case "SelectedCoverageProjectStillRequiresRestore" {
+        $validationRoot = Join-Path $root "coverage-validation"
+        Remove-Item -LiteralPath (Join-Path $validationRoot "artifacts/obj/Portable.UnitTests/project.assets.json")
+        Assert-Failure {
+            & $CoverageValidatorPath -Configuration Release -RepositoryRoot $validationRoot -SolutionFilter Consumer.slnf
+        } "Coverage validation requires the restored project identity"
     }
     Write-Host "Passed $($passed.Count) build-output tests."
 }
