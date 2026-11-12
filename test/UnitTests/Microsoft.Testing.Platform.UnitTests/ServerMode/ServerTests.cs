@@ -294,12 +294,24 @@ public sealed class ServerTests
             }
             """);
 
-        var incompatibleVersionError = (ErrorMessage)(await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ErrorMessage { Id: 2 },
-            "Wait incompatible protocol version error",
-            timeout.Token))!;
+        ErrorMessage? incompatibleVersionError = null;
+        ErrorMessage? queuedRequestError = null;
+        while (incompatibleVersionError is null || queuedRequestError is null)
+        {
+            RpcMessage? message = await messageHandler.ReadAsync(timeout.Token);
+            if (message is ErrorMessage { Id: 2 } initializationError)
+            {
+                incompatibleVersionError = initializationError;
+            }
+
+            if (message is ErrorMessage { Id: 20 } discoveryError)
+            {
+                queuedRequestError = discoveryError;
+            }
+        }
+
         Assert.AreEqual(ErrorCodes.ProtocolVersionNotSupported, incompatibleVersionError.ErrorCode);
+        Assert.AreEqual(ErrorCodes.ServerNotInitialized, queuedRequestError.ErrorCode);
 
         const string initializeMessage = """
             {
@@ -320,23 +332,11 @@ public sealed class ServerTests
             """;
         await WriteMessageAsync(writer, initializeMessage);
 
-        ErrorMessage? queuedRequestError = null;
-        ResponseMessage? initializeResponse = null;
-        while (queuedRequestError is null || initializeResponse is null)
-        {
-            RpcMessage? message = await messageHandler.ReadAsync(timeout.Token);
-            if (queuedRequestError is null && message is ErrorMessage { Id: 20 } error)
-            {
-                queuedRequestError = error;
-            }
-
-            if (initializeResponse is null && message is ResponseMessage { Id: 2 } response)
-            {
-                initializeResponse = response;
-            }
-        }
-
-        Assert.AreEqual(ErrorCodes.ServerNotInitialized, queuedRequestError.ErrorCode);
+        var initializeResponse = (ResponseMessage)(await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 2 },
+            "Wait initialize response",
+            timeout.Token))!;
         InitializeResponseArgs initializeResult = SerializerUtilities.Deserialize<InitializeResponseArgs>(
             (IDictionary<string, object?>)initializeResponse.Result!);
         Assert.AreEqual(JsonRpcProtocolVersions.Current, initializeResult.ProtocolVersion);
