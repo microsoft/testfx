@@ -33,7 +33,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             .Replace("$UseUwp$", useUwp.ToString(), StringComparison.Ordinal)
             .Replace("$Desktop$", desktop ? "true" : "false", StringComparison.Ordinal);
         using TestAsset asset = await TestAsset.GenerateAssetAsync("CoreFrameworkConsumer", source);
-        string cache = Path.Combine(asset.TargetAssetPath, ".packages");
+        string cache = Path.Join(asset.TargetAssetPath, ".packages");
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = cache };
         DotnetMuxerResult build = await DotnetCli.RunAsync(
             "build -c Release -bl:consumer.binlog",
@@ -42,16 +42,16 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             cancellationToken: TestContext.CancellationToken);
         build.AssertExitCodeIs(0);
 
-        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(asset.TargetAssetPath, "obj", "project.assets.json")));
+        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Join(asset.TargetAssetPath, "obj", "project.assets.json")));
         string[] packageFolders = assets.RootElement.GetProperty("packageFolders").EnumerateObject()
             .Select(folder => Path.GetFullPath(folder.Name).TrimEnd(Path.DirectorySeparatorChar)).ToArray();
         Assert.Contains(Path.GetFullPath(cache).TrimEnd(Path.DirectorySeparatorChar), packageFolders);
         Assert.AreEqual(
             Path.GetFullPath(cache),
             Path.GetFullPath(assets.RootElement.GetProperty("project").GetProperty("restore").GetProperty("packagesPath").GetString()!));
-        string package = Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
-        string restored = Path.Combine(cache, "mstest.testframework", MSTestVersion);
-        string cachedPackage = Path.Combine(restored, $"mstest.testframework.{MSTestVersion}.nupkg");
+        string package = Path.Join(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
+        string restored = Path.Join(cache, "mstest.testframework", MSTestVersion);
+        string cachedPackage = Path.Join(restored, $"mstest.testframework.{MSTestVersion}.nupkg");
         Assert.AreEqual(
             Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(package))),
             Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedPackage))));
@@ -61,8 +61,8 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             ("MSTest.TestFramework", coreAsset),
             ("MSTest.TestFramework.Extensions", extensionsAsset),
         ];
-        string output = Path.Combine(asset.TargetAssetPath, "bin", "Release", targetFramework);
-        string[] resolved = File.ReadAllLines(Path.Combine(asset.TargetAssetPath, "resolved-framework-assets.txt"));
+        string output = Path.Join(asset.TargetAssetPath, "bin", "Release", targetFramework);
+        string[] resolved = File.ReadAllLines(Path.Join(asset.TargetAssetPath, "resolved-framework-assets.txt"));
         var expectedResolved = new List<string>();
         using ZipArchive archive = ZipFile.OpenRead(package);
         foreach ((string name, string folder) in assemblies)
@@ -70,8 +70,8 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             string relative = $"{folder}/{name}.dll";
             using Stream packedAssembly = archive.GetEntry(relative)!.Open();
             string hash = Convert.ToHexString(SHA256.HashData(packedAssembly));
-            string cachedAssembly = Path.GetFullPath(Path.Combine(restored, relative));
-            string copiedAssembly = Path.Combine(output, name + ".dll");
+            string cachedAssembly = Path.GetFullPath(Path.Join(restored, relative));
+            string copiedAssembly = Path.Join(output, name + ".dll");
             Assert.AreEqual(hash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedAssembly))), relative);
             Assert.AreEqual(hash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(copiedAssembly))), relative);
             expectedResolved.Add($"compile={cachedAssembly}");
@@ -81,20 +81,20 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
 
         Assert.AreSequenceEqual(expectedResolved.Order(StringComparer.Ordinal), resolved.Order(StringComparer.Ordinal));
         using Stream packedResource = archive.GetEntry($"{coreAsset}/fr/MSTest.TestFramework.resources.dll")!.Open();
-        string copiedResource = Path.Combine(output, "fr", "MSTest.TestFramework.resources.dll");
+        string copiedResource = Path.Join(output, "fr", "MSTest.TestFramework.resources.dll");
         Assert.AreEqual(
             Convert.ToHexString(SHA256.HashData(packedResource)),
             Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(copiedResource))));
         using DotnetMuxer muxer = new(environment);
         int exit = await muxer.ExecuteAsync(
-            $"\"{Path.Combine(output, "CoreFrameworkConsumer.dll")}\"",
+            $"\"{Path.Join(output, "CoreFrameworkConsumer.dll")}\"",
             workingDirectory: asset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, exit, $"{muxer.StandardOutput}{muxer.StandardError}");
         Assert.AreEqual(
             $"""
-            {Path.Combine(output, "MSTest.TestFramework.dll")}
-            {Path.Combine(output, "MSTest.TestFramework.Extensions.dll")}
+            {Path.Join(output, "MSTest.TestFramework.dll")}
+            {Path.Join(output, "MSTest.TestFramework.Extensions.dll")}
             {copiedResource}
             Packed framework ownership and API shape passed.
             """.ReplaceLineEndings(),
