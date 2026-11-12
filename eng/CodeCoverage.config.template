@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+<DoesNotReturnAttribute>None</DoesNotReturnAttribute>
+@IncludeTestAssembly@
+  <CodeCoverage>
+    <Attributes mergeDefaults="False">
+<Exclude />
+    </Attributes>
+    <ModulePaths mergeDefaults="False">
+      <Include>
+@ModulePaths@
+      </Include>
+      <Exclude>
+<ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>
+      </Exclude>
+    </ModulePaths>
+    <Sources>
+@SourceIncludes@
+      <Exclude>
+@SourceExcludes@
+      </Exclude>
+    </Sources>
+<UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>
+<EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+<EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
+<EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
+<EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
+  </CodeCoverage>
+</Configuration>

@@ -229,6 +229,11 @@ function New-CoverageFixture {
     $targetCopy = Join-Path $root "test\Directory.Build.targets"
     [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($targetCopy)) | Out-Null
     [IO.File]::Copy($script:CoverageSnapshot, $targetCopy)
+    if ([IO.File]::Exists($script:CoverageTemplateSnapshot)) {
+        $templateCopy = Join-Path $root "eng\CodeCoverage.config.template"
+        [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($templateCopy)) | Out-Null
+        [IO.File]::Copy($script:CoverageTemplateSnapshot, $templateCopy)
+    }
     Write-FixtureFile (Join-Path $root "ImportedReferences.targets") @'
 <Project>
   <ItemGroup>
@@ -846,6 +851,7 @@ $script:ScratchDirectory = $scratchDirectory
 $script:OldInputTime = [DateTime]::new(2001, 2, 3, 4, 5, 6, [DateTimeKind]::Utc)
 $script:Invocations = [Collections.Generic.List[object]]::new()
 $script:CoverageSnapshot = Join-Path $runRoot "inputs\coverage.targets"
+$script:CoverageTemplateSnapshot = Join-Path $runRoot "inputs\CodeCoverage.config.template"
 $script:WinUISnapshot = Join-Path $runRoot "inputs\WinUI.Incremental.targets"
 $script:UpstreamSnapshot = Join-Path $runRoot "inputs\Microsoft.WindowsAppSDK.SelfContained.targets"
 $script:PipelineSnapshot = Join-Path $runRoot "inputs\test-windows-configuration-tests.yml"
@@ -859,6 +865,10 @@ $sources = @{}
 $sourceCopies = @{}
 if (@($selected | Where-Object { $_ -like "Coverage*" }).Count -gt 0) {
     $sourceCopies[[IO.Path]::GetFullPath($CoverageTargetsPath)] = $script:CoverageSnapshot
+    $coverageTemplate = Join-Path $RepositoryRoot "eng\CodeCoverage.config.template"
+    if ([IO.File]::Exists($coverageTemplate)) {
+        $sourceCopies[$coverageTemplate] = $script:CoverageTemplateSnapshot
+    }
 }
 if (@($selected | Where-Object { $_ -like "WinUI*" }).Count -gt 0) {
     $sourceCopies[[IO.Path]::GetFullPath($WinUITargetsPath)] = $script:WinUISnapshot
