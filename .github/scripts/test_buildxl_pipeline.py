@@ -14,6 +14,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[2]
+JOURNAL_STEP = "Initialize BuildXL change journal"
 CACHE_STEP = "Cache BuildXL actions"
 BUILD_STEP = "Build repository with BuildXL"
 COLLECT_STEP = "Collect BuildXL engine and project logs"
@@ -138,6 +139,15 @@ class BuildXLPipelineTests(unittest.TestCase):
             self.job["variables"]["NUGET_PACKAGES"],
         )
 
+    def test_change_journal_is_initialized_before_cache_and_build(self) -> None:
+        journal = self.step(JOURNAL_STEP)
+        checkout = next(step for step in self.steps if "checkout" in step)
+        self.assertIs(True, journal.get("enabled", True))
+        self.assertNotIn("condition", journal)
+        self.assertLess(self.steps.index(checkout), self.steps.index(journal))
+        self.assertLess(self.steps.index(journal), self.steps.index(self.step(CACHE_STEP)))
+        self.assertLess(self.steps.index(journal), self.steps.index(self.step(BUILD_STEP)))
+
     def test_action_cache_uses_qualified_immutable_key_and_compatible_restore_prefix(self) -> None:
         inputs = self.step(CACHE_STEP)["inputs"]
         prefix = [
@@ -257,6 +267,168 @@ class BuildXLPipelineTests(unittest.TestCase):
         self.assertEqual(
             "buildxl-$(BuildXLConfiguration)-Attempt$(System.JobAttempt)",
             publisher["inputs"]["artifact"],
+        )
+
+    def initialize_change_journal(
+        self, checkout: str, replies: list[dict]
+    ) -> tuple[subprocess.CompletedProcess, list[list[str]]]:
+        # With the pre-fix YAML, no setup runs and the journal remains untouched.
+        setup = "\n".join(
+            step["pwsh"] for step in self.steps
+            if step.get("displayName") == JOURNAL_STEP
+        )
+        fixture = base64.b64encode(
+            json.dumps(
+                {"Checkout": checkout, "Replies": replies, "Setup": setup}
+            ).encode("utf-8")
+        ).decode("ascii")
+        script = r"""
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version 2.0
+$fixture = [Text.Encoding]::UTF8.GetString(
+    [Convert]::FromBase64String('__FIXTURE__')) | ConvertFrom-Json -AsHashtable
+$env:BUILD_SOURCESDIRECTORY = $fixture.Checkout
+$calls = [Collections.Generic.List[object]]::new()
+$global:LASTEXITCODE = 0
+function fsutil.exe {
+    $script:calls.Add([string[]] $args)
+    if ($script:calls.Count -gt $script:fixture.Replies.Count) {
+        throw 'Unexpected journal command.'
+    }
+
+    $reply = $script:fixture.Replies[$script:calls.Count - 1]
+    $global:LASTEXITCODE = $reply.ExitCode
+    Write-Output $reply.Output
+}
+try {
+    & ([scriptblock]::Create($fixture.Setup))
+}
+finally {
+    $result = @{ Calls = @($calls.ToArray()) }
+    Write-Output ('BUILDXL_JOURNAL_RESULT=' + ($result | ConvertTo-Json -Depth 4 -Compress))
+}
+"""
+        command = base64.b64encode(
+            script.replace("__FIXTURE__", fixture).encode("utf-16-le")
+        ).decode("ascii")
+        process = subprocess.run(
+            [
+                "pwsh", "-NoLogo", "-NoProfile", "-NonInteractive",
+                "-OutputFormat", "Text", "-EncodedCommand", command,
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        marker = "BUILDXL_JOURNAL_RESULT="
+        results = [
+            line.removeprefix(marker)
+            for line in process.stdout.splitlines() if line.startswith(marker)
+        ]
+        self.assertEqual(1, len(results), process.stdout + process.stderr)
+        return process, json.loads(results[0])["Calls"]
+
+    def test_existing_change_journal_is_preserved(self) -> None:
+        process, calls = self.initialize_change_journal(
+            r"D:\checkout with spaces",
+            [{"ExitCode": 0, "Output": "USN-Journal-ID : 0x56789"}],
+        )
+        self.assertEqual(0, process.returncode, process.stdout + process.stderr)
+        self.assertEqual("", process.stderr.strip())
+        self.assertEqual([["usn", "queryjournal", "D:"]], calls)
+
+    def test_missing_change_journal_is_created_and_verified(self) -> None:
+        for case, checkout, volume, diagnostic in (
+            (
+                "hosted-workspace", r"D:\a\_work\1\s", "D:",
+                "Error 1179: The volume change journal is not active.",
+            ),
+            (
+                "different-drive", r"T:\CI checkout's workspace\src", "T:",
+                "Fehler 1179: Das Journal ist nicht aktiv.",
+            ),
+        ):
+            with self.subTest(case=case):
+                process, calls = self.initialize_change_journal(
+                    checkout,
+                    [
+                        {"ExitCode": 1, "Output": diagnostic},
+                        {"ExitCode": 0, "Output": "Journal created."},
+                        {"ExitCode": 0, "Output": "USN-Journal-ID : 0x56789"},
+                    ],
+                )
+                self.assertEqual(0, process.returncode, process.stdout + process.stderr)
+                self.assertEqual("", process.stderr.strip())
+                self.assertEqual(
+                    [
+                        ["usn", "queryjournal", volume],
+                        ["usn", "createjournal", "m=0x20000000", "a=0x8000000", volume],
+                        ["usn", "queryjournal", volume],
+                    ],
+                    calls,
+                )
+
+    def test_change_journal_query_failure_preserves_existing_journal(self) -> None:
+        for case, diagnostic in (
+            ("access-denied", "Error 5: Access is denied."),
+            ("deletion-in-progress", "Error 1178: The volume change journal is being deleted."),
+            ("unrecognized-output", "The volume change journal is not active."),
+            ("journal-id-collision", "Usn Journal ID : 1179"),
+        ):
+            with self.subTest(case=case):
+                process, calls = self.initialize_change_journal(
+                    r"D:\a\_work\1\s",
+                    [
+                        {"ExitCode": 1, "Output": diagnostic},
+                        {"ExitCode": 0, "Output": "An existing journal was resized."},
+                        {"ExitCode": 0, "Output": "USN-Journal-ID : 0x56789"},
+                    ],
+                )
+                self.assertNotEqual(0, process.returncode)
+                self.assertEqual([["usn", "queryjournal", "D:"]], calls)
+                self.assertIn(diagnostic, process.stdout)
+                self.assertIn("exit 1", process.stderr)
+
+    def test_change_journal_creation_failure_blocks_build(self) -> None:
+        process, calls = self.initialize_change_journal(
+            r"D:\a\_work\1\s",
+            [
+                {"ExitCode": 1, "Output": "Error 1179: The volume change journal is not active."},
+                {"ExitCode": 5, "Output": "Access is denied."},
+            ],
+        )
+        self.assertNotEqual(0, process.returncode)
+        self.assertIn("Access is denied.", process.stdout)
+        self.assertIn("exit 5", process.stderr)
+        self.assertEqual(
+            [
+                ["usn", "queryjournal", "D:"],
+                ["usn", "createjournal", "m=0x20000000", "a=0x8000000", "D:"],
+            ],
+            calls,
+        )
+
+    def test_change_journal_verification_failure_blocks_build(self) -> None:
+        process, calls = self.initialize_change_journal(
+            r"D:\a\_work\1\s",
+            [
+                {"ExitCode": 1, "Output": "Error 1179: The volume change journal is not active."},
+                {"ExitCode": 0, "Output": "Journal created."},
+                {"ExitCode": 1, "Output": "Journal is still unavailable."},
+            ],
+        )
+        self.assertNotEqual(0, process.returncode)
+        self.assertIn("Journal is still unavailable.", process.stdout)
+        self.assertIn("exit 1", process.stderr)
+        self.assertEqual(
+            [
+                ["usn", "queryjournal", "D:"],
+                ["usn", "createjournal", "m=0x20000000", "a=0x8000000", "D:"],
+                ["usn", "queryjournal", "D:"],
+            ],
+            calls,
         )
 
     def file_system_mode(
