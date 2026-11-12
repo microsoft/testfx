@@ -201,7 +201,7 @@ public class AssemblyResolverTests : TestContainer
             // The resolver bypasses Console.Error, so capture the intentional failure in an isolated host.
             var startInfo = new ProcessStartInfo(typeof(AssemblyResolverTests).Assembly.Location)
             {
-                Arguments = $"--filter-uid {typeof(AssemblyResolverTests).FullName}.{nameof(OnResolveShouldIgnoreTraceLoggerFailures)} --no-ansi --progress off",
+                Arguments = $"--filter-uid {typeof(AssemblyResolverTests).FullName}.{nameof(OnResolveShouldIgnoreTraceLoggerFailures)} --ansi off --progress off",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,

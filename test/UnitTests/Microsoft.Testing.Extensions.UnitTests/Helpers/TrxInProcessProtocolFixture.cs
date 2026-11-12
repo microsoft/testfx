@@ -170,7 +170,8 @@ internal sealed class TrxInProcessProtocolFixture : IAsyncDisposable
 
         // The provider observes the effective name after binding. Transfer only its task-owned
         // value into the mocked child environment; never set a process environment variable.
-        ITestHostEnvironmentVariableProvider provider = Assert.ContainsSingle(configuration.EnvironmentVariableProviders);
+        ITestHostEnvironmentVariableProvider provider = Assert.ContainsSingle(
+            configuration.EnvironmentVariableProviders.OfType<TrxEnvironmentVariableProvider>());
         var variables = new EnvironmentVariables(Memory.LoggerFactory.Object) { CurrentProvider = provider };
         await provider.UpdateAsync(variables);
         Assert.IsTrue(variables.TryGetVariable("TRXNAMEDPIPENAME", out OwnedEnvironmentVariable? pipe));

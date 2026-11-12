@@ -182,6 +182,7 @@ internal static class RetryTestHostRunner
             completedTask = await WaitForConnectionGracePeriodAsync(
                 completedTask,
                 waitForConnectionTask,
+                serviceProvider.GetTask(),
                 linkedToken.Token).ConfigureAwait(false);
 
             if (HasConnectionCompleted(completedTask, waitForConnectionTask))
@@ -248,6 +249,7 @@ internal static class RetryTestHostRunner
     private static async Task<Task> WaitForConnectionGracePeriodAsync(
         Task completedTask,
         Task waitForConnectionTask,
+        ITask task,
         CancellationToken cancellationToken)
     {
         if (!ShouldWaitForConnectionGracePeriod(completedTask, waitForConnectionTask))
@@ -260,7 +262,7 @@ internal static class RetryTestHostRunner
         // Stryker disable once Boolean: continuation scheduling does not change the grace-period result.
         Task connectionOrGracePeriod = await Task.WhenAny(
             waitForConnectionTask,
-            Task.Delay(TimeSpan.FromSeconds(1), cancellationToken)).ConfigureAwait(false);
+            task.Delay(TimeSpan.FromSeconds(1), cancellationToken)).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         return connectionOrGracePeriod;
     }

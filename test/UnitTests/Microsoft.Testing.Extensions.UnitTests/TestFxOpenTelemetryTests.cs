@@ -417,7 +417,8 @@ public sealed class TestFxOpenTelemetryTests
                 : $"FullyQualifiedName~{nameof(IsDisabled_OnlyTrueTurnsRegistrationOff)}");
         }
 
-        startInfo.ArgumentList.Add("--no-ansi");
+        startInfo.ArgumentList.Add("--ansi");
+        startInfo.ArgumentList.Add("off");
         startInfo.ArgumentList.Add("--progress");
         startInfo.ArgumentList.Add("off");
         RemoveAffectedTestEnvironment(startInfo);
