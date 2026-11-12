@@ -118,7 +118,7 @@ runfiles settings.
 | `//:mstest_package_closure` | Those four packages plus the original three MTP/TRX packages and analyzers: eight native archives. |
 | `//:mstest_package`, `//:mstest_sdk_package` | Native MSTest meta-package and MSTest.Sdk; together with the closure above, ten packages for isolated consumers. |
 | `//:published_samples` | Self-contained platform explorer layouts for .NET 8/9/10/11 on the selected host RID. |
-| `//:windows_libraries` | Four WinRT PackagedApp and four WPF-reference UIAutomation variants, plus three modern-UWP and three WinUI library variants. |
+| `//:windows_libraries` | Four WinRT PackagedApp and four WPF-reference UIAutomation variants, plus four modern-UWP and four WinUI library variants. |
 | `//:windows_probes` | Seven native self-contained library consumers; no XAML application compilation. |
 | `//:windows_controllers` | Both original net8/net9 win-x64 framework-dependent apphost layouts. |
 | `//:windows_app_model` | A native console host for real loose-MSIX registration/activation and controller checks. |
@@ -132,6 +132,12 @@ the server-client's default validation assembly retains `net8.0`.
 project variants rather than relying on compatible-framework fallback.
 Windows-qualified targets are opt-in; full workload/runtime parity remains a
 separate gate.
+The modern-UWP (`net10.0-windows10.0.17763.0`) and WinUI
+(`net10.0-windows10.0.18362.0`) closures use their matching `framework_uwp` and
+`framework_winui` core variants, not ordinary `framework`. `TestContext` is
+defined in core for every flavor; the UI variants retain the exclusions of
+`DeploymentItemAttribute` and the desktop `TestContext` directory properties.
+The desktop library probe checks that ordinary core still exposes those APIs.
 `validate.ps1` selects the ten-target suite on Windows and the nine-target suite
 elsewhere, and records the selected suite and unsupported targets in its result.
 `MSTestAdapter.PlatformServices.UnitTests` has Windows path/filename semantics

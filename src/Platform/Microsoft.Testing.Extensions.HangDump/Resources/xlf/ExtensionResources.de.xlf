@@ -83,8 +83,8 @@ Datenträgerinformationen:
       <trans-unit id="HangDumpFileNameTemplateOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</target>
+        <target state="translated">Geben Sie den Namen der Speicherabbilddatei an.
+Unterstützt die folgenden Platzhalter: {pname} (Testanwendungsname), {pid} (Prozess-ID), {asm} (Eintragsassemblyname), {tfm} (Zielframeworkmoniker), {arch} (Prozessarchitektur), {time} (Zeitstempel).</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">

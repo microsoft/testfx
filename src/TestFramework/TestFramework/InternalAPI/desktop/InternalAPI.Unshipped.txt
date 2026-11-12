@@ -1,0 +1,6 @@
+#nullable enable
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectoryLabel -> string!

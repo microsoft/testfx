@@ -83,8 +83,8 @@ Informacje o dysku:
       <trans-unit id="HangDumpFileNameTemplateOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</target>
+        <target state="translated">Określ nazwę pliku zrzutu.
+Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej), {pid} (identyfikator procesu), {asm} (nazwa zestawu wpisu), {tfm} (moniker platformy docelowej), {arch} (architektura procesu), {time} (sygnatura czasowa).</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">

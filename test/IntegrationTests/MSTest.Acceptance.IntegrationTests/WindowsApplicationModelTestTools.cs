@@ -224,12 +224,13 @@ internal static class WindowsApplicationModelTestTools
             WindowsApplicationModelAssetKind.ModernUwp =>
             (
                 [
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
+                    "/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll",
                     "/buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll",
                     "/buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll",
                     "/buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll",
                 ],
                 [
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
                     "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
                     "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
                     "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
@@ -237,11 +238,13 @@ internal static class WindowsApplicationModelTestTools
             WindowsApplicationModelAssetKind.WinUI =>
             (
                 [
+                    "/buildTransitive/net10.0/winui/MSTest.TestFramework.dll",
                     "/buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
                     "/buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
                     "/buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
                 ],
                 [
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
                     "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
                     "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
                     "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",

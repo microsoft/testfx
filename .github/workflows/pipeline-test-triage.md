@@ -761,6 +761,14 @@ safe-outputs:
     allowed-fields: [Type]
     deduplicate-by-title: 3
     max: 1
+  set-issue-type:
+    allowed: [Bug]
+    target: "*"
+    required-labels: [type/automation, type/ai-inspected]
+    required-title-prefix: "[pipeline-test-triage] "
+    # The handler counts a deferred temporary-ID lookup against its budget.
+    # Allow its initial attempt plus the publisher's single deferred retry.
+    max: 2
   add-comment:
     max: 1
     # check_run has no gh-aw triggering-item context. The trusted collector

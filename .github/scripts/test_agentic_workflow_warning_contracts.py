@@ -257,6 +257,161 @@ exec /usr/bin/mv "$@"
         return self.git("rev-parse", "HEAD")
 
 
+class BuildAnalysisInputTests(unittest.TestCase):
+    workflows = ("build-failure-analysis", "build-failure-analysis-command")
+
+    def export(self, workflow: str, *, files: tuple[str, ...] = ("1_Linux.binlog",),
+               shadow_source: str | None = None,
+               fixture_parent: pathlib.Path | None = None,
+               **overrides: str) -> tuple[subprocess.CompletedProcess, pathlib.Path, dict]:
+        temporary = tempfile.TemporaryDirectory(
+            prefix="gh-aw-build-inputs-", dir=fixture_parent or os.environ.get("WORKFLOW_WARNING_TMP")
+        )
+        self.addCleanup(temporary.cleanup)
+        root = pathlib.Path(temporary.name)
+        binlogs, shared, tools = root / "binlogs", root / "shared", root / "tools"
+        for directory in (binlogs, shared, tools, root / "home"):
+            directory.mkdir()
+        for name in files:
+            (binlogs / name).write_bytes(b"fixture inventory; not parsed as a binary log")
+        wrapper = tools / "python3"
+        wrapper.write_text('#!/bin/bash\nexec "$FIXTURE_PYTHON" "$@"\n', encoding="utf-8")
+        wrapper.chmod(0o755)
+        env = {key: value for key, value in os.environ.items()
+               if key.upper() in ("PATH", "SYSTEMROOT", "WINDIR", "TEMP", "TMP")}
+        values = {
+            "GH_AW_BINLOG_FOUND_VALUE": "true", "GH_AW_PR_NUMBER_VALUE": "73",
+            "GH_AW_PR_HEAD_SHA_VALUE": "a" * 40, "GH_AW_PR_MERGE_SHA_VALUE": "b" * 40,
+            "GH_AW_ADO_BUILD_URL_VALUE": "https://dev.azure.com/fixture/public/_build/results?buildId=420",
+            "GH_AW_MISSING_LEGS_VALUE": 'Windows "Release"\n(unknown timeline)',
+            "GH_AW_GITHUB_WORKSPACE": str(root / "workspace"),
+        }
+        values.update(overrides)
+        env.update(values)
+        if shadow_source is not None:
+            location = root if shadow_source == "checkout" else root / "pythonpath"
+            location.mkdir(exist_ok=True)
+            (location / "json.py").write_text(
+                'open("shadow-imported", "w").write("untrusted module executed")\n'
+                'raise RuntimeError("PR-controlled json module imported")\n',
+                encoding="utf-8",
+            )
+            if shadow_source == "pythonpath":
+                env["PYTHONPATH"] = str(location)
+        env.update({
+            "HOME": str(root / "home"), "USERPROFILE": str(root / "home"),
+            "GITHUB_REPOSITORY": REPOSITORY, "GITHUB_ENV": str(root / "context.env"),
+            "FIXTURE_PYTHON": str(sys.executable), "FIXTURE_BIN": tools.as_posix(),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        })
+        source, _ = authored(workflow + ".md")
+        script = next(step["run"] for step in source["steps"]
+                      if step.get("name") == "Export agent context")
+        script = re.sub(
+            r"/tmp/(binlogs|gh-aw)",
+            lambda match: (binlogs if match[1] == "binlogs" else shared).as_posix(),
+            script,
+        )
+        prelude = 'export PATH="$(cd "$FIXTURE_BIN" && pwd):$PATH"\n'
+        result = subprocess.run(
+            [str(BASH), "--noprofile", "--norc", "-s"], input=prelude + script,
+            cwd=root, env=env, text=True, capture_output=True, timeout=TIMEOUT,
+        )
+        return result, shared / "build-failure-analysis/analysis-inputs.json", values
+
+    def test_build_context_preserves_fixture_paths_containing_workflow_paths(self) -> None:
+        temporary = tempfile.TemporaryDirectory(
+            prefix="gh-aw-build-paths-", dir=os.environ.get("WORKFLOW_WARNING_TMP")
+        )
+        self.addCleanup(temporary.cleanup)
+        root = pathlib.Path(temporary.name)
+        for parent in ("gh-aw", "binlogs"):
+            directory = root / "tmp" / parent
+            directory.mkdir(parents=True)
+            for workflow in self.workflows:
+                with self.subTest(workflow=workflow, parent=parent):
+                    result, path, _ = self.export(workflow, fixture_parent=directory)
+                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                    inputs = json.loads(path.read_text(encoding="utf-8"))
+                    self.assertEqual(["/data/binlogs/1_Linux.binlog"], inputs["GH_AW_BINLOG_LIST"])
+
+    def test_build_context_is_readable_without_environment_probes(self) -> None:
+        for workflow in self.workflows:
+            with self.subTest(workflow=workflow):
+                result, path, values = self.export(
+                    workflow, files=("2_Windows Release.binlog", "1_Linux.binlog"))
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertTrue(path.is_file(), "The analyst needs a sandbox-visible input manifest")
+                inputs = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual({
+                    "schema_version": 1, "repository": REPOSITORY,
+                    "GH_AW_BUILD_OUTCOME": "failure", "GH_AW_BINLOG_DIR": "/data/binlogs",
+                    "GH_AW_BINLOG_LIST": ["/data/binlogs/1_Linux.binlog", "/data/binlogs/2_Windows Release.binlog"],
+                    "GH_AW_BINLOG_PATH": "/data/binlogs/1_Linux.binlog",
+                    "GH_AW_PR_NUMBER": 73, "GH_AW_PR_HEAD_SHA": "a" * 40,
+                    "GH_AW_PR_MERGE_SHA": "b" * 40,
+                    "GH_AW_BINLOG_HOST_PATH": values["GH_AW_ADO_BUILD_URL_VALUE"],
+                    "GH_AW_WORKSPACE": values["GH_AW_GITHUB_WORKSPACE"],
+                    "GH_AW_MISSING_LEGS": values["GH_AW_MISSING_LEGS_VALUE"],
+                }, inputs)
+                prompt = authored("shared/build-failure-analysis-shared.md")[1]
+                command = re.search(r"```bash\n[ \t]*(cat [^\n]+)\n", prompt)
+                self.assertIsNotNone(command, "Give the analyst a standalone allowed manifest read")
+                args = shlex.split(command[1])
+                self.assertIn(args[0], authored(workflow + ".md")[0]["tools"]["bash"])
+                self.assertEqual("/tmp/gh-aw/build-failure-analysis/analysis-inputs.json", args[1])
+                read = subprocess.run(
+                    [str(BASH), "--noprofile", "--norc", "-c", 'cat "$1"', "fixture", path.as_posix()],
+                    env={"PATH": os.environ["PATH"], "SYSTEMROOT": os.environ.get("SYSTEMROOT", "")},
+                    text=True, capture_output=True, timeout=TIMEOUT,
+                )
+                self.assertEqual(0, read.returncode, read.stderr)
+                self.assertEqual(inputs, json.loads(read.stdout))
+
+    def test_build_context_rejects_missing_inventory_or_invalid_identity(self) -> None:
+        cases = (
+            ((), {}),
+            (("1_Linux.binlog",), {"GH_AW_BINLOG_FOUND_VALUE": "false"}),
+            (("1_Linux.binlog",), {"GH_AW_PR_NUMBER_VALUE": "false"}),
+            (("1_Linux.binlog",), {"GH_AW_PR_NUMBER_VALUE": "0"}),
+            (("1_Linux.binlog",), {"GH_AW_PR_HEAD_SHA_VALUE": "abc"}),
+            (("1_Linux.binlog",), {"GH_AW_PR_MERGE_SHA_VALUE": "invalid"}),
+        )
+        for workflow in self.workflows:
+            for files, values in cases:
+                with self.subTest(workflow=workflow, files=files, values=values):
+                    result, path, _ = self.export(workflow, files=files, **values)
+                    self.assertNotEqual(0, result.returncode, "Invalid inputs must stop the agent")
+                    self.assertIn("Missing or invalid required build-analysis inputs.", result.stderr)
+                    self.assertFalse(path.exists())
+
+    def test_build_context_ignores_checkout_and_python_path_modules(self) -> None:
+        for workflow in self.workflows:
+            for source in ("checkout", "pythonpath"):
+                with self.subTest(workflow=workflow, source=source):
+                    result, path, _ = self.export(workflow, shadow_source=source)
+                    self.assertFalse((path.parents[2] / "shadow-imported").exists(),
+                                     "PR-controlled or PYTHONPATH modules must not execute on the host")
+                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                    self.assertTrue(path.is_file())
+                    self.assertEqual(73, json.loads(path.read_text(encoding="utf-8"))["GH_AW_PR_NUMBER"])
+
+    def test_build_context_preserves_optional_merge_and_compiled_delivery(self) -> None:
+        for workflow in self.workflows:
+            with self.subTest(workflow=workflow):
+                result, path, _ = self.export(workflow, GH_AW_PR_MERGE_SHA_VALUE="")
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertTrue(path.is_file())
+                self.assertEqual("", json.loads(path.read_text(encoding="utf-8"))["GH_AW_PR_MERGE_SHA"])
+                source, _ = authored(workflow + ".md")
+                script = next(step["run"] for step in source["steps"]
+                              if step.get("name") == "Export agent context")
+                delivered = next(step["run"] for step in compiled(workflow + ".lock.yml")["jobs"]["agent"]["steps"]
+                                 if step.get("name") == "Export agent context")
+                self.assertEqual(script, delivered)
+                self.assertEqual(["/tmp/binlogs:/data/binlogs:ro"], source["mcp-servers"]["binlog-mcp"]["mounts"])
+
+
 @unittest.skipUnless(sys.platform.startswith("linux"), "Ubuntu runner setup uses /etc/os-release")
 class MarkdownLinterSetupTests(unittest.TestCase):
     def scripts(self) -> list[tuple[str, str]]:

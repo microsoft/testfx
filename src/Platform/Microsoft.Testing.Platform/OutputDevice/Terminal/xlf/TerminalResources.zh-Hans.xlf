@@ -409,7 +409,7 @@
       </trans-unit>
       <trans-unit id="RuntimeFramework">
         <source>runtime: {0}</source>
-        <target state="new">runtime: {0}</target>
+        <target state="translated">运行时: {0}</target>
         <note>{0} is the executing runtime framework, shown after the target framework and process architecture when the runtime differs or the target is unknown.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">

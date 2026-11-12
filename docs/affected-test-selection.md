@@ -449,10 +449,15 @@ with affected-test v2 shards. Compare test/module coverage, source associations,
 failures, and missing modules, not literal map-file equality.
 
 The configured comparison enables CTS's same-module batch parallelism and records the worker count explicitly.
-It selects the affected-test-capable Release hosts from the existing build outputs, uses managed DLLs for .NET
-and EXEs for .NET Framework, and records every input path/hash. CTS otherwise deduplicates identical apphosts
-by hash and can silently drop a distinct framework/flavor. Successful collection must produce one consistent
-TRX and committed native map per input; failed CTS exits remain failures and retain diagnostics.
+It selects the affected-test-capable Release hosts from the existing build outputs, uses managed DLLs for
+portable .NET hosts and EXEs for .NET Framework and Windows-targeted applications, and records every input
+path/hash. Windows applications must retain the apphost's native activation manifest: a `dotnet` DLL launch
+can fail WinRT activation and leave an incomplete trace when a native startup child exits. Other .NET hosts
+still use DLLs because CTS deduplicates identical apphosts by hash and can silently drop a distinct
+framework/flavor. `WindowsApplicationModulesKeepTheirApphost` protects the Windows exception. Successful
+collection must produce one consistent TRX and committed native map per input; failed CTS exits remain
+failures and retain diagnostics. Native-startup helper processes also clear inherited affected-test request
+and batch-feedback variables so they cannot overwrite their parent batch's final UID/timing inventory.
 
 Real package validation also exposed a separate timing contract gap. Both MTP JSON-RPC test-node serializers
 emit `time.duration-ms`, but omit `time.start-utc` and `time.stop-utc`. CTS expects the latter fields and substitutes

@@ -17,6 +17,7 @@
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <MicrosoftTestingPlatformVersion>$(MicrosoftTestingExtensionsPackagedAppVersion)</MicrosoftTestingPlatformVersion>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <GenerateTestingPlatformApplicationHelper>false</GenerateTestingPlatformApplicationHelper>
     <GenerateSelfRegisteredExtensions>false</GenerateSelfRegisteredExtensions>

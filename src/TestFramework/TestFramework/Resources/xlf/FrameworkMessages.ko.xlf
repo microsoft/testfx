@@ -350,7 +350,7 @@
       </trans-unit>
       <trans-unit id="CollectionContentsNotEnumerated">
         <source>&lt;{0}&gt; (contents not enumerated)</source>
-        <target state="new">&lt;{0}&gt; (contents not enumerated)</target>
+        <target state="translated">&lt;{0}&gt;(콘텐츠가 열거되지 않음)</target>
         <note />
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -420,7 +420,7 @@
       </trans-unit>
       <trans-unit id="ContainsOnlyPredicateFailedSummary">
         <source>Expected collection to contain only elements matching the predicate.</source>
-        <target state="new">Expected collection to contain only elements matching the predicate.</target>
+        <target state="translated">컬렉션에 조건자와 일치하는 요소만 포함될 것으로 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -734,12 +734,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="PredicateMismatchIndexLabel">
         <source>index:</source>
-        <target state="new">index:</target>
+        <target state="translated">인덱스:</target>
         <note />
       </trans-unit>
       <trans-unit id="PredicateMismatchItemLabel">
         <source>item:</source>
-        <target state="new">item:</target>
+        <target state="translated">항목:</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

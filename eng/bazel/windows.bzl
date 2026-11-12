@@ -6,6 +6,7 @@ load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_library", "testfx_matrix")
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 _SHARED = "src/Platform/SharedExtensionHelpers"
 _PACKAGED_APP = "src/Platform/Microsoft.Testing.Extensions.PackagedApp"
+_FRAMEWORK = "src/TestFramework/TestFramework"
 _UI_AUTOMATION = "src/TestFramework/TestFramework.Windows.UIAutomation"
 _PACKAGED_FRAMEWORKS = [tfm + "-windows10.0.19041.0" for tfm in PORTABLE_FRAMEWORKS]
 _DESKTOP_FRAMEWORKS = [tfm + "-windows7.0" for tfm in PORTABLE_FRAMEWORKS]
@@ -99,12 +100,39 @@ def _windows_library(name, target_frameworks, linked_srcs = [], minimum_version 
     )
 
 def _mstest_flavor(flavor, framework, symbol, projection_deps):
+    core = "framework_" + flavor
     extensions = "framework_extensions_" + flavor
     services = "platform_services_" + flavor
     adapter = "adapter_" + flavor
     framework_project = "src/TestFramework/TestFramework.Extensions"
     services_project = "src/Adapter/MSTestAdapter.PlatformServices"
     adapter_project = "src/Adapter/MSTest.TestAdapter"
+    _windows_library(
+        name = core,
+        project = _FRAMEWORK,
+        assembly_name = "MSTest.TestFramework",
+        target_frameworks = [framework],
+        minimum_version = "10.0.17763.0" if flavor == "winui" else "",
+        defines = ["EXCLUDE_RANGE_INDEX_POLYFILL", "EXCLUDE_OS_POLYFILL", "TESTFRAMEWORK_CI_DETECTOR", symbol],
+        linked_srcs = [
+            _PLATFORM + "/Helpers/RoslynHashCode.cs",
+            _PLATFORM + "/Helpers/CIEnvironmentDetector.cs",
+        ],
+        resources = {_FRAMEWORK + "/Resources/FrameworkMessages.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages"},
+        usings = ["Polyfills", "Microsoft.VisualStudio.TestTools.UnitTesting.Resources"],
+        internals_visible_to = [
+            "DynamicProxyGenAssembly2",
+            "MSTestAdapter.PlatformServices",
+            "MSTest.TestAdapter",
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests",
+            "MSTest.TestFramework.Extensions",
+            "MSTest.Extensions.Hosting",
+            "Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests",
+            "MSTestAdapter.PlatformServices.UnitTests",
+            "MSTest.Performance.Benchmarks",
+        ],
+        deps = [":assert_generator_plugin"],
+    )
     _windows_library(
         name = extensions,
         project = framework_project,
@@ -123,10 +151,9 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             "MSTestAdapter.PlatformServices",
             "MSTestAdapter.PlatformServices.UnitTests",
             "MSTest.TestAdapter",
-            "MSTest.Extensions.Hosting",
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests",
         ],
-        deps = [":framework"] + projection_deps,
+        deps = [":" + core] + projection_deps,
     )
     _windows_library(
         name = services,
@@ -147,7 +174,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             "MSTest.Acceptance.IntegrationTests",
             "MSTest.Performance.Benchmarks",
         ],
-        deps = [":framework", ":" + extensions] + projection_deps,
+        deps = [":" + core, ":" + extensions] + projection_deps,
     )
     _windows_library(
         name = adapter,
@@ -179,7 +206,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
         deps = [
             ":platform",
             ":" + services,
-            ":framework",
+            ":" + core,
             ":" + extensions,
             ":trx_abstractions",
             ":trx",
@@ -190,7 +217,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             "@paket.source//microsoft.testplatform.objectmodel",
         ],
     )
-    native.filegroup(name = "_windows_" + flavor, srcs = [":" + extensions, ":" + services, ":" + adapter])
+    native.filegroup(name = "_windows_" + flavor, srcs = [":" + core, ":" + extensions, ":" + services, ":" + adapter])
     testfx_matrix(name = "windows_" + flavor, target = ":_windows_" + flavor, frameworks = [framework])
 
 def _library_probe(name, framework, scenario, deps, project_sdk = "default"):
@@ -370,8 +397,8 @@ def windows_libraries():
         frameworks = _DESKTOP_FRAMEWORKS,
     )
 
-    _mstest_flavor("uwp", "net9.0-windows10.0.17763.0", "WINDOWS_UWP", [":windows_sdk_17763"])
-    _mstest_flavor("winui", "net8.0-windows10.0.18362.0", "WIN_UI", [":windows_sdk_18362", "@windows.main//microsoft.windowsappsdk"])
+    _mstest_flavor("uwp", "net10.0-windows10.0.17763.0", "WINDOWS_UWP", [":windows_sdk_17763"])
+    _mstest_flavor("winui", "net10.0-windows10.0.18362.0", "WIN_UI", [":windows_sdk_18362", "@windows.main//microsoft.windowsappsdk"])
     _controller()
 
     native.filegroup(
@@ -398,15 +425,15 @@ def windows_libraries():
     )
     _library_probe(
         "windows_probe_uwp",
-        "net9.0-windows10.0.17763.0",
+        "net10.0-windows10.0.17763.0",
         "uwp",
-        [":adapter_uwp", ":platform_services_uwp", ":framework_extensions_uwp", ":framework"],
+        [":adapter_uwp", ":platform_services_uwp", ":framework_extensions_uwp", ":framework_uwp"],
     )
     _library_probe(
         "windows_probe_winui",
-        "net8.0-windows10.0.18362.0",
+        "net10.0-windows10.0.18362.0",
         "winui",
-        [":adapter_winui", ":platform_services_winui", ":framework_extensions_winui", ":framework"],
+        [":adapter_winui", ":platform_services_winui", ":framework_extensions_winui", ":framework_winui"],
     )
     native.filegroup(
         name = "windows_probes",

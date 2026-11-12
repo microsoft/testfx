@@ -103,33 +103,47 @@ steps:
       GH_AW_MISSING_LEGS_VALUE: ${{ needs.fetch-binlog.outputs.missing-legs }}
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
-      # See build-failure-analysis.md for the binlog path conventions. The
-      # per-leg binlogs are read through the binlog-mcp MCP server (mounted at
-      # `/data/binlogs`); GH_AW_BINLOG_HOST_PATH points at the Azure DevOps
-      # build for human-facing references.
-      BINLOG_DIR="/data/binlogs"
-      LIST=""
-      if [ "${GH_AW_BINLOG_FOUND_VALUE:-false}" = "true" ] && [ -d /tmp/binlogs ]; then
-        for f in /tmp/binlogs/*.binlog; do
-          [ -f "$f" ] || continue
-          LIST="${LIST}${BINLOG_DIR}/$(basename "$f")"$'\n'
-        done
-      fi
-      FIRST=$(printf '%s' "$LIST" | head -1)
-      {
-        echo "GH_AW_BUILD_OUTCOME=failure"
-        echo "GH_AW_BINLOG_DIR=${BINLOG_DIR}"
-        echo "GH_AW_BINLOG_PATH=${FIRST}"
-        echo "GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}"
-        echo "GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}"
-        echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
-        echo "GH_AW_PR_MERGE_SHA=${GH_AW_PR_MERGE_SHA_VALUE}"
-        echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
-        echo "GH_AW_MISSING_LEGS=${GH_AW_MISSING_LEGS_VALUE}"
-        echo "GH_AW_BINLOG_LIST<<GH_AW_EOF"
-        printf '%s' "$LIST"
-        echo "GH_AW_EOF"
-      } >> "$GITHUB_ENV"
+      python3 -I - <<'PY'
+      import json
+      import os
+      import pathlib
+      import re
+
+      number = os.environ["GH_AW_PR_NUMBER_VALUE"]
+      head = os.environ["GH_AW_PR_HEAD_SHA_VALUE"]
+      merge = os.environ["GH_AW_PR_MERGE_SHA_VALUE"]
+      binlogs = [
+          f"/data/binlogs/{path.name}"
+          for path in sorted(pathlib.Path("/tmp/binlogs").glob("*.binlog"))
+          if path.is_file()
+      ]
+      if (
+          os.environ["GH_AW_BINLOG_FOUND_VALUE"] != "true"
+          or not binlogs
+          or not re.fullmatch(r"[1-9][0-9]*", number)
+          or not re.fullmatch(r"[0-9a-fA-F]{40}", head)
+          or (merge and not re.fullmatch(r"[0-9a-fA-F]{40}", merge))
+      ):
+          raise SystemExit("Missing or invalid required build-analysis inputs.")
+
+      inputs = {
+          "schema_version": 1,
+          "repository": os.environ["GITHUB_REPOSITORY"],
+          "GH_AW_BUILD_OUTCOME": "failure",
+          "GH_AW_BINLOG_DIR": "/data/binlogs",
+          "GH_AW_BINLOG_LIST": binlogs,
+          "GH_AW_BINLOG_PATH": binlogs[0],
+          "GH_AW_BINLOG_HOST_PATH": os.environ["GH_AW_ADO_BUILD_URL_VALUE"],
+          "GH_AW_PR_NUMBER": int(number),
+          "GH_AW_PR_HEAD_SHA": head,
+          "GH_AW_PR_MERGE_SHA": merge,
+          "GH_AW_WORKSPACE": os.environ["GH_AW_GITHUB_WORKSPACE"],
+          "GH_AW_MISSING_LEGS": os.environ["GH_AW_MISSING_LEGS_VALUE"],
+      }
+      output = pathlib.Path("/tmp/gh-aw/build-failure-analysis/analysis-inputs.json")
+      output.parent.mkdir(parents=True, exist_ok=True)
+      output.write_text(json.dumps(inputs, indent=2) + "\n", encoding="utf-8")
+      PY
 
 tools:
   github:

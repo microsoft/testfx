@@ -350,7 +350,7 @@
       </trans-unit>
       <trans-unit id="CollectionContentsNotEnumerated">
         <source>&lt;{0}&gt; (contents not enumerated)</source>
-        <target state="new">&lt;{0}&gt; (contents not enumerated)</target>
+        <target state="translated">&lt;{0}&gt; (内容が列挙されていません)</target>
         <note />
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -420,7 +420,7 @@
       </trans-unit>
       <trans-unit id="ContainsOnlyPredicateFailedSummary">
         <source>Expected collection to contain only elements matching the predicate.</source>
-        <target state="new">Expected collection to contain only elements matching the predicate.</target>
+        <target state="translated">述語に一致する要素のみがコレクションに含まれている必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -734,12 +734,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="PredicateMismatchIndexLabel">
         <source>index:</source>
-        <target state="new">index:</target>
+        <target state="translated">インデックス:</target>
         <note />
       </trans-unit>
       <trans-unit id="PredicateMismatchItemLabel">
         <source>item:</source>
-        <target state="new">item:</target>
+        <target state="translated">項目:</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

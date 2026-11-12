@@ -56,9 +56,10 @@ internal static class LibraryProbe
             throw new InvalidOperationException("A WPF reference assembly was loaded as a runtime implementation.");
         }
 
+        Assembly desktopExtensions = Assembly.Load("MSTest.TestFramework.Extensions");
         sourceAssemblies.Add(windowTest.Assembly);
-        sourceAssemblies.Add(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext).Assembly);
-        sourceAssemblies.Add(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly);
+        sourceAssemblies.Add(VerifyFrameworkApi(desktopExtensions, hasDesktopApi: true));
+        sourceAssemblies.Add(desktopExtensions);
         runtimeAssemblies.Add(automation);
 #elif WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
 #if WINDOWS_UWP_PROBE
@@ -66,7 +67,8 @@ internal static class LibraryProbe
 #else
         scenario = "winui";
 #endif
-        Assembly extensions = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext).Assembly;
+        Assembly extensions = Assembly.Load("MSTest.TestFramework.Extensions");
+        Assembly framework = VerifyFrameworkApi(extensions, hasDesktopApi: false);
         Type uiMethod = extensions.GetType(
             "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute", throwOnError: true)!;
         if (!typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).IsAssignableFrom(uiMethod))
@@ -74,13 +76,8 @@ internal static class LibraryProbe
             throw new InvalidOperationException("The Windows flavor did not expose the UI test method attribute.");
         }
 
-        if (extensions.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute") is not null)
-        {
-            throw new InvalidOperationException("A portable framework extensions flavor was loaded instead of the Windows flavor.");
-        }
-
         sourceAssemblies.Add(extensions);
-        sourceAssemblies.Add(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly);
+        sourceAssemblies.Add(framework);
         sourceAssemblies.Add(Assembly.Load("MSTestAdapter.PlatformServices"));
         sourceAssemblies.Add(Assembly.Load("MSTest.TestAdapter"));
 #else
@@ -104,6 +101,39 @@ internal static class LibraryProbe
             RuntimeAssemblies = runtimeAssemblies.Select(Describe),
         }));
     }
+
+#if WINDOWS_DESKTOP_PROBE || WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
+    private static Assembly VerifyFrameworkApi(Assembly extensions, bool hasDesktopApi)
+    {
+        Assembly framework = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly;
+        Type context = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext);
+        if (framework.GetName().Name != "MSTest.TestFramework" || context.Assembly != framework
+            || extensions.GetType(context.FullName!) is not null)
+        {
+            throw new InvalidOperationException("TestContext must be defined in the core framework, not Extensions.");
+        }
+
+        const string deploymentItemName = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
+        Type? deploymentItem = framework.GetType(deploymentItemName);
+        if ((deploymentItem is not null) != hasDesktopApi
+            || (deploymentItem is not null && deploymentItem.Assembly != framework)
+            || extensions.GetType(deploymentItemName) is not null)
+        {
+            throw new InvalidOperationException($"DeploymentItemAttribute must be defined only in ordinary core and excluded from UI core. Expected desktop API: {hasDesktopApi}.");
+        }
+
+        string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
+        foreach (string directory in directories)
+        {
+            if ((context.GetProperty(directory) is not null) != hasDesktopApi)
+            {
+                throw new InvalidOperationException($"TestContext.{directory} must remain excluded from UI core and available in ordinary core. Expected desktop API: {hasDesktopApi}.");
+            }
+        }
+
+        return framework;
+    }
+#endif
 
     private static object Describe(Assembly assembly)
         => new

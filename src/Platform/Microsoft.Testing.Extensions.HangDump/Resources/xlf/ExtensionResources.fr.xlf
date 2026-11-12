@@ -83,8 +83,8 @@ Informations sur le risque :
       <trans-unit id="HangDumpFileNameTemplateOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</target>
+        <target state="translated">Spécifiez le nom du fichier de vidage.
+Prend en charge les espaces réservés suivants : {pname} (nom de l’application de test), {pid} (ID de processus), {asm} (nom de l’assembly d’entrée), {tfm} (moniker du framework cible), {arch} (architecture de processus) {time} (horodatage).</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">

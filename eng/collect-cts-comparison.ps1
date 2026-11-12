@@ -71,7 +71,22 @@ function Invoke-CTSModuleSelectionSelfTest {
         }
 
         Write-Output "PASS EmptySelectionIsRejected"
-        Write-Output "CTS module-selection self-tests: 4 passed."
+
+        $windowsFramework = "net10.0-windows10.0.18362.0"
+        $windowsDirectory = Join-Path -Path $fixture -ChildPath "artifacts" -AdditionalChildPath @("bin", "Example.UnitTests", "Release", $windowsFramework, "win-x64")
+        New-Item -ItemType Directory -Path $windowsDirectory -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $windowsDirectory "Example.UnitTests.exe") -Value "windows activation manifest"
+        Set-Content -LiteralPath (Join-Path $windowsDirectory "Example.UnitTests.dll") -Value "windows managed module"
+        Set-Content -LiteralPath (Join-Path $windowsDirectory "Example.UnitTests.runtimeconfig.json") -Value "{}"
+        Set-Content -LiteralPath (Join-Path $windowsDirectory "Microsoft.Testing.Extensions.AffectedTests.dll") -Value "provider"
+        $windowsModules = @(Get-CTSComparisonModule $fixture "Release" | Where-Object Framework -eq $windowsFramework)
+        if ($windowsModules.Count -ne 1 -or
+            $windowsModules[0].RelativePath -ne "artifacts/bin/Example.UnitTests/Release/$windowsFramework/win-x64/Example.UnitTests.exe") {
+            throw "WindowsApplicationModulesKeepTheirApphost: Windows activation requires the native apphost, not a dotnet DLL launch."
+        }
+
+        Write-Output "PASS WindowsApplicationModulesKeepTheirApphost"
+        Write-Output "CTS module-selection self-tests: 5 passed."
     } finally {
         Remove-Item -LiteralPath $fixture -Recurse -Force
     }

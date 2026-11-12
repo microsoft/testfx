@@ -8,6 +8,8 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PublishAot>true</PublishAot>
+    <MSTestVersion>$(MSTestPreviewVersion)</MSTestVersion>
+    <MicrosoftTestingPlatformVersion Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'">$(MicrosoftTestingExtensionsPackagedAppVersion)</MicrosoftTestingPlatformVersion>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>

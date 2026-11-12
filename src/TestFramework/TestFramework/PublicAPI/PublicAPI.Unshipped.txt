@@ -86,3 +86,26 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> M
 Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestContext() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.get -> object?[]?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.get -> System.Exception?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.get -> int
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(string! fileName) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.Generic.IDictionary<string!, object?>!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string! format, params object?[]! args) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string? message) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string! format, params object?[]! args) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string? message) -> void
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationTokenSource.get -> System.Threading.CancellationTokenSource!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationTokenSource.set -> void
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome.get -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string!

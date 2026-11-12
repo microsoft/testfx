@@ -16,19 +16,16 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class WindowsApplicationModelPackageTests
 {
     [TestMethod]
-    [DataRow("net10.0-windows10.0.26100.0", "net10.0", "net11.0")]
-    [DataRow("net11.0-windows10.0.26100.0", "net11.0", "net10.0")]
-    public void ModernUwp_ResolvedAssetsRequireMatchingFrameworkAndSpecializedPayloads(
-        string targetFramework,
-        string frameworkAsset,
-        string wrongFrameworkAsset)
+    [DataRow("net10.0-windows10.0.26100.0")]
+    [DataRow("net11.0-windows10.0.26100.0")]
+    public void ModernUwp_ResolvedAssetsRequireMatchingFrameworkAndSpecializedPayloads(string targetFramework)
     {
         using var directory = new TempDirectory();
         string reportPath = Path.Combine(directory.Path, "resolved-mstest-assets.txt");
         string report = $$"""
             TargetFramework={{targetFramework}}
             UseUwpTools=true
-            /lib/{{frameworkAsset}}/MSTest.TestFramework.dll
+            /buildTransitive/net10.0/uwp/MSTest.TestFramework.dll
             /buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll
             /buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll
             /buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll
@@ -40,17 +37,17 @@ public sealed class WindowsApplicationModelPackageTests
 
         File.WriteAllText(
             reportPath,
-            report.Replace($"/lib/{frameworkAsset}/", $"/lib/{wrongFrameworkAsset}/", StringComparison.Ordinal));
+            report.Replace("/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll", StringComparison.Ordinal));
         AssertFailedException wrongFramework = Assert.ThrowsExactly<AssertFailedException>(() =>
             WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
-        Assert.Contains($"/lib/{frameworkAsset}/MSTest.TestFramework.dll", wrongFramework.Message);
+        Assert.Contains("/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", wrongFramework.Message);
 
         File.WriteAllText(reportPath, report.Replace("/uwp/", "/", StringComparison.Ordinal));
         AssertFailedException ordinaryPayload = Assert.ThrowsExactly<AssertFailedException>(() =>
             WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
-        Assert.Contains("/buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll", ordinaryPayload.Message);
+        Assert.Contains("/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", ordinaryPayload.Message);
     }
 
     [TestMethod]
@@ -133,7 +130,7 @@ public sealed class WindowsApplicationModelPackageTests
     public void PackedMSTestTestFramework_SealsConcreteCoreAttributes(string assemblyPath)
     {
         using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
-        Dictionary<string, TypeAttributes> types = ReadPublicTypeAttributes(archive, assemblyPath);
+        Dictionary<string, TypeAttributes> types = ReadTypeAttributes(archive, assemblyPath);
         const string prefix = "Microsoft.VisualStudio.TestTools.UnitTesting.";
         string[] sealedAttributes =
         [
@@ -156,20 +153,20 @@ public sealed class WindowsApplicationModelPackageTests
     }
 
     [TestMethod]
-    [DataRow("lib/netstandard2.0/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_NetStandard20_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll", true, DisplayName = "DeploymentItem_Net10_IsAvailable")]
-    [DataRow("buildTransitive/net11.0/MSTest.TestFramework.Extensions.dll", true, DisplayName = "DeploymentItem_Net11_IsAvailable")]
-    public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesTargetFramework(string assemblyPath, bool expectedAvailable)
-        => AssertDeploymentItemAvailability(assemblyPath, expectedAvailable);
+    [DataRow("lib/netstandard2.0/MSTest.TestFramework.dll", false, true, DisplayName = "DeploymentItem_NetStandard20_IsUnavailable")]
+    [DataRow("lib/net10.0/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_Net10_IsAvailable")]
+    [DataRow("lib/net11.0/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_Net11_IsAvailable")]
+    public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesTargetFramework(string assemblyPath, bool expectedAvailable, bool directoriesAvailable)
+        => AssertCoreContract(assemblyPath, expectedAvailable, directoriesAvailable);
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows-specific framework assets are produced only by Windows packs.")]
-    [DataRow("lib/net462/MSTest.TestFramework.Extensions.dll", true, DisplayName = "DeploymentItem_Net462_IsAvailable")]
-    [DataRow("lib/uap10.0/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_ClassicUwp_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_ModernUwp_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll", false, DisplayName = "DeploymentItem_WinUI_IsUnavailable")]
-    public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesWindowsTargetFramework(string assemblyPath, bool expectedAvailable)
-        => AssertDeploymentItemAvailability(assemblyPath, expectedAvailable);
+    [DataRow("lib/net462/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_Net462_IsAvailable")]
+    [DataRow("lib/uap10.0/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_ClassicUwp_IsUnavailable")]
+    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_ModernUwp_IsUnavailable")]
+    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_WinUI_IsUnavailable")]
+    public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesWindowsTargetFramework(string assemblyPath, bool expectedAvailable, bool directoriesAvailable)
+        => AssertCoreContract(assemblyPath, expectedAvailable, directoriesAvailable);
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
@@ -179,7 +176,7 @@ public sealed class WindowsApplicationModelPackageTests
     public void PackedMSTestTestFramework_SealsConcreteUIAttributes(string assemblyPath, bool winUI)
     {
         using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
-        Dictionary<string, TypeAttributes> types = ReadPublicTypeAttributes(archive, assemblyPath);
+        Dictionary<string, TypeAttributes> types = ReadTypeAttributes(archive, assemblyPath);
         const string prefix = "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.";
 
         Assert.AreEqual(TypeAttributes.Sealed, types[prefix + "UITestMethodAttribute"] & TypeAttributes.Sealed, assemblyPath);
@@ -229,8 +226,14 @@ public sealed class WindowsApplicationModelPackageTests
         "buildTransitive/net10.0/MSTest.TestFramework.targets",
         "buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll",
         "buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.xml",
+        "buildTransitive/net10.0/uwp/MSTest.TestFramework.dll",
+        "buildTransitive/net10.0/uwp/MSTest.TestFramework.xml",
+        "buildTransitive/net10.0/uwp/fr/MSTest.TestFramework.resources.dll",
         "buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
         "buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.xml",
+        "buildTransitive/net10.0/winui/MSTest.TestFramework.dll",
+        "buildTransitive/net10.0/winui/MSTest.TestFramework.xml",
+        "buildTransitive/net10.0/winui/fr/MSTest.TestFramework.resources.dll",
     ];
 
     [TestMethod]
@@ -443,18 +446,46 @@ public sealed class WindowsApplicationModelPackageTests
         return expectedPath;
     }
 
-    private static void AssertDeploymentItemAvailability(string assemblyPath, bool expectedAvailable)
+    private static void AssertCoreContract(string assemblyPath, bool deploymentAvailable, bool directoriesAvailable)
     {
         using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
-        Dictionary<string, TypeAttributes> types = ReadPublicTypeAttributes(archive, assemblyPath);
+        Dictionary<string, TypeAttributes> types = ReadTypeAttributes(archive, assemblyPath);
+        const string prefix = "Microsoft.VisualStudio.TestTools.UnitTesting.";
 
         Assert.AreEqual(
-            expectedAvailable,
-            types.ContainsKey("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"),
+            deploymentAvailable,
+            types.ContainsKey(prefix + nameof(DeploymentItemAttribute)),
             assemblyPath);
+        Assert.Contains(prefix + nameof(TestContext), types.Keys, assemblyPath);
+        Assert.Contains(prefix + "ITestClassInstanceFactory", types.Keys, assemblyPath);
+        Assert.Contains(prefix + "ITestClassInstanceLease", types.Keys, assemblyPath);
+
+        using Stream stream = archive.GetEntry(assemblyPath)!.Open();
+        using var image = new MemoryStream();
+        stream.CopyTo(image);
+        image.Position = 0;
+        using var peReader = new PEReader(image);
+        MetadataReader reader = peReader.GetMetadataReader();
+        TypeDefinition context = reader.TypeDefinitions.Select(reader.GetTypeDefinition)
+            .Single(type => reader.GetString(type.Name) == nameof(TestContext));
+        string[] properties = context.GetProperties().Select(reader.GetPropertyDefinition)
+            .Select(property => reader.GetString(property.Name)).ToArray();
+        string[] directoryProperties =
+        [
+            nameof(TestContext.TestRunDirectory), nameof(TestContext.DeploymentDirectory),
+            nameof(TestContext.ResultsDirectory), nameof(TestContext.TestRunResultsDirectory),
+            nameof(TestContext.TestResultsDirectory), nameof(TestContext.TestTempDirectory),
+        ];
+        Assert.AreSequenceEqual(
+            (directoriesAvailable ? directoryProperties : []).Order(StringComparer.Ordinal),
+            properties.Intersect(directoryProperties).Order(StringComparer.Ordinal),
+            assemblyPath);
+        bool frameworkDataAvailable = assemblyPath.StartsWith("lib/net462/", StringComparison.Ordinal);
+        Assert.AreEqual(frameworkDataAvailable, properties.Contains("DataRow"), assemblyPath);
+        Assert.AreEqual(frameworkDataAvailable, properties.Contains("DataConnection"), assemblyPath);
     }
 
-    private static Dictionary<string, TypeAttributes> ReadPublicTypeAttributes(ZipArchive archive, string assemblyPath)
+    private static Dictionary<string, TypeAttributes> ReadTypeAttributes(ZipArchive archive, string assemblyPath)
     {
         ZipArchiveEntry? entry = archive.GetEntry(assemblyPath);
         Assert.IsNotNull(entry, $"The packed framework is missing '{assemblyPath}'.");
@@ -467,7 +498,7 @@ public sealed class WindowsApplicationModelPackageTests
 
         return reader.TypeDefinitions
             .Select(reader.GetTypeDefinition)
-            .Where(type => (type.Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.Public)
+            .Where(type => (type.Attributes & TypeAttributes.VisibilityMask) is TypeAttributes.Public or TypeAttributes.NotPublic)
             .ToDictionary(
                 type => $"{reader.GetString(type.Namespace)}.{reader.GetString(type.Name)}",
                 type => type.Attributes,
