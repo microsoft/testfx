@@ -87,22 +87,59 @@
   <UsingTask TaskName="WriteCodeCoverageSettings"
              TaskFactory="RoslynCodeTaskFactory"
              AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <FileName ParameterType="System.String" Required="true" />
-      <Lines ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
-    </ParameterGroup>
     <Task>
-      <Code Type="Fragment" Language="cs">
+      <Code Type="Class" Language="cs">
         <![CDATA[
-        string path = System.IO.Path.GetFullPath(FileName);
-        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
-        string[] values = new string[Lines.Length];
-        for (int index = 0; index < Lines.Length; index++)
+        using System;
+        using System.IO;
+        using System.Linq;
+        using System.Text;
+        using Microsoft.Build.Framework;
+
+        namespace Microsoft.Build.Framework
         {
-            values[index] = Lines[index].GetMetadata("Value");
+            [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+            internal sealed class MSBuildMultiThreadableTaskAttribute : Attribute
+            {
+            }
         }
 
-        System.IO.File.WriteAllLines(path, values, new System.Text.UTF8Encoding(true));
+        #pragma warning disable CS0436 // Keep the embedded marker loadable on older hosts.
+        [MSBuildMultiThreadableTask]
+        #pragma warning restore CS0436
+        public sealed class WriteCodeCoverageSettings : Microsoft.Build.Utilities.Task
+        {
+            [Required]
+            public string FileName { get; set; }
+
+            [Required]
+            public ITaskItem[] Lines { get; set; }
+
+            public override bool Execute()
+            {
+                byte[] content;
+                using (var stream = new MemoryStream())
+                {
+                    using (var writer = new StreamWriter(stream, new UTF8Encoding(true), 1024, true))
+                    {
+                        foreach (ITaskItem line in Lines)
+                        {
+                            writer.WriteLine(line.GetMetadata("Value"));
+                        }
+                    }
+
+                    content = stream.ToArray();
+                }
+
+                if (!File.Exists(FileName) || !File.ReadAllBytes(FileName).SequenceEqual(content))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(FileName));
+                    File.WriteAllBytes(FileName, content);
+                }
+
+                return true;
+            }
+        }
         ]]>
       </Code>
     </Task>
@@ -209,7 +246,7 @@
     </ItemGroup>
 
     <!-- WriteLinesToFile also normalizes transformed metadata when binding its ITaskItem[] Lines parameter. -->
-    <WriteCodeCoverageSettings FileName="$(CodeCoverageSettingsFile)"
+    <WriteCodeCoverageSettings FileName="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CodeCoverageSettingsFile)'))"
                                Lines="@(_CodeCoverageSettingsLine)" />
   </Target>
 
@@ -280,5 +317,8 @@
   <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\WinUI.Incremental.targets"
+          Condition="'$(WindowsAppSDKSelfContained)' == 'true' and '$(TargetFramework)' == '$(WinUiMinimum)' and '$(MicrosoftWindowsAppSDKPackageDir)' == ''" />
 
 </Project>
