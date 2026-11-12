@@ -177,8 +177,17 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             (string?)identity.Attribute("Name"),
             $"Unexpected package identity in the tooling-generated manifest '{manifestPath}'.");
 
+        string resourcesPriPath = Path.Combine(build.PackageLayoutPath, "resources.pri");
+        Assert.IsTrue(
+            File.Exists(resourcesPriPath),
+            $"The classic UWP layout must retain its application-owned resources '{resourcesPriPath}'. Binlog: '{build.BinlogPath}'.");
+
         string[] runtimeAssemblies =
         [
+            "MSTest.TestAdapter.dll",
+            "MSTestAdapter.PlatformServices.dll",
+            "MSTest.TestFramework.dll",
+            "MSTest.TestFramework.Extensions.dll",
             "Microsoft.ApplicationInsights.dll",
             "Microsoft.Testing.Extensions.MSBuild.dll",
             "Microsoft.Testing.Extensions.Retry.dll",
@@ -208,7 +217,8 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var trx = XDocument.Load(trxPath);
         XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
-        Assert.HasCount(2, results, $"Expected exactly the plain and UI classic UWP tests in '{trxPath}'.");
+        const int expectedTestCount = 6;
+        Assert.HasCount(expectedTestCount, results, $"Expected the plain, UI and four localization cases in '{trxPath}'.");
 
         string[] actualTestNames = results
             .Select(result => (string?)result.Attribute("testName"))
@@ -218,18 +228,26 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             .ToArray();
         string[] expectedTestNames =
         [
+            "AdapterFailureMessages_AreLocalized_English",
+            "AdapterFailureMessages_UseNeutralFallbackForFrench",
+            "ApplicationResources_AreLocalized_English",
+            "ApplicationResources_AreLocalized_French",
             "PlainTestMethod_RunsInClassicUwpPackage",
             "UITestMethod_RunsOnCoreWindowDispatcher",
         ];
         Assert.AreSequenceEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
-        Assert.IsTrue(
-            results.All(result => (string?)result.Attribute("outcome") == "Passed"),
-            $"Every classic UWP result must pass. TRX: '{trxPath}'.");
+        foreach (XElement result in results)
+        {
+            Assert.AreEqual(
+                "Passed",
+                (string?)result.Attribute("outcome"),
+                $"Classic UWP case '{(string?)result.Attribute("testName")}' must execute and pass. TRX: '{trxPath}'.");
+        }
 
         XElement counters = trx.Descendants(ns + "Counters").Single();
-        AssertCounter(counters, "total", 2, trxPath);
-        AssertCounter(counters, "executed", 2, trxPath);
-        AssertCounter(counters, "passed", 2, trxPath);
+        AssertCounter(counters, "total", expectedTestCount, trxPath);
+        AssertCounter(counters, "executed", expectedTestCount, trxPath);
+        AssertCounter(counters, "passed", expectedTestCount, trxPath);
         AssertCounter(counters, "failed", 0, trxPath);
         AssertCounter(counters, "error", 0, trxPath);
         AssertCounter(counters, "inconclusive", 0, trxPath);
@@ -280,6 +298,8 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     </Compile>
     <AppxManifest Include="Package.appxmanifest" />
     <Content Include="Assets\**\*" />
+    <None Remove="Strings\**\*.resw" />
+    <PRIResource Include="Strings\**\*.resw" Exclude="@(PRIResource)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -298,12 +318,16 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
-      Lines="TargetFramework=$(TargetFramework);TargetPlatformVersion=$(TargetPlatformVersion);MSBuildRuntimeType=$(MSBuildRuntimeType)"
+      Lines="TargetFramework=$(TargetFramework);TargetPlatformVersion=$(TargetPlatformVersion);UseUwpTools=$(UseUwpTools);UseWinUI=$(UseWinUI);MSBuildRuntimeType=$(MSBuildRuntimeType);NETCoreSdkVersion=$(NETCoreSdkVersion);NuGetPackageRoot=$(NuGetPackageRoot)"
       Overwrite="true" />
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
       Lines="@(ReferencePath->'%(FullPath)')"
       Overwrite="false" />
+    <WriteLinesToFile
+      File="$(MSBuildProjectDirectory)\resolved-mstest-runtime-assets.txt"
+      Lines="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)|%(FullPath)')"
+      Overwrite="true" />
   </Target>
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Version="$MSBuildSdkExtrasVersion$" />
   <Import Project="Sdk.targets" Sdk="MSTest.Sdk" Version="$MSTestVersion$" />
@@ -421,7 +445,7 @@ namespace $AssetName$
         DisplayName="$AssetName$"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="MSTest classic UWP acceptance asset"
+        Description="ms-resource:AppDescription"
         BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
@@ -435,9 +459,12 @@ namespace $AssetName$
 </Package>
 
 #file UnitTests.cs
+using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Resources.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
@@ -446,6 +473,8 @@ namespace $AssetName$
     [TestClass]
     public sealed class ClassicUwpPackageTests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public void PlainTestMethod_RunsInClassicUwpPackage()
         {
@@ -464,7 +493,83 @@ namespace $AssetName$
             Assert.IsNotNull(grid.Dispatcher);
             Assert.IsTrue(grid.Dispatcher.HasThreadAccess);
         }
+
+        [TestMethod]
+        [DataRow("en-US", "The parameter should not be null or empty.", DisplayName = "AdapterFailureMessages_AreLocalized_English")]
+        [DataRow("fr-FR", "The parameter should not be null or empty.", DisplayName = "AdapterFailureMessages_UseNeutralFallbackForFrench")]
+        public void AdapterFailureMessages_RespectSatellitePolicy(string cultureName, string expectedMessage)
+        {
+            CultureInfo originalUICulture = CultureInfo.CurrentUICulture;
+            try
+            {
+                CultureInfo.CurrentUICulture = new CultureInfo(cultureName);
+
+                // Native UWP MTP suppresses adapter satellite copying; preserve its neutral fallback.
+                // This public API reads the adapter's real platform-services resources before any file I/O.
+                ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() => TestContext.AddResultFile(string.Empty));
+                Assert.AreEqual("fileName", exception.ParamName);
+                Assert.StartsWith(expectedMessage, exception.Message);
+            }
+            finally
+            {
+                CultureInfo.CurrentUICulture = originalUICulture;
+            }
+        }
+
+        [TestMethod]
+        [DataRow("en-US", "MSTest classic UWP sample", DisplayName = "ApplicationResources_AreLocalized_English")]
+        [DataRow("fr-FR", "Exemple UWP classique MSTest", DisplayName = "ApplicationResources_AreLocalized_French")]
+        public void ApplicationResources_AreLocalized(string language, string expectedDescription)
+        {
+            var context = new ResourceContext();
+            context.QualifierValues["Language"] = language;
+
+            string description = ResourceManager.Current.MainResourceMap
+                .GetValue("Resources/AppDescription", context).ValueAsString;
+
+            Assert.AreEqual(expectedDescription, description);
+        }
     }
 }
+
+#file Strings/en-US/Resources.resw
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDescription" xml:space="preserve">
+    <value>MSTest classic UWP sample</value>
+  </data>
+</root>
+
+#file Strings/fr-FR/Resources.resw
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Exemple UWP classique MSTest</value>
+  </data>
+</root>
 """;
 }

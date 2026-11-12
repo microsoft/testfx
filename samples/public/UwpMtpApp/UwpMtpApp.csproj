@@ -23,5 +23,23 @@
                            Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
     <Page Include="MainPage.xaml"
           Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
+    <None Remove="Strings\**\*.resw" />
+    <PRIResource Include="Strings\**\*.resw" Exclude="@(PRIResource)"
+                 Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
   </ItemGroup>
+
+  <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="TargetFramework=$(TargetFramework);UseUwpTools=$(UseUwpTools);UseWinUI=$(UseWinUI);MSBuildRuntimeType=$(MSBuildRuntimeType);NETCoreSdkVersion=$(NETCoreSdkVersion);NuGetPackageRoot=$(NuGetPackageRoot)"
+      Overwrite="true" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="@(ReferencePath->'%(FullPath)')"
+      Overwrite="false" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-runtime-assets.txt"
+      Lines="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)|%(FullPath)')"
+      Overwrite="true" />
+  </Target>
 </Project>
