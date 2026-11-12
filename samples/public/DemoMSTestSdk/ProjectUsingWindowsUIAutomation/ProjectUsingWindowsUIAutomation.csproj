@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <!-- Enables the MSTest Windows UI Automation feature -->
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
-    <MSTestWindowsUIAutomationVersion>$(MSTestVersion)</MSTestWindowsUIAutomationVersion>
   </PropertyGroup>
 
 </Project>
@@ -33,7 +32,7 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(VSTestVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MTPVersion)" />
-    <PackageReference Include="MSTest.Windows.UIAutomation" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Windows.UIAutomation" Version="$(MSTestWindowsUIAutomationVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />

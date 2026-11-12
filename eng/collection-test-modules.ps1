@@ -17,7 +17,9 @@ function Get-CTSComparisonModule {
             }
 
             $modulePath = $apphost.FullName
-            if (Test-Path -LiteralPath (Join-Path $apphost.DirectoryName "$($apphost.BaseName).runtimeconfig.json")) {
+            # Windows-targeted applications need the apphost's native activation manifest.
+            if ($segments[2] -notlike "*-windows*" -and
+                (Test-Path -LiteralPath (Join-Path $apphost.DirectoryName "$($apphost.BaseName).runtimeconfig.json"))) {
                 # CTS deduplicates input files by hash. Apphosts can be identical across different test builds.
                 $modulePath = Join-Path $apphost.DirectoryName "$($apphost.BaseName).dll"
             }
