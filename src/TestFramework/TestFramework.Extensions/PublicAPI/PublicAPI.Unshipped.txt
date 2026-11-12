@@ -1,1 +1,21 @@
 #nullable enable
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo.PlannedTests.get -> System.Collections.Generic.IReadOnlyCollection<Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest!>!
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.AssemblyPath.get -> string!
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringFilePath.get -> string?
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringLineNumber.get -> int?
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.FullyQualifiedTestClassName.get -> string!
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedMethodName.get -> string?
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedTypeName.get -> string?
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.PlannedTest(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, System.Collections.Generic.IReadOnlyCollection<string!>! testCategories, System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>! testProperties) -> void
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestCategories.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestDisplayName.get -> string?
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestName.get -> string!
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestProperties.get -> System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>!
+*REMOVED*[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestRun
+*REMOVED*[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Error = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel

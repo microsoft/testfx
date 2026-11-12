@@ -28,6 +28,16 @@ Supported platforms:
 
 ## Documentation
 
+### Common API assembly ownership
+
+Starting with MSTest 5, `MessageLevel`, `TestRun`, `ITestRunInfo` and `PlannedTest`
+are defined in `MSTest.TestFramework.dll`. The .NET Framework-only private
+reflection and test-configuration helpers are also defined there. Consumers
+compiled against their former `MSTest.TestFramework.Extensions.dll` definitions
+must recompile; assembly-qualified configuration names must use the core assembly.
+`TestContext`, `DeploymentItemAttribute` and the UI APIs remain in Extensions.
+The package layout and supported targets are unchanged.
+
 ### Predicate-based collection assertions
 
 Starting with MSTest 5, use `Assert.ContainsOnly` to assert that every collection

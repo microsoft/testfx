@@ -420,7 +420,7 @@
       </trans-unit>
       <trans-unit id="ContainsOnlyPredicateFailedSummary">
         <source>Expected collection to contain only elements matching the predicate.</source>
-        <target state="new">Expected collection to contain only elements matching the predicate.</target>
+        <target state="translated">Se esperaba que la colección contuviera solo los elementos que coinciden con el predicado.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">

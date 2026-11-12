@@ -871,10 +871,15 @@ public class RetryTests
         Task completedExit = Task.FromResult(0);
         Task completedConnection = Task.CompletedTask;
         var pendingConnection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var graceTimeout = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITask> task = new(MockBehavior.Strict);
+        task.Setup(value => value.Delay(TimeSpan.FromSeconds(1), CancellationToken.None))
+            .Returns(graceTimeout.Task);
 
         Task<Task> gracePeriod = InvokeRetryTestHostRunnerGracePeriodAsync(
             completedExit,
             pendingConnection.Task,
+            task.Object,
             CancellationToken.None);
         Assert.IsFalse(gracePeriod.IsCompleted);
 
@@ -884,17 +889,33 @@ public class RetryTests
         Task<Task> noGracePeriod = InvokeRetryTestHostRunnerGracePeriodAsync(
             completedExit,
             completedConnection,
+            task.Object,
             CancellationToken.None);
         Assert.AreSame(completedExit, await noGracePeriod);
+        task.Verify(value => value.Delay(TimeSpan.FromSeconds(1), CancellationToken.None), Times.Once);
+
+        var timedOutConnection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task<Task> timedOutGracePeriod = InvokeRetryTestHostRunnerGracePeriodAsync(
+            completedExit,
+            timedOutConnection.Task,
+            task.Object,
+            CancellationToken.None);
+        Assert.IsFalse(timedOutGracePeriod.IsCompleted);
+        graceTimeout.SetResult(true);
+        Assert.AreSame(graceTimeout.Task, await timedOutGracePeriod);
 
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
+        task.Setup(value => value.Delay(TimeSpan.FromSeconds(1), cancellation.Token))
+            .Returns(Task.FromCanceled(cancellation.Token));
         var neverConnects = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
             () => InvokeRetryTestHostRunnerGracePeriodAsync(
                 completedExit,
                 neverConnects.Task,
+                task.Object,
                 cancellation.Token));
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
     }
 
     [TestMethod]
@@ -2648,12 +2669,13 @@ public class RetryTests
     private static Task<Task> InvokeRetryTestHostRunnerGracePeriodAsync(
         Task completedTask,
         Task waitForConnectionTask,
+        ITask task,
         CancellationToken cancellationToken)
         => (Task<Task>)typeof(RetryTestHostRunner)
             .GetMethod(
                 "WaitForConnectionGracePeriodAsync",
                 BindingFlags.Static | BindingFlags.NonPublic)!
-            .Invoke(null, [completedTask, waitForConnectionTask, cancellationToken])!;
+            .Invoke(null, [completedTask, waitForConnectionTask, task, cancellationToken])!;
 
     private static void AssertReadLine(MethodInfo readLine, object reader, string expectedResult, string expectedLine)
     {
