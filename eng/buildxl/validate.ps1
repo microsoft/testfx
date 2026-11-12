@@ -8,10 +8,10 @@ param(
     [switch] $NoJournal,
     [ValidateSet('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
         'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache')]
     [string[]] $Case = @('DefaultBuildSelectsRepositorySolution', 'SettingsAndProvenance', 'SolutionBuildPreservesProjectFrameworks',
         'InvalidProjectRejected', 'BuildFailurePropagates', 'ChangedInputInvalidatesCache',
-        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
+        'SharedCompilerTracksChangedInputs', 'NativeBuildProducesClosure', 'SummaryRolloverPreservesPreviousAttempt', 'CallerStateRestored', 'UnchangedBuildUsesCache', 'MissingOutputRestoredFromCache'),
     [string] $BuildScript = (Join-Path (Split-Path $PSScriptRoot -Parent) 'buildxl.ps1')
 )
 
@@ -361,6 +361,29 @@ using System.Reflection;
         foreach ($name in @('Microsoft.Testing.Platform', 'Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.TrxReport')) {
             $assembly = Join-Path $repo "artifacts\buildxl\bin\$name\Debug\net10.0\$name.dll"
             Assert-Equal $name ([Reflection.AssemblyName]::GetAssemblyName($assembly).Name)
+        }
+    }
+    Test-Case 'SummaryRolloverPreservesPreviousAttempt' {
+        $outputId = "validation-summary-$([Guid]::NewGuid().ToString('N'))"
+        $logs = Join-Path $repo "artifacts\buildxl-runs\$outputId\logs"
+        New-Item -ItemType Directory -Path $logs -Force | Out-Null
+        $summary = Join-Path $logs 'BuildXL.Summary.md'
+        $previousSummary = "Previous attempt $([Guid]::NewGuid().ToString('N'))"
+        [IO.File]::WriteAllText($summary, $previousSummary)
+        $run = Invoke-Build 'summary-rollover' @('-OutputId', $outputId)
+        Assert-Equal 0 $run.ExitCode
+        Assert-Equal $false $run.Output.Contains('Error writing AzureDevOps summary file')
+        $history = Join-Path $logs 'summary-history'
+        $archived = @(if (Test-Path -LiteralPath $history) { Get-ChildItem -LiteralPath $history -Filter '*.md' -File })
+        Assert-Equal 1 $archived.Count
+        Assert-Equal $previousSummary ([IO.File]::ReadAllText($archived[0].FullName))
+        if (Test-Path -LiteralPath $summary -PathType Leaf) {
+            Assert-Equal $false ([IO.File]::ReadAllText($summary) -ceq $previousSummary)
+        }
+        else {
+            # Outside Azure DevOps the engine does not render a summary; probe its CreateNew contract.
+            $writer = [IO.File]::Open($summary, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+            $writer.Dispose()
         }
     }
     Test-Case 'CallerStateRestored' {

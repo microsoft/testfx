@@ -236,6 +236,14 @@ try {
             $journalArguments = @('/verifyJournalForEngineVolumes-', '/scanChangeJournal-', '/useFileContentTable-', '/useHardlinks-')
         }
 
+        # BuildXL creates the Azure summary with CreateNew, including when a task retries.
+        $summary = Join-Path $logs 'BuildXL.Summary.md'
+        if (Test-Path -LiteralPath $summary -PathType Leaf) {
+            $history = Join-Path $logs 'summary-history'
+            New-Item -ItemType Directory -Path $history -Force | Out-Null
+            Move-Item -LiteralPath $summary -Destination (Join-Path $history "BuildXL.Summary.$([Guid]::NewGuid().ToString('N')).md")
+        }
+
         $frameworkDescription = if ($TargetFramework) { $TargetFramework } else { 'project target frameworks; classic UAP excluded' }
         Write-Host "BuildXL: $relativeProject ($Configuration, $frameworkDescription). Outputs: $output"
         & $bxl "/config:$config" "/objectDirectory:$output\engine" `

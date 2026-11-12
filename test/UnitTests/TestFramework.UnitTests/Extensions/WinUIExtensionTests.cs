@@ -207,6 +207,19 @@ public sealed class WinUIExtensionTests : TestContainer
             start.ArgumentList.Add("--filter-uid");
             start.ArgumentList.Add(typeof(WinUIExtensionTests).FullName + "." + nameof(NativeApplicationStartupInIsolatedProcesses));
             start.Environment[ChildModeVariable] = childMode;
+            // This helper is not a collection batch and must not overwrite its parent's timing feedback.
+            foreach (string variable in new[]
+            {
+                "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
+                "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+                "MTP_AFFECTED_TESTS_CHILD_PROCESS",
+                "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_ID",
+                "MTP_AFFECTED_TESTS_BATCH_FEEDBACK_PATH",
+            })
+            {
+                start.Environment.Remove(variable);
+            }
+
             using Process process = Process.Start(start)!;
             Task<string> output = process.StandardOutput.ReadToEndAsync();
             Task<string> error = process.StandardError.ReadToEndAsync();

@@ -9,6 +9,9 @@ Alternatively, if you don't want to use the `global.json` file for versions, you
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
+    <!-- Source generation is prerelease and requires its matching framework and adapter. -->
+    <MSTestVersion>$(MSTestPreviewVersion)</MSTestVersion>
+
     <!-- When MSTest Sdk detects PublishAot=true, it references the required packages to ensure Native AOT support -->
     <PublishAot>true</PublishAot>
   </PropertyGroup>

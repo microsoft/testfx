@@ -697,6 +697,42 @@ The YAML SHA-256 is
 the retained test SHA-256 is
 `CCA770D92B47F67D45ACE75BBF3E4C26D3D57A698578EE7DCFB3DF78FB4F110F`.
 
+### 2026-11-12: preserve summaries across hosted retries
+
+[Azure build 1677171](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1677171),
+at `4988a1e87e24722d7ae29ac1f6b021384ddfd060`, exercised the bounded recovery above:
+both native configurations initially rejected a surviving `getmac.exe`, then succeeded on their
+automatic retry. This closes the hosted retry-execution gap; it does not fix the upstream
+500 ms child-process lifetime constraint or justify weakening the sandbox.
+
+Both successful retries also reported `Error writing AzureDevOps summary file` because the
+previous attempt's `BuildXL.Summary.md` still occupied the path. Before a native engine invocation,
+the wrapper now moves that one existing file to a uniquely named file under
+`logs/summary-history`. The current summary path, cache, statistics, and recursive artifact
+collection remain unchanged. Deleting the previous file would lose failure evidence, while
+changing every invocation's log root would unnecessarily change existing consumers.
+
+**Test-value evidence:** the unchanged
+`.\eng\buildxl\validate.ps1 -Case SummaryRolloverPreservesPreviousAttempt -NoJournal`
+executes the real pinned BuildXL engine against the TRX project. Without rollover, the engine
+exits 0 but the test exits 1 because the expected archived-summary count is 1 and the actual
+count is 0. With rollover, the engine and test both exit 0, the previous bytes are retained,
+and the current path accepts the summary writer's `CreateNew` contract. Outside Azure DevOps,
+the test probes that file contract rather than claiming a hosted summary upload.
+The validator SHA-256 is identical in both runs:
+`C6264D7025DD71F8887BE00B83C3ABE003AD2A78D2D29B8D626A839F94B51B72`.
+The wrapper changes from
+`DA1EE775329C8D44D6A338641B02191670BD74B3809FC264E05AEB2F90ADE798` to
+`A0B58CEC3266414DE38FC6F4713B8F43CABAA2C0032E0103C20BF5EDFFE89145`.
+Results are retained in `artifacts/buildxl-validation/9c0d81afc1454f49b9a026632268bd16/results.json`
+and `artifacts/buildxl-validation/b1948fcfb057478aab203f5f7caca0a2/results.json`.
+The existing pipeline contracts also pass all 23 cases; the retry limit and final-exit checks
+are unchanged. Hosted summary publication with this wrapper remains unverified until CI runs it.
+
+An earlier local setup attempt failed while renaming the extracted tool directory. Extracting
+the same hash-verified package directly into a new task-owned deployment completed installation;
+that setup failure is not counted as behavioral red evidence.
+
 ### 2026-11-10: native full-solution integration
 
 Base source: `129aff748a337473ebd9a2b9417a6779cd6619d3`, with the
