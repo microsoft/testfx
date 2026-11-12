@@ -63,7 +63,10 @@ the solution and retain engine counters and project binlogs for later analysis.
 Outputs are isolated; the Arcade build remains the shipping authority.
 The driver enables tracked shared compilation, sizes concurrency to the available
 CPUs, and automatically falls back to full input hashing when change journals
-are unavailable. CI persists the action cache between compatible runs.
+are unavailable without modifying local volume settings. CI initializes the
+checkout volume's change journal before restoring the action cache between
+compatible runs; existing journals are preserved, and initialization failures
+fail the job. The Windows CI agent must run elevated.
 The [BuildXL performance comparison](decisions/buildxl-build.md#comparing-build-performance)
 remains an explicit local experiment for matched cold, changed-input, and no-op
 TRX builds. CI runs real solution builds, not repeated benchmark samples.

@@ -136,7 +136,7 @@
     <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.26.150" />
     <!--
       Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
       here to pick up versions that fix security vulnerabilities in the transitive versions shipped
@@ -150,10 +150,10 @@
     -->
     <PackageVersion Include="Nerdbank.MessagePack" Version="1.4.95" />
     <PackageVersion Include="MessagePack" Version="3.1.12" />
-    <PackageVersion Include="StrongNamer" Version="0.2.5" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="StrongNamer" Version="0.2.5" />    
+    <PackageVersion Include="System.CommandLine" Version="3.0.0" />
     <PackageVersion Include="System.Management" Version="$(DotNetRuntimePackagesVersion)" />
-    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.1" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.2" />
   </ItemGroup>
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK

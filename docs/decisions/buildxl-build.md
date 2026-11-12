@@ -1,5 +1,129 @@
 # BuildXL build: research and decisions
 
+## 2026-11-11: preserve journals when a query fails
+
+Review of `9435e80cf4736dc2cfaadf843bb88d821fd928b3` identified an
+error-handling gap in the new CI prerequisite: a failed query does not prove a
+journal is inactive, so unconditionally creating one could resize an active
+journal. This violates the existing preservation contract.
+
+A real, read-only `fsutil.exe usn queryjournal Q:` probe exited 1 and reported
+`Error 1179: The volume change journal is not active.` The command's exit code
+alone is insufficient. Create only when a failed query reports Win32
+`ERROR_JOURNAL_NOT_ACTIVE` (1179) in the diagnostic's error-code position.
+Do not match English message text or a number occurring in journal metadata.
+Retain the query diagnostic and fail without mutation for other errors,
+including access denial, deletion in progress, and unrecognized output.
+The existing local-driver fallback remains unchanged.
+
+Extend the actual-inline-script tests with those query-error cases and a
+non-English error prefix. Keep all journal commands faked inside their existing
+child-process boundary; no real volume settings may change.
+
+### Query-error correction: test-value evidence
+
+The tested source is `9435e80cf4736dc2cfaadf843bb88d821fd928b3` plus the
+correction. Its executable-only `git diff --binary` patch SHA-256 is
+`D038BC6D96116A9A4505190FA4B51ABC7519259F1664ED0F39F371B8A06DEE9A`.
+Runner versions and the child-process isolation contract are unchanged.
+
+Keep the changed regression script with the original job YAML in an isolated
+comparison outside the checkout, then replace only that YAML for the paired
+run. `test_change_journal_query_failure_preserves_existing_journal` provides
+successful fake creation/verification responses too, so the old implementation
+actually issues the unwanted mutation and incorrectly exits 0; a fixture error
+cannot manufacture the red result.
+
+| Executed command / source state | Result |
+| --- | --- |
+| `python "$comparison\.github\scripts\test_buildxl_pipeline.py" -k query_failure` / original job YAML at `9435e80cf4736dc2cfaadf843bb88d821fd928b3` | Exit 1; one method executes and fails its intended nonzero-exit assertion in all four subcases: access denied, deletion in progress, unrecognized output, and a journal-metadata number collision. No errors or skips. |
+| Same command and unchanged tests / corrected job YAML | Exit 0; the method and all four subcases pass, requiring that only the query executes and its diagnostic/code are retained. |
+| `python .github\scripts\test_buildxl_pipeline.py` / corrected worktree | Exit 0; all 29 methods pass, with no failures, errors, or skips. |
+
+This is **executed: detected** for the reported query-error defect.
+`test_missing_change_journal_is_created_and_verified` also still creates and
+verifies an inactive journal with both English and German error prefixes.
+The only real filesystem command was the read-only probe above; no real journal
+was created, resized, or deleted. Hosted validation of the corrected revision
+remains pending.
+
+## 2026-11-11: initialize the CI workspace change journal
+
+[Azure build 1676185](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1676185)
+reports DX7135 for the workspace's D-volume in both BuildXL configurations.
+That run uses `d12b49e407477117dcdf6dbef1b1499988782529`, before the
+read-only automatic filesystem-mode detection below. Neither revision provisions
+the agent's journal, and the reported run already requests `-NoJournal`.
+Disabling journal-backed optimizations is therefore not a substitute for
+initializing the CI volume.
+
+Initialize only the checkout volume in the BuildXL job, after checkout and
+before restoring its action cache or invoking the driver. Derive the volume
+from `BUILD_SOURCESDIRECTORY`, rather than assuming D:. An existing journal
+must remain unchanged: Microsoft's [fsutil usn reference](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/fsutil-usn)
+documents that `createjournal` also resizes existing journals. Query first;
+create a missing journal with BuildXL's recommended 512 MiB maximum and
+128 MiB allocation delta, then query again to verify activation.
+Creation or verification failure must fail this prerequisite with the native
+diagnostic and exit code, not silently continue with the same warning.
+The [fsutil permission requirement](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/fsutil)
+means the Windows CI agent must run elevated; do not launch an interactive UAC
+prompt or change an agent-wide policy.
+
+Keep the local driver read-only and preserve its explicit `-NoJournal` override
+and full-hashing fallback. Do not change other volumes, disable sandbox checks,
+or change the pinned BuildXL/SDK, native build, retry, cache isolation, or shipping
+Arcade jobs. The journal belongs to the CI agent volume's lifetime, not a local
+build invocation; do not delete it during job cleanup.
+
+Extend `test_buildxl_pipeline.py` to check setup ordering and execute the actual
+inline PowerShell against a child-process-local `fsutil.exe` fake. Cover an
+existing journal, missing journal on different drive letters, creation failure,
+and failed verification. The existing suite's 23 cases pass before this change.
+Tests must never create or modify a real developer-volume journal. Hosted
+activation, agent permissions, and disappearance of DX7135 require a run of the
+changed pipeline; local mocked execution alone cannot establish those outcomes.
+
+### Journal setup validation and test-value evidence
+
+Tested source: `50b513022be7c356cb342866a3b755a4b18bf97d` plus the local
+pipeline and regression-test changes. The executable-only `git diff --binary`
+patch SHA-256 is
+`ADA79F2F1A845DEFE6C7E2E563F7EFA15B3BB770C5EC0ECFC7F25CF05AF5A601`;
+documentation is excluded to avoid a self-referential identity.
+Runners: PowerShell 7.6.9 (`pwsh`) on Windows, Python 3.12.10, PyYAML 6.0.2.
+
+| Contract | Retained regression |
+| --- | --- |
+| Setup runs after checkout, before cache restore and native build | `test_change_journal_is_initialized_before_cache_and_build` |
+| Existing journals are queried without resizing | `test_existing_change_journal_is_preserved` |
+| Missing journals are created and verified on D: and an alternate drive | `test_missing_change_journal_is_created_and_verified` |
+| Creation errors block setup and retain the native diagnostic/code | `test_change_journal_creation_failure_blocks_build` |
+| A successful create command alone is insufficient | `test_change_journal_verification_failure_blocks_build` |
+
+For the isolated comparison, copy the base `azure-pipelines.yml` and
+`eng\pipelines\jobs\buildxl.yml`, retaining the changed
+`.github\scripts\test_buildxl_pipeline.py` at the same relative location.
+`$comparison` below denotes that task-owned directory outside the checkout.
+Replace only its job YAML with the fixed version for the second run;
+the regression-test bytes and selection remain identical.
+
+| Executed command / source state | Result |
+| --- | --- |
+| `python "$comparison\.github\scripts\test_buildxl_pipeline.py" -k change_journal` / base job YAML | Exit 1; five methods execute with six intended assertion failures, including both missing-journal subcases. No errors or skips; the absent setup issues no journal commands and incorrectly succeeds in failure scenarios. |
+| Same command and retained tests / fixed job YAML | Exit 0; all five methods pass. |
+| `python .github\scripts\test_buildxl_pipeline.py -k change_journal` / fixed worktree | Exit 0; all five methods pass. |
+| `python .github\scripts\test_buildxl_pipeline.py` / fixed worktree | Exit 0; all 28 methods pass, with no errors, failures, or skips. This retains all 23 existing pipeline, collector, and read-only local-driver cases. |
+
+This is **executed: detected** evidence for the CI setup contract, not proof of
+real journal activation or a hosted performance improvement. Tests run serially
+through `unittest`; each PowerShell child owns its environment and command fake.
+No real `fsutil` command or volume mutation occurs. No shipping binaries,
+packages, public APIs, or test-assembly scheduling change, so no product rebuild
+or package validation is needed. The hosted-agent permission requirement and
+absence of DX7135 remain unverified; no pipeline was queued or GitHub content
+published as part of this local fix.
+
 ## 2026-11-11: correct the performance setup
 
 The setup audit of [Azure build 1674906](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1674906)

@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Read-only ambient information about the current test run. Accessed via <see cref="TestRun.Current"/>.
 /// </summary>
 /// <remarks>
-/// Unlike <see cref="TestContext"/>, which describes the test currently executing, an
+/// Unlike <c>TestContext</c>, which describes the test currently executing, an
 /// <see cref="ITestRunInfo"/> describes the run as a whole and is queryable from any code reachable
 /// during a test run (for example helpers, fixtures, or <c>[AssemblyInitialize]</c> methods).
 /// <para>
