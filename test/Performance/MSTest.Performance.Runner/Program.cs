@@ -22,18 +22,21 @@ internal class EntryPoint
         Console.WriteLine("Microsoft (R) MSTest Performance Profiler Command Line Tool");
 
         var rootCommand = new RootCommand("MSTest Performance Profiler Command Line Tool");
-        var pipelineNameFilter = new Option<string>(name: "--pipelineNameFilter", description: "Globing filter for the pipeline name to execute.", getDefaultValue: () => string.Empty);
+        var pipelineNameFilter = new Option<string>("--pipelineNameFilter")
+        {
+            Description = "Globing filter for the pipeline name to execute.",
+            DefaultValueFactory = _ => string.Empty,
+        };
         var executeTests = new Command("execute", "Execute the performance scenarios.")
         {
             pipelineNameFilter,
         };
-        executeTests.SetHandler(
-            context =>
-                context.ExitCode = Pipelines(context.ParseResult.GetValueForOption(pipelineNameFilter) ?? string.Empty));
+        executeTests.SetAction(parseResult =>
+            Pipelines(parseResult.GetValue(pipelineNameFilter) ?? string.Empty));
 
-        rootCommand.AddCommand(executeTests);
+        rootCommand.Subcommands.Add(executeTests);
 
-        return rootCommand.InvokeAsync(args);
+        return rootCommand.Parse(args).InvokeAsync();
     }
 
     private static int Pipelines(string pipelineNameFilter)
