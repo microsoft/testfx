@@ -35,7 +35,7 @@ function Get-OutputFiles {
         foreach ($project in Get-ChildItem -LiteralPath $binRoot -Directory) {
             $directory = Join-Path $project.FullName $Configuration
             if (Test-Path -LiteralPath $directory) {
-                $files.AddRange([IO.FileInfo[]]@(Get-ChildItem -LiteralPath $directory -File -Recurse))
+                $files.AddRange([IO.FileInfo[]]@(Get-ChildItem -LiteralPath $directory -File -Recurse -Force))
             }
         }
     }
@@ -197,8 +197,10 @@ try {
 }
 finally { $archive.Dispose() }
 
-$consumerRepositoryPattern = [regex]::Escape($RepositoryRoot.TrimEnd("\", "/") + [IO.Path]::DirectorySeparatorChar)
-$consumerPackagesPattern = [regex]::Escape($NuGetPackagesRoot.TrimEnd("\", "/") + [IO.Path]::DirectorySeparatorChar)
+$consumerRepositoryRoot = $RepositoryRoot.TrimEnd("\", "/") + [IO.Path]::DirectorySeparatorChar
+$consumerPackagesRoot = $NuGetPackagesRoot.TrimEnd("\", "/") + [IO.Path]::DirectorySeparatorChar
+$consumerRepositoryPattern = [regex]::Escape($consumerRepositoryRoot)
+$consumerPackagesPattern = [regex]::Escape($consumerPackagesRoot)
 $producerRepositoryPattern = [regex]::Escape($manifest.repositoryRoot)
 $producerPackagesPattern = [regex]::Escape($manifest.nuGetPackagesRoot)
 foreach ($file in $manifest.files | Where-Object { $_.path.EndsWith("/coverage.config") }) {
@@ -222,4 +224,49 @@ foreach ($file in $manifest.files | Where-Object { $_.path.EndsWith("/coverage.c
     $settings.Save($path)
 }
 
-Write-Host "Imported $($manifest.files.Count) verified files for $SourceVersion ($Configuration); coverage settings now use consumer-local paths."
+function Convert-CoverageSourcePath([string]$Path) {
+    foreach ($root in (@(
+        @{ Producer = $manifest.repositoryRoot; Consumer = $consumerRepositoryRoot }
+        @{ Producer = $manifest.nuGetPackagesRoot; Consumer = $consumerPackagesRoot }
+    ) | Sort-Object { $_.Producer.Length } -Descending)) {
+        $comparison = if ($root.Producer.EndsWith("\")) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
+        if ($Path.StartsWith($root.Producer, $comparison)) {
+            $relative = $Path.Substring($root.Producer.Length)
+            if ($root.Producer.EndsWith("\") -and [IO.Path]::DirectorySeparatorChar -eq "/") {
+                $relative = $relative.Replace("\", "/")
+            }
+            return $root.Consumer + $relative
+        }
+    }
+    return $Path
+}
+
+foreach ($file in $manifest.files | Where-Object {
+    [IO.Path]::GetFileName($_.path).StartsWith(".msCoverageExtensionSourceRootsMapping_", [StringComparison]::Ordinal)
+}) {
+    $path = Join-Path $RepositoryRoot $file.path
+    $reader = [IO.StreamReader]::new($path)
+    $lines = [Collections.Generic.List[string]]::new()
+    try {
+        while ($null -ne ($line = $reader.ReadLine())) {
+            if ($line.Length -eq 0) {
+                $lines.Add($line)
+                continue
+            }
+            # The coverage SDK writes project|physical-root=virtual-root records.
+            $projectEnd = $line.IndexOf("|")
+            $physicalEnd = $line.LastIndexOf("=")
+            if ($projectEnd -le 0 -or $physicalEnd -le $projectEnd + 1 -or $physicalEnd -eq $line.Length - 1) {
+                throw "Invalid coverage source-root mapping in '$path'."
+            }
+            $project = Convert-CoverageSourcePath $line.Substring(0, $projectEnd)
+            $physical = Convert-CoverageSourcePath $line.Substring($projectEnd + 1, $physicalEnd - $projectEnd - 1)
+            $lines.Add("$project|$physical" + $line.Substring($physicalEnd))
+        }
+        $encoding = $reader.CurrentEncoding
+    }
+    finally { $reader.Dispose() }
+    [IO.File]::WriteAllLines($path, $lines, $encoding)
+}
+
+Write-Host "Imported $($manifest.files.Count) verified files for $SourceVersion ($Configuration); coverage metadata now uses consumer-local paths."

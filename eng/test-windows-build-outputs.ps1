@@ -75,9 +75,26 @@ function Assert-CoverageRoots([string]$Consumer) {
     Assert-Equal ("^" + [regex]::Escape((Join-Path $Consumer "test/Utilities") + [IO.Path]::DirectorySeparatorChar) + ".*") $excludes[1] "Consumer nested source-path regex."
 }
 
+function Assert-CoverageSourceMappings([string]$Consumer) {
+    $path = Join-Path $Consumer $mappingPath
+    Assert-Equal $true (Test-Path -LiteralPath $path) "The coverage source mapping must be transported."
+    $lines = [IO.File]::ReadAllLines($path)
+    $consumerRoot = $Consumer + [IO.Path]::DirectorySeparatorChar
+    $project = Join-Path $Consumer "src/Probe/Probe.csproj"
+    $nestedProject = Join-Path $Consumer "src/Nested/Nested.csproj"
+    $packages = (Join-Path $Consumer ".packages & restored") + [IO.Path]::DirectorySeparatorChar
+    Assert-Equal 4 $lines.Count "Source-root mapping count."
+    Assert-Equal "$project|$consumerRoot=/_/" $lines[0] "Consumer repository source mapping."
+    Assert-Equal "$project|$packages=/_1/" $lines[1] "Consumer package source mapping."
+    Assert-Equal "$nestedProject|$(Join-Path $Consumer 'src/Nested')$([IO.Path]::DirectorySeparatorChar)=/_/nested/" $lines[2] "Nested physical path and unchanged virtual path."
+    Assert-Equal "$project|C:\unrelated cache\=/_2/" $lines[3] "Unrelated source mappings must remain unchanged."
+    Assert-Equal "FFFE" ([Convert]::ToHexString([IO.File]::ReadAllBytes($path)[0..1])) "Preserved UTF-16 mapping encoding."
+}
+
 try {
     $binaryPath = "artifacts/bin/Portable.UnitTests/Release/net10.0/Portable.UnitTests.dll"
     $coveragePath = "artifacts/obj/Portable.UnitTests/Release/net10.0/coverage.config"
+    $mappingPath = "artifacts/bin/Portable.UnitTests/Release/net10.0/.msCoverageExtensionSourceRootsMapping_Portable.UnitTests"
     $packagePath = "artifacts/packages/Release/Shipping/Microsoft.Testing.Platform.1.0.0.nupkg"
     Write-FixtureFile (Join-Path $producer $binaryPath) "assembly-marker"
     Write-FixtureFile (Join-Path $producer "artifacts/bin/Portable.UnitTests/Release/net10.0/Portable.UnitTests.pdb") "portable-symbol-marker"
@@ -88,6 +105,14 @@ try {
     Write-FixtureFile (Join-Path $producer "artifacts/bin/Portable.UnitTests/Debug/net10.0/stale.dll") "excluded-debug-output"
     Write-FixtureFile (Join-Path $producer ".dotnet/sdk/sdk-marker.txt") "excluded-sdk"
     $producerPackages = Join-Path $producer ".packages & original"
+    $project = Join-Path $producer "src/Probe/Probe.csproj"
+    $nestedProject = Join-Path $producer "src/Nested/Nested.csproj"
+    [IO.File]::WriteAllLines((Join-Path $producer $mappingPath), @(
+        "$project|$producer$([IO.Path]::DirectorySeparatorChar)=/_/"
+        "$project|$producerPackages$([IO.Path]::DirectorySeparatorChar)=/_1/"
+        "$nestedProject|$(Join-Path $producer 'src/Nested')$([IO.Path]::DirectorySeparatorChar)=/_/nested/"
+        "$project|C:\unrelated cache\=/_2/"
+    ), [Text.Encoding]::Unicode)
     Write-FixtureFile (Join-Path $producer "artifacts/obj/Portable.UnitTests/project.assets.json") `
         (@{ project = @{ restore = @{ packagesPath = $producerPackages } } } | ConvertTo-Json -Depth 4)
     $sourceRegex = [Security.SecurityElement]::Escape("^" + [regex]::Escape((Join-Path $producer "src") + [IO.Path]::DirectorySeparatorChar) + ".*")
@@ -104,8 +129,8 @@ try {
             $manifest = Read-Manifest $zip
             Assert-Equal 1 $manifest.formatVersion "Manifest format."
             Assert-Equal $sourceVersion $manifest.sourceVersion "Source identity."
-            Assert-Equal 7 $manifest.files.Count "Payload inventory."
-            Assert-Equal 8 $zip.Entries.Count "Archive inventory including manifest."
+            Assert-Equal 8 $manifest.files.Count "Payload inventory."
+            Assert-Equal 9 $zip.Entries.Count "Archive inventory including manifest."
             if ($zip.Entries.FullName -match 'Debug|project\.assets\.json|sdk-marker') {
                 throw "Restore state, SDKs, or another configuration entered the payload."
             }
@@ -122,6 +147,10 @@ try {
         Assert-Equal "nonshipping-package-marker" ([IO.File]::ReadAllText((Join-Path $consumer "artifacts/packages/Release/NonShipping/Fixture.1.0.0.nupkg"))) "NonShipping package bytes."
         Assert-Equal "test-data-marker" ([IO.File]::ReadAllText((Join-Path $consumer "artifacts/bin/Portable.UnitTests/Release/net10.0/data/input.txt"))) "Test data."
         Assert-CoverageRoots $consumer
+    }
+
+    Invoke-Case "CoverageSourceMappingsUseConsumerPaths" {
+        Assert-CoverageSourceMappings (Join-Path $root "round-trip & relocated")
     }
 
     Invoke-Case "WindowsCoveragePathsUseConsumerDirectorySeparators" {
@@ -142,6 +171,24 @@ try {
                         Replace("/", '\\')
                 }
             }
+            $reader = [IO.StreamReader]::new($zip.GetEntry($mappingPath).Open())
+            try { $mapping = $reader.ReadToEnd() }
+            finally { $reader.Dispose() }
+            $mappingLines = @($mapping -split '\r?\n' | Where-Object { $_ } | ForEach-Object {
+                $parts = $_ -split '=', 2
+                $physical = $parts[0].Replace($manifest.nuGetPackagesRoot, $windowsPackages).
+                    Replace($manifest.repositoryRoot, $windowsRepository).Replace("/", "\")
+                "$physical=$($parts[1])"
+            })
+            $encoding = [Text.Encoding]::Unicode
+            $mappingBytes = $encoding.GetPreamble() + $encoding.GetBytes(($mappingLines -join "`r`n") + "`r`n")
+            $zip.GetEntry($mappingPath).Delete()
+            $stream = $zip.CreateEntry($mappingPath).Open()
+            try { $stream.Write([byte[]]$mappingBytes) }
+            finally { $stream.Dispose() }
+            $mappingEntry = @($manifest.files | Where-Object { $_.path -eq $mappingPath })[0]
+            $mappingEntry.length = $mappingBytes.Length
+            $mappingEntry.sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([byte[]]$mappingBytes))
             $manifest.repositoryRoot = $windowsRepository
             $manifest.nuGetPackagesRoot = $windowsPackages
             $bytes = [Text.Encoding]::UTF8.GetBytes($settings.OuterXml)
@@ -156,6 +203,7 @@ try {
         }
         Import-Fixture "windows-source-paths" -Path $path
         Assert-CoverageRoots (Join-Path $root "windows-source-paths")
+        Assert-CoverageSourceMappings (Join-Path $root "windows-source-paths")
     }
 
     Invoke-Case "RejectsStaleSourceBeforeExtraction" {

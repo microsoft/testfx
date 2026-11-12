@@ -32,7 +32,10 @@ start artifact-consuming jobs.
 
 Each consumer keeps its own checkout, pinned SDK, runtimes, workloads, and NuGet
 restore. It imports the outputs, rebases coverage source/package path expressions,
-and runs the existing test selection with `UseAppHost=false`. The property is
+and rebases the physical paths in
+`.msCoverageExtensionSourceRootsMapping_<assembly>` sidecars without changing
+their virtual path-map keys or encoding. It then runs the existing test
+selection with `UseAppHost=false`. The property is
 passed to the outer test command, not exported as an environment default that
 could change generated acceptance applications.
 
@@ -101,6 +104,74 @@ collection scheduler change was made. Both pipeline YAML files and their shared
 step templates parsed, and structural checks confirmed default-off rollout,
 producer dependencies/output references, current-run artifact selection, and
 restore-only consumer commands.
+
+### 2026-11-12: coverage source-root mapping diagnosis
+
+Following the coverage owner's guidance, the retained controller diagnostics
+were inspected beyond the final `no_symbols` summary. They show the portable
+PDB being loaded, followed by
+`AssemblyMetadataProcessor.IsIncludedBySources: ... as all sources do not exist`.
+The collector reads `.msCoverageExtensionSourceRootsMapping_<assembly>` from
+the transported output and maps `/_/` back to the original Windows checkout.
+Rebasing `coverage.config` alone does not relocate this separate metadata.
+
+The generated coverage settings do not set any `SymbolsRestrict*` switches.
+The tested coverage package's configuration defaults were also inspected:
+`SymbolsRestrictOriginalPathAccess`, `SymbolsRestrictReferencePathAccess`,
+`SymbolsRestrictDBGAccess`, and `SymbolsRestrictSystemRootAccess` are all false.
+The repair does not change those switches. It rebases the physical
+project/source/package paths in the mapping files and includes hidden sidecars
+when enumerating outputs on Unix. Longest-root-first matching retains the
+consumer package root when the producer's package cache is inside its checkout.
+
+`CoverageSourceMappingsUseConsumerPaths` failed against the unchanged importer
+at the stale repository-path assertion. With the repair, all 13 transport
+cases pass on Windows and Linux, including Windows-to-Unix nested paths,
+UTF-16 encoding, unchanged virtual roots, and package-cache relocation.
+
+A fresh paired experiment built Windows binaries from
+`f50f73e66dd136c88c213795ffcf207ad8bf3321`, packed the matching MTP core, and
+used the same archive with the old and repaired importers in isolated Linux
+checkouts. SDK `12.0.100-alpha.1.26556.115`, Release/net11.0, runtime
+`11.0.0-rc.3.26522.148`, and CodeCoverage
+`18.13.0-preview.26560.3` were used. The production DLL in
+`Microsoft.Testing.Platform.3.0.0-ci.nupkg` matched the test host's loaded output
+(SHA-256 `31964BFC9C73D598A7551FE4A128D3B73478B1B2B7E7E0FA409DFEC30900A979`).
+
+| Execution | Selected/executed/passed | Runner line coverage |
+| --- | --- | --- |
+| Windows-built binaries on Windows | 35 / 35 / 35 | 18.9% |
+| The same binaries on Linux, old importer | 35 / 35 / 35 | No coverable data |
+| The same binaries on Linux, repaired importer | 35 / 35 / 35 | 18.9% |
+
+Both Linux selections were reconciled by exact TRX names against the Windows
+baseline. Each exited zero with no failed/skipped cases. All 2,836 transported
+DLL/PDB files stayed byte-identical in both variants, and replaying both restore
+and no-build test binlogs found zero compiler tasks. The repaired report
+contains real source coverage and the correctly relocated Linux source filename:
+the source-linked `DeadlineHelper` copy has 43/43 covered line entries, while
+the shipping-core copy has 4/43. These are separate module records, not combined
+shipping-only coverage.
+The full Cobertura report has 5,223 covered line entries out of 25,000, versus
+an empty `<packages />` in the old-importer report. These report-entry counts
+are not the runner summary's differently aggregated percentage denominator.
+
+The shared test invocation, run from each isolated consumer checkout, was:
+
+```text
+dotnet test --project <consumer>/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj -c Release --framework net11.0 --no-build -p:UseAppHost=false -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=<results> -bl:<results>/test.binlog --filter FullyQualifiedName~DeadlineHelperTests --show-test-results failed
+```
+
+The actual commands, roots, reports, diagnostic logs, binary hashes, and
+counterfactual helper are retained in the session's `coverage-source-map`
+evidence. Initial scratch-harness attempts failed on a PowerShell interpolation
+error and an assumption that empty Cobertura reports have line-count attributes;
+those are setup/verification errors, not behavioral red-phase evidence.
+
+This corrects the earlier diagnosis: `no_symbols` was the final skip category,
+but the detailed cause was unresolved source paths, not unsupported Windows
+PDBs. The focused Linux coverage blocker is resolved. Full acceptance, macOS,
+and live pipeline transport still need validation; the trial remains off.
 
 ## Alternatives and decision
 
@@ -194,9 +265,9 @@ observable surfaces are runner exits, module results, packages, and CI artifacts
 ## Open questions
 
 - macOS execution and the live public/1ES artifact transport require CI evidence.
-- Keep the trial disabled until coverage symbol-resolution parity is fixed and
-  complete cross-platform validation succeeds. Do not remove coverage options
-  or accept empty coverage to make the experiment green.
+- The source-root repair restores focused Windows-to-Linux coverage. Keep the
+  trial disabled until complete cross-platform validation succeeds; do not
+  remove coverage options or accept empty coverage to make the experiment green.
 - This change targets the current branch; release-branch adoption/backports need
   separate validation before enabling reuse there.
 - The change owner must compare the trial and baseline and either enable the
