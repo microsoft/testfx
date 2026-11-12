@@ -134,7 +134,7 @@ internal sealed partial class AppxManifestInfo
 
         string fullManifestDirectory = Path.GetFullPath(manifestDirectory);
         string[] pathSegments = packageRelativePath.Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries);
-        string resolvedPath = Path.GetFullPath(Path.Combine([fullManifestDirectory, .. pathSegments]));
+        string resolvedPath = Path.GetFullPath(Path.Join([fullManifestDirectory, .. pathSegments]));
         string relativePath = Path.GetRelativePath(fullManifestDirectory, resolvedPath);
 
         return relativePath == ".."

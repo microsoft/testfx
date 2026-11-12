@@ -18,7 +18,7 @@ internal sealed partial class AppxManifestInfo
     /// </returns>
     public static string? GetManifestPath(string layoutDirectory)
     {
-        string manifestPath = Path.Combine(layoutDirectory, AppxManifestFileName);
+        string manifestPath = Path.Combine(layoutDirectory, Path.GetFileName(AppxManifestFileName));
         return File.Exists(manifestPath) ? manifestPath : null;
     }
 
