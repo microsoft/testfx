@@ -58,6 +58,10 @@ python .github/scripts/test_build_failure_analysis_checkout.py
 python .github/scripts/check_action_pins.py
 ```
 
+Build-context fixtures substitute authored paths in one pass so temporary
+directories containing `/tmp/gh-aw` or `/tmp/binlogs` remain intact. Their
+prompt-command extraction also accepts Markdown list indentation.
+
 These are local contract checks, not evidence of live GitHub alert access,
 model analysis, or review/PR publication. Live runs require separate authorization.
 
