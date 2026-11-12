@@ -30,6 +30,59 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [DataRow("", DisplayName = "Deployment_Reflection")]
+    [DataRow("Rooting", DisplayName = "Deployment_Rooting")]
+    [DataRow("ReflectionFree", DisplayName = "Deployment_ReflectionFree")]
+    public async Task DeploymentItemsFailBeforeBodiesIncludingInheritedAttributes(string sourceGenMode)
+    {
+        const string assetName = "WinUIDeploymentContract";
+        string generator = sourceGenMode.Length == 0
+            ? string.Empty
+            : $"<PackageReference Include=\"MSTest.SourceGeneration\" Version=\"{MSTestSourceGenerationVersion}\" />";
+        string source = DeploymentSource
+            .Replace("$TargetFramework$", WinUITargetFramework, StringComparison.Ordinal)
+            .Replace("$MSTestVersion$", MSTestVersion, StringComparison.Ordinal)
+            .Replace("$PlatformVersion$", MicrosoftTestingPlatformVersion, StringComparison.Ordinal)
+            .Replace("$Generator$", generator, StringComparison.Ordinal)
+            .Replace("$SourceGenMode$", sourceGenMode, StringComparison.Ordinal)
+            .Replace("$ReflectionType$", sourceGenMode.Length == 0 ? "ReflectionOperations" : "SourceGeneratedReflectionOperations", StringComparison.Ordinal);
+        using TestAsset asset = await TestAsset.GenerateAssetAsync(assetName, source);
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            "build -c Release -warnaserror -bl:deployment.binlog",
+            workingDirectory: asset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        build.AssertExitCodeIs(0);
+        if (sourceGenMode.Length != 0)
+        {
+            Assert.IsNotEmpty(Directory.GetFiles(Path.Join(asset.TargetAssetPath, "obj"), "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories));
+        }
+
+        var host = TestHost.LocateFrom(asset.TargetAssetPath, assetName, WinUITargetFramework);
+        TestHostResult result = await host.ExecuteAsync(
+            "--report-trx --report-trx-filename deployment.trx",
+            cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContainsSummary(failed: 4, passed: 1, skipped: 0);
+        string reportPath = Assert.ContainsSingle(Directory.GetFiles(asset.TargetAssetPath, "deployment.trx", SearchOption.AllDirectories));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var report = XDocument.Load(reportPath);
+        XElement[] results = [.. report.Descendants(ns + "UnitTestResult")];
+        Assert.AreSequenceEqual(
+            ["ClassDeployment:Failed", "InheritedClassDeployment:Failed", "InheritedMethodDeployment:Failed", "MetadataProviderIsSelected:Passed", "MethodDeployment:Failed"],
+            results.Select(test => $"{test.Attribute("testName")!.Value}:{test.Attribute("outcome")!.Value}").Order(StringComparer.Ordinal));
+        foreach (XElement failed in results.Where(test => (string?)test.Attribute("outcome") == "Failed"))
+        {
+            Assert.Contains(
+                "DeploymentItemAttribute is not supported by UWP or WinUI test hosts.",
+                failed.Descendants(ns + "Message").Single().Value);
+            Assert.DoesNotContain("DEPLOYMENT_BODY_EXECUTED", failed.Value);
+        }
+
+        TestContext.WriteLine($"Packed WinUI deployment guard: {sourceGenMode}; TRX: {reportPath}");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "WinUITests";
@@ -60,8 +113,7 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -82,4 +134,77 @@ public class TestClass1
     }
 
     public TestContext TestContext { get; set; }
+
+    private const string DeploymentSource = """
+        #file WinUIDeploymentContract.csproj
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>$TargetFramework$</TargetFramework>
+            <OutputType>Exe</OutputType>
+            <EnableMSTestRunner>true</EnableMSTestRunner>
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <ImplicitUsings>enable</ImplicitUsings>
+            <Nullable>enable</Nullable>
+            <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+            <MSTestSourceGenMode>$SourceGenMode$</MSTestSourceGenMode>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
+            <PackageReference Include="Microsoft.Testing.Platform" Version="$PlatformVersion$" />
+            <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$PlatformVersion$" />
+            $Generator$
+          </ItemGroup>
+        </Project>
+
+        #file DeploymentTests.cs
+        using System.Reflection;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public sealed class MethodDeploymentTests
+        {
+            [TestMethod]
+            [DeploymentItem("not-deployed.txt")]
+            public void MethodDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+
+            [TestMethod]
+            public void MetadataProviderIsSelected()
+            {
+                Assembly services = AppDomain.CurrentDomain.GetAssemblies().Single(assembly => assembly.GetName().Name == "MSTestAdapter.PlatformServices");
+                Type providerType = services.GetType("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider", true)!;
+                object provider = providerType.GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
+                object reflection = providerType.GetProperty("ReflectionOperations")!.GetValue(provider)!;
+                Assert.AreEqual("$ReflectionType$", reflection.GetType().Name);
+            }
+        }
+
+        [TestClass]
+        [DeploymentItem("not-deployed.txt")]
+        public sealed class ClassDeploymentTests
+        {
+            [TestMethod]
+            public void ClassDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+
+        public abstract class MethodDeploymentBase
+        {
+            [TestMethod]
+            [DeploymentItem("not-deployed.txt")]
+            public void InheritedMethodDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+
+        [TestClass]
+        public sealed class InheritedMethodDeploymentTests : MethodDeploymentBase;
+
+        [DeploymentItem("not-deployed.txt")]
+        public abstract class ClassDeploymentBase;
+
+        [TestClass]
+        public sealed class InheritedClassDeploymentTests : ClassDeploymentBase
+        {
+            [TestMethod]
+            public void InheritedClassDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+        """;
 }

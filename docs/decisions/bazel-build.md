@@ -4073,3 +4073,155 @@ recorded source, not a new full-product rerun of this lifecycle correction.
 Hosted cache authorization, transfer costs and main-seed behavior still require
 CI. Local logs, BEP, policy/source hashes and counterfactual records are retained
 under the session's `bazel-review-d9e8c1dc` evidence.
+
+## 2026-11-12: explicit MSTest platform packages and shared core
+
+**Baseline and scope.** The authoritative prerequisite is merged #12428,
+`e1c66e5cbfa844384a59343c3727821f97e2a09a` (final PR head
+`ef322e36cc63e455e22552077a29916822b3204f`), not an earlier prototype.
+This tooling-only follow-up retires its live Extensions project/assembly
+references, without deleting the archived API provenance. Hosting must still
+reference core directly, and repeated probe passes must retain separate,
+append-only evidence. The primary implementation owns the production projects,
+SDK selection, solutions, API history, and integrated verification.
+
+**Decision.** One ordinary `MSTest.TestFramework` owns context and activation
+contracts and targets netstandard2.0, net462, net10.0, and net11.0. Modern Uwp
+and WinUI source libraries reference that same core, not separately compiled
+UI cores. Therefore the final prerequisite's UI-core **API exclusions** are
+intentionally superseded: modern UI probes must find `DeploymentItemAttribute`
+and all six directory getters in core. This does not enable deployment on UI:
+the matching adapters still own the unsupported-operation result and null
+directory behavior. Classic UWP consumes netstandard2.0 core, which has no
+`DeploymentItemAttribute`. UI-specific attributes and adapters stay isolated
+in `MSTest.Uwp` and `MSTest.WinUI`; ordinary/other-flavor adapter packages must
+not enter those package closures.
+
+Keeping flavored cores would contradict the approved shared-core contract;
+keeping an empty Extensions assembly would preserve obsolete package/build
+references. Neither is chosen. Preserve native compiler scheduling, signing,
+source generation, production flavor dispatch, and app-owned activation. Use
+the actual project package assets/dependencies rather than historical prototype
+file counts. NuGet Windows lib paths omit the final `.0` platform component;
+the classic Uwp package path is `uap10.0.16299`. UI adapter satellites belong
+under `buildTransitive/<canonical-tfm>/_localization/<culture>/`, preventing
+classic/modern Uwp collisions. Ordinary adapter satellites remain shared under
+`buildTransitive/_localization`; WinUI attribute satellites remain under lib.
+Each UI TFM packs the existing matching adapter target content directly as
+`<PackageId>.targets`, with `Parallelize.targets` beside it. The shared
+`MSTest.Platform.props` supplies package-local roots as `<PackageId>.props`;
+there is no extra wrapper target or `buildTransitive/common` directory.
+Historical Extensions API files retain their bytes under APIHistory with
+`.txt.history` names, so normal shipped-API promotion cannot rewrite them.
+
+**Consumer evidence plan.**
+
+| Requirement / risk | Automated consumer contract | Evidence boundary |
+| --- | --- | --- |
+| Shared ordinary core and isolated UI attributes/adapters | `windows_targeting_test`, `LibraryProbe`, and `windows\validate.ps1` check compile/runtime owners, core APIs, signing, loaded hashes, and flavor closure. | Native library probes are not XAML/AppX activation tests. |
+| Core package ownership and retired payloads | `validate-mstest-packages.ps1` inspects lib/build assets, dependencies, satellites, loaded native assemblies, and normal/failure/zero-result exits. | Repack and composed consumer execution belong to primary. |
+| SDK/meta-package contract | `Generate_MetaPackagePreservesDependencyAndAssetFlow`, contract-drift cases, and `validate-sdk-packages.ps1` follow core project ownership and supported framework/package selection. | SDK evaluation alone is not execution or source-generation proof. |
+| Evidence survives repeated passes | Preserve unique run paths and distinct consumer-pass provenance files. | Do not overwrite an earlier successful pass with a later MSBuild/probe pass. |
+
+This boundary is nonvisual. No new launcher, protocol, apartment/exception
+behavior, or unrelated analyzer work is authorized. Builds, restores, tests,
+and red/green comparisons are deliberately not run by this lane in the shared
+worktree; primary owns serial integrated verification. Static checks and final
+validation gaps are recorded below.
+
+**Native producer boundary.** The existing Bazel UI lane compiles modern
+Windows libraries only. Its new opt-in `mstest_platform_package_closure`
+therefore produces modern Uwp/WinUI development packages, not a fabricated
+classic UAP implementation. `validate-mstest-packages.ps1 -IncludeWindowsPlatformPackages`
+checks those modern layouts/dependencies in
+addition to the ordinary package closure; its ordinary consumer must still
+resolve no UI packages. Classic UAP production and real UI package-consuming
+activation remain primary's shipping-layout validation responsibilities.
+The portable native matrix now follows the current `SupportedNetFrameworks`
+(`net10.0;net11.0`); deliberately older rule-compatibility fixtures and pinned
+SDK pack inventories are not evidence of additional MSTest shipping targets.
+
+### Tooling file report
+
+Paths are under `eng\bazel` unless qualified otherwise.
+
+| File | Requirement delivered locally |
+| --- | --- |
+| Root `BUILD.bazel` | Retire Extensions from managed libraries, samples, and framework tests. |
+| `defs.bzl` | Match the current net10/net11 portable source contract. |
+| `mstest.bzl` | Remove the Extensions source library; retain ordinary core and Hosting's signed friend identity. The relocated AppModel follows the existing services source glob. |
+| `extensions.bzl` | Keep Hosting's direct core dependency; remove only its retired dependency. |
+| `compatibility.bzl` | Remove live Extensions compatibility variants, not API history. |
+| `tests.bzl` | Remove retired dependencies from native test hosts. |
+| `reference-alias-tests.bzl` | Use a net10 MSTest host; preserve older independent alias/error fixtures. |
+| `samples.bzl` | Remove retired dependencies and use supported MSTest/AOT host TFMs. |
+| `mstest-packages.bzl` | Package core from its real owner, retain net462 resolver core/dependencies, and expose isolated modern UI packages with canonical lib paths and per-TFM targets/localization. |
+| `sdk-packages.bzl` | Remove the retired test-host dependency; select all 15 source-declared SDK cases. |
+| `SdkPackageTool.cs` | Read the real core/meta references; validate the conditional classic Uwp branch without leaking it into portable dependency groups. |
+| `test\UnitTests\Bazel.SdkPackages.UnitTests\SdkPackageTests.cs` | Update core ownership/framework fixtures and reject retired-framework, wrong-UI-reference, and wrong-UI-condition drift. |
+| `mstest-consumer\NativePackageTests.cs` | Expect core without Extensions, assert shared APIs, and write unique provenance reports with an append-only path index. |
+| `validate-mstest-packages.ps1` | Check current package entries/dependencies, per-TFM UI satellites, net462 resolver identity, and repeated-pass provenance; distinguish optional modern UI layout checks from activation. |
+| `validate-sdk-packages.ps1` | Keep ordinary SDK profiles and add net10/net11 Uwp/WinUI reference-selection cases. |
+| `validate-packages.ps1` | Match the portable native package matrix. |
+| `validate.ps1` | Report the actual portable native matrix. |
+| `windows.bzl` | Build the new attribute projects with one ordinary core and isolated matching adapters/services; retain production flavor symbols and activation code. |
+| `windows\LibraryProbe.cs` | Require shared modern core APIs and separately owned UI attributes; reject retired/other-flavor payloads. |
+| `windows\targeting_tests.bzl` | Check compile/runtime owners, flavor isolation, compatible net11 selection, and canonical Windows/classic-UAP paths. |
+| `windows\validate.ps1` | Check named assembly sets and equal ordinary core hashes across desktop/Uwp/WinUI, not obsolete core API exclusions or prototype compiler counts. |
+| `windows\AppModelHost.cs` | Preserve each activation report and append its path; retain the existing stdout payload and lifecycle. |
+| `windows\validate-app-model.ps1` | Consume the path index, reject overwritten prefixes, and follow the current controller TFMs without changing activation/handshake checks. |
+| `docs\decisions\bazel-build.md` | Append only this dated decision/evidence entry. |
+
+### Static validation and remaining integration evidence
+
+The local code patch is based on
+`e1c66e5cbfa844384a59343c3727821f97e2a09a`. SHA-256 of raw
+`git diff --binary HEAD -- BUILD.bazel eng\bazel test\UnitTests\Bazel.SdkPackages.UnitTests` stdout is
+`267b0ef6aa9f6b2992edf0b224390be3ba58e5123ff65cd7e854bda0facb0f6d`.
+This deliberately excludes this decision record and primary's other paths;
+it is not a fingerprint of a tested integrated revision.
+
+Bounded read-only checks exited 0:
+
+- PowerShell `Parser.ParseFile` parsed all six changed scripts without executing
+  their bodies.
+- Python `ast.parse` accepted the Python-compatible syntax of twelve changed
+  Starlark/BUILD files. This is **not** Bazel analysis or buildifier validation;
+  buildifier was not available.
+- All five changed C# files retain UTF-8 BOMs and final newlines.
+- Source discovery matched `PORTABLE_FRAMEWORKS` to `SupportedNetFrameworks`,
+  found the six current package asset/readme inputs, parsed their four MSBuild
+  XML inputs without evaluation, and matched the four meta-project
+  references/conditions. It counted thirteen data rows plus two non-data SDK
+  methods: fifteen source-declared cases, not discovered/executed tests.
+- `git diff --check -- BUILD.bazel eng\bazel test\UnitTests\Bazel.SdkPackages.UnitTests docs\decisions\bazel-build.md`
+  exited 0.
+
+Parallel-safety preflight leaves scheduling unchanged: SDK cases use MSTest
+method-level scheduling with CPU-count workers and per-test `TestTempDirectory`
+inputs/outputs; the generated ordinary consumer retains two workers. Its
+provenance test is the sole index writer, while the other passing methods read
+stable package/configuration files. Driver invocations are serial. No new
+process-global mutation, lock, background worker, or cleanup policy was added.
+
+**Test-value evidence:** all behavioral sensitivity below is a static
+prediction; no product counts, red/green runs, archive production, or composed
+consumer results were obtained by this lane.
+
+| Contract / test case | Buildable counterfactual | Correct implementation / evidence gap |
+| --- | --- | --- |
+| Shared core: `windows_targeting_test`, `LibraryProbe.VerifyFrameworkApi`, `PackagedTargetsProvideCoreAndParallelization` | Reintroduce a separately owned flavored core while retaining the same API shape. | Static: predicts owner/metadata/hash detection. Native analysis, compilation, and execution not run. |
+| Layout: `UwpLibPathUsesNuGetCanonicalWindowsVersion`, `WinuiLibPathUsesNuGetCanonicalWindowsVersion`, `ClassicUwpLibPathPreservesMinimum`, `Assert-PackageLayout` | Retain trailing Windows `.0` folders or restore shared UI satellite placement. | Static: predicts path/layout detection. Native archive/consumer validation not run. |
+| SDK/meta: `Generate_MetaPackagePreservesDependencyAndAssetFlow`; `Generate_RejectsContractDriftBeforeWritingOutputs` rows `meta-retired-framework`, `meta-ui-reference`, `meta-ui-condition` | Accept the retired project or wrong UI branch and emit an otherwise valid request. | Static: predicts dependency/rejection assertions fail. Fifteen source-declared SDK cases remain unexecuted. |
+| Append-only provenance: `NativeAssembliesAreLoadedFromConsumer`, `Run-MSBuildConsumer`, `Read-AppModelProvenance` | Overwrite the path index on a later pass while keeping valid report JSON. | Static: predicts count/prefix detection. Repeated real probe/consumer passes not run. |
+
+The generated native versions remain source-derived:
+MSTest `5.0.0-preview.bazel` and MTP `3.0.0-preview.bazel`; the pinned native
+SDK remains `11.0.100-rc.3.26522.148`. Existing external dependency/toolchain
+interop was not revalidated. Primary owns serial Bazel analysis/tests and
+shipping-layout restore/build/run evidence, including net462 Configuration,
+actual UI null directory getters and pre-body DeploymentItem rejection,
+net11 package consumption, classic UAP, and real activation. No native classic
+UAP producer was introduced. No commit, push, publication, or other-worktree
+change was made by this lane. Archiving API provenance is not a compatibility
+waiver or evidence that old binary consumers still work.

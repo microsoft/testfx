@@ -20,7 +20,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     [TestMethod]
     [DataRow("MSTest.Sdk")]
     [DataRow("MSTest")]
-    [DataRow("MSTest.TestAdapter")]
+    [DataRow("MSTest.Uwp")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP execution is supported only on Windows.")]
     public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp(string package)
     {
@@ -32,7 +32,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
         {
             string references = package == "MSTest"
                 ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
-                : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+                : $"<PackageReference Include=\"MSTest.Uwp\" Version=\"{MSTestVersion}\" />";
             source = source
                 .Replace("  <Import Project=\"Sdk.props\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
                 .Replace("  <Import Project=\"Sdk.targets\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
@@ -287,11 +287,11 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0\MSTest.TestFramework.dll"
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\netstandard2.0\MSTest.TestFramework.dll"
              Link="MSTest.TestFramework.dll"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0\MSTest.TestFramework.Extensions.dll"
-             Link="MSTest.TestFramework.Extensions.dll"
+    <Content Include="$(NuGetPackageRoot)\mstest.uwp\$MSTestVersion$\lib\uap10.0.16299\MSTest.Uwp.dll"
+             Link="MSTest.Uwp.dll"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -446,11 +446,28 @@ namespace $AssetName$
     [TestClass]
     public sealed class ClassicUwpPackageTests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public void PlainTestMethod_RunsInClassicUwpPackage()
         {
             Assert.AreEqual("$PackageIdentityName$", Package.Current.Id.Name);
             Assert.IsFalse(string.IsNullOrWhiteSpace(Package.Current.Id.FamilyName));
+            string[] directories = { "TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory" };
+            foreach (string directory in directories)
+            {
+                TestContext.Properties[directory] = "not-a-ui-directory";
+            }
+
+            Assert.IsNull(TestContext.TestRunDirectory);
+            Assert.IsNull(TestContext.DeploymentDirectory);
+            Assert.IsNull(TestContext.ResultsDirectory);
+            Assert.IsNull(TestContext.TestRunResultsDirectory);
+            Assert.IsNull(TestContext.TestResultsDirectory);
+            Assert.IsNull(TestContext.TestTempDirectory);
+            TestContext.WriteLine(typeof(TestContext).Assembly.Location);
+            TestContext.WriteLine(typeof(UITestMethodAttribute).Assembly.Location);
+            TestContext.WriteLine(TestContext.GetType().Assembly.Location);
         }
 
         [UITestMethod]

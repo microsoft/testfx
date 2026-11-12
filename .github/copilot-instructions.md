@@ -7,7 +7,7 @@ This is a .NET based repository that contains the MSTest testing framework and M
 The codebase ships several distinct (but related) products. Knowing which product a change belongs to is essential because they have different conventions, target frameworks, and public API surfaces:
 
 - `src/Platform/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/Platform/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
-- `src/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …) plus `TestFramework.Extensions`.
+- `src/TestFramework` — MSTest itself: the shared `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …), plus the explicit `MSTest.Uwp` and `MSTest.WinUI` application-model packages.
 - `src/Adapter` — bridges MSTest to test hosts: `MSTest.TestAdapter` (VSTest adapter) and `MSTestAdapter.PlatformServices` (platform-services abstraction shared by both hosts).
 - `src/Analyzers` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
 - `src/Package/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.

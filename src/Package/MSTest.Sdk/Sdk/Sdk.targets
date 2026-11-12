@@ -8,11 +8,33 @@
 
     <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
     <!--
-      The desktop Visual Studio UWP imports set UseUwpTools after this SDK declares its package
-      references, but before NuGet buildTransitive targets select the specialized UWP assemblies.
-      Preserve the application-model and package decisions during this earlier evaluation.
+      Select the package before declaring references, separately for each inner target framework.
+      Desktop UWP imports can set UseUwpTools later, so UseUwp without an explicit tooling opt-out
+      is also a safe early default. An explicit model owns restore-time selection without enabling
+      or overriding UI tooling. Do not default the public property: an outer build's inferred model
+      must not become an explicit choice in its inner builds.
     -->
-    <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') ">true</_MSTestUwpApplicationModel>
+    <_MSTestApplicationModel>$(MSTestApplicationModel)</_MSTestApplicationModel>
+    <_MSTestApplicationModel Condition=" '$(_MSTestApplicationModel)' == '' AND '$(UseWinUI)' == 'true' ">WinUI</_MSTestApplicationModel>
+    <_MSTestApplicationModel Condition=" '$(_MSTestApplicationModel)' == '' AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap'))) ">Uwp</_MSTestApplicationModel>
+    <_MSTestApplicationModel Condition=" '$(_MSTestApplicationModel)' == '' ">Default</_MSTestApplicationModel>
+    <_MSTestUwpApplicationModel>false</_MSTestUwpApplicationModel>
+    <_MSTestUwpApplicationModel Condition=" '$(_MSTestApplicationModel)' == 'Uwp' ">true</_MSTestUwpApplicationModel>
+    <_MSTestWinUIApplicationModel>false</_MSTestWinUIApplicationModel>
+    <_MSTestWinUIApplicationModel Condition=" '$(_MSTestApplicationModel)' == 'WinUI' ">true</_MSTestWinUIApplicationModel>
+    <_MSTestAdapterPackageId>MSTest.TestAdapter</_MSTestAdapterPackageId>
+    <_MSTestAdapterPackageId Condition=" '$(_MSTestApplicationModel)' == 'Uwp' ">MSTest.Uwp</_MSTestAdapterPackageId>
+    <_MSTestAdapterPackageId Condition=" '$(_MSTestApplicationModel)' == 'WinUI' ">MSTest.WinUI</_MSTestAdapterPackageId>
+
+    <_MSTestSdkHelperNeedsAdapter>false</_MSTestSdkHelperNeedsAdapter>
+    <_MSTestSdkHelperNeedsAdapter
+      Condition=" '$(IsTestApplication)' != 'true'
+                  AND ('$(_MSTestApplicationModel)' == 'Uwp' OR '$(_MSTestApplicationModel)' == 'WinUI'
+                       OR ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
+                           AND ('$(EnableMSTestSourceGeneration)' == 'true'
+                                OR ('$(UseVSTest)' == 'false' AND '$(PublishAot)' == 'true')))) ">true</_MSTestSdkHelperNeedsAdapter>
+    <!-- A helper compiles against UI APIs/runtime hooks supplied by its eventual test application. -->
+    <EnableMSTestV2CopyResources Condition=" '$(_MSTestSdkHelperNeedsAdapter)' == 'true' ">false</EnableMSTestV2CopyResources>
   </PropertyGroup>
 
   <!-- Import Runner.targets -->
@@ -21,9 +43,19 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
-  <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
-    <Error Condition=" '$(UseWinUI)' == 'true' AND '$(_MSTestUwpApplicationModel)' == 'true' "
+  <Target Name="_MSTestSDKValidateWindowsApplicationModel"
+          BeforeTargets="CollectPackageReferences;PrepareForBuild"
+          Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
+    <Error Condition=" '$(MSTestApplicationModel)' != '' AND '$(MSTestApplicationModel)' != 'Default' AND '$(MSTestApplicationModel)' != 'Uwp' AND '$(MSTestApplicationModel)' != 'WinUI' "
+           Text="Invalid value '$(MSTestApplicationModel)' for MSTestApplicationModel. Valid values are 'Default', 'Uwp' and 'WinUI'." />
+    <Error Condition=" '$(UseWinUI)' == 'true' AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap'))) "
            Text="A test project cannot use both WinUI and UWP application models." />
+    <Error Condition=" '$(MSTestApplicationModel)' == 'Uwp' AND '$(UseWinUI)' == 'true' "
+           Text="MSTestApplicationModel 'Uwp' conflicts with UseWinUI=true." />
+    <Error Condition=" '$(MSTestApplicationModel)' == 'WinUI' AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap'))) "
+           Text="MSTestApplicationModel 'WinUI' conflicts with the UWP application model." />
+    <Error Condition=" '$(MSTestApplicationModel)' == 'Default' AND ('$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap'))) "
+           Text="MSTestApplicationModel 'Default' conflicts with the configured Windows application model." />
   </Target>
 
   <Target Name="_MSTestSDKValidateSourceGeneration"
@@ -46,15 +78,14 @@
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(IsTestApplication)' != 'true'
-                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
-                         and ( '$(EnableMSTestSourceGeneration)' == 'true'
-                               or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
-    <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
-    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+  <ItemGroup Condition=" '$(_MSTestSdkHelperNeedsAdapter)' == 'true' ">
+    <!-- Ordinary helpers need only core, except when generated code requires the adapter's runtime hooks. -->
+    <PackageReference Include="$(_MSTestAdapterPackageId)" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+    <PackageVersion Include="$(_MSTestAdapterPackageId)" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

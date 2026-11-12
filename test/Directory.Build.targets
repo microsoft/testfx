@@ -120,7 +120,6 @@
         <CoverageAssemblyName>%(ProjectReference.Filename)</CoverageAssemblyName>
         <!-- These projects use assembly names that differ from their project file names. -->
         <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework' ">MSTest.TestFramework</CoverageAssemblyName>
-        <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework.Extensions' ">MSTest.TestFramework.Extensions</CoverageAssemblyName>
       </_CodeCoverageProjectReference>
       <!-- Some unit suites compile product implementations as linked sources under test-only conditional symbols. -->
       <_CodeCoverageProjectReference Include="$(MSBuildProjectFullPath)"

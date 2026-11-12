@@ -276,13 +276,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <!--
-      MSTest.TestAdapter + MSTest.TestFramework rather than the MSTest metapackage: the metapackage also
-      pulls Microsoft.Testing.Extensions.CodeCoverage, whose Microsoft.Testing.Platform floor is above the
-      locally built '-dev' platform package, so restore would not resolve against the local packages.
-    -->
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -353,9 +347,26 @@ namespace $AssetName$;
 [TestClass]
 public class TestClass1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void PlainTestMethod_Runs()
     {
+        string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
+        foreach (string directory in directories)
+        {
+            TestContext.Properties[directory] = "not-a-ui-directory";
+        }
+
+        Assert.IsNull(TestContext.TestRunDirectory);
+        Assert.IsNull(TestContext.DeploymentDirectory);
+        Assert.IsNull(TestContext.ResultsDirectory);
+        Assert.IsNull(TestContext.TestRunResultsDirectory);
+        Assert.IsNull(TestContext.TestResultsDirectory);
+        Assert.IsNull(TestContext.TestTempDirectory);
+        TestContext.WriteLine(typeof(TestContext).Assembly.Location);
+        TestContext.WriteLine(typeof(UITestMethodAttribute).Assembly.Location);
+        TestContext.WriteLine(TestContext.GetType().Assembly.Location);
     }
 
     [TestMethod]
@@ -504,8 +515,7 @@ public class UITimeoutTestClass
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>

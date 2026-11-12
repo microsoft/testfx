@@ -1,4 +1,12 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel.GetCurrentPackagePath() -> string?
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel.IsPackagedProcess() -> bool
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DeploymentDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ResultsDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunResultsDirectory.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestResultsDirectory.get -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.TryResolveClassDependency(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.HashSet<string!>!>! methodsByClass, out string? dependentClassName, out string? prerequisiteClassName) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestPartition.Count.get -> int

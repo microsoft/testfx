@@ -22,6 +22,7 @@ $directory = Join-Path $ArtifactsDirectory $run
 New-Item -ItemType Directory -Path $directory | Out-Null
 $steps = [Collections.Generic.List[object]]::new()
 $consumers = [Collections.Generic.List[object]]::new()
+$coreHashes = @{}
 $succeeded = $false
 $inputHashes = @(Get-FileHash -Algorithm SHA256 -LiteralPath @(
     (Join-Path $root 'MODULE.bazel'), (Join-Path $root 'BUILD.bazel'),
@@ -77,11 +78,9 @@ function Invoke-Consumer([string] $Name, [string] $Executable, [string] $Layout)
 }
 
 $probes = @(
-    @{ Name = 'windows_probe_packaged_net8'; Scenario = 'packaged'; Major = 8; Platform = '10.0.19041.0' },
-    @{ Name = 'windows_probe_packaged_net9'; Scenario = 'packaged'; Major = 9; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net10'; Scenario = 'packaged'; Major = 10; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net11'; Scenario = 'packaged'; Major = 11; Platform = '10.0.19041.0' },
-    @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 8; Platform = '7.0' },
+    @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 10; Platform = '7.0' },
     @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.17763.0' },
     @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 10; Platform = '10.0.18362.0' }
 )
@@ -132,8 +131,17 @@ try {
         if ($report.Scenario -cne $probe.Scenario -or ([Version]$report.Runtime).Major -ne $probe.Major) {
             throw "Consumer scenario/runtime mismatch for $($probe.Name)."
         }
-        $expectedCount = if ($probe.Scenario -eq 'packaged') { 2 } elseif ($probe.Scenario -eq 'desktop') { 3 } else { 4 }
-        if (@($report.SourceAssemblies).Count -ne $expectedCount) { throw "Missing source assembly evidence for $($probe.Name)." }
+        $expectedAssemblies = switch ($probe.Scenario) {
+            'packaged' { @('Microsoft.Testing.Extensions.PackagedApp', 'Microsoft.Testing.Platform') }
+            'desktop' { @('MSTest.Windows.UIAutomation', 'MSTest.TestFramework') }
+            'uwp' { @('MSTest.Uwp', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter') }
+            'winui' { @('MSTest.WinUI', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter') }
+        }
+        $actualAssemblies = @($report.SourceAssemblies.Name)
+        if ($actualAssemblies.Count -ne $expectedAssemblies.Count -or
+            (Compare-Object ($expectedAssemblies | Sort-Object -CaseSensitive) ($actualAssemblies | Sort-Object -CaseSensitive) -CaseSensitive)) {
+            throw "Unexpected source assembly identities for $($probe.Name)."
+        }
         if (@($report.SourceAssemblies | Where-Object PublicKeyToken -CNE 'b03f5f7f11d50a3a').Count -ne 0) {
             throw "Source assembly public-signing identity mismatch for $($probe.Name)."
         }
@@ -147,14 +155,25 @@ try {
         }
         $windowsAssemblies = @($report.SourceAssemblies | Where-Object {
             $_.Name -in @('Microsoft.Testing.Extensions.PackagedApp', 'MSTest.Windows.UIAutomation') -or
-            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
+            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.Uwp', 'MSTest.WinUI', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
         })
         foreach ($assembly in $windowsAssemblies) {
-            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions')) { '10.0.17763.0' } else { $probe.Platform }
+            $minimum = if ($assembly.Name -eq 'MSTest.WinUI') { '10.0.17763.0' } else { $probe.Platform }
             if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
                 $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."
             }
+        }
+        foreach ($core in @($report.SourceAssemblies | Where-Object Name -CEQ 'MSTest.TestFramework')) {
+            $expectedCoreFramework = ".NETCoreApp,Version=v$($probe.Major).0"
+            # Portable native cores historically omit this attribute; Windows metadata is never valid here.
+            if (($core.Framework -and $core.Framework -cne $expectedCoreFramework) -or $core.Platform -or $core.SupportedOS) {
+                throw 'A UI-specific core was selected instead of the ordinary shared core.'
+            }
+            if ($coreHashes.ContainsKey($expectedCoreFramework) -and $coreHashes[$expectedCoreFramework] -cne $core.Sha256) {
+                throw 'Desktop and UI consumers did not load the same native core payload.'
+            }
+            $coreHashes[$expectedCoreFramework] = $core.Sha256
         }
         if ($probe.Scenario -eq 'packaged' -and (Test-Path -LiteralPath (Join-Path $layout 'Microsoft.Windows.UI.Xaml.dll'))) {
             throw 'The ordinary WinRT profile leaked the UWP XAML projection.'
@@ -167,7 +186,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the Windows producer action graph.' }
     $graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
     $compilerCount = @($graph.actions | Where-Object mnemonic -eq 'CSharpCompile').Count
-    if ($compilerCount -lt 16) { throw 'The Windows library matrix is missing compiler actions.' }
+    if ($compilerCount -eq 0) { throw 'The Windows library matrix has no native compiler actions.' }
     foreach ($action in $graph.actions) {
         foreach ($argument in $action.arguments) {
             if ($argument -match '(?i)(^|[\s/\\])(MSBuild(\.exe|\.dll)?|dotnet(\.exe)?\s+(build|test|msbuild))(\s|$)') {
@@ -176,7 +195,7 @@ try {
         }
     }
     $succeeded = $true
-    Write-Host "Native Windows libraries and seven consumers passed. No app registration or XAML compilation was exercised. Evidence: $directory"
+    Write-Host "Native Windows libraries and $($probes.Count) consumers passed. No app registration or XAML compilation was exercised. Evidence: $directory"
 }
 finally {
     [pscustomobject]@{

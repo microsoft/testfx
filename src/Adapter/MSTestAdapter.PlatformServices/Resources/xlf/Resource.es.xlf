@@ -196,6 +196,11 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Elemento de implementación no válido: la ruta de acceso '{0}' o el directorio de salida '{1}' especificados contienen caracteres no válidos.</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
+      <trans-unit id="DeploymentItemNotSupportedForUi">
+        <source>DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</source>
+        <target state="new">DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</target>
+        <note>Do not localize the API name {Locked="DeploymentItemAttribute"} or the application-model names {Locked="UWP"}{Locked="WinUI"}.</note>
+      </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
         <target state="translated">Elemento de implementación no válido: el directorio de salida no puede ser un valor null.</target>

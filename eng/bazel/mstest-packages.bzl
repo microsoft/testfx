@@ -1,4 +1,4 @@
-"""The portable MSTest package layouts, with explicitly owned bundled payloads."""
+"""MSTest package layouts, with explicitly owned core and platform payloads."""
 
 load(
     "@rules_dotnet//dotnet/private:providers.bzl",
@@ -7,8 +7,14 @@ load(
     "NuGetPackInfo",
 )
 load("@rules_dotnet//dotnet/private/rules/nuget_pack:layout.bzl", "extra_files_layout")
-load(":defs.bzl", "PORTABLE_FRAMEWORKS")
+load(":defs.bzl", "PORTABLE_FRAMEWORKS", "STANDARD_FRAMEWORKS")
 load(":packages.bzl", "package_build_assets", "package_version")
+
+def mstest_package_tfm(framework):
+    """Match NuGet's Windows folder normalization without shortening classic UAP."""
+    if "-windows" in framework and len(framework.split("-windows")[1].split(".")) == 4:
+        return framework.removesuffix(".0")
+    return framework
 
 def _frameworks_impl(_settings, attr):
     return {
@@ -76,23 +82,35 @@ def _package_impl(ctx):
         if len(targets) != len(ctx.attr.directories):
             fail("{} is missing native assembly outputs for {}".format(ctx.label, framework))
         for index, target in enumerate(targets):
-            directory = ctx.attr.directories[index].replace("{tfm}", framework)
+            package_tfm = mstest_package_tfm(framework)
+            directory = ctx.attr.directories[index].replace("{tfm}", package_tfm)
             resource_directory = ctx.attr.resource_directories[index]
-            # Adapter satellites are shared once, using the lowest portable TFM.
+            # Ordinary adapter satellites are shared once, from its first TFM.
             if "{tfm}" not in resource_directory and framework != ctx.attr.target_frameworks[0]:
                 resource_directory = ""
-            name = _add_assembly(entries, target, framework, directory, resource_directory.replace("{tfm}", framework))
+            name = _add_assembly(entries, target, framework, directory, resource_directory.replace("{tfm}", package_tfm))
             names[name] = True
 
         external_dependencies = []
         if ctx.attr.nuget_deps and framework not in ctx.split_attr.nuget_deps:
             fail("{} is missing external dependency metadata for {}".format(ctx.label, framework))
-        for target in ctx.split_attr.nuget_deps.get(framework, []):
+        external_targets = ctx.split_attr.nuget_deps.get(framework, [])
+        if framework == "net462":
+            external_targets += ctx.split_attr.netframework_nuget_deps.get(framework, [])
+        for target in external_targets:
             info = target[DotnetAssemblyRuntimeInfo]
             if info.nuget_info == None:
                 fail("{} is not an external NuGet dependency".format(target.label))
             external_dependencies.append(struct(id = info.name, version = info.version, exclude = ["Build", "Analyzers"]))
-        groups.append(struct(targetFramework = framework, dependencies = dependencies + external_dependencies))
+        groups.append(struct(targetFramework = mstest_package_tfm(framework), dependencies = dependencies + external_dependencies))
+
+    for target in ctx.attr.resolver_libraries:
+        info = target[DotnetAssemblyRuntimeInfo]
+        if target[DotnetAssemblyCompileInfo].target_framework != "net462" or len(info.libs) != 1:
+            fail("The VSTest resolver payload must be an exact net462 core implementation.")
+        for file in info.libs:
+            entries.append(("buildTransitive/net462/" + file.basename, file))
+        names[info.name] = True
 
     for target in ctx.attr.task_libraries:
         _add_assembly(entries, target, "netstandard2.0", "_MSBuildTasks/netstandard2.0", "_MSBuildTasks/netstandard2.0")
@@ -174,6 +192,8 @@ _package = rule(
         "deps": attr.label_list(providers = [NuGetPackInfo]),
         "dependency_excludes": attr.string_list_dict(),
         "nuget_deps": attr.label_list(providers = [DotnetAssemblyRuntimeInfo], cfg = _frameworks),
+        "netframework_nuget_deps": attr.label_list(providers = [DotnetAssemblyRuntimeInfo], cfg = _frameworks),
+        "resolver_libraries": attr.label_list(providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo]),
         "bound_platform": attr.bool(),
         "package_id": attr.string(mandatory = True),
         "description": attr.string(mandatory = True),
@@ -191,21 +211,21 @@ def _asset(files, name, source, destination):
     files[":" + name] = destination
 
 def native_mstest_packages():
-    """Declare portable packages using the explicit compatibility task wrappers."""
+    """Declare ordinary packages and opt-in modern Windows platform packages."""
     package_version(name = "mstest_package_version", property_name = "VersionPrefix")
-    framework_project = "src/TestFramework/TestFramework.Extensions"
+    framework_project = "src/TestFramework/TestFramework"
     adapter_project = "src/Adapter/MSTest.TestAdapter"
-    framework_files = {}
+    framework_files = {framework_project + "/MSTest.TestFramework.targets": "buildTransitive/MSTest.TestFramework.targets"}
     adapter_files = {}
-    for framework in PORTABLE_FRAMEWORKS:
+    windows_adapter_files = {}
+    for framework in PORTABLE_FRAMEWORKS + ["net462"]:
         suffix = framework.replace(".", "_")
-        _asset(framework_files, "framework_build_" + suffix, framework_project + "/build/" + framework + "/MSTest.TestFramework.targets", "build/" + framework + "/MSTest.TestFramework.targets")
-        _asset(framework_files, "framework_transitive_" + suffix, framework_project + "/buildTransitive/net8.0AndLater/MSTest.TestFramework.targets", "buildTransitive/" + framework + "/MSTest.TestFramework.targets")
+        files = windows_adapter_files if framework == "net462" else adapter_files
         for extension in ["props", "targets"]:
             filename = "MSTest.TestAdapter." + extension
-            _asset(adapter_files, "adapter_build_" + suffix + "_" + extension, adapter_project + "/build/" + framework + "/" + filename, "build/" + framework + "/" + filename)
-            _asset(adapter_files, "adapter_transitive_" + suffix + "_" + extension, adapter_project + "/buildTransitive/common/" + filename, "buildTransitive/" + framework + "/" + filename)
-        _asset(adapter_files, "adapter_parallelize_" + suffix, adapter_project + "/buildTransitive/Parallelize.targets", "buildTransitive/" + framework + "/Parallelize.targets")
+            _asset(files, "adapter_build_" + suffix + "_" + extension, adapter_project + "/build/" + framework + "/" + filename, "build/" + framework + "/" + filename)
+            _asset(files, "adapter_transitive_" + suffix + "_" + extension, adapter_project + "/buildTransitive/common/" + filename, "buildTransitive/" + framework + "/" + filename)
+        _asset(files, "adapter_parallelize_" + suffix, adapter_project + "/buildTransitive/Parallelize.targets", "buildTransitive/" + framework + "/Parallelize.targets")
 
     _package(
         name = "framework_package",
@@ -213,9 +233,10 @@ def native_mstest_packages():
         version_file = ":mstest_package_version",
         description = "Provides the libraries for writing tests with MSTest. MSTest is Microsoft supported Test Framework.",
         readme = framework_project + "/PACKAGE.md",
-        libraries = [":framework", ":framework_extensions"],
-        directories = ["lib/{tfm}", "buildTransitive/{tfm}"],
-        resource_directories = ["lib/{tfm}", ""],
+        libraries = [":framework"],
+        target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
+        directories = ["lib/{tfm}"],
+        resource_directories = ["lib/{tfm}"],
         files = framework_files,
         deps = [":analyzers_package"],
         dependency_excludes = {"MSTest.Analyzers": ["Compile", "Runtime"]},
@@ -258,14 +279,30 @@ def native_mstest_packages():
         description = "Discovers and runs MSTest tests using VSTest or Microsoft Testing Platform. MSTest is Microsoft supported Test Framework.",
         readme = adapter_project + "/PACKAGE.md",
         libraries = [":adapter", ":platform_services"],
+        target_frameworks = select({
+            "@platforms//os:windows": ["net462"] + PORTABLE_FRAMEWORKS,
+            "//conditions:default": PORTABLE_FRAMEWORKS,
+        }),
         directories = ["buildTransitive/{tfm}", "buildTransitive/{tfm}"],
         resource_directories = ["buildTransitive/_localization", "buildTransitive/_localization"],
-        files = adapter_files,
+        files = select({
+            "@platforms//os:windows": adapter_files | windows_adapter_files,
+            "//conditions:default": adapter_files,
+        }),
+        resolver_libraries = select({
+            "@platforms//os:windows": [":framework_net462"],
+            "//conditions:default": [],
+        }),
         deps = [":trx_abstractions_package", ":telemetry_package", ":platform_msbuild_package"] + select({
             "@platforms//os:windows": [":framework_package"],
             "//conditions:default": [],
         }),
         nuget_deps = ["@paket.source//microsoft.testplatform.objectmodel"],
+        netframework_nuget_deps = [
+            "@paket.compatibility_mstest//system.memory",
+            "@paket.compatibility_mstest//system.threading.tasks.extensions",
+            "@paket.compatibility_mstest//system.reflection.metadata",
+        ],
     )
     native.filegroup(
         name = "mstest_packages",
@@ -274,4 +311,39 @@ def native_mstest_packages():
     native.filegroup(
         name = "mstest_package_closure",
         srcs = [":mstest_packages", ":packages", ":analyzers_package"],
+    )
+
+    platform_packages = []
+    for flavor, package_id, framework in [
+        ("uwp", "MSTest.Uwp", "net10.0-windows10.0.17763.0"),
+        ("winui", "MSTest.WinUI", "net10.0-windows10.0.18362.0"),
+    ]:
+        name = "mstest_" + flavor + "_package"
+        project = "src/TestFramework/" + package_id
+        tfm = mstest_package_tfm(framework)
+        files = {
+            adapter_project + "/buildTransitive/common/MSTest.TestAdapter.targets": "buildTransitive/" + tfm + "/" + package_id + ".targets",
+            adapter_project + "/buildTransitive/Parallelize.targets": "buildTransitive/" + tfm + "/Parallelize.targets",
+            "src/TestFramework/PlatformPackage/MSTest.Platform.props": "buildTransitive/" + tfm + "/" + package_id + ".props",
+        }
+        _package(
+            name = name,
+            package_id = package_id,
+            version_file = ":mstest_package_version",
+            description = "Provides UI-thread test attributes and matching MSTest adapters for " + package_id + ".",
+            readme = project + "/PACKAGE.md",
+            libraries = [":mstest_" + flavor, ":adapter_" + flavor, ":platform_services_" + flavor],
+            target_frameworks = [framework],
+            directories = ["lib/{tfm}", "buildTransitive/{tfm}", "buildTransitive/{tfm}"],
+            resource_directories = ["lib/{tfm}", "buildTransitive/{tfm}/_localization", "buildTransitive/{tfm}/_localization"],
+            files = files,
+            deps = [":framework_package", ":trx_abstractions_package", ":telemetry_package", ":platform_msbuild_package"],
+            nuget_deps = ["@paket.source//microsoft.testplatform.objectmodel"],
+            target_compatible_with = ["@platforms//os:windows"],
+        )
+        platform_packages.append(":" + name)
+    native.filegroup(
+        name = "mstest_platform_package_closure",
+        srcs = [":mstest_package_closure"] + platform_packages,
+        target_compatible_with = ["@platforms//os:windows"],
     )

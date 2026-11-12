@@ -14,26 +14,39 @@
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
-    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net10.0/winui/</_TestAdapterPlatformServicesRoot>
+  <PropertyGroup>
+    <_MSTestAdapterPayloadRoot Condition=" '$(_MSTestAdapterPayloadRoot)' == '' ">$(MSBuildThisFileDirectory)</_MSTestAdapterPayloadRoot>
+    <_MSTestAdapterLocalizationRoot Condition=" '$(_MSTestAdapterLocalizationRoot)' == '' ">$(MSBuildThisFileDirectory)..\_localization\</_MSTestAdapterLocalizationRoot>
   </PropertyGroup>
-  <!--
-    Desktop Visual Studio MSBuild resolves UseUwpTools before NuGet imports this target. Use the
-    resolved tooling property so an explicit false continues to select the ordinary assemblies.
-  -->
-  <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
-    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net10.0/uwp/</_TestAdapterPlatformServicesRoot>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwpTools)' != 'true' ">
-    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)</_TestAdapterPlatformServicesRoot>
-  </PropertyGroup>
+
+  <Target Name="_MSTestValidateAdapterComposition" BeforeTargets="PrepareForBuild">
+    <!-- NuGet imports these markers from the current inner TFM's buildTransitive closure. -->
+    <Error Condition=" ('$(_MSTestUwpAdapterReferenced)' == 'true' AND ('$(_MSTestWinUIAdapterReferenced)' == 'true' OR '$(_MSTestOrdinaryAdapterReferenced)' == 'true'))
+                       OR ('$(_MSTestWinUIAdapterReferenced)' == 'true' AND '$(_MSTestOrdinaryAdapterReferenced)' == 'true') "
+           Text="Reference exactly one MSTest adapter composition: MSTest.TestAdapter, MSTest.Uwp, or MSTest.WinUI. Do not combine a UI package with the MSTest metapackage or another adapter package." />
+    <Error Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND ('$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true') "
+           Text="MSTest.TestAdapter no longer selects UI payloads. Reference MSTest.Uwp for UWP or MSTest.WinUI for WinUI instead." />
+    <Error Condition=" ('$(_MSTestUwpAdapterReferenced)' == 'true' AND '$(UseWinUI)' == 'true')
+                       OR ('$(_MSTestWinUIAdapterReferenced)' == 'true' AND '$(UseUwpTools)' == 'true') "
+           Text="The selected MSTest UI package does not match the application's UWP or WinUI model." />
+  </Target>
+
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'false' ">
+    <!-- Stable extension identity: entry-point generation registers MSTest last. -->
+    <TestingPlatformBuilderHook Include="031F8871-2660-4208-8F6B-FC142B40ABFF">
+      <DisplayName>MSTest</DisplayName>
+      <TypeFullName>Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="MSTest.TestAdapter">
-      <HintPath>$(_TestAdapterPlatformServicesRoot)MSTest.TestAdapter.dll</HintPath>
+      <HintPath>$(_MSTestAdapterPayloadRoot)MSTest.TestAdapter.dll</HintPath>
+      <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
     </Reference>
     <Reference Include="MSTestAdapter.PlatformServices">
-      <HintPath>$(_TestAdapterPlatformServicesRoot)MSTestAdapter.PlatformServices.dll</HintPath>
+      <HintPath>$(_MSTestAdapterPayloadRoot)MSTestAdapter.PlatformServices.dll</HintPath>
+      <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
     </Reference>
   </ItemGroup>
 
@@ -73,7 +86,7 @@
       -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND ('$(UseUwpTools)' != 'true' OR '$(SatelliteResourceLanguages)' != '') ">
       <_MSTestSatelliteResourceLanguages Include="$(SatelliteResourceLanguages)" />
-      <_MSTestV2Files Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\_localization'))\**\*.dll" />
+      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)**\*.dll" />
       <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because
            the well-known %(RecursiveDir) metadata is only available on items after they have been created. -->
       <_MSTestV2Files Update="@(_MSTestV2Files)">
@@ -105,7 +118,7 @@
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
-      <_MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
+      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)\</UICulture>
         <Culture>$([System.String]::Copy('%(CurrentUICultureHierarchy.Identity)').ToLowerInvariant())</Culture>
       </_MSTestV2Files>

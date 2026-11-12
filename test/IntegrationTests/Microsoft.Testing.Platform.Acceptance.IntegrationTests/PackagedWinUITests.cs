@@ -104,8 +104,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    [DataRow("MSTest")]
-    [DataRow("MSTest.TestAdapter")]
+    [DataRow("MSTest.WinUI")]
     public async Task PackagedAppContainerWinUI_ExplicitIntegrationPublishesTrx(string package)
     {
         GeneratedPackagedWinUIAsset generatedAsset = await GeneratePackagedWinUIAssetAsync(appContainer: true, package: package);
@@ -651,9 +650,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string source = SourceCode;
         if (package is not null)
         {
-            string references = package == "MSTest"
-                ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
-                : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+            string references = $"<PackageReference Include=\"{package}\" Version=\"{MSTestVersion}\" />";
             source = source
                 .Replace("MSTest.Sdk/$MSTestVersion$", "Microsoft.NET.Sdk", StringComparison.Ordinal)
                 .Replace(
@@ -970,18 +967,17 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         string[] required =
         [
-            "/buildTransitive/net10.0/winui/MSTest.TestFramework.dll",
-            "/buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
-            "/buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
-            "/buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
+            "/lib/net10.0/MSTest.TestFramework.dll",
+            "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
+            "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
+            "/lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
             "/lib/net10.0-windows10.0.19041/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];
         string[] rejected =
         [
-            "/lib/net10.0/MSTest.TestFramework.dll",
-            "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
-            "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
-            "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
+            "/mstest.testadapter/",
+            "/mstest.uwp/",
+            "MSTest.TestFramework.Extensions.dll",
             "/lib/net10.0/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];
 
@@ -1444,10 +1440,26 @@ namespace $AssetName$;
 public sealed class PackagedWinUITestCases
 {
     private static readonly object s_executionMarkerLock = new();
+    public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
     public void PlainTestMethod_Runs()
     {
+        string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
+        foreach (string directory in directories)
+        {
+            TestContext.Properties[directory] = "not-a-ui-directory";
+        }
+
+        Assert.IsNull(TestContext.TestRunDirectory);
+        Assert.IsNull(TestContext.DeploymentDirectory);
+        Assert.IsNull(TestContext.ResultsDirectory);
+        Assert.IsNull(TestContext.TestRunResultsDirectory);
+        Assert.IsNull(TestContext.TestResultsDirectory);
+        Assert.IsNull(TestContext.TestTempDirectory);
+        TestContext.WriteLine(typeof(TestContext).Assembly.Location);
+        TestContext.WriteLine(typeof(UITestMethodAttribute).Assembly.Location);
+        TestContext.WriteLine(TestContext.GetType().Assembly.Location);
         RecordExecution(nameof(PlainTestMethod_Runs));
     }
 

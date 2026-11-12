@@ -22,7 +22,7 @@ $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $pwsh = Join-Path $PSHOME $(if ($IsWindows) { 'pwsh.exe' } else { 'pwsh' })
 $bazel = Join-Path $root 'eng\bazel.ps1'
-$frameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+$frameworks = @('net10.0', 'net11.0')
 $steps = [Collections.Generic.List[object]]::new()
 $packages = @{}
 $evaluations = [Collections.Generic.List[object]]::new()
@@ -131,7 +131,7 @@ function Assert-Trx([string] $Path, [string] $Name, [string] $Outcome) {
     Assert-Equal 0 ([int]$counters.notExecuted) 'Skipped test count'
 }
 
-function New-Consumer([string] $Name, [string] $Properties, [switch] $Meta, [switch] $Layered) {
+function New-Consumer([string] $Name, [string] $Properties, [switch] $Meta, [switch] $Layered, [string] $Framework = 'net11.0') {
     $path = Join-Path $directory $Name
     New-Item -ItemType Directory -Path $path | Out-Null
     foreach ($file in @('Directory.Build.props', 'Directory.Build.targets', 'Directory.Packages.props')) {
@@ -143,7 +143,7 @@ function New-Consumer([string] $Name, [string] $Properties, [switch] $Meta, [swi
         'msbuild-sdks' = @{ 'MSTest.Sdk' = $mstestVersion }
         test = @{ runner = $(if ($Meta) { 'VSTest' } else { 'Microsoft.Testing.Platform' }) }
     } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $path 'global.json') -Encoding utf8
-    $propertiesXml = "<PropertyGroup><TargetFramework>net11.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>$Properties</PropertyGroup>"
+    $propertiesXml = "<PropertyGroup><TargetFramework>$Framework</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>$Properties</PropertyGroup>"
     $project = if ($Layered) {
         @"
 <Project>
@@ -334,8 +334,19 @@ try {
         @{ Name = 'sdk-aot-selection'; Properties = '<PublishAot>true</PublishAot>'; Expected = @('Microsoft.Testing.Platform.MSBuild', 'MSTest.TestFramework', 'MSTest.SourceGeneration', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage', 'Microsoft.CodeCoverage.MSBuild') },
         @{ Name = 'sdk-version-overrides'; Properties = '<MSTestVersion>7.8.9</MSTestVersion><MicrosoftTestingPlatformVersion>3.2.1</MicrosoftTestingPlatformVersion>'; MSTestVersion = '7.8.9'; PlatformVersion = '3.2.1'; Expected = @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage') }
     )
+    foreach ($framework in $frameworks) {
+        foreach ($model in @('Uwp', 'WinUI')) {
+            $evaluationCases += @{
+                Name = "sdk-$($model.ToLowerInvariant())-$framework"
+                Framework = "$framework-windows10.0.26100.0"
+                Properties = "<EnableWindowsTargeting>true</EnableWindowsTargeting><MSTestApplicationModel>$model</MSTestApplicationModel>"
+                Expected = @('MSTest.TestFramework', "MSTest.$model", 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage')
+            }
+        }
+    }
     foreach ($case in $evaluationCases) {
-        $consumer = New-Consumer $case.Name $case.Properties -Layered:([bool]$case.Layered)
+        $framework = if ($case.Framework) { $case.Framework } else { 'net11.0' }
+        $consumer = New-Consumer $case.Name $case.Properties -Layered:([bool]$case.Layered) -Framework $framework
         $result = Invoke-Step "evaluate-$($case.Name)" $dotnet @('msbuild', 'Consumer.csproj', '-nologo',
             '-getProperty:UsingMSTestSdk,MSTestVersion,MicrosoftTestingPlatformVersion,_MSTestSdkImportsMicrosoftNETSdk,OutputType,NETCoreSdkVersion,MSBuildToolsPath',
             '-getItem:PackageReference,PackageVersion', "-bl:$(Join-Path $directory "$($case.Name)-evaluation.binlog")") $consumer -Environment $consumerEnvironment

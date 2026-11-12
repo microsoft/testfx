@@ -17,6 +17,7 @@ load(
 )
 load("@rules_dotnet//dotnet/private:providers.bzl", "DotnetAssemblyCompileInfo", "DotnetAssemblyRuntimeInfo")
 load("@rules_dotnet//dotnet/private/transitions:common.bzl", "FRAMEWORK_COMPATABILITY_TRANSITION_OUTPUTS")
+load("//eng/bazel:mstest-packages.bzl", "mstest_package_tfm")
 
 def _configuration(framework):
     return analysis_test_transition(settings = {
@@ -32,26 +33,26 @@ def _flavor_targets(flavor, framework):
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
         )
         for name, target in [
-            ("extensions", "framework_extensions_" + flavor),
+            ("attributes", "mstest_" + flavor),
             ("services", "platform_services_" + flavor),
             ("adapter", "adapter_" + flavor),
             ("probe", "windows_probe_" + flavor + "_app"),
         ]
     }
 
-def _core_owners(target):
+def _assembly_owners(target, name):
     compile_info = target[DotnetAssemblyCompileInfo]
     runtime_info = target[DotnetAssemblyRuntimeInfo]
     compile_owners = depset([
         str(reference.owner)
         for reference in compile_info.refs + compile_info.transitive_refs.to_list()
-        if reference.basename == "MSTest.TestFramework.dll"
+        if reference.basename == name + ".dll"
     ])
     runtime_owners = depset([
         str(library.owner)
         for dependency in [runtime_info] + runtime_info.deps.to_list()
         for library in dependency.libs
-        if library.basename == "MSTest.TestFramework.dll"
+        if library.basename == name + ".dll"
     ])
     return sorted(compile_owners.to_list()), sorted(runtime_owners.to_list())
 
@@ -86,19 +87,41 @@ def _targeting_tests_impl(ctx):
             {"name": "Microsoft.NETCore.App", "version": "8.0.0"},
             {"name": "Microsoft.WindowsDesktop.App", "version": "8.0.0"},
         ], desktop["runtimeOptions"]["frameworks"]),
+        ("Net11UwpConsumesNet10Attributes", "net10.0-windows10.0.17763.0", get_nearest_compatible_target_framework("net11.0-windows10.0.17763.0", ["net10.0-windows10.0.17763.0"])),
+        ("Net11WinuiConsumesNet10Attributes", "net10.0-windows10.0.18362.0", get_nearest_compatible_target_framework("net11.0-windows10.0.18362.0", ["net10.0-windows10.0.18362.0"])),
+        ("ModernUiSelectsOrdinaryCore", "net11.0", get_nearest_compatible_target_framework("net11.0-windows10.0.18362.0", ["netstandard2.0", "net462", "net10.0", "net11.0"])),
+        ("UwpLibPathUsesNuGetCanonicalWindowsVersion", "net10.0-windows10.0.17763", mstest_package_tfm("net10.0-windows10.0.17763.0")),
+        ("WinuiLibPathUsesNuGetCanonicalWindowsVersion", "net10.0-windows10.0.18362", mstest_package_tfm("net10.0-windows10.0.18362.0")),
+        ("ClassicUwpLibPathPreservesMinimum", "uap10.0.16299", mstest_package_tfm("uap10.0.16299")),
     ]
-    for flavor, core, targets in [
-        ("Desktop", "framework", [ctx.attr.desktop[0]]),
-        ("Uwp", "framework_uwp", [ctx.attr.uwp_extensions[0], ctx.attr.uwp_services[0], ctx.attr.uwp_adapter[0], ctx.attr.uwp_probe[0]]),
-        ("Winui", "framework_winui", [ctx.attr.winui_extensions[0], ctx.attr.winui_services[0], ctx.attr.winui_adapter[0], ctx.attr.winui_probe[0]]),
+    for flavor, targets in [
+        ("Desktop", [ctx.attr.desktop[0]]),
+        ("Uwp", [ctx.attr.uwp_attributes[0], ctx.attr.uwp_services[0], ctx.attr.uwp_adapter[0], ctx.attr.uwp_probe[0]]),
+        ("Winui", [ctx.attr.winui_attributes[0], ctx.attr.winui_services[0], ctx.attr.winui_adapter[0], ctx.attr.winui_probe[0]]),
     ]:
         for target in targets:
-            compile_owners, runtime_owners = _core_owners(target)
-            expected = [str(Label("//:" + core))]
+            compile_owners, runtime_owners = _assembly_owners(target, "MSTest.TestFramework")
+            expected = [str(Label("//:framework"))]
             cases.extend([
                 ("{} {} compile core".format(flavor, target.label), expected, compile_owners),
                 ("{} {} runtime core".format(flavor, target.label), expected, runtime_owners),
             ])
+    for flavor, assembly_name, other in [("uwp", "MSTest.Uwp", "MSTest.WinUI"), ("winui", "MSTest.WinUI", "MSTest.Uwp")]:
+        for kind in ["attributes", "services", "adapter", "probe"]:
+            target = getattr(ctx.attr, flavor + "_" + kind)[0]
+            for name, owner, present in [
+                (assembly_name, "mstest_" + flavor, kind in ["attributes", "probe"]),
+                (other, "", False),
+                ("MSTest.TestAdapter", "adapter_" + flavor, kind in ["adapter", "probe"]),
+                ("MSTestAdapter.PlatformServices", "platform_services_" + flavor, kind in ["services", "adapter", "probe"]),
+                ("MSTest.TestFramework.Extensions", "", False),
+            ]:
+                compile_owners, runtime_owners = _assembly_owners(target, name)
+                expected = [str(Label("//:" + owner))] if present else []
+                cases.extend([
+                    ("{} {} compile {}".format(flavor, kind, name), expected, compile_owners),
+                    ("{} {} runtime {}".format(flavor, kind, name), expected, runtime_owners),
+                ])
     failures = [
         "{}: expected {}, actual {}".format(name, repr(expected), repr(actual))
         for name, expected, actual in cases
@@ -115,7 +138,7 @@ windows_targeting_test = rule(
     attrs = {
         "desktop": attr.label(
             default = "//:windows_probe_desktop_app",
-            cfg = _configuration("net8.0-windows7.0"),
+            cfg = _configuration("net10.0-windows7.0"),
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
         ),
     } | _flavor_targets("uwp", "net10.0-windows10.0.17763.0") | _flavor_targets("winui", "net10.0-windows10.0.18362.0"),

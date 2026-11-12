@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <_MSTestAdapterPayloadRoot>$(MSBuildThisFileDirectory)</_MSTestAdapterPayloadRoot>
+    <_MSTestAdapterLocalizationRoot>$(MSBuildThisFileDirectory)_localization\</_MSTestAdapterLocalizationRoot>
+    <_MSTestUwpAdapterReferenced Condition=" '$(MSBuildThisFileName)' == 'MSTest.Uwp' ">true</_MSTestUwpAdapterReferenced>
+    <_MSTestWinUIAdapterReferenced Condition=" '$(MSBuildThisFileName)' == 'MSTest.WinUI' ">true</_MSTestWinUIAdapterReferenced>
+    <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
+    <IsMSTestTestAdapterReferenced>true</IsMSTestTestAdapterReferenced>
+  </PropertyGroup>
+</Project>

@@ -29,9 +29,7 @@
 Supported platforms:
 - .NET 4.6.2+
 - .NET 10.0+
-- .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 10+
 
 $(CommonProductDescription)]]></PackageDescription>
 
@@ -45,8 +43,9 @@ $(CommonProductDescription)]]></PackageDescription>
   </Target>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Uwp\MSTest.Uwp.csproj" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
   </ItemGroup>
 

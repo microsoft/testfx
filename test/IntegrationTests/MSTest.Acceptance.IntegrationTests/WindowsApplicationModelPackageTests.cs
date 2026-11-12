@@ -25,10 +25,10 @@ public sealed class WindowsApplicationModelPackageTests
         string report = $$"""
             TargetFramework={{targetFramework}}
             UseUwpTools=true
-            /buildTransitive/net10.0/uwp/MSTest.TestFramework.dll
-            /buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll
-            /buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll
-            /buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll
+            /lib/{{targetFramework.Split('-')[0]}}/MSTest.TestFramework.dll
+            /buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll
+            /buildTransitive/net10.0-windows10.0.17763/MSTestAdapter.PlatformServices.dll
+            /lib/net10.0-windows10.0.17763/MSTest.Uwp.dll
             """;
         File.WriteAllText(reportPath, report);
 
@@ -37,17 +37,17 @@ public sealed class WindowsApplicationModelPackageTests
 
         File.WriteAllText(
             reportPath,
-            report.Replace("/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll", StringComparison.Ordinal));
+            report.Replace($"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll", "/lib/netstandard2.0/MSTest.TestFramework.dll", StringComparison.Ordinal));
         AssertFailedException wrongFramework = Assert.ThrowsExactly<AssertFailedException>(() =>
             WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
-        Assert.Contains("/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", wrongFramework.Message);
+        Assert.Contains($"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll", wrongFramework.Message);
 
-        File.WriteAllText(reportPath, report.Replace("/uwp/", "/", StringComparison.Ordinal));
+        File.WriteAllText(reportPath, report.Replace("/buildTransitive/net10.0-windows10.0.17763/", "/buildTransitive/net10.0/", StringComparison.Ordinal));
         AssertFailedException ordinaryPayload = Assert.ThrowsExactly<AssertFailedException>(() =>
             WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
-        Assert.Contains("/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", ordinaryPayload.Message);
+        Assert.Contains("/buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll", ordinaryPayload.Message);
     }
 
     [TestMethod]
@@ -162,20 +162,17 @@ public sealed class WindowsApplicationModelPackageTests
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows-specific framework assets are produced only by Windows packs.")]
     [DataRow("lib/net462/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_Net462_IsAvailable")]
-    [DataRow("lib/uap10.0/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_ClassicUwp_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_ModernUwp_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_WinUI_IsUnavailable")]
     public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesWindowsTargetFramework(string assemblyPath, bool expectedAvailable, bool directoriesAvailable)
         => AssertCoreContract(assemblyPath, expectedAvailable, directoriesAvailable);
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
-    [DataRow("lib/uap10.0/MSTest.TestFramework.Extensions.dll", false)]
-    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll", false)]
-    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll", true)]
-    public void PackedMSTestTestFramework_SealsConcreteUIAttributes(string assemblyPath, bool winUI)
+    [DataRow("MSTest.Uwp", "lib/uap10.0.16299/MSTest.Uwp.dll", false)]
+    [DataRow("MSTest.Uwp", "lib/net10.0-windows10.0.17763/MSTest.Uwp.dll", false)]
+    [DataRow("MSTest.WinUI", "lib/net10.0-windows10.0.18362/MSTest.WinUI.dll", true)]
+    public void PackedUIFramework_SealsConcreteUIAttributes(string packageId, string assemblyPath, bool winUI)
     {
-        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestFramework"));
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath(packageId));
         Dictionary<string, TypeAttributes> types = ReadTypeAttributes(archive, assemblyPath);
         const string prefix = "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.";
 
@@ -188,77 +185,106 @@ public sealed class WindowsApplicationModelPackageTests
 
     private static readonly string[] RequiredTestAdapterEntries =
     [
-        // Classic UWP.
-        "build/uap10.0/MSTest.TestAdapter.props",
-        "build/uap10.0/MSTest.TestAdapter.targets",
-        "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
-        "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
-        "buildTransitive/uap10.0/MSTest.TestAdapter.props",
-        "buildTransitive/uap10.0/MSTest.TestAdapter.targets",
-        "buildTransitive/uap10.0/Parallelize.targets",
-
-        // Modern UWP, WinUI, and their normal net10.0 selection targets.
+        "buildTransitive/net462/MSTest.TestFramework.dll",
+        "buildTransitive/net462/MSTest.TestAdapter.dll",
+        "buildTransitive/net462/MSTestAdapter.PlatformServices.dll",
         "build/net10.0/MSTest.TestAdapter.props",
         "build/net10.0/MSTest.TestAdapter.targets",
         "buildTransitive/net10.0/MSTest.TestAdapter.props",
         "buildTransitive/net10.0/MSTest.TestAdapter.targets",
         "buildTransitive/net10.0/Parallelize.targets",
-        "buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll",
-        "buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll",
-        "buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
-        "buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
+        "buildTransitive/net10.0/MSTest.TestAdapter.dll",
+        "buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
+        "buildTransitive/net11.0/MSTest.TestAdapter.dll",
+        "buildTransitive/net11.0/MSTestAdapter.PlatformServices.dll",
     ];
 
     private static readonly string[] RequiredTestFrameworkEntries =
     [
-        // Classic UWP.
-        "lib/uap10.0/MSTest.TestFramework.dll",
-        "lib/uap10.0/MSTest.TestFramework.xml",
-        "lib/uap10.0/MSTest.TestFramework.Extensions.dll",
-        "lib/uap10.0/MSTest.TestFramework.Extensions.xml",
-        "build/uap10.0/MSTest.TestFramework.targets",
-        "buildTransitive/uap10.0/MSTest.TestFramework.targets",
-
-        // Modern UWP, WinUI, and their normal net10.0 framework assets.
+        "lib/netstandard2.0/MSTest.TestFramework.dll",
+        "lib/net462/MSTest.TestFramework.dll",
         "lib/net10.0/MSTest.TestFramework.dll",
         "lib/net10.0/MSTest.TestFramework.xml",
-        "build/net10.0/MSTest.TestFramework.targets",
-        "buildTransitive/net10.0/MSTest.TestFramework.targets",
-        "buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll",
-        "buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.xml",
-        "buildTransitive/net10.0/uwp/MSTest.TestFramework.dll",
-        "buildTransitive/net10.0/uwp/MSTest.TestFramework.xml",
-        "buildTransitive/net10.0/uwp/fr/MSTest.TestFramework.resources.dll",
-        "buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
-        "buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.xml",
-        "buildTransitive/net10.0/winui/MSTest.TestFramework.dll",
-        "buildTransitive/net10.0/winui/MSTest.TestFramework.xml",
-        "buildTransitive/net10.0/winui/fr/MSTest.TestFramework.resources.dll",
+        "lib/net11.0/MSTest.TestFramework.dll",
+        "lib/net10.0/fr/MSTest.TestFramework.resources.dll",
+        "lib/net11.0/fr/MSTest.TestFramework.resources.dll",
+        "buildTransitive/MSTest.TestFramework.targets",
     ];
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
-    public void PackedMSTestTestAdapter_ContainsRequiredWindowsApplicationModelAssets()
-        => AssertPackageContainsAllEntries(
-            GetExactCurrentPackagePath("MSTest.TestAdapter"),
-            RequiredTestAdapterEntries);
+    public void PackedMSTestTestAdapter_ContainsOnlyOrdinaryAssets()
+    {
+        string package = GetExactCurrentPackagePath("MSTest.TestAdapter");
+        AssertPackageContainsAllEntries(package, RequiredTestAdapterEntries);
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        Assert.DoesNotContain(
+            entry => entry.FullName.Contains("uap", StringComparison.OrdinalIgnoreCase)
+                || entry.FullName.Contains("windows", StringComparison.OrdinalIgnoreCase)
+                || entry.FullName.Contains("/winui/", StringComparison.OrdinalIgnoreCase)
+                || entry.FullName.Contains("/uwp/", StringComparison.OrdinalIgnoreCase)
+                || entry.FullName.Contains("TestFramework.Extensions", StringComparison.Ordinal),
+            archive.Entries);
+        using var reader = new StreamReader(archive.GetEntry("MSTest.TestAdapter.nuspec")!.Open());
+        var nuspec = XDocument.Parse(reader.ReadToEnd());
+        Assert.DoesNotContain(
+            group => ((string?)group.Attribute("targetFramework"))?.Contains("UAP", StringComparison.OrdinalIgnoreCase) == true
+                || ((string?)group.Attribute("targetFramework"))?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true,
+            nuspec.Descendants().Where(element => element.Name.LocalName == "group"));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [DataRow("MSTest.Uwp", "uap10.0.16299")]
+    [DataRow("MSTest.Uwp", "net10.0-windows10.0.17763")]
+    [DataRow("MSTest.WinUI", "net10.0-windows10.0.18362")]
+    public void PackedUIFramework_OwnsItsPayloadWithoutAnotherAdapter(string packageId, string framework)
+    {
+        string package = GetExactCurrentPackagePath(packageId);
+        AssertPackageContainsAllEntries(
+            package,
+            [
+                $"lib/{framework}/{packageId}.dll",
+                $"lib/{framework}/{packageId}.xml",
+                $"buildTransitive/{framework}/{packageId}.props",
+                $"buildTransitive/{framework}/{packageId}.targets",
+                $"buildTransitive/{framework}/MSTest.TestAdapter.dll",
+                $"buildTransitive/{framework}/MSTestAdapter.PlatformServices.dll",
+                $"buildTransitive/{framework}/_localization/fr/MSTestAdapter.PlatformServices.resources.dll",
+            ]);
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        Assert.DoesNotContain(entry => entry.Name == "MSTest.TestFramework.dll", archive.Entries);
+        using var reader = new StreamReader(archive.GetEntry(packageId + ".nuspec")!.Open());
+        var nuspec = XDocument.Parse(reader.ReadToEnd());
+        XElement[] dependencies = nuspec.Descendants().Where(element => element.Name.LocalName == "dependency").ToArray();
+        Assert.DoesNotContain(
+            dependency => (string?)dependency.Attribute("id") is "MSTest.TestAdapter" or "MSTest.Uwp" or "MSTest.WinUI",
+            dependencies);
+        XElement[] core = dependencies.Where(dependency => (string?)dependency.Attribute("id") == "MSTest.TestFramework").ToArray();
+        Assert.IsNotEmpty(core);
+        foreach (XElement dependency in core)
+        {
+            Assert.AreEqual(AcceptanceTestBase.MSTestVersion, (string?)dependency.Attribute("version"));
+        }
+    }
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only by Windows packs.")]
-    public void PackedMSTestTestAdapter_ClassicUwpDoesNotDuplicateRuntimeDependencies()
+    public void PackedMSTestUwp_ClassicUwpDoesNotDuplicateRuntimeDependencies()
     {
-        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestAdapter"));
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.Uwp"));
         string[] assemblies = archive.Entries
             .Select(entry => entry.FullName)
-            .Where(path => path.StartsWith("buildTransitive/uap10.0/", StringComparison.Ordinal)
+            .Where(path => path.StartsWith("buildTransitive/uap10.0.16299/", StringComparison.Ordinal)
+                && !path["buildTransitive/uap10.0.16299/".Length..].Contains('/')
                 && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
             .Order(StringComparer.Ordinal)
             .ToArray();
 
         Assert.AreSequenceEqual(
             [
-                "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
-                "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
+                "buildTransitive/uap10.0.16299/MSTest.TestAdapter.dll",
+                "buildTransitive/uap10.0.16299/MSTestAdapter.PlatformServices.dll",
             ],
             assemblies);
     }
@@ -267,10 +293,10 @@ public sealed class WindowsApplicationModelPackageTests
     [DataRow("Microsoft.Testing.Extensions.TrxReport")]
     [DataRow("Microsoft.Testing.Extensions.Retry")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only by Windows packs.")]
-    public void PackedMSTestTestAdapter_ClassicUwpDeclaresBootstrapDependencies(string packageId)
+    public void PackedMSTestUwp_ClassicUwpDeclaresBootstrapDependencies(string packageId)
     {
-        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestAdapter"));
-        using var reader = new StreamReader(archive.GetEntry("MSTest.TestAdapter.nuspec")!.Open());
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.Uwp"));
+        using var reader = new StreamReader(archive.GetEntry("MSTest.Uwp.nuspec")!.Open());
         var nuspec = XDocument.Parse(reader.ReadToEnd());
         XElement[] groups = nuspec.Descendants().Where(element => element.Name.LocalName == "group").ToArray();
         XElement classicGroup = groups.Single(group => (string?)group.Attribute("targetFramework") == "UAP10.0.16299");
@@ -288,12 +314,12 @@ public sealed class WindowsApplicationModelPackageTests
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
-    public void PackedMSTestTestAdapter_UwpPropsRegisterMSTestBuilderHook()
+    public void PackedMSTestUwp_TargetsRegisterMSTestBuilderHook()
     {
-        string packagePath = GetExactCurrentPackagePath("MSTest.TestAdapter");
+        string packagePath = GetExactCurrentPackagePath("MSTest.Uwp");
         using ZipArchive archive = ZipFile.OpenRead(packagePath);
-        ZipArchiveEntry propsEntry = archive.GetEntry("buildTransitive/uap10.0/MSTest.TestAdapter.props")
-            ?? throw new AssertFailedException($"Package '{packagePath}' does not contain the classic UWP props.");
+        ZipArchiveEntry propsEntry = archive.GetEntry("buildTransitive/uap10.0.16299/MSTest.Uwp.targets")
+            ?? throw new AssertFailedException($"Package '{packagePath}' does not contain the classic UWP targets.");
         using var reader = new StreamReader(propsEntry.Open());
         string props = reader.ReadToEnd();
 
@@ -306,7 +332,7 @@ public sealed class WindowsApplicationModelPackageTests
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
-    public void PackedMSTestTestFramework_ContainsRequiredWindowsApplicationModelAssets()
+    public void PackedMSTestTestFramework_ContainsSharedCoreAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestFramework"),
             RequiredTestFrameworkEntries);

@@ -26,6 +26,26 @@ internal sealed partial class TestContextImplementation
     /// <inheritdoc/>
     public override IDictionary<string, object?> Properties => _properties;
 
+#if WINDOWS_UWP || WIN_UI
+    /// <inheritdoc/>
+    public override string? TestRunDirectory => null;
+
+    /// <inheritdoc/>
+    public override string? DeploymentDirectory => null;
+
+    /// <inheritdoc/>
+    public override string? ResultsDirectory => null;
+
+    /// <inheritdoc/>
+    public override string? TestRunResultsDirectory => null;
+
+    /// <inheritdoc/>
+    public override string? TestResultsDirectory => null;
+
+    /// <inheritdoc/>
+    public override string? TestTempDirectory => null;
+#endif
+
     /// <summary>
     /// Returns whether property with parameter name is present or not.
     /// </summary>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "knownTargetCount": 41,
+  "knownTargetCount": 42,
   "excludedProjects": [
     {
       "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.Controller/Microsoft.Testing.Extensions.PackagedApp.Controller.csproj",
@@ -33,6 +33,14 @@
     {
       "project": "src/TestFramework/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj",
       "reason": "Windows desktop UI Automation project requiring the WPF framework; it cannot execute in the Ubuntu/net10.0 mutation shards."
+    },
+    {
+      "project": "src/TestFramework/MSTest.Uwp/MSTest.Uwp.csproj",
+      "reason": "UWP UI library requiring Windows application-model tooling; its classic and modern package consumers execute in the Windows app-model acceptance job, not Ubuntu/net10.0 mutation shards."
+    },
+    {
+      "project": "src/TestFramework/MSTest.WinUI/MSTest.WinUI.csproj",
+      "reason": "WinUI UI library requiring the Windows App SDK; its packaged and unpackaged consumers execute in Windows acceptance tests, not Ubuntu/net10.0 mutation shards."
     }
   ],
   "modules": [
@@ -372,17 +380,6 @@
       "id": "test-framework",
       "displayName": "MSTest.TestFramework",
       "project": "src/TestFramework/TestFramework/TestFramework.csproj",
-      "testProjects": [
-        "test/UnitTests/TestFramework.UnitTests/TestFramework.UnitTests.csproj"
-      ],
-      "timeoutMinutes": 360,
-      "enabled": true,
-      "legacyReport": false
-    },
-    {
-      "id": "test-framework-extensions",
-      "displayName": "MSTest.TestFramework.Extensions",
-      "project": "src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj",
       "testProjects": [
         "test/UnitTests/TestFramework.UnitTests/TestFramework.UnitTests.csproj"
       ],

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(WinUiMinimum)</TargetFrameworks>
+    <PackageId>MSTest.WinUI</PackageId>
+    <AssemblyName>MSTest.WinUI</AssemblyName>
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <PackageDescription><![CDATA[Write and run UI-thread tests in packaged and unpackaged WinUI applications with the WinUI-specific MSTest framework and adapter.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
+  <Import Project="..\PlatformPackage\PlatformPackage.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" PrivateAssets="all" />
+    <Using Include="$(RootNamespace).Resources" />
+  </ItemGroup>
+
+  <Import Project="..\PlatformPackage\PlatformPackage.targets" />
+
+</Project>

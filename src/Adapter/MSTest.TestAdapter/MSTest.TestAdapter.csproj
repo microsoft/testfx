@@ -28,14 +28,11 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestAdapter</PackageId>
     <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2</PackageTags>
-    <PackageDescription><![CDATA[This package includes the adapter logic to discover and run tests. For access to the testing framework, install the MSTest.TestFramework package.
+    <PackageDescription><![CDATA[Discover and run ordinary MSTest tests. For UWP applications use MSTest.Uwp; for WinUI applications use MSTest.WinUI. For access to the testing framework, install MSTest.TestFramework.
 
 Supported platforms:
 - .NET 4.6.2+
 - .NET 10.0+
-- .NET 10.0 Windows.18362+ (WinUI)
-- UWP 10.0.16299
-- UWP 10.0.17763 with .NET 10+
 
 $(CommonProductDescription)]]></PackageDescription>
     <!-- Nothing in lib but that's expected -->
@@ -70,46 +67,21 @@ $(CommonProductDescription)]]></PackageDescription>
          dependency: PrivateAssets="all" suppresses the dependency (and its transitive package dependencies). -->
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" PrivateAssets="all" />
 
-    <!-- Curated package dependencies. PrivateAssets="none" so all assets (including build/buildTransitive
-         targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" PrivateAssets="none" />
-    <!-- The classic UWP bootstrap registers TRX and Retry directly, so their runtime dependencies must
-         flow through NuGet for that TFM instead of being bundled in the adapter package. -->
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" PrivateAssets="all">
-      <PrivateAssets Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">none</PrivateAssets>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" PrivateAssets="none" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="all" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" PrivateAssets="all">
-      <PrivateAssets Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">none</PrivateAssets>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" PrivateAssets="none" />
     <!-- On Windows the package depends on MSTest.TestFramework, matching the historical MSTest.TestAdapter.nuspec.
          The historical MSTest.TestAdapter.NonWindows.nuspec did NOT declare this dependency, so on non-Windows builds
          we keep the compile-time reference but suppress the package dependency via PrivateAssets="all" to keep the
          produced non-Windows package's dependency graph identical to the previous nuspec-based output. -->
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" Condition=" '$(OS)' == 'Windows_NT' " PrivateAssets="none" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" Condition=" '$(OS)' != 'Windows_NT' " PrivateAssets="all" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" Condition=" '$(OS)' == 'Windows_NT' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" Condition=" '$(OS)' != 'Windows_NT' " PrivateAssets="all" />
   </ItemGroup>
+
+  <Import Project="PackageDependencies.props" />
 
   <ItemGroup>
     <InternalsVisibleTo Include="MSTest.Extensions.Hosting" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- For .NET Framework and UWP these assemblies must be declared as package dependencies (on modern TFMs
-         they are part of the framework). They would normally flow transitively through PlatformServices, but
-         that reference is suppressed above, so they are referenced explicitly here. -->
-    <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
-    <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
-    <PackageReference Include="System.Reflection.Metadata" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
-
-    <!-- The adapter's VSTest-facing code (VSTestAdapter\*, AdapterTestProperties) and the native Microsoft.Testing.Platform
-         integration (TestingPlatformAdapter\MSTestFilterContext) use the VSTest object model directly. It used to flow
-         in transitively via Microsoft.Testing.Extensions.VSTestBridge; now that the bridge reference is gone it is
-         referenced explicitly for every TFM. -->
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-
     <!-- The native Microsoft.Testing.Platform integration (TestingPlatformAdapter\MSTestFilterContext) parses VSTest
          filter expressions via the Filter source package. It flows in transitively via the VSTestBridge today
          (PrivateAssets=all there), so reference it explicitly here. -->
@@ -169,15 +141,10 @@ $(CommonProductDescription)]]></PackageDescription>
   <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
     <None Include="build\net462\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net462\" />
     <None Include="build\net462\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net462\" />
-    <None Include="build\uap10.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\uap10.0\" />
-    <None Include="build\uap10.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\uap10.0\" />
 
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net462\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net462\" />
-    <None Include="buildTransitive\uwp\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\uap10.0\" />
-    <None Include="buildTransitive\uwp\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\uap10.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net462\" />
-    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\uap10.0\" />
   </ItemGroup>
 
   <!--
@@ -190,13 +157,11 @@ $(CommonProductDescription)]]></PackageDescription>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddTestAdapterPackageFiles</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
-  <Target Name="_AddTestAdapterPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+  <Target Name="_AddTestAdapterPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences"
+          Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' AND '$(TargetFramework)' != '$(WinUiMinimum)' ">
     <PropertyGroup>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">buildTransitive\net462\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">buildTransitive\$(TargetFramework)\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">buildTransitive\uap10.0\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net10.0\winui\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net10.0\uwp\</_BuildTransitiveDir>
 
       <!-- All TFMs share the same resx, so the localized satellites are shipped once, taken from a single TFM.
            That source TFM must be one that is actually built on the current OS: net462 on Windows, otherwise net10.0. -->
@@ -211,11 +176,46 @@ $(CommonProductDescription)]]></PackageDescription>
 
       <!-- .NET Framework also bundles the TestFramework assemblies. -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.Extensions.dll" PackagePath="$(_BuildTransitiveDir)" />
 
       <!-- Localized satellites, shipped once from the OS-appropriate source TFM (see _LocalizationSourceTfm). -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(_LocalizationSourceTfm)' " Include="$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll" PackagePath="buildTransitive\_localization\" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(_LocalizationSourceTfm)' " Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll" PackagePath="buildTransitive\_localization\" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SelectOrdinaryMSTestAdapterPackPayload"
+          BeforeTargets="_WalkEachTargetPerFrameworkCore;GenerateNuspec"
+          Condition=" '$(TargetFramework)' == '' ">
+    <ItemGroup>
+      <!-- Sdk.Extras caches this matrix during Build, before pack narrows TargetFrameworks. -->
+      <_MSTestAdapterBuildFlavor Include="@(_SdkProjectFlavorMatrixItem)" />
+      <_SdkProjectFlavorMatrixItem Remove="@(_SdkProjectFlavorMatrixItem)"
+                                  Condition=" '%(_SdkProjectFlavorMatrixItem.TargetFramework)' == '$(UwpMinimum)'
+                                    OR '%(_SdkProjectFlavorMatrixItem.TargetFramework)' == '$(ModernUwpMinimum)'
+                                    OR '%(_SdkProjectFlavorMatrixItem.TargetFramework)' == '$(WinUiMinimum)' " />
+      <_FrameworksWithSuppressedDependencies Include="$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Build/restore still expose the variants consumed by the explicit UI packages.
+       Limit both NuGet's framework list and older pack walkers' public list only after Build. -->
+  <Target Name="_SelectOrdinaryMSTestAdapterPackFrameworks" BeforeTargets="_GetTargetFrameworksOutput"
+          Condition=" '$(TargetFramework)' == '' ">
+    <PropertyGroup>
+      <_MSTestAdapterBuildFrameworks>$(TargetFrameworks)</_MSTestAdapterBuildFrameworks>
+      <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
+      <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(TargetFrameworks)</TargetFrameworks>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_RestoreMSTestAdapterBuildFrameworks" AfterTargets="Pack"
+          Condition=" '$(_MSTestAdapterBuildFrameworks)' != '' ">
+    <PropertyGroup>
+      <TargetFrameworks>$(_MSTestAdapterBuildFrameworks)</TargetFrameworks>
+    </PropertyGroup>
+    <ItemGroup>
+      <_SdkProjectFlavorMatrixItem Remove="@(_SdkProjectFlavorMatrixItem)" />
+      <_SdkProjectFlavorMatrixItem Include="@(_MSTestAdapterBuildFlavor)" />
     </ItemGroup>
   </Target>
 

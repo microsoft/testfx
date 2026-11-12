@@ -67,7 +67,7 @@ public sealed class SdkPackageTests(TestContext context)
         using JsonDocument request = JsonDocument.Parse(File.ReadAllText(PathFor("pack.json")));
         Assert.AreEqual("MSTest", request.RootElement.GetProperty("metadata").GetProperty("id").GetString());
         JsonElement[] groups = request.RootElement.GetProperty("dependencyGroups").EnumerateArray().ToArray();
-        Assert.AreSequenceEqual(new[] { "net8.0", "net9.0", "net10.0", "net11.0" }, groups.Select(group => group.GetProperty("targetFramework").GetString()).ToArray());
+        Assert.AreSequenceEqual(new[] { "net10.0", "net11.0" }, groups.Select(group => group.GetProperty("targetFramework").GetString()).ToArray());
         foreach (JsonElement group in groups)
         {
             Dictionary<string, JsonElement> dependencies = group.GetProperty("dependencies").EnumerateArray().ToDictionary(item => item.GetProperty("id").GetString()!);
@@ -88,7 +88,7 @@ public sealed class SdkPackageTests(TestContext context)
         }
 
         Assert.AreSequenceEqual(
-            new[] { "PACKAGE.md", "lib/net8.0/_._", "lib/net9.0/_._", "lib/net10.0/_._", "lib/net11.0/_._" },
+            new[] { "PACKAGE.md", "lib/net10.0/_._", "lib/net11.0/_._" },
             request.RootElement.GetProperty("files").EnumerateArray().Select(item => item.GetProperty("target").GetString()).ToArray(),
             SequenceOrder.InAnyOrder);
         Assert.IsFalse(File.Exists(PathFor("generated.props")));
@@ -105,6 +105,9 @@ public sealed class SdkPackageTests(TestContext context)
     [DataRow("framework-drift", "differs from SupportedNetFrameworks")]
     [DataRow("meta-private-assets", "test SDK build-asset flow changed")]
     [DataRow("meta-reference", "Unsupported meta-package project reference")]
+    [DataRow("meta-retired-framework", "Unsupported meta-package project reference")]
+    [DataRow("meta-ui-reference", "Unsupported meta-package project reference")]
+    [DataRow("meta-ui-condition", "Unsupported meta-package project reference")]
     public async Task Generate_RejectsContractDriftBeforeWritingOutputs(string scenario, string expectedError)
     {
         JsonObject input = CreateInput(sdk: !scenario.StartsWith("meta-", StringComparison.Ordinal));
@@ -140,6 +143,15 @@ public sealed class SdkPackageTests(TestContext context)
             case "meta-reference":
                 ReplaceInFile(PathFor("Package.csproj"), "MSTest.TestAdapter.csproj", "Unknown.csproj");
                 break;
+            case "meta-retired-framework":
+                ReplaceInFile(PathFor("Package.csproj"), @"TestFramework\TestFramework\TestFramework.csproj", @"TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj");
+                break;
+            case "meta-ui-reference":
+                ReplaceInFile(PathFor("Package.csproj"), @"MSTest.Uwp\MSTest.Uwp.csproj", @"MSTest.WinUI\MSTest.WinUI.csproj");
+                break;
+            case "meta-ui-condition":
+                ReplaceInFile(PathFor("Package.csproj"), "'$(TargetFramework)' == '$(UwpMinimum)'", "'$(TargetFramework)' != '$(UwpMinimum)'");
+                break;
             default:
                 Assert.Fail($"Unknown scenario: {scenario}");
                 break;
@@ -165,7 +177,7 @@ public sealed class SdkPackageTests(TestContext context)
             """);
         string repositoryProperties = Write("Directory.Build.props", """
             <Project><PropertyGroup>
-              <SupportedNetFrameworks>net8.0;net9.0;net10.0;net11.0</SupportedNetFrameworks>
+              <SupportedNetFrameworks>net10.0;net11.0</SupportedNetFrameworks>
               <PackageLicenseExpression>MIT</PackageLicenseExpression>
             </PropertyGroup></Project>
             """);
@@ -191,8 +203,9 @@ public sealed class SdkPackageTests(TestContext context)
             <None Pack="true" PackagePath="Sdk\Sdk.props" />
             <None Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
             """ : """
-            <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-            <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+            <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" />
+            <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Uwp\MSTest.Uwp.csproj" Condition="'$(TargetFramework)' == '$(UwpMinimum)'" />
+            <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
             <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" />
             <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" PrivateAssets="none" />
             <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
@@ -238,7 +251,7 @@ public sealed class SdkPackageTests(TestContext context)
         else
         {
             string placeholder = Write("_._", "");
-            files.AddRange(new[] { "net8.0", "net9.0", "net10.0", "net11.0" }.Select(framework => new { source = placeholder, target = $"lib/{framework}/_._" }));
+            files.AddRange(new[] { "net10.0", "net11.0" }.Select(framework => new { source = placeholder, target = $"lib/{framework}/_._" }));
         }
 
         return JsonSerializer.SerializeToNode(new
@@ -249,7 +262,7 @@ public sealed class SdkPackageTests(TestContext context)
             repositoryProperties,
             sourceProperties,
             centralPackages,
-            frameworks = new[] { "net8.0", "net9.0", "net10.0", "net11.0" },
+            frameworks = new[] { "net10.0", "net11.0" },
             templates,
             files,
             output = PathFor("package.nupkg"),
