@@ -82,7 +82,7 @@ public sealed class NativePackageTests
     [TestMethod]
     public void PackagedTargetsProvideExtensionsAndParallelization()
     {
-        Assert.AreEqual("MSTest.TestFramework.Extensions", typeof(TestContext).Assembly.GetName().Name);
+        Assert.AreEqual("MSTest.TestFramework", typeof(TestContext).Assembly.GetName().Name);
         ParallelizeAttribute? parallelize = typeof(NativePackageTests).Assembly.GetCustomAttribute<ParallelizeAttribute>();
         Assert.IsNotNull(parallelize);
         Assert.AreEqual(ExecutionScope.MethodLevel, parallelize.Scope);

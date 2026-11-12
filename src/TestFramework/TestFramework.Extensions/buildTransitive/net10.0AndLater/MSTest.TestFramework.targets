@@ -24,6 +24,25 @@
     </Reference>
   </ItemGroup>
 
+  <!-- Replace both compiler and runtime assets, not just the assembly copied by RAR.
+       Preserve NuGet metadata so dependency-file generation still recognizes the package. -->
+  <Target Name="_SelectMSTestUiCore" AfterTargets="ResolvePackageAssets"
+          Condition=" '$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true' ">
+    <ItemGroup>
+      <_MSTestCoreCompileAsset Include="@(ResolvedCompileFileDefinitions)" Condition=" '%(Filename)' == 'MSTest.TestFramework' " />
+      <_MSTestCoreRuntimeAsset Include="@(RuntimeCopyLocalItems)" Condition=" '%(Filename)' == 'MSTest.TestFramework' " />
+      <_MSTestCoreResourceAsset Include="@(ResourceCopyLocalItems)" Condition=" '%(Filename)' == 'MSTest.TestFramework.resources' " />
+      <ResolvedCompileFileDefinitions Remove="@(_MSTestCoreCompileAsset)" />
+      <RuntimeCopyLocalItems Remove="@(_MSTestCoreRuntimeAsset)" />
+      <ResourceCopyLocalItems Remove="@(_MSTestCoreResourceAsset)" />
+      <ResolvedCompileFileDefinitions Include="@(_MSTestCoreCompileAsset->'$(_TestFrameworkExtensionsRoot)MSTest.TestFramework.dll')">
+        <HintPath>$(_TestFrameworkExtensionsRoot)MSTest.TestFramework.dll</HintPath>
+      </ResolvedCompileFileDefinitions>
+      <RuntimeCopyLocalItems Include="@(_MSTestCoreRuntimeAsset->'$(_TestFrameworkExtensionsRoot)MSTest.TestFramework.dll')" />
+      <ResourceCopyLocalItems Include="@(_MSTestCoreResourceAsset->'$(_TestFrameworkExtensionsRoot)%(DestinationSubDirectory)MSTest.TestFramework.resources.dll')" />
+    </ItemGroup>
+  </Target>
+
   <!--
     Implicit imports
     Ensure feature is available and user hasn't opted-out from it.

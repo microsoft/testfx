@@ -99,3 +99,16 @@
 *REMOVED*override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Equals(object? obj) -> bool
 *REMOVED*override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode() -> int
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.DeploymentItemAttribute(string? path) -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.DeploymentItemAttribute(string? path, string? outputDirectory) -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory.get -> string?
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path.get -> string?
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection.get -> System.Data.Common.DbConnection?
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow.get -> System.Data.DataRow?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestTempDirectory.get -> string?

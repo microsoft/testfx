@@ -99,3 +99,5 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.TestConfig
 override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Equals(object? obj) -> bool
 override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode() -> int
 static Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection.get -> System.Data.Common.DbConnection?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow.get -> System.Data.DataRow?

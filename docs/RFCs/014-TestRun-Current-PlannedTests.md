@@ -49,7 +49,7 @@ The same shape is used by other frameworks: xUnit v3 separates per-test `TestCon
 
 ### Public API
 
-All types live in `Microsoft.VisualStudio.TestTools.UnitTesting` (same as `TestContext`) and ship inside `MSTest.TestFramework`. `TestContext` remains in `MSTest.TestFramework.Extensions`. All run-state types are gated behind `[Experimental("MSTESTEXP")]` for v1.
+All types live in `Microsoft.VisualStudio.TestTools.UnitTesting` (same as `TestContext`) and ship inside `MSTest.TestFramework`. Starting with MSTest 5, `TestContext` is also defined in that core assembly. All run-state types are gated behind `[Experimental("MSTESTEXP")]` for v1.
 
 ```csharp
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;

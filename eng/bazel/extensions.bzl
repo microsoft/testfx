@@ -240,7 +240,7 @@ def extension_libraries():
             "src/Adapter/MSTest.Extensions.Hosting/Resources/HostingResources.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Hosting.Resources.HostingResources",
         },
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests"],
-        deps = [":adapter", ":hosting", ":framework_extensions"] + testfx_nuget(["microsoft.extensions.dependencyinjection.abstractions"], compatibility_group = "compatibility_hosting") + select({
+        deps = [":adapter", ":hosting", ":framework", ":framework_extensions"] + testfx_nuget(["microsoft.extensions.dependencyinjection.abstractions"], compatibility_group = "compatibility_hosting") + select({
             "//eng/bazel/compatibility:net462": [":netframework_netstandard_facade", ":netframework_runtime_information"],
             "//conditions:default": [],
         }),
