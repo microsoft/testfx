@@ -95,12 +95,16 @@ $evidence = Join-Path ([IO.Path]::GetTempPath()) "testfx-incrementality-$([guid]
 Windows CI runs the regression script once in the Debug matrix, inside the
 existing test/skip gate, using the restored `.packages` cache and owned agent
 temporary storage. The existing Release coverage-content check is unchanged.
+An always-run directory probe and guarded artifact task preserve fixture
+results, stdout/stderr and binlogs even when the regression step fails, without
+introducing a second upload failure when no evidence directory exists.
 Hosted CI execution remains separate from the local evidence.
 
 ### Executed evidence, 2026-11-12
 
-The final uncommitted production state is based on
-`50b513022be7c356cb342866a3b755a4b18bf97d`. Tested file SHA-256 values:
+The initial implementation was tested before being committed as
+`3b5bbfdc52fe23bdc5fcd90053d4a6f4b33a4490`, based on
+`50b513022be7c356cb342866a3b755a4b18bf97d`. That tested snapshot's file SHA-256 values:
 
 | File | SHA-256 |
 | --- | --- |
@@ -186,3 +190,30 @@ Linux/macOS, desktop MSBuild, other architectures, restore-inclusive or cold
 performance were not measured. No shipping API/package changes or servicing
 rollout are involved, and no package publication was performed. Reevaluate the
 test-only override when upgrading Windows App SDK Base from `1.8.250831001`.
+
+### Review follow-up: hosted failure evidence
+
+The initial Debug regression step wrote its diagnostics outside the repository,
+where the existing log/test-result publishers do not collect them. A hosted
+fixture failure therefore lost its stdout/stderr, result JSON and binlog when
+the agent was discarded.
+
+An always-run directory probe now gates a dedicated `PublishBuildArtifacts`
+step, also eligible after failures. The original Debug/XML-only scope is
+preserved, and artifact names distinguish matrix entries and job attempts.
+Missing output directories skip publication rather than causing a second error.
+
+`BuildIncrementalityFailureEvidenceIsPublished` executes that exact probe
+against absent and failed-fixture evidence and verifies the publisher path and
+conditions. The current pipeline passed this case (exit **0**); the pipeline
+from `3b5bbfdc52fe23bdc5fcd90053d4a6f4b33a4490` failed the same assertion
+(exit **1**), without a compiler/setup failure.
+
+```powershell
+.\eng\test-build-incrementality.ps1 -ArtifactsDirectory $evidence -TestName BuildIncrementalityFailureEvidenceIsPublished
+.\eng\test-build-incrementality.ps1 -ArtifactsDirectory $evidence -TestName BuildIncrementalityFailureEvidenceIsPublished -PipelineTemplatePath $oldPipeline
+```
+
+The full updated harness passed **12/12**, zero failures/skips, and the pipeline
+YAML parsed successfully. The coverage writer and WinUI target implementations
+are unchanged. Actual hosted artifact upload remains a CI verification gate.

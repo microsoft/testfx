@@ -12,6 +12,7 @@ param(
     [string]$RepositoryRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$CoverageTargetsPath,
     [string]$WinUITargetsPath,
+    [string]$PipelineTemplatePath,
     [string]$PackageRoot = $env:NUGET_PACKAGES,
     [string]$ManifestTool,
     [string]$ArtifactsDirectory,
@@ -773,6 +774,34 @@ $cases = [ordered]@{
         $null = Invoke-FixtureBuild $fixture.Project "CreateWinRTRegistration" "unchanged-after-invalidation"
         Assert-Equal $state (Get-ManifestState $fixture) "A consumed changed input must not cause perpetual regeneration."
     }
+    BuildIncrementalityFailureEvidenceIsPublished = {
+        $template = [IO.File]::ReadAllText($script:PipelineSnapshot)
+        $probe = [regex]::Match($template, '(?m)^- pwsh: \|\r?\n(?<script>(?:    .*\r?\n)+)  displayName: Check for build incrementality evidence\r?\n  condition: (?<condition>.+)')
+        Assert-TestCondition $probe.Success "The incrementality evidence directory must be probed before publication."
+        $publisher = [regex]::Match($template, '(?m)^- task: PublishBuildArtifacts@1\r?\n  displayName: Publish build incrementality evidence\r?\n  inputs:\r?\n    PathtoPublish: (?<path>.+)\r?\n    ArtifactName: (?<name>.+)\r?\n  condition: (?<condition>.+)')
+        Assert-TestCondition $publisher.Success "Incrementality evidence must have its own artifact publication step."
+        foreach ($condition in @($probe.Groups["condition"].Value, $publisher.Groups["condition"].Value)) {
+            Assert-TestCondition ($condition.StartsWith("and(always(),", [StringComparison]::Ordinal)) "Evidence collection must still run after the fixture check fails."
+            Assert-TestCondition ($condition.Contains("eq(variables._BuildConfig, 'Debug')") -and $condition.Contains("ne(variables._XmlDocsOnly, 'true')")) "Evidence collection must preserve the fixture check's scope."
+        }
+        Assert-Equal "'`$(Agent.TempDirectory)\testfx-build-incrementality'" $publisher.Groups["path"].Value.Trim() "Publication must retain the actual fixture output directory."
+        Assert-TestCondition ($publisher.Groups["condition"].Value.Contains("eq(variables.HasBuildIncrementalityEvidence, 'true')")) "A missing fixture directory must not cause a second upload failure."
+        Assert-TestCondition ($publisher.Groups["name"].Value.Contains('$(_TestArtifactsName)') -and $publisher.Groups["name"].Value.Contains('$(System.JobAttempt)')) "Evidence artifacts must distinguish configurations and job attempts."
+
+        $body = $probe.Groups["script"].Value -replace '(?m)^    ', ''
+        $body = $body.Replace('"$(Agent.TempDirectory)\testfx-build-incrementality"', '$FixtureEvidenceDirectory')
+        $command = [scriptblock]::Create("param([string]`$FixtureEvidenceDirectory)`n$body")
+        $directory = Join-Path $script:CaseDirectory "failure evidence"
+        $messages = @(& $command $directory 6>&1 | ForEach-Object { $_.ToString() })
+        Assert-TestCondition ($messages -ccontains "##vso[task.setvariable variable=HasBuildIncrementalityEvidence]false") "Absent evidence must disable publication."
+        Assert-TestCondition (-not [IO.Directory]::Exists($directory)) "The publication probe must not create absent evidence."
+        $failureLog = Join-Path $directory "fixture.stderr.log"
+        Write-FixtureFile $failureLog "Representative failed-fixture diagnostic"
+        Write-FixtureFile (Join-Path $directory "results.json") '{"Failed":1}'
+        $messages = @(& $command $directory 6>&1 | ForEach-Object { $_.ToString() })
+        Assert-TestCondition ($messages -ccontains "##vso[task.setvariable variable=HasBuildIncrementalityEvidence]true") "A failed fixture with saved diagnostics must enable publication."
+        Assert-Equal "Representative failed-fixture diagnostic" ([IO.File]::ReadAllText($failureLog)) "Probing failure evidence must preserve the original diagnostic."
+    }
 }
 
 function Invoke-ParallelCoverageCase {
@@ -804,6 +833,7 @@ if ($scratchDirectory -ieq $RepositoryRoot -or $scratchDirectory.StartsWith($Rep
 }
 if (-not $CoverageTargetsPath) { $CoverageTargetsPath = Join-Path $RepositoryRoot "test\Directory.Build.targets" }
 if (-not $WinUITargetsPath) { $WinUITargetsPath = Join-Path $RepositoryRoot "eng\WinUI.Incremental.targets" }
+if (-not $PipelineTemplatePath) { $PipelineTemplatePath = Join-Path $RepositoryRoot "eng\pipelines\steps\test-windows-configuration-tests.yml" }
 if (-not $PackageRoot) { $PackageRoot = Join-Path $HOME ".nuget\packages" }
 if (-not $ManifestTool) {
     $ManifestTool = Join-Path $PackageRoot "microsoft.windows.sdk.buildtools\10.0.26100.4654\bin\10.0.26100.0\x64\mt.exe"
@@ -818,6 +848,7 @@ $script:Invocations = [Collections.Generic.List[object]]::new()
 $script:CoverageSnapshot = Join-Path $runRoot "inputs\coverage.targets"
 $script:WinUISnapshot = Join-Path $runRoot "inputs\WinUI.Incremental.targets"
 $script:UpstreamSnapshot = Join-Path $runRoot "inputs\Microsoft.WindowsAppSDK.SelfContained.targets"
+$script:PipelineSnapshot = Join-Path $runRoot "inputs\test-windows-configuration-tests.yml"
 $script:ManifestTool = [IO.Path]::GetFullPath($ManifestTool)
 $selected = @($cases.Keys | Where-Object {
     $name = $_
@@ -834,6 +865,9 @@ if (@($selected | Where-Object { $_ -like "WinUI*" }).Count -gt 0) {
     $sourceCopies[[IO.Path]::GetFullPath($upstreamTargets)] = $script:UpstreamSnapshot
     if (-not [IO.File]::Exists($script:ManifestTool)) { throw "The pinned real manifest tool is missing: '$script:ManifestTool'." }
     $sources[$script:ManifestTool] = (Get-FileHash -LiteralPath $script:ManifestTool -Algorithm SHA256).Hash
+}
+if ($selected -contains "BuildIncrementalityFailureEvidenceIsPublished") {
+    $sourceCopies[[IO.Path]::GetFullPath($PipelineTemplatePath)] = $script:PipelineSnapshot
 }
 foreach ($source in $sourceCopies.Keys) {
     $sources[$source] = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
