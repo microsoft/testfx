@@ -4,6 +4,8 @@ Package versions are maintained in [`Directory.Build.props`](Directory.Build.pro
 MSTest and MTP packages, while source generation, Windows UI Automation, hosting, and newer reporting
 extensions still require published prerelease versions. The Native AOT samples align the framework and
 adapter with the source generator; packaged-app samples also align MTP with the sidecar's exact dependency.
+The packaged WinUI projects apply that sample-specific pin only when it is defined, so copies outside
+the public samples tree retain the platform version supplied by MSTest.Sdk.
 
 ## Observability
 
