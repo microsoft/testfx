@@ -1,3 +1,18 @@
 #nullable enable
 *REMOVED*[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.CreateFromOwnedArrays(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, string![]! testCategories, System.Collections.Generic.KeyValuePair<string!, string!>[]! testProperties) -> Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest!
 *REMOVED*[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.SetCurrent(Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo? info) -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory.CreateInstance(System.Type! testClassType, Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.DisposeAsync() -> System.Threading.Tasks.Task!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.Instance.get -> object!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.RequiresCleanup.get -> bool
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.set -> void
+*REMOVED*[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.set -> void
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectoryLabel -> string!
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassNameLabel -> string!
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectoryLabel -> string!
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestNameLabel -> string!
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectoryLabel -> string!
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectoryLabel -> string!
+*REMOVED*static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectoryLabel -> string!

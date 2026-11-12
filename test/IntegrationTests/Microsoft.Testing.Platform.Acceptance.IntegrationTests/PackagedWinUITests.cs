@@ -970,6 +970,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         string[] required =
         [
+            "/buildTransitive/net10.0/winui/MSTest.TestFramework.dll",
             "/buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
             "/buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
             "/buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
@@ -977,6 +978,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         ];
         string[] rejected =
         [
+            "/lib/net10.0/MSTest.TestFramework.dll",
             "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
             "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
             "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",

@@ -30,13 +30,19 @@ Supported platforms:
 
 ### Common API assembly ownership
 
-Starting with MSTest 5, `MessageLevel`, `TestRun`, `ITestRunInfo` and `PlannedTest`
+Starting with MSTest 5, `TestContext`, `DeploymentItemAttribute`, `MessageLevel`,
+`TestRun`, `ITestRunInfo` and `PlannedTest`
 are defined in `MSTest.TestFramework.dll`. The .NET Framework-only private
 reflection and test-configuration helpers are also defined there. Consumers
 compiled against their former `MSTest.TestFramework.Extensions.dll` definitions
 must recompile; assembly-qualified configuration names must use the core assembly.
-`TestContext`, `DeploymentItemAttribute` and the UI APIs remain in Extensions.
-The package layout and supported targets are unchanged.
+UI APIs remain in Extensions. Package IDs, package ownership and supported targets
+are unchanged. UWP/WinUI select matching core and Extensions assemblies; their
+`TestContext` still excludes desktop directory properties, and
+`DeploymentItemAttribute` remains unavailable there and on .NET Standard 2.0.
+Modern UWP/WinUI core assemblies and their resources ship beside the existing
+UI Extensions assets in `buildTransitive/net10.0/uwp` and
+`buildTransitive/net10.0/winui`; ordinary consumers keep their `lib` assets.
 
 ### Predicate-based collection assertions
 

@@ -21,6 +21,12 @@ public sealed class ExtensionsContractTests : TestContainer
             typeof(ITestRunInfo),
             typeof(PlannedTest),
             typeof(TestRun),
+            typeof(TestContext),
+            typeof(ITestClassInstanceFactory),
+            typeof(ITestClassInstanceLease),
+#if !WIN_UI
+            typeof(DeploymentItemAttribute),
+#endif
 #if NETFRAMEWORK
             typeof(PrivateObject),
             typeof(PrivateType),

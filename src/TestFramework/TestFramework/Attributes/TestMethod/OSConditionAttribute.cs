@@ -16,7 +16,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 {
 #if !NETFRAMEWORK
     private static readonly OSPlatform FreeBSD =
-#if NETSTANDARD
+#if NETSTANDARD || (WINDOWS_UWP && !NET)
         OSPlatform.Create("FreeBSD");
 #else
         OSPlatform.FreeBSD;

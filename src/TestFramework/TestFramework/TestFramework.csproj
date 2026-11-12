@@ -1,7 +1,26 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
+
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -45,6 +64,15 @@
     <AdditionalFiles Include="InternalAPI\net462\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' AND '$(TargetFramework)' != '$(WinUiMinimum)' ">
+    <AdditionalFiles Include="PublicAPI\desktop\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\desktop\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\desktop\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\desktop\InternalAPI.Unshipped.txt" />
+    <AdditionalFiles Include="PublicAPI\deployment\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI\deployment\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
     <Reference Include="System.Configuration" />
   </ItemGroup>
@@ -76,6 +104,7 @@
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Extensions.Hosting" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Performance.Benchmarks" Key="$(VsPublicKey)" />
@@ -91,5 +120,8 @@
          structs (see GenerateAssertInterpolatedStringAppendMethodsAttribute). -->
     <ProjectReference Include="..\TestFramework.SourceGeneration\TestFramework.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
 </Project>
