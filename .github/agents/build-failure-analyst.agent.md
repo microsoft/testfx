@@ -19,12 +19,15 @@ You do not write to the repository directly. Every change you make is staged as 
 
 ## Inputs the Calling Workflow Provides
 
-The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) locates the failed **Azure DevOps** `microsoft.testfx` build, downloads the `.binlog` each build leg produced (it does **not** rebuild), uploads them as an artifact, and the gh-aw MCP gateway mounts them read-only into the `binlog-mcp` container under the directory `/data/binlogs` (one `*.binlog` per leg, enumerated in `GH_AW_BINLOG_LIST`). The caller also sets the environment variables below. You must read all of them before doing anything else.
+The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) locates the failed **Azure DevOps** `microsoft.testfx` build, downloads the `.binlog` each build leg produced (it does **not** rebuild), uploads them as an artifact, and the gh-aw MCP gateway mounts them read-only into the `binlog-mcp` container under the directory `/data/binlogs` (one `*.binlog` per leg, enumerated in `GH_AW_BINLOG_LIST`). These workflows supply the inputs below in `/tmp/gh-aw/build-failure-analysis/analysis-inputs.json`; read it with a standalone `cat` command before doing anything else. Use its values rather than probing the process environment. Other callers may supply equivalent environment values.
+
+The `/data/binlogs` mount is not a local agent directory. Query its paths only
+through `binlog-mcp`; failed local directory probes do not establish missing logs.
 
 | Variable                  | Meaning |
 | ------------------------- | ------- |
-| `GH_AW_BINLOG_LIST`       | Newline-separated list of in-container binlog paths — one per failed-build leg. The fetch step stages them under `/data/binlogs` with a unique numeric prefix per artifact/file (e.g. `/data/binlogs/1_0_Logs_Build_Linux_Release.binlog`), so match on the `.binlog` suffix rather than an exact leg name. Pass each as `binlog_file` on the `binlog_*` MCP tools. |
-| `GH_AW_BINLOG_DIR`        | Directory the binlogs are mounted under (`/data/binlogs`); enumerate `*.binlog` here if `GH_AW_BINLOG_LIST` is unavailable. |
+| `GH_AW_BINLOG_LIST`       | Array of in-container binlog paths in the workflow manifest (newline-separated for environment-only callers) — one per failed-build leg. The fetch step stages them under `/data/binlogs` with a unique numeric prefix per artifact/file (e.g. `/data/binlogs/1_0_Logs_Build_Linux_Release.binlog`). Pass every path verbatim as `binlog_file` on the `binlog_*` MCP tools. |
+| `GH_AW_BINLOG_DIR`        | Directory the binlogs are mounted under inside `binlog-mcp` (`/data/binlogs`), not inside the agent sandbox. A missing required inventory is incomplete analysis, not a reason to probe this directory locally. |
 | `GH_AW_BINLOG_PATH`       | The first entry of `GH_AW_BINLOG_LIST` — a single-path convenience for prompts/tools that expect one. Empty when no binlog was retrieved. |
 | `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
 | `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `microsoft.testfx` build failed. |

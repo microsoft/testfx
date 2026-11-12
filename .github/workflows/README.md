@@ -446,6 +446,55 @@ python .github/scripts/check_action_pins.py --list
 
 ### Build-analysis checkout identity
 
+#### Runtime analysis inputs and native triage issue types
+
+[Run 43150146472](https://github.com/microsoft/testfx/actions/runs/43150146472)
+downloaded the binlogs and resolved PR #12415 correctly, but the analyst tried
+an unapproved `printf` command to read its environment. Its fallback searched
+the MCP-only `/data/binlogs` mount locally, then incorrectly reported missing
+logs and a missing PR target. Both automatic and command workflows now write
+validated inputs to `/tmp/gh-aw/build-failure-analysis/analysis-inputs.json`.
+The exporter uses isolated Python startup (`-I`) so a PR checkout or inherited
+`PYTHONPATH` cannot shadow its standard-library imports before sandboxing.
+The shared prompt reads this file with the already-allowed `cat` command and
+passes every inventoried path to `binlog-mcp`, not local file tools. Missing
+required identity or inventory fails explicitly; missing-leg evidence remains
+visible and PR-head revalidation still precedes publication.
+
+[Run 43180889320](https://github.com/microsoft/testfx/actions/runs/43180889320)
+completed test analysis and detection but failed issue publication with
+`unknown issue field "Type"`. Native Issue Type is not a custom field.
+Pipeline Test Triage now queues `create_issue` and `set_issue_type` using the
+same temporary ID. Type assignment accepts only `Bug` issues with the
+triage title prefix and both automation labels, with two handler attempts to
+cover the publisher's single deferred retry. The analyst queues at most one
+type request. The existing custom-field allowlist is retained: omitting it
+would grant access to all custom fields, not disable them. Existing deduplication,
+early/full escalation policy, stale-PR checks, credentials, detection, and
+publication limits remain unchanged. A queued creation is not publication;
+failed creation cannot provide an issue target for type assignment.
+
+The warning tracked by [#12385](https://github.com/microsoft/testfx/issues/12385)
+was instead a pre-agent apt mirror DNS failure, already fixed by
+[#12405](https://github.com/microsoft/testfx/pull/12405). Recent review runs with
+no jobs, such as [43187028649](https://github.com/microsoft/testfx/actions/runs/43187028649),
+expired while waiting for GitHub approval. Neither is evidence of a detected
+threat, and the approval gates remain intact.
+
+gh-aw v1.2.2 was evaluated in an isolated snapshot on November 12, 2026.
+Its issue runtime still treats `Type` as a custom field, so an upgrade does
+not repair these authored contracts. The probe also introduces a checkout-safety
+warning for the existing verified PR-head checkout. This focused fix retains
+the aligned v1.0.1 compiler/runtime rather than broadening checkout policy or
+changing every workflow to mask the failures.
+
+Local validation completed strict compilation and ShellCheck for all three
+changed workflows, syntax checks, a generated-control comparison, and the action-pin
+audit. The new offline regression methods cover manifest delivery and identity,
+isolated imports, native issue typing, deferred retry, failed/duplicate creation,
+and scope filters, but have not been executed. Red/green sensitivity and hosted
+model/publication behavior remain unverified. No workflow was dispatched.
+
 [Run 40359801044](https://github.com/microsoft/testfx/actions/runs/40359801044)
 resolved an open PR, but it merged and its branch was deleted during activation.
 The later agent checkout failed before analysis. The automatic build analyst now

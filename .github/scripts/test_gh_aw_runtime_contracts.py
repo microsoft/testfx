@@ -137,7 +137,7 @@ const repos = closed({
     record("repos.get", params); return { data: { private: false, visibility: "public" } };
   },
 }, "repos");
-const github = closed({ rest: closed({ pulls, repos }, "rest") }, "github");
+let github = closed({ rest: closed({ pulls, repos }, "rest") }, "github");
 const context = { repo: { owner: "fixture", repo: "workflows" } };
 Object.assign(globalThis, { core, github, context });
 const load = name => require(path.join(input.actionsDir, name + ".cjs"));
@@ -150,6 +150,92 @@ async function main() {
     });
   } else if (input.action === "guard") {
     await load("determine_automatic_lockdown")(github, context, core);
+  } else if (input.action === "triage-issue") {
+    let issue = null;
+    const record = (operation, params) => calls.push({ operation, params: structuredClone(params) });
+    const issues = closed({
+      async create(params) {
+        record("issues.create", params);
+        assert.equal(params.owner, "fixture"); assert.equal(params.repo, "workflows");
+        if (input.rejectIssue) throw Object.assign(new Error("Fixture issue rejected"), { status: 422 });
+        issue = {
+          ...params, number: 91, id: 9001, node_id: "I_fixture91", state: "open", type: null,
+          html_url: "https://github.com/fixture/workflows/issues/91",
+          labels: params.labels.map(name => ({ name })),
+        };
+        return { data: issue };
+      },
+      async get(params) {
+        record("issues.get", params);
+        assert.deepEqual(params, { owner: "fixture", repo: "workflows", issue_number: 91 });
+        assert.ok(issue);
+        return { data: issue };
+      },
+    }, "issues");
+    github = closed({
+      rest: closed({
+        issues, repos,
+        search: closed({
+          async issuesAndPullRequests(params) {
+            record("search.issuesAndPullRequests", params);
+            assert.match(params.q, /^repo:fixture\/workflows /);
+            const items = input.duplicateIssue ? [{ title: "[pipeline-test-triage] Repeated test failure" }] : [];
+            return { data: { total_count: items.length, items } };
+          },
+        }, "search"),
+        rateLimit: closed({
+          async get() {
+            record("rateLimit.get", {});
+            return { data: { resources: { search: { remaining: 30, limit: 30 } } } };
+          },
+        }, "rateLimit"),
+      }, "rest"),
+      async graphql(query, variables) {
+        if (query.includes("issueFields(")) {
+          record("graphql.issueFields", variables);
+          assert.deepEqual(variables, { owner: "fixture", repo: "workflows" });
+          return { repository: { issueFields: { nodes: [
+            { id: "F_priority", name: "Priority", dataType: "SINGLE_SELECT" },
+            { id: "F_start", name: "Start date", dataType: "DATE" },
+          ] } } };
+        }
+        if (query.includes("issueTypes(")) {
+          record("graphql.issueTypes", variables);
+          assert.deepEqual(variables, { owner: "fixture", repo: "workflows" });
+          return { repository: { issueTypes: { nodes: [{ id: "IT_bug", name: "Bug" }] } } };
+        }
+        if (query.includes("updateIssue(input:")) {
+          record("graphql.updateIssue", variables);
+          assert.deepEqual(variables, { issueId: "I_fixture91", issueType: { issueTypeId: "IT_bug" } });
+          assert.ok(issue);
+          issue.type = { name: "Bug" };
+          return { updateIssue: { issue: { id: issue.node_id } } };
+        }
+        return forbidden("graphql:unknown");
+      },
+    }, "github");
+    globalThis.github = github;
+    context.runId = 420;
+    context.payload = {};
+    process.env.GH_AW_WORKFLOW_ID = "pipeline-test-triage";
+    process.env.GH_AW_WORKFLOW_NAME = "Pipeline Test Triage";
+    const setType = input.config.set_issue_type && input.setMessage
+      ? await load("set_issue_type").main(input.config.set_issue_type) : null;
+    const deferred = input.deferFirst && setType ? await setType(input.setMessage, {}) : null;
+    const create = await load("create_issue").main(input.config.create_issue);
+    const created = await create(input.message, {});
+    const resolved = {};
+    if (created.success && created.temporaryId && Number.isInteger(created.number)) {
+      resolved[created.temporaryId] = { repo: created.repo, number: created.number };
+    }
+    if (issue && input.removeLabel) issue.labels = issue.labels.filter(label => label.name !== input.removeLabel);
+    if (issue && input.replaceTitle) issue.title = input.replaceTitle;
+    let typed = null, repeated = null;
+    if (setType) {
+      typed = await setType(input.setMessage, resolved);
+      if (input.repeatType) repeated = await setType(input.setMessage, resolved);
+    }
+    result = { created, deferred, typed, repeated, issue };
   } else if (input.action === "cli-arguments") {
     const tools = JSON.parse(fs.readFileSync(path.join(input.actionsDir, "safe_outputs_tools.json"), "utf8"));
     const tool = tools.find(item => item.name === input.tool);
@@ -256,6 +342,89 @@ class GhAwRuntimeContractTests(unittest.TestCase):
                 self.assertEqual([], result["calls"])
                 self.assertEqual([], result["errors"])
             return result
+
+    def triage_issue_recipe(self) -> dict:
+        document = compiled("pipeline-test-triage")
+        configs = [item["env"]["GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG"]
+                   for item in document["jobs"]["safe_outputs"]["steps"]
+                   if "GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG" in item.get("env", {})]
+        self.assertEqual(1, len(configs))
+        playbook = (WORKFLOW_ROOT.parent / "agents/pipeline-test-triage-analyst.agent.md").read_text(encoding="utf-8")
+        message = {
+            "title": "Repeated test failure",
+            "body": "Fixture analysis: a repeatable failure across two distinct builds.",
+            "temporary_id": "aw_triage123",
+            "labels": ["type/regression"],
+        }
+        # Replay the authored recipe, including the original invalid custom-field
+        # request in retained-test baselines. No model or GitHub API is invoked.
+        legacy = re.search(r'(?m)^  `fields: (\[[^\n]+\])`', playbook)
+        if legacy:
+            message["fields"] = json.loads(legacy[1])
+        native = re.search(r'`set_issue_type\((\{[^\n]+\})\)`', playbook)
+        return dict(config=json.loads(configs[0]), message=message,
+                    setMessage=json.loads(native[1]) if native else None)
+
+    def test_pipeline_triage_issue_recipe_creates_native_bug(self) -> None:
+        output = self.run_runtime("triage-issue", **self.triage_issue_recipe(), deferFirst=True, repeatType=True)
+        result = output["result"]
+        self.assertIs(True, result["created"]["success"], result["created"])
+        self.assertIsNotNone(result["typed"], "Native Issue Type needs its own queued handler")
+        self.assertIs(True, result["typed"]["success"], result["typed"])
+        self.assertEqual(("fixture/workflows", 91, "Bug"), (
+            result["typed"]["repo"], result["typed"]["issue_number"], result["typed"]["issue_type"]))
+        self.assertEqual({"name": "Bug"}, result["issue"]["type"])
+        self.assertEqual("[pipeline-test-triage] Repeated test failure", result["issue"]["title"])
+        self.assertIn("repeatable failure across two distinct builds", result["issue"]["body"])
+        self.assertEqual(["type/automation", "type/ai-inspected", "type/regression"],
+                         [label["name"] for label in result["issue"]["labels"]])
+        self.assertIs(True, result["deferred"]["deferred"])
+        self.assertIs(False, result["repeated"]["success"])
+        self.assertIn("Max count of 2 reached", result["repeated"]["error"])
+        self.assertEqual(1, sum(call["operation"] == "issues.create" for call in output["calls"]))
+        self.assertEqual(1, sum(call["operation"] == "graphql.updateIssue" for call in output["calls"]))
+        self.assertNotIn("graphql.issueFields", [call["operation"] for call in output["calls"]])
+        self.assertEqual([], output["errors"])
+
+    def test_pipeline_triage_failed_or_duplicate_creation_cannot_type_another_issue(self) -> None:
+        for option in ("rejectIssue", "duplicateIssue"):
+            with self.subTest(case=option):
+                output = self.run_runtime("triage-issue", **self.triage_issue_recipe(),
+                                          repeatType=True, **{option: True})
+                result = output["result"]
+                if option == "rejectIssue":
+                    self.assertIs(False, result["created"]["success"])
+                    self.assertIn("Fixture issue rejected", result["created"]["error"])
+                else:
+                    self.assertIs(True, result["created"]["dropped_duplicate"])
+                self.assertIsNone(result["issue"])
+                self.assertIsNotNone(result["typed"])
+                self.assertIs(False, result["typed"]["success"])
+                self.assertIs(True, result["typed"]["deferred"])
+                self.assertIs(True, result["repeated"]["deferred"],
+                              "An unresolved duplicate must not become a max-count failure on retry")
+                self.assertFalse(any(call["operation"] in ("issues.get", "graphql.updateIssue")
+                                     for call in output["calls"]))
+
+    def test_pipeline_triage_type_assignment_respects_scope_and_allowed_type(self) -> None:
+        cases = (
+            {"removeLabel": "type/automation"},
+            {"removeLabel": "type/ai-inspected"},
+            {"replaceTitle": "Unrelated issue"},
+            {"setMessage": {"issue_number": "#aw_triage123", "issue_type": "Feature"}},
+            {"setMessage": {"issue_number": 91, "issue_type": "Bug", "repo": "other/repository"}},
+        )
+        for overrides in cases:
+            with self.subTest(case=overrides):
+                recipe = self.triage_issue_recipe()
+                recipe.update(overrides)
+                output = self.run_runtime("triage-issue", **recipe)
+                result = output["result"]
+                self.assertIs(True, result["created"]["success"], result["created"])
+                self.assertIsNotNone(result["typed"])
+                self.assertIs(False, result["typed"]["success"], result["typed"])
+                self.assertIsNone(result["issue"]["type"])
+                self.assertFalse(any(call["operation"] == "graphql.updateIssue" for call in output["calls"]))
 
     def test_resource_lock_terminal_examples_use_pinned_cli_argument_parser(self) -> None:
         prompt = authored("resource-lock-refactoring.md")[1]
