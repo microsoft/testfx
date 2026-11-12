@@ -30,10 +30,26 @@ caller allows it, `git add`/`git commit` for authoring a fix commit).
 
 ## Instructions
 
-1. Read the agent-context environment variables: `GH_AW_BUILD_OUTCOME`,
-   `GH_AW_BINLOG_LIST`, `GH_AW_BINLOG_DIR`, `GH_AW_BINLOG_PATH`,
-   `GH_AW_BINLOG_HOST_PATH`, `GH_AW_PR_NUMBER`, `GH_AW_PR_HEAD_SHA`,
-   `GH_AW_PR_MERGE_SHA`, `GH_AW_WORKSPACE`, `GH_AW_MISSING_LEGS`.
+1. Read the trusted runtime manifest with this standalone, allowed command:
+
+   ```bash
+   cat /tmp/gh-aw/build-failure-analysis/analysis-inputs.json
+   ```
+
+   Require `schema_version` 1, repository `${{ github.repository }}`, a positive
+   `GH_AW_PR_NUMBER`, a full `GH_AW_PR_HEAD_SHA`, and a nonempty
+   `GH_AW_BINLOG_LIST` array. Use the manifest's `GH_AW_*` values throughout the
+   playbook; do not query process environment variables with `printf` or `env`.
+   Those commands are not allowed, and host environment exports are not the
+   agent's input contract. Missing or invalid required inputs mean incomplete
+   analysis: call `report_missing_data`, then terminal `report_incomplete`,
+   and stop without guessing a PR number or claiming that no binlogs exist.
+
+   The manifest is inside the agent-visible `/tmp/gh-aw` tree. Its
+   `/data/binlogs/*.binlog` paths belong **only to the `binlog-mcp` container**:
+   pass them verbatim as `binlog_file` to that server. Do not glob, `ls`, or
+   read `/data/binlogs` with local file/shell tools, and do not infer missing
+   logs from that directory being absent in the agent sandbox.
 
 2. If `GH_AW_BUILD_OUTCOME == 'success'`, the build did not actually fail —
    there is nothing to analyze. Call `noop` with the message
@@ -44,7 +60,7 @@ caller allows it, `git add`/`git commit` for authoring a fix commit).
    root-cause grouping, source-context reading via the GitHub API at
    `GH_AW_PR_HEAD_SHA`, comment/suggestion formatting, and defensive behavior.
    In summary:
-   - Iterate **every** path in `GH_AW_BINLOG_LIST` (newline-separated
+   - Iterate **every** path in `GH_AW_BINLOG_LIST` (the manifest's array of
      in-container binlog paths, one per failed-build leg, under
      `GH_AW_BINLOG_DIR` = `/data/binlogs`) and query the `binlog-mcp` MCP
      server (`binlog_errors`, `binlog_overview`, `binlog_warnings`, …) with
