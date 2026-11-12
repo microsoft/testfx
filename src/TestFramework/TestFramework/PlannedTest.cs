@@ -118,18 +118,18 @@ public sealed class PlannedTest
 
     /// <summary>
     /// Gets the fully-qualified name of the class declaring the test method.
-    /// Mirrors <see cref="TestContext.FullyQualifiedTestClassName"/>.
+    /// Mirrors <c>TestContext.FullyQualifiedTestClassName</c>.
     /// </summary>
     public string FullyQualifiedTestClassName { get; }
 
     /// <summary>
-    /// Gets the simple name of the test method. Mirrors <see cref="TestContext.TestName"/>.
+    /// Gets the simple name of the test method. Mirrors <c>TestContext.TestName</c>.
     /// </summary>
     public string TestName { get; }
 
     /// <summary>
     /// Gets the display name of the test, when one was set; otherwise <see langword="null"/>.
-    /// Mirrors <see cref="TestContext.TestDisplayName"/>.
+    /// Mirrors <c>TestContext.TestDisplayName</c>.
     /// </summary>
     public string? TestDisplayName { get; }
 

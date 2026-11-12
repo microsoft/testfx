@@ -61,8 +61,28 @@
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, System.StringComparison comparisonType) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo.PlannedTests.get -> System.Collections.Generic.IReadOnlyCollection<Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.AssemblyPath.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringFilePath.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringLineNumber.get -> int?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.FullyQualifiedTestClassName.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedMethodName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedTypeName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.PlannedTest(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, System.Collections.Generic.IReadOnlyCollection<string!>! testCategories, System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>! testProperties) -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestCategories.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestDisplayName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestName.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestProperties.get -> System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestRun
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo!
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute.ExpectedDurationAttribute(int milliseconds) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedDurationAttribute.Milliseconds.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Error = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsOnly<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> void
