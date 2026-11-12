@@ -47,5 +47,4 @@ internal sealed partial class AppxManifestInfo
     /// is empty when the manifest declares no application.
     /// </summary>
     public IReadOnlyList<AppxApplicationInfo> Applications { get; }
-
 }

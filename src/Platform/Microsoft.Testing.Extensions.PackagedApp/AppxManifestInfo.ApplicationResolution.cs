@@ -50,7 +50,7 @@ internal sealed partial class AppxManifestInfo
                     CultureInfo.CurrentCulture,
                     ExtensionResources.AmbiguousAppxManifestApplication,
                     executablePath,
-                    string.Join(", ", exactMatches.Select(static application => application.AppUserModelId)));
+                    string.Join(", ", exactMatches.Select(static application => application.AppUserModelId))));
         }
 
         // The manifest names executables, but not the one we were asked to launch: it describes a
@@ -110,7 +110,7 @@ internal sealed partial class AppxManifestInfo
                     CultureInfo.CurrentCulture,
                     ExtensionResources.AmbiguousAppxManifestApplication,
                     executableFileName,
-                    string.Join(", ", Applications.Select(static application => application.AppUserModelId)));
+                    string.Join(", ", Applications.Select(static application => application.AppUserModelId))));
     }
 
     // The manifest's Application/@Executable is package-root-relative and may include a subdirectory
