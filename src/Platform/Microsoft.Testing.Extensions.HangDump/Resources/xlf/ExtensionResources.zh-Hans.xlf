@@ -83,8 +83,8 @@ Disk info:
       <trans-unit id="HangDumpFileNameTemplateOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).</target>
+        <target state="translated">指定转储文件的名称。
+支持以下占位符: {pname} (测试应用程序名称)、{pid} (进程 ID)、{asm} (入口程序集名称)、{tfm} (目标框架名字对象)、{arch} (进程体系结果)、{time} (时间戳)。</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
