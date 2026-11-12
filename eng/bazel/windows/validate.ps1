@@ -82,8 +82,8 @@ $probes = @(
     @{ Name = 'windows_probe_packaged_net10'; Scenario = 'packaged'; Major = 10; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net11'; Scenario = 'packaged'; Major = 11; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 8; Platform = '7.0' },
-    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 9; Platform = '10.0.17763.0' },
-    @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 8; Platform = '10.0.18362.0' }
+    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.17763.0' },
+    @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 10; Platform = '10.0.18362.0' }
 )
 Push-Location $root
 try {
@@ -147,10 +147,10 @@ try {
         }
         $windowsAssemblies = @($report.SourceAssemblies | Where-Object {
             $_.Name -in @('Microsoft.Testing.Extensions.PackagedApp', 'MSTest.Windows.UIAutomation') -or
-            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework.Extensions', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
+            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
         })
         foreach ($assembly in $windowsAssemblies) {
-            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -eq 'MSTest.TestFramework.Extensions') { '10.0.17763.0' } else { $probe.Platform }
+            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions')) { '10.0.17763.0' } else { $probe.Platform }
             if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
                 $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."
@@ -167,7 +167,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the Windows producer action graph.' }
     $graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
     $compilerCount = @($graph.actions | Where-Object mnemonic -eq 'CSharpCompile').Count
-    if ($compilerCount -lt 14) { throw 'The Windows library matrix is missing compiler actions.' }
+    if ($compilerCount -lt 16) { throw 'The Windows library matrix is missing compiler actions.' }
     foreach ($action in $graph.actions) {
         foreach ($argument in $action.arguments) {
             if ($argument -match '(?i)(^|[\s/\\])(MSBuild(\.exe|\.dll)?|dotnet(\.exe)?\s+(build|test|msbuild))(\s|$)') {
