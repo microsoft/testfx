@@ -262,9 +262,10 @@ class BuildAnalysisInputTests(unittest.TestCase):
 
     def export(self, workflow: str, *, files: tuple[str, ...] = ("1_Linux.binlog",),
                shadow_source: str | None = None,
+               fixture_parent: pathlib.Path | None = None,
                **overrides: str) -> tuple[subprocess.CompletedProcess, pathlib.Path, dict]:
         temporary = tempfile.TemporaryDirectory(
-            prefix="gh-aw-build-inputs-", dir=os.environ.get("WORKFLOW_WARNING_TMP")
+            prefix="gh-aw-build-inputs-", dir=fixture_parent or os.environ.get("WORKFLOW_WARNING_TMP")
         )
         self.addCleanup(temporary.cleanup)
         root = pathlib.Path(temporary.name)
@@ -306,13 +307,33 @@ class BuildAnalysisInputTests(unittest.TestCase):
         source, _ = authored(workflow + ".md")
         script = next(step["run"] for step in source["steps"]
                       if step.get("name") == "Export agent context")
-        script = script.replace("/tmp/binlogs", binlogs.as_posix()).replace("/tmp/gh-aw", shared.as_posix())
+        script = re.sub(
+            r"/tmp/(binlogs|gh-aw)",
+            lambda match: (binlogs if match[1] == "binlogs" else shared).as_posix(),
+            script,
+        )
         prelude = 'export PATH="$(cd "$FIXTURE_BIN" && pwd):$PATH"\n'
         result = subprocess.run(
             [str(BASH), "--noprofile", "--norc", "-s"], input=prelude + script,
             cwd=root, env=env, text=True, capture_output=True, timeout=TIMEOUT,
         )
         return result, shared / "build-failure-analysis/analysis-inputs.json", values
+
+    def test_build_context_preserves_fixture_paths_containing_workflow_paths(self) -> None:
+        temporary = tempfile.TemporaryDirectory(
+            prefix="gh-aw-build-paths-", dir=os.environ.get("WORKFLOW_WARNING_TMP")
+        )
+        self.addCleanup(temporary.cleanup)
+        root = pathlib.Path(temporary.name)
+        for parent in ("gh-aw", "binlogs"):
+            directory = root / "tmp" / parent
+            directory.mkdir(parents=True)
+            for workflow in self.workflows:
+                with self.subTest(workflow=workflow, parent=parent):
+                    result, path, _ = self.export(workflow, fixture_parent=directory)
+                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                    inputs = json.loads(path.read_text(encoding="utf-8"))
+                    self.assertEqual(["/data/binlogs/1_Linux.binlog"], inputs["GH_AW_BINLOG_LIST"])
 
     def test_build_context_is_readable_without_environment_probes(self) -> None:
         for workflow in self.workflows:
@@ -334,7 +355,7 @@ class BuildAnalysisInputTests(unittest.TestCase):
                     "GH_AW_MISSING_LEGS": values["GH_AW_MISSING_LEGS_VALUE"],
                 }, inputs)
                 prompt = authored("shared/build-failure-analysis-shared.md")[1]
-                command = re.search(r"```bash\n(cat [^\n]+)\n", prompt)
+                command = re.search(r"```bash\n[ \t]*(cat [^\n]+)\n", prompt)
                 self.assertIsNotNone(command, "Give the analyst a standalone allowed manifest read")
                 args = shlex.split(command[1])
                 self.assertIn(args[0], authored(workflow + ".md")[0]["tools"]["bash"])
