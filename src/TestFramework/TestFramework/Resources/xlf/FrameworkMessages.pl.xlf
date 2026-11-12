@@ -350,7 +350,7 @@
       </trans-unit>
       <trans-unit id="CollectionContentsNotEnumerated">
         <source>&lt;{0}&gt; (contents not enumerated)</source>
-        <target state="new">&lt;{0}&gt; (contents not enumerated)</target>
+        <target state="translated">&lt;{0}&gt; (zawartość nie jest wyliczana)</target>
         <note />
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -420,7 +420,7 @@
       </trans-unit>
       <trans-unit id="ContainsOnlyPredicateFailedSummary">
         <source>Expected collection to contain only elements matching the predicate.</source>
-        <target state="new">Expected collection to contain only elements matching the predicate.</target>
+        <target state="translated">Oczekiwano, że kolekcja będzie zawierać element pasujący do predykatu.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -734,12 +734,12 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="PredicateMismatchIndexLabel">
         <source>index:</source>
-        <target state="new">index:</target>
+        <target state="translated">indeks:</target>
         <note />
       </trans-unit>
       <trans-unit id="PredicateMismatchItemLabel">
         <source>item:</source>
-        <target state="new">item:</target>
+        <target state="translated">element:</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
