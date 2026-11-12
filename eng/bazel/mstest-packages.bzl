@@ -56,6 +56,7 @@ def _package_impl(ctx):
     groups = []
     version_files = [ctx.file.version_file]
     platform_version_file = None
+    core_version_file = None
     dependencies = []
     for target in ctx.attr.deps:
         package = target[NuGetPackInfo]
@@ -66,6 +67,10 @@ def _package_impl(ctx):
             if not version_file:
                 fail("The native platform dependency must carry its generated version file.")
             platform_version_file = version_file
+        if ctx.attr.exact_core_dependency and package.package_id == "MSTest.TestFramework":
+            if not version_file:
+                fail("The native core dependency must carry its generated version file.")
+            core_version_file = version_file
         dependencies.append(struct(
             id = package.package_id,
             version = package.version or "",
@@ -75,6 +80,10 @@ def _package_impl(ctx):
 
     if ctx.attr.bound_platform and not platform_version_file:
         fail("A bounded package must declare the native platform dependency.")
+    if ctx.attr.exact_core_dependency and not core_version_file:
+        fail("An exact core package must declare the native framework dependency.")
+    if core_version_file and platform_version_file:
+        fail("Core pinning and platform bounds must use separate package contracts.")
     if len(ctx.attr.directories) != len(ctx.attr.resource_directories):
         fail("Each assembly directory needs an explicit satellite-resource policy.")
     for framework in ctx.attr.target_frameworks:
@@ -94,7 +103,7 @@ def _package_impl(ctx):
         external_dependencies = []
         if ctx.attr.nuget_deps and framework not in ctx.split_attr.nuget_deps:
             fail("{} is missing external dependency metadata for {}".format(ctx.label, framework))
-        external_targets = ctx.split_attr.nuget_deps.get(framework, [])
+        external_targets = list(ctx.split_attr.nuget_deps.get(framework, []))
         if framework == "net462":
             external_targets += ctx.split_attr.netframework_nuget_deps.get(framework, [])
         for target in external_targets:
@@ -133,7 +142,8 @@ def _package_impl(ctx):
     nupkg = ctx.actions.declare_file(ctx.label.name + "/" + ctx.label.name + ".nupkg")
     nuspec = ctx.actions.declare_file(ctx.label.name + "/" + ctx.label.name + ".nuspec")
     request = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.json")
-    template = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.template.json") if platform_version_file else request
+    range_version_file = core_version_file or platform_version_file
+    template = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.template.json") if range_version_file else request
     ctx.actions.write(template, json.encode(struct(
         output = nupkg.path,
         nuspecOutput = nuspec.path,
@@ -149,13 +159,18 @@ def _package_impl(ctx):
         dependencyGroups = groups,
         files = [struct(source = by_path[path].path, target = path) for path in sorted(by_path.keys())],
     )))
-    if platform_version_file:
+    if range_version_file:
+        arguments = [template.path, range_version_file.path, request.path]
+        inputs = [template, range_version_file]
+        if core_version_file:
+            arguments.append("--exact-framework")
+            inputs.append(ctx.file.version_file)
         ctx.actions.run(
             executable = ctx.executable._range_tool,
-            arguments = [template.path, platform_version_file.path, request.path],
-            inputs = [template, platform_version_file],
+            arguments = arguments,
+            inputs = depset(inputs),
             outputs = [request],
-            mnemonic = "TestFxPlatformDependencyRange",
+            mnemonic = "TestFxFrameworkDependencyRange" if core_version_file else "TestFxPlatformDependencyRange",
         )
     ctx.actions.run(
         executable = ctx.attr._packer[DefaultInfo].files_to_run,
@@ -195,6 +210,7 @@ _package = rule(
         "netframework_nuget_deps": attr.label_list(providers = [DotnetAssemblyRuntimeInfo], cfg = _frameworks),
         "resolver_libraries": attr.label_list(providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo]),
         "bound_platform": attr.bool(),
+        "exact_core_dependency": attr.bool(),
         "package_id": attr.string(mandatory = True),
         "description": attr.string(mandatory = True),
         "readme": attr.label(allow_single_file = True, mandatory = True),
@@ -338,6 +354,7 @@ def native_mstest_packages():
             resource_directories = ["lib/{tfm}", "buildTransitive/{tfm}/_localization", "buildTransitive/{tfm}/_localization"],
             files = files,
             deps = [":framework_package", ":trx_abstractions_package", ":telemetry_package", ":platform_msbuild_package"],
+            exact_core_dependency = True,
             nuget_deps = ["@paket.source//microsoft.testplatform.objectmodel"],
             target_compatible_with = ["@platforms//os:windows"],
         )

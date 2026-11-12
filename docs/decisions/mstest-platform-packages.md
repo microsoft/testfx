@@ -116,6 +116,33 @@ core, which does not expose `DeploymentItem`.
   supported, a declared wrong/Windows TFM is rejected, and desktop/UI core bytes
   are compared under the independently planned framework major. No broad native
   metadata, runtime, or source changes are introduced by this correction.
+- Final package-boundary review found two gaps in the first committed snapshot,
+  `51457e73fbb982343390f33e5bb5c884361625ab`: imported markers alone miss a
+  competing package whose build assets are excluded, and NuGet packs an ordinary
+  core ProjectReference as a minimum version. Commit
+  `33faf4889ca048ccdcb508c2088b15dd5f1efd21` uses the SDK's current-inner-TFM
+  `ResolvePackageAssets`/`PackageDependencies` for composition validation, retaining
+  markers for non-SDK projects. A package-local `_GetProjectReferenceVersions`
+  hook pins the UI package's core dependency to exactly `[$(PackageVersion)]`,
+  following the repository's existing project-reference packaging hook.
+- The same retained 12 cases execute against both package states: before the
+  correction, six direct/transitive excluded-build cases incorrectly reach
+  successful `PrepareForBuild`, and three nuspec assertions observe a bare
+  minimum instead of an exact range. Those nine intended assertions fail;
+  three direct conflict controls pass (12 executed, 0 skipped, exit 2).
+  After the corrected 42-project pack, all 12 pass (0 skipped, exit 0).
+  The conflict tests assert both package IDs in the actual resolved inner target,
+  including a real ProjectReference, before checking the pre-compilation error.
+  The retained test patch has SHA-256
+  `733315AC5F3A0654FAC0A8BF7600F72C3B933212488BC9D8E365B5077CFC7296`;
+  both package states and reports remain in the task's `boundary` evidence.
+- The final host refresh initially passed a global `TargetFramework` to a
+  desktop helper that implicitly restores. That produced inappropriate net12
+  assets and pruning diagnostics; a no-restore attempt then exposed the missing
+  normal targets. Restoring the owning graph without that override fixed setup.
+  A later `.cmd` invocation split semicolon-containing logger arguments after
+  the build; the clean producer rerun omits those arguments. None of these
+  setup/command failures is credited as product or red-phase evidence.
 
 ## Alternatives and decision
 
@@ -148,8 +175,9 @@ after pack. Source builds and restore retain the full graph.
 The SDK may infer a safe early application-model default and expose a bounded
 explicit override where restore precedes desktop UWP tooling imports. Selection
 must apply to every runner and source-generated helper injection path. Conflict
-checks inspect the current inner TFM's resolved closure, never every target in a
-multi-targeted assets file. Package builder hooks must honor
+checks inspect the current inner TFM's SDK-resolved package closure, even when
+build assets are excluded, never every target in a multi-targeted assets file.
+Non-SDK projects retain their imported-marker check. Package builder hooks must honor
 `IsTestApplication=false` without dropping source-generation compile hooks.
 
 ## Validation and demonstration
@@ -172,7 +200,8 @@ zero tests with application execution.
 
 ### Executed shipping-layout evidence
 
-All runs below use Release, repository SDK
+The final shipping production/test snapshot is
+`33faf4889ca048ccdcb508c2088b15dd5f1efd21`. All runs below use Release, repository SDK
 `12.0.100-alpha.1.26556.115`, MSTest `5.0.0-dev`, and MTP `3.0.0-dev`.
 The outer acceptance hosts target net12.0; generated consumers target the
 frameworks named by their cases. Producer dependencies use the verified
@@ -204,13 +233,17 @@ Independent discovery uses the same project/filter with `--list-tests json`,
 clearing `TestingPlatformCommandLineArguments` and
 `TestRunnerAdditionalArguments`. Expected identities are reconciled with source
 and verified against fresh TRX by the existing `verify_execution.py` gate.
-Every passing row below has exit 0 and zero skips.
+Every passing row below has exit 0 and zero skips. After the final dependency
+and resolved-closure corrections, the same defined follow-through reruns 140
+MSTest acceptance cases, 11 MTP acceptance cases, and 26 source-unit cases:
+**177/177 pass**. The separately repeated 12-case boundary proof is not added
+again to that unique total.
 
 | Requirement | Exact selection / executed cases | Result |
 | --- | --- | --- |
 | Core/UI ownership, matching compile/runtime/satellite bytes, package closure, and pre-body UI deployment failure | `CoreFrameworkAssemblyTests`, `WindowsApplicationModelPackageTests`, and `.WinUITests.` | 43/43 passed. `DeploymentItemsFailBeforeBodiesIncludingInheritedAttributes` executes reflection, Rooting, and ReflectionFree and checks exact failed identities/messages, not merely a failed child exit. |
 | SDK defaults/explicit choices, CPM, ordinary/UI multi-TFM, helper/source-generation isolation, and net462 | `SdkTests.MSTestSdk_`, `SettingIsTestApplicationToFalseReducesAddedExtensionsAndMakesProjectNotExecutable`, `TestApplicationRunsTestsFromReferencedMSTestSdkTestLibrary`, `SourceGenerationNonAotTests.MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively`, `FrameworkTargetingTests.PackedPackages_UseMatchingFrameworkAssetsAndRuntime`, `NetFrameworkRunnerCompatibilityTests` | 65/65 passed. Helper runtime payloads stay private; only the MSTest builder hook is excluded, without changing unrelated MTP dependency hooks. |
-| Direct conflicting package pairs | `SdkTests.ExplicitPackages_RejectConflictingAdaptersBeforeCompilation` | 3/3 passed for ordinary+Uwp, ordinary+WinUI, and Uwp+WinUI. `PrepareForBuild` reports the composition diagnostic before compilation. |
+| Conflicting direct/transitive package pairs, including excluded build assets | `SdkTests.ExplicitPackages_RejectConflictingAdaptersBeforeCompilation` | 9/9 passed for ordinary+Uwp, ordinary+WinUI, and Uwp+WinUI. Both packages are asserted in the real inner-TFM resolved graph, including ProjectReference consumers. `PrepareForBuild` reports the composition diagnostic before compilation. |
 | Actual classic/modern UWP and unpackaged WinUI | `ClassicUwpTests`, `ModernUwpTests`, `UnpackagedWinUITests` | 12/12 passed. Classic consumes SDK/metapackage/direct Uwp compositions; modern executes net10/net11 plus inherited unsupported deployment. x86/ARM64 layouts build; real execution is x64. Unpackaged dispatch, timeout cleanup, and constructor failure paths execute. |
 | Actual packaged WinUI | `PackagedFullTrustWinUI_RegistersActivatesConnectsBackRunsUiTestsAndCleansUp`, `PackagedAppContainerWinUI_RunsThroughMtpControllerAndPublishesTrx`, `PackagedAppContainerWinUI_ExplicitIntegrationPublishesTrx` | 3/3 passed, including direct `MSTest.WinUI`. Names/outcomes and package identity are checked in the real activated host's TRX. |
 | Hosting/core dependency and scope lifetime | `GeneratedMSTestHostingInjectionTests` | 8/8 passed across net462/net10/net11, including explicit unsupported AppDomain discovery/execution. |
@@ -229,10 +262,14 @@ The exact frozen shipping package hashes are:
 
 | Package (`5.0.0-dev`) | SHA-256 |
 | --- | --- |
-| MSTest.TestFramework | `910EE1E42522F58B709F246B3F485E9D651B4A43C5A7AC2D53DCE6266A844FA4` |
-| MSTest.TestAdapter | `4919459CA1CE3F34DC9E6A81185C3FBD35BA81B29E8159C307D6E1C1AAB6F07D` |
-| MSTest.Uwp | `9D758A77C1A34781F43208C7488D3BEC0302D80021DACF8A7B0CD54D2AE0AA67` |
-| MSTest.WinUI | `C91FABBC15223E201E2AE4E6CD95E68FD6AA8767333575EAD37BFED939C3B77C` |
+| MSTest.TestFramework | `1FA5C88A0DC7DAC56EE37CFB094CFE710F6868321FFE9C94196A41C2823C45A2` |
+| MSTest.TestAdapter | `582FB397A048AFAFBC1926E5406A8124456A237957862DD27023CBEF309F1004` |
+| MSTest.Uwp | `606224A38A8F1A733022126C6A82ACD55F62A4558B47CAA592B352862F9F3537` |
+| MSTest.WinUI | `BE1954567CB3E281526FEE583A71CEAA3DEF96C3D7486AEB83540D316993C7D0` |
+
+These supersede the first package snapshot. Actual Uwp nuspec core dependencies
+are `[5.0.0-dev]` in both classic and modern groups; WinUI has the same exact
+range in its modern group. The existing physical package test checks them.
 
 ### Test-value evidence
 
@@ -262,7 +299,15 @@ worktree's SHA-256 values. Red/green NuGets, TRX, build/execution binlogs, retai
 test identities, and both patch hashes are preserved in the task's
 `counterfactual` evidence directory.
 Package/SDK selection groups have executed green coverage but no additional
-fault campaign; they are not credited with the two behavioral faults above.
+general fault campaign. The bounded package-boundary correction separately
+executes the retained 12 cases described above: 9 intended assertion failures
+and 3 controls on the previous packages, then 12/12 passed on the corrected
+packages. This is executed detection of excluded-build/transitive conflicts and
+non-exact core ranges, not proof generalized to other package faults.
+The four original runtime/test contract files are byte-identical between
+`51457e73fbb982343390f33e5bb5c884361625ab` and
+`33faf4889ca048ccdcb508c2088b15dd5f1efd21`; the final shipping selection reexecutes
+their nine cases against the corrected package snapshot.
 
 Logs, binary logs, expected identities, and reports are task-owned evidence,
 not source additions. This package boundary introduces no report/UI layout,
@@ -277,3 +322,13 @@ adoption. This targets main's next major MSTest release, not a servicing
 backport that changes an existing released package boundary. Architecture and
 release-branch surfaces not exercised locally must remain explicit validation
 gaps. No merge or Agent merge is authorized by this package-stage delivery.
+
+The native Bazel full package closure passes analysis but stops on net462
+PlatformServices CS0234: `System.Reflection.Metadata`/`PortableExecutable`
+references are absent. The source imports and missing native dependency are
+unchanged in the prerequisite; this is static comparison, not an executed
+pristine-baseline run. The ordinary native package consumer therefore remains
+unvalidated. Do not repair unrelated native wiring to hide that gap. Native
+modern UI archive/probe results are recorded separately in the Bazel decision
+entry; actual classic UAP production/activation is covered by the MSBuild
+shipping runs, not simulated by the native modern-only producer.

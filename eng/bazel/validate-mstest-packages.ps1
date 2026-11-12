@@ -221,6 +221,12 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                 if ($IsWindows -or $Id -ne 'MSTest.TestAdapter') { $ids += 'MSTest.TestFramework' }
                 if ($group.targetFramework -eq 'net462') { $ids += @('System.Memory', 'System.Threading.Tasks.Extensions', 'System.Reflection.Metadata') }
                 Assert-Names $ids @($dependencies | ForEach-Object id) "$Id dependencies"
+                if ($platformFrameworks.ContainsKey($Id)) {
+                    $core = @($dependencies | Where-Object id -CEQ 'MSTest.TestFramework')
+                    if ($core.Count -ne 1 -or $core[0].version -cne "[$mstestVersion]") {
+                        throw "$Id must pin the matching core package version exactly."
+                    }
+                }
                 foreach ($dependency in $dependencies | Where-Object { $_.id -ne 'Microsoft.TestPlatform.ObjectModel' -and $_.id -notlike 'System.*' }) {
                     if ($dependency.HasAttribute('exclude')) { throw "The adapter must retain build/analyzer assets from $($dependency.id)." }
                 }

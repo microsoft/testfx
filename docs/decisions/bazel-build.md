@@ -4172,7 +4172,7 @@ Paths are under `eng\bazel` unless qualified otherwise.
 | `windows\validate-app-model.ps1` | Consume the path index, reject overwritten prefixes, and follow the current controller TFMs without changing activation/handshake checks. |
 | `docs\decisions\bazel-build.md` | Append only this dated decision/evidence entry. |
 
-### Static validation and remaining integration evidence
+### Initial static validation before integrated execution
 
 The local code patch is based on
 `e1c66e5cbfa844384a59343c3727821f97e2a09a`. SHA-256 of raw
@@ -4225,3 +4225,51 @@ net11 package consumption, classic UAP, and real activation. No native classic
 UAP producer was introduced. No commit, push, publication, or other-worktree
 change was made by this lane. Archiving API provenance is not a compatibility
 waiver or evidence that old binary consumers still work.
+
+### Primary integrated follow-through
+
+The primary shipping snapshot is
+`33faf4889ca048ccdcb508c2088b15dd5f1efd21`. Its corrected 42-project MSBuild
+source pack passes with zero warnings/errors and the normal package verifier.
+The defined shipping selections execute 177 passing cases, zero skipped:
+140 MSTest acceptance, 11 MTP acceptance, and 26 context/WinUI source units.
+Those include real classic and modern UWP, packaged/unpackaged WinUI,
+net10/net11 selection, SDK/helper/mixed-TFM composition, net462 configuration,
+native SDK routing, and Hosting. These are MSBuild shipping-package results,
+not native Bazel package consumer evidence.
+
+Executed native commands:
+
+| Command | Observed result |
+| --- | --- |
+| `.\eng\bazel.ps1 test //:sdk_package_tests --jobs=2 --test_output=errors` | Bazel target passed. Do not substitute the fifteen source-declared cases for a verified executed-method count. |
+| `.\eng\bazel\windows\validate.ps1 -ArtifactsDirectory $run` | Five native library probes passed, desktop/Uwp/WinUI core hashes match, and both targeting/asset-selection analysis tests pass (2 passed, 0 failed/skipped). Hosting build also exits 0. |
+| `.\eng\bazel.ps1 build //:mstest_uwp_package //:mstest_winui_package --jobs=2 --noshow_progress --show_result=0` | Final stable-input build exits 0. The maintained `Assert-PackageLayout` assertions execute against both produced archives and pass, including exact `[5.0.0-preview.bazel]` core dependencies. This is scoped archive validation, not the blocked full validator/ordinary native consumer. |
+| `.\eng\bazel.ps1 build //:mstest_platform_package_closure --jobs=2 --noshow_progress --show_result=0` | Analysis passes after copying the frozen external-target list before appending net462 dependencies. Compilation then exits 1 on net462 `platform_services` CS0234: `System.Reflection.Metadata`/`PortableExecutable` references are missing. Full native layout/ordinary consumer execution is not reached. |
+
+The original ordinary native core already omitted portable
+`TargetFrameworkAttribute` metadata. The new Windows validator now accepts
+that undeclared value while rejecting declared wrong/Windows metadata and
+still comparing core bytes under the independently planned framework major.
+It does not change native producer metadata or weaken shared-core API checks.
+
+The net462 source imports and missing native dependency are unchanged in the
+prerequisite; the retired Extensions library depended only on core. This is
+static baseline attribution, **not an executed pristine-baseline proof**.
+No unrelated native dependency repair is included. The ordinary/full native
+package consumer remains an explicit validation gap; real MSBuild net462 and
+configuration consumers pass independently.
+
+The new native UI packages reuse the existing version-request tool to pin
+only `MSTest.Uwp`/`MSTest.WinUI` to exactly their matching core version;
+other dependency ranges are unchanged. Classic native UAP production remains
+unsupported rather than simulated.
+
+The final bounded UI rerun retains patch SHA-256
+`6E3C2D1C7284BE2B387DDFFC5A5E26E07AC845023DF04372FD0D72986ACA362E`
+on the shipping snapshot above; all recorded native/package inputs remain
+byte-identical through build and validation. Its exact commands, input hashes,
+archive hashes and results are in task evidence
+`bazel-native/20261112-162052-18d945ec/result.json`. Only the task-owned
+`Q:\tfb\pkg37010c6b` Bazel server is shut down, exit 0. No global cache,
+registration, other-worktree output, or other server is changed.
