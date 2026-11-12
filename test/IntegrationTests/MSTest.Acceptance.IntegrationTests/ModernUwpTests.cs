@@ -109,7 +109,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
                     File.Copy(
                         Path.Combine(build.PackageLayoutPath, "AppxManifest.xml"),
                         Path.Combine(executionDirectory, "AppxManifest.xml"));
-                    File.Copy(resourcesPriPath, Path.Combine(executionDirectory, "resources.pri"));
+                    File.Copy(resourcesPriPath, Path.Join(executionDirectory, "resources.pri"));
                     File.Copy(build.RecipePath, Path.Combine(executionDirectory, Path.GetFileName(build.RecipePath)));
 
                     string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
@@ -228,7 +228,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
 
     private static string AssertApplicationResourcesPri(UwpBuildResult build)
     {
-        string resourcesPriPath = Path.Combine(build.PackageLayoutPath, "resources.pri");
+        string resourcesPriPath = Path.Join(build.PackageLayoutPath, "resources.pri");
         Assert.IsTrue(
             File.Exists(resourcesPriPath),
             $"The Modern UWP layout must retain its application-owned resources '{resourcesPriPath}'. Binlog: '{build.BinlogPath}'.");

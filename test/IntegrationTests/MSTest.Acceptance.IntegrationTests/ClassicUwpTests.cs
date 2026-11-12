@@ -177,7 +177,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             (string?)identity.Attribute("Name"),
             $"Unexpected package identity in the tooling-generated manifest '{manifestPath}'.");
 
-        string resourcesPriPath = Path.Combine(build.PackageLayoutPath, "resources.pri");
+        string resourcesPriPath = Path.Join(build.PackageLayoutPath, "resources.pri");
         Assert.IsTrue(
             File.Exists(resourcesPriPath),
             $"The classic UWP layout must retain its application-owned resources '{resourcesPriPath}'. Binlog: '{build.BinlogPath}'.");
