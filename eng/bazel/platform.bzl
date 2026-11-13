@@ -12,6 +12,10 @@ def modern_json_sources():
         for name in [
             "Json",
             "Json.Deserializers",
+            "Json.Deserializers.Errors",
+            "Json.Deserializers.Initialize",
+            "Json.Deserializers.Messages",
+            "Json.Deserializers.Primitives",
             "Json.Serializers",
             "Json.TestNodeSerializer",
             "JsonCollectionDeserializer",
