@@ -44,17 +44,18 @@ describes the application for logs.
   asserts together with each `deps.json` `runtimeTarget` and every listed runtime asset.
 - Real consumer builds assert the selected, staged layout (including the apphost machine type) for
   the override and SDK-RID paths, plus the explicit error for an unsupported value.
-- The x64 layout was executed from the packed package (`--info`, both TFMs).
+- On a Windows 11 ARM64 machine (Debug, `.\build.cmd -pack`), both the native `win-arm64` and the
+  `win-x64` controllers ran `--info` on `net10.0` and `net11.0`. `PackagedAppIntegrationTests` and
+  `WindowsApplicationModelPackageTests` passed (128/128), including the tests that launch the
+  packaged controller.
+- The real application-model tests (`PackagedAppNativeDotnetTestTests`, packaged WinUI activation
+  through `dotnet test` and `InvokeTestingPlatform`) passed with the native `win-arm64` controller
+  staged under `obj\...\PackagedAppController\win-arm64`.
 
 ## Gaps
 
-- No ARM64 hardware was available. The ARM64 controller is validated as a package and staging
-  contract, not by execution. Before claiming full support run a packaged WinUI app built for
-  ARM64 and one built for x64 through `dotnet test`, `InvokeTestingPlatform`, Test Explorer,
-  `--coverage` and `--hangdump` on an ARM64 device or runner.
+- `--coverage` and `--hangdump` were not run with the `win-arm64` controller, and Test Explorer
+  was not exercised on ARM64.
 - The Bazel `//:windows_controllers` validation build and the test harness RID constants
   (`win-x64` test applications) are unchanged; they describe the application under test, not the
   controller.
-- Acceptance tests that start the controller from the NuGet package fail on a checkout whose
-  path pushes the controller path past `MAX_PATH` (259 characters); this is independent of this
-  change.
