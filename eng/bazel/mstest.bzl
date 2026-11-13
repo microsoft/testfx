@@ -38,32 +38,12 @@ def mstest_libraries():
             "MSTestAdapter.PlatformServices",
             "MSTest.TestAdapter",
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests",
-            "MSTest.TestFramework.Extensions",
             "MSTest.Extensions.Hosting",
             "Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests",
             "MSTestAdapter.PlatformServices.UnitTests",
             "MSTest.Performance.Benchmarks",
         ],
         deps = [":assert_generator_plugin"],
-    )
-    testfx_library(
-        name = "framework_extensions",
-        project = "src/TestFramework/TestFramework.Extensions",
-        target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
-        linked_srcs = testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
-        assembly_name = "MSTest.TestFramework.Extensions",
-        defines = ["EXCLUDE_RANGE_INDEX_POLYFILL", "EXCLUDE_OS_POLYFILL"],
-        usings = ["Polyfills", "Microsoft.VisualStudio.TestTools.UnitTesting.Resources"],
-        resources = {
-            "src/TestFramework/TestFramework.Extensions/Resources/FrameworkExtensionsMessages.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages",
-        },
-        internals_visible_to = [
-            "MSTestAdapter.PlatformServices",
-            "MSTestAdapter.PlatformServices.UnitTests",
-            "MSTest.TestAdapter",
-            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests",
-        ],
-        deps = [":framework"],
     )
     testfx_library(
         name = "platform_services",
@@ -84,7 +64,7 @@ def mstest_libraries():
             "MSTest.Acceptance.IntegrationTests",
             "MSTest.Performance.Benchmarks",
         ],
-        deps = [":framework", ":framework_extensions"] + testfx_compatibility_select([
+        deps = [":framework"] + testfx_compatibility_select([
             "@paket.compatibility_mstest//system.memory",
             "@paket.compatibility_mstest//system.threading.tasks.extensions",
         ]),
@@ -128,7 +108,6 @@ def mstest_libraries():
             ":msbuild_extension",
             ":retry",
             ":platform_msbuild",
-            ":framework_extensions",
         ] + testfx_nuget(["microsoft.testplatform.objectmodel"], compatibility_group = "compatibility_mstest") + testfx_compatibility_select([
             "@paket.compatibility_mstest//system.memory",
             "@paket.compatibility_mstest//system.threading.tasks.extensions",

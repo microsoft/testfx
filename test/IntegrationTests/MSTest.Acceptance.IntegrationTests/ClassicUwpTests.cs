@@ -20,7 +20,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     [TestMethod]
     [DataRow("MSTest.Sdk")]
     [DataRow("MSTest")]
-    [DataRow("MSTest.TestAdapter")]
+    [DataRow("MSTest.Uwp")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP execution is supported only on Windows.")]
     public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp(string package)
     {
@@ -32,7 +32,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
         {
             string references = package == "MSTest"
                 ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
-                : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+                : $"<PackageReference Include=\"MSTest.Uwp\" Version=\"{MSTestVersion}\" />";
             source = source
                 .Replace("  <Import Project=\"Sdk.props\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
                 .Replace("  <Import Project=\"Sdk.targets\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
@@ -287,11 +287,11 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0\MSTest.TestFramework.dll"
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\netstandard2.0\MSTest.TestFramework.dll"
              Link="MSTest.TestFramework.dll"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0\MSTest.TestFramework.Extensions.dll"
-             Link="MSTest.TestFramework.Extensions.dll"
+    <Content Include="$(NuGetPackageRoot)\mstest.uwp\$MSTestVersion$\lib\uap10.0.16299\MSTest.Uwp.dll"
+             Link="MSTest.Uwp.dll"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

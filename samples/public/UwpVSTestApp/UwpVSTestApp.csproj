@@ -32,8 +32,7 @@
     <!-- True UWP/AppContainer test applications are hosted by VSTest, not Microsoft.Testing.Platform. -->
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(VSTestVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(VSTestVersion)" ExcludeAssets="build" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Uwp" Version="$(MSTestVersion)" />
   </ItemGroup>
 
   <Target Name="UseNuGetTestPlatformRuntime" BeforeTargets="SDKRedistOutputGroup">

@@ -191,8 +191,9 @@ public sealed class SdkPackageTests(TestContext context)
             <None Pack="true" PackagePath="Sdk\Sdk.props" />
             <None Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
             """ : """
-            <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-            <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+            <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" />
+            <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Uwp\MSTest.Uwp.csproj" Condition="'$(TargetFramework)' == '$(UwpMinimum)'" />
+            <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
             <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" />
             <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" PrivateAssets="none" />
             <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />

@@ -147,10 +147,10 @@ try {
         }
         $windowsAssemblies = @($report.SourceAssemblies | Where-Object {
             $_.Name -in @('Microsoft.Testing.Extensions.PackagedApp', 'MSTest.Windows.UIAutomation') -or
-            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
+            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.Uwp', 'MSTest.WinUI', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
         })
         foreach ($assembly in $windowsAssemblies) {
-            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions')) { '10.0.17763.0' } else { $probe.Platform }
+            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.WinUI')) { '10.0.17763.0' } else { $probe.Platform }
             if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
                 $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."

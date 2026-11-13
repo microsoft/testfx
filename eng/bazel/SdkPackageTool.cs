@@ -193,8 +193,9 @@ static Dependency[] MetaPackageDependencies(XElement project, Dictionary<string,
 {
     var projectDependencies = new Dictionary<string, (string id, string version, string condition)>(StringComparer.Ordinal)
     {
-        ["$(RepoRoot)src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj"] = ("MSTest.TestAdapter", versions["MSTestVersion"], ""),
-        ["$(RepoRoot)src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj"] = ("MSTest.TestFramework", versions["MSTestVersion"], ""),
+        ["$(RepoRoot)src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj"] = ("MSTest.TestAdapter", versions["MSTestVersion"], "'$(TargetFramework)'!='$(UwpMinimum)'"),
+        ["$(RepoRoot)src/TestFramework/MSTest.Uwp/MSTest.Uwp.csproj"] = ("MSTest.Uwp", versions["MSTestVersion"], "'$(TargetFramework)'=='$(UwpMinimum)'"),
+        ["$(RepoRoot)src/TestFramework/TestFramework/TestFramework.csproj"] = ("MSTest.TestFramework", versions["MSTestVersion"], ""),
         ["$(RepoRoot)src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj"] = ("Microsoft.Testing.Extensions.TrxReport", versions["MicrosoftTestingPlatformVersion"], "'$(TargetFramework)'!='$(UwpMinimum)'"),
     };
     var dependencies = new List<Dependency>();
@@ -207,7 +208,10 @@ static Dependency[] MetaPackageDependencies(XElement project, Dictionary<string,
             throw new InvalidDataException($"Unsupported meta-package project reference or condition: {path}");
         }
 
-        dependencies.Add(new(dependency.id, dependency.version, ["Build", "Analyzers"]));
+        if (dependency.condition != "'$(TargetFramework)'=='$(UwpMinimum)'")
+        {
+            dependencies.Add(new(dependency.id, dependency.version, ["Build", "Analyzers"]));
+        }
     }
 
     if (projectDependencies.Count != 0)

@@ -212,42 +212,41 @@ internal static class WindowsApplicationModelTestTools
             WindowsApplicationModelAssetKind.ClassicUwp =>
             (
                 [
-                    "/buildTransitive/uap10.0/MSTest.TestAdapter.dll",
-                    "/buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
-                    "/lib/uap10.0/MSTest.TestFramework.dll",
-                    "/lib/uap10.0/MSTest.TestFramework.Extensions.dll",
+                    "/buildTransitive/uap10.0.16299/MSTest.TestAdapter.dll",
+                    "/buildTransitive/uap10.0.16299/MSTestAdapter.PlatformServices.dll",
+                    "/lib/netstandard2.0/MSTest.TestFramework.dll",
+                    "/lib/uap10.0.16299/MSTest.Uwp.dll",
                 ],
                 [
-                    "/lib/netstandard2.0/MSTest.TestFramework.dll",
-                    "/lib/netstandard2.0/MSTest.TestFramework.Extensions.dll",
+                    "/mstest.testadapter/",
+                    "/mstest.winui/",
+                    "MSTest.TestFramework.Extensions.dll",
                 ]),
             WindowsApplicationModelAssetKind.ModernUwp =>
             (
                 [
-                    "/buildTransitive/net10.0/uwp/MSTest.TestFramework.dll",
-                    "/buildTransitive/net10.0/uwp/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net10.0/uwp/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net10.0/uwp/MSTest.TestFramework.Extensions.dll",
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
+                    "/buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll",
+                    "/buildTransitive/net10.0-windows10.0.17763/MSTestAdapter.PlatformServices.dll",
+                    "/lib/net10.0-windows10.0.17763/MSTest.Uwp.dll",
                 ],
                 [
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
-                    "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
+                    "/mstest.testadapter/",
+                    "/mstest.winui/",
+                    "MSTest.TestFramework.Extensions.dll",
                 ]),
             WindowsApplicationModelAssetKind.WinUI =>
             (
                 [
-                    "/buildTransitive/net10.0/winui/MSTest.TestFramework.dll",
-                    "/buildTransitive/net10.0/winui/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net10.0/winui/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net10.0/winui/MSTest.TestFramework.Extensions.dll",
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
+                    "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
+                    "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
+                    "/lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
                 ],
                 [
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
-                    "/buildTransitive/net10.0/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
-                    "/buildTransitive/net10.0/MSTest.TestFramework.Extensions.dll",
+                    "/mstest.testadapter/",
+                    "/mstest.uwp/",
+                    "MSTest.TestFramework.Extensions.dll",
                 ]),
             _ => throw new ArgumentOutOfRangeException(nameof(assetKind), assetKind, "Unknown Windows application model."),
         };

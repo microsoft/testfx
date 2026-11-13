@@ -8,11 +8,14 @@
 
     <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
     <!--
-      The desktop Visual Studio UWP imports set UseUwpTools after this SDK declares its package
-      references, but before NuGet buildTransitive targets select the specialized UWP assemblies.
-      Preserve the application-model and package decisions during this earlier evaluation.
+      Select packages before declaring references. Desktop UWP imports can set UseUwpTools
+      later, so preserve early UseUwp inference unless the application explicitly opts out.
     -->
-    <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') ">true</_MSTestUwpApplicationModel>
+    <_MSTestUwpApplicationModel>false</_MSTestUwpApplicationModel>
+    <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap')) ">true</_MSTestUwpApplicationModel>
+    <_MSTestAdapterPackageId>MSTest.TestAdapter</_MSTestAdapterPackageId>
+    <_MSTestAdapterPackageId Condition=" '$(_MSTestUwpApplicationModel)' == 'true' ">MSTest.Uwp</_MSTestAdapterPackageId>
+    <_MSTestAdapterPackageId Condition=" '$(UseWinUI)' == 'true' ">MSTest.WinUI</_MSTestAdapterPackageId>
   </PropertyGroup>
 
   <!-- Import Runner.targets -->
@@ -51,10 +54,10 @@
                          and ( '$(EnableMSTestSourceGeneration)' == 'true'
                                or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
     <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
-    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+    <PackageReference Include="$(_MSTestAdapterPackageId)" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+    <PackageVersion Include="$(_MSTestAdapterPackageId)" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

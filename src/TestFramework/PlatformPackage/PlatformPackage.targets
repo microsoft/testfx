@@ -1,0 +1,36 @@
+<Project>
+
+  <Target Name="_AlignMSTestPlatformPackageCoreVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Condition=" '%(Filename)' == 'TestFramework' ">
+        <ProjectVersion>[$(PackageVersion)]</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AddMSTestPlatformPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <PropertyGroup>
+      <_PlatformPackageTfm Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">uap10.0.16299</_PlatformPackageTfm>
+      <_PlatformPackageTfm Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">net10.0-windows10.0.17763</_PlatformPackageTfm>
+      <_PlatformPackageTfm Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">net10.0-windows10.0.18362</_PlatformPackageTfm>
+    </PropertyGroup>
+    <Error Condition=" '$(_PlatformPackageTfm)' == '' " Text="No MSTest platform package layout is defined for '$(TargetFramework)'." />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestAdapter.dll;$(TargetDir)MSTestAdapter.PlatformServices.dll"
+                              PackagePath="buildTransitive\$(_PlatformPackageTfm)\" />
+      <TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)MSTest.Platform.props"
+                              PackagePath="buildTransitive\$(_PlatformPackageTfm)\$(PackageId).props" />
+      <TfmSpecificPackageFile Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\buildTransitive\common\MSTest.TestAdapter.targets"
+                              PackagePath="buildTransitive\$(_PlatformPackageTfm)\$(PackageId).targets"
+                              Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+      <TfmSpecificPackageFile Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\buildTransitive\uwp\MSTest.TestAdapter.targets"
+                              PackagePath="buildTransitive\$(_PlatformPackageTfm)\$(PackageId).targets"
+                              Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+      <TfmSpecificPackageFile Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\buildTransitive\Parallelize.targets"
+                              PackagePath="buildTransitive\$(_PlatformPackageTfm)\" />
+      <TfmSpecificPackageFile Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll;$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll"
+                              PackagePath="buildTransitive\$(_PlatformPackageTfm)\_localization\" />
+    </ItemGroup>
+  </Target>
+
+</Project>

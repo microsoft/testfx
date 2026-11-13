@@ -28,6 +28,12 @@ For package identity, AUMID activation, unpackaged WinUI, UWP launch activation,
 AppContainer security guidance, see
 [Testing UWP and WinUI apps with MSTest](https://github.com/microsoft/testfx/blob/main/docs/winui-testing.md).
 
+The SDK selects `MSTest.WinUI` for `UseWinUI=true`, `MSTest.Uwp` for UWP tooling
+or classic UAP targets, and `MSTest.TestAdapter` otherwise. Early `UseUwp=true`
+also selects UWP unless `UseUwpTools=false` is explicit. All use the same
+`MSTest.TestFramework` core; UI applications no longer swap hidden Extensions
+assemblies. Direct-package consumers should use the matching UI package.
+
 For packaged Windows applications, the SDK references
 `Microsoft.Testing.Extensions.PackagedApp.MSBuild` from the aligned MTP release.
 That separately shipped package owns the full-trust controller, shared launch

@@ -35,7 +35,7 @@ public sealed class WinUIExtensionTests : TestContainer
 
     public void UnpackagedProcessHasNoPackageIdentityOrPath()
     {
-        Type model = typeof(UITestMethodAttribute).Assembly.GetType("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel", true)!;
+        Type model = Assembly.Load("MSTestAdapter.PlatformServices").GetType("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel", true)!;
         model.GetMethod("IsPackagedProcess")!.Invoke(null, null).Should().Be(false);
         model.GetMethod("GetCurrentPackagePath")!.Invoke(null, null).Should().BeNull();
     }

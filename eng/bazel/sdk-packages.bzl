@@ -138,7 +138,7 @@ def sdk_packages():
         generate_documentation_file = False,
         data = ["//eng/bazel:sdk_package_tool"],
         envs = {"TESTFX_BAZEL_SDK_PACKAGE_TOOL": "$(rlocationpath //eng/bazel:sdk_package_tool)"},
-        deps = [":adapter", ":framework", ":framework_extensions", ":trx", ":mstest_analyzer_plugin", "//eng/bazel:runfiles"],
+        deps = [":adapter", ":framework", ":trx", ":mstest_analyzer_plugin", "//eng/bazel:runfiles"],
     )
     testfx_test(
         name = "sdk_package_tests",
