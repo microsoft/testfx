@@ -1,0 +1,10 @@
+# Expected files of the MSTest.SourceGeneration NuGet package, validated by eng/verify-nupkgs.ps1 after pack.
+# After an intentional package layout change, regenerate with: .\eng\verify-nupkgs.ps1 -configuration <Configuration> -updateBaselines
+Icon.png
+License.txt
+MSTest.SourceGeneration.nuspec
+PACKAGE.md
+[Content_Types].xml
+_rels/.rels
+analyzers/dotnet/cs/MSTest.SourceGeneration.dll
+package/services/metadata/core-properties/{guid}.psmdcp
