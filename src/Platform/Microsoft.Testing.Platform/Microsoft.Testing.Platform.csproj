@@ -28,6 +28,10 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Remove="Configurations/JsonConfigurationFileParser.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.Errors.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.Initialize.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.Messages.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.Primitives.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.Serializers.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.TestNodeSerializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonCollectionDeserializer.cs" />

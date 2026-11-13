@@ -33,11 +33,11 @@ Supported platforms:
 Starting with MSTest 5, `TestContext`, `DeploymentItemAttribute`, `MessageLevel`,
 `TestRun`, `ITestRunInfo` and `PlannedTest`
 are defined in `MSTest.TestFramework.dll`. The .NET Framework-only private
-reflection and test-configuration helpers are also defined there. Consumers
-compiled against their former `MSTest.TestFramework.Extensions.dll` definitions
-continue to resolve them through type forwarders in Extensions, including legacy
-assembly-qualified configuration names. New code can reference the core assembly
-directly.
+reflection and test-configuration helpers are also defined there.
+`MSTest.TestFramework.Extensions.dll` forwards these types to the core assembly,
+so binaries compiled against MSTest 4 (such as `Microsoft.Playwright.MSTest.v4`)
+and assembly-qualified type names that use the former assembly keep resolving to
+the core definitions without a rebuild.
 UI APIs remain in Extensions. Package IDs, package ownership and supported targets
 are unchanged. UWP/WinUI select matching core and Extensions assemblies; their
 `TestContext` still excludes desktop directory properties, and

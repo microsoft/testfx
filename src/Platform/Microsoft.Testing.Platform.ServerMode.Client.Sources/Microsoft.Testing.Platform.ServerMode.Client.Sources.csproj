@@ -134,6 +134,10 @@
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.cs" />
     <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Deserializers.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Deserializers.Errors.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Deserializers.Initialize.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Deserializers.Messages.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Deserializers.Primitives.cs" />
     <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Serializers.cs" />
     <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.TestNodeSerializer.cs" />
     <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonCollectionDeserializer.cs" />
