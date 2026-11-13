@@ -21,7 +21,6 @@ public sealed class NativePackageTests
         string[] names =
         [
             "MSTest.TestFramework",
-            "MSTest.TestFramework.Extensions",
             "MSTest.TestAdapter",
             "MSTestAdapter.PlatformServices",
             "Microsoft.Testing.Platform",

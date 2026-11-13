@@ -20,7 +20,7 @@ def portable_samples():
             linked_srcs = ["//eng/bazel:TestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
             defines = defines,
             generate_documentation_file = False,
-            deps = [":adapter", ":framework", ":framework_extensions", ":trx"],
+            deps = [":adapter", ":framework", ":trx"],
         )
         testfx_test(
             name = name + "_test",
@@ -37,7 +37,7 @@ def portable_samples():
         polyfills = False,
         usings = ["Microsoft.VisualStudio.TestTools.UnitTesting"],
         generate_documentation_file = False,
-        deps = [":adapter", ":framework", ":framework_extensions", ":platform"],
+        deps = [":adapter", ":framework", ":platform"],
     )
     testfx_test(
         name = "custom_report_test",
@@ -152,7 +152,7 @@ def portable_samples():
         linked_srcs = ["//eng/bazel:TestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
         analyzer_configs = ["//eng/bazel:reflection-free.globalconfig"],
         generate_documentation_file = False,
-        deps = [":adapter", ":framework", ":framework_extensions", ":platform_services", ":trx", ":sample_source_generator"],
+        deps = [":adapter", ":framework", ":platform_services", ":trx", ":sample_source_generator"],
     )
     # The pinned rules_dotnet links NativeAOT only for Linux and macOS; it fails analysis for Windows.
     native_aot_hosts = select({

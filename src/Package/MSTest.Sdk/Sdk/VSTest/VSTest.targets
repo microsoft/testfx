@@ -36,10 +36,10 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
 
-    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+    <PackageReference Include="$(_MSTestAdapterPackageId)" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+    <PackageVersion Include="$(_MSTestAdapterPackageId)" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

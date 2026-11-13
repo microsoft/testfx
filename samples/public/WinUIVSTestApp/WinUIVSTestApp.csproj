@@ -50,8 +50,7 @@
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(VSTestVersion)" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.WinUI" Version="$(MSTestVersion)" />
   </ItemGroup>
 
   <!--

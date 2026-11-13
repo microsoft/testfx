@@ -25,7 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.WinUI\MSTest.WinUI.csproj" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.SourceGeneration\TestFramework.SourceGeneration.csproj" Condition=" '$(IsNetCoreApp)' == 'true' " />
   </ItemGroup>
 
@@ -41,7 +42,7 @@
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" PrivateAssets="all" Condition=" '$(IsNetCoreApp)' == 'true' " />
-    <!-- Needed to execute the shipping WinUI Extensions assembly; its private WinUI dependency does not flow here. -->
+    <!-- The application owns the Windows App SDK runtime; the UI package's build dependency is private. -->
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " PrivateAssets="all" />
   </ItemGroup>
 
