@@ -52,10 +52,11 @@ It does not claim SDK12 bundled-pack defaults or net12.0 targeting.
 the decision record distinguishes successful native builds/consumers from
 synthetic verifier checks. The default remains SDK11.
 
-The bootstrap supports Windows x64, Linux x64, and macOS arm64. Windows was
-executed locally; the added Windows/Linux CI job is configuration, not evidence
-that CI or Linux has run. Other architectures can use Bazelisk with
-`.bazelversion`, subject to the rules' platform support.
+The bootstrap supports Windows x64, Linux x64, and macOS arm64. The
+`bazel.yml` workflow runs on Windows and Linux; see
+[Measured CI duration](#measured-ci-duration). macOS arm64 is not exercised by
+CI. Other architectures can use Bazelisk with `.bazelversion`, subject to the
+rules' platform support.
 
 On Windows, the default output root is
 `<checkout-drive>:\tfb\<hash-of-worktree-path>` to avoid batch-file path limits.
@@ -475,6 +476,61 @@ the **whole job**, including transfers and artifact handling, and inspect BEP
 cache-hit statistics before reporting a speedup. Whole-archive snapshots incur
 transfer/extraction overhead and GitHub cache quota/eviction; a remote action
 cache remains a possible later optimization, not part of this change.
+
+## Measured CI duration
+
+Durations of **successful** jobs (agent start to finish, excluding queue wait)
+from 2026-11-06 18:52 UTC, when
+[#12253](https://github.com/microsoft/testfx/pull/12253) added the cache steps,
+to 2026-11-13.
+Bazel jobs come from the GitHub Actions jobs API for `bazel.yml`. Normal CI jobs
+come from the build timeline of the `microsoft.testfx` Azure DevOps pipeline
+(definition 209) over the same window. PR and `main` runs are combined;
+PR-only medians differ by at most 0.6 minutes.
+
+| Job | Median | P90 | Successful jobs |
+| --- | ---: | ---: | ---: |
+| Bazel Windows | 4.5 min | 7.7 min | 233 |
+| Bazel Linux | 3.2 min | 6.1 min | 233 |
+| Normal CI Windows Debug | 27.5 min | 32.6 min | 88 |
+| Normal CI Windows Release | 87.2 min | 92.8 min | 62 |
+| Normal CI Linux Release | 46.1 min | 47.9 min | 75 |
+
+The two Bazel jobs run in parallel, for a median workflow time of 4.8 minutes.
+A successful normal CI PR build takes a median 97.6 minutes (35 builds),
+dominated by Windows Release. Before the cache steps, 28 Bazel runs took a
+median 10.7 minutes on Windows and 7.8 minutes on Linux.
+
+Phase medians (Windows/Linux):
+
+- Bazel: `validate.ps1` takes 2.9/2.1 minutes, `validate-packages.ps1`
+  0.8/0.6 minutes, and cache restore 0.3/0.2 minutes.
+- Normal CI: the Build step (restore, build and pack; Windows also signs) takes
+  15.1/7.7 minutes. Windows Debug runs unit tests in 7.7 minutes. The test step
+  takes about 64 minutes on Windows Release and 34.2 minutes on Linux.
+
+These ratios are **not** a speedup for the same work:
+
+| | Bazel CI job | Normal CI job |
+| --- | --- | --- |
+| Build | `//:managed_all`: 35 source projects for net8.0 to net11.0 with the SDK11 compiler, then a no-op rebuild check. Test targets build for net10.0 only. No netstandard2.0/net462 variants and no signing. | Arcade build of `TestFx.slnx` (Linux: `NonWindowsTests.slnf`) covering every source and test project for each declared TFM. |
+| Tests | Windows runs `//:portable_tests` (ten targets, 3,801 cases). Linux runs `//:portable_non_windows_tests` (nine targets, 2,327 cases, no platform-services suite). Each suite runs once on net10.0, plus sample checks for reports and exit codes. | Windows Debug runs every unit-test project on each TFM (about 55,000 results). Windows Release adds integration/acceptance tests and coverage, or affected tests on PRs (about 57,000). Linux runs unit and acceptance tests (about 26,000). |
+| Packages | `//:packages`: three MTP/TRX NuGets, a four-TFM `dotnet build` consumer and self-contained explorer layouts. | MSTest, MTP and extension packages, consumed by the acceptance tests. |
+| Reuse | Action outputs restored from the latest compatible `main` snapshot; tests always execute (`--nocache_test_results`). | No build cache: each job restores and builds a clean checkout. |
+| Runners | Standard GitHub-hosted `windows-latest` and `ubuntu-latest`. | `NetCore-Public`: `windows.vs2026preview.scout.amd64.open` and `build.ubuntu.2204.amd64.open`. |
+
+Bazel CI does not run the full MTP suite (`//:platform_tests`), the MSBuild,
+extension, analyzer, server-client, terminal or self-real suites
+(`//:all_unit_tests`), the compatibility builds, the MSTest/analyzer/SDK
+packages, acceptance tests, coverage, Windows application-model checks or
+macOS. Test-result counts come from the Azure DevOps test runs of eight recent
+successful builds and from the `validation.json` of `main` run 43236218960.
+
+The closest pair is Bazel Windows against normal CI Windows Debug: both build the
+modern frameworks and run unit tests, but Windows Debug produces about 14 times
+as many test results and builds, packs and signs much more. The like-for-like
+workload in [Build-and-test cache dogfood](#build-and-test-cache-dogfood) has no
+recorded CI runs yet.
 
 ## Build-and-test cache dogfood
 
