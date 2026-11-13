@@ -108,18 +108,18 @@ internal static class LibraryProbe
         Assembly framework = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly;
         Type context = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext);
         if (framework.GetName().Name != "MSTest.TestFramework" || context.Assembly != framework
-            || extensions.GetType(context.FullName!) is not null)
+            || extensions.GetType(context.FullName!) != context)
         {
-            throw new InvalidOperationException("TestContext must be defined in the core framework, not Extensions.");
+            throw new InvalidOperationException("TestContext must be defined in the core framework and forwarded by Extensions.");
         }
 
         const string deploymentItemName = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
         Type? deploymentItem = framework.GetType(deploymentItemName);
         if ((deploymentItem is not null) != hasDesktopApi
             || (deploymentItem is not null && deploymentItem.Assembly != framework)
-            || extensions.GetType(deploymentItemName) is not null)
+            || extensions.GetType(deploymentItemName) != deploymentItem)
         {
-            throw new InvalidOperationException($"DeploymentItemAttribute must be defined only in ordinary core and excluded from UI core. Expected desktop API: {hasDesktopApi}.");
+            throw new InvalidOperationException($"DeploymentItemAttribute must be defined only in ordinary core, forwarded by ordinary Extensions, and excluded from UI core. Expected desktop API: {hasDesktopApi}.");
         }
 
         string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];

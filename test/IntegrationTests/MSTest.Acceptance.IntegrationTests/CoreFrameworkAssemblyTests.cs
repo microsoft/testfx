@@ -141,7 +141,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assembly core = typeof(TestMethodAttribute).Assembly;
         Assert.AreSame(core, typeof(TestContext).Assembly);
         Assembly extensions = Assembly.Load("MSTest.TestFramework.Extensions");
-        Assert.IsNull(extensions.GetType(typeof(TestContext).FullName!));
+        Assert.AreSame(typeof(TestContext), extensions.GetType(typeof(TestContext).FullName!));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory"));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease"));
         Assert.AreEqual($Desktop$, core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute") is not null);
