@@ -175,7 +175,7 @@ try {
         RulesDotnet = 'add5c92b30888a70aa951de1744a770b8f8ef436'
         Sdk = $toolchain.Groups[1].Value
         Runtime = $toolchain.Groups[2].Value
-        TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+        TargetFrameworks = @('net10.0', 'net11.0')
         TestCounts = $counts
         TestSuite = $testSuite
         UnsupportedSuites = @($unsupportedSuites)

@@ -14,7 +14,7 @@ def portable_samples():
         testfx_binary(
             name = name,
             project = project,
-            target_frameworks = ["net8.0"],
+            target_frameworks = ["net10.0"],
             polyfills = False,
             linked_srcs = ["//eng/bazel:TestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
             defines = defines,
@@ -32,7 +32,7 @@ def portable_samples():
         name = "custom_report",
         project = "samples/public/mstest-runner/CustomReportExtension/CustomReportExtension",
         linked_srcs = ["//eng/bazel:PortableTestFrameworkMetadata.cs"],
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         usings = ["Microsoft.VisualStudio.TestTools.UnitTesting"],
         generate_documentation_file = False,
@@ -146,7 +146,7 @@ def portable_samples():
     testfx_binary(
         name = "aot_sample",
         project = "samples/public/DemoMSTestSdk/ProjectWithNativeAOT",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         linked_srcs = ["//eng/bazel:TestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
         analyzer_configs = ["//eng/bazel:reflection-free.globalconfig"],
@@ -156,7 +156,7 @@ def portable_samples():
     publish_binary(
         name = "aot_publish",
         binary = ":aot_sample",
-        target_framework = "net8.0",
+        target_framework = "net10.0",
         native_aot = True,
         tags = ["manual"],
     )
