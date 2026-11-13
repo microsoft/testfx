@@ -262,11 +262,6 @@ public sealed class ModernUwpTests : AcceptanceTestBase
     <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Strings\**\*.resw" />
-    <PRIResource Include="Strings\**\*.resw" Exclude="@(PRIResource)" />
-  </ItemGroup>
-
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"

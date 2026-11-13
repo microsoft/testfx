@@ -25,9 +25,6 @@
                            Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
     <Page Include="MainPage.xaml"
           Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
-    <None Remove="Strings\**\*.resw" />
-    <PRIResource Include="Strings\**\*.resw" Exclude="@(PRIResource)"
-                 Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
   </ItemGroup>
 
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">

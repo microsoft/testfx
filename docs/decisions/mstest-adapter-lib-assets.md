@@ -376,3 +376,70 @@ build/discovery cannot demonstrate a localized user-visible result.
 - Legacy consumers and downstream VSTest tests hard-code the existing package
   directories. No rollout, release-branch servicing, or downstream migration has
   been authorized.
+
+## PR review and CI follow-up: 2026-11-13
+
+[Build 1677700](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1677700)
+tested PR head `7fc7ac9b2bb816527a7dc3816460a4269eab5193`, with merge revision
+`dca0010c890425f2043800d23b7169a0e355a6c7`.
+Its native application-model test run recorded all three classic UWP variants
+(`MSTest.Sdk`, `MSTest`, and explicit `MSTest.TestAdapter`) as passed. This is
+native CI evidence for that earlier revision, not the current head.
+
+The four modern UWP build/runtime rows and the public modern UWP sample failed
+at `CheckForDuplicatePriItems` with `NETSDK1022`. The Windows SDK includes
+`**/*.resw` after the project body. Therefore, the explicit `PRIResource` include
+duplicated both English and French files; excluding the items already present
+at that earlier evaluation point could not prevent the SDK's later inclusion.
+
+The fix removes the explicit resource group from the modern generated consumer
+and the equivalent two resource declarations from the public sample. Both
+resources remain under SDK default-item ownership. Classic UWP's separate
+resource wiring is unchanged because its actual native comparisons passed.
+Application translations, strict result checks and resource lookups remain.
+
+### Focused verification
+
+The actual Windows SDK default-item import and `CheckForDuplicatePriItems` target
+from `Microsoft.Windows.SDK.BuildTools.MSIX` `1.7.20250806.1` were run on isolated
+copies of the resource groups extracted from the original/fixed projects:
+
+| Source / mode | Original | Fixed |
+| --- | --- | --- |
+| Public sample, packaged | Exit 1, expected `NETSDK1022` duplicates | Exit 0, exactly one English and one French resource |
+| Public sample, unpackaged | Exit 0, two resources | Exit 0, same two resources |
+| Generated modern consumer, packaged | Exit 1, expected `NETSDK1022` duplicates | Exit 0, exactly one English and one French resource |
+
+This is executed SDK item-validation evidence, not native activation or a
+passing MSTest run. The first standalone harness attempt lacked task-assembly
+properties and failed during evaluation; the corrected run used the actual
+MSIX task assembly/namespace and produced the intended diagnostic comparison.
+The source blocks, copied resources, commands and binlogs are retained in
+session artifacts.
+
+```powershell
+.\.dotnet\dotnet.exe build test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-restore /p:SkipUapTargetFramework=true -bl:artifacts\log\Release\uwp-ready-build.binlog --verbosity quiet
+```
+
+Exit 0, zero warnings/errors. This builds the outer acceptance harness, not the
+generated native UWP children.
+
+The branch also merges existing upstream fixes
+`8dd78e1347417e400c3ef8d786059a8bb346162f` (evaluated package versions for
+acceptance assets) and `9cdf7ab8e417c0d15f4c10a1001e74c359a07c34` (async GitHub
+client handling in offline action-contract tests), rather than duplicating
+their unrelated changes. The pinned-action contract suite passed all 19 cases,
+with `$pinnedActions` pointing to the session-owned `setup/js` files extracted
+from action revision `221ba4f4319de6b8e809d1a15528b3ae6a818aa5`:
+
+```powershell
+python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir "$pinnedActions"
+```
+
+Exit 0. No workflow source or generated action pins were edited.
+
+The remaining Retry recovery-delay and Playwright failures also occur on
+`main` [build 1677886](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1677886).
+They are not attributed to the UWP resource changes or changed in this PR.
+Full modern UWP activation still requires the capable CI agent; a new pending
+run must not be presented as passing evidence.
