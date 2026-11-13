@@ -2,7 +2,7 @@
 
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "import_library")
 
-PORTABLE_FRAMEWORKS = ["net8.0", "net9.0", "net10.0", "net11.0"]
+PORTABLE_FRAMEWORKS = ["net10.0", "net11.0"]
 STANDARD_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["netstandard2.0"]
 DESKTOP_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["net462"]
 

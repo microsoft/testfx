@@ -65,22 +65,40 @@ internal static class LibraryProbe
 #else
         scenario = "winui";
 #endif
-        Assembly extensions = Assembly.Load(scenario == "uwp" ? "MSTest.Uwp" : "MSTest.WinUI");
-        Assembly framework = VerifyFrameworkApi(extensions);
-        Type uiMethod = extensions.GetType(
+        string uiAssemblyName = scenario == "uwp" ? "MSTest.Uwp" : "MSTest.WinUI";
+        Assembly attributes = Assembly.Load(uiAssemblyName);
+        Assembly framework = VerifyFrameworkApi(attributes);
+        Type uiMethod = attributes.GetType(
             "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute", throwOnError: true)!;
-        if (!typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).IsAssignableFrom(uiMethod))
+        if (uiMethod.Assembly != attributes || !typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).IsAssignableFrom(uiMethod))
         {
-            throw new InvalidOperationException("The Windows flavor did not expose the UI test method attribute.");
+            throw new InvalidOperationException($"The UI test method attribute must be defined in {uiAssemblyName} and derive from shared core.");
         }
 
-        sourceAssemblies.Add(extensions);
+        const string winuiTargetName = "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.WinUITestTargetAttribute";
+        if ((attributes.GetType(winuiTargetName) is not null) != (scenario == "winui"))
+        {
+            throw new InvalidOperationException("WinUITestTargetAttribute must be isolated to MSTest.WinUI.");
+        }
+
+        string otherFlavor = scenario == "uwp" ? "MSTest.WinUI" : "MSTest.Uwp";
+        if (File.Exists(Path.Combine(AppContext.BaseDirectory, otherFlavor + ".dll")))
+        {
+            throw new InvalidOperationException("The Windows consumer contains the other flavor's UI attributes.");
+        }
+
+        sourceAssemblies.Add(attributes);
         sourceAssemblies.Add(framework);
         sourceAssemblies.Add(Assembly.Load("MSTestAdapter.PlatformServices"));
         sourceAssemblies.Add(Assembly.Load("MSTest.TestAdapter"));
 #else
 #error A Windows library probe scenario must be selected.
 #endif
+        if (File.Exists(Path.Combine(AppContext.BaseDirectory, "MSTest.TestFramework.Extensions.dll")))
+        {
+            throw new InvalidOperationException("The retired Extensions assembly must not be in a native consumer layout.");
+        }
+
         foreach (Assembly assembly in sourceAssemblies)
         {
             if (!assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -101,20 +119,21 @@ internal static class LibraryProbe
     }
 
 #if WINDOWS_DESKTOP_PROBE || WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
-    private static Assembly VerifyFrameworkApi(Assembly? extensions = null)
+    private static Assembly VerifyFrameworkApi(Assembly? attributes = null)
     {
         Assembly framework = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly;
         Type context = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext);
         if (framework.GetName().Name != "MSTest.TestFramework" || context.Assembly != framework
-            || extensions?.GetType(context.FullName!) is not null)
+            || attributes?.GetType(context.FullName!) is not null
+            || framework.GetCustomAttribute<TargetPlatformAttribute>() is not null)
         {
-            throw new InvalidOperationException("TestContext must be defined in the core framework, not Extensions.");
+            throw new InvalidOperationException("TestContext must be defined in the ordinary shared core, not a UI-specific assembly.");
         }
 
         const string deploymentItemName = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
         Type? deploymentItem = framework.GetType(deploymentItemName);
         if (deploymentItem is null || deploymentItem.Assembly != framework
-            || extensions?.GetType(deploymentItemName) is not null)
+            || attributes?.GetType(deploymentItemName) is not null)
         {
             throw new InvalidOperationException("DeploymentItemAttribute must be defined in shared modern core, including for UI consumers.");
         }
@@ -126,6 +145,12 @@ internal static class LibraryProbe
             {
                 throw new InvalidOperationException($"TestContext.{directory} must be available from shared core for every modern consumer.");
             }
+        }
+
+        if (framework.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute") is not null
+            || framework.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.WinUITestTargetAttribute") is not null)
+        {
+            throw new InvalidOperationException("UI-specific attributes must not be defined in shared core.");
         }
 
         return framework;

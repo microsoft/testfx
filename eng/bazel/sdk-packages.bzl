@@ -143,6 +143,6 @@ def sdk_packages():
     testfx_test(
         name = "sdk_package_tests",
         binary = ":sdk_package_tests_app",
-        args = ["--minimum-expected-tests", "12"],
+        args = ["--minimum-expected-tests", "15"],
         size = "medium",
     )
