@@ -29,9 +29,11 @@ else { $expectedHostSkips['//:platform_services_tests'] = 'Windows filesystem co
 # A floor so that deleting or excluding test targets fails validation even though the expected set is queried.
 $minimumTests = 35
 
-# Manual targets that no automatic `//...` target depends on. Every other manual target, such as the
-# per-framework and Windows variants, is built as a dependency of an automatic wrapper target. A manual
-# target that is not in this list, or a listed target that no longer exists, fails validation.
+# Manual targets that no automatic `//...` target depends on through any select() branch. The query is
+# unconfigured, so it proves reachability rather than that every branch is built: per-framework test
+# applications are selected for the active framework only, and test targets run on net10.0 by design
+# (`//:managed_all` builds the product graph for every framework). A manual target that is not in this
+# list, or a listed target that no longer exists, fails validation.
 $unreachableManualTargets = [ordered]@{
     '//:custom_report_failure_probe' = 'Intentionally failing sample; asserted by the mixed-results step.'
     '//:ensure_failure_probe' = 'Intentionally failing sample; asserted by the mixed-results step.'
@@ -39,6 +41,24 @@ $unreachableManualTargets = [ordered]@{
     '//:reference_alias_duplicate' = 'Intentional analysis failure; asserted by the reference-alias-failures step.'
     '//:reference_alias_empty' = 'Intentional analysis failure; asserted by the reference-alias-failures step.'
     '//:reference_alias_unknown' = 'Intentional analysis failure; asserted by the reference-alias-failures step.'
+}
+
+# Tests built on TestMain, NativeUnitTestMain or ServerClientTestMain must write a fresh tests.trx. These
+# automatic tests have no TRX, so their PASSED outcome is their result evidence. A listed test that writes
+# a TRX, or that is no longer an automatic test, fails validation.
+$nonTrxTests = [ordered]@{
+    '//:compatibility_explorer_test' = 'Platform explorer sample with its own entry point.'
+    '//:compatibility_reference_direct_tfm_test' = 'Starlark analysis test.'
+    '//:compatibility_reference_independent_test' = 'Starlark analysis test.'
+    '//:compatibility_reference_native_test' = 'Starlark analysis test.'
+    '//:compatibility_reference_newer_package_test' = 'Starlark analysis test.'
+    '//:custom_report_test' = 'Custom report sample with its own entry point.'
+    '//:explorer_released_test' = 'Platform explorer sample with its own entry point.'
+    '//:explorer_test' = 'Platform explorer sample with its own entry point.'
+    '//:framework_netstandard2_0_consumer_test' = 'Console consumer that is not a test application.'
+    '//:otel_sample_test' = 'OpenTelemetry sample with its own entry point.'
+    '//:windows_asset_selection_test' = 'Starlark analysis test.'
+    '//:windows_targeting_test' = 'Starlark analysis test.'
 }
 foreach ($entry in $expectedHostSkips.GetEnumerator()) { Write-Host "Unsupported on this host: $($entry.Key) ($($entry.Value))" }
 New-Item -ItemType Directory -Path $reports, $testEvidence -Force | Out-Null
@@ -95,17 +115,20 @@ function Get-TestLogPath([string] $TestLogs, [string] $Label, [string] $Relative
 }
 
 function Get-TrxSummary([string] $Path) {
-    # Counters and XPath counts keep the 100,000-case scale fixture cheap to inspect.
+    # Counters and XPath counts keep the 100,000-case scale fixture cheap to inspect. The TRX writer reports
+    # skipped and inconclusive cases as NotExecuted, so every result must be Passed or NotExecuted.
     [xml]$report = Get-Content -LiteralPath $Path -Raw
     $counters = $report.SelectSingleNode('//*[local-name()="Counters"]')
     $total = $report.SelectNodes('//*[local-name()="UnitTestResult"]').Count
-    $failed = $report.SelectNodes('//*[local-name()="UnitTestResult"][@outcome="Failed" or @outcome="Error" or @outcome="Timeout" or @outcome="Aborted"]').Count
-    if (-not $counters -or $total -eq 0 -or [int]$counters.total -ne $total -or [int]$counters.executed -eq 0 -or $failed -ne 0 -or
+    $passed = $report.SelectNodes('//*[local-name()="UnitTestResult"][@outcome="Passed"]').Count
+    $notExecuted = $report.SelectNodes('//*[local-name()="UnitTestResult"][@outcome="NotExecuted"]').Count
+    if (-not $counters -or $passed -eq 0 -or $passed + $notExecuted -ne $total -or [int]$counters.total -ne $total -or
+        [int]$counters.executed -ne $passed -or [int]$counters.passed -ne $passed -or [int]$counters.notExecuted -ne $notExecuted -or
         ([int]$counters.failed + [int]$counters.error + [int]$counters.timeout + [int]$counters.aborted) -ne 0) {
         throw "Missing, failed, or inconsistent test results: $Path"
     }
 
-    return [ordered]@{ Total = $total; Executed = [int]$counters.executed; Passed = [int]$counters.passed }
+    return [ordered]@{ Total = $total; Executed = $passed; Passed = $passed; NotExecuted = $notExecuted }
 }
 
 Push-Location $root
@@ -162,11 +185,30 @@ try {
     }
 
     $trxSummaries = [ordered]@{}
+    $missingTrx = [System.Collections.Generic.List[string]]::new()
+    $unexpectedTrx = [System.Collections.Generic.List[string]]::new()
     foreach ($label in $expectedTests) {
+        if ($expectedHostSkips.Contains($label)) {
+            continue
+        }
+
         $trx = Get-TestLogPath $testLogs $label 'test.outputs/tests.trx'
-        if (-not $expectedHostSkips.Contains($label) -and (Test-Path -LiteralPath $trx)) {
+        $fresh = (Test-Path -LiteralPath $trx) -and (Get-Item -LiteralPath $trx).LastWriteTimeUtc -ge $testStart
+        if ($nonTrxTests.Contains($label)) {
+            if ($fresh) { $unexpectedTrx.Add($label) }
+        }
+        elseif ($fresh) {
             $trxSummaries[$label] = Get-TrxSummary $trx
         }
+        else {
+            $missingTrx.Add($label)
+        }
+    }
+
+    $staleNonTrx = @($nonTrxTests.Keys | Where-Object { $_ -notin $expectedTests })
+    if ($missingTrx.Count -or $unexpectedTrx.Count -or $staleNonTrx.Count) {
+        throw "TRX evidence changed. Missing a fresh TRX: $($missingTrx -join ', '); unexpected TRX: $($unexpectedTrx -join ', '); " +
+            "no longer automatic tests: $($staleNonTrx -join ', '). Report results to TRX or document why a test has none."
     }
 
     $counts = [ordered]@{}

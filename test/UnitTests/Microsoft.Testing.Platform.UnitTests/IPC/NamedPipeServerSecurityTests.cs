@@ -865,12 +865,9 @@ public sealed class NamedPipeServerSecurityTests
             IntPtr buffer = Marshal.AllocHGlobal(sizeof(int));
             try
             {
-                if (!GetTokenInformation(token, TokenImpersonationLevelClass, buffer, sizeof(int), out _))
-                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-                }
-
-                return Marshal.ReadInt32(buffer) >= SecurityImpersonation;
+                return !GetTokenInformation(token, TokenImpersonationLevelClass, buffer, sizeof(int), out _)
+                    ? throw new Win32Exception(Marshal.GetLastWin32Error())
+                    : Marshal.ReadInt32(buffer) >= SecurityImpersonation;
             }
             finally
             {

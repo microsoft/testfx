@@ -26,11 +26,20 @@ From the repository root:
 
 `validate.ps1` builds and tests the whole graph (`//...`) with test-result
 caching disabled. It requires every automatic test target to pass, except
-documented host-incompatible targets, which must report `SKIPPED`. It also
-requires every produced TRX to have executed results and no failures. A Bazel
-query enforces a floor on the number of test targets. A second query requires
-that any `manual` target unreachable from `//...` is on a reviewed allowlist.
-Today that allowlist holds only the intentional failure probes and the
+documented host-incompatible targets, which must report `SKIPPED`. Every test
+built on the repository's MTP test entry points must write a TRX in that run
+whose results are all passed or not executed (skipped or inconclusive), with
+consistent counters and at least one pass. The remaining automatic tests
+(Starlark analysis tests, samples with their own entry points, and a console
+consumer) are on a reviewed no-TRX allowlist, and a listed test that writes a
+TRX fails validation. A Bazel query enforces a floor on the number of test
+targets. A second, unconfigured query requires that any `manual` target
+outside the dependencies of `//...`, across every `select()` branch, is on a
+reviewed allowlist. Because it is unconfigured, the net11.0 publishes of the
+test applications count as reachable even though only the active framework's
+branch is built: test targets run on net10.0 by design, while `//:managed_all`
+builds the product graph for both frameworks.
+Today the manual-target allowlist holds only the intentional failure probes and the
 reference-alias negative fixtures, and the script proves each of them fails as
 designed. It also checks discovery, real TRX/HTML/JUnit/CTRF output, paths
 containing spaces and `!`, failing-test exits, zero-result exits, mixed-module
