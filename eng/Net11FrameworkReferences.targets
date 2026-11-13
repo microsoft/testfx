@@ -1,9 +1,9 @@
 <Project>
 
-  <!-- Early .NET 12 SDKs map net11.0 to .NET 12 packs. Keep net11.0 binaries runnable on .NET 11. -->
+  <!-- Early .NET 12 SDKs map net11.0 to .NET 12 or prerelease .NET 11 packs. Pin net11.0 to the .NET 11 runtime in global.json. -->
   <PropertyGroup>
-    <Net10RuntimeVersion Condition=" '$(Net10RuntimeVersion)' == '' ">10.0.14</Net10RuntimeVersion>
-    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0-rc.3.26522.148</Net11RuntimeVersion>
+    <Net10RuntimeVersion Condition=" '$(Net10RuntimeVersion)' == '' ">10.0.15</Net10RuntimeVersion>
+    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0</Net11RuntimeVersion>
   </PropertyGroup>
 
   <!-- The pinned SDK's implicit Native AOT compiler predates the runtime servicing version in global.json. -->
@@ -39,37 +39,37 @@
           Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' == 'v11.0' ">
     <ItemGroup>
       <KnownFrameworkReference Update="@(KnownFrameworkReference)"
-                               Condition=" '%(KnownFrameworkReference.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownFrameworkReference.TargetingPackVersion)').StartsWith('12.')) ">
+                               Condition=" '%(KnownFrameworkReference.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownFrameworkReference.TargetingPackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownFrameworkReference.TargetingPackVersion)').StartsWith('12.'))) ">
         <DefaultRuntimeFrameworkVersion>$(Net11RuntimeVersion)</DefaultRuntimeFrameworkVersion>
         <LatestRuntimeFrameworkVersion>$(Net11RuntimeVersion)</LatestRuntimeFrameworkVersion>
         <TargetingPackVersion>$(Net11RuntimeVersion)</TargetingPackVersion>
       </KnownFrameworkReference>
       <KnownAppHostPack Update="@(KnownAppHostPack)"
-                        Condition=" '%(KnownAppHostPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownAppHostPack.AppHostPackVersion)').StartsWith('12.')) ">
+                        Condition=" '%(KnownAppHostPack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownAppHostPack.AppHostPackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownAppHostPack.AppHostPackVersion)').StartsWith('12.'))) ">
         <AppHostPackVersion>$(Net11RuntimeVersion)</AppHostPackVersion>
       </KnownAppHostPack>
       <KnownCrossgen2Pack Update="@(KnownCrossgen2Pack)"
-                         Condition=" '%(KnownCrossgen2Pack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownCrossgen2Pack.Crossgen2PackVersion)').StartsWith('12.')) ">
+                         Condition=" '%(KnownCrossgen2Pack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownCrossgen2Pack.Crossgen2PackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownCrossgen2Pack.Crossgen2PackVersion)').StartsWith('12.'))) ">
         <Crossgen2PackVersion>$(Net11RuntimeVersion)</Crossgen2PackVersion>
       </KnownCrossgen2Pack>
       <KnownILCompilerPack Update="@(KnownILCompilerPack)"
-                          Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownILCompilerPack.ILCompilerPackVersion)').StartsWith('12.')) ">
+                          Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownILCompilerPack.ILCompilerPackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownILCompilerPack.ILCompilerPackVersion)').StartsWith('12.'))) ">
         <ILCompilerPackVersion>$(Net11RuntimeVersion)</ILCompilerPackVersion>
       </KnownILCompilerPack>
       <KnownRuntimePack Update="@(KnownRuntimePack)"
-                        Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownRuntimePack.LatestRuntimeFrameworkVersion)').StartsWith('12.')) ">
+                        Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownRuntimePack.LatestRuntimeFrameworkVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownRuntimePack.LatestRuntimeFrameworkVersion)').StartsWith('12.'))) ">
         <LatestRuntimeFrameworkVersion>$(Net11RuntimeVersion)</LatestRuntimeFrameworkVersion>
       </KnownRuntimePack>
       <KnownILLinkPack Update="@(KnownILLinkPack)"
-                      Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownILLinkPack.ILLinkPackVersion)').StartsWith('12.')) ">
+                      Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownILLinkPack.ILLinkPackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownILLinkPack.ILLinkPackVersion)').StartsWith('12.'))) ">
         <ILLinkPackVersion>$(Net11RuntimeVersion)</ILLinkPackVersion>
       </KnownILLinkPack>
       <KnownWebAssemblySdkPack Update="@(KnownWebAssemblySdkPack)"
-                              Condition=" '%(KnownWebAssemblySdkPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownWebAssemblySdkPack.WebAssemblySdkPackVersion)').StartsWith('12.')) ">
+                              Condition=" '%(KnownWebAssemblySdkPack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownWebAssemblySdkPack.WebAssemblySdkPackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownWebAssemblySdkPack.WebAssemblySdkPackVersion)').StartsWith('12.'))) ">
         <WebAssemblySdkPackVersion>$(Net11RuntimeVersion)</WebAssemblySdkPackVersion>
       </KnownWebAssemblySdkPack>
       <KnownAspNetCorePack Update="@(KnownAspNetCorePack)"
-                          Condition=" '%(KnownAspNetCorePack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownAspNetCorePack.AspNetCorePackVersion)').StartsWith('12.')) ">
+                          Condition=" '%(KnownAspNetCorePack.TargetFramework)' == 'net11.0' AND ($([System.String]::Copy('%(KnownAspNetCorePack.AspNetCorePackVersion)').StartsWith('11.')) OR $([System.String]::Copy('%(KnownAspNetCorePack.AspNetCorePackVersion)').StartsWith('12.'))) ">
         <AspNetCorePackVersion>$(Net11RuntimeVersion)</AspNetCorePackVersion>
       </KnownAspNetCorePack>
     </ItemGroup>
