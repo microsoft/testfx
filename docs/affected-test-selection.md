@@ -1547,6 +1547,259 @@ and denial checks.
 Regression coverage includes `Serialize_NonAsciiCharacters_ProducesLosslessAsciiJson` and the packed, headless
 consumer test `ListTestsJson_HeadlessProcess_PreservesUnicode`.
 
+## Full-suite collection performance investigation (2026-11-13)
+
+The local comparison uses TestFx source `5b55ad287b4635ee4555abef0fd719450f6b7cf9`
+with only local map storage configured in isolated fixture commit
+`f52fed97d79a7958049490af46922a328c9aa905`. Its Release build and pack use
+`FastAcceptanceTest=true`, matching the Windows collection job. Independent JSON
+discovery covers the same 48 module/TFM paths as
+[build 1676866](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1676866),
+including both acceptance suites, and identifies 57,070 unique module/UID pairs.
+The historical build has 57,066 pairs at its different source revision; these
+are not identical-revision machine measurements.
+
+Both collectors use the same built modules and four instrumentation-child slots.
+AffectedTests, its Azure DevOps storage provider, and test-host CodeCoverage are
+`18.13.0-preview.26560.3`, stamped with
+`13fcbb6be5af9c988589f5474d595818085a7441`. Standalone CTS is
+`2.13.0-alpha.26530.1`, stamped with
+`fe4721e980b711722351edfd491577a03b8d4421`. All 144 affected-test companion
+DLLs in the 48 test-host layouts match their selected package payloads.
+
+| Complete local collection command | Elapsed | Exit and coverage |
+| --- | --- | --- |
+| AffectedTests repository wrapper | 5,851.629 seconds | Exit 0; all 48 exact maps and all 57,070 unique module/UID pairs. |
+| CTS repository wrapper | 2,354.798 seconds | Exit 1; all 48 maps and unique inventories, but 45 failed and 184 skipped results. |
+
+These are one sequential run per collector, not repeated medians or clean passing
+performance proof. CTS reports 56,844 passed results and records one NUnit UID
+four times versus two identical discovery records. The verifier retains that
+excess multiplicity as a failure rather than weakening the inventory check.
+AffectedTests reports 47 failed-test batches while preserving their maps; its
+successful collection exit is not an authoritative test verdict. An initial CTS
+launch rejected the local SDK junction before executing tests; that failed
+5.6-second attempt is retained separately and is not a timing sample. The retry
+excludes only that SDK junction entry, not additional tests or source modules.
+
+The acceptance suites dominate affected-test collection. MTP takes 4,104.055
+seconds with 186 measured batches of 3-16 tests; MSTest takes 5,382.700 seconds
+with 218 batches of 4-19 tests. Both have zero timing fallbacks, and their module
+lifetimes overlap. CTS's corresponding module logs contain 124 and 127 batch
+starts, including discovery, with a different process ID for each start. The
+evidence does not support assuming persistent acceptance-test processes in CTS.
+Its module summaries are 33m 38.594s and 34m 49.203s. The current question is
+which controller, setup, instrumentation, or feedback differences cause the
+extra affected-test work, not whether the 40-second unit-only sample represented
+the full repository.
+
+### Optimization contract and planned comparisons
+
+TestFx owns the unchanged consumer inventory, packaging, timing/report producers,
+and bounded collection wrapper. The coverage repository owns affected-test
+collection, native instrumentation, feedback interpretation, and batch policy.
+The coordinator retains responsibility for testing the composed shipping layout
+and subsequent package flow; local packages do not authorize a public-feed
+update, pipeline enablement, or a release-branch rollout.
+
+Preserve every discovered module/UID identity, conservative source associations,
+the explicit distinction between failed tests and infrastructure failure,
+legacy/absent feedback behavior, cancellation and descendant teardown, and
+atomic map publication. No test/TFM exclusions, retry-based failure masking,
+unbounded worker increase, or shared mutable acceptance output is an acceptable
+way to match CTS's time. A protocol or capability addition must retain an
+explicit unsupported/absent path for older hosts.
+
+| Requirement or risk | Evidence required before accepting an optimization |
+| --- | --- |
+| Causal performance improvement | Compare the exact stamped implementations and retained per-module/batch evidence; change one supported cause before rerunning matched workloads. |
+| Correct scheduling and lifecycle | Focused tests for the changed controller or lifecycle, including cancellation, nonzero exits, missing/invalid feedback, and multi-module completion where affected. |
+| Real package consumption | Aligned local packages with source/version/hash provenance; verify resolved and physically loaded payloads in the real SDK collection path. |
+| No lost work or associations | Independent discovery, all 48 module/TFM inventories, exact UID sets, and a deterministic source-association oracle or baseline preservation check. |
+| Acceptance-heavy performance | Reuse both complete acceptance modules and the full inventory gate; report failed/skipped work separately and distinguish one run from repeated measurements. |
+
+The existing/no-change path retains the measured baseline. Simply raising worker
+counts would confound resource use with collector efficiency, so it is not the
+first experiment. Replacing the affected-test entry point with standalone CTS
+would change map/storage and SDK contracts and is not the selected approach.
+The first experiment below isolates ordering before considering other changes.
+
+### First source-backed cause: discovery-order locality
+
+The coverage source investigation identifies an avoidable ordering difference:
+`RefreshChildProcess.ParseDiscoveryResponseAsync` ordinal-sorts opaque test UIDs
+before affected-test batching, while CTS preserves the producer's discovery
+order. The sort is present at the affected package's stamped source and current
+coverage main. For these MSTest acceptance modules, producer discovery is
+class-contiguous, but UID order is effectively unrelated to class identity.
+The same retained discovery documents independently reproduce the effect:
+
+| Acceptance module | Classes | Discovery-order class transitions | UID-sorted class transitions | Class/batch touches, discovery order / sorted, at a fixed 16 UIDs |
+| --- | ---: | ---: | ---: | ---: |
+| MTP | 106 | 105 | 889 | 157 / 763 |
+| MSTest | 140 | 139 | 1,145 | 206 / 996 |
+
+These are replayed grouping counts, not measured speedup. The amplification has
+a concrete consumer: `AcceptanceTestBase<TFixture>.ClassInitialize` creates a
+fixture for each derived class in every new batch process, and
+`TestAssetFixtureBase.InitializeAsync` builds its reflection and source-generation
+assets. Splitting one class across many batches repeats that setup without adding
+test coverage. Retained top-level acceptance build binlogs created during the
+exact full-run intervals number 3,290 for AffectedTests and 1,326 for CTS; retained
+log counts do not attribute every second of the difference to compilation.
+
+The first selected experiment preserves first-seen discovery order while
+ordinal-deduplicating UIDs. It retains the existing batch controller, two-child
+module cap, four-child overall budget, feedback validation, and map format.
+This is a performance-oriented scheduling change, not a pure structural
+refactor: batch coarsening can change conservative false-positive associations.
+Validation must preserve every actual source/test association with independent
+oracles, rather than require every accidental old batch union to stay identical.
+Focused order/dedup regressions must fail against the original sort and pass
+against the corrected parser before packaged acceptance measurements are credited.
+Persistent host reuse, source-data pooling, and a different execution-time target
+remain separate, untried alternatives, not bundled explanations or improvements.
+
+The existing MTP producer already enumerates its input sequence directly in
+`DiscoveredTestsJsonSerializer.Serialize`; it does not sort UIDs. Its unchanged
+16-case `DiscoveredTestsJsonSerializerTests` selection passes on each frozen
+`net10.0` and `net462` host (32 executed/passed, zero failed/skipped), with exact
+independently planned TRX identities verified by the acceptance execution gate.
+This includes
+`Serialize_MixedMetadataAndMalformedUnicode_PreservesNodeAndPropertyOrdering`.
+These are producer-contract preservation checks, not the new consumer fix's
+red/green evidence or a performance measurement. No MTP schema or public API
+change is needed for the selected experiment.
+
+### Packaged implementation and correctness proof
+
+The coverage implementation is based on
+`12d8abc4d08edd23d1123e2060d459c0b1edacd9` plus production patch SHA-256
+`090977814B07ED8E2D5610360216CBF87F4ED46230083D6020ED39B3FDFAC489`.
+The complete source/test/decision-record patch has SHA-256
+`570247503C9A85913983730608EB69B46FBAB8858A57237B3CD861C44BD0CB59`.
+The old committed `src` closure matches the published affected package's stamped
+source. Only the discovery parser's first-seen planning changes production logic;
+the existing test is strengthened for unsorted, repeated, and case-distinct UIDs,
+and its coupled real-child probe UID follows the renamed test.
+
+The locally versioned aligned tuples are
+`18.13.0-local.discoverybaseline.20261113.1` and
+`18.13.0-local.discoveryfixed.20261113.1`. Their 50 native entries match each
+other and the published `.26560.3` inputs; all 88 CodeCoverage library/runtime
+payloads are identical. Dependency groups match modulo the exact local tuple
+version and retain minimum MTP `3.0.0-preview.26559.7`. The local native-input
+overlay is build evidence, not a native-source optimization or a Unix/ARM64 run.
+
+**Test-value evidence:** the unchanged final
+`ParseDiscoveryResponseAsync_ValidResponse_PreservesDiscoveryOrderAndOrdinalUniqueness`
+assertion executes against the actual baseline package DLL and fails the order
+comparison (one case, raw exit 2), then passes against the fixed package DLL
+(one case, exit 0). Both use identical test-source bytes, SHA-256
+`C9390B86FF4ED506CF5DFB66D465972D69BB81A068FA2BA3A7926E7B350C0015`,
+and identical test-assembly bytes, SHA-256
+`449ED7D96ADF10B373B02E72E712E82F96D61683F01F6CC94551C212A547A053`.
+The complete relevant collector suite executes 381 passing cases with zero
+failures/skips, exit 0. Both packaged parser TFMs (`net10.0` and
+`netstandard2.0`) retain all 48 original inventories and all 57,070 unique
+module/UID identities. Restore/launcher failures during setup are retained
+separately and do not count as behavioral red evidence.
+
+The coordinator independently read back package hashes, manifests, payload
+comparisons, the expected red assertion, and the original 381-pass TRX. The
+full TestFx baseline has been rebuilt and packed with its own restored local
+tuple/cache, all 144 physical host payloads verified, and the actual acceptance
+`project.assets.json` and cached nupkgs checked. Timing begins only after the
+coverage build/test processes have finished. No local tuple is committed as a
+public TestFx dependency.
+
+### Complete packaged before/after result
+
+Both local tuples are restored into separate task-owned caches and used for
+full Release build/pack commands with the same TestFx source, SDK, runtime pins,
+`OfficialBuildId=20261112.90`, and `FastAcceptanceTest=true`. The only selected
+production change is discovery ordering. Each variant rebuilds the consumer
+against its own package inputs; 40 of the 48 test-assembly hashes differ, so this
+is a source-matched packaged comparison, not a byte-identical-binary comparison.
+All module/TFM paths, independent UID inventories, and frozen consumer setup and
+collection-helper hashes remain unchanged.
+
+| Complete affected-test collection | Unmodified local tuple | Discovery-order fix |
+| --- | ---: | ---: |
+| Parent elapsed, seconds | 4,879.184 | 2,778.635 |
+| Parent elapsed, minutes | 81.320 | 46.311 |
+| Exact module maps / independently expected module/UID identities | 48 / 57,070 | 48 / 57,070 |
+| Measured batches | 817 | 640 |
+| Conservative timing-fallback batches | 0 | 2 |
+| Failed-test batch diagnostics, retained | 47 | 17 |
+| Independently required source/UID associations verified | 13 / 13 | 13 / 13 |
+
+Both parent commands return 0 and confirm descendant teardown. The observed
+local elapsed reduction is **43.05%**, or **1.756x**, saving 35m 00.549s in this
+one sequential pair. No tests or TFMs are excluded. Both maps contain every
+independently discovered UID exactly once, every UID has a source association,
+and no source association names an unknown UID. The 13 additional true
+source/UID oracles cover eight source-declared methods across both acceptance
+suites; a deliberately removed required association fails that gate.
+
+The fixed MTP acceptance module takes 25.468 minutes and 79 measured batches,
+versus 56.377 minutes and 163 batches before the change. MSTest acceptance takes
+34.810 minutes and 107 measured batches, versus 66.088 minutes and 197 batches.
+Their module lifetimes overlap. Retained top-level acceptance asset build logs
+fall from 3,272 to 1,285 in the exact timed intervals, corroborating less repeated
+class setup without claiming those counts are build CPU time.
+
+The two fixed timing fallbacks explicitly report `NoExecutedTests`, one in each
+acceptance suite. The collector visibly retains legacy 4-32 bounds for that
+batch. The suppressed/interleaved output does not establish every case's
+individual outcome in those batches, so they are not reported as proven
+all-skipped batches. Missing/invalid timing is not reclassified as measured
+feedback, and these are not incomplete or silently dropped inventories.
+Failed-test batch diagnostics remain visible; successful map collection does
+not mean every collected test passed.
+
+The earlier CTS full run took 39.247 minutes, so the fixed whole-suite result
+still trails that reference by 18.00%; it is not proven whole-suite CTS parity.
+Its acceptance modules were 33.643 and 34.820 minutes, so the fixed collector
+reaches that acceptance-heavy performance level. Replaying the fixed measured
+module durations gives 91.888 minutes of total module lifetime and a 45.944-minute
+two-slot work lower bound. Current-order replay is 45.994 minutes; longest-first
+replay is 45.947 minutes. These are scheduling models, not executed additional
+optimizations, and show that queue reordering alone cannot close the remaining
+gap under those observed costs.
+
+### Remaining structural differences, not bundled optimizations
+
+The bounded source follow-up distinguishes three remaining mechanisms:
+
+| Mechanism | AffectedTests versus CTS | Evidence limit |
+| --- | --- | --- |
+| Global cross-module refill | The repository wrapper has two SDK module slots with at most two instrumentation children each. CTS uses four global workers with `--parallelize-same-module-batches` and re-enqueues eligible modules. | Same four-child ceiling, different allocation/lifetimes; changing module queue order cannot replace global budget ownership. No concurrency/protocol redesign was made. |
+| Source-collection lifetime | Affected collection creates/disposes a native source collection per batch; CTS resets and caches source collections for reuse. The fixed inventory has 642 batches; two leases per multi-batch module would require at most 90 successful initial collections. | This is an avoidable-work candidate, not a measured latency saving. The retained logs do not time creation/reset/disposal, so no claim is made that pooling closes the remaining gap. |
+| Persistence | Affected maps expand source/UID pairs and serialize/write atomically before their module finishes; CTS stores source/batch indices and uses a separate bounded persistence channel. | The formats/contracts differ. Fixed JSON maps total 1,779.747 MiB and 25,125,994 source/UID pairs, but no persistence phase timestamps establish it as the latency root cause. |
+
+The externally visible SDK process interval minus its final collection summary
+is only 28.812 seconds summed across all 48 modules (median 0.530 seconds per
+module, maximum 1.083 seconds). That boundary does not isolate work inside the
+SDK summary, but outer process launch/teardown alone cannot account for seven
+minutes. Two Framework PlatformServices maps are approximately 127.243 MiB,
+near the existing 128-MiB map bound; neither the bound nor map schema is relaxed
+to improve timing.
+
+There is one full measured run per local variant on one shared Windows machine,
+not repeated medians or an independent rerun. Earlier CTS and hosted-CI durations
+are reference results, not members of this source-matched pair. No hosted cache
+consumption, Azure upload, package flow, or actual CI savings is established.
+The implementation remains local in the coverage worktree, with verified
+source/test patches and immutable package tuples; TestFx's public dependency
+pins, rollout gates, and official/release pipelines are unchanged.
+
+Windows x64 is the measured surface; non-Windows execution, hosted Azure
+publication/cache consumption, servicing, and actual CI savings remain unproven.
+Retained commands, plans, raw maps, original TRX reports, package hashes, and
+verification diagnostics are in this session's full-collection artifacts; no
+remote publication is claimed.
+
 ## Storage design
 
 The map uses the extension's Azure DevOps artifact provider:
