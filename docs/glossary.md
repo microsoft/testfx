@@ -504,8 +504,6 @@ The `CaptureTraceOutput` setting accepts the mode names as well as the legacy bo
 
 The `Microsoft.Playwright.MSTest.v4` integration for browser end-to-end tests. When using [MSTest.Sdk](#mstestsdk), set `<EnablePlaywright>true</EnablePlaywright>` to add the package and its implicit using. This feature is supported in the default MSTest runner and VSTest modes, but not when `PublishAot=true`; MSTest.Sdk emits a build error for that combination.
 
-Starting with MSTest 5, `TestContext` is defined in `MSTest.TestFramework.dll`. `Microsoft.Playwright.MSTest.v4` was compiled against the MSTest 4 definition in `MSTest.TestFramework.Extensions.dll`, so its tests fail discovery with a type-load error until Playwright publishes a package rebuilt against MSTest 5.
-
 ### PlannedTest
 
 A sealed class (`Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest`, currently `[Experimental("MSTESTEXP")]`) that describes a test that has been discovered and passed the active filter for the current assembly, before execution begins. Exposes the test's `FullyQualifiedTestClassName`, `TestName`, `TestDisplayName`, `AssemblyPath`, `ManagedTypeName`, `ManagedMethodName`, source file location (`DeclaringFilePath`, `DeclaringLineNumber`), `TestCategories` (from `[TestCategory]`), and `TestProperties` (from `[TestProperty]`). Instances are accessed via `TestRun.Current.PlannedTests`. Data-driven tests whose rows are resolved only at execution time (non-serializable data, `TestDataSourceUnfoldingStrategy.Fold` set via `[TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]`, `[DataSource]`) appear as a single `PlannedTest` entry rather than one per row. See also [TestRun](#testrun) and RFC 014 (`docs/RFCs/014-TestRun-Current-PlannedTests.md`).
