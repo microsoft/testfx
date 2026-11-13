@@ -443,6 +443,17 @@ checks each action's declared inputs. A cache miss or eviction runs the same
 full validation rather than skipping work.
 PRs remain cold until the first successful compatible `main` seed is available.
 
+The Windows job also runs `eng/bazel/windows/validate.ps1`: it builds the
+`netstandard2.0`/`net462` compatibility variants and Windows-qualified libraries,
+executes seven native Windows consumers, and runs four additional existing unit
+test suites with result-cache reuse disabled. The analyzer and extensions unit
+suites are not yet included because their Bazel test fixtures do not match
+existing tests' assembly metadata, process output, and runtime-layout
+assumptions. It also does not include the full MTP unit suite (which has two
+known host-blocked failures), XAML compilation, or app-model activation. The
+[measured durations](#measured-ci-duration) above predate this expanded
+workload and are not timing estimates for the updated Windows job.
+
 Before a successful main save, the stopped job trims oldest cache files to
 1,536 MiB of download payload and 512 MiB of action payload: at most 2 GiB
 uncompressed per platform for a new snapshot pair. Missing blobs are ordinary

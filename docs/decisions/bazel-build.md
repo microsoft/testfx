@@ -4073,3 +4073,115 @@ recorded source, not a new full-product rerun of this lifecycle correction.
 Hosted cache authorization, transfer costs and main-seed behavior still require
 CI. Local logs, BEP, policy/source hashes and counterfactual records are retained
 under the session's `bazel-review-d9e8c1dc` evidence.
+
+## Windows CI parity expansion (2026-11-13)
+
+### Problem and contract
+
+The user asked to extend Bazel as close as possible to normal CI's build and test
+coverage. Keep the GitHub Bazel workflow optional and non-required; do not change
+the shipping Arcade pipeline or claim full parity until the remaining execution,
+packaging, and application-model gaps are closed. Native targets must continue
+to compile TestFx directly and execute selected tests without test-result cache
+reuse. Failed tests remain visible; known host failures must not be excluded or
+reported as passes.
+
+### Research and decision
+
+The existing Windows validator already builds the Windows-qualified libraries
+and seven real library consumers, and checks their TFM/runtime/hash provenance.
+`//:managed_compatibility` already compiles 26 `netstandard2.0` and five
+`net462` source variants. The existing native test targets cover all 13 original
+unit-test projects, but the complete `//:all_unit_tests` aggregate includes the
+full MTP suite, which has two confirmed host-dependent impersonation failures
+(Win32 1346). Its assertions and test selection must remain unchanged.
+
+The Windows workflow now runs the existing compatibility and Windows-native
+validation on the GitHub Windows runner, plus four existing unit suites
+(`msbuild_tests`, `server_client_tests`, `terminal_contract_tests`, and
+`self_real_tests`) beyond the portable baseline. This adds useful native
+coverage without creating a new test harness, hiding failures, or invoking
+MSBuild for producer builds. The step uses the existing Bazel output/cache and
+retains its logs, inventories, test reports, and provenance under the
+workflow's existing artifact directory.
+
+This is not a full test-TFM matrix: these existing native executable targets
+still select modern TFMs, and `net462` currently cannot be launched through
+`rules_dotnet`'s normal apphost path. The current windows validator does not
+compile XAML; native WinUI application, classic UWP/AppContainer, and full
+package-consuming acceptance validation remain separate gates. The 30-minute
+matrix-job timeout is raised to 60 minutes for the expanded Windows workload.
+No XAML compiler bridge or test suppression is included.
+
+The first local run of the expanded validator failed while compiling the exact
+`net462` `platform_services` variant: `TypeCache.ProviderDiscovery.Metadata.cs`
+uses `System.Reflection.Metadata`, but the Bazel compatibility target omitted
+that package reference. The normal project declares the package for `net462`;
+the compatibility Paket lock already resolves it transitively through
+`Microsoft.TestPlatform.ObjectModel`. Add that locked package only to the
+`net462` Bazel variant, rather than broadening the `netstandard2.0` or modern
+dependency graphs. This failure is a real compatibility build gap, not a
+toolchain/setup failure.
+
+After that build fix, the second local run passed the compatibility build,
+Windows library build, and Windows-targeting tests, then exposed a separate
+existing Bazel test-target gap: recent extension tests use the `ctrf` extern
+alias declared by their project file, but `extension_tests_binary` had not
+configured the CTRF reference's aliases. The native `:ctrf` dependency was
+already present through the shared test dependency list; its Bazel alias
+configuration now matches the project file's `global,ctrf` pair. No test source
+or assertions changed. The next local compilation then showed that MSBuild
+links `test/Utilities/TestFxOpenTelemetry.cs` through `test/Directory.Build.targets`,
+while the native Bazel target had omitted that shared test helper. Link the same
+source into the Bazel test binary; this aligns its test inputs with MSBuild and
+does not alter test assertions.
+
+### Validation plan and matrix
+
+| Requirement / risk | Automated E2E evidence | Rendered check / gap |
+| --- | --- | --- |
+| Legacy source builds are included | `//:managed_compatibility` inventory asserts 26 exact `netstandard2.0` and five exact `net462` outputs. | Nonvisual compiler/metadata evidence. |
+| Windows TFMs use native compiler actions and run in their target layout | `eng/bazel/windows/validate.ps1` builds `//:windows_libraries` and `//:windows_probes`; its seven consumers check runtime, loaded assembly hash, TFM and platform metadata. | No XAML UI is compiled or rendered. |
+| Additional existing unit suites execute rather than reuse cached results | Explicitly run `msbuild_tests`, `server_client_tests`, `terminal_contract_tests`, and `self_real_tests` with `--nocache_test_results`; require a complete TRX with no failed or unknown outcomes and at least one pass for each target. | Nonvisual test-result evidence. The analyzer and extensions suites currently have native-test-fixture mismatches; full MTP remains blocked by two known runner failures. |
+| Existing portable behavior remains covered | `.github/workflows/bazel.yml` retains `validate.ps1` and `validate-packages.ps1` on both OSes. | Linux remains on its current supported portable matrix. |
+
+Exploratory local runs attempted all six additional suites. The analyzer suite
+had 16 failures: ten `GlobalConfigGeneratorContinuationTests` threw a
+`NullReferenceException` in `GetToolPath()` because Bazel's test assembly lacks
+the expected `AssemblyConfigurationAttribute`; six process tests received the
+native runner's parallelization banner where they expect a ready marker. The
+extensions suite had seven failures: its build-configuration metadata assertion
+failed, and six child test-host launches could not resolve `Azure.AI.OpenAI`
+from the Bazel runfiles. Keep these suites out of the workflow rather than
+waiving those failures. The four selected suites passed in the same run.
+
+### Local validation
+
+The final local source state was based on `9d93a40e7fd3c5c43bbbb9dea07f699655a4d456`;
+the expanded validator retained its tracked diff as `source.patch` alongside
+the logs and test reports in
+`Q:\tfb\6bc82916c23e\windows-validation\20261113-111234-f16993fa`. Under Bazel
+9.1.1 and the rules_dotnet .NET SDK `11.0.100-rc.3.26522.148`:
+
+| Command | Result |
+| --- | --- |
+| `.\eng\bazel\windows\validate.ps1` | Exit 0: exact 26 `netstandard2.0` and five `net462` variants built; both Windows-targeting tests passed; all seven packaged/desktop/UWP/WinUI consumers passed with staged-layout assembly hashes verified. |
+| `.\eng\bazel.ps1 test //:msbuild_tests //:server_client_tests //:terminal_contract_tests //:self_real_tests --jobs=2 --nocache_test_results --noshow_progress --show_result=0` | Exit 0: 1,109 results, 1,096 passed, 13 skipped, zero failures. |
+| `.\eng\bazel\validate.ps1 -EvidenceRoot 'Q:\tfb\6bc82916c23e\windows-validation\portable-baseline'` | Exit 0: portable build/test matrix, report, failure, empty-selection, mixed-result, and toolchain-provenance checks passed. |
+| `.\eng\bazel\validate-packages.ps1 -EvidenceRoot 'Q:\tfb\6bc82916c23e\windows-validation\package-validation'` | Exit 0: package archives, four TFM consumers, and runtime pass/failure/zero-result paths passed. |
+
+| Suite | Total | Passed | Skipped |
+| --- | ---: | ---: | ---: |
+| `msbuild_tests` | 466 | 461 | 5 |
+| `server_client_tests` | 603 | 595 | 8 |
+| `terminal_contract_tests` | 16 | 16 | 0 |
+| `self_real_tests` | 24 | 24 | 0 |
+| **Total** | **1,109** | **1,096** | **13** |
+
+The original `net462` compilation failure with the package absent, followed by
+the same compatibility build succeeding with the locked reference, provides
+build-graph regression evidence; this is not a product-behavior red/green test.
+PowerShell parsing, workflow YAML parsing, and `git diff --check` also passed.
+This change is local and is not yet verified by a GitHub-hosted workflow. XAML
+compilation, AppContainer activation, and rendered UI checks do not apply to
+the changed build-validation behavior.

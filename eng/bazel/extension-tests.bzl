@@ -28,12 +28,16 @@ def extension_unit_tests():
             "//eng/bazel:NativeUnitTestMain.cs",
             "//eng/bazel:PortableTestFrameworkMetadata.cs",
             "test/Utilities/TestAssertExtensions.cs",
+            "test/Utilities/TestFxOpenTelemetry.cs",
             "test/Utilities/ValidationResultExtensions.cs",
         ],
         defines = ["TESTFX_TELEMETRY", "TESTFX_CRASHDUMP_IGNORE_UNSUPPORTED"],
         usings = ["Microsoft.Testing.TestInfrastructure", "Polyfills"],
         generate_documentation_file = False,
-        reference_aliases = {"Microsoft.Testing.Extensions.GitHubActionsReport": ["ghactions"]},
+        reference_aliases = {
+            "Microsoft.Testing.Extensions.CtrfReport": ["global", "ctrf"],
+            "Microsoft.Testing.Extensions.GitHubActionsReport": ["ghactions"],
+        },
         deps = native_unit_test_deps() + [
             ":telemetry",
             ":hotreload",

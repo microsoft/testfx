@@ -52,7 +52,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -92,6 +92,10 @@ jobs:
       - name: Validate native packages and self-contained runtimes
         shell: pwsh
         run: .\eng\bazel\validate-packages.ps1
+      - name: Validate expanded Windows and compatibility matrix
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\eng\bazel\windows\validate.ps1 -ArtifactsDirectory "$env:GITHUB_WORKSPACE\artifacts\bazel-validation\windows-expanded"
       - name: Stop the worktree's Bazel server
         if: always()
         shell: pwsh
