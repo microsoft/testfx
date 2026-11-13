@@ -196,6 +196,11 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Elemento di distribuzione non valido: la directory di output '{1}' o il percorso specificato '{0}' contiene caratteri non validi.</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
+      <trans-unit id="DeploymentItemNotSupportedForUi">
+        <source>DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</source>
+        <target state="new">DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</target>
+        <note>Do not localize the API name {Locked="DeploymentItemAttribute"} or the application-model names {Locked="UWP"}{Locked="WinUI"}.</note>
+      </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
         <target state="translated">Elemento della distribuzione non valido: la directory di output non può essere null.</target>

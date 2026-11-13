@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if !NETSTANDARD2_0 && !WINDOWS_UWP && !WIN_UI
+#if !NETSTANDARD2_0
 
 /// <summary>
 /// Used to specify a deployment item (file or directory) for per-test deployment. The specified files
@@ -19,6 +19,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// If specified on a test class, the class needs to contain at least one test method. This means that the
 /// attribute cannot be combined with a test class that would contain only an AssemblyInitialize or
 /// ClassInitialize method.
+/// Deployment items are not supported by UWP or WinUI test hosts. Tests using this attribute in
+/// those hosts fail before their test body executes.
 /// </remarks>
 /// <example>
 /// <code>

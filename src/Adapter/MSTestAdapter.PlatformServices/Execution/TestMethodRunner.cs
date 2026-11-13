@@ -314,6 +314,24 @@ internal sealed partial class TestMethodRunner
             throw ApplicationStateGuard.Unreachable();
         }
 
+#if (WINDOWS_UWP || WIN_UI) && NET
+        IReflectionOperations reflection = PlatformServiceProvider.Instance.ReflectionOperations;
+        if (reflection.IsAttributeDefined<DeploymentItemAttribute>(_testMethodInfo.MethodInfo)
+            || reflection.IsAttributeDefined<DeploymentItemAttribute>(_testMethodInfo.Parent.ClassType))
+        {
+            _testContext.SetOutcome(UnitTestOutcome.Failed);
+            return
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.Failed,
+                    DisplayName = _test.DisplayName,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Failed, Resource.DeploymentItemNotSupportedForUi),
+                },
+            ];
+        }
+#endif
+
         // Fast path for non-data-driven tests (the common case).
         // A single attribute scan replaces the two scans done by TryExecuteDataSourceBasedTestsAsync and
         // TryExecuteFoldedDataDrivenTestsAsync, and avoids allocating a List<TestResult> that would

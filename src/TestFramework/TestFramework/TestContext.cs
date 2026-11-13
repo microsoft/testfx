@@ -37,13 +37,11 @@ public abstract class TestContext
 
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
     internal static readonly string TestNameLabel = nameof(TestName);
-#if !WINDOWS_UWP && !WIN_UI
     internal static readonly string TestRunDirectoryLabel = nameof(TestRunDirectory);
     internal static readonly string DeploymentDirectoryLabel = nameof(DeploymentDirectory);
     internal static readonly string ResultsDirectoryLabel = nameof(ResultsDirectory);
     internal static readonly string TestRunResultsDirectoryLabel = nameof(TestRunResultsDirectory);
     internal static readonly string TestResultsDirectoryLabel = nameof(TestResultsDirectory);
-#endif
 
     /// <summary>
     /// Gets test properties for a test.
@@ -84,7 +82,6 @@ public abstract class TestContext
     public abstract DbConnection? DataConnection { get; }
 #endif
 
-#if !WINDOWS_UWP && !WIN_UI
     #region Test run deployment directories
 
     /// <summary>
@@ -100,6 +97,10 @@ public abstract class TestContext
     ///         \&lt;MachineName&gt;                    // TestRunResultsDirectory
     ///     \Out                                 // DeploymentDirectory
     /// </code>
+    /// <para>
+    /// UWP and WinUI test hosts do not support deployment directories. All test-run directory
+    /// properties return <see langword="null"/> in those hosts, even if a same-named property is present in <see cref="Properties"/>.
+    /// </para>
     /// </remarks>
     public virtual string? TestRunDirectory => GetProperty<string>(TestRunDirectoryLabel);
 
@@ -108,6 +109,7 @@ public abstract class TestContext
     /// </summary>
     /// <remarks>
     /// When app domains are disabled, this can instead point at the test assembly directory.
+    /// Returns <see langword="null"/> in UWP and WinUI test hosts.
     /// </remarks>
     public virtual string? DeploymentDirectory => GetProperty<string>(DeploymentDirectoryLabel);
 
@@ -117,6 +119,7 @@ public abstract class TestContext
     /// <remarks>
     /// In the current implementation this returns the same path as <see cref="TestResultsDirectory"/> (the <c>In</c> directory).
     /// When run directory information is unavailable, the platform services layer can fall back to the application base directory.
+    /// Returns <see langword="null"/> in UWP and WinUI test hosts.
     /// </remarks>
     public virtual string? ResultsDirectory => GetProperty<string>(ResultsDirectoryLabel);
 
@@ -135,6 +138,7 @@ public abstract class TestContext
     /// </code>
     /// <para>
     /// When run directory information is unavailable, the platform services layer can return the same path for both properties.
+    /// UWP and WinUI test hosts return <see langword="null"/>.
     /// </para>
     /// </remarks>
     public virtual string? TestRunResultsDirectory => GetProperty<string>(TestRunResultsDirectoryLabel);
@@ -143,6 +147,7 @@ public abstract class TestContext
     /// Gets the directory for test result files (the "In" directory). This is the same path as <see cref="ResultsDirectory"/>
     /// and is typically the parent of <see cref="TestRunResultsDirectory"/>. When run directory information is unavailable,
     /// the platform services layer can return the same path for both properties.
+    /// UWP and WinUI test hosts return <see langword="null"/>.
     /// </summary>
     public virtual string? TestResultsDirectory => GetProperty<string>(TestResultsDirectoryLabel);
 
@@ -160,6 +165,9 @@ public abstract class TestContext
     /// This is a *per-test* directory, so it returns <see langword="null"/> when accessed outside of
     /// a test — for example from <c>[AssemblyInitialize]</c>, <c>[ClassInitialize]</c>,
     /// <c>[ClassCleanup]</c>, or <c>[AssemblyCleanup]</c> — where there is no single owning test.
+    /// </para>
+    /// <para>
+    /// UWP and WinUI test hosts do not provide this directory and always return <see langword="null"/>.
     /// </para>
     /// <para>
     /// The directory is deleted automatically when the test passes and retained when the test
@@ -192,7 +200,6 @@ public abstract class TestContext
     public virtual string? TestTempDirectory => null;
 
     #endregion
-#endif
 
     /// <summary>
     /// Gets the Fully-qualified name of the class containing the test method currently being executed.

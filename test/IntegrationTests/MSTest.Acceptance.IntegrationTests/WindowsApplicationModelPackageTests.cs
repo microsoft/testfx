@@ -162,9 +162,9 @@ public sealed class WindowsApplicationModelPackageTests
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows-specific framework assets are produced only by Windows packs.")]
     [DataRow("lib/net462/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_Net462_IsAvailable")]
-    [DataRow("lib/uap10.0/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_ClassicUwp_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_ModernUwp_IsUnavailable")]
-    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.dll", false, false, DisplayName = "DeploymentItem_WinUI_IsUnavailable")]
+    [DataRow("lib/uap10.0/MSTest.TestFramework.dll", false, true, DisplayName = "DeploymentItem_ClassicUwp_IsUnavailable")]
+    [DataRow("buildTransitive/net10.0/uwp/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_ModernUwp_IsAvailable")]
+    [DataRow("buildTransitive/net10.0/winui/MSTest.TestFramework.dll", true, true, DisplayName = "DeploymentItem_WinUI_IsAvailable")]
     public void PackedMSTestTestFramework_DeploymentItemAvailabilityMatchesWindowsTargetFramework(string assemblyPath, bool expectedAvailable, bool directoriesAvailable)
         => AssertCoreContract(assemblyPath, expectedAvailable, directoriesAvailable);
 
