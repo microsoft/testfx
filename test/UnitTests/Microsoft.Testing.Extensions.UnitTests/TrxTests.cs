@@ -732,6 +732,63 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithOnlyStateAndTiming_UsesFallbackClassNameAndDisplayNameAsMethodName()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        DateTimeOffset startTime = new(2026, 9, 27, 12, 0, 0, TimeSpan.Zero);
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TimingProperty(new TimingInfo(startTime, startTime.AddSeconds(3), TimeSpan.FromSeconds(3))));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([ExtractTestResult("test()", "My display name", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Completed");
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement testMethod = xml.Descendants(ns + "TestMethod").Single();
+        Assert.AreEqual("DefaultClassName", testMethod.Attribute("className")!.Value);
+        Assert.AreEqual("My display name", testMethod.Attribute("name")!.Value);
+        Assert.AreEqual("00:00:03.0000000", xml.Descendants(ns + "UnitTestResult").Single().Attribute("duration")!.Value);
+    }
+
+    [TestMethod]
+    [DataRow(null, "My.Namespace.MyType")]
+    [DataRow("Fqn.Namespace.FqnType", "Fqn.Namespace.FqnType")]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTestMethodIdentifier_ClassNameIsFullyQualifiedTypeNameElseNamespaceAndType(string? fullyQualifiedTypeName, string expectedClassName)
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TestMethodIdentifierProperty("assembly", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void"));
+        if (fullyQualifiedTypeName is not null)
+        {
+            propertyBag.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedTypeName));
+        }
+
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([ExtractTestResult("test()", "My display name", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement testMethod = memoryStream.TrxContent.Descendants(ns + "TestMethod").Single();
+        Assert.AreEqual(expectedClassName, testMethod.Attribute("className")!.Value);
+        Assert.AreEqual("MyMethod", testMethod.Attribute("name")!.Value);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByTestNode_TrxContainsResultFile()
     {
         // Arrange
@@ -1081,6 +1138,11 @@ public class TrxTests
             propertyBag.Add(new TrxFullyQualifiedTypeNameProperty("MyNamespace.MyClass"));
         }
 
+        return ExtractTestResult(uid, displayName, propertyBag);
+    }
+
+    private static TrxTestResult ExtractTestResult(string uid, string displayName, PropertyBag propertyBag)
+    {
         var message = new TestNodeUpdateMessage(
                 new SessionUid("1"),
                 new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });

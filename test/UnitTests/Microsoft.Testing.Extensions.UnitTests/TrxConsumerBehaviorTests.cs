@@ -90,6 +90,29 @@ public sealed class TrxConsumerBehaviorTests
     }
 
     [TestMethod]
+    public async Task Session_NodeWithOnlyStateAndTimingStreamsAndReportsFallbackClassName()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        using var cancellation = new CancellationTokenSource();
+        var session = new TestSessionContext(cancellation.Token);
+        TrxReportGenerator generator = fixture.CreateGenerator();
+        await generator.OnTestSessionStartingAsync(session);
+        TimingProperty timing = new(new TimingInfo(TrxBehaviorFixture.Start, TrxBehaviorFixture.Start.AddSeconds(2), TimeSpan.FromSeconds(2)));
+        TestNode node = new() { Uid = "bare", DisplayName = "bare display name", Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, timing) };
+
+        await generator.ConsumeAsync(null!, new TestNodeUpdateMessage(new SessionUid("fixture-session"), node), cancellation.Token);
+        await fixture.FinishAsync(generator, session);
+
+        XElement testMethod = fixture.Report.Descendants(Ns + "TestMethod").Single();
+        Assert.AreEqual("DefaultClassName", (string?)testMethod.Attribute("className"));
+        Assert.AreEqual("bare display name", (string?)testMethod.Attribute("name"));
+        Assert.AreEqual("00:00:02.0000000", (string?)fixture.Report.Descendants(Ns + "UnitTestResult").Single().Attribute("duration"));
+        Assert.AreEqual("Completed", (string?)fixture.Report.Descendants(Ns + "ResultSummary").Single().Attribute("outcome"));
+        Assert.IsEmpty(fixture.Displays);
+        Assert.HasCount(1, fixture.Publications);
+    }
+
+    [TestMethod]
     public async Task Session_ZeroResultsAvoidsWriterAndProducesEmptyReport()
     {
         using var fixture = new TrxBehaviorFixture();
