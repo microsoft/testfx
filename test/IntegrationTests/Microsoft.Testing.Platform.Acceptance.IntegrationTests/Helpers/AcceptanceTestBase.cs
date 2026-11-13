@@ -18,8 +18,8 @@ public abstract class AcceptanceTestBase
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
-        MicrosoftExtensionsHostingVersion = GetPackageVersion(cpmPropFileDoc, "Microsoft.Extensions.Logging");
-        OpenTelemetryVersion = GetPackageVersion(cpmPropFileDoc, "OpenTelemetry");
+        MicrosoftExtensionsHostingVersion = GetPackageVersion("Microsoft.Extensions.Hosting");
+        OpenTelemetryVersion = GetPackageVersion("OpenTelemetry");
 
         using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
         MSBuildSdkExtrasVersion = globalJson.RootElement
@@ -171,12 +171,14 @@ public abstract class AcceptanceTestBase
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
-    private static string GetPackageVersion(XDocument centralPackageManagementDocument, string packageName)
-        => centralPackageManagementDocument
-            .Descendants("PackageVersion")
-            .Single(element => string.Equals(element.Attribute("Include")?.Value, packageName, StringComparison.Ordinal))
-            .Attribute("Version")?.Value
-            ?? throw new InvalidOperationException($"Directory.Packages.props does not define a version for '{packageName}'.");
+    private static string GetPackageVersion(string packageName)
+    {
+        string? version = typeof(Constants).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .SingleOrDefault(attribute => string.Equals(attribute.Key, packageName, StringComparison.Ordinal))?.Value;
+        return !string.IsNullOrEmpty(version)
+            ? version
+            : throw new InvalidOperationException($"The test infrastructure does not define an evaluated version for '{packageName}'.");
+    }
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {
