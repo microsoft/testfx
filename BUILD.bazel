@@ -82,7 +82,6 @@ filegroup(
         ":crashdump",
         ":ctrf",
         ":framework",
-        ":framework_extensions",
         ":github_report",
         ":globalconfigs_generator",
         ":hangdump",
@@ -179,7 +178,6 @@ testfx_binary(
         ":adapter",
         ":ctrf",
         ":framework",
-        ":framework_extensions",
         ":html",
         ":junit",
         ":trx",
@@ -210,7 +208,6 @@ testfx_binary(
     deps = [
         ":assert_generator",
         ":framework",
-        ":framework_extensions",
         ":internal_test_framework",
         ":trx",
         "@paket.source//awesomeassertions",

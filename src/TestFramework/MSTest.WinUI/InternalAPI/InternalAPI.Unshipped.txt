@@ -1,0 +1,4 @@
+#nullable enable
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.WaitForApplicationStartup<T>(System.Threading.Tasks.TaskCompletionSource<T>! startupCompletion, System.Func<System.TimeSpan, bool>! waitForUiThreadExit, System.TimeSpan timeout, System.TimeSpan pollInterval) -> void

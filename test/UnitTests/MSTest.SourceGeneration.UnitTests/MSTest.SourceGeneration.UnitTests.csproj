@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
     <!-- Reference the generator project as a regular library so that the generator class can be instantiated in tests. -->
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.SourceGeneration\MSTest.SourceGeneration.csproj" />
   </ItemGroup>

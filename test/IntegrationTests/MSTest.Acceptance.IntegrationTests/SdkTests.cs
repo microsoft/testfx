@@ -425,11 +425,13 @@ namespace MSTestSdkTest
               </PropertyGroup>
 
               <ItemGroup>
-                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+                <PackageReference Include="MSTest.Uwp" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
               </ItemGroup>
 
-              <Import Project="$(PkgMSTest_TestAdapter)\buildTransitive\uap10.0\MSTest.TestAdapter.targets"
-                      Condition=" '$(PkgMSTest_TestAdapter)' != '' " />
+              <Import Project="$(PkgMSTest_Uwp)\buildTransitive\uap10.0.16299\MSTest.Uwp.props"
+                      Condition=" '$(PkgMSTest_Uwp)' != '' " />
+              <Import Project="$(PkgMSTest_Uwp)\buildTransitive\uap10.0.16299\MSTest.Uwp.targets"
+                      Condition=" '$(PkgMSTest_Uwp)' != '' " />
 
               <Target Name="PrintSatelliteCultures" DependsOnTargets="GetMSTestV2CultureHierarchy">
                 <Message Text="SatelliteCultures=[@(MSTestV2Files->'%(UICulture)')]" Importance="High" />
@@ -467,11 +469,13 @@ namespace MSTestSdkTest
               </PropertyGroup>
 
               <ItemGroup>
-                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+                <PackageReference Include="MSTest.Uwp" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
               </ItemGroup>
 
-              <Import Project="$(PkgMSTest_TestAdapter)\buildTransitive\uap10.0\MSTest.TestAdapter.targets"
-                      Condition=" '$(PkgMSTest_TestAdapter)' != '' " />
+              <Import Project="$(PkgMSTest_Uwp)\buildTransitive\uap10.0.16299\MSTest.Uwp.props"
+                      Condition=" '$(PkgMSTest_Uwp)' != '' " />
+              <Import Project="$(PkgMSTest_Uwp)\buildTransitive\uap10.0.16299\MSTest.Uwp.targets"
+                      Condition=" '$(PkgMSTest_Uwp)' != '' " />
 
               <Target Name="PrintSatelliteCultures" DependsOnTargets="GetMSTestV2CultureHierarchy">
                 <Message Text="SatelliteCultures=[@(MSTestV2Files->'%(Culture)')]" Importance="High" />
@@ -805,9 +809,11 @@ namespace MSTestSdkTest
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
-        // Ensure that MSTest.Framework is referenced
+        // Ordinary helpers reference only the shared framework.
         Assert.Contains(r => r.Text.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase), references);
-        Assert.Contains(r => r.Text.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase), references);
+        Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase), references);
+        Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.Uwp.dll", StringComparison.OrdinalIgnoreCase), references);
+        Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.WinUI.dll", StringComparison.OrdinalIgnoreCase), references);
 
         // No adapter, no extensions, no vstest sdk
         Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase), references);
@@ -1257,7 +1263,7 @@ namespace MSTestWebTest
         result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
         result.AssertOutputContains("ControllerTfm=net11.0");
         result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx;mstest;EndContract");
-        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputContains("MSTest.Uwp");
         result.AssertOutputContains("MSTest.TestFramework");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
         result.AssertOutputContains("TestContainer");
@@ -1375,10 +1381,15 @@ namespace MSTestWebTest
 
         string adapterPath = resolvedAssets.Single(
             path => path.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase));
-        string frameworkExtensionsPath = resolvedAssets.Single(
-            path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase));
+        string frameworkPath = resolvedAssets.Single(
+            path => path.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", adapterPath, adapterPath);
-        Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", frameworkExtensionsPath, frameworkExtensionsPath);
+        Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", frameworkPath, frameworkPath);
+        Assert.DoesNotContain(
+            path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith("MSTest.Uwp.dll", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith("MSTest.WinUI.dll", StringComparison.OrdinalIgnoreCase),
+            resolvedAssets);
         Assert.DoesNotContain(
             path => path.Contains("Microsoft.Testing.Extensions.PackagedApp", StringComparison.OrdinalIgnoreCase),
             resolvedAssets);
@@ -1502,7 +1513,7 @@ namespace MSTestWebTest
         result.AssertOutputContains("WindowsTestContract:UseVSTest=true;GenerateEntryPoint=false;GenerateHelper=false;PackagedApp=;OutputType=Exe;IsTestProject=true;");
         result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=;EndContract");
         result.AssertOutputContains("Microsoft.NET.Test.Sdk");
-        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputContains("MSTest.WinUI");
         result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
     }
 
@@ -1526,9 +1537,9 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [DataRow("net10.0", "Windows_NT", "mstest-appmodel-controller.exe", "net10.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("net11.0", "Windows_NT", "mstest-appmodel-controller.exe", "net11.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("net11.0", "Unix", "", "", "")]
+    [DataRow("net10.0-windows10.0.26100.0", "Windows_NT", "mstest-appmodel-controller.exe", "net10.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0-windows10.0.26100.0", "Windows_NT", "mstest-appmodel-controller.exe", "net11.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0-windows10.0.26100.0", "Unix", "", "", "")]
     public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
         string targetFramework, string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
     {
@@ -1589,6 +1600,7 @@ namespace MSTestWebTest
               <PropertyGroup>
                 <TargetFramework>$TargetFramework$</TargetFramework>
                 <OutputType>Exe</OutputType>
+                <EnableWindowsTargeting>true</EnableWindowsTargeting>
                 <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
                 <NoWarn>$(NoWarn);NETSDK1201;NU1507</NoWarn>
                 $ApplicationModelProperties$
@@ -1615,7 +1627,7 @@ namespace MSTestWebTest
             Source
                 .PatchCodeWithReplace("$AssetName$", assetName)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$TargetFramework$", targetFramework ?? TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$TargetFramework$", targetFramework ?? $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0")
                 .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
         string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 

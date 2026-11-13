@@ -1,0 +1,30 @@
+<Project>
+
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(ModernUwpMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(UwpMinimum)' != '' ">$(UwpMinimum);$(TargetFrameworks)</TargetFrameworks>
+    <PackageId>MSTest.Uwp</PackageId>
+    <AssemblyName>MSTest.Uwp</AssemblyName>
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+    <PackageDescription><![CDATA[Write and run UI-thread tests in classic and modern UWP applications with the UWP-specific MSTest framework and adapter.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
+  <Import Project="..\PlatformPackage\PlatformPackage.props" />
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\MSTest.Uwp.rd.xml" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+  <Import Project="..\PlatformPackage\PlatformPackage.targets" />
+
+</Project>
