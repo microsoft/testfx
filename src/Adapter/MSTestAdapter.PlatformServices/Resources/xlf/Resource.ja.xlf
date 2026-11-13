@@ -196,6 +196,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">無効な配置項目です: 指定されたパス '{0}' または出力ディレクトリ '{1}' に使用できない文字が含まれています。</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
+      <trans-unit id="DeploymentItemNotSupportedForUi">
+        <source>DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</source>
+        <target state="new">DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</target>
+        <note>Do not localize the API name {Locked="DeploymentItemAttribute"} or the application-model names {Locked="UWP"}{Locked="WinUI"}.</note>
+      </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
         <target state="translated">無効な配置項目です: 出力ディレクトリを null にすることはできません。</target>

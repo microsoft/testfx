@@ -54,11 +54,12 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             Net10TargetFramework);
     }
 
-    [DataRow(Net10TargetFramework)]
-    [DataRow(Net11TargetFramework)]
+    [DataRow(Net10TargetFramework, false, DisplayName = "ModernUwp_Net10")]
+    [DataRow(Net11TargetFramework, false, DisplayName = "ModernUwp_Net11")]
+    [DataRow(Net10TargetFramework, true, DisplayName = "ModernUwp_UnsupportedDeployment")]
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP execution is supported only on Windows.")]
-    public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp(string targetFramework)
+    public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp(string targetFramework, bool unsupportedDeployment)
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
         string assetName = $"ModernUwp{uniqueSuffix[..12]}";
@@ -69,6 +70,10 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", targetFramework);
+        if (unsupportedDeployment)
+        {
+            sourceCode += UnsupportedDeploymentSource.PatchCodeWithReplace("$AssetName$", assetName);
+        }
 
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
         string executionDirectory = Path.Combine(Path.GetTempPath(), nameof(ModernUwpTests), uniqueSuffix);
@@ -129,7 +134,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
                             TestContext.CancellationToken);
 
                     Assert.AreEqual(
-                        0,
+                        unsupportedDeployment ? 1 : 0,
                         run.ExitCode,
                         $"MTP failed to execute the real Modern UWP project '{build.ProjectPath}'. TRX: '{run.TrxPath}'. " +
                         $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +
@@ -145,7 +150,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
                         run.StandardOutput,
                         $"MTP reported zero discovered tests for '{build.ProjectPath}'.");
 
-                    AssertModernUwpTrx(run.TrxPath, build);
+                    AssertModernUwpTrx(run.TrxPath, build, unsupportedDeployment);
                 });
             cleanupSucceeded = true;
         }
@@ -177,7 +182,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
         }
     }
 
-    private static void AssertModernUwpTrx(string trxPath, UwpBuildResult build)
+    private static void AssertModernUwpTrx(string trxPath, UwpBuildResult build, bool unsupportedDeployment)
     {
         Assert.IsTrue(
             File.Exists(trxPath),
@@ -186,29 +191,37 @@ public sealed class ModernUwpTests : AcceptanceTestBase
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var trx = XDocument.Load(trxPath);
         XElement[] results = [.. trx.Descendants(ns + "UnitTestResult")];
-        Assert.HasCount(2, results, $"Expected exactly the plain and UI Modern UWP tests in '{trxPath}'.");
-
-        string[] actualTestNames = results
-            .Select(result => (string?)result.Attribute("testName"))
-            .Where(name => name is not null)
-            .Cast<string>()
-            .Order(StringComparer.Ordinal)
-            .ToArray();
-        string[] expectedTestNames =
+        int failures = unsupportedDeployment ? 2 : 0;
+        string[] expectedResults = unsupportedDeployment
+            ?
+            [
+                "InheritedClassDeployment:Failed",
+                "InheritedMethodDeployment:Failed",
+                "PlainTestMethod_RunsInPackagedUwp:Passed",
+                "UITestMethod_RunsOnCoreWindowDispatcher:Passed",
+            ]
+            :
         [
-            "PlainTestMethod_RunsInPackagedUwp",
-            "UITestMethod_RunsOnCoreWindowDispatcher",
+            "PlainTestMethod_RunsInPackagedUwp:Passed",
+            "UITestMethod_RunsOnCoreWindowDispatcher:Passed",
         ];
-        Assert.AreSequenceEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
-        Assert.IsTrue(
-            results.All(result => (string?)result.Attribute("outcome") == "Passed"),
-            $"Every Modern UWP result must pass. TRX: '{trxPath}'.");
+        Assert.AreSequenceEqual(
+            expectedResults,
+            results.Select(result => $"{result.Attribute("testName")!.Value}:{result.Attribute("outcome")!.Value}").Order(StringComparer.Ordinal),
+            $"Unexpected Modern UWP identities/outcomes in '{trxPath}'.");
+        foreach (XElement result in results.Where(result => (string?)result.Attribute("outcome") == "Failed"))
+        {
+            Assert.Contains(
+                "DeploymentItemAttribute is not supported by UWP or WinUI test hosts.",
+                result.Descendants(ns + "Message").Single().Value);
+            Assert.DoesNotContain("DEPLOYMENT_BODY_EXECUTED", result.Value);
+        }
 
         XElement counters = trx.Descendants(ns + "Counters").Single();
-        AssertCounter(counters, "total", 2, trxPath);
-        AssertCounter(counters, "executed", 2, trxPath);
+        AssertCounter(counters, "total", 2 + failures, trxPath);
+        AssertCounter(counters, "executed", 2 + failures, trxPath);
         AssertCounter(counters, "passed", 2, trxPath);
-        AssertCounter(counters, "failed", 0, trxPath);
+        AssertCounter(counters, "failed", failures, trxPath);
         AssertCounter(counters, "error", 0, trxPath);
         AssertCounter(counters, "inconclusive", 0, trxPath);
         AssertCounter(counters, "notExecuted", 0, trxPath);
@@ -219,6 +232,34 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             expected.ToString(CultureInfo.InvariantCulture),
             (string?)counters.Attribute(name),
             $"Unexpected '{name}' counter in '{trxPath}'.");
+
+    private const string UnsupportedDeploymentSource = """
+
+        #file UnsupportedDeploymentTests.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        namespace $AssetName$;
+
+        public abstract class MethodDeploymentBase
+        {
+            [TestMethod]
+            [DeploymentItem("not-deployed.txt")]
+            public void InheritedMethodDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+
+        [TestClass]
+        public sealed class InheritedMethodDeploymentTests : MethodDeploymentBase;
+
+        [DeploymentItem("not-deployed.txt")]
+        public abstract class ClassDeploymentBase;
+
+        [TestClass]
+        public sealed class InheritedClassDeploymentTests : ClassDeploymentBase
+        {
+            [TestMethod]
+            public void InheritedClassDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+        }
+        """;
 
     private const string ModernUwpSourceCode = """
 #file $AssetName$.csproj
@@ -404,11 +445,19 @@ namespace $AssetName$;
 [TestClass]
 public sealed class ModernUwpPackageTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void PlainTestMethod_RunsInPackagedUwp()
     {
         Assert.AreEqual("$PackageIdentityName$", Package.Current.Id.Name);
         Assert.IsFalse(string.IsNullOrWhiteSpace(Package.Current.Id.FamilyName));
+        string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
+        foreach (string directory in directories)
+        {
+            TestContext.Properties[directory] = "not-a-ui-directory";
+            Assert.IsNull(typeof(TestContext).GetProperty(directory)!.GetValue(TestContext), directory);
+        }
     }
 
     [UITestMethod]

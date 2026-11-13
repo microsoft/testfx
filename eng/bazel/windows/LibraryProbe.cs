@@ -58,7 +58,7 @@ internal static class LibraryProbe
 
         Assembly desktopExtensions = Assembly.Load("MSTest.TestFramework.Extensions");
         sourceAssemblies.Add(windowTest.Assembly);
-        sourceAssemblies.Add(VerifyFrameworkApi(desktopExtensions, hasDesktopApi: true));
+        sourceAssemblies.Add(VerifyFrameworkApi(desktopExtensions));
         sourceAssemblies.Add(desktopExtensions);
         runtimeAssemblies.Add(automation);
 #elif WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
@@ -68,7 +68,7 @@ internal static class LibraryProbe
         scenario = "winui";
 #endif
         Assembly extensions = Assembly.Load("MSTest.TestFramework.Extensions");
-        Assembly framework = VerifyFrameworkApi(extensions, hasDesktopApi: false);
+        Assembly framework = VerifyFrameworkApi(extensions);
         Type uiMethod = extensions.GetType(
             "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute", throwOnError: true)!;
         if (!typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).IsAssignableFrom(uiMethod))
@@ -103,7 +103,7 @@ internal static class LibraryProbe
     }
 
 #if WINDOWS_DESKTOP_PROBE || WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
-    private static Assembly VerifyFrameworkApi(Assembly extensions, bool hasDesktopApi)
+    private static Assembly VerifyFrameworkApi(Assembly extensions)
     {
         Assembly framework = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly;
         Type context = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext);
@@ -115,19 +115,18 @@ internal static class LibraryProbe
 
         const string deploymentItemName = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
         Type? deploymentItem = framework.GetType(deploymentItemName);
-        if ((deploymentItem is not null) != hasDesktopApi
-            || (deploymentItem is not null && deploymentItem.Assembly != framework)
+        if (deploymentItem is null || deploymentItem.Assembly != framework
             || extensions.GetType(deploymentItemName) is not null)
         {
-            throw new InvalidOperationException($"DeploymentItemAttribute must be defined only in ordinary core and excluded from UI core. Expected desktop API: {hasDesktopApi}.");
+            throw new InvalidOperationException("DeploymentItemAttribute must be defined in shared modern core, including for UI consumers.");
         }
 
         string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
         foreach (string directory in directories)
         {
-            if ((context.GetProperty(directory) is not null) != hasDesktopApi)
+            if (context.GetProperty(directory) is null)
             {
-                throw new InvalidOperationException($"TestContext.{directory} must remain excluded from UI core and available in ordinary core. Expected desktop API: {hasDesktopApi}.");
+                throw new InvalidOperationException($"TestContext.{directory} must be available from shared core for every modern consumer.");
             }
         }
 

@@ -37,17 +37,14 @@ public sealed class TestContextTests : TestContainer
         testName.Should().ThrowExactly<InvalidOperationException>().WithMessage("*TestName*");
         context.CurrentTestOutcome.Should().Be(UnitTestOutcome.Unknown);
         context.TestRunCount.Should().Be(0);
-#if !WIN_UI
         context.TestTempDirectory.Should().BeNull();
         context.TestRunDirectory.Should().BeNull();
         context.DeploymentDirectory.Should().BeNull();
         context.ResultsDirectory.Should().BeNull();
         context.TestRunResultsDirectory.Should().BeNull();
         context.TestResultsDirectory.Should().BeNull();
-#endif
     }
 
-#if !WIN_UI
     public void DirectoryPropertiesUseIndependentKeys()
     {
         using var context = new Context();
@@ -62,7 +59,6 @@ public sealed class TestContextTests : TestContainer
         context.TestRunResultsDirectory.Should().Be("machine");
         context.TestResultsDirectory.Should().Be("results");
     }
-#endif
 
     public void MetadataAndCancellationArePerContext()
     {
