@@ -391,7 +391,7 @@ public class UnitTest1
             .OfType<string>()
             .ToArray();
 
-        Assert.Contains("MSTest.TestAdapter", dependencyIds);
+        Assert.DoesNotContain("MSTest.TestAdapter", dependencyIds);
         Assert.DoesNotContain("MSTest.SourceGeneration", dependencyIds);
     }
 
