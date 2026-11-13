@@ -300,13 +300,12 @@ function Get-ExpectedCoverageBytes {
     param([object]$Fixture, [string]$Module, [bool]$Linked, [string]$Packages, [string]$Artifacts)
 
     $lines = [Collections.Generic.List[string]]::new()
-    # Pin the original serialized bytes, including MSBuild's trimming of single XML
-    # elements supplied through attribute metadata (element metadata retains indentation).
+    # Pin literal template formatting; MSBuild still trims the optional assembly element's attribute metadata.
     $lines.AddRange([string[]]@('<?xml version="1.0" encoding="utf-8"?>',
-        '<Configuration>', '<DoesNotReturnAttribute>None</DoesNotReturnAttribute>'))
+        '<Configuration>', '  <DoesNotReturnAttribute>None</DoesNotReturnAttribute>'))
     if ($Linked) { $lines.Add('<IncludeTestAssembly>True</IncludeTestAssembly>') }
     $lines.AddRange([string[]]@('  <CodeCoverage>', '    <Attributes mergeDefaults="False">',
-        '<Exclude />', '    </Attributes>', '    <ModulePaths mergeDefaults="False">', '      <Include>'))
+        '      <Exclude />', '    </Attributes>', '    <ModulePaths mergeDefaults="False">', '      <Include>'))
     foreach ($assembly in @($Module, "MSTest.TestFramework", "MSTest.TestFramework.Extensions")) {
         $pattern = [regex]::Escape($assembly)
         $lines.Add("        <ModulePath>.*$pattern\.dll`$</ModulePath>")
@@ -316,7 +315,7 @@ function Get-ExpectedCoverageBytes {
         $lines.Add("        <ModulePath>.*$pattern\.exe`$</ModulePath>")
     }
     $lines.AddRange([string[]]@('      </Include>', '      <Exclude>',
-        '<ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>',
+        '        <ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>',
         '      </Exclude>', '    </ModulePaths>', '    <Sources>'))
     if ($Linked) {
         $pattern = ConvertTo-XmlText ("^" + [regex]::Escape("$($Fixture.Root)\src\") + ".*")
@@ -329,11 +328,11 @@ function Get-ExpectedCoverageBytes {
         $lines.Add("        <Source>$pattern</Source>")
     }
     $lines.AddRange([string[]]@('      </Exclude>', '    </Sources>',
-        '<UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>',
-        '<EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>',
-        '<EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>',
-        '<EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>',
-        '<EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>',
+        '    <UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>',
+        '    <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>',
+        '    <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>',
+        '    <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>',
+        '    <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>',
         '  </CodeCoverage>', '</Configuration>'))
     return ,(Get-BomBytes (($lines -join [Environment]::NewLine) + [Environment]::NewLine))
 }

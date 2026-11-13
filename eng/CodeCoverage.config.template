@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration>
-<DoesNotReturnAttribute>None</DoesNotReturnAttribute>
+  <DoesNotReturnAttribute>None</DoesNotReturnAttribute>
 @IncludeTestAssembly@
   <CodeCoverage>
     <Attributes mergeDefaults="False">
-<Exclude />
+      <Exclude />
     </Attributes>
     <ModulePaths mergeDefaults="False">
       <Include>
 @ModulePaths@
       </Include>
       <Exclude>
-<ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>
+        <ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>
       </Exclude>
     </ModulePaths>
     <Sources>
@@ -20,10 +20,10 @@
 @SourceExcludes@
       </Exclude>
     </Sources>
-<UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>
-<EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
-<EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
-<EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
-<EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
+    <UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>
+    <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+    <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
+    <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
+    <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
   </CodeCoverage>
 </Configuration>

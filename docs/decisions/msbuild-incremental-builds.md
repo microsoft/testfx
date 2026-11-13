@@ -378,3 +378,19 @@ including compatibility helpers and opt-out-marked code. No generated XML or
 collector policy changes. The five existing `Coverage*` cases passed again
 (exit 0, no skips), and six direct comparison/compatibility/failure checks
 passed across ten uniquely logged builds (nine successes, one intended failure).
+
+#### User-requested template indentation, 2026-11-13
+
+The later explicit formatting request intentionally supersedes byte preservation
+for the static XML indentation only. Indent those elements according to their
+nesting and update the literal exact-byte oracle, without normalizing its inputs.
+Keep the four section markers, dynamic `Value` metadata, collector settings,
+encoding, newline handling and unchanged-output suppression intact.
+
+On base `c0d7cf449a5633ee18a485bb04761e00957fbf19`, the existing `Coverage*`
+selection passed 5/5 before editing. The same selection with the updated literal
+oracle passed 5/5 after formatting, including filter validation and strict
+in-process routing. The old unindented generator fails the updated exact-byte
+assertion after a successful build, proving the new expectation detects this
+intentional formatting change. Exactly eight template lines gain 36 spaces;
+their element values and all four markers are unchanged.
