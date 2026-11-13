@@ -5,6 +5,8 @@ on:
     paths:
       - 'Build.cmd'
       - 'eng/build.ps1'
+      - 'eng/configure-toolset.*'
+      - 'eng/common/tools.*'
       - '.github/workflows/build-failure-analysis*.md'
       - '.github/workflows/shared/build-failure-analysis-fetch.md'
       - '.github/workflows/tests/test_archive_validation.py'
@@ -16,6 +18,8 @@ on:
     paths:
       - 'Build.cmd'
       - 'eng/build.ps1'
+      - 'eng/configure-toolset.*'
+      - 'eng/common/tools.*'
       - '.github/workflows/build-failure-analysis*.md'
       - '.github/workflows/shared/build-failure-analysis-fetch.md'
       - '.github/workflows/tests/test_archive_validation.py'
@@ -44,6 +48,8 @@ jobs:
           python-version: '3.12'
       - name: Test build failure analysis archive validation
         run: python .github/workflows/tests/test_archive_validation.py
+      - name: Test shell build configuration
+        run: python .github/workflows/tests/test_build_entry_points.py -v
 
   build-entry-points:
     name: Test Windows build entry points
@@ -56,5 +62,5 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - name: Test build entry point exit codes
+      - name: Test build entry point defaults and exit codes
         run: python .github\workflows\tests\test_build_entry_points.py -v
