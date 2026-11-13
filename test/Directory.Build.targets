@@ -91,6 +91,7 @@
       <Code Type="Class" Language="cs">
         <![CDATA[
         using System;
+        using System.Collections.Generic;
         using System.IO;
         using System.Linq;
         using System.Text;
@@ -115,16 +116,28 @@
             [Required]
             public ITaskItem[] Lines { get; set; }
 
+            public string TemplateFile { get; set; }
+
             public override bool Execute()
             {
+                IEnumerable<string> lines = Lines.Select(line => line.GetMetadata("Value"));
+                if (!string.IsNullOrEmpty(TemplateFile))
+                {
+                    var sections = Lines.ToLookup(line => line.GetMetadata("Section"), line => line.GetMetadata("Value"));
+                    lines = File.ReadLines(TemplateFile).SelectMany(line =>
+                        line == "@IncludeTestAssembly@" || line == "@ModulePaths@" || line == "@SourceIncludes@" || line == "@SourceExcludes@"
+                            ? sections[line]
+                            : new[] { line });
+                }
+
                 byte[] content;
                 using (var stream = new MemoryStream())
                 {
                     using (var writer = new StreamWriter(stream, new UTF8Encoding(true), 1024, true))
                     {
-                        foreach (ITaskItem line in Lines)
+                        foreach (string line in lines)
                         {
-                            writer.WriteLine(line.GetMetadata("Value"));
+                            writer.WriteLine(line);
                         }
                     }
 
@@ -198,55 +211,34 @@
 
     <!-- Keep regex text in metadata: MSBuild normalizes backslashes in item identities and path-like property values on Unix. -->
     <ItemGroup>
-      <_CodeCoverageSettingsLine Include="Declaration" Value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
-      <_CodeCoverageSettingsLine Include="ConfigurationStart" Value="&lt;Configuration&gt;" />
-      <_CodeCoverageSettingsLine Include="DoesNotReturnAttribute" Value="  &lt;DoesNotReturnAttribute&gt;None&lt;/DoesNotReturnAttribute&gt;" />
       <_CodeCoverageSettingsLine Include="IncludeSourceLinkedTestAssembly"
                                  Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
+                                 Section="@IncludeTestAssembly@"
                                  Value="  &lt;IncludeTestAssembly&gt;True&lt;/IncludeTestAssembly&gt;" />
-      <_CodeCoverageSettingsLine Include="CodeCoverageStart" Value="  &lt;CodeCoverage&gt;" />
-      <!-- Measure all production bodies, including compatibility helpers and opt-out-marked code.
-           Module/source filters still keep test infrastructure, packages and generated artifacts out. -->
-      <_CodeCoverageSettingsLine Include="AttributesStart" Value="    &lt;Attributes mergeDefaults=&quot;False&quot;&gt;" />
-      <_CodeCoverageSettingsLine Include="AttributesExclude" Value="      &lt;Exclude /&gt;" />
-      <_CodeCoverageSettingsLine Include="AttributesEnd" Value="    &lt;/Attributes&gt;" />
-      <_CodeCoverageSettingsLine Include="ModulePathsStart" Value="    &lt;ModulePaths mergeDefaults=&quot;False&quot;&gt;" />
-      <_CodeCoverageSettingsLine Include="ModuleIncludeStart" Value="      &lt;Include&gt;" />
-      <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference)">
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference)" Section="@ModulePaths@">
         <Value>        &lt;ModulePath&gt;.*%(_CodeCoverageProjectReference.CoverageAssemblyPattern)%(_CodeCoverageProjectReference.CoverageAssemblyExtensionPattern)$&lt;/ModulePath&gt;</Value>
       </_CodeCoverageSettingsLine>
-      <_CodeCoverageSettingsLine Include="ModuleIncludeEnd" Value="      &lt;/Include&gt;" />
-      <_CodeCoverageSettingsLine Include="ModuleExcludeStart" Value="      &lt;Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="TestInfrastructure" Value="        &lt;ModulePath&gt;.*Microsoft\.Testing\.TestInfrastructure\.dll$&lt;/ModulePath&gt;" />
-      <_CodeCoverageSettingsLine Include="ModuleExcludeEnd" Value="      &lt;/Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="ModulePathsEnd" Value="    &lt;/ModulePaths&gt;" />
-      <_CodeCoverageSettingsLine Include="SourcesStart" Value="    &lt;Sources&gt;" />
       <_CodeCoverageSettingsLine Include="SourceIncludeStart"
                                  Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
+                                 Section="@SourceIncludes@"
                                  Value="      &lt;Include&gt;" />
-      <_CodeCoverageSettingsLine Include="@(_CodeCoverageIncludedSource)">
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageIncludedSource)" Section="@SourceIncludes@">
         <Value>        &lt;Source&gt;%(_CodeCoverageIncludedSource.XmlPattern)&lt;/Source&gt;</Value>
       </_CodeCoverageSettingsLine>
       <_CodeCoverageSettingsLine Include="SourceIncludeEnd"
                                  Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
+                                 Section="@SourceIncludes@"
                                  Value="      &lt;/Include&gt;" />
-      <_CodeCoverageSettingsLine Include="SourceExcludeStart" Value="      &lt;Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource)">
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource)" Section="@SourceExcludes@">
         <Value>        &lt;Source&gt;%(_CodeCoverageExcludedSource.XmlPattern)&lt;/Source&gt;</Value>
       </_CodeCoverageSettingsLine>
-      <_CodeCoverageSettingsLine Include="SourceExcludeEnd" Value="      &lt;/Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="SourcesEnd" Value="    &lt;/Sources&gt;" />
-      <_CodeCoverageSettingsLine Include="VerifiableInstrumentation" Value="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="StaticNativeInstrumentation" Value="    &lt;EnableStaticNativeInstrumentation&gt;False&lt;/EnableStaticNativeInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="DynamicNativeInstrumentation" Value="    &lt;EnableDynamicNativeInstrumentation&gt;False&lt;/EnableDynamicNativeInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="StaticManagedInstrumentation" Value="    &lt;EnableStaticManagedInstrumentation&gt;False&lt;/EnableStaticManagedInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="DynamicManagedInstrumentation" Value="    &lt;EnableDynamicManagedInstrumentation&gt;True&lt;/EnableDynamicManagedInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="CodeCoverageEnd" Value="  &lt;/CodeCoverage&gt;" />
-      <_CodeCoverageSettingsLine Include="ConfigurationEnd" Value="&lt;/Configuration&gt;" />
     </ItemGroup>
 
+    <!-- Measure all production bodies, including compatibility helpers and opt-out-marked code.
+         Module/source filters still keep test infrastructure, packages and generated artifacts out. -->
     <!-- WriteLinesToFile also normalizes transformed metadata when binding its ITaskItem[] Lines parameter. -->
     <WriteCodeCoverageSettings FileName="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CodeCoverageSettingsFile)'))"
+                               TemplateFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'eng', 'CodeCoverage.config.template'))"
                                Lines="@(_CodeCoverageSettingsLine)" />
   </Target>
 

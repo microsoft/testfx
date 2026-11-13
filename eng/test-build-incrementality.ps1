@@ -229,6 +229,11 @@ function New-CoverageFixture {
     $targetCopy = Join-Path $root "test\Directory.Build.targets"
     [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($targetCopy)) | Out-Null
     [IO.File]::Copy($script:CoverageSnapshot, $targetCopy)
+    if ([IO.File]::Exists($script:CoverageTemplateSnapshot)) {
+        $templateCopy = Join-Path $root "eng\CodeCoverage.config.template"
+        [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($templateCopy)) | Out-Null
+        [IO.File]::Copy($script:CoverageTemplateSnapshot, $templateCopy)
+    }
     Write-FixtureFile (Join-Path $root "ImportedReferences.targets") @'
 <Project>
   <ItemGroup>
@@ -295,13 +300,12 @@ function Get-ExpectedCoverageBytes {
     param([object]$Fixture, [string]$Module, [bool]$Linked, [string]$Packages, [string]$Artifacts)
 
     $lines = [Collections.Generic.List[string]]::new()
-    # Pin the original serialized bytes, including MSBuild's trimming of single XML
-    # elements supplied through attribute metadata (element metadata retains indentation).
+    # Pin literal template formatting; MSBuild still trims the optional assembly element's attribute metadata.
     $lines.AddRange([string[]]@('<?xml version="1.0" encoding="utf-8"?>',
-        '<Configuration>', '<DoesNotReturnAttribute>None</DoesNotReturnAttribute>'))
+        '<Configuration>', '  <DoesNotReturnAttribute>None</DoesNotReturnAttribute>'))
     if ($Linked) { $lines.Add('<IncludeTestAssembly>True</IncludeTestAssembly>') }
     $lines.AddRange([string[]]@('  <CodeCoverage>', '    <Attributes mergeDefaults="False">',
-        '<Exclude />', '    </Attributes>', '    <ModulePaths mergeDefaults="False">', '      <Include>'))
+        '      <Exclude />', '    </Attributes>', '    <ModulePaths mergeDefaults="False">', '      <Include>'))
     foreach ($assembly in @($Module, "MSTest.TestFramework", "MSTest.TestFramework.Extensions")) {
         $pattern = [regex]::Escape($assembly)
         $lines.Add("        <ModulePath>.*$pattern\.dll`$</ModulePath>")
@@ -311,7 +315,7 @@ function Get-ExpectedCoverageBytes {
         $lines.Add("        <ModulePath>.*$pattern\.exe`$</ModulePath>")
     }
     $lines.AddRange([string[]]@('      </Include>', '      <Exclude>',
-        '<ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>',
+        '        <ModulePath>.*Microsoft\.Testing\.TestInfrastructure\.dll$</ModulePath>',
         '      </Exclude>', '    </ModulePaths>', '    <Sources>'))
     if ($Linked) {
         $pattern = ConvertTo-XmlText ("^" + [regex]::Escape("$($Fixture.Root)\src\") + ".*")
@@ -324,11 +328,11 @@ function Get-ExpectedCoverageBytes {
         $lines.Add("        <Source>$pattern</Source>")
     }
     $lines.AddRange([string[]]@('      </Exclude>', '    </Sources>',
-        '<UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>',
-        '<EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>',
-        '<EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>',
-        '<EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>',
-        '<EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>',
+        '    <UseVerifiableInstrumentation>False</UseVerifiableInstrumentation>',
+        '    <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>',
+        '    <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>',
+        '    <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>',
+        '    <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>',
         '  </CodeCoverage>', '</Configuration>'))
     return ,(Get-BomBytes (($lines -join [Environment]::NewLine) + [Environment]::NewLine))
 }
@@ -846,6 +850,7 @@ $script:ScratchDirectory = $scratchDirectory
 $script:OldInputTime = [DateTime]::new(2001, 2, 3, 4, 5, 6, [DateTimeKind]::Utc)
 $script:Invocations = [Collections.Generic.List[object]]::new()
 $script:CoverageSnapshot = Join-Path $runRoot "inputs\coverage.targets"
+$script:CoverageTemplateSnapshot = Join-Path $runRoot "inputs\CodeCoverage.config.template"
 $script:WinUISnapshot = Join-Path $runRoot "inputs\WinUI.Incremental.targets"
 $script:UpstreamSnapshot = Join-Path $runRoot "inputs\Microsoft.WindowsAppSDK.SelfContained.targets"
 $script:PipelineSnapshot = Join-Path $runRoot "inputs\test-windows-configuration-tests.yml"
@@ -859,6 +864,10 @@ $sources = @{}
 $sourceCopies = @{}
 if (@($selected | Where-Object { $_ -like "Coverage*" }).Count -gt 0) {
     $sourceCopies[[IO.Path]::GetFullPath($CoverageTargetsPath)] = $script:CoverageSnapshot
+    $coverageTemplate = Join-Path $RepositoryRoot "eng\CodeCoverage.config.template"
+    if ([IO.File]::Exists($coverageTemplate)) {
+        $sourceCopies[$coverageTemplate] = $script:CoverageTemplateSnapshot
+    }
 }
 if (@($selected | Where-Object { $_ -like "WinUI*" }).Count -gt 0) {
     $sourceCopies[[IO.Path]::GetFullPath($WinUITargetsPath)] = $script:WinUISnapshot
