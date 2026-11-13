@@ -35,7 +35,9 @@ Starting with MSTest 5, `TestContext`, `DeploymentItemAttribute`, `MessageLevel`
 are defined in `MSTest.TestFramework.dll`. The .NET Framework-only private
 reflection and test-configuration helpers are also defined there. Consumers
 compiled against their former `MSTest.TestFramework.Extensions.dll` definitions
-must recompile; assembly-qualified configuration names must use the core assembly.
+continue to resolve them through type forwarders in Extensions, including legacy
+assembly-qualified configuration names. New code can reference the core assembly
+directly.
 UI APIs remain in Extensions. Package IDs, package ownership and supported targets
 are unchanged. UWP/WinUI select matching core and Extensions assemblies; their
 `TestContext` still excludes desktop directory properties, and

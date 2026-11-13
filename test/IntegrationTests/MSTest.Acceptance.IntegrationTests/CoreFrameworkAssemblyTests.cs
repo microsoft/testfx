@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -15,10 +17,60 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
 {
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
+    [DataRow("lib/netstandard2.0", false, false, DisplayName = "NetStandardForwarders")]
+    [DataRow("lib/net462", true, true, DisplayName = "NetFrameworkForwarders")]
+    [DataRow("lib/uap10.0", false, false, DisplayName = "ClassicUwpForwarders")]
+    [DataRow("buildTransitive/net10.0", true, false, DisplayName = "Net10Forwarders")]
+    [DataRow("buildTransitive/net11.0", true, false, DisplayName = "Net11Forwarders")]
+    [DataRow("buildTransitive/net10.0/uwp", false, false, DisplayName = "ModernUwpForwarders")]
+    [DataRow("buildTransitive/net10.0/winui", false, false, DisplayName = "WinUIForwarders")]
+    public void PackedExtensionsForwardMovedTypesToCore(string assetFolder, bool supportsDeployment, bool supportsPrivateHelpers)
+    {
+        string package = Path.Join(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        ZipArchiveEntry? entry = archive.GetEntry($"{assetFolder}/MSTest.TestFramework.Extensions.dll");
+        Assert.IsNotNull(entry);
+        using Stream packedAssembly = entry.Open();
+        using var image = new MemoryStream();
+        packedAssembly.CopyTo(image);
+        image.Position = 0;
+        using var pe = new PEReader(image);
+        MetadataReader metadata = pe.GetMetadataReader();
+        ExportedType[] forwardedTypes = metadata.ExportedTypes
+            .Select(metadata.GetExportedType)
+            .Where(type => metadata.GetString(type.Namespace) == "Microsoft.VisualStudio.TestTools.UnitTesting")
+            .ToArray();
+        List<string> expected = ["ITestRunInfo", "MessageLevel", "PlannedTest", "TestContext", "TestRun"];
+        if (supportsDeployment)
+        {
+            expected.Add("DeploymentItemAttribute");
+        }
+
+        if (supportsPrivateHelpers)
+        {
+            expected.AddRange(["DataSourceElement", "DataSourceElementCollection", "PrivateObject", "PrivateType", "TestConfiguration", "TestConfigurationSection"]);
+        }
+
+        Assert.AreSequenceEqual(
+            expected.Order(StringComparer.Ordinal),
+            forwardedTypes.Select(type => metadata.GetString(type.Name)).Order(StringComparer.Ordinal));
+        foreach (ExportedType type in forwardedTypes)
+        {
+            Assert.IsTrue(type.IsForwarder);
+            Assert.AreEqual(HandleKind.AssemblyReference, type.Implementation.Kind);
+            Assert.AreEqual(
+                "MSTest.TestFramework",
+                metadata.GetString(metadata.GetAssemblyReference((AssemblyReferenceHandle)type.Implementation).Name));
+        }
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DataRow("net10.0-windows10.0.26100.0", false, false, false, "lib/net10.0", DisplayName = "OrdinaryWindows")]
     [DataRow("net10.0-windows10.0.26100.0", true, false, false, "buildTransitive/net10.0/winui", DisplayName = "WinUI")]
     [DataRow("net10.0-windows10.0.26100.0", false, true, true, "buildTransitive/net10.0/uwp", DisplayName = "ModernUwp")]
     [DataRow("net10.0-windows10.0.26100.0", false, false, true, "lib/net10.0", DisplayName = "ExplicitUwpToolsOptOut")]
+    [DataRow("net11.0-windows10.0.26100.0", false, false, false, "lib/net11.0", DisplayName = "Net11OrdinaryWindows")]
     [DataRow("net11.0-windows10.0.26100.0", true, false, false, "buildTransitive/net10.0/winui", DisplayName = "Net11WinUI")]
     [DataRow("net11.0-windows10.0.26100.0", false, true, true, "buildTransitive/net10.0/uwp", DisplayName = "Net11ModernUwp")]
     public async Task PackedConsumersUseMatchingCoreAndExtensions(
@@ -141,7 +193,15 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assembly core = typeof(TestMethodAttribute).Assembly;
         Assert.AreSame(core, typeof(TestContext).Assembly);
         Assembly extensions = Assembly.Load("MSTest.TestFramework.Extensions");
-        Assert.IsNull(extensions.GetType(typeof(TestContext).FullName!));
+        string[] forwardedTypes = ["TestContext", "MessageLevel", "TestRun", "ITestRunInfo", "PlannedTest"];
+        foreach (string typeName in forwardedTypes)
+        {
+            string fullName = $"Microsoft.VisualStudio.TestTools.UnitTesting.{typeName}";
+            Type expected = core.GetType(fullName, throwOnError: true)!;
+            Assert.AreSame(expected, extensions.GetType(fullName, throwOnError: true), typeName);
+            Assert.AreSame(expected, Type.GetType($"{fullName}, {extensions.FullName}", throwOnError: true), typeName);
+        }
+
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory"));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease"));
         Assert.AreEqual($Desktop$, core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute") is not null);
