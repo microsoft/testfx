@@ -103,6 +103,12 @@ For Linux and macOS:
 
 Another common flag is `-pack` which will produce the NuGet packages of MSTest. These packages are required for the acceptance tests (see [testing section](#testing)).
 
+On Windows, `-pack` also runs `eng/verify-nupkgs.ps1`, which checks package metadata and compares the files of each MSTest package against its expected shape in `eng/package-shapes/<PackageId>.txt`. A missing or unexpected file fails the build and is listed in the error. When a package layout change is intentional, regenerate the expected shapes after packing and commit them with your change:
+
+```powershell
+.\eng\verify-nupkgs.ps1 -configuration Debug -updateBaselines
+```
+
 For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
 
 ### Build layout
