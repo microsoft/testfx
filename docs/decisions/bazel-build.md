@@ -2237,6 +2237,39 @@ bootstrap actions retain SDK 10.0.401, and the actual `net10.0` reference pack
 remains 10.0.14. Other host archives have verified published checksums, but their
 native execution was not repeated by this refresh.
 
+### SDK pin refresh (2026-11-13)
+
+Both `global.json` pins and the opt-in engineering registration advance to
+`12.0.100-alpha.1.26562.108` and runtime `12.0.0-alpha.1.26562.108`, the build
+selected for every host by the public .NET 12 daily `productCommit-<rid>.txt`
+links. All six archive SHA-512 values were checked against the version-specific
+`https://ci.dot.net/public-checksums/Sdk/12.0.100-alpha.1.26562.108/` manifests.
+
+The SDK's `.version` identifies commit `8b22ce04ad5fa175ef5cd8f96c38fcba40e173dc`;
+the executed compiler is
+`5.14.0-1.26562.108 (8b22ce04ad5fa175ef5cd8f96c38fcba40e173dc)`.
+Its runtimeconfig requests the matching runtime. The bundled maximum/default
+target remains `net12.0`, and C# 15.0 and F# 11.2 remain the verified language
+versions. The default published SDK 11, SDK 10 bootstrap, and independently
+pinned .NET 8/9/10/11 target-pack graph are unchanged.
+
+All 12 verifier fixtures pass. With the same valid four-framework fixture and
+real compiler, the previous verifier (blob
+`1d6497f20cd2d11ac088a4b516c1bd54a1ec6548`, run from an isolated copy) rejects
+the new SDK with `Unexpected compiler identity: 5.14.0-1.26562.108` after
+compiler exit 0, while the updated verifier accepts the identical input.
+
+The opt-in Windows `//:platform` build succeeds with 79 native actions in
+task-owned output/cache roots. Native `//:protocol_contract_tests` (28 cases)
+and `//:simple1_test` (one case) pass on the .NET 12 host with fresh TRX
+results. The `//:simple1_test` closure now includes the source-built MSTest
+graph, so the action-graph audit covers 215 declared source actions instead of
+16; all use the new engineering SDK, the two bootstrap actions retain SDK
+10.0.401, and the actual `net10.0` reference pack remains 10.0.14. That audit
+must pass `-TargetFrameworks net10.0` because these targets compile only that
+framework. The repository build also succeeds with the new SDK. Other host
+archives were checked only against published checksums, and CI was not run.
+
 ### Narrow, reversible registration decision
 
 Use the pinned rules' existing `dotnet_sdk_repositories` and

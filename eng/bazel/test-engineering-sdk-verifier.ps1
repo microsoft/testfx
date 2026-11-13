@@ -28,7 +28,7 @@ $results = [Collections.Generic.List[object]]::new()
 $pwsh = (Get-Process -Id $PID).Path
 $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }
 
-function New-Graph([string] $SdkRoot = '.', [string] $Version = '12.0.100-alpha.1.26556.115') {
+function New-Graph([string] $SdkRoot = '.', [string] $Version = '12.0.100-alpha.1.26562.108') {
     $actions = foreach ($pair in $expectedPacks.GetEnumerator()) {
         @{
             mnemonic = 'CSharpCompile'
@@ -108,7 +108,7 @@ $graph = New-Graph
 $graph.actions[0].arguments[1] = "different-sdk/$dotnetName"
 Assert-Fixture 'MismatchedCompilerHost' $graph 1 'compiler and execution host come from different SDK roots'
 $graph = New-Graph
-$graph.actions[3].paramFiles[0].arguments[0] = '-r:external/rules_dotnet++dotnet+nuget.microsoft.netcore.app.ref.v12.0.0-alpha.1.26556.115/ref/net11.0/System.Runtime.dll'
+$graph.actions[3].paramFiles[0].arguments[0] = '-r:external/rules_dotnet++dotnet+nuget.microsoft.netcore.app.ref.v12.0.0-alpha.1.26562.108/ref/net11.0/System.Runtime.dll'
 Assert-Fixture 'WrongNet11ReferencePack' $graph 1 'Unexpected net11.0 reference pack'
 $graph = New-Graph
 $graph.actions = @($graph.actions[0])
@@ -125,7 +125,7 @@ $graph.targets += @{ id = 2; label = '@@rules_dotnet+//tools/csharp_compiler_wor
 $graph.actions += @{
     mnemonic = 'CSharpCompile'
     targetId = 2
-    arguments = @('compiler_wrapper', "./$dotnetName", './sdk/12.0.100-alpha.1.26556.115/Roslyn/bincore/csc.dll')
+    arguments = @('compiler_wrapper', "./$dotnetName", './sdk/12.0.100-alpha.1.26562.108/Roslyn/bincore/csc.dll')
 }
 Assert-Fixture 'ChangedBootstrapCompiler' $graph 1 'bootstrap compiler changed'
 Assert-Fixture 'OutsideExecutionRoot' (New-Graph '../outside-root') 1 'Action input is outside the supplied execution root'
