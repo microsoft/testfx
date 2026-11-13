@@ -106,11 +106,65 @@ and the two focused test owners, respectively. All four commands exited 0.
 The context hosts used `--treenode-filter "/*/*/TestContextTests/*"` with TRX
 export; every host exited 0. Logs/binlogs and TRX remain in task-owned storage.
 
-At this checkpoint, behavior-removal sensitivity and real classic/modern UWP
+At the initial checkpoint, behavior-removal sensitivity and real classic/modern UWP
 activation are not yet established. Historical proof from the final source PR
 is not credited. No layout or UI rendering implementation changes in this layer;
 the executable API/result transcript is more useful than a staged screenshot.
 Historical proof from #12435 is not proof of this intermediate source.
+
+### Test-value evidence
+
+Runtime/test revision: `e22e899febaeee44ea3af385403e1c65c18164bb`, based on
+`8dd78e1347417e400c3ef8d786059a8bb346162f`. Later updates to this record do not
+change those executable sources.
+
+An isolated detached comparison retained the same API, resource declarations,
+tests and scheduling. It removed the deployment guard and replaced five UI
+null overrides with the base property-bag getters (the sixth getter remained
+null). Counterfactual patch SHA-256:
+`EE03335E10599D3CBBA26D905C342B7D67457FBBC08ED5A70EC7480430C7C6F5`.
+The comparison lived outside the repository's ancestor analyzer configuration.
+Its initial child-launch attempt lacked the fixture's required `.dotnet` path;
+an owned SDK junction corrected setup, without source changes. That attempt is
+not red proof.
+
+Both variants built and packed successfully with the pinned toolchain. The same
+17-case selector executed **13 passed / 4 failed / 0 skipped** without the two
+behaviors (outer exit 2), then **17 passed / 0 failed / 0 skipped** after restoring
+the exact original source bytes and rebuilding/repacking (outer exit 0).
+
+| Contract / exact case | Counterfactual observation | Correct implementation |
+| --- | --- | --- |
+| Six UI directory getters / `SimpleWinUITestCase` | Executed: detected; child assertion reported `TestRunDirectory` was not null. | Executed: passed with all six bag entries populated. |
+| Pre-body deployment rejection / `Deployment_Reflection`, `Deployment_Rooting`, `Deployment_ReflectionFree` | Executed: detected; diagnostic assertions exposed `DEPLOYMENT_BODY_EXECUTED` for direct/inherited method/class attributes. | Executed: passed; each child reports four associated failed results with the unsupported-deployment diagnostic and one passed metadata-provider check. |
+| Shared-core identities/API / six core consumers and seven package API cases | These 13 unchanged controls passed; a separate core-flavor mutation was not executed. | Packed/cached/copied hash and loaded-path assertions passed. |
+
+Loaded UI `MSTestAdapter.PlatformServices.dll` SHA-256 was
+`A3EB4489A813F89DC5EF1FAD89DA7F058A632C5A08ED3C721CF9681EF0866D16`
+in all three red consumers and
+`8DDCD025DF63F4BC50F9E2CF594F4A6CB53A1FDDF71F5E142B7BEDF41F7C75B7`
+in all three restored-green consumers. Primary green consumers matched the
+primary packed UI runtime hash
+`EDCEAAF4CD0548A9453CB391BA9A42F264C966E55AF95D56905CE17A11CF463B`.
+The primary framework/adapter packages were `MSTest.TestFramework.5.0.0-dev.nupkg`
+(SHA-256 `2C868DA86726A51A7B8965D9E9C2704FE8B8F84A10AA6AD93F7C649C3262FD0A`)
+and `MSTest.TestAdapter.5.0.0-dev.nupkg`
+(SHA-256 `C96BBEBD26D90ED384945B69E8F1DD35FFB6927B469662B12FF91EE83026613A`).
+The overwritten red ZIP is not retained; the counterfactual patch, build logs,
+resolved asset manifests, child binaries and TRX are retained.
+
+The comparison used the same pack/fixture commands above, rebuilt the unchanged
+acceptance project directly, and repacked the restored adapter with
+`.\build.cmd -pack -c Release -msbuildEngine vs -projects src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj -bl`
+(exit 0). Its test commands used the same filter with separate `layer1-red-2`
+and `layer1-restored-green` result directories and binary logs. Strict TRX
+checks reconciled the planned identities, actual outcomes and fresh timestamps.
+
+Real classic/modern UWP activation and a full native Bazel run were not executed
+here. Modern UWP discovery is not activation proof; the package-extraction layer
+owns the composed activation/release-branch evidence. No CI result is credited
+for this head. The comparison source is restored and the primary worktree was
+never mutated for the counterfactual.
 
 ## Delivery boundary
 
