@@ -522,11 +522,12 @@ public sealed class SerializationMutationTests
     [TestMethod]
     public async Task Json_SerializeAsync_DoesNotCaptureSynchronizationContextForFlush()
     {
-        var stream = new DelayedFlushMemoryStream();
+        using var stream = new DelayedFlushMemoryStream();
         var pool = new ObjectPool<MemoryStream>(() => stream, size: 1);
         var json = new PlatformJson();
         GetInstanceField(json.GetType(), "_memoryStreamPool").SetValue(json, pool);
         var context = new RecordingSynchronizationContext();
+        var completionTimeout = TimeSpan.FromSeconds(30);
 
         SynchronizationContext? previous = SynchronizationContext.Current;
         Task<string> serialization;
@@ -540,10 +541,17 @@ public sealed class SerializationMutationTests
             SynchronizationContext.SetSynchronizationContext(previous);
         }
 
-        await stream.WriteStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
-        stream.AllowWrite.SetResult();
+        try
+        {
+            await stream.WriteStarted.Task.WaitAsync(completionTimeout, TestContext.CancellationToken);
+        }
+        finally
+        {
+            stream.AllowWrite.TrySetResult();
+            await serialization.WaitAsync(completionTimeout, CancellationToken.None);
+        }
 
-        Assert.AreEqual("\"value\"", await serialization.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+        Assert.AreEqual("\"value\"", await serialization);
         Assert.AreEqual(0, context.PostCount);
     }
 
@@ -1651,7 +1659,8 @@ public sealed class SerializationMutationTests
     {
         public TaskCompletionSource WriteStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public TaskCompletionSource AllowWrite { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        // Complete the flush inline so the context-capture probe does not depend on a free pool worker.
+        public TaskCompletionSource AllowWrite { get; } = new();
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
@@ -1671,7 +1680,7 @@ public sealed class SerializationMutationTests
         public override void Post(SendOrPostCallback d, object? state)
         {
             Interlocked.Increment(ref _postCount);
-            ThreadPool.QueueUserWorkItem(_ => d(state));
+            d(state);
         }
     }
 }
