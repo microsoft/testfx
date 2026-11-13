@@ -70,8 +70,8 @@ function Assert-CollectionJobIsolation {
     $mainBudget = '${{ if eq(variables[''Build.SourceBranch''], ''refs/heads/main'') }}:'
     if ($windowsJob -notmatch ([regex]::Escape($mainBudget) + '\r?\n          timeoutInMinutes: 240\r?\n') -or
         $collectionJob -notmatch '(?m)^          timeoutInMinutes: 360\r?$' -or
-        $windowsJob -notmatch '\$\{\{ else \}\}:\r?\n          timeoutInMinutes: 120\r?\n') {
-        throw "CollectionHasIndependentTimeBudget: Windows collection needs a literal six-hour timeout without matrix-variable dependencies or extended main/PR validation."
+        $windowsJob -notmatch '\$\{\{ else \}\}:\r?\n          timeoutInMinutes: 150\r?\n') {
+        throw "CollectionHasIndependentTimeBudget: Windows collection needs a literal six-hour timeout, main validation four hours, and PR validation 150 minutes, without matrix-variable dependencies."
     }
 
     $sharedBuildCall = 'template: /eng/pipelines/steps/build-test-windows.yml\r?\n\s+parameters:\r?\n\s+SkipTests: ' +
@@ -364,7 +364,12 @@ function Invoke-CollectionJobIsolationSelfTest {
         },
         @{
             Name = "ExtendedPullRequestTimeoutIsRejected"
-            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 120", "          timeoutInMinutes: 360")
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 150", "          timeoutInMinutes: 360")
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "InsufficientPullRequestTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 150", "          timeoutInMinutes: 120")
             ExpectedFailure = "CollectionHasIndependentTimeBudget"
         },
         @{
