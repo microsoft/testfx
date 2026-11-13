@@ -36,7 +36,6 @@ def reference_alias_tests():
             ":alias_second",
             ":adapter",
             ":framework",
-            ":framework_extensions",
             ":trx",
         ],
     )

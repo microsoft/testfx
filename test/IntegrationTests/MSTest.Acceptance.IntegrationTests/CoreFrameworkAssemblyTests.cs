@@ -15,22 +15,25 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
 {
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
-    [DataRow("net10.0-windows10.0.26100.0", false, false, false, "lib/net10.0", DisplayName = "OrdinaryWindows")]
-    [DataRow("net10.0-windows10.0.26100.0", true, false, false, "buildTransitive/net10.0/winui", DisplayName = "WinUI")]
-    [DataRow("net10.0-windows10.0.26100.0", false, true, true, "buildTransitive/net10.0/uwp", DisplayName = "ModernUwp")]
-    [DataRow("net10.0-windows10.0.26100.0", false, false, true, "lib/net10.0", DisplayName = "ExplicitUwpToolsOptOut")]
-    [DataRow("net11.0-windows10.0.26100.0", true, false, false, "buildTransitive/net10.0/winui", DisplayName = "Net11WinUI")]
-    [DataRow("net11.0-windows10.0.26100.0", false, true, true, "buildTransitive/net10.0/uwp", DisplayName = "Net11ModernUwp")]
-    public async Task PackedConsumersUseMatchingCoreAndExtensions(
-        string targetFramework, bool useWinUI, bool useUwpTools, bool useUwp, string coreAsset)
+    [DataRow("net10.0-windows10.0.26100.0", false, false, false, "", DisplayName = "OrdinaryWindows")]
+    [DataRow("net10.0-windows10.0.26100.0", true, false, false, "MSTest.WinUI", DisplayName = "WinUI")]
+    [DataRow("net10.0-windows10.0.26100.0", false, true, true, "MSTest.Uwp", DisplayName = "ModernUwp")]
+    [DataRow("net10.0-windows10.0.26100.0", false, false, true, "", DisplayName = "ExplicitUwpToolsOptOut")]
+    [DataRow("net11.0-windows10.0.26100.0", true, false, false, "MSTest.WinUI", DisplayName = "Net11WinUI")]
+    [DataRow("net11.0-windows10.0.26100.0", false, true, true, "MSTest.Uwp", DisplayName = "Net11ModernUwp")]
+    public async Task PackedConsumersUseSharedCoreAndSelectedUiPackage(
+        string targetFramework, bool useWinUI, bool useUwpTools, bool useUwp, string uiPackage)
     {
-        bool desktop = coreAsset.StartsWith("lib/", StringComparison.Ordinal);
+        string coreAsset = $"lib/{targetFramework.Split('-')[0]}";
+        string uiTfm = useWinUI ? "net10.0-windows10.0.18362" : "net10.0-windows10.0.17763";
         string source = ConsumerSource
             .Replace("$TargetFramework$", targetFramework, StringComparison.Ordinal)
             .Replace("$MSTestVersion$", MSTestVersion, StringComparison.Ordinal)
             .Replace("$UseWinUI$", useWinUI.ToString(), StringComparison.Ordinal)
             .Replace("$UseUwpTools$", useUwpTools.ToString(), StringComparison.Ordinal)
-            .Replace("$UseUwp$", useUwp.ToString(), StringComparison.Ordinal);
+            .Replace("$UseUwp$", useUwp.ToString(), StringComparison.Ordinal)
+            .Replace("$UiPackage$", uiPackage, StringComparison.Ordinal)
+            .Replace("$UiReference$", uiPackage.Length == 0 ? string.Empty : $"<PackageReference Include=\"{uiPackage}\" Version=\"{MSTestVersion}\" />", StringComparison.Ordinal);
         using TestAsset asset = await TestAsset.GenerateAssetAsync("CoreFrameworkConsumer", source);
         string cache = Path.Join(asset.TargetAssetPath, ".packages");
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = cache };
@@ -48,34 +51,32 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assert.AreEqual(
             Path.GetFullPath(cache),
             Path.GetFullPath(assets.RootElement.GetProperty("project").GetProperty("restore").GetProperty("packagesPath").GetString()!));
-        string package = Path.Join(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
-        string restored = Path.Join(cache, "mstest.testframework", MSTestVersion);
-        string cachedPackage = Path.Join(restored, $"mstest.testframework.{MSTestVersion}.nupkg");
-        Assert.AreEqual(
-            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(package))),
-            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedPackage))));
-        string extensionsAsset = desktop ? $"buildTransitive/{targetFramework.Split('-')[0]}" : coreAsset;
-        (string Name, string Asset)[] assemblies =
+        List<(string Package, string Name, string Asset)> assemblies =
         [
-            ("MSTest.TestFramework", coreAsset),
-            ("MSTest.TestFramework.Extensions", extensionsAsset),
+            ("MSTest.TestFramework", "MSTest.TestFramework", coreAsset),
         ];
+        if (uiPackage.Length != 0)
+        {
+            assemblies.Add((uiPackage, uiPackage, $"lib/{uiTfm}"));
+            assemblies.Add((uiPackage, "MSTest.TestAdapter", $"buildTransitive/{uiTfm}"));
+            assemblies.Add((uiPackage, "MSTestAdapter.PlatformServices", $"buildTransitive/{uiTfm}"));
+        }
+
         string output = Path.Join(asset.TargetAssetPath, "bin", "Release", targetFramework);
         string[] resolved = File.ReadAllLines(Path.Join(asset.TargetAssetPath, "resolved-framework-assets.txt"));
         var expectedResolved = new List<string>();
-        using ZipArchive archive = ZipFile.OpenRead(package);
-        foreach ((string name, string folder) in assemblies)
+        foreach ((string packageId, string name, string folder) in assemblies)
         {
+            string package = Path.Join(Constants.ArtifactsPackagesShipping, $"{packageId}.{MSTestVersion}.nupkg");
+            string restored = Path.Join(cache, packageId.ToLowerInvariant(), MSTestVersion);
+            string cachedPackage = Path.Join(restored, $"{packageId.ToLowerInvariant()}.{MSTestVersion}.nupkg");
+            Assert.AreEqual(
+                Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(package))),
+                Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedPackage))));
+            using ZipArchive archive = ZipFile.OpenRead(package);
             string relative = $"{folder}/{name}.dll";
             using Stream packedAssembly = archive.GetEntry(relative)!.Open();
             string hash = Convert.ToHexString(SHA256.HashData(packedAssembly));
-            if (name == "MSTest.TestFramework")
-            {
-                string sharedCoreAsset = desktop ? coreAsset : "lib/net10.0";
-                using Stream sharedCore = archive.GetEntry($"{sharedCoreAsset}/{name}.dll")!.Open();
-                Assert.AreEqual(Convert.ToHexString(SHA256.HashData(sharedCore)), hash, relative);
-            }
-
             string cachedAssembly = Path.GetFullPath(Path.Join(restored, relative));
             string copiedAssembly = Path.Join(output, name + ".dll");
             Assert.AreEqual(hash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedAssembly))), relative);
@@ -86,7 +87,8 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         }
 
         Assert.AreSequenceEqual(expectedResolved.Order(StringComparer.Ordinal), resolved.Order(StringComparer.Ordinal));
-        using Stream packedResource = archive.GetEntry($"{coreAsset}/fr/MSTest.TestFramework.resources.dll")!.Open();
+        using ZipArchive corePackage = ZipFile.OpenRead(Path.Join(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg"));
+        using Stream packedResource = corePackage.GetEntry($"{coreAsset}/fr/MSTest.TestFramework.resources.dll")!.Open();
         string copiedResource = Path.Join(output, "fr", "MSTest.TestFramework.resources.dll");
         Assert.AreEqual(
             Convert.ToHexString(SHA256.HashData(packedResource)),
@@ -97,15 +99,19 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             workingDirectory: asset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, exit, $"{muxer.StandardOutput}{muxer.StandardError}");
-        Assert.AreEqual(
-            $"""
+        string expectedOutput = uiPackage.Length == 0
+            ? $"""
             {Path.Join(output, "MSTest.TestFramework.dll")}
-            {Path.Join(output, "MSTest.TestFramework.Extensions.dll")}
             {copiedResource}
             Packed framework ownership and API shape passed.
-            """.ReplaceLineEndings(),
-            muxer.StandardOutput.ReplaceLineEndings());
-        TestContext.WriteLine($"Package: {package}; cache: {restored}");
+            """
+            : $"""
+            {Path.Join(output, "MSTest.TestFramework.dll")}
+            {Path.Join(output, uiPackage + ".dll")}
+            {copiedResource}
+            Packed framework ownership and API shape passed.
+            """;
+        Assert.AreEqual(expectedOutput.ReplaceLineEndings(), muxer.StandardOutput.ReplaceLineEndings());
         TestContext.WriteLine($"Package folders: {string.Join("; ", packageFolders)}");
         TestContext.WriteLine(string.Join(Environment.NewLine, resolved));
         TestContext.WriteLine(muxer.StandardOutput);
@@ -130,11 +136,12 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
           </PropertyGroup>
           <ItemGroup>
             <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+            $UiReference$
           </ItemGroup>
           <Target Name="ReportFrameworkAssets" AfterTargets="Build">
             <ItemGroup>
-              <_FrameworkCompile Include="@(ReferencePath)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions') AND '%(Extension)' == '.dll' " />
-              <_FrameworkRuntime Include="@(ReferenceCopyLocalPaths)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions') AND '%(Extension)' == '.dll' " />
+              <_FrameworkCompile Include="@(ReferencePath)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
+              <_FrameworkRuntime Include="@(ReferenceCopyLocalPaths)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
             </ItemGroup>
             <WriteLinesToFile File="$(MSBuildProjectDirectory)\resolved-framework-assets.txt" Lines="@(_FrameworkCompile->'compile=%(FullPath)');@(_FrameworkRuntime->'runtime=%(FullPath)')" Overwrite="true" />
           </Target>
@@ -146,8 +153,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
 
         Assembly core = typeof(TestMethodAttribute).Assembly;
         Assert.AreSame(core, typeof(TestContext).Assembly);
-        Assembly extensions = Assembly.Load("MSTest.TestFramework.Extensions");
-        Assert.IsNull(extensions.GetType(typeof(TestContext).FullName!));
+        Assert.IsFalse(File.Exists(Path.Join(AppContext.BaseDirectory, "MSTest.TestFramework.Extensions.dll")));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory"));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease"));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"));
@@ -160,7 +166,26 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assert.IsNull(typeof(TestContext).GetProperty("DataRow"));
         Assert.IsNull(typeof(TestContext).GetProperty("DataConnection"));
         Console.WriteLine(core.Location);
-        Console.WriteLine(extensions.Location);
+        if ("$UiPackage$".Length != 0)
+        {
+            Assembly ui = Assembly.Load("$UiPackage$");
+            Assert.IsNull(ui.GetType(typeof(TestContext).FullName!));
+            Assembly services = Assembly.Load("MSTestAdapter.PlatformServices");
+            Type implementation = services.GetType("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation", true)!;
+            var properties = directories.ToDictionary(name => name, name => (object?)"must-not-be-a-directory");
+            var context = (TestContext)implementation.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(constructor => constructor.GetParameters().Length == 5)
+                .Invoke([null, null, properties, null, null]);
+            foreach (string directory in directories)
+            {
+                Assert.AreEqual("must-not-be-a-directory", context.Properties[directory]);
+                Assert.IsNull(typeof(TestContext).GetProperty(directory)!.GetValue(context), directory);
+            }
+
+            ((IDisposable)context).Dispose();
+            Console.WriteLine(ui.Location);
+        }
+
         Console.WriteLine(core.GetSatelliteAssembly(System.Globalization.CultureInfo.GetCultureInfo("fr")).Location);
         Console.WriteLine("Packed framework ownership and API shape passed.");
         """;

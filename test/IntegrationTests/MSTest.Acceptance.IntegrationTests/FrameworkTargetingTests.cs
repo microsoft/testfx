@@ -97,11 +97,10 @@ public sealed class FrameworkTargetingTests : AcceptanceTestBase<NopAssetFixture
         string importedTargets = File.ReadAllText(Path.Combine(asset.TargetAssetPath, "obj", $"{assetName}.csproj.nuget.g.targets"))
             .Replace('\\', '/');
         Assert.Contains($"buildTransitive/{targetFramework}/MSTest.TestAdapter.targets", importedTargets);
-        Assert.Contains($"buildTransitive/{targetFramework}/MSTest.TestFramework.targets", importedTargets);
+        Assert.Contains("buildTransitive/MSTest.TestFramework.targets", importedTargets);
 
         var host = TestHost.LocateFrom(asset.TargetAssetPath, assetName, targetFramework);
         await AssertMatchingAssemblyAsync("MSTest.TestFramework", MSTestVersion, $"lib/{targetFramework}/MSTest.TestFramework.dll", host.DirectoryName);
-        await AssertMatchingAssemblyAsync("MSTest.TestFramework", MSTestVersion, $"buildTransitive/{targetFramework}/MSTest.TestFramework.Extensions.dll", host.DirectoryName);
         await AssertMatchingAssemblyAsync("MSTest.TestAdapter", MSTestVersion, $"buildTransitive/{targetFramework}/MSTest.TestAdapter.dll", host.DirectoryName);
         await AssertMatchingAssemblyAsync("MSTest.TestAdapter", MSTestVersion, $"buildTransitive/{targetFramework}/MSTestAdapter.PlatformServices.dll", host.DirectoryName);
         await AssertMatchingAssemblyAsync("Microsoft.Testing.Platform", MicrosoftTestingPlatformVersion, $"lib/{targetFramework}/Microsoft.Testing.Platform.dll", host.DirectoryName);

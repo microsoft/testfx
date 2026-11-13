@@ -209,9 +209,6 @@ public class HarvestPlaceholder
     <Reference Include="MSTest.TestFramework">
       <HintPath>$(ClosureDir)\MSTest.TestFramework.dll</HintPath>
     </Reference>
-    <Reference Include="MSTest.TestFramework.Extensions">
-      <HintPath>$(ClosureDir)\MSTest.TestFramework.Extensions.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

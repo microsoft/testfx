@@ -23,7 +23,7 @@ A packaged WinUI 3 desktop app is full trust by default. Packaging gives it iden
 
 `Microsoft.Testing.Extensions.PackagedApp` supports both full-trust and AppContainer hosts end to end. `Microsoft.Testing.Extensions.PackagedApp.MSBuild` supplies the full-trust sidecar controller, selects the packaged test executable explicitly, and ships the UAP-compatible bootstrap. `MSTest.Sdk` references that integration package automatically; the adapter supplies classic UWP's runtime assets.
 
-### Explicit metapackage or adapter integration
+### Explicit UI-package integration
 
 Projects using `Microsoft.NET.Sdk` or `MSBuild.Sdk.Extras` instead of `MSTest.Sdk`
 can reference the same integration package explicitly:
@@ -35,13 +35,16 @@ can reference the same integration package explicitly:
   <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
 </PropertyGroup>
 <ItemGroup>
-  <PackageReference Include="MSTest" Version="4.5.0" />
-  <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Version="2.5.0" />
+  <PackageReference Include="MSTest.WinUI" Version="5.0.0" />
+  <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Version="3.0.0" />
 </ItemGroup>
 ```
 
-The `MSTest` reference can be replaced with explicit `MSTest.TestAdapter` and
-`MSTest.TestFramework` references. Preserve the application's WinUI/UWP build
+For UWP, replace `MSTest.WinUI` with `MSTest.Uwp`. These MSTest 5 packages own the
+UI attributes and matching adapter/services and depend on the exact matching
+`MSTest.TestFramework` version. Do not combine them with `MSTest.TestAdapter`
+or the modern `MSTest` metapackage; classic UAP metapackage consumers select
+`MSTest.Uwp` through their UAP dependency group. Preserve the application's WinUI/UWP build
 settings and `OnLaunched` bootstrap, then execute
 `msbuild MyTests.csproj -t:InvokeTestingPlatform`. Desktop MSBuild and
 `dotnet msbuild` both reuse `InvokeTestingPlatformTask` to launch the controller

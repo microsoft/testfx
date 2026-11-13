@@ -9,13 +9,12 @@
     <AssemblyName>MSTest.TestFramework</AssemblyName>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
-    <!-- TestFramework.Extensions.csproj is what we actually package as "MSTest.TestFramework", and it bundles
-         this assembly into its lib folder. This project is never packed on its own (IsPackable=false) and uses a
-         distinct PackageId so it is not seen as a circular/self reference. Because Extensions references it
-         directly, NuGet would still surface it as a package dependency, so TestFramework.Extensions.csproj
-         removes this "NotPublishable" dependency from the produced package (see _RemoveNonPublishableCoreDependency). -->
-    <PackageId>NotPublishable</PackageId>
-    <IsPackable>false</IsPackable>
+    <PackageId>MSTest.TestFramework</PackageId>
+    <IsPackable>true</IsPackable>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework Framework</PackageTags>
+    <PackageDescription><![CDATA[Write tests and shared test libraries with the MSTest framework. Add MSTest.TestAdapter to run ordinary tests, MSTest.Uwp for UWP tests, or MSTest.WinUI for WinUI tests.
+
+$(CommonProductDescription)]]></PackageDescription>
     <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>
 
     <!-- Treat "missing XML doc comment for publicly visible type or member" as a build error so
@@ -58,6 +57,15 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" />
+    <None Include="MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="Internal\RoslynHashCode.cs" />
     <!-- Single source of truth for CI environment detection lives in Microsoft.Testing.Platform. The
@@ -84,7 +92,6 @@
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Extensions.Hosting" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />

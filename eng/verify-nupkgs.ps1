@@ -20,8 +20,10 @@ function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
         "MSTest.Sdk"                                  = 16
-        "MSTest.TestFramework"                        = 135
-        "MSTest.TestAdapter"                          = 66
+        "MSTest.TestFramework"                        = 67
+        "MSTest.Uwp"                                  = 73
+        "MSTest.WinUI"                                = 53
+        "MSTest.TestAdapter"                          = 54
         "MSTest.Extensions.Hosting"                   = 57
         "MSTest"                                      = 10
         "MSTest.Analyzers"                            = 56

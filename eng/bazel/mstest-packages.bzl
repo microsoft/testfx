@@ -193,14 +193,12 @@ def _asset(files, name, source, destination):
 def native_mstest_packages():
     """Declare portable packages using the explicit compatibility task wrappers."""
     package_version(name = "mstest_package_version", property_name = "VersionPrefix")
-    framework_project = "src/TestFramework/TestFramework.Extensions"
+    framework_project = "src/TestFramework/TestFramework"
     adapter_project = "src/Adapter/MSTest.TestAdapter"
-    framework_files = {}
+    framework_files = {framework_project + "/MSTest.TestFramework.targets": "buildTransitive/MSTest.TestFramework.targets"}
     adapter_files = {}
     for framework in PORTABLE_FRAMEWORKS:
         suffix = framework.replace(".", "_")
-        _asset(framework_files, "framework_build_" + suffix, framework_project + "/build/" + framework + "/MSTest.TestFramework.targets", "build/" + framework + "/MSTest.TestFramework.targets")
-        _asset(framework_files, "framework_transitive_" + suffix, framework_project + "/buildTransitive/net8.0AndLater/MSTest.TestFramework.targets", "buildTransitive/" + framework + "/MSTest.TestFramework.targets")
         for extension in ["props", "targets"]:
             filename = "MSTest.TestAdapter." + extension
             _asset(adapter_files, "adapter_build_" + suffix + "_" + extension, adapter_project + "/build/" + framework + "/" + filename, "build/" + framework + "/" + filename)
@@ -213,9 +211,9 @@ def native_mstest_packages():
         version_file = ":mstest_package_version",
         description = "Provides the libraries for writing tests with MSTest. MSTest is Microsoft supported Test Framework.",
         readme = framework_project + "/PACKAGE.md",
-        libraries = [":framework", ":framework_extensions"],
-        directories = ["lib/{tfm}", "buildTransitive/{tfm}"],
-        resource_directories = ["lib/{tfm}", ""],
+        libraries = [":framework"],
+        directories = ["lib/{tfm}"],
+        resource_directories = ["lib/{tfm}"],
         files = framework_files,
         deps = [":analyzers_package"],
         dependency_excludes = {"MSTest.Analyzers": ["Compile", "Runtime"]},

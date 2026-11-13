@@ -29,7 +29,6 @@
          (PrivateAssets="all"), so reference it directly to compile against its (internals-visible) types. -->
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -169,9 +169,6 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
     <Reference Include="MSTest.TestFramework">
       <HintPath>$MSTestFrameworkDir$\MSTest.TestFramework.dll</HintPath>
     </Reference>
-    <Reference Include="MSTest.TestFramework.Extensions">
-      <HintPath>$MSTestFrameworkDir$\MSTest.TestFramework.Extensions.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

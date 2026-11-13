@@ -22,9 +22,13 @@ Supported platforms:
 
 - .NET 4.6.2+
 - .NET 10.0+
-- .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 10+
+
+Classic UWP selects `MSTest.Uwp` through its UAP dependency group. Modern UWP
+and WinUI cannot be distinguished by a Windows TFM alone: reference
+`MSTest.Uwp` or `MSTest.WinUI` directly instead of this metapackage, or use
+`MSTest.Sdk` with the appropriate application model. Do not combine them with
+the ordinary adapter dependency supplied by this metapackage.
 
 ## Documentation
 

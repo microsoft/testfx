@@ -276,13 +276,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <!--
-      MSTest.TestAdapter + MSTest.TestFramework rather than the MSTest metapackage: the metapackage also
-      pulls Microsoft.Testing.Extensions.CodeCoverage, whose Microsoft.Testing.Platform floor is above the
-      locally built '-dev' platform package, so restore would not resolve against the local packages.
-    -->
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -504,8 +498,7 @@ public class UITimeoutTestClass
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>

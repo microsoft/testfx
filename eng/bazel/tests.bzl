@@ -12,7 +12,6 @@ def native_unit_test_deps():
         ":platform",
         ":adapter",
         ":framework",
-        ":framework_extensions",
         ":trx",
         ":junit",
         ":ctrf",
@@ -185,7 +184,7 @@ def unit_tests():
             defines = ["TESTFX_FOUR_WORKERS" if four_workers else "TESTFX_METHOD_PARALLEL"],
             usings = ["Microsoft.Testing.Platform.Extensions"] if name == "vstest_bridge_tests" else [],
             generate_documentation_file = False,
-            deps = [":platform", ":adapter", ":framework", ":framework_extensions", ":trx", ":mstest_analyzer_plugin"] + dependencies,
+            deps = [":platform", ":adapter", ":framework", ":trx", ":mstest_analyzer_plugin"] + dependencies,
         )
         testfx_test(
             name = name,
@@ -203,7 +202,7 @@ def unit_tests():
         generate_documentation_file = False,
         data = ["//eng/bazel:build_tools"],
         envs = {"TESTFX_BAZEL_BUILD_TOOLS": "$(rlocationpath //eng/bazel:build_tools)"},
-        deps = [":adapter", ":framework", ":framework_extensions", ":trx", ":mstest_analyzer_plugin", "//eng/bazel:runfiles"],
+        deps = [":adapter", ":framework", ":trx", ":mstest_analyzer_plugin", "//eng/bazel:runfiles"],
     )
     testfx_test(
         name = "build_tools_tests",
@@ -231,7 +230,6 @@ def unit_tests():
             generate_documentation_file = False,
             deps = [
                 ":framework",
-                ":framework_extensions",
                 ":adapter",
                 ":platform_services",
                 ":platform",

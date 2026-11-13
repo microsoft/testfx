@@ -10,10 +10,10 @@
 
   <ItemGroup>
     <Reference Include="MSTest.TestAdapter">
-      <HintPath>$(MSBuildThisFileDirectory)MSTest.TestAdapter.dll</HintPath>
+      <HintPath>$(_MSTestAdapterPayloadRoot)MSTest.TestAdapter.dll</HintPath>
     </Reference>
     <Reference Include="MSTestAdapter.PlatformServices">
-      <HintPath>$(MSBuildThisFileDirectory)MSTestAdapter.PlatformServices.dll</HintPath>
+      <HintPath>$(_MSTestAdapterPayloadRoot)MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -60,7 +60,7 @@
       Every requested localized satellite must be copied to the output directory so any selected culture can be resolved at run time.
       -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
-      <_MSTestV2Files Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\_localization'))\**\*.dll" />
+      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)**\*.dll" />
       <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because
            the well-known %(RecursiveDir) metadata is only available on items after they have been created. -->
       <_MSTestV2Files Update="@(_MSTestV2Files)">
@@ -92,7 +92,7 @@
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
-      <_MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
+      <_MSTestV2Files Include="$(_MSTestAdapterLocalizationRoot)%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
         <Culture>$([System.String]::Copy('%(CurrentUICultureHierarchy.Identity)').ToLowerInvariant())</Culture>
       </_MSTestV2Files>
