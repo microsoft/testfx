@@ -32,7 +32,8 @@ function Invoke-FixtureGit {
 function Invoke-AffectedStep {
     param(
         [string]$Repository,
-        [int]$DotnetExit = 0
+        [int]$DotnetExit = 0,
+        [hashtable]$Environment = @{}
     )
 
     $script = @'
@@ -56,6 +57,9 @@ function dotnet {
     }
     $startInfo.Environment["TESTFX_AFFECTED_GIT_DOTNET_EXIT"] = "$DotnetExit"
     $startInfo.Environment["GIT_TERMINAL_PROMPT"] = "0"
+    foreach ($name in $Environment.Keys) {
+        $startInfo.Environment[$name] = $Environment[$name]
+    }
     $process = [System.Diagnostics.Process]::Start($startInfo)
     try {
         $output = $process.StandardOutput.ReadToEndAsync()
@@ -164,6 +168,41 @@ try {
         Write-Output "PASS $($case.Name)"
         $passed++
     }
+
+    $seedStub = Join-Path $complete "eng/seed-affected-tests-cache.ps1"
+    $null = New-Item -ItemType Directory -Path (Split-Path $seedStub -Parent) -Force
+    [System.IO.File]::WriteAllText($seedStub, @'
+param([string]$Repository, [string]$CommonCommit)
+Write-Output "AFFECTED_GIT_PROBE_SEED:$CommonCommit"
+if ($env:TESTFX_AFFECTED_GIT_SEED_THROW -eq "1") {
+    throw "AFFECTED_GIT_PROBE_SEED_FAILURE"
+}
+'@)
+    $result = Invoke-AffectedStep -Repository $complete
+    Assert-StepResult -Name "AffectedCacheSeedRunsBeforeSelection" -Result $result
+    $seedIndex = $result.Output.IndexOf("AFFECTED_GIT_PROBE_SEED:$baseline", [System.StringComparison]::Ordinal)
+    if ($seedIndex -lt 0 -or $seedIndex -gt $result.Output.IndexOf("AFFECTED_GIT_PROBE_DOTNET", [System.StringComparison]::Ordinal)) {
+        throw "AffectedCacheSeedRunsBeforeSelection: the seed must receive the merge base before dotnet test runs: $($result.Output)"
+    }
+    Write-Output "PASS AffectedCacheSeedRunsBeforeSelection"
+    $passed++
+
+    $result = Invoke-AffectedStep -Repository $complete -Environment @{ TESTFX_AFFECTED_GIT_SEED_THROW = "1" }
+    Assert-StepResult -Name "AffectedCacheSeedFailureFailsOpen" -Result $result
+    if (-not $result.Output.Contains("##vso[task.logissue type=warning]Affected-test cache seed failed: AFFECTED_GIT_PROBE_SEED_FAILURE")) {
+        throw "AffectedCacheSeedFailureFailsOpen: a seed failure must be a visible warning: $($result.Output)"
+    }
+    Write-Output "PASS AffectedCacheSeedFailureFailsOpen"
+    $passed++
+
+    $result = Invoke-AffectedStep -Repository $complete -Environment @{ TESTFX_AFFECTED_TESTS_SEED = "0" }
+    Assert-StepResult -Name "AffectedCacheSeedOptOut" -Result $result
+    if ($result.Output.Contains("AFFECTED_GIT_PROBE_SEED")) {
+        throw "AffectedCacheSeedOptOut: TESTFX_AFFECTED_TESTS_SEED=0 must skip the seed: $($result.Output)"
+    }
+    Write-Output "PASS AffectedCacheSeedOptOut"
+    $passed++
+    Remove-Item -LiteralPath (Split-Path $seedStub -Parent) -Recurse -Force
 
     $null = Invoke-FixtureGit @("-C", $complete, "remote", "set-url", "origin", (Join-Path $fixture "missing remote"))
     $result = Invoke-AffectedStep -Repository $complete
