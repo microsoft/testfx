@@ -16,6 +16,10 @@ public sealed class TargetFrameworkParserTests
     [DataRow(".NET Framework 4.7.0", "net47")]
     [DataRow(".NET Framework 4.8.0", "net48")]
 
+    // TargetFrameworkAttribute display names omit a zero patch
+    [DataRow(".NET Framework 4.7", "net47")]
+    [DataRow(".NET Framework 4.8", "net48")]
+
     // known 3 digit versions
     [DataRow(".NET Framework 4.6.2", "net462")]
     [DataRow(".NET Framework 4.7.1", "net471")]
@@ -93,6 +97,21 @@ public sealed class TargetFrameworkParserTests
     {
         Assembly assembly = CreateAssemblyWithTargetFramework(frameworkName, frameworkDisplayName, platformName);
 
+        Assert.AreEqual(expected, TargetFrameworkParser.GetTargetFrameworkFromAssembly(assembly));
+    }
+
+    // CI summary fragments name the module with GetShortTargetFrameworkIncludingPlatform while dotnet test records
+    // GetTargetFrameworkFromAssembly; a mismatch makes the Azure DevOps summary post-processor reject the fragment.
+    [TestMethod]
+    [DataRow(".NETFramework,Version=v4.8", ".NET Framework 4.8", "net48")]
+    [DataRow(".NETFramework,Version=v4.6.2", ".NET Framework 4.6.2", "net462")]
+    [DataRow(".NETFramework,Version=v4.8.1", ".NET Framework 4.8.1", "net481")]
+    public void GetShortTargetFrameworkIncludingPlatform_WithSdkFrameworkDisplayName_MatchesDeclaredTarget(
+        string frameworkName, string frameworkDisplayName, string expected)
+    {
+        Assembly assembly = CreateAssemblyWithTargetFramework(frameworkName, frameworkDisplayName, platformName: null);
+
+        Assert.AreEqual(expected, TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(assembly));
         Assert.AreEqual(expected, TargetFrameworkParser.GetTargetFrameworkFromAssembly(assembly));
     }
 
