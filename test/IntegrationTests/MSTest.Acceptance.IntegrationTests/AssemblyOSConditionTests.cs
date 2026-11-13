@@ -271,11 +271,14 @@ public sealed class AssemblyOSConditionTests : AcceptanceTestBase<NopAssetFixtur
                 _ => ("Microsoft.Testing.Platform", MicrosoftTestingPlatformVersion),
             };
             using ZipArchive package = ZipFile.OpenRead(Path.Combine(Constants.ArtifactsPackagesShipping, $"{packageId}.{version}.nupkg"));
-            string[] currentPayloadHashes = [.. package.Entries.Where(entry => entry.Name == name + ".dll").Select(entry =>
-            {
-                using Stream payload = entry.Open();
-                return Convert.ToHexString(SHA256.HashData(payload));
-            })];
+            string[] currentPayloadHashes =
+            [
+                .. package.Entries.Where(entry => entry.Name == name + ".dll").Select(entry =>
+                {
+                    using Stream payload = entry.Open();
+                    return Convert.ToHexString(SHA256.HashData(payload));
+                }),
+            ];
             Assert.Contains(product[2], currentPayloadHashes, $"{name} loaded by the consumer must match the current shipping package.");
         }
     }

@@ -471,11 +471,12 @@ public sealed class MtpServerProcessTests
     {
         using var temp = TempDirectory.Create();
         string dll = temp.CreateFile("App.dll");
-        string interpreter = temp.CreateFile("interpreter");
+        string interpreter = Path.Combine(temp.Path, "interpreter");
+        File.Copy("/bin/sh", interpreter);
         string apphost = temp.CreateFile("App", "#" + $"!{interpreter}\n");
 
-        // A non-executable interpreter produces EACCES on both Linux and macOS, even for a privileged process.
-        // A group-only execute bit on the apphost does not reliably deny execution on those systems.
+        // CodeQL runs text interpreters through a shell, bypassing their execute bits. A native interpreter
+        // without execute permission still produces EACCES, including for a privileged process.
         File.SetUnixFileMode(interpreter, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         MakeExecutable(apphost);
 
