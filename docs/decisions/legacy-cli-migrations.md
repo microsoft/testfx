@@ -508,6 +508,77 @@ The demonstration terminal was stopped, and no private process using this
 worktree's SDK remained. Shipping outputs, baseline/removal package snapshots,
 and diagnostic evidence were retained; no borrowed cache or process was changed.
 
+### 2026-11-13: rebase and review readiness
+
+The follow-up was rebased onto main
+`e92578e3a4c076150c8b4174fbe04bd5b9df91d6`. Git applied the commit without
+textual conflict markers, preserving main's newer source and translations.
+The owning platform's `UpdateXlf` target was then rerun: ten translated catalogs
+still contained the obsolete `TerminalProgressModeOptionDescription` unit after
+the automatic merge. Regeneration removed those units without hand-editing any
+translation. The localization guard's 41 self-tests and all 364 catalogs passed.
+
+[dotnet/arcade#17784](https://github.com/dotnet/arcade/pull/17784) is now merged
+at `d3c2ebbd7d9a81318117839335ba7e8540c3d77f`. The newly inherited Arcade pin
+is **12.0.0-beta.26562.1**, source
+`ffc98fd0de10a312712802f9b6b43da9326781fc`, which is the merge commit's parent.
+Its actual runner target still appends `--no-progress`. No build for the fix's
+exact commit was registered in BAR when checked, and no compatible replacement
+package was established for this rebase. Readiness is therefore **ready for
+review at the user's request**, not a claim that the package-flow prerequisite
+or a stock Arcade test run has passed. The PR must retain that merge blocker.
+
+The November 11 execution and counterfactual evidence above remains bound to
+that earlier source/package state. Rebased validation is recorded separately;
+it must not be presented as a replay of those earlier packages.
+
+The rebased production/test delta against that main revision, including the
+regenerated catalogs, has SHA-256
+`3CA456F8DD10B2E5BEF20A39E23BA51A2F346C3CFB5E8B4CD962CAF3FD7E489F`.
+The same repository SDK **12.0.100-alpha.1.26556.115** was used with the
+updated pinned runtimes. The generated validation filter contains all 41
+shipping source projects and the three affected test owners; no samples,
+unrelated unit projects, or warning-policy overrides are included.
+
+```powershell
+& .\eng\build.ps1 -restore -build -pack -c Release -projects "$evidence\rebase\validation.slnf" -binaryLog -nodeReuse:$false /m:4 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false '/bl:artifacts\log\Release\no-progress-rebase-pack-{}.binlog'
+# Exit 0: zero warnings/errors; shipping packages and package guards passed.
+
+& "$evidence\run-validation.ps1" -Suite unit -Framework net10.0 -RunName rebase-unit-net10
+# Exit 0: 179 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite unit -Framework net11.0 -RunName rebase-unit-net11
+# Exit 0: 179 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite unit -Framework net462 -RunName rebase-unit-net462
+# Exit 0: 180 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite mtp -Framework net12.0 -RunName rebase-mtp
+# Exit 0: 47 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite mstest -Framework net12.0 -RunName rebase-mstest
+# Exit 0: 6 selected/executed/passed, zero failed/skipped.
+```
+
+The helper uses the same explicit filters, independent JSON discovery, host
+arguments, and TRX/JUnit/CTRF checks documented above. Thus **538 unit cases
+and 53 packed acceptance cases passed**, with no skips. The unit count is
+three lower than the historical run because upstream removed its obsolete
+cancelled-state data row on each TFM; that change was preserved. The new
+`NoProgressOption_IsRejectedAsUnknownOption` case and all canonical-progress
+cases still execute. Unlike the November 11 owner build, this strict build
+needs no MSTEST0037 demotion.
+
+The freshly packed core nupkg SHA-256 is
+`E86B9599C5E8BF7A0247D6EC15996BBB0BFE729CE1A3935B1ABDCEDDEEB072B1`;
+both acceptance caches matched that archive and all 20 physical consumer core
+DLLs matched its TFM-specific payloads. The real native SDK module invocation
+documented above was repeated against this run's source-generated MSTest
+`HelpInfo` output: **`Test` passed, exit 0, total 1, failed/skipped 0, no ANSI
+escapes**. The SDK's negative switches still belong to its own parser.
+
+**Test-value evidence:** these are executed post-rebase preservation runs,
+not a newly executed red phase or CI result. The earlier paired package
+failure/pass remains historical evidence for the unchanged rejection assertion.
+No new behavior is introduced by this rebase. Fresh reports and package/cache
+manifests are retained separately from the November 11 artifacts.
+
 ## Remaining prerequisite
 
 **The final MTP `--no-progress` removal is proposed in this follow-up, but

@@ -493,17 +493,6 @@ Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: 'Normal
         <target state="translated"> | henüz tamamlanmış test yok</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalProgressModeOptionDescription">
-        <source>Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="translated">İlerlemenin ekrana bildirilip bildirilmediğini denetler.
-Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).
-Terminal yerinde güncelleştirilemiyorsa (örneğin --ansi off veya CI ortamında olduğu gibi) 'auto' ilerleme durumunu gösterir.
-Bu seçenek, kullanım dışı bırakılan --no-progress bayrağından önceliklidir.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
-      </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--progress, değeri 'auto', 'on' (veya 'true', 'enable', '1') ya da 'off' (veya 'false', 'disable', '0') olan tek bir parametre bekliyor.</target>

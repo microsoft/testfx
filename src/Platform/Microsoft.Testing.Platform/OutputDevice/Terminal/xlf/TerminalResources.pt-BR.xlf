@@ -493,17 +493,6 @@ Os valores válidos são ''Minimal'', ''Normal'' e ''Detailed''. O padrão é ''
         <target state="translated"> | nenhum teste concluído ainda</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalProgressModeOptionDescription">
-        <source>Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="translated">Controle se o progresso será relatado na tela.
-Os valores válidos são ''auto'' (padrão), ''on'' (também aceita ''true'', ''enable'', ''1'') ou ''off'' (também aceita ''false'', ''disable'', ''0'').
-''auto'' mostra o progresso, a menos que o terminal não possa ser atualizado no local (por exemplo, com --ansi off ou em CI).
-Essa opção tem precedência sobre o sinalizador --no-progress preterido.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
-      </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--progress espera apenas um parâmetro com o valor 'auto', 'on' (ou 'true', 'enable', '1') ou 'off' (ou 'false', 'disable', '0').</target>
