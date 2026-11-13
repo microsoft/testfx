@@ -385,6 +385,94 @@ The updated source dependency graph builds with zero warnings/errors using the p
 verifying four executed/passed cases and no skips. This is green-before/green-after merge validation, not
 new hosted cache-use or savings evidence.
 
+## Red-main map staleness (2026-11-13)
+
+PR [#12410](https://github.com/microsoft/testfx/pull/12410) reported that Windows Release still spent more than an
+hour in affected-test selection. In its run
+[1677661](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1677661), `Test affected changes`
+ran from 14:25:12 to 15:32:02 and all 48 module/TFM invocations logged `Falling back to all tests` because the
+mapping identity changed. That run's failing exit came from an unrelated retry-recovery test, not selection.
+That PR also edits `eng/**`, which `global.json` lists under `forceAllTests`, so even a usable map would
+intentionally select every test for it. The fallback itself was nevertheless a real, repository-wide defect:
+every PR invocation observed from 2026-11-06 to 2026-11-13 fell back, first with a missing-artifact message and
+then, from 2026-11-11, with an identity mismatch.
+
+The cause is the published provider's baseline query, not the change policy or the Git repair above. The
+decompiled `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps` from both the pinned
+`18.13.0-preview.26560.3` and the newer `18.13.0-preview.26562.1` has an identical
+`AzureDevOpsArtifactClient.GetSuccessfulBuildsAsync`. It requests `resultFilter=succeeded` and reads the
+newest of those builds whose source commit is an ancestor of the PR merge base. It checks the mapping identity
+only after it has downloaded that artifact, and it does not retry another candidate. Every main build of
+definition 209 since 2026-11-11 has failed overall, so PRs kept reading build
+[1674604](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1674604)
+(`2a581dd596bc529ee0ae1519b7804e11542a8c56`). Its maps embed the runtime that built them (for example
+`.NET 10.0.14|win-x64`), so the SDK/runtime refresh that followed made every identity stale. The failed main
+build [1679434](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1679434)
+(`197c7b947d55160b8f03c8035cda98fad59d92e2`) had a succeeded `Windows AffectedTests` job and a complete
+`TestFx_AffectedTestsMaps` artifact; unrelated validation-job failures alone made it invisible to selection.
+
+The provider checks a local cache before querying Azure DevOps. A cache entry is stored at
+`<root>/<repository id>/<lowercase SHA-256 of the UTF-8 object name>.json`, together with a `.metadata` sidecar
+holding `SchemaVersion` 2, `BuildId`, `CommonCommit`, and the uppercase content SHA-256. Its default root is
+`affected-tests/azure-devops-cache` beneath `CTS_TEMPDIRECTORY`, which CI sets to the agent temporary directory.
+On a schema, commit, or content-hash mismatch, the provider deletes the entry and continues with its normal
+lookup; an identity mismatch is still reported as an ordinary full-test fallback.
+
+The repair is `eng/seed-affected-tests-cache.ps1`, which runs from the PR selection step after Git computes the
+merge base and before `dotnet test`:
+
+- it walks the newest 50 completed main builds of definition 209, skipping canceled builds and builds without a
+  source version, and keeps only those whose source commit is the merge base or one of its ancestors;
+- when the newest eligible build succeeded, it does nothing, because the provider already selects that build;
+- otherwise it selects the newest eligible build, newer than the provider's choice, whose `Windows AffectedTests`
+  job succeeded and whose `TestFx_AffectedTestsMaps` container artifact has a download URL;
+- it downloads that artifact once and writes each shard to the provider cache layout atomically, with the
+  selected build and merge base in the metadata;
+- it runs only on Windows, because non-Windows collection is a separately gated, default-off rollout whose
+  collection jobs this selection rule does not validate;
+- `TESTFX_AFFECTED_TESTS_SEED=0` disables it; every seed failure is a pipeline warning, and the existing
+  provider lookup and full-test fallbacks remain authoritative.
+
+Considered alternatives:
+
+- Fixing only main's red tests restores selection until the next red main run, which has repeatedly lasted days.
+- Pinning a build id through provider configuration or editing the storage section in `global.json` changes
+  every consumer's storage contract and needs manual updates for each main run.
+- A separate collection-only pipeline definition would need new permissions, a second artifact producer, and
+  rollout ownership while duplicating the existing collection job.
+- Accepting a build only because its overall result is `partiallySucceeded` would accept results unrelated to
+  map collection; the seed instead requires the collection job's own success.
+
+The durable correction belongs in the provider: it should qualify builds by the collection job or artifact rather
+than the overall result, or try further candidates after an identity mismatch. This seed depends on the private
+cache layout above and must be re-verified against the decompiled provider on each affected-test package update.
+It runs the 157-second artifact import once per PR selection job, not once per module, and writes about 2.7 GB of
+maps (616 MB zipped) beneath the agent temporary directory, which the agent cleans after the job.
+
+Validation used base `e92578e3a4c076150c8b4174fbe04bd5b9df91d6`:
+
+| Requirement / risk | Evidence | Consuming surface |
+| --- | --- | --- |
+| A red main run with a successful collection job seeds maps that the provider reads. | Executed against dnceng-public: merge base `e92578e3a4c076150c8b4174fbe04bd5b9df91d6` selected 1679434 over 1674604, imported 48 shards in 157 s, exit 0. | Real Azure DevOps REST and artifact. |
+| The provider reads and validates the seeded layout. | Executed: see test-value evidence below. | Pinned SDK and provider, Release `TerminalReporterContract.UnitTests`. |
+| Selection, cache path, and import are deterministic and reject an incomplete artifact. | Executed: `SeedCachePath`, `SeedBuildSelection`, and `SeedCacheImport` in `seed-affected-tests-cache.ps1 -SelfTest`. | Seed script functions. |
+| The seed runs with the merge base before tests, can be disabled, and fails open with a warning. | Executed: `AffectedCacheSeedRunsBeforeSelection`, `AffectedCacheSeedFailureFailsOpen`, and `AffectedCacheSeedOptOut` (12 Git cases total). | Actual shared step body, isolated Git repositories, stub seed. |
+| The pipeline cannot silently drop the seed wiring. | Executed: `AffectedTestsCacheSeedWiring` plus five rejected mutations (removed, moved after tests, no opt-out, no merge base, failing closed). | `DetectChanges` validator. |
+
+**Test-value evidence:** with the template change stashed and the provider cache empty, a local Release run of
+`Microsoft.Testing.Platform.TerminalReporterContract.UnitTests` with `--affected-tests` logged `No successful
+Azure DevOps collect artifact contains …` for both net10.0 and net11.0 and ran all 32 tests. After seeding the
+net10.0 shard from 1679434 only, the same command's net10.0 invocation instead reported the mapping-identity
+fallback, while unseeded net11.0 still reported the missing artifact. The provider therefore found, validated,
+and retained the seeded entry; its identity differed only because this host runs .NET 10.0.15 while CI collected
+with 10.0.14. Both runs exited 0 with 32 passed tests. The validator mutations fail with their intended
+`AffectedTestsCacheSeedWiring` message. Running the retained Git harness against the original template
+(`-TemplatePath` with `HEAD:eng/pipelines/steps/test-affected-tests.yml`) exits 1 at the intended
+`AffectedCacheSeedRunsBeforeSelection` merge-base assertion, while the Git cases before it still pass; the
+changed template passes all 12 cases.
+No hosted PR cache hit or time saving is claimed yet; the first PR run after this change that does not touch
+force-all paths must confirm the cache hit in CI.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
@@ -413,7 +501,7 @@ new hosted cache-use or savings evidence.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
   nested-process isolation, command names, and fallbacks. Its `-SelfTest` mode, run by `DetectChanges`, also rejects
   shared collection/validation jobs, regressed collection budgets, bypassed rollout gates, ignored collection
-  failures, and artifact collisions.
+  failures, artifact collisions, and a removed, reordered, or fail-closed PR map-cache seed.
 
 ### CTS comparison: research and decisions (2026-10-31)
 
@@ -1812,6 +1900,8 @@ The map uses the extension's Azure DevOps artifact provider:
 - trusted main builds publish each module shard beneath the `TestFx_AffectedTestsMaps` artifact;
 - PR builds query successful builds from definition 209 and select the newest artifact whose baseline commit is an
   ancestor of the PR checkout;
+- when main is red, Windows PR selection first seeds the provider's local cache from the newest ancestor build whose
+  collection job succeeded (see [Red-main map staleness](#red-main-map-staleness-2026-11-13));
 - fork PRs receive no access token, so unavailable storage safely selects all tests rather than exposing credentials;
 - mapping identity includes the repository, module, target/runtime, test metadata, policy, and storage compatibility
   fields, so incompatible shards are rejected conservatively.
