@@ -152,7 +152,10 @@ also reaches child MSBuild invocations and, unlike
 `MSBUILDFORCEMULTITHREADED`, allows `-mt:false` to win. Expose the existing
 `-msbuildMultiThreaded` / `-mt` option through the Windows repository wrapper.
 Set the same default at pipeline scope for build/test steps that invoke the
-.NET CLI directly rather than going through Arcade.
+.NET CLI directly rather than going through Arcade. Acceptance-test
+infrastructure does not pass this ambient default to generated assets; they
+keep their explicit opt-in because some SDK tasks, such as the browser-wasm
+`JsonToItemsTaskFactory`, cannot run in the TaskHost that `-mt` requires.
 
 Do not edit mirrored `eng/common` files, switch Windows to .NET MSBuild
 (which would break desktop/UWP tooling), or rely solely on
