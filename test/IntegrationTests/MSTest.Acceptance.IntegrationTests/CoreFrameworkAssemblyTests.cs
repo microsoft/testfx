@@ -30,8 +30,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             .Replace("$MSTestVersion$", MSTestVersion, StringComparison.Ordinal)
             .Replace("$UseWinUI$", useWinUI.ToString(), StringComparison.Ordinal)
             .Replace("$UseUwpTools$", useUwpTools.ToString(), StringComparison.Ordinal)
-            .Replace("$UseUwp$", useUwp.ToString(), StringComparison.Ordinal)
-            .Replace("$Desktop$", desktop ? "true" : "false", StringComparison.Ordinal);
+            .Replace("$UseUwp$", useUwp.ToString(), StringComparison.Ordinal);
         using TestAsset asset = await TestAsset.GenerateAssetAsync("CoreFrameworkConsumer", source);
         string cache = Path.Join(asset.TargetAssetPath, ".packages");
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = cache };
@@ -70,6 +69,13 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             string relative = $"{folder}/{name}.dll";
             using Stream packedAssembly = archive.GetEntry(relative)!.Open();
             string hash = Convert.ToHexString(SHA256.HashData(packedAssembly));
+            if (name == "MSTest.TestFramework")
+            {
+                string sharedCoreAsset = desktop ? coreAsset : "lib/net10.0";
+                using Stream sharedCore = archive.GetEntry($"{sharedCoreAsset}/{name}.dll")!.Open();
+                Assert.AreEqual(Convert.ToHexString(SHA256.HashData(sharedCore)), hash, relative);
+            }
+
             string cachedAssembly = Path.GetFullPath(Path.Join(restored, relative));
             string copiedAssembly = Path.Join(output, name + ".dll");
             Assert.AreEqual(hash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedAssembly))), relative);
@@ -144,11 +150,11 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assert.IsNull(extensions.GetType(typeof(TestContext).FullName!));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory"));
         Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease"));
-        Assert.AreEqual($Desktop$, core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute") is not null);
+        Assert.IsNotNull(core.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"));
         string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];
         foreach (string directory in directories)
         {
-            Assert.AreEqual($Desktop$, typeof(TestContext).GetProperty(directory) is not null, directory);
+            Assert.IsNotNull(typeof(TestContext).GetProperty(directory), directory);
         }
 
         Assert.IsNull(typeof(TestContext).GetProperty("DataRow"));
