@@ -57,7 +57,14 @@ internal static class AppModelHost
                 }),
         };
         string json = JsonSerializer.Serialize(report);
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "native-app-model.json"), json);
+        string reportPath = Path.Combine(AppContext.BaseDirectory, "native-app-model-" + Guid.NewGuid().ToString("N") + ".json");
+        using (FileStream stream = File.Open(reportPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+        using (var writer = new StreamWriter(stream))
+        {
+            writer.Write(json);
+        }
+
+        File.AppendAllLines(Path.Combine(AppContext.BaseDirectory, "native-app-model.paths"), [reportPath]);
         Console.WriteLine("BAZEL_APPMODEL_PROVENANCE: " + json);
     }
 
