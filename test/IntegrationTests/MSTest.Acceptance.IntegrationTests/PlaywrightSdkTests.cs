@@ -9,10 +9,16 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.TestAssetFixture>
 {
+    // Microsoft.Playwright.MSTest.v4 binds TestContext to MSTest.TestFramework.Extensions, where MSTest 4 defined it.
+    // MSTest 5 intentionally moved TestContext into MSTest.TestFramework without a type forwarder, so the published
+    // package fails test discovery with a TypeLoadException until Playwright ships a build compiled against MSTest 5.
+    private const string PlaywrightNeedsMSTest5Rebuild = "Microsoft.Playwright.MSTest.v4 needs to be recompiled against MSTest v5";
+
     public TestContext TestContext { get; set; }
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [Ignore(PlaywrightNeedsMSTest5Rebuild)]
     public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
@@ -38,6 +44,7 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [Ignore(PlaywrightNeedsMSTest5Rebuild)]
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
