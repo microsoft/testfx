@@ -4404,5 +4404,52 @@ The Windows MSBuild acquisition in `eng\build.ps1` could not complete:
 pin predates this change. The projects were therefore built with the SDK that
 `eng\build.ps1` had already restored into `.dotnet`.
 
-This change has not yet run in a GitHub-hosted workflow; that run remains
-required before the workflow can be treated as proven on hosted runners.
+The initial local validation preceded the first hosted run. The follow-up below
+tracks the hosted failures and their repairs.
+
+### Hosted validation follow-up (2026-11-13)
+
+The first hosted run,
+[43494273125](https://github.com/microsoft/testfx/actions/runs/43494273125),
+exposed two gaps that local full-graph validation did not cover:
+
+- The Linux full-graph step passed, but `validate-packages.ps1` still required
+  four self-contained publishers after the portable matrix changed to
+  net10.0/net11.0. Its native query returns exactly those two publishers. Keep
+  the cardinality guard, but derive its expected count from the validator's
+  framework list; the existing per-publisher check already rejects unexpected
+  or duplicate frameworks. Removing the guard would conceal missing outputs.
+- Windows analyzer tests could not initialize NuGet's machine-wide settings.
+  Bazel inherits environment names case-sensitively, whereas Windows resolves
+  them case-insensitively. The rule requested uppercase `PROGRAMFILES` names,
+  which match the local shell, but not the hosted runner's `ProgramFiles` and
+  `ProgramFiles(x86)` spelling. Reproducing those spellings in a child process
+  at `bf07eed116fa73aace608716c59a54059e19a7b8` made all 11
+  `AssertionArgsShouldAvoidConditionalAccessAnalyzerTests` cases fail with the
+  same `ConfigurationDefaults` / null `path1` error (Bazel exit 3).
+  Preserve both established spellings in the rule rather than modifying
+  machine settings or weakening the analyzer tests.
+
+These are launcher/validation repairs, not changes to product behavior or test
+scheduling. The existing analyzer tests and the real package consumer validator
+remain the oracles. Validation must cover both Windows environment spellings,
+the net10.0/net11.0 self-contained layouts and their pass/failure/empty exits,
+and the complete Windows/Linux hosted jobs before claiming hosted success.
+
+Local repair validation used Bazel 9.1.1 and SDK
+`11.0.100-rc.3.26522.148`, with the two rule/validator changes above applied to
+`bf07eed116fa73aace608716c59a54059e19a7b8`:
+
+| Contract | Command / source state | Observed result |
+| --- | --- | --- |
+| Analyzer runner inherits Windows installation paths | `pwsh -NoLogo -NoProfile -File eng/bazel.ps1 test //:analyzer_tests --nocache_test_results --test_arg=--filter --test_arg=FullyQualifiedName~AssertionArgsShouldAvoidConditionalAccessAnalyzerTests --jobs=4 --noshow_progress`, launched with only mixed-case `ProgramFiles` / `ProgramFiles(x86)` names | Before the rule fix: Bazel exit 3, 11 failed at NuGet initialization. After: exit 0, the same 11 cases executed and passed. Repeating with uppercase names also passed all 11. TRX counters were checked. This proves launcher initialization, not new analyzer behavior. |
+| Package validation matches the supported runtime matrix | `pwsh -NoLogo -NoProfile -File eng/bazel/validate-packages.ps1 -Jobs 4 -EvidenceRoot <dir>` | Exit 0. Three aligned `3.0.0-preview.bazel` packages were restored into an isolated consumer cache; net10.0/net11.0 builds passed. The package consumer and both staged self-contained hosts returned 0/2/9 for pass/failure/empty selections. Each passing TRX contained one passing test, and each host loaded CoreLib from its own staged layout. |
+| Complete Windows graph with hosted environment spelling | `pwsh -NoLogo -NoProfile -File eng/bazel/validate.ps1 -Jobs 4 -EvidenceRoot <dir>`, launched with mixed-case installation-path names | Exit 0: all 35 automatic targets accounted for, 34 passed and only the documented Windows NativeAOT target skipped. All 14 validation steps had their expected exits. The analyzer suite executed 3,050 passing cases with one conditional skip; the strict fresh-TRX gate accepted all 22 reporting targets. |
+| Workflow contracts and action pins | `python .github/scripts/test_bazel_cache.py`; `python .github/scripts/check_action_pins.py` | Exit 0 for both: 14 contract tests passed; the action-pin audit checked 2,769 references in 60 files. |
+
+The package validator's pre-fix failure is preserved in the hosted run above:
+native publishing succeeded, then the obsolete four-publisher assertion failed.
+The fix retains the count and unique-framework checks rather than accepting a
+partial matrix. Local logs and TRX are retained under
+`artifacts/bazel-ci-repair`; hosted results will be linked in the PR at the
+tested source revision.

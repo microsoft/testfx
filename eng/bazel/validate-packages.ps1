@@ -222,7 +222,9 @@ try {
     Set-Location $root
     $null = Invoke-Step 'publish' $bazel @('build', '//:published_samples', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
     $published = @(& $bazel cquery 'filter("explorer_net[0-9]+_0$", deps(//:published_samples))' --output=starlark '--starlark:expr=str(target.label) + "|" + providers(target)["DefaultInfo"].files_to_run.executable.path' --noshow_progress)
-    if ($LASTEXITCODE -ne 0 -or $published.Count -ne 4) { throw 'Expected four native self-contained publishers.' }
+    if ($LASTEXITCODE -ne 0 -or $published.Count -ne $frameworks.Count) {
+        throw "Expected $($frameworks.Count) native self-contained publishers, one per framework."
+    }
     $env:DOTNET_ROOT = Join-Path $directory 'missing-runtime'
     $env:DOTNET_ROOT_X64 = $env:DOTNET_ROOT
     foreach ($publishedTarget in $published) {

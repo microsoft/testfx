@@ -86,7 +86,8 @@ def analyzer_unit_tests():
         name = "analyzer_tests",
         binary = ":analyzer_tests_app",
         args = ["--minimum-expected-tests", "1"],
-        env_inherit = ["PROGRAMFILES", "PROGRAMFILES(X86)"],
+        # Bazel's inherited-name lookup is case-sensitive even on Windows.
+        env_inherit = ["PROGRAMFILES", "PROGRAMFILES(X86)", "ProgramFiles", "ProgramFiles(x86)"],
         repository_marker = True,
         tools = {":globalconfigs_generator_tool": "TESTFX_BAZEL_GLOBAL_CONFIGS_GENERATOR"},
         files = {
