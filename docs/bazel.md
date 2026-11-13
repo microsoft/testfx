@@ -38,7 +38,7 @@ a set of scoped compatibility patches. Its default toolchain downloads SDK
 **11.0.100-rc.3.26522.148** (runtime **11.0.0-rc.3.26522.148**). Neither the
 machine SDK nor `global.json` selects this experimental compiler.
 
-The exact `global.json` SDK, **12.0.100-alpha.1.26509.101**, is also available as
+The exact `global.json` SDK, **12.0.100-alpha.1.26562.108**, is also available as
 an explicit, checksum-pinned compiler/runtime choice:
 
 ```powershell
