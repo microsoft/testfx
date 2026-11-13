@@ -10,8 +10,12 @@
     <IsTrimmable>false</IsTrimmable>
     <IsAotCompatible>false</IsAotCompatible>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <!-- RuntimeIdentifier is a local property, so an outer RuntimeIdentifier cannot leak in. The packaging
+         project selects the architecture through this private global property instead. -->
+    <_PackagedAppControllerRuntimeIdentifier Condition="'$(_PackagedAppControllerRuntimeIdentifier)' == ''">win-x64</_PackagedAppControllerRuntimeIdentifier>
+    <RuntimeIdentifier>$(_PackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
+    <!-- Restore both so the apphost packs and asset targets exist for every shipped architecture. -->
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <SelfContained>false</SelfContained>
     <UseAppHost>true</UseAppHost>
     <RollForward>LatestMajor</RollForward>
