@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
-using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 
@@ -244,7 +243,8 @@ internal sealed partial class TrxReportEngine
                 // The use of testResultDisplayName here is very wrong.
                 // We keep it as a fallback if we cannot determine the testMethodName (when TestMethodIdentifierProperty isn't present).
                 // This will most likely be hit for NUnit.
-                // However, this is very wrong and we probably should fail if TestMethodIdentifierProperty isn't present.
+                // We intentionally don't fail the report when TestMethodIdentifierProperty isn't present, so that test frameworks
+                // that don't provide the TRX-specific properties still get a usable report.
                 testMethod.SetAttributeValue("name", testMethodName ?? testResultDisplayName);
 
                 unitTest.Add(testMethod);
@@ -272,7 +272,7 @@ internal sealed partial class TrxReportEngine
         return new SummaryCounts(passed, failed, skipped, timedout);
     }
 
-    private (string ClassName, string? TestMethodName) GetClassAndMethodName(TrxTestResult testResult)
+    private static (string ClassName, string? TestMethodName) GetClassAndMethodName(TrxTestResult testResult)
     {
         TrxTestMethodIdentifier? methodIdentifier = testResult.TestMethodIdentifier;
 
@@ -281,7 +281,10 @@ internal sealed partial class TrxReportEngine
             return (className, methodIdentifier?.MethodName);
         }
 
-        _ = methodIdentifier ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFrameworkAdapter.DisplayName, _testFrameworkAdapter.Uid));
+        if (methodIdentifier is null)
+        {
+            return (FallbackClassName, null);
+        }
 
         string classNameFromIdentifierProperty = RoslynString.IsNullOrEmpty(methodIdentifier.Namespace)
             ? methodIdentifier.TypeName
