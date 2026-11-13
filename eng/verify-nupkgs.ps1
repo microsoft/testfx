@@ -162,6 +162,9 @@ function Confirm-NugetPackages {
     $errors = @()
     $hasShapeMismatch = $false
     $verifiedPackageKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    # Baselines are written only after every archive is read, so retained archives of one package
+    # with different shapes are rejected instead of the last one silently overwriting the others.
+    $pendingBaselines = [ordered]@{}
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
@@ -213,8 +216,25 @@ function Confirm-NugetPackages {
             $baselineName = "eng/package-shapes/$packageKey.txt"
             $baselinePath = Join-Path $baselineDirectory "$packageKey.txt"
             if ($updateBaselines) {
-                Write-PackageShapeBaseline $baselinePath $packageKey $actualEntries $excludePdbFiles
-                Write-Host "Updated '$baselineName' ($($actualEntries.Count) files)."
+                $packageFileName = Split-Path -Leaf $nugetPackageByUnzipDir[$unzipNugetPackageDir]
+                $pending = $pendingBaselines[$packageKey]
+                if ($null -eq $pending) {
+                    $pendingBaselines[$packageKey] = [pscustomobject]@{
+                        PackageKey = $packageKey
+                        BaselinePath = $baselinePath
+                        BaselineName = $baselineName
+                        Entries = $actualEntries
+                        ExcludePdbFiles = $excludePdbFiles
+                        Packages = [System.Collections.Generic.List[string]]@($packageFileName)
+                        HasConflict = $false
+                    }
+                }
+                else {
+                    $pending.Packages.Add($packageFileName)
+                    if (Compare-PackageShape $packageKey $baselineName $pending.Entries $actualEntries) {
+                        $pending.HasConflict = $true
+                    }
+                }
             }
             elseif (!(Test-Path -LiteralPath $baselinePath -PathType Leaf)) {
                 $errors += "Expected package shape '$baselineName' for '$packageKey' was not found"
@@ -232,6 +252,18 @@ function Confirm-NugetPackages {
             if (Test-Path $unzipNugetPackageDir) {
                 Remove-Item -Force -Recurse $unzipNugetPackageDir | Out-Null
             }
+        }
+    }
+
+    $conflictingBaselines = @($pendingBaselines.Values | Where-Object { $_.HasConflict })
+    foreach ($pending in $conflictingBaselines) {
+        $errors += "Packed archives of '$($pending.BaselineName)' have different package shapes ($($pending.Packages -join ', ')); remove stale packages from artifacts/packages/$configuration and pack again before updating baselines"
+    }
+
+    if ($conflictingBaselines.Count -eq 0) {
+        foreach ($pending in $pendingBaselines.Values) {
+            Write-PackageShapeBaseline $pending.BaselinePath $pending.PackageKey $pending.Entries $pending.ExcludePdbFiles
+            Write-Host "Updated '$($pending.BaselineName)' ($($pending.Entries.Count) files)."
         }
     }
 
