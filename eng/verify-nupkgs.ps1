@@ -7,6 +7,7 @@ Param(
     [switch] $updateBaselines
 )
 
+Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $ErrorActionPreference = 'Stop'
@@ -20,18 +21,25 @@ function Unzip {
 }
 
 function Get-PackageShape {
-    param([string]$unzipNugetPackageDir, [bool]$excludePdbFiles)
+    param([string]$nugetPackage, [bool]$excludePdbFiles)
 
-    $root = (Get-Item -LiteralPath $unzipNugetPackageDir).FullName.TrimEnd('\', '/')
+    # Read the archive entry names rather than the extracted files: extraction on a case-insensitive
+    # filesystem merges directories that differ only by casing and would hide such path changes.
     $entries = [System.Collections.Generic.List[string]]::new()
-    foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File) {
-        $entry = $file.FullName.Substring($root.Length + 1).Replace('\', '/')
-        if ($excludePdbFiles -and $entry.EndsWith('.pdb', [System.StringComparison]::OrdinalIgnoreCase)) {
-            continue
-        }
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($nugetPackage)
+    try {
+        foreach ($zipEntry in $archive.Entries) {
+            $entry = $zipEntry.FullName
+            if ($entry.EndsWith('/') -or ($excludePdbFiles -and $entry.EndsWith('.pdb', [System.StringComparison]::OrdinalIgnoreCase))) {
+                continue
+            }
 
-        # NuGet names the OPC core-properties part with a new GUID on every pack.
-        $entries.Add(($entry -replace '^package/services/metadata/core-properties/[^/]+\.psmdcp$', 'package/services/metadata/core-properties/{guid}.psmdcp'))
+            # NuGet names the OPC core-properties part with a new GUID on every pack.
+            $entries.Add(($entry -creplace '^package/services/metadata/core-properties/[^/]+\.psmdcp$', 'package/services/metadata/core-properties/{guid}.psmdcp'))
+        }
+    }
+    finally {
+        $archive.Dispose()
     }
 
     $entries.Sort([System.StringComparer]::Ordinal)
@@ -62,10 +70,34 @@ function Write-PackageShapeBaseline {
 function Compare-PackageShape {
     param([string]$packageKey, [string]$baselineName, [string[]]$expectedEntries, [string[]]$actualEntries)
 
-    $expected = [System.Collections.Generic.HashSet[string]]::new($expectedEntries, [System.StringComparer]::Ordinal)
-    $actual = [System.Collections.Generic.HashSet[string]]::new($actualEntries, [System.StringComparer]::Ordinal)
-    $missing = @($expectedEntries | Where-Object { !$actual.Contains($_) })
-    $unexpected = @($actualEntries | Where-Object { !$expected.Contains($_) })
+    # Compare as multisets so each expected entry consumes one actual entry and extra occurrences
+    # (e.g. a second core-properties part, which normalizes to the same name) are reported.
+    $remaining = [System.Collections.Generic.Dictionary[string, int]]::new([System.StringComparer]::Ordinal)
+    foreach ($entry in $actualEntries) {
+        $count = 0
+        $null = $remaining.TryGetValue($entry, [ref]$count)
+        $remaining[$entry] = $count + 1
+    }
+
+    $missing = [System.Collections.Generic.List[string]]::new()
+    foreach ($entry in $expectedEntries) {
+        $count = 0
+        if ($remaining.TryGetValue($entry, [ref]$count) -and $count -gt 0) {
+            $remaining[$entry] = $count - 1
+        }
+        else {
+            $missing.Add($entry)
+        }
+    }
+
+    $unexpected = [System.Collections.Generic.List[string]]::new()
+    foreach ($entry in $actualEntries) {
+        if ($remaining[$entry] -gt 0) {
+            $remaining[$entry] = $remaining[$entry] - 1
+            $unexpected.Add($entry)
+        }
+    }
+
     if ($missing.Count -eq 0 -and $unexpected.Count -eq 0) {
         return $null
     }
@@ -105,9 +137,11 @@ function Confirm-NugetPackages {
 
     Write-Verbose "Unzipping NuGet packages."
     $unzipNugetPackageDirs = @()
+    $nugetPackageByUnzipDir = @{}
     foreach ($nugetPackage in $nugetPackages) {
         $unzipNugetPackageDir = $(Join-Path $tmpDirectory (Get-Item $nugetPackage).BaseName)
         $unzipNugetPackageDirs += $unzipNugetPackageDir
+        $nugetPackageByUnzipDir[$unzipNugetPackageDir] = $nugetPackage
 
         if (Test-Path -Path $unzipNugetPackageDir) {
             Remove-Item -Force -Recurse $unzipNugetPackageDir
@@ -175,7 +209,7 @@ function Confirm-NugetPackages {
             }
 
             $excludePdbFiles = $packagesWithOptionalPdbFiles -contains $packageKey
-            $actualEntries = Get-PackageShape $unzipNugetPackageDir $excludePdbFiles
+            $actualEntries = Get-PackageShape $nugetPackageByUnzipDir[$unzipNugetPackageDir] $excludePdbFiles
             $baselineName = "eng/package-shapes/$packageKey.txt"
             $baselinePath = Join-Path $baselineDirectory "$packageKey.txt"
             if ($updateBaselines) {
