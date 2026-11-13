@@ -76,7 +76,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
     <!-- Keep a version mirrored by dotnet-public; the internal pipeline rejects mixed external feeds. -->
-    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.3.171-beta" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
     <!-- If this gets updated, please revise if the explicit dependency on System.Diagnostics.DiagnosticSource is still needed -->

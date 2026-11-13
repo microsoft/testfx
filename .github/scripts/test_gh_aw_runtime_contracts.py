@@ -77,7 +77,11 @@ globalThis.fetch = () => forbidden("fetch");
 function closed(values, name) {
   return new Proxy(values, {
     get(target, key) {
-      if (!Object.hasOwn(target, key)) return forbidden(`${name}.${String(key)}`);
+      if (!Object.hasOwn(target, key)) {
+        // Promise resolution probes "then" when async handlers return this fake.
+        if (key === "then") return undefined;
+        return forbidden(`${name}.${String(key)}`);
+      }
       return target[key];
     },
   });
@@ -323,6 +327,11 @@ class GhAwRuntimeContractTests(unittest.TestCase):
                 "GITHUB_REPOSITORY": "fixture/workflows", "GITHUB_SERVER_URL": "https://github.com",
                 "GH_AW_AIC": "2.25", "GH_AW_HEAD_SHA": REVIEWED_SHA,
             })
+            if action == "triage-issue":
+                env.update({
+                    "GITHUB_REPOSITORY_ID": "123", "GITHUB_RUN_ID": "420", "GITHUB_RUN_ATTEMPT": "1",
+                    "GITHUB_JOB": "safe_outputs", "GH_AW_JOB_CHECK_RUN_ID": "9000",
+                })
             if policy:
                 self.assertLessEqual(set(policy), {
                     "GH_AW_GITHUB_MIN_INTEGRITY", "GH_AW_GITHUB_REPOS", "GH_AW_PRIVATE_TO_PUBLIC_FLOWS",
