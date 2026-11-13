@@ -388,7 +388,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
                 (_, serviceProvider) => SuppressOutput(serviceProvider, testFramework)),
             cancellationTokenSource.Token);
 
-        await testFramework.Started;
+        await WaitForStartAsync(testFramework.Started, runTask);
         cancellationTokenSource.Cancel();
 
         int exitCode = await runTask;
@@ -412,7 +412,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
                 (_, serviceProvider) => SuppressOutput(serviceProvider, testFramework)),
             TestContext.CancellationToken);
 
-        await testFramework.Started;
+        await WaitForStartAsync(testFramework.Started, runTask);
         hostApplicationLifetime.StopApplication();
 
         int exitCode = await runTask;
@@ -500,6 +500,15 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
 
         Assert.AreEqual(3, exitCode);
         Assert.IsFalse(host.ApplicationStoppingWasRequestedBeforeStopAsync);
+    }
+
+    private static async Task WaitForStartAsync(Task started, Task<int> runTask)
+    {
+        // Surface early run failures instead of waiting for a start that will never happen.
+        if (await Task.WhenAny(started, runTask) == runTask)
+        {
+            Assert.Fail($"The MTP run completed with exit code {await runTask} before the test framework started.");
+        }
     }
 
     private static TTestFramework SuppressOutput<TTestFramework>(IServiceProvider serviceProvider, TTestFramework testFramework)

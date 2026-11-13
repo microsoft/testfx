@@ -23,7 +23,7 @@ $publishedSdk = (Resolve-Path -LiteralPath $PublishedSdkDirectory).Path
 $base = if ($EvidenceRoot) { [IO.Path]::GetFullPath($EvidenceRoot) } else { Join-Path $root 'artifacts\bazel-sdk-verifier-tests' }
 $directory = Join-Path $base ([Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $directory | Out-Null
-$expectedPacks = [ordered]@{ 'net8.0' = '8.0.33'; 'net9.0' = '9.0.22'; 'net10.0' = '10.0.14'; 'net11.0' = '11.0.0-rc.3.26522.148' }
+$expectedPacks = [ordered]@{ 'net10.0' = '10.0.14'; 'net11.0' = '11.0.0-rc.3.26522.148' }
 $results = [Collections.Generic.List[object]]::new()
 $pwsh = (Get-Process -Id $PID).Path
 $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }
@@ -108,18 +108,18 @@ $graph = New-Graph
 $graph.actions[0].arguments[1] = "different-sdk/$dotnetName"
 Assert-Fixture 'MismatchedCompilerHost' $graph 1 'compiler and execution host come from different SDK roots'
 $graph = New-Graph
-$graph.actions[3].paramFiles[0].arguments[0] = '-r:external/rules_dotnet++dotnet+nuget.microsoft.netcore.app.ref.v12.0.0-alpha.1.26562.108/ref/net11.0/System.Runtime.dll'
+$graph.actions[1].paramFiles[0].arguments[0] = '-r:external/rules_dotnet++dotnet+nuget.microsoft.netcore.app.ref.v12.0.0-alpha.1.26562.108/ref/net11.0/System.Runtime.dll'
 Assert-Fixture 'WrongNet11ReferencePack' $graph 1 'Unexpected net11.0 reference pack'
 $graph = New-Graph
 $graph.actions = @($graph.actions[0])
 Assert-Fixture 'MissingFrameworks' $graph 1 'action graph must include the requested target frameworks'
-Assert-Fixture 'RequestedFrameworkSubset' $graph 0 'Engineering compiler verified for 1 declared source actions' -TargetFramework 'net8.0'
+Assert-Fixture 'RequestedFrameworkSubset' $graph 0 'Engineering compiler verified for 1 declared source actions' -TargetFramework 'net10.0'
 $graph = New-Graph
 foreach ($action in $graph.actions) {
     $action.arguments += $action.paramFiles[0].arguments
     $action.Remove('paramFiles')
 }
-Assert-Fixture 'ExpandedCompilerArguments' $graph 0 'Engineering compiler verified for 4 declared source actions'
+Assert-Fixture 'ExpandedCompilerArguments' $graph 0 'Engineering compiler verified for 2 declared source actions'
 $graph = New-Graph
 $graph.targets += @{ id = 2; label = '@@rules_dotnet+//tools/csharp_compiler_worker:csharp_compiler_worker' }
 $graph.actions += @{
@@ -130,7 +130,7 @@ $graph.actions += @{
 Assert-Fixture 'ChangedBootstrapCompiler' $graph 1 'bootstrap compiler changed'
 Assert-Fixture 'OutsideExecutionRoot' (New-Graph '../outside-root') 1 'Action input is outside the supplied execution root'
 Assert-Fixture 'PublishedCompilerRejected' (New-Graph '.' '11.0.100-rc.3.26522.148') 1 'Expected global.json compiler SDK' $publishedSdk
-Assert-Fixture 'VerifiedEngineeringCompiler' (New-Graph) 0 'Engineering compiler verified for 4 declared source actions'
+Assert-Fixture 'VerifiedEngineeringCompiler' (New-Graph) 0 'Engineering compiler verified for 2 declared source actions'
 Assert-EnvironmentRestored 'EnvironmentRestoredAfterSuccess' 'VerifiedEngineeringCompiler' $false
 Assert-EnvironmentRestored 'EnvironmentRestoredAfterFailure' 'MissingFrameworks' $true
 $results | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $directory 'fixture-results.json') -Encoding utf8

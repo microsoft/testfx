@@ -12,9 +12,9 @@ else if (args.Length == 5 && args[0] == "xlf")
 {
     GenerateTranslations(args[1], args[2], args[3], args[4]);
 }
-else if (args.Length == 11 && args[0] == "metadata")
+else if (args.Length == 12 && args[0] == "metadata")
 {
-    GenerateMetadata(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);
+    GenerateMetadata(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);
 }
 else if (args.Length == 4 && args[0] == "version")
 {
@@ -24,7 +24,7 @@ else if (args.Length == 4 && args[0] == "version")
 }
 else
 {
-    throw new ArgumentException("Expected resx <input> <type> <resources> <source>, xlf <neutral> <catalog> <culture> <resources>, version <versions> <property> <output>, or metadata <versions> <property> <source> <template> <generated-template> <usings> <version-override> <culture> <assembly-version> <build-status>.");
+    throw new ArgumentException("Expected resx <input> <type> <resources> <source>, xlf <neutral> <catalog> <culture> <resources>, version <versions> <property> <output>, or metadata <versions> <property> <source> <template> <generated-template> <usings> <version-override> <culture> <assembly-version> <build-status> <sdk-version>.");
 }
 
 static void GenerateResources(string input, string typeName, string resourcesOutput, string sourceOutput)
@@ -137,7 +137,7 @@ static XDocument ReadXml(string path)
     return XDocument.Load(reader, LoadOptions.PreserveWhitespace);
 }
 
-static void GenerateMetadata(string versionsFile, string versionProperty, string output, string template, string templateOutput, string usings, string versionOverride, string culture, string assemblyVersionOverride, string buildStatus)
+static void GenerateMetadata(string versionsFile, string versionProperty, string output, string template, string templateOutput, string usings, string versionOverride, string culture, string assemblyVersionOverride, string buildStatus, string sdkVersion)
 {
     string version = versionOverride == "-"
         ? ReadVersion(versionsFile, versionProperty)
@@ -156,6 +156,11 @@ static void GenerateMetadata(string versionsFile, string versionProperty, string
     source.AppendLine($"[assembly: global::System.Reflection.AssemblyFileVersion({Literal(fileVersion)})]");
     source.AppendLine($"[assembly: global::System.Reflection.AssemblyInformationalVersion({Literal(informationalVersion)})]");
     source.AppendLine("[assembly: global::System.Reflection.AssemblyMetadata(\"TestFx.BuildSystem\", \"Bazel\")]");
+    if (sdkVersion != "-")
+    {
+        source.AppendLine($"[assembly: global::System.Reflection.AssemblyMetadata(\"TestFx.NETCoreSdkVersion\", {Literal(sdkVersion)})]");
+    }
+
     if (culture != "-")
     {
         source.AppendLine($"[assembly: global::System.Reflection.AssemblyCulture({Literal(culture)})]");

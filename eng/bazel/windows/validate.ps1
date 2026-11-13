@@ -97,11 +97,9 @@ function Invoke-Consumer([string] $Name, [string] $Executable, [string] $Layout)
 }
 
 $probes = @(
-    @{ Name = 'windows_probe_packaged_net8'; Scenario = 'packaged'; Major = 8; Platform = '10.0.19041.0' },
-    @{ Name = 'windows_probe_packaged_net9'; Scenario = 'packaged'; Major = 9; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net10'; Scenario = 'packaged'; Major = 10; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net11'; Scenario = 'packaged'; Major = 11; Platform = '10.0.19041.0' },
-    @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 8; Platform = '7.0' },
+    @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 10; Platform = '7.0' },
     @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.17763.0' },
     @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 10; Platform = '10.0.18362.0' }
 )
@@ -245,7 +243,7 @@ try {
         }
     }
     $succeeded = $true
-    Write-Host "Native compatibility and Windows libraries, seven consumers, and four additional unit suites passed. No app registration or XAML compilation was exercised. Evidence: $directory"
+    Write-Host "Native compatibility and Windows libraries, $($consumers.Count) consumers, and four additional unit suites passed. No app registration or XAML compilation was exercised. Evidence: $directory"
 }
 finally {
     [pscustomobject]@{

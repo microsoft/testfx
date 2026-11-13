@@ -90,7 +90,7 @@ def unit_tests():
         ],
         linked_srcs = _terminal_contract_sources(standalone = True, include_reporter = False),
         assembly_name = "TerminalReporterContract.Standalone",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         resources = terminal_resources,
         usings = ["Polyfills", "Microsoft.Testing.Platform.Helpers"],
         generate_documentation_file = False,
@@ -251,12 +251,15 @@ def unit_tests():
                 name = configuration,
                 flag_values = {"@rules_dotnet//dotnet:target_framework": framework},
             )
+            # The layout alias reaches the publish for the active TFM; the
+            # others cannot be analyzed in that configuration.
             publish_binary(
                 name = application,
                 binary = ":" + name + "_app",
                 target_framework = framework,
                 self_contained = False,
                 roll_forward_behavior = "LatestMajor",
+                tags = ["manual"],
             )
             applications[":" + configuration] = ":" + application
         native.alias(name = name + "_layout", actual = select(applications))
@@ -286,6 +289,7 @@ def unit_tests():
         exclude = ["test/UnitTests/Microsoft.Testing.Platform.UnitTests/Program.cs"],
         linked_srcs = [
             "//eng/bazel:TestMain.cs",
+            "//eng/bazel:PortableTestFrameworkMetadata.cs",
             "test/Utilities/DiagnosticAssertionObserver.cs",
             "test/Utilities/TestAssertExtensions.cs",
             "test/Utilities/ValidationResultExtensions.cs",
@@ -309,9 +313,13 @@ def unit_tests():
             _PLATFORM + "/ServerMode/JsonRpc/RpcIdParser.cs",
             _PLATFORM + "/Services/ArtifactNamingHelper.cs",
             "test/Utilities/Microsoft.Testing.TestInfrastructure/SlowestTestsConsumer.cs",
+            "test/Utilities/Microsoft.Testing.TestInfrastructure/AcceptanceDiagnostics.cs",
+            "test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Helpers/CollectionPackageCache.cs",
         ] + native.glob([_PLATFORM + "/OutputDevice/Terminal/*.cs"]),
+        # Like the csproj, embed the platform version rather than MSTest's.
+        version_property = "TestingPlatformVersionPrefix",
         build_info = _PLATFORM + "/BuildInfo.cs.template",
-        defines = ["IS_MTP_UNIT_TESTS", "TESTFX_METHOD_PARALLEL"],
+        defines = ["IS_MTP_UNIT_TESTS", "TESTFX_METHOD_PARALLEL", "TESTFX_MTP_CHILD_PROBES"],
         usings = ["Polyfills", "Microsoft.Testing.Platform.Extensions", "Microsoft.Testing.TestInfrastructure"],
         internals_visible_to = ["DynamicProxyGenAssembly2"],
         generate_documentation_file = False,

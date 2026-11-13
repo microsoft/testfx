@@ -16,13 +16,18 @@ load(
     "TARGETING_PACK_LOOKUP_TABLE",
 )
 load("@rules_dotnet//dotnet/private:providers.bzl", "DotnetAssemblyCompileInfo", "DotnetAssemblyRuntimeInfo")
-load("@rules_dotnet//dotnet/private/transitions:common.bzl", "FRAMEWORK_COMPATABILITY_TRANSITION_OUTPUTS")
+load("@rules_dotnet//dotnet/private/transitions:common.bzl", "FRAMEWORK_COMPATABILITY_TRANSITION_OUTPUTS", "rid_compatability_transition_outputs")
 
 def _configuration(framework):
+    # Windows probes have no host apphost/runtime packs on Linux or macOS, so pin
+    # the RID to keep this analysis-only contract test host-independent.
     return analysis_test_transition(settings = {
         "@rules_dotnet" + key: value
-        for key, value in FRAMEWORK_COMPATABILITY_TRANSITION_OUTPUTS[framework].items()
-    } | {"@rules_dotnet//dotnet:target_framework": framework})
+        for key, value in (FRAMEWORK_COMPATABILITY_TRANSITION_OUTPUTS[framework] | rid_compatability_transition_outputs("win-x64")).items()
+    } | {
+        "@rules_dotnet//dotnet:target_framework": framework,
+        "@rules_dotnet//dotnet:rid": "win-x64",
+    })
 
 def _flavor_targets(flavor, framework):
     return {
@@ -115,7 +120,7 @@ windows_targeting_test = rule(
     attrs = {
         "desktop": attr.label(
             default = "//:windows_probe_desktop_app",
-            cfg = _configuration("net8.0-windows7.0"),
+            cfg = _configuration("net10.0-windows7.0"),
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
         ),
     } | _flavor_targets("uwp", "net10.0-windows10.0.17763.0") | _flavor_targets("winui", "net10.0-windows10.0.18362.0"),

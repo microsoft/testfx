@@ -11,7 +11,7 @@ def reference_alias_tests():
             name = "alias_" + name.lower(),
             srcs = [_PROJECT + "/" + name + ".cs"],
             out = "Bazel.Aliases." + name,
-            target_frameworks = ["net8.0"],
+            target_frameworks = ["net10.0"],
             internals_visible_to = testfx_friend_identities(["Bazel.ReferenceAliases.UnitTests"]),
             keyfile = TESTFX_PUBLIC_KEY_FILE,
             compiler_options = ["/publicsign+"],
@@ -23,7 +23,7 @@ def reference_alias_tests():
         exclude = [_PROJECT + "/" + name + ".cs" for name in ["First", "Second", "InvalidConfiguration"]],
         linked_srcs = ["//eng/bazel:TestMain.cs"],
         defines = ["TESTFX_METHOD_PARALLEL"],
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         reference_aliases = {
             "Bazel.Aliases.First": ["global", "FirstAlias"],
             "Bazel.Aliases.Second": ["SecondAlias"],
@@ -54,7 +54,7 @@ def reference_alias_tests():
         csharp_library(
             name = "reference_alias_" + name,
             srcs = [_PROJECT + "/InvalidConfiguration.cs"],
-            target_frameworks = ["net8.0"],
+            target_frameworks = ["net10.0"],
             reference_aliases = aliases,
             generate_documentation_file = False,
             deps = [":alias_first"],

@@ -144,7 +144,7 @@ public sealed class BuildToolsTests(TestContext context)
         string metadata = PathFor("AssemblyInfo.g.cs");
         string buildInfo = PathFor("BuildInfo.g.cs");
 
-        (int exitCode, string output) = await RunAsync("metadata", versions, "VersionPrefix", metadata, template, buildInfo, "-", "-", "-", "14.0.0.0", stamp);
+        (int exitCode, string output) = await RunAsync("metadata", versions, "VersionPrefix", metadata, template, buildInfo, "-", "-", "-", "14.0.0.0", stamp, "11.0.100-rc.3");
 
         Assert.AreEqual(0, exitCode, output);
         Assert.AreEqual("""
@@ -153,6 +153,7 @@ public sealed class BuildToolsTests(TestContext context)
             [assembly: global::System.Reflection.AssemblyFileVersion("7.8.9.0")]
             [assembly: global::System.Reflection.AssemblyInformationalVersion("7.8.9-preview.bazel")]
             [assembly: global::System.Reflection.AssemblyMetadata("TestFx.BuildSystem", "Bazel")]
+            [assembly: global::System.Reflection.AssemblyMetadata("TestFx.NETCoreSdkVersion", "11.0.100-rc.3")]
             [assembly: global::System.Resources.NeutralResourcesLanguage("en")]
             [assembly: global::System.Reflection.AssemblyMetadata("Microsoft.Testing.Platform.Application.BuildTimeUTC", "1970/01/01")]
 

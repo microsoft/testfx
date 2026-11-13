@@ -376,10 +376,29 @@ public sealed class SystemWrappersTests
     {
         string module = typeof(SystemWrappersTests).Assembly.Location;
 #if NETCOREAPP
+        // Launch the child on the .NET installation that runs this test host
+        // (<root>/shared/Microsoft.NETCore.App/<version>/) so the helper does
+        // not depend on the MSBuild artifacts layout.
         string host = Path.GetFullPath(Path.Combine(
-            Path.GetDirectoryName(module)!, "..", "..", "..", "..", "..", ".dotnet",
+            RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..",
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet"));
         ProcessStartInfo start = new(host);
+
+        // Hosts whose dependencies resolve through runtimeconfig probing paths (such as
+        // Bazel-built test applications) use paths relative to the launch directory, which
+        // MSTest replaces with the module directory. Forward the host's resolved absolute
+        // probe directories so the child resolves the same dependencies.
+        if (AppContext.GetData("PROBING_DIRECTORIES") is string probingDirectories
+            && probingDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries) is { Length: > 0 } probes)
+        {
+            start.ArgumentList.Add("exec");
+            foreach (string probe in probes)
+            {
+                start.ArgumentList.Add("--additionalprobingpath");
+                start.ArgumentList.Add(probe);
+            }
+        }
+
         start.ArgumentList.Add(moduleOverride ?? module);
 #else
         ProcessStartInfo start = new(moduleOverride ?? module);
@@ -434,7 +453,11 @@ public sealed class SystemWrappersTests
             {
                 if (Path.GetExtension(file).ToLowerInvariant() is ".dll" or ".exe" or ".json" or ".config" or ".pdb")
                 {
-                    File.Copy(file, Path.Combine(root, Path.GetFileName(file)));
+                    string destination = Path.Combine(root, Path.GetFileName(file));
+                    File.Copy(file, destination);
+
+                    // Build outputs can be read-only (as in Bazel); keep the copy deletable.
+                    File.SetAttributes(destination, FileAttributes.Normal);
                 }
             }
 

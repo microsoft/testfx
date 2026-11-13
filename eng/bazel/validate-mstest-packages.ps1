@@ -17,7 +17,7 @@ if (-not $OutputRoot) { $OutputRoot = Join-Path $root 'artifacts\bazel-mstest-va
 $directory = Join-Path ([System.IO.Path]::GetFullPath($OutputRoot)) ([DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
-$frameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+$frameworks = @('net10.0', 'net11.0')
 $expectedIds = @(
     'MSTest.TestFramework', 'MSTest.TestAdapter', 'MSTest.Analyzers',
     'Microsoft.Testing.Platform', 'Microsoft.Testing.Platform.MSBuild',

@@ -19,6 +19,15 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 #endif
 
+#if TESTFX_MTP_CHILD_PROBES
+// Mirrors Microsoft.Testing.Platform.UnitTests/Program.cs, whose tests relaunch this
+// application as a child fixture.
+if (Microsoft.Testing.Platform.UnitTests.SystemWrapperChildProbe.TryRun())
+{
+    return 0;
+}
+#endif
+
 #if TESTFX_PLATFORM_SERVICES_PROBES
 if (Environment.GetEnvironmentVariable(DebugAssertionChildProbe.ModeVariable) is string probeMode)
 {

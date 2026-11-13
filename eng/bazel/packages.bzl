@@ -94,9 +94,12 @@ def native_packages():
             binary = ":runtime_explorer",
             target_framework = framework,
             self_contained = True,
+            tags = ["manual"],
         )
         published.append(":" + name)
-    native.filegroup(name = "_published_samples", srcs = published)
+
+    # Only the newest-TFM wrapper can analyze every publish; `//...` reaches them through it.
+    native.filegroup(name = "_published_samples", srcs = published, tags = ["manual"])
     testfx_matrix(
         name = "published_samples",
         target = ":_published_samples",

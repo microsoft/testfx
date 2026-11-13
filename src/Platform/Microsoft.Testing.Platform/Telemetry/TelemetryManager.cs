@@ -136,7 +136,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
             // See if we should write the file, and write it.
             if (!RoslynString.IsNullOrWhiteSpace(directory))
             {
-                Directory.CreateDirectory(directory);
+                fileSystem.CreateDirectory(directory);
 
                 // Write empty file.
                 path = Path.Combine(directory, fileName);
