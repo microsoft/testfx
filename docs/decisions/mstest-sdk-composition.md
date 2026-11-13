@@ -7,8 +7,10 @@ This layer replaces the SDK/helper/composition portion of
 [#7225](https://github.com/microsoft/testfx/issues/7225),
 [#12412](https://github.com/microsoft/testfx/pull/12412),
 [#12428](https://github.com/microsoft/testfx/pull/12428), the
-[shared-core layer](shared-core-ui-contract.md), and the
-[explicit-package layer](explicit-mstest-packages.md).
+[shared-core layer](shared-core-ui-contract.md)
+([#12446](https://github.com/microsoft/testfx/pull/12446)), and the
+[explicit-package layer](explicit-mstest-packages.md)
+([#12450](https://github.com/microsoft/testfx/pull/12450)).
 
 `MSTestApplicationModel` accepts `Default`, `Uwp`, or `WinUI`. An empty value
 preserves automatic inference, including early UWP inference and explicit
@@ -81,6 +83,10 @@ plus retained patch SHA-256
 `979C1B1DA2D38DFD63592CBC24D64FCAF44D9E18B8A41F967C4358C9079192BE`
 before committing that checkpoint. Later evidence-only changes do not change
 shipping files or tests. Historical unsplit-source runs are not counted.
+Before publication, parent evidence commit
+`9d2bc45c1a2603ad0ff908504f8d00bbf95ceb47` was fetched and merged.
+Its only change is the lower layer's decision record; shipping/test source
+still matches the tested checkpoint byte-for-byte.
 
 The pinned SDK is `12.0.100-alpha.1.26556.115`; desktop MSBuild reports
 `18.13.0.52701`, and SDK MSBuild reports `18.14.0-1.26556.115`.
