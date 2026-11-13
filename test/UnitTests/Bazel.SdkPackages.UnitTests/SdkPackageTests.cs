@@ -67,7 +67,7 @@ public sealed class SdkPackageTests(TestContext context)
         using JsonDocument request = JsonDocument.Parse(File.ReadAllText(PathFor("pack.json")));
         Assert.AreEqual("MSTest", request.RootElement.GetProperty("metadata").GetProperty("id").GetString());
         JsonElement[] groups = request.RootElement.GetProperty("dependencyGroups").EnumerateArray().ToArray();
-        Assert.AreSequenceEqual(new[] { "net8.0", "net9.0", "net10.0", "net11.0" }, groups.Select(group => group.GetProperty("targetFramework").GetString()).ToArray());
+        Assert.AreSequenceEqual(new[] { "net10.0", "net11.0" }, groups.Select(group => group.GetProperty("targetFramework").GetString()).ToArray());
         foreach (JsonElement group in groups)
         {
             Dictionary<string, JsonElement> dependencies = group.GetProperty("dependencies").EnumerateArray().ToDictionary(item => item.GetProperty("id").GetString()!);
@@ -88,7 +88,7 @@ public sealed class SdkPackageTests(TestContext context)
         }
 
         Assert.AreSequenceEqual(
-            new[] { "PACKAGE.md", "lib/net8.0/_._", "lib/net9.0/_._", "lib/net10.0/_._", "lib/net11.0/_._" },
+            new[] { "PACKAGE.md", "lib/net10.0/_._", "lib/net11.0/_._" },
             request.RootElement.GetProperty("files").EnumerateArray().Select(item => item.GetProperty("target").GetString()).ToArray(),
             SequenceOrder.InAnyOrder);
         Assert.IsFalse(File.Exists(PathFor("generated.props")));
@@ -165,7 +165,7 @@ public sealed class SdkPackageTests(TestContext context)
             """);
         string repositoryProperties = Write("Directory.Build.props", """
             <Project><PropertyGroup>
-              <SupportedNetFrameworks>net8.0;net9.0;net10.0;net11.0</SupportedNetFrameworks>
+              <SupportedNetFrameworks>net10.0;net11.0</SupportedNetFrameworks>
               <PackageLicenseExpression>MIT</PackageLicenseExpression>
             </PropertyGroup></Project>
             """);
@@ -238,7 +238,7 @@ public sealed class SdkPackageTests(TestContext context)
         else
         {
             string placeholder = Write("_._", "");
-            files.AddRange(new[] { "net8.0", "net9.0", "net10.0", "net11.0" }.Select(framework => new { source = placeholder, target = $"lib/{framework}/_._" }));
+            files.AddRange(new[] { "net10.0", "net11.0" }.Select(framework => new { source = placeholder, target = $"lib/{framework}/_._" }));
         }
 
         return JsonSerializer.SerializeToNode(new
@@ -249,7 +249,7 @@ public sealed class SdkPackageTests(TestContext context)
             repositoryProperties,
             sourceProperties,
             centralPackages,
-            frameworks = new[] { "net8.0", "net9.0", "net10.0", "net11.0" },
+            frameworks = new[] { "net10.0", "net11.0" },
             templates,
             files,
             output = PathFor("package.nupkg"),

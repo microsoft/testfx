@@ -15,6 +15,9 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class GlobalConfigGeneratorContinuationTests
 {
+    // Bazel has no MSBuild artifacts layout: it supplies its published generator and runs it with its DOTNET_ROOT.
+    private const string BazelToolPathVariable = "TESTFX_BAZEL_GLOBAL_CONFIGS_GENERATOR";
+
     [TestMethod]
     public async Task MissingOutputPathFailsBeforeProducingFiles()
     {
@@ -61,9 +64,17 @@ public sealed class GlobalConfigGeneratorContinuationTests
 #else
         const string expectedConfiguration = "Release";
 #endif
-        Assert.AreEqual(expectedConfiguration, Directory.GetParent(System.IO.Path.GetDirectoryName(GetToolPath())!)!.Name);
+        if (GetBazelToolPath() is null)
+        {
+            Assert.AreEqual(expectedConfiguration, Directory.GetParent(System.IO.Path.GetDirectoryName(GetToolPath())!)!.Name);
+        }
+
         using var directory = new OwnedDirectory();
-        File.Copy(typeof(UseParallelizeAttributeAnalyzer).Assembly.Location, System.IO.Path.Combine(directory.Path, "MSTest.Analyzers.dll"));
+        string analyzer = System.IO.Path.Combine(directory.Path, "MSTest.Analyzers.dll");
+        File.Copy(typeof(UseParallelizeAttributeAnalyzer).Assembly.Location, analyzer);
+
+        // Build outputs can be read-only (as under Bazel); the copy must remain deletable.
+        File.SetAttributes(analyzer, FileAttributes.Normal);
 
         ToolResult result = await RunToolAsync(directory.Path);
 
@@ -268,10 +279,12 @@ public sealed class GlobalConfigGeneratorContinuationTests
         bool provideOutputPath = true,
         IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
-        string root = RootFinder.Find();
         string tool = GetToolPath();
         Assert.IsTrue(File.Exists(tool), $"The unchanged tool output is required; this test must not build production references: {tool}");
-        string host = System.IO.Path.Combine(root, ".dotnet", Environment.OSVersion.Platform == PlatformID.Win32NT ? "dotnet.exe" : "dotnet");
+        string dotnetRoot = GetBazelToolPath() is null
+            ? System.IO.Path.Combine(RootFinder.Find(), ".dotnet")
+            : Environment.GetEnvironmentVariable("DOTNET_ROOT") ?? throw new InvalidOperationException($"DOTNET_ROOT must accompany {BazelToolPathVariable}.");
+        string host = System.IO.Path.Combine(dotnetRoot, Environment.OSVersion.Platform == PlatformID.Win32NT ? "dotnet.exe" : "dotnet");
         var startInfo = new ProcessStartInfo(host, $"\"{tool}\"")
         {
             WorkingDirectory = directory,
@@ -322,8 +335,16 @@ public sealed class GlobalConfigGeneratorContinuationTests
 
     private sealed record ToolResult(int ExitCode, string StandardOutput, string StandardError);
 
+    private static string? GetBazelToolPath()
+        => Environment.GetEnvironmentVariable(BazelToolPathVariable) is { Length: > 0 } path ? path : null;
+
     private static string GetToolPath()
     {
+        if (GetBazelToolPath() is { } bazelTool)
+        {
+            return bazelTool;
+        }
+
         string configuration = typeof(GlobalConfigGeneratorContinuationTests).Assembly
             .GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
         return System.IO.Path.Combine(RootFinder.Find(), "artifacts", "bin", "MSTest.GlobalConfigsGenerator", configuration, "net12.0", "MSTest.GlobalConfigsGenerator.dll");

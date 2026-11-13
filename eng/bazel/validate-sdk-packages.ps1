@@ -22,7 +22,7 @@ $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $pwsh = Join-Path $PSHOME $(if ($IsWindows) { 'pwsh.exe' } else { 'pwsh' })
 $bazel = Join-Path $root 'eng\bazel.ps1'
-$frameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+$frameworks = @('net10.0', 'net11.0')
 $steps = [Collections.Generic.List[object]]::new()
 $packages = @{}
 $evaluations = [Collections.Generic.List[object]]::new()

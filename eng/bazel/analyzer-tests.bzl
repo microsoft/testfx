@@ -36,7 +36,7 @@ def analyzer_unit_tests():
             "test/Utilities/Microsoft.Testing.TestInfrastructure/RootFinder.cs",
             "test/Utilities/DiagnosticAssertionObserver.cs",
         ],
-        defines = ["TESTFX_ISOLATED_NUGET"],
+        defines = ["TESTFX_ISOLATED_NUGET", "TESTFX_ANALYZER_CHILD_PROBES"],
         usings = ["Microsoft.Testing.TestInfrastructure", "Polyfills"],
         analyzer_configs = [":analyzer_test_policy"],
         generate_documentation_file = False,
@@ -63,20 +63,32 @@ def analyzer_unit_tests():
             name = configuration,
             flag_values = {"@rules_dotnet//dotnet:target_framework": framework},
         )
+        # The alias below reaches the publish for the active TFM; the others
+        # cannot be analyzed in that configuration.
         publish_binary(
             name = application,
             binary = ":analyzer_tests_binary",
             target_framework = framework,
             self_contained = True,
+            tags = ["manual"],
         )
         applications[":" + configuration] = ":" + application
     native.alias(name = "analyzer_tests_app", actual = select(applications))
+    # Framework-dependent, so the test host runs it with the toolchain DOTNET_ROOT like the MSBuild artifact.
+    publish_binary(
+        name = "globalconfigs_generator_tool",
+        binary = ":globalconfigs_generator",
+        target_framework = "net10.0",
+        self_contained = False,
+        roll_forward_behavior = "Major",
+    )
     testfx_published_test(
         name = "analyzer_tests",
         binary = ":analyzer_tests_app",
         args = ["--minimum-expected-tests", "1"],
         env_inherit = ["PROGRAMFILES", "PROGRAMFILES(X86)"],
         repository_marker = True,
+        tools = {":globalconfigs_generator_tool": "TESTFX_BAZEL_GLOBAL_CONFIGS_GENERATOR"},
         files = {
             "NuGet.config": "NuGet.config",
             analyzer_directory + "/AnalyzerReleases.Shipped.md": analyzer_directory + "/AnalyzerReleases.Shipped.md",

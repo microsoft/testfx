@@ -450,6 +450,11 @@ public sealed class NamedPipeServerSecurityTests
 
         try
         {
+            if (!WindowsSecurity.IsCurrentThreadImpersonationUsable())
+            {
+                Assert.Inconclusive(WindowsSecurity.DowngradedImpersonationMessage);
+            }
+
             using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.None);
 
             Assert.ThrowsExactly<UnauthorizedAccessException>(() => client.Connect(timeout: 5_000));
@@ -547,6 +552,7 @@ public sealed class NamedPipeServerSecurityTests
             return;
         }
 
+        int downgradedCandidates = 0;
         try
         {
             foreach ((SafeHandle token, string sid) in candidates)
@@ -554,6 +560,12 @@ public sealed class NamedPipeServerSecurityTests
                 Assert.IsTrue(
                     NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(sid),
                     $"A live AppContainer SID must satisfy the platform's authorization policy, but '{sid}' did not.");
+
+                if (!WindowsSecurity.CanImpersonateUsably(token))
+                {
+                    downgradedCandidates++;
+                    continue;
+                }
 
                 // Establish that this token is a viable low-integrity AppContainer with the granular
                 // kernel open first. The managed-client assertion below is the behavior under test and must
@@ -575,6 +587,11 @@ public sealed class NamedPipeServerSecurityTests
                     TryConnectAsAppContainer(token, []),
                     "An AppContainer must not reach a pipe that authorizes no package at all.");
                 return;
+            }
+
+            if (downgradedCandidates == candidates.Count)
+            {
+                Assert.Inconclusive(WindowsSecurity.DowngradedImpersonationMessage);
             }
 
             Assert.Fail(
@@ -630,6 +647,9 @@ public sealed class NamedPipeServerSecurityTests
     /// </summary>
     private static class WindowsSecurity
     {
+        public const string DowngradedImpersonationMessage =
+            "Windows downgraded the impersonation to identification level because the test process lacks SeImpersonatePrivilege (for example a non-elevated shell); no access check can be observed.";
+
         private const int SeKernelObject = 6;
         private const int OwnerSecurityInformation = 1;
         private const int GroupSecurityInformation = 2;
@@ -648,6 +668,7 @@ public sealed class NamedPipeServerSecurityTests
         private const int TokenIsAppContainerClass = 29;
         private const int TokenAppContainerSidClass = 31;
         private const int TokenIntegrityLevelClass = 25;
+        private const int TokenImpersonationLevelClass = 9;
         private const string LowIntegritySid = "S-1-16-4096";
         private const uint OpenExisting = 3;
         private const int ErrorAccessDenied = 5;
@@ -827,6 +848,54 @@ public sealed class NamedPipeServerSecurityTests
 
         [SupportedOSPlatform("windows")]
         public static void RevertToSelf() => RevertToSelfCore();
+
+        /// <summary>
+        /// Impersonation APIs succeed even when Windows downgrades the thread token to identification level
+        /// (for instance when the caller lacks <c>SeImpersonatePrivilege</c>); every later open then fails
+        /// with <c>ERROR_BAD_IMPERSONATION_LEVEL</c> before the pipe's DACL is consulted.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        public static bool IsCurrentThreadImpersonationUsable()
+        {
+            if (!OpenThreadToken(GetCurrentThread(), TokenQuery, openAsSelf: true, out IntPtr token))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            IntPtr buffer = Marshal.AllocHGlobal(sizeof(int));
+            try
+            {
+                if (!GetTokenInformation(token, TokenImpersonationLevelClass, buffer, sizeof(int), out _))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+
+                return Marshal.ReadInt32(buffer) >= SecurityImpersonation;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+                CloseHandle(token);
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
+        public static bool CanImpersonateUsably(SafeHandle impersonationToken)
+        {
+            if (!ImpersonateLoggedOnUser(impersonationToken))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            try
+            {
+                return IsCurrentThreadImpersonationUsable();
+            }
+            finally
+            {
+                RevertToSelfCore();
+            }
+        }
 
         /// <summary>
         /// Duplicates the token of every live <em>low-integrity</em> AppContainer process whose token can be
@@ -1160,6 +1229,14 @@ public sealed class NamedPipeServerSecurityTests
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out IntPtr tokenHandle);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool OpenThreadToken(
+            IntPtr threadHandle,
+            uint desiredAccess,
+            [MarshalAs(UnmanagedType.Bool)] bool openAsSelf,
+            out IntPtr tokenHandle);
 
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

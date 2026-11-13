@@ -92,10 +92,14 @@ def _windows_library(name, target_frameworks, linked_srcs = [], minimum_version 
         minimum_version = minimum_version,
         emit_supported_os = emit_supported_os,
     )
+
+    # Windows TFMs cannot be analyzed in the portable default configuration, so
+    # `//...` reaches these assemblies only through their testfx_matrix wrappers.
     testfx_library(
         name = name,
         target_frameworks = target_frameworks,
         linked_srcs = linked_srcs + [":" + name + "_windows_metadata"],
+        tags = ["manual"],
         **kwargs
     )
 
@@ -217,7 +221,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             "@paket.source//microsoft.testplatform.objectmodel",
         ],
     )
-    native.filegroup(name = "_windows_" + flavor, srcs = [":" + core, ":" + extensions, ":" + services, ":" + adapter])
+    native.filegroup(name = "_windows_" + flavor, srcs = [":" + core, ":" + extensions, ":" + services, ":" + adapter], tags = ["manual"])
     testfx_matrix(name = "windows_" + flavor, target = ":_windows_" + flavor, frameworks = [framework])
 
 def _library_probe(name, framework, scenario, deps, project_sdk = "default"):
@@ -240,6 +244,7 @@ def _library_probe(name, framework, scenario, deps, project_sdk = "default"):
         nowarn = ["CS1701", "CS1702", "TPEXP", "TPINTERNAL", "MSTESTOBS"],
         project_sdk = project_sdk,
         deps = deps,
+        tags = ["manual"],
     )
     publish_binary(
         name = name + "_publish",
@@ -247,6 +252,7 @@ def _library_probe(name, framework, scenario, deps, project_sdk = "default"):
         target_framework = framework,
         runtime_identifier = "win-x64",
         self_contained = True,
+        tags = ["manual"],
     )
     testfx_matrix(name = name, target = ":" + name + "_publish", frameworks = [framework])
 
@@ -336,29 +342,20 @@ def _controller():
             runtime_identifier = "win-x64",
             self_contained = False,
             roll_forward_behavior = "LatestMajor",
+            tags = ["manual"],
         )
         testfx_matrix(name = name, target = ":" + name + "_publish", frameworks = [framework])
         controllers.append(":" + name)
     native.filegroup(name = "windows_controllers", srcs = controllers)
 
 def windows_libraries():
-    _projection("windows_sdk_19041", "sdk19041", "10.0.19041.57", "net8.0")
+    # The last argument is the package's lib folder, not a product TFM.
     _projection("windows_sdk_19041_net10", "sdk19041net10", "10.0.19041.87", "net9.0")
     _projection("windows_sdk_17763", "sdk17763", "10.0.17763.57", "net8.0")
     _projection("windows_sdk_18362", "sdk18362", "10.0.18362.57", "net8.0")
 
-    for framework in _PACKAGED_FRAMEWORKS:
-        native.config_setting(
-            name = "windows_tfm_" + framework,
-            flag_values = {"@rules_dotnet//dotnet:target_framework": framework},
-        )
-    native.alias(
-        name = "windows_sdk_packaged",
-        actual = select({
-            ":windows_tfm_" + framework: ":windows_sdk_19041" if framework.split("-")[0] in ["net8.0", "net9.0"] else ":windows_sdk_19041_net10"
-            for framework in _PACKAGED_FRAMEWORKS
-        }),
-    )
+    # Every packaged product TFM (net10.0+) uses the .NET 10 projection.
+    native.alias(name = "windows_sdk_packaged", actual = ":windows_sdk_19041_net10")
 
     _windows_library(
         name = "packaged_app_windows",
@@ -418,7 +415,7 @@ def windows_libraries():
         probes.append(":" + name)
     _library_probe(
         "windows_probe_desktop",
-        "net8.0-windows7.0",
+        _DESKTOP_FRAMEWORKS[0],
         "desktop",
         [":windows_ui_automation", ":framework", ":framework_extensions"],
         project_sdk = "windowsdesktop",
@@ -455,6 +452,7 @@ def windows_libraries():
         nullable = "enable",
         generate_documentation_file = False,
         deps = [":platform", ":packaged_app_windows", ":trx", ":trx_abstractions", ":retry", ":windows_sdk_packaged"],
+        tags = ["manual"],
     )
     publish_binary(
         name = "windows_app_model_publish",
@@ -462,5 +460,6 @@ def windows_libraries():
         target_framework = _PACKAGED_FRAMEWORKS[0],
         runtime_identifier = "win-x64",
         self_contained = True,
+        tags = ["manual"],
     )
     testfx_matrix(name = "windows_app_model", target = ":windows_app_model_publish", frameworks = [_PACKAGED_FRAMEWORKS[0]])

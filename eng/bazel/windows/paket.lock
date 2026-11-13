@@ -95,13 +95,6 @@ NUGET
   remote: https://api.nuget.org/v3/index.json
     Microsoft.Windows.SDK.NET.Ref (10.0.18362.57)
 
-GROUP sdk19041
-STORAGE: NONE
-STRATEGY: MIN
-NUGET
-  remote: https://api.nuget.org/v3/index.json
-    Microsoft.Windows.SDK.NET.Ref (10.0.19041.57)
-
 GROUP sdk19041net10
 STORAGE: NONE
 STRATEGY: MIN

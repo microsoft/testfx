@@ -2,7 +2,8 @@
 
 This branch provides a **staged development build, not a drop-in replacement for
 the shipping MSBuild/Arcade pipeline**. The portable graph compiles 35 projects
-under `src` for .NET 8/9/10/11 without running MSBuild or consuming its outputs.
+under `src` for .NET 10/11, the repository's `SupportedNetFrameworks`, without
+running MSBuild or consuming its outputs.
 Separate compatibility targets provide 26 netstandard2.0 and five net462 source
 variants. Native packaging now produces ten experimental MTP/MSTest/analyzer/SDK
 NuGets, alongside self-contained test hosts. Existing release, signing-service,
@@ -17,20 +18,28 @@ The bootstrap does not change machine policy or install a global SDK.
 From the repository root:
 
 ```powershell
-.\eng\bazel.ps1 build //:managed_all
-.\eng\bazel.ps1 test //:portable_tests
+.\eng\bazel.ps1 build //...
+.\eng\bazel.ps1 test //...
 .\eng\bazel\validate.ps1
 .\eng\bazel\validate-packages.ps1
 ```
 
-`validate.ps1` also checks discovery, real TRX/HTML/JUnit/CTRF output, paths
+`validate.ps1` builds and tests the whole graph (`//...`) with test-result
+caching disabled. It requires every automatic test target to pass, except
+documented host-incompatible targets, which must report `SKIPPED`. It also
+requires every produced TRX to have executed results and no failures. A Bazel
+query enforces a floor on the number of test targets. A second query requires
+that any `manual` target unreachable from `//...` is on a reviewed allowlist.
+Today that allowlist holds only the intentional failure probes and the
+reference-alias negative fixtures, and the script proves each of them fails as
+designed. It also checks discovery, real TRX/HTML/JUnit/CTRF output, paths
 containing spaces and `!`, failing-test exits, zero-result exits, mixed-module
-failure aggregation, and the native action graph. Evidence is written under a
-unique `artifacts\bazel-validation` directory. Its success is scoped to the
-portable suite, not the complete repository. `validate-packages.ps1` separately
-builds and inspects native NuGets, compiles the existing platform explorer against
-them for all four frameworks, runs the net11 consumer, and executes isolated
-self-contained publishers on their actual .NET 8/9/10/11 runtimes.
+failure aggregation, and the native action graph. Evidence, including each
+test's `test.xml`, is written under a unique `artifacts\bazel-validation`
+directory. `validate-packages.ps1` separately builds and inspects native NuGets,
+compiles the existing platform explorer against them for both frameworks, runs
+the net11 consumer, and executes isolated self-contained publishers on their
+actual .NET 10/11 runtimes.
 
 The wrapper pins and verifies Bazel **9.1.1**. Bzlmod pins `rules_dotnet` commit
 **add5c92b30888a70aa951de1744a770b8f8ef436**, with an integrity-checked archive and
@@ -46,7 +55,7 @@ an explicit, checksum-pinned compiler/runtime choice:
 ```
 
 This opt-in uses SDK12's real compiler and execution runtime while retaining
-the published SDK11 reference/RID-pack policy for net8.0 through net11.0.
+the published SDK11 reference/RID-pack policy for net10.0 and net11.0.
 It does not claim SDK12 bundled-pack defaults or net12.0 targeting.
 `eng/bazel/verify-engineering-sdk.ps1` audits an actual action-graph capture;
 the decision record distinguishes successful native builds/consumers from
@@ -88,16 +97,16 @@ runfiles settings.
 | Target | Contents |
 | --- | --- |
 | `//:managed` | 35 source projects in the selected framework configuration (net10.0 by default). |
-| `//:managed_all` | The same graph built for net8.0, net9.0, net10.0, and net11.0, retaining fixed-framework analyzers/generators and server-client validation. |
+| `//:managed_all` | The same graph built for net10.0 and net11.0, retaining fixed-framework analyzers/generators and server-client validation. |
 | `//:managed_compatibility` | All 26 netstandard2.0 and five net462 source variants, with exact-framework inventories. |
 | `//:managed_netstandard2_0`, `//:managed_net462` | The respective compatibility subgraphs; individual labels use `_netstandard2_0` or `_net462` suffixes. |
 | `//:explorer_released` | Existing platform explorer compiled against its released MTP 2.5.2 packages. |
 | `//:explorer` | The same sample compiled against this checkout's MTP and TRX assemblies. |
 | `//:simple1` | Existing `samples/public/mstest-runner/Simple1`, using the source-built MSTest runner and reporters. |
 | `//:baseline_tests` | Seven Windows test targets: the three sample smoke runs, existing framework/adapter/platform-services suites, and build-tool regression cases. |
-| `//:portable_tests` | The Windows baseline plus protocol-contract, source-generation, and VSTestBridge suites: ten targets. |
+| `//:portable_tests` | The Windows baseline plus protocol-contract, source-generation, and VSTestBridge suites: ten targets. A named subset; CI runs every test target through `//...`. |
 | `//:portable_non_windows_tests` | The same portable contracts without the Windows-filesystem platform-services suite: nine targets. |
-| `//:all_unit_tests` | All thirteen original unit-test projects, including the full MTP suite and its known Windows host failures. No cases or original skips are filtered out. |
+| `//:all_unit_tests` | All thirteen original unit-test projects, including the full MTP suite. No cases or original skips are filtered out. |
 | `//:framework_tests` | Existing framework tests, including the assertion-generator tests, using the existing sequential `TestContainer` engine. |
 | `//:adapter_tests` | Existing adapter tests, using `TestContainer` and a framework-dependent layout for child-process tests. |
 | `//:platform_services_tests` | Windows-only platform-services tests, using `TestContainer` and an isolated writable layout for filesystem/child-process fixtures. |
@@ -113,22 +122,22 @@ runfiles settings.
 | `//:server_client_tests` | Native self-contained host and original child-process bootstraps; 305 passes and eight original Unix-only skips on Windows. |
 | `//:extension_tests` | Original extension sources, aliases and annotation fixtures; 2,863 passes and seven original skips on Windows. |
 | `//:analyzer_tests` | All 2,102 existing analyzer/code-fix cases with ordinary test-subject references, generated Recommended policy and isolated reference-pack caches. |
-| `//:packages` | Experimental `Microsoft.Testing.Platform`, `Microsoft.Testing.Extensions.TrxReport.Abstractions`, and `Microsoft.Testing.Extensions.TrxReport` NuGets, each with four portable TFMs. |
+| `//:packages` | Experimental `Microsoft.Testing.Platform`, `Microsoft.Testing.Extensions.TrxReport.Abstractions`, and `Microsoft.Testing.Extensions.TrxReport` NuGets, each with two portable TFMs (net10.0 and net11.0). |
 | `//:analyzers_package` | Native MSTest.Analyzers package, including C#/VB analyzers, C# fixes, satellites and generated analysis-mode configs. |
 | `//:mstest_packages` | Native framework, adapter, Telemetry and Platform.MSBuild packages; real netstandard task assemblies are bundled at their required paths. |
 | `//:mstest_package_closure` | Those four packages plus the original three MTP/TRX packages and analyzers: eight native archives. |
 | `//:mstest_package`, `//:mstest_sdk_package` | Native MSTest meta-package and MSTest.Sdk; together with the closure above, ten packages for isolated consumers. |
-| `//:published_samples` | Self-contained platform explorer layouts for .NET 8/9/10/11 on the selected host RID. |
+| `//:published_samples` | Self-contained platform explorer layouts for .NET 10/11 on the selected host RID. |
 | `//:windows_libraries` | Four WinRT PackagedApp and four WPF-reference UIAutomation variants, plus four modern-UWP and four WinUI library variants. |
 | `//:windows_probes` | Seven native self-contained library consumers; no XAML application compilation. |
-| `//:windows_controllers` | Both original net8/net9 win-x64 framework-dependent apphost layouts. |
+| `//:windows_controllers` | Both net10/net11 win-x64 framework-dependent controller apphost layouts. |
 | `//:windows_app_model` | A native console host for real loose-MSIX registration/activation and controller checks. |
-| `//:platform_tests` | Full 3,380-case MTP suite, preserving method-level parallelization. Two real Windows impersonation cases are host-blocked in local validation; this target is deliberately not part of `baseline_tests`. |
+| `//:platform_tests` | Full 3,380-case MTP suite, preserving method-level parallelization. Two real Windows impersonation cases report Inconclusive when the host lacks `SeImpersonatePrivilege`; see below. |
 
 The default configuration remains `net10.0`; `managed_all` explicitly builds the
-four-framework matrix. The assertion generator, MSTest
+two-framework matrix. The assertion generator, MSTest
 analyzers/code fixes, and MSTest source generator retain `netstandard2.0`;
-the server-client's default validation assembly retains `net8.0`.
+the server-client's default validation assembly targets `net10.0`.
 `managed_compatibility` explicitly selects the additional non-Windows-qualified
 project variants rather than relying on compatible-framework fallback.
 Windows-qualified targets are opt-in; full workload/runtime parity remains a
@@ -139,12 +148,16 @@ The modern-UWP (`net10.0-windows10.0.17763.0`) and WinUI
 defined in core for every flavor; the UI variants retain the exclusions of
 `DeploymentItemAttribute` and the desktop `TestContext` directory properties.
 The desktop library probe checks that ordinary core still exposes those APIs.
-`validate.ps1` selects the ten-target suite on Windows and the nine-target suite
-elsewhere, and records the selected suite and unsupported targets in its result.
+`validate.ps1` runs every compatible test target and records any
+host-incompatible targets in its result. Bazel reports those as `SKIPPED`, and
+the script fails unless the skipped set exactly matches the documented host
+exceptions.
 `MSTestAdapter.PlatformServices.UnitTests` has Windows path/filename semantics
-and is also absent from the repository's `NonWindowsTests.slnf`; an explicit
-request for its Bazel target on another OS fails compatibility analysis rather
-than reporting those tests as passed. Windows still executes its full suite.
+and is also absent from the repository's `NonWindowsTests.slnf`, so it is the
+expected skip on Linux and macOS. An explicit request for its Bazel target on
+another OS fails compatibility analysis rather than reporting those tests as
+passed. Windows still executes its full suite.
+`//:aot_publish_test` is the expected skip on Windows; see the samples section.
 
 The native Roslyn producer/test pins must match `Directory.Packages.props`.
 `verify-roslyn-dependencies.ps1 -SelfTest` checks both Paket declarations and
@@ -168,11 +181,11 @@ The six source projects outside `managed` are:
 | `Microsoft.Testing.Extensions.PackagedApp.Controller` | `//:windows_controllers`. |
 | `TestFramework.Windows.UIAutomation` | `//:windows_ui_automation_all`. |
 
-Native targets now exist for all thirteen repository unit-test projects; this
-does not turn the known full-MTP host failures into a passing suite.
+Native targets now exist for all thirteen repository unit-test projects, and
+`validate.ps1` executes all of them through `//...`.
 Not yet migrated or established: the complete integration/acceptance suites,
 every public example, complete legacy runtime behavior, native XAML/UI-thread
-and classic-UWP/AppContainer execution, NativeAOT execution,
+and classic-UWP/AppContainer execution, Windows NativeAOT linking,
 SourceLink/API-audit parity, official package layout/signing/publishing,
 and downstream servicing. Native assemblies and satellites use the same
 public-only Microsoft signing key as the repository's Arcade development build
@@ -210,10 +223,10 @@ The additive `//:terminal_contract_tests` and `//:self_real_tests` targets run
 the existing terminal-reporter contract and MSTest self-real-example suites.
 Their first Windows x64 validation compiled `net10.0` and executed on the pinned
 .NET 11 runtime: **15** and **24** cases passed, respectively, with no skips.
-They are not yet included in `portable_tests`. The terminal target also requires
-a standalone `net8.0` compilation of the reporter and its coverage/retry model
-closure; this does not claim that the existing `.props` manifest contains that
-entire standalone closure.
+They are not part of `portable_tests`; CI runs them through `//...`. The
+terminal target also requires a standalone `net10.0` compilation of the reporter
+and its coverage/retry model closure; this does not claim that the existing
+`.props` manifest contains that entire standalone closure.
 
 These two targets use `eng/bazel/NativeUnitTestMain.cs`, preserving method-level
 and class-level scheduling respectively, with the original CPU-count worker
@@ -222,7 +235,7 @@ providers, and OpenTelemetry registration, but not the CI-only affected-test and
 coverage collectors. Explicit framework metadata identifies their compile TFM
 even when the test host runs on a newer runtime.
 
-Three further opt-in targets retain their original method-level, CPU-count
+Three further targets retain their original method-level, CPU-count
 scheduling: `//:msbuild_tests` passes 388 existing cases;
 `//:server_client_tests` passes 305 with eight original Unix-only skips;
 `//:extension_tests` passes 2,863 with seven original OS/filesystem skips on
@@ -232,8 +245,8 @@ process fixtures can launch the same assembly outside Bazel's application
 shim. The other two compile net10 and execute on the pinned .NET 11 host.
 The MSBuild suite stages the real native netstandard task DLL, not a reference
 assembly. Extension source-location checks use declared original source files
-and the repository's `/_/` pathmap. These targets remain outside
-`portable_tests`.
+and the repository's `/_/` pathmap. These targets are outside `portable_tests`
+but run in CI through `//...`.
 
 `//:analyzer_tests` runs all 2,102 existing analyzer cases in a native
 self-contained net10 host, with zero failures or skips. Its generated
@@ -266,18 +279,21 @@ key-qualified friend references through every C# compiler pass. It also checks
 the emitted public keys and localized satellite identity. Unknown assemblies and
 empty/duplicate alias lists are rejected during analysis.
 
-Local full MTP execution reported 3,378 passes and these two failures:
+Without `SeImpersonatePrivilege` (for example, from a non-elevated shell), two
+real Windows impersonation cases cannot observe an access check:
 
 - `CreateServerStream_AnUnauthorizedIdentityCannotConnect`
 - `CreateServerStream_AnAppContainerConnectsOnlyWhenItsOwnPackageIsAuthorized`
 
-Windows returned `ERROR_BAD_IMPERSONATION_LEVEL` (**1346 / 0x542**).
-The same error occurred outside Bazel's test wrapper, and a standalone
-`NamedPipeServerStream`/anonymous-token probe with no TestFx or Bazel code
-reproduced it. The tests and their assertions remain unchanged. A separate,
-explicit selection excluding those two executed and passed the other 3,378
-cases; this is not a full-suite pass. Do not change machine security policy or
-weaken the assertions to obtain a green result.
+Windows silently downgrades the impersonation to identification level, and every
+later open returns `ERROR_BAD_IMPERSONATION_LEVEL` (**1346 / 0x542**) before the
+pipe's DACL is consulted. The same error occurred outside Bazel's test wrapper,
+and a standalone `NamedPipeServerStream`/anonymous-token probe with no TestFx or
+Bazel code reproduced it. The tests now query the impersonated thread token's
+level and report **Inconclusive** when it was downgraded. Their assertions are
+unchanged and still run in full on hosts that hold the privilege, such as
+elevated CI agents. Do not change machine security policy or weaken the
+assertions to obtain a green result.
 
 ## How the build works
 
@@ -348,22 +364,26 @@ now retain their incoming configuration. Reassess these changes on an upgrade.
 
 | Target | Verified behavior |
 | --- | --- |
-| `sdk_runner_sample_test` | Existing net8 SDK-runner example: one passing case, using native source assemblies rather than proving SDK-package behavior. |
-| `reliable_suite_test` | All 11 existing net8 reliability cases pass, including retry/cancellation and the real pinned-dotnet executable condition. |
-| `scale_10c_test`, `scale_100c_test`, `scale_1000c_test` | Existing method-parallel net8 scale examples: 1,000, 10,000 and 100,000 passing cases. These are scalability fixtures, not newly generated coverage. |
+| `sdk_runner_sample_test` | Existing net10 SDK-runner example: one passing case, using native source assemblies rather than proving SDK-package behavior. |
+| `reliable_suite_test` | All 11 existing net10 reliability cases pass, including retry/cancellation and the real pinned-dotnet executable condition. |
+| `scale_10c_test`, `scale_100c_test`, `scale_1000c_test` | Existing method-parallel net10 scale examples: 1,000, 10,000 and 100,000 passing cases. These are scalability fixtures, not newly generated coverage. |
 | `custom_report_test` | The existing passing custom-report example; the separate manual failure probe retains the intentional failing example and exit 2. |
 | `ensure_sample` | Existing custom framework: discovery finds its one case; real execution intentionally fails with exit 2. |
-| `otel_sample_test` | Existing net9 host-composition example: five passes and real source-built OpenTelemetry output. |
+| `otel_sample_test` | Existing net10 host-composition example: five passes and real source-built OpenTelemetry output. |
 | `browser_publish` | Native upstream WebAssembly bundle; unchanged Node runner passes one browser-wasm case and propagates minimum-count exit 9. |
 | `benchmark_runner` | Native self-contained net10 layout; build with `-c opt`. Twelve existing benchmarks are discoverable and an in-process Dry execution runs without an MSBuild-generated host. |
 | `aot_sample` | Existing SDK AOT sample compiles with source-generated reflection metadata and passes its one managed case. This alone is not NativeAOT execution. |
+| `aot_publish_test` | Runs the NativeAOT-linked `aot_publish` executable and requires its one case to pass. Linux and macOS only. |
 
-The manual `aot_publish` invokes upstream's native AOT publisher, but the pinned
-upstream does not supply NativeAOT for this existing sample's net8.0 target:
-an isolated Linux attempt also rejects `net8.0 on linux-x64`. Windows native
-linking is separately unsupported. The sample was not retargeted to hide this
-boundary, and its managed pass is not AOT coverage. None of these targets enlarges
-the previously verified `portable_tests` aggregate.
+Each sample now compiles for its project's own `net10.0` target framework. The
+pinned upstream `rules_dotnet` links NativeAOT only on Linux and macOS: its
+publisher fails analysis for Windows with "NativeAOT cannot target windows yet".
+`aot_publish` and `aot_publish_test` are therefore restricted with
+`target_compatible_with`. They build and run automatically in `//...` on Linux
+and macOS and are reported as incompatible on Windows. On Linux, `aot_publish`
+produced the native `ProjectWithNativeAOT` executable and `aot_publish_test`
+passed with one executed case in its TRX. macOS is not covered by CI. Windows
+NativeAOT remains an upstream gap and must not be emulated with a managed run.
 
 Packages carry an explicit `-preview.bazel` prerelease version derived from
 `eng/Versions.props`; they are not official shipping packages. They include the
@@ -443,16 +463,17 @@ checks each action's declared inputs. A cache miss or eviction runs the same
 full validation rather than skipping work.
 PRs remain cold until the first successful compatible `main` seed is available.
 
-The Windows job also runs `eng/bazel/windows/validate.ps1`: it builds the
-`netstandard2.0`/`net462` compatibility variants and Windows-qualified libraries,
-executes seven native Windows consumers, and runs four additional existing unit
-test suites with result-cache reuse disabled. The analyzer and extensions unit
-suites are not yet included because their Bazel test fixtures do not match
-existing tests' assembly metadata, process output, and runtime-layout
-assumptions. It also does not include the full MTP unit suite (which has two
-known host-blocked failures), XAML compilation, or app-model activation. The
-[measured durations](#measured-ci-duration) above predate this expanded
-workload and are not timing estimates for the updated Windows job.
+Both jobs run `eng/bazel/validate.ps1`, which builds and tests every compatible
+target in `//...`. That includes the analyzer, extension, MSBuild,
+server-client, terminal-contract, self-real, adapter, full MTP, sample, and
+package-consumer suites. The Windows job also runs `eng/bazel/windows/validate.ps1`:
+it builds the `netstandard2.0`/`net462` compatibility variants and
+Windows-qualified libraries, executes the native Windows consumers, and
+re-executes four existing unit test suites with stricter per-suite TRX checks.
+That re-execution overlaps the `//...` run and keeps the Windows gate
+self-contained. It does not include XAML compilation or app-model activation. The
+[measured durations](#measured-ci-duration) below predate the full-graph
+workload and are not timing estimates for the current jobs.
 
 Before a successful main save, the stopped job trims oldest cache files to
 1,536 MiB of download payload and 512 MiB of action payload: at most 2 GiB
@@ -492,7 +513,9 @@ cache remains a possible later optimization, not part of this change.
 
 Successful jobs from 2026-11-06 18:52 UTC
 ([#12253](https://github.com/microsoft/testfx/pull/12253) added the Bazel cache)
-to 2026-11-13; durations exclude queue wait.
+to 2026-11-13; durations exclude queue wait. These runs predate the switch to
+`//...` and the net10/net11-only matrix; they measure the earlier portable-suite
+jobs.
 
 | Job | Projects built | Tests run | Median | P90 | Successful jobs |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -579,8 +602,10 @@ replacement of authoritative validation.
 See the maintained [research and decision record](decisions/bazel-build.md) for
 experiments, exact commands, red/green evidence, and remaining limitations.
 `validate.ps1` produces `validation.json`, command logs, copied TRX files, reports,
-and `actions.json`. Its portable suite has 3,443 passing cases across ten targets;
-the inspected managed action graph contains no MSBuild execution.
+and `actions.json`. It builds `//...` and runs all 35 automatic test targets
+uncached. On Windows, 34 passed and the host-incompatible NativeAOT test was
+skipped; their 22 TRX reports contain 126,984 passing cases and no failures. The
+inspected managed action graph contains no MSBuild execution.
 
 The combined native source revision `c910ab89ce7dc95c3ab2666ed62c4172a9950183`
 was validated after integrating all seven lanes. All modern, compatibility and
@@ -588,7 +613,9 @@ Windows library builds succeeded. The thirteen original unit projects reported
 12,502 passes, 15 original platform-dependent skips and exactly the two known
 Win32-1346 failures described above; all 34 native helper cases and six
 targeting/reference analysis checks passed. The full-unit command correctly
-returned failure rather than filtering those host limitations.
+returned failure rather than filtering those host limitations. Those two tests
+now detect the identification-level downgrade and report Inconclusive, so
+`//...` passes on such hosts without changing their assertions.
 
 On that same integrated source, the SDK/meta gate passed all 40 steps, the
 MSTest/runtime/satellite-sensitivity gate all 31 steps, and the analyzer package

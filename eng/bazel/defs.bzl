@@ -2,7 +2,7 @@
 
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "import_library")
 
-PORTABLE_FRAMEWORKS = ["net8.0", "net9.0", "net10.0", "net11.0"]
+PORTABLE_FRAMEWORKS = ["net10.0", "net11.0"]
 STANDARD_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["netstandard2.0"]
 DESKTOP_FRAMEWORKS = PORTABLE_FRAMEWORKS + ["net462"]
 
@@ -142,6 +142,12 @@ def _metadata_impl(ctx):
         template_output = ctx.actions.declare_file(ctx.label.name + ".BuildInfo.g.cs")
         inputs.append(ctx.file.template)
         outputs.append(template_output)
+    sdk_version = "-"
+    if ctx.attr.sdk_version:
+        toolchain = ctx.toolchains["@rules_dotnet//dotnet:toolchain_type"]
+        if not toolchain:
+            fail("SDK version metadata requires a resolved .NET toolchain.")
+        sdk_version = toolchain.dotnetinfo.sdk_version
     ctx.actions.run(
         executable = ctx.executable._tool,
         arguments = [
@@ -156,6 +162,7 @@ def _metadata_impl(ctx):
             ctx.attr.culture or "-",
             ctx.attr.assembly_version or "-",
             ctx.version_file.path if ctx.attr.build_time else "-",
+            sdk_version,
         ],
         inputs = inputs,
         outputs = outputs,
@@ -172,10 +179,13 @@ testfx_metadata = rule(
         "culture": attr.string(),
         "assembly_version": attr.string(),
         "build_time": attr.bool(),
+        # Stamps TestFx.NETCoreSdkVersion from the selected toolchain, like test/Directory.Build.targets.
+        "sdk_version": attr.bool(),
         "template": attr.label(allow_single_file = True),
         "usings": attr.string_list(),
         "_tool": attr.label(default = "//eng/bazel:build_tools", executable = True, cfg = "exec"),
     },
+    toolchains = [config_common.toolchain_type("@rules_dotnet//dotnet:toolchain_type", mandatory = False)],
 )
 
 def testfx_library(
@@ -199,8 +209,16 @@ def testfx_library(
         analyzer_configs = [],
         compiler_options = [],
         binary = False,
+        sdk_version_metadata = False,
+        tags = [],
         **kwargs):
-    """Compile one source assembly without invoking or consuming MSBuild outputs."""
+    """Compile one source assembly without invoking or consuming MSBuild outputs.
+
+    Tags also reach the satellite assemblies, which share the main assembly's
+    target frameworks and so must share its `manual` reachability.
+    `sdk_version_metadata` mirrors the TestFx.NETCoreSdkVersion stamp that
+    test/Directory.Build.targets pairs with test/Utilities/TestFxOpenTelemetry.cs.
+    """
     testfx_metadata(
         name = name + "_metadata",
         version_property = version_property or ("TestingPlatformVersionPrefix" if project.startswith("src/Platform/") else "VersionPrefix"),
@@ -209,6 +227,7 @@ def testfx_library(
         template = build_info,
         usings = usings,
         build_time = project == "src/Platform/Microsoft.Testing.Platform",
+        sdk_version = sdk_version_metadata,
     )
     sources = native.glob(
         [project + "/**/*.cs"],
@@ -261,8 +280,9 @@ def testfx_library(
             keyfile = TESTFX_PUBLIC_KEY_FILE,
             compiler_options = ["/publicsign+"],
             generate_documentation_file = False,
+            tags = tags,
         )
-        _satellite(name = satellite_name, assembly = ":" + satellite_name + "_dll", culture = culture)
+        _satellite(name = satellite_name, assembly = ":" + satellite_name + "_dll", culture = culture, tags = tags)
         satellites.append(":" + satellite_name)
 
     for index, (path, logical_name) in enumerate(embedded_resources.items()):
@@ -291,6 +311,7 @@ def testfx_library(
         analyzer_configs = ["//:.editorconfig"] + analyzer_configs,
         nowarn = ["CS1701", "CS1702", "TPEXP", "TPINTERNAL", "MSTESTOBS"],
         treat_warnings_as_errors = True,
+        tags = tags,
         **kwargs
     )
 
@@ -298,11 +319,53 @@ def testfx_binary(**kwargs):
     """Build a native executable with the same source/metadata rules as libraries."""
     testfx_library(binary = True, **kwargs)
 
+# MTP defaults its working and results directories to the app directory, which is read-only in
+# sandboxed test runs, so point them at the per-test temporary directory instead. On Unix, MTP
+# pipes are domain sockets whose paths are limited to about 104 bytes, which Bazel's nested sandbox
+# TMPDIR exceeds; give them a short private directory that is removed when the test exits.
+TEST_LAUNCHER_WINDOWS_PROLOGUE = [
+    'if not defined DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY if defined TEST_TMPDIR set "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY=%TEST_TMPDIR%"',
+]
+
+TEST_LAUNCHER_UNIX_PROLOGUE = [
+    'if [[ -z "${DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY:-}" && -n "${TEST_TMPDIR:-}" ]]; then',
+    '  export DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY="${TEST_TMPDIR}"',
+    "fi",
+    'if [[ -z "${TESTINGPLATFORM_PIPE_DIRECTORY:-}" ]]; then',
+    '  TESTINGPLATFORM_PIPE_DIRECTORY="$(mktemp -d /tmp/tfx.XXXXXX)"',
+    "  export TESTINGPLATFORM_PIPE_DIRECTORY",
+    "  trap 'rm -rf \"${TESTINGPLATFORM_PIPE_DIRECTORY}\"' EXIT",
+    "fi",
+]
+
 def _test_impl(ctx):
     info = ctx.attr.binary[DefaultInfo]
-    executable = ctx.actions.declare_file(ctx.label.name + "." + info.files_to_run.executable.extension)
-    ctx.actions.symlink(output = executable, target_file = info.files_to_run.executable, is_executable = True)
-    providers = [DefaultInfo(executable = executable, runfiles = info.default_runfiles)]
+    target = info.files_to_run.executable
+    path = target.short_path
+    runfile = path[3:] if path.startswith("../") else ctx.workspace_name + "/" + path
+    is_windows = target.extension in ("bat", "cmd", "exe")
+    executable = ctx.actions.declare_file(ctx.label.name + (".bat" if is_windows else ".sh"))
+
+    if is_windows:
+        content = "\r\n".join([
+            "@echo off",
+            "setlocal DisableDelayedExpansion",
+        ] + TEST_LAUNCHER_WINDOWS_PROLOGUE + [
+            'call "%TEST_SRCDIR%\\' + runfile.replace("/", "\\") + '" %*',
+            "exit /b %ERRORLEVEL%",
+            "",
+        ])
+    else:
+        # Do not exec: the prologue's EXIT trap removes the pipe directory; errexit keeps the exit code.
+        content = "\n".join([
+            "#!/usr/bin/env bash",
+            "set -euo pipefail",
+        ] + TEST_LAUNCHER_UNIX_PROLOGUE + [
+            '"${TEST_SRCDIR}/' + runfile + '" "$@"',
+            "",
+        ])
+    ctx.actions.write(executable, content, is_executable = True)
+    providers = [DefaultInfo(executable = executable, runfiles = info.default_runfiles.merge(ctx.runfiles(files = [target])))]
     if RunEnvironmentInfo in ctx.attr.binary:
         providers.append(ctx.attr.binary[RunEnvironmentInfo])
     return providers

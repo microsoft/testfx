@@ -22,7 +22,7 @@ $directory = if ($EvidenceRoot) { Join-Path $EvidenceRoot $run } else { Join-Pat
 $feed = Join-Path $directory 'feed'
 $consumer = Join-Path $directory 'consumer'
 New-Item -ItemType Directory -Path $feed, $consumer | Out-Null
-$frameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+$frameworks = @('net10.0', 'net11.0')
 $expectedPackageIds = @('Microsoft.Testing.Platform', 'Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.TrxReport')
 $seenPackages = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $seenRuntimes = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)

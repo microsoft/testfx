@@ -9,7 +9,7 @@ def server_client_library():
     testfx_library(
         name = "server_client",
         project = "src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources",
-        target_frameworks = ["netstandard2.0", "net8.0"],
+        target_frameworks = ["netstandard2.0", "net10.0"],
         polyfills = False,
         defines = ["IS_CORE_MTP", "IS_MTP_SERVER_MODE_CLIENT", "IS_MTP_CLIENT_REPO"],
         usings = ["Polyfills"],
