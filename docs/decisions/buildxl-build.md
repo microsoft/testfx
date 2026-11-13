@@ -527,8 +527,11 @@ Each entry invokes `eng/buildxl.ps1 -Project TestFx.slnx` with its configuration
 CPU-sized concurrency, tracked shared compilation, and automatic filesystem
 profile selection. There is one normal restore/build, no warm-up,
 synthetic source marker, benchmark repetition, or comparison threshold.
-A failed task can retry the same native build once to recover from the observed
-Windows child-process teardown race; a second failure still fails the job.
+Before starting the engine, the wrapper pre-caches the Visual Studio telemetry
+MAC hash that MSIX packaging tasks would otherwise compute by launching
+`getmac` inside a pip. A failed task can retry the same native build once to
+recover from any remaining Windows child-process teardown race; a second
+failure still fails the job.
 The native engine's stdout/stderr reaches the Azure task directly instead of
 being redirected to a benchmark sample log. Tests are compiled as part of the
 solution; they are not executed or represented as synthetic benchmark tests.
@@ -732,6 +735,84 @@ are unchanged. Hosted summary publication with this wrapper remains unverified u
 An earlier local setup attempt failed while renaming the extracted tool directory. Extracting
 the same hash-verified package directly into a new task-owned deployment completed installation;
 that setup failure is not counted as behavioral red evidence.
+
+### 2026-11-13: seed the Visual Studio telemetry MAC cache
+
+[Azure build 1680271](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1680271)
+failed Debug's first attempt again with `DX0041`/`DX0064` for a surviving
+`C:\Windows\System32\getmac.exe` under `TestFramework.Extensions.csproj` at
+`net10.0-windows10.0.18362.0`. The compiler succeeded and the bounded retry
+passed. This was the third occurrence after builds 1674906 and 1677171, so the
+source of the child process was traced instead of relying only on the retry.
+
+Decompiling the pinned packages shows the cause chain. The WinUI target
+(`Microsoft.WindowsAppSDK.WinUI` 1.8) imports
+`Microsoft.Windows.SDK.BuildTools.MSIX` 1.7.20250829.1. Its packaging task
+helper creates a Visual Studio telemetry session through
+`TelemetryService.DefaultSession` when no `VSTelemetrySession` string is
+supplied, as on CI. Session startup asks `MACInformationProvider` for the
+machine hash. If `HKCU\Software\Microsoft\VisualStudio\Telemetry\PersistentPropertyBag`
+has no valid `mac.address` value, it starts `getmac` without waiting and
+persists `s:<sha256>` from the completion callback. When the MSBuild node
+finishes first, BuildXL's fixed 500 ms nested-process timeout rejects the
+survivor. The retry succeeds because the first attempt's callbacks have already
+written the cache, and BuildXL does not virtualize HKCU. The package has no
+telemetry opt-out for this path, and the existing `DOTNET_CLI_TELEMETRY_OPTOUT`
+does not reach it.
+
+Before invoking the native engine, the wrapper now seeds that cache outside the
+sandbox. It applies the provider's read rule: a string value is valid unless its
+`d:` suffix parses as a double, and it must contain a case-sensitive,
+unanchored `[a-f0-9]{64}` match. A valid value is left untouched. Otherwise the
+wrapper runs `getmac` synchronously, takes the first non-zero MAC that matches the
+provider's pattern, and stores `s:` plus the lowercase SHA-256 of its UTF-8
+text. A nonzero exit, missing executable, absent usable address, or registry
+error logs a message and continues. The build then keeps its previous behavior,
+and the bounded retry remains its backstop. PrepareOnly and MSBuild-engine runs
+exit before the helper is reached.
+
+Rejected alternatives: allowlisting `getmac` or letting it break away weakens
+the sandbox. Suppressing `DX0041` hides real survivors. Disabling MSIX/MRT
+tasks changes build output. An explicit empty `VSTelemetrySession` still
+creates a session. Raising the retry count accepts the race instead of
+removing its cause. The cache is the provider's documented persistent property
+bag. A real value written by Visual Studio would be reused unchanged, so the
+helper does not alter telemetry identity.
+
+**Test-value evidence:** in a worktree of base
+`2cf92e4e5a532c91adb1035b52969fa8ad944a50` outside the repository, the retained
+test file (SHA-256
+`6174C5588C5F4DD69DA986D84EB8D8D2831B6C34B5D32898C8E642F78FEC8498`) ran
+`python .github\scripts\test_buildxl_pipeline.py BuildXLPipelineTests.test_wrapper_seeds_telemetry_mac_cache_only_before_native_buildxl`.
+It executed one case and exited 1 at `1 != 0`, because the base wrapper never
+seeds the cache. The base full suite also reports 13 helper-extraction failures.
+Those are setup failures and are not counted as red evidence. Copying the new
+wrapper (working-tree SHA-256
+`606856D775535D69D7CA9BBF60DB339A11A6465088FCFED6D5A7AF9FA316312A`) into
+the same worktree made `python .github\scripts\test_buildxl_pipeline.py`
+exit 0 with all 34 cases passing. The Windows-only harness runs the extracted
+helper against a unique HKCU key with a mocked `getmac` and deletes the key
+afterwards. Seven helper mutants each made the five MAC-cache tests exit 1 on
+assertions: the old rejection of non-numeric `d:` values, ignoring numeric
+`d:` values, case-insensitive matching, accepting zero MACs, lowercasing before
+hashing, ignoring the `getmac` exit code, and propagating errors.
+
+A task-owned differential probe also loaded the exact
+`tools\net6.0\Microsoft.VisualStudio.Telemetry.dll` shipped in the MSIX
+package. For eight cached forms (prefixed, repeated-prefix, unprefixed and
+non-numeric `d:` hashes, plus uppercase, short, numeric `d:` and DWORD values),
+the helper replaced the value exactly when the real provider would launch
+`getmac`. In every case the provider no longer needed `getmac` afterwards. With
+no cache, the real provider launched `getmac`, and the value it persisted was
+byte-identical to the helper's value. The probe exited 0 with zero mismatches.
+A case-insensitive mutant exited 1 on the uppercase-hash case. Probe keys were
+removed afterwards. The probe script was a session artifact and is not retained.
+
+Not run locally: a full native BuildXL build. The race is intermittent, so a
+local pass would not prove absence. The hosted gap stays open until the BuildXL
+job's first attempt logs
+`Cached the Visual Studio telemetry MAC hash before starting BuildXL.` and
+reports no `getmac` `DX0041` on agents with an empty cache.
 
 ### 2026-11-10: native full-solution integration
 

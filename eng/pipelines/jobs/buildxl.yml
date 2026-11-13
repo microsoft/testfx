@@ -71,6 +71,8 @@ jobs:
     displayName: Build repository with BuildXL
     # Restore uses the pinned SDK; BuildXL schedules the solution's native MSBuild graph.
     # Native MSBuild gives terminating Windows SDK children only 500 ms to exit.
+    # The wrapper pre-caches the VS telemetry MAC hash so MSIX tasks skip getmac;
+    # the single retry remains a backstop for other teardown races.
     retryCountOnTaskFailure: 1
 
   - pwsh: |
