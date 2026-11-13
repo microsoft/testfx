@@ -355,3 +355,26 @@ for this representation-only follow-up. Shared caches, pre-existing SDK
 installations, other checkouts and the preceding PR branch were untouched.
 No GitHub publication was performed. The existing incremental write and
 in-process routing guarantees were verified without repeating the earlier benchmark.
+
+#### Review clarification, 2026-11-13
+
+The original attribute-metadata values are not the serialized indentation:
+MSBuild trims their single XML elements. The unchanged byte oracle explicitly
+records this distinction; it compares complete byte arrays without normalizing
+whitespace. A direct same-fixture comparison against the baseline target also
+passed for ordinary scope (1,465 bytes), linked EXE/DLL scope (1,753 bytes each)
+and empty scope (1,271 bytes), preserving the baseline output's timestamp.
+Adding the proposed indentation would change, not restore, the output contract.
+
+The lines-only task call is intentional: `WriteMetadataProbe` exercises raw
+`Value` serialization without a template. Coverage generation always supplies
+an absolute template path; deleting that fixture-local companion fails with
+`FileNotFoundException` and MSBuild exit 1, without corrupting existing output.
+The conditional fixture copies permit comparison with pre-template target
+snapshots; a missing required production companion does not select a fallback.
+
+Restore the precise source comment about measuring **all** production bodies,
+including compatibility helpers and opt-out-marked code. No generated XML or
+collector policy changes. The five existing `Coverage*` cases passed again
+(exit 0, no skips), and six direct comparison/compatibility/failure checks
+passed across ten uniquely logged builds (nine successes, one intended failure).

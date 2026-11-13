@@ -234,7 +234,8 @@
       </_CodeCoverageSettingsLine>
     </ItemGroup>
 
-    <!-- The template measures attribute-marked production bodies; module/source filters exclude infrastructure. -->
+    <!-- Measure all production bodies, including compatibility helpers and opt-out-marked code.
+         Module/source filters still keep test infrastructure, packages and generated artifacts out. -->
     <!-- WriteLinesToFile also normalizes transformed metadata when binding its ITaskItem[] Lines parameter. -->
     <WriteCodeCoverageSettings FileName="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CodeCoverageSettingsFile)'))"
                                TemplateFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'eng', 'CodeCoverage.config.template'))"
