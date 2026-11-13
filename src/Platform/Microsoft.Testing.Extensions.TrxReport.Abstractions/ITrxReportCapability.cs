@@ -17,15 +17,18 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 /// <see cref="ErrorTestNodeStateProperty"/>, <see cref="TimeoutTestNodeStateProperty"/>, or
 /// <see cref="SkippedTestNodeStateProperty"/> are included in the report.
 /// Properties supplied only on discovery or in-progress updates are not carried forward to the final update.
+/// The final state is the only required property; every other property is optional.
 /// </para>
 /// <para>
-/// To create a test definition, the reporter requires either <see cref="TrxFullyQualifiedTypeNameProperty"/>
-/// or <see cref="TestMethodIdentifierProperty"/> on the final node.
+/// To create a test definition, the reporter uses <see cref="TrxFullyQualifiedTypeNameProperty"/> and
+/// <see cref="TestMethodIdentifierProperty"/> from the final node. Providing at least one of them is recommended
+/// so that the test is grouped under its real class.
 /// <see cref="TrxFullyQualifiedTypeNameProperty"/> supplies the TRX class name when present; otherwise,
 /// the namespace and type name from <see cref="TestMethodIdentifierProperty"/> are used.
+/// When neither property is present, the class name is <c>DefaultClassName</c>, the same placeholder the
+/// VSTest TRX logger uses, because the TRX schema requires a class name.
 /// The method identifier supplies the method name when available; otherwise, <see cref="TestNode.DisplayName"/> is used.
 /// Source-file information is not required, and the reporter does not look up whether the class or method exists.
-/// Omitting both identity properties causes report generation to fail.
 /// </para>
 /// <para>The following properties are optional:</para>
 /// <list type="bullet">
@@ -88,6 +91,7 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 /// <para>
 /// Provide one final state and at most one instance of each identity or optional property above,
 /// except <see cref="TestMetadataProperty"/> and <see cref="FileArtifactProperty"/>, which can have multiple instances.
+/// Providing more than one instance of any other property makes report generation fail.
 /// <see cref="StandardOutputProperty"/> and <see cref="TestFileLocationProperty"/> are not consumed by the TRX reporter.
 /// </para>
 /// </remarks>
