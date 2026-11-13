@@ -182,3 +182,8 @@ unavailable; no downstream enablement or backport is made.
 Owned mutation layouts and bad archive copies were removed. The isolated Bazel
 server (PID `92900`) shut down with exit **0**; no app registration, shared-cache
 cleanup or other-worktree cleanup was performed.
+
+Before publication, integrated SDK parent
+`06ee2b01d972423dd9d4f06b8ef5c8256cda9e3c`. Its only change from the tested
+parent was the SDK decision/evidence document; native/product inputs and the
+native patch hash above are unchanged.
