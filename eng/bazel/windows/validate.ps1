@@ -27,10 +27,30 @@ $inputHashes = @(Get-FileHash -Algorithm SHA256 -LiteralPath @(
     (Join-Path $root 'MODULE.bazel'), (Join-Path $root 'BUILD.bazel'),
     (Join-Path $root 'eng\bazel\windows.bzl'), (Join-Path $root 'eng\bazel\patches\windows-targeting.patch'),
     (Join-Path $root 'eng\bazel\patches\public-signing.patch'), (Join-Path $root 'eng\bazel\defs.bzl'),
+    (Join-Path $root 'eng\bazel\compatibility.bzl'), (Join-Path $root 'eng\bazel\tests.bzl'),
+    (Join-Path $root 'eng\bazel\analyzer-tests.bzl'), (Join-Path $root 'eng\bazel\extension-tests.bzl'),
+    (Join-Path $root 'eng\bazel\extra-tests.bzl'), (Join-Path $root 'eng\bazel\mstest.bzl'),
+    (Join-Path $root 'test\Utilities\TestFxOpenTelemetry.cs'),
+    (Join-Path $PSScriptRoot 'validate.ps1'),
     (Join-Path $PSScriptRoot 'paket.lock'), (Join-Path $PSScriptRoot 'LibraryProbe.cs'),
     (Join-Path $PSScriptRoot 'targeting_tests.bzl'), (Join-Path $PSScriptRoot 'asset_selection_tests.bzl'),
     (Join-Path $PSScriptRoot 'winrt.globalconfig'), (Join-Path $PSScriptRoot 'windows.MODULE.bazel')
 ))
+
+function Assert-ExpandedTrx([string] $Path) {
+    [xml]$report = Get-Content -LiteralPath $Path -Raw
+    $results = @($report.SelectNodes('//*[local-name()="UnitTestResult"]'))
+    $passed = @($results | Where-Object outcome -EQ 'Passed')
+    $skipped = @($results | Where-Object outcome -In @('NotExecuted', 'Skipped'))
+    $unexpected = @($results | Where-Object outcome -NotIn @('Passed', 'NotExecuted', 'Skipped'))
+    $counters = $report.SelectSingleNode('//*[local-name()="Counters"]')
+    if (-not $counters -or $results.Count -eq 0 -or [int]$counters.total -ne $results.Count -or
+        $passed.Count -eq 0 -or $unexpected.Count -ne 0) {
+        throw "Unexpected or incomplete test results in $Path (passed=$($passed.Count), skipped=$($skipped.Count), unexpected=$($unexpected.Count))."
+    }
+
+    return [pscustomobject]@{ Passed = $passed.Count; Skipped = $skipped.Count; Total = $results.Count }
+}
 
 function Invoke-BazelStep([string] $Name, [string[]] $Arguments) {
     $log = Join-Path $directory "$Name.log"
@@ -93,15 +113,64 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not record the working tree state.' }
     git diff --binary HEAD "--output=$(Join-Path $directory 'source.patch')"
     if ($LASTEXITCODE -ne 0) { throw 'Could not preserve the tracked source patch.' }
+    Invoke-BazelStep 'compatibility-build' @('build', '//:managed_compatibility', '--jobs=2', '--noshow_progress', '--show_result=0')
     Invoke-BazelStep 'windows-build' @('build', '//:windows_libraries', '//:windows_probes', '--jobs=2', '--noshow_progress', '--show_result=0')
     Invoke-BazelStep 'windows-targeting' @('test', '//:windows_targeting_test', '//:windows_asset_selection_test', '--jobs=2', '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $expandedTests = @('msbuild_tests', 'server_client_tests', 'terminal_contract_tests', 'self_real_tests')
+    $testArguments = @('test') + @($expandedTests | ForEach-Object { "//:$_" }) + @('--jobs=2', '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $testLogs = & $bazel info bazel-testlogs
+    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the analysis-test report.' }
+    $testLogs = $testLogs.Replace('/', '\')
+    $testStart = [DateTime]::UtcNow
+    try {
+        Invoke-BazelStep 'expanded-unit-tests' $testArguments
+    }
+    finally {
+        # Preserve this run's reports before outcome validation so failed suites remain in the uploaded evidence.
+        foreach ($name in $expandedTests) {
+            $testReport = Join-Path $testLogs "$name\test.outputs\tests.trx"
+            try {
+                if ((Test-Path -LiteralPath $testReport) -and (Get-Item -LiteralPath $testReport).LastWriteTimeUtc -ge $testStart) {
+                    Copy-Item -LiteralPath $testReport -Destination (Join-Path $directory "$name.trx")
+                }
+            }
+            catch {
+                Write-Warning "Could not preserve $testReport`: $_"
+            }
+        }
+    }
+
     $executionRoot = & $bazel info execution_root
     if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
     $executionRoot = $executionRoot.Replace('/', '\')
-    $testLogs = & $bazel info bazel-testlogs
-    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the analysis-test report.' }
+
+    $compatibilityInventories = [ordered]@{}
+    foreach ($framework in @('netstandard2_0', 'net462')) {
+        $files = @(& $bazel cquery "//:managed_$framework" --output=files --noshow_progress)
+        if ($LASTEXITCODE -ne 0) { throw "Could not locate the $framework compatibility inventory." }
+        $inventoryPaths = @($files | Where-Object { $_.EndsWith("/managed_$framework.json", [StringComparison]::Ordinal) })
+        if ($inventoryPaths.Count -ne 1) { throw "Expected one $framework compatibility inventory." }
+        $inventoryPath = Join-Path $executionRoot $inventoryPaths[0].Replace('/', '\')
+        $inventory = @(Get-Content -LiteralPath $inventoryPath -Raw | ConvertFrom-Json)
+        $expectedCount = if ($framework -eq 'netstandard2_0') { 26 } else { 5 }
+        $expectedFramework = if ($framework -eq 'netstandard2_0') { 'netstandard2.0' } else { 'net462' }
+        if ($inventory.Count -ne $expectedCount -or
+            @($inventory | Where-Object target_framework -NE $expectedFramework).Count -ne 0) {
+            throw "The $framework inventory did not contain exactly $expectedCount exact-framework assemblies."
+        }
+        Copy-Item -LiteralPath $inventoryPath -Destination (Join-Path $directory "managed_$framework.json")
+        $compatibilityInventories[$framework] = $inventory.Count
+    }
+
+    $testCounts = [ordered]@{}
+    foreach ($name in $expandedTests) {
+        $testReport = Join-Path $directory "$name.trx"
+        if (-not (Test-Path -LiteralPath $testReport)) { throw "$name did not produce a test report in this run." }
+        $testCounts[$name] = Assert-ExpandedTrx $testReport
+    }
+
     foreach ($test in @('windows_targeting_test', 'windows_asset_selection_test')) {
-        $testReport = Join-Path $testLogs.Replace('/', '\') "$test\test.xml"
+        $testReport = Join-Path $testLogs "$test\test.xml"
         [xml]$testXml = Get-Content -LiteralPath $testReport -Raw
         if (@($testXml.SelectNodes('//testcase')).Count -ne 1 -or @($testXml.SelectNodes('//failure | //error | //skipped')).Count -ne 0) {
             throw "$test did not execute successfully."
@@ -176,7 +245,7 @@ try {
         }
     }
     $succeeded = $true
-    Write-Host "Native Windows libraries and seven consumers passed. No app registration or XAML compilation was exercised. Evidence: $directory"
+    Write-Host "Native compatibility and Windows libraries, seven consumers, and four additional unit suites passed. No app registration or XAML compilation was exercised. Evidence: $directory"
 }
 finally {
     [pscustomobject]@{
@@ -184,7 +253,9 @@ finally {
         Revision = $revision
         WorkingTree = $sourceState
         Inputs = $inputHashes
+        CompatibilityInventories = $compatibilityInventories
         Consumers = $consumers
+        Tests = $testCounts
         Steps = $steps
     } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
     Pop-Location

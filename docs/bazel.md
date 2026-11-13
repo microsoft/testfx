@@ -52,10 +52,11 @@ It does not claim SDK12 bundled-pack defaults or net12.0 targeting.
 the decision record distinguishes successful native builds/consumers from
 synthetic verifier checks. The default remains SDK11.
 
-The bootstrap supports Windows x64, Linux x64, and macOS arm64. Windows was
-executed locally; the added Windows/Linux CI job is configuration, not evidence
-that CI or Linux has run. Other architectures can use Bazelisk with
-`.bazelversion`, subject to the rules' platform support.
+The bootstrap supports Windows x64, Linux x64, and macOS arm64. The
+`bazel.yml` workflow runs on Windows and Linux; see
+[Measured CI duration](#measured-ci-duration). macOS arm64 is not exercised by
+CI. Other architectures can use Bazelisk with `.bazelversion`, subject to the
+rules' platform support.
 
 On Windows, the default output root is
 `<checkout-drive>:\tfb\<hash-of-worktree-path>` to avoid batch-file path limits.
@@ -442,6 +443,17 @@ checks each action's declared inputs. A cache miss or eviction runs the same
 full validation rather than skipping work.
 PRs remain cold until the first successful compatible `main` seed is available.
 
+The Windows job also runs `eng/bazel/windows/validate.ps1`: it builds the
+`netstandard2.0`/`net462` compatibility variants and Windows-qualified libraries,
+executes seven native Windows consumers, and runs four additional existing unit
+test suites with result-cache reuse disabled. The analyzer and extensions unit
+suites are not yet included because their Bazel test fixtures do not match
+existing tests' assembly metadata, process output, and runtime-layout
+assumptions. It also does not include the full MTP unit suite (which has two
+known host-blocked failures), XAML compilation, or app-model activation. The
+[measured durations](#measured-ci-duration) above predate this expanded
+workload and are not timing estimates for the updated Windows job.
+
 Before a successful main save, the stopped job trims oldest cache files to
 1,536 MiB of download payload and 512 MiB of action payload: at most 2 GiB
 uncompressed per platform for a new snapshot pair. Missing blobs are ordinary
@@ -475,6 +487,20 @@ the **whole job**, including transfers and artifact handling, and inspect BEP
 cache-hit statistics before reporting a speedup. Whole-archive snapshots incur
 transfer/extraction overhead and GitHub cache quota/eviction; a remote action
 cache remains a possible later optimization, not part of this change.
+
+## Measured CI duration
+
+Successful jobs from 2026-11-06 18:52 UTC
+([#12253](https://github.com/microsoft/testfx/pull/12253) added the Bazel cache)
+to 2026-11-13; durations exclude queue wait.
+
+| Job | Projects built | Tests run | Median | P90 | Successful jobs |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Bazel Windows | 35 product (net8.0-net11.0), 10 test targets (net10.0), 3 packages | 3,801 (net10.0 only) | 4.5 min | 7.7 min | 233 |
+| Bazel Linux | 35 product (net8.0-net11.0), 9 test targets (net10.0), 3 packages | 2,327 (net10.0 only) | 3.2 min | 6.1 min | 233 |
+| Normal CI Windows Debug | 67 (`TestFx.slnx`, all TFMs) | ~55,000 (unit, all TFMs) | 27.5 min | 32.6 min | 88 |
+| Normal CI Windows Release | 67 (`TestFx.slnx`, all TFMs) | ~57,000 (unit, integration, acceptance) | 87.2 min | 92.8 min | 62 |
+| Normal CI Linux Release | 50 (`NonWindowsTests.slnf`, all TFMs) | ~26,000 (unit, acceptance) | 46.1 min | 47.9 min | 75 |
 
 ## Build-and-test cache dogfood
 
