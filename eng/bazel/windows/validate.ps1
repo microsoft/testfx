@@ -118,13 +118,31 @@ try {
     Invoke-BazelStep 'windows-targeting' @('test', '//:windows_targeting_test', '//:windows_asset_selection_test', '--jobs=2', '--nocache_test_results', '--noshow_progress', '--show_result=0')
     $expandedTests = @('msbuild_tests', 'server_client_tests', 'terminal_contract_tests', 'self_real_tests')
     $testArguments = @('test') + @($expandedTests | ForEach-Object { "//:$_" }) + @('--jobs=2', '--nocache_test_results', '--noshow_progress', '--show_result=0')
-    Invoke-BazelStep 'expanded-unit-tests' $testArguments
+    $testLogs = & $bazel info bazel-testlogs
+    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the analysis-test report.' }
+    $testLogs = $testLogs.Replace('/', '\')
+    $testStart = [DateTime]::UtcNow
+    try {
+        Invoke-BazelStep 'expanded-unit-tests' $testArguments
+    }
+    finally {
+        # Preserve this run's reports before outcome validation so failed suites remain in the uploaded evidence.
+        foreach ($name in $expandedTests) {
+            $testReport = Join-Path $testLogs "$name\test.outputs\tests.trx"
+            try {
+                if ((Test-Path -LiteralPath $testReport) -and (Get-Item -LiteralPath $testReport).LastWriteTimeUtc -ge $testStart) {
+                    Copy-Item -LiteralPath $testReport -Destination (Join-Path $directory "$name.trx")
+                }
+            }
+            catch {
+                Write-Warning "Could not preserve $testReport`: $_"
+            }
+        }
+    }
 
     $executionRoot = & $bazel info execution_root
     if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
     $executionRoot = $executionRoot.Replace('/', '\')
-    $testLogs = & $bazel info bazel-testlogs
-    if ($LASTEXITCODE -ne 0) { throw 'Could not locate the analysis-test report.' }
 
     $compatibilityInventories = [ordered]@{}
     foreach ($framework in @('netstandard2_0', 'net462')) {
@@ -146,14 +164,13 @@ try {
 
     $testCounts = [ordered]@{}
     foreach ($name in $expandedTests) {
-        $testReport = Join-Path $testLogs.Replace('/', '\') "$name\test.outputs\tests.trx"
-        $count = Assert-ExpandedTrx $testReport
-        Copy-Item -LiteralPath $testReport -Destination (Join-Path $directory "$name.trx")
-        $testCounts[$name] = $count
+        $testReport = Join-Path $directory "$name.trx"
+        if (-not (Test-Path -LiteralPath $testReport)) { throw "$name did not produce a test report in this run." }
+        $testCounts[$name] = Assert-ExpandedTrx $testReport
     }
 
     foreach ($test in @('windows_targeting_test', 'windows_asset_selection_test')) {
-        $testReport = Join-Path $testLogs.Replace('/', '\') "$test\test.xml"
+        $testReport = Join-Path $testLogs "$test\test.xml"
         [xml]$testXml = Get-Content -LiteralPath $testReport -Raw
         if (@($testXml.SelectNodes('//testcase')).Count -ne 1 -or @($testXml.SelectNodes('//failure | //error | //skipped')).Count -ne 0) {
             throw "$test did not execute successfully."
