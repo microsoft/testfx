@@ -35,6 +35,7 @@ See full log [of v4.5.3...main](https://github.com/microsoft/testfx/compare/v4.5
 * Negotiate JSON-RPC `client/showMessage` user output between the server and source-only client, retaining `client/log` for legacy or unacknowledged peers, by @drognanar in [#11712](https://github.com/microsoft/testfx/pull/11712)
 * Include available UTC start and stop timestamps alongside test durations in JSON-RPC results, consistently across the System.Text.Json and legacy Jsonite serializers while omitting unknown endpoints, by @Evangelink in [#12191](https://github.com/microsoft/testfx/pull/12191)
 * Add `--report-gh-attachments <directory>` to stage failed-test attachments and per-test association manifests for workflow-managed upload and download links. The option requires an absolute directory and does not authenticate to GitHub or upload files from the test process, by @Evangelink in [#12184](https://github.com/microsoft/testfx/pull/12184)
+* Ship native `win-arm64` packaged-app controller layouts in `Microsoft.Testing.Extensions.PackagedApp.MSBuild`, beside `win-x64`, so ARM64 machines run packaged WinUI and UWP tests without an x64 .NET runtime or emulation. The controller layouts moved to `tools/AppModelController/<tfm>/<rid>/`; the targets select the architecture from the .NET SDK in use (override with `TestingPlatformPackagedAppControllerArchitecture` set to `x64` or `arm64`). The controller's architecture is independent of the packaged application's architecture.
 
 ### Changed
 
