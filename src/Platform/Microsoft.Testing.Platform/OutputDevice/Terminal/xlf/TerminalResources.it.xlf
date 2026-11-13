@@ -409,7 +409,7 @@
       </trans-unit>
       <trans-unit id="RuntimeFramework">
         <source>runtime: {0}</source>
-        <target state="new">runtime: {0}</target>
+        <target state="translated">runtime: {0}</target>
         <note>{0} is the executing runtime framework, shown after the target framework and process architecture when the runtime differs or the target is unknown.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
@@ -451,9 +451,9 @@
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</target>
+        <target state="translated">Verificare se vengono generati caratteri di escape ANSI.
+I valori validi sono 'auto' (impostazione predefinita), 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0').
+'on' forza i codici di escape ANSI (incluso lo spostamento del cursore) anche quando stdout viene reindirizzato; associarlo a --progress off se si vogliono solo colori.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -503,10 +503,10 @@ I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinit
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-This option takes precedence over the deprecated --no-progress flag.</target>
+        <target state="translated">Controllare se lo stato viene visualizzato sullo schermo.
+I valori validi sono 'auto' (impostazione predefinita), 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0').
+'auto' mostra lo stato, a meno che il terminale non possa eseguire l'aggiornamento sul posto, ad esempio con --ansi off o in CI.
+Questa opzione ha la precedenza sul flag --no-progress deprecato.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
