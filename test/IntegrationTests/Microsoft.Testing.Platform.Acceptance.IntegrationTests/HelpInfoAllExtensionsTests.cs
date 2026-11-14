@@ -78,8 +78,6 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --no-progress
-        [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
         Preset the per-test result blocks shown in the terminal.
         Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
@@ -87,7 +85,6 @@ Options:
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-        This option takes precedence over the deprecated --no-progress flag.
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
@@ -455,10 +452,6 @@ Built-in command line providers:
         Description: Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-      --no-progress
-        Arity: 0
-        Hidden: False
-        Description: [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
       --output
         Arity: 1
         Hidden: False
@@ -470,7 +463,6 @@ Built-in command line providers:
         Description: Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-        This option takes precedence over the deprecated --no-progress flag.
       --show-flaky-tests
         Arity: 0..1
         Hidden: False

@@ -518,7 +518,7 @@ An MTP terminal-reporter command-line option that controls progress output durin
 | `on` | Same as `auto` |
 | `off` | Suppress all progress output |
 
-Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a replacement for the former `--no-progress` flag. `--no-progress` continues to work as a deprecated alias that routes to `--progress off`; outside of CI it emits a one-per-process deprecation warning on stderr. The warning is suppressed in CI environments, where it would be invisible noise and where build infrastructure (such as the Arcade SDK test runner) passes `--no-progress` unconditionally. `--progress` always wins when both are supplied.
+Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a replacement for the former `--no-progress` flag. MTP 2.x accepts `--no-progress` as a deprecated alias; MTP 3 removes that application option, so use `--progress off`. This does not remove the native SDK's separately parsed `dotnet test --no-progress` option.
 
 On CI, piped, and redirected non-cursor terminals, a progress line is emitted after
 60 seconds without visible reporter output. Hidden passing results do not postpone

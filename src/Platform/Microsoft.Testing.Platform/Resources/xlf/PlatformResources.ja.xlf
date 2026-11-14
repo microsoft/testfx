@@ -1262,11 +1262,6 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
         <target state="translated">テレメトリ プロバイダーは既に設定されています</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">警告: --no-progress は非推奨です。代わりに --progress off を使用してください。</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">'ITestFrameworkInvoker' ファクトリは既に設定されています</target>

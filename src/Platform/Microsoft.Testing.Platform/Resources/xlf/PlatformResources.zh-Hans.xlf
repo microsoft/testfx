@@ -1262,11 +1262,6 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
         <target state="translated">已设置遥测提供程序</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">警告: --no-progress 已弃用；请改用 --progress off。</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">已设置“ITestFrameworkInvoker”工厂</target>

@@ -330,16 +330,268 @@ renderer behavior, a second correctly resized terminal grid, and CI for the
 published head. These do not imply those checks passed. No source-generation
 runtime variant is credited merely because its fixture compiled.
 
+### 2026-11-11: final progress-alias follow-up
+
+The final follow-up starts from TestFx
+`ecee016ececdffa3d8b8fbdc835055e3cc6cbe21`. The three earlier implementation
+PRs (#12316, #12317, and #12319) are merged. This branch proposes removing the
+remaining MTP `--no-progress` registration, precedence/warning state, resources,
+and compatibility expectations. The supported application spelling remains
+`--progress off`; the native SDK's separately parsed switches are unchanged.
+
+The dependency is still a merge gate, not a completed migration.
+`global.json` now pins Arcade **12.0.0-beta.26560.9**, whose source
+`305558e284ce35e7b35ac9ebd75802915394fd3e` still appends `--no-progress`.
+[dotnet/arcade#17784](https://github.com/dotnet/arcade/pull/17784), open at
+`e7c0fe16e0266cfa6847d466eeb88ee9cb5e6d7a` when inspected, changes that producer
+to `--progress off`. Do not merge this removal until a published Arcade SDK
+containing that change has flowed into TestFx. No mirrored runner fork,
+argument-stripping workaround, or claim that the current stock runner works
+without the alias is part of this follow-up.
+
+Validation uses the existing terminal option/unit and packed acceptance
+fixtures: retain canonical progress/default behavior, reject the retired option
+both alone and alongside `--progress off`, and reconcile MTP/MSTest help/info.
+Use the same rejection assertions against preserved baseline packages and newly
+packed removal packages to establish sensitivity. Executed results follow below.
+The follow-up PR will be draft while the dependency is unavailable and will use
+a closing reference to #12314 so that the issue closes on merge, not before.
+
+The progress help text uses a fresh
+`TerminalProgressReportingOptionDescription` resource ID. Reusing the previous
+key could retain translations that still advertise precedence over the removed
+alias. Only the neutral resources and hand-maintained accessor were edited;
+the owning platform's `UpdateXlf` target regenerated the catalogs. The shipped
+internal API baseline is preserved, with an explicit unshipped `*REMOVED*`
+entry for `NoProgressOption`.
+
+| Requirement / consumer | Focused automated evidence | Boundary |
+| --- | --- | --- |
+| The retired application option is not registered. | `TerminalTestReporterCommandLineOptionsProviderTests.GetCommandLineOptions_DoesNotIncludeNoProgressOption` | Source-linked provider on net10/net11/net462. |
+| A real packaged host rejects the retired spelling. | `AnsiOptionTests.NoProgressOption_IsRejectedAsUnknownOption` | Exit 5 and the exact unknown-option diagnostic. The existing helper also supplies `--progress off`, covering the former precedence combination. |
+| Canonical progress values and defaults remain unchanged. | `ValidateOptionArguments_ProgressOption_AcceptsValidValues`, `ValidateOptionArguments_ProgressOption_RejectsInvalidValues`, `IsProgressEnabled_ProgressOption_ReturnsRequestedState`, and `IsProgressEnabled_NoProgressOptions_ReturnsTrue`; existing `AnsiOptionTests` execute packaged passing consumers with the helper's `--progress off`. | Invalid canonical values still fail validation; default/on/off behavior and ANSI independence are retained. |
+| MTP and MSTest advertise only supported application options. | `HelpInfoTests.Help_WhenNoExtensionRegistered_OutputDefaultHelpContent`, `Info_WhenNoExtensionRegistered_OutputDefaultInfoContent`, `HelpInfoAllExtensionsTests.Help_WithAllExtensionsRegistered_OutputFullHelpContent`, `Info_WithAllExtensionsRegistered_OutputFullInfoContent`, and MSTest's `Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension` / `Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension`. | Packed net10/net11/net462 consumers; native SDK-owned options are not removed. |
+
+Both affected test assemblies retain method-level parallelization with CPU-count
+workers. The provider tests use per-test option dictionaries; the packed ANSI
+fixture is built once, then executed read-only in separate child processes.
+Deleting warning-only tests also deletes their reflection-based static reset and
+console-capture helper. The unit class's existing console resource lock remains
+for its other console users; no scheduling or lock declaration is weakened.
+
+#### Executed follow-up evidence
+
+The tested source is base `ecee016ececdffa3d8b8fbdc835055e3cc6cbe21` plus the
+production/test patch with SHA-256
+`C45C69018E08E3CD2F7C2FAA1C4F9FA992179BDEDA67C3876DBA50E80ACF987D`.
+The patch includes neutral/generated resources and the API removal record.
+Its hash was checked again after all runs; subsequent edits are documentation
+only. This identifies the actual dirty build state, not a fictional committed
+or CI-verified package.
+
+The pinned SDK was **12.0.100-alpha.1.26556.115**. Shipping projects compiled
+their normal target frameworks, including legacy assets and default UAP
+packaging; the outer acceptance hosts target net12.0, while their generated
+consumers exercise net11.0, net10.0, and net462.
+
+The source-only solution filter contains all 41 `src/**/*.csproj` projects from
+`TestFx.slnx`. The test-owner filter contains only platform units and MTP
+acceptance; the MSTest acceptance owner had already compiled successfully in
+the initial strict selection. Both filters are task-owned artifacts, not
+repository build changes.
+
+```powershell
+# Baseline product, before the production edits: exit 0, no warnings/errors.
+& .\eng\build.ps1 -restore -build -pack -c Release -projects .\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -binaryLog -nodeReuse:$false /m:2 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false '-bl:artifacts\log\Release\no-progress-baseline-pack-{}.binlog'
+
+# $evidence is the task-owned artifact directory containing the generated filters.
+# Correct product: exit 0, no warnings/errors; 32 shipping packages and pack guards passed.
+& .\eng\build.ps1 -restore -build -pack -c Release -projects "$evidence\shipping.slnf" -binaryLog -nodeReuse:$false /m:4 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false '/bl:artifacts\log\Release\no-progress-green-shipping-pack-{}.binlog'
+
+# Test owners only: exit 0, 22 existing MSTEST0037 warnings, no errors.
+& .\eng\build.ps1 -build -c Release -projects "$evidence\test-owners.slnf" -binaryLog -nodeReuse:$false /m:4 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false /p:BuildProjectReferences=false /p:WarningsNotAsErrors=MSTEST0037 /warnnotaserror:MSTEST0037 '/bl:artifacts\log\Release\no-progress-test-owner-build-final-{}.binlog'
+```
+
+The strict source-plus-owner selection failed with **22 MSTEST0037 errors** in
+untouched assertions. These are not fixed or suppressed in this PR. Only the
+local test-owner invocation demotes that rule; shipping compilation/pack remains
+strict. An initial local `NoWarn=MSTEST0037` attempt was rejected because global
+`NoWarn` replaced the projects' normal exclusions, re-enabling MSTEST0084 and
+SA0001. The final command preserves those exclusions. Other discarded setup
+attempts were a canceled over-broad solution build and a semicolon-separated
+project argument rejected with MSB1006; neither is test or regression evidence.
+
+All focused host runs used the following arguments, with a unique result
+directory per run, and separate `--list-tests json` discovery using the same
+filter. TRX was checked against that discovery plan with `verify_execution.py`;
+JUnit and CTRF case counts and failure/skip outcomes were reconciled too.
+
+```powershell
+$unitFilter = 'FullyQualifiedName~TerminalTestReporterCommandLineOptionsProviderTests|FullyQualifiedName~TerminalOutputDeviceTests|FullyQualifiedName~LegacyExtensionContractTests'
+$mtpFilter = 'FullyQualifiedName~AnsiOptionTests|FullyQualifiedName~HelpInfoTests|FullyQualifiedName~HelpInfoAllExtensionsTests'
+$mstestFilter = 'FullyQualifiedName~HelpInfoTests'
+$rejectionFilter = 'FullyQualifiedName~AnsiOptionTests.NoProgressOption_IsRejectedAsUnknownOption'
+
+# $hostExecutable/$prefix select the already-built module below; no MSBuild runs here.
+& $hostExecutable @prefix --filter $filter --ansi off --progress off --show-test-results failed --results-directory $results --report-trx --report-trx-filename execution.trx --report-junit --report-junit-filename execution.junit.xml --report-ctrf --report-ctrf-filename execution.ctrf.json
+```
+
+| Module / selection | Selected / executed / passed / failed / skipped | Host exit |
+| --- | --- | --- |
+| Platform units, net10.0, `$unitFilter` | 180 / 180 / 180 / 0 / 0 | 0 |
+| Platform units, net11.0, `$unitFilter` | 180 / 180 / 180 / 0 / 0 | 0 |
+| Platform units, net462, `$unitFilter` | 181 / 181 / 181 / 0 / 0 | 0 |
+| MTP acceptance, net12.0, `$mtpFilter` | 47 / 47 / 47 / 0 / 0 | 0 |
+| MSTest acceptance, net12.0, `$mstestFilter` | 6 / 6 / 6 / 0 / 0 | 0 |
+| Same MTP acceptance harness, baseline inner package, `$rejectionFilter` | 1 / 1 / 0 / 1 / 0 | 2, intended assertion failure |
+| Same MTP acceptance harness, restored removal package, `$rejectionFilter` | 1 / 1 / 1 / 0 / 0 | 0 |
+
+Modern modules were launched with the repository's `.dotnet\dotnet.exe` and
+`artifacts\bin\<module>\Release\<tfm>\<module>.dll`; net462 units use their
+`.exe` directly. The first net462 invocation incorrectly looked for a DLL and
+never executed; correcting the launcher produced the 181-case run above.
+
+**Test-value evidence:** the unchanged acceptance assembly SHA-256 was
+`B2375E07D02623897B33E88B60AEF4D9EFDB474E62ED5C911E3AC3D73D250511`
+in both package states. The red assertion reported **expected exit 5, actual
+exit 0**, with the baseline child actually executing and passing `Test1`.
+The same selection then passed with the removal package. Compilation, setup,
+or zero-test failures are not credited as sensitivity proof.
+
+| Product payload | Baseline | Removal |
+| --- | --- | --- |
+| Core `3.0.0-dev.nupkg` SHA-256 | `E687CB9DC8E0A676358EFC48ADCC9174134CBE9891CF237AD1545AA6C15CF224` | `B0A6A2A8C22CC95D2F1C0CF7CDA10B9628D2B555E26699F7B7BEFF84ECE91AA9` |
+| Executed net11 core DLL SHA-256 | `ED0E7904EA71D213F388025CC3D56B73262644D8CC1F23E4A16A769BADA63CBE` | `A795A7460079B508452D128821EB3C9FF43356EFF7C9393ACE2535B80AA328CD` |
+
+Each package state used a fresh, marked task-owned cache through
+`TESTFX_COLLECTION_NUGET_CACHE`. `project.assets.json`, cache archives, and
+physical consumer DLLs were inspected. All 20 initial green consumer core
+copies, both red copies, and both replay copies matched their own packed
+payloads. The shipping feed was restored to the removal package in `finally`;
+no shared package cache was cleared. A standalone host trace also resolved the
+executed core from the verified green asset directory.
+
+The real pinned native SDK separately executed the source-generation output of
+the packed MSTest help fixture:
+
+```powershell
+& .\.dotnet\dotnet.exe test --test-modules HelpInfo.dll --root-directory "$asset\HelpInfo\bin\SourceGen\Release\net11.0" --no-ansi --no-progress --show-test-results all
+```
+
+**Exit 0: exactly `Test` passed, total 1, failed/skipped 0, no ANSI escapes.**
+This is module mode without MSBuild. Its SDK-owned negative switches were not
+forwarded to the application. An initial attempt to add TRX options failed
+because this deliberately minimal help fixture does not register that reporter;
+the successful preservation run omits those unsupported options rather than
+adding dependencies. The regular acceptance runs above still exercise all
+three configured report formats. Directly launching the green ANSI fixture
+with only `--no-progress` returned **5** and the unknown-option diagnostic.
+
+The terminal canvas rendered the actual green packed host's
+`--help --ansi off` at **80 columns x 24 rows**; two settled reads confirmed
+readable option indentation, canonical progress help without the removed row
+or precedence sentence, and help exit 0. A text transcript is clearer than an
+image for this option removal. No second resized grid or non-Windows runtime
+execution is claimed. Localization passed 41 guard self-tests and all 364
+catalogs; all 11 changed C# files retained their UTF-8 BOMs.
+
+Logs, discovery plans, TRX/JUnit/CTRF, package/consumer hash manifests, and
+counterfactual diagnostics are retained in task-owned artifact storage. The
+counts, decisive assertion, commands, and package hashes above preserve the
+reviewable evidence without relying solely on local absolute paths. Published
+head CI and a stock Arcade `-test` pass remain unproven; the latter is blocked
+by the dependency below.
+
+After archiving the execution reports and consumer manifests, all six owned
+generated-asset directories and four marked comparison caches were removed.
+The demonstration terminal was stopped, and no private process using this
+worktree's SDK remained. Shipping outputs, baseline/removal package snapshots,
+and diagnostic evidence were retained; no borrowed cache or process was changed.
+
+### 2026-11-13: rebase and review readiness
+
+The follow-up was rebased onto main
+`e92578e3a4c076150c8b4174fbe04bd5b9df91d6`. Git applied the commit without
+textual conflict markers, preserving main's newer source and translations.
+The owning platform's `UpdateXlf` target was then rerun: ten translated catalogs
+still contained the obsolete `TerminalProgressModeOptionDescription` unit after
+the automatic merge. Regeneration removed those units without hand-editing any
+translation. The localization guard's 41 self-tests and all 364 catalogs passed.
+
+[dotnet/arcade#17784](https://github.com/dotnet/arcade/pull/17784) is now merged
+at `d3c2ebbd7d9a81318117839335ba7e8540c3d77f`. The newly inherited Arcade pin
+is **12.0.0-beta.26562.1**, source
+`ffc98fd0de10a312712802f9b6b43da9326781fc`, which is the merge commit's parent.
+Its actual runner target still appends `--no-progress`. No build for the fix's
+exact commit was registered in BAR when checked, and no compatible replacement
+package was established for this rebase. Readiness is therefore **ready for
+review at the user's request**, not a claim that the package-flow prerequisite
+or a stock Arcade test run has passed. The PR must retain that merge blocker.
+
+The November 11 execution and counterfactual evidence above remains bound to
+that earlier source/package state. Rebased validation is recorded separately;
+it must not be presented as a replay of those earlier packages.
+
+The rebased production/test delta against that main revision, including the
+regenerated catalogs, has SHA-256
+`3CA456F8DD10B2E5BEF20A39E23BA51A2F346C3CFB5E8B4CD962CAF3FD7E489F`.
+The same repository SDK **12.0.100-alpha.1.26556.115** was used with the
+updated pinned runtimes. The generated validation filter contains all 41
+shipping source projects and the three affected test owners; no samples,
+unrelated unit projects, or warning-policy overrides are included.
+
+```powershell
+& .\eng\build.ps1 -restore -build -pack -c Release -projects "$evidence\rebase\validation.slnf" -binaryLog -nodeReuse:$false /m:4 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false '/bl:artifacts\log\Release\no-progress-rebase-pack-{}.binlog'
+# Exit 0: zero warnings/errors; shipping packages and package guards passed.
+
+& "$evidence\run-validation.ps1" -Suite unit -Framework net10.0 -RunName rebase-unit-net10
+# Exit 0: 179 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite unit -Framework net11.0 -RunName rebase-unit-net11
+# Exit 0: 179 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite unit -Framework net462 -RunName rebase-unit-net462
+# Exit 0: 180 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite mtp -Framework net12.0 -RunName rebase-mtp
+# Exit 0: 47 selected/executed/passed, zero failed/skipped.
+& "$evidence\run-validation.ps1" -Suite mstest -Framework net12.0 -RunName rebase-mstest
+# Exit 0: 6 selected/executed/passed, zero failed/skipped.
+```
+
+The helper uses the same explicit filters, independent JSON discovery, host
+arguments, and TRX/JUnit/CTRF checks documented above. Thus **538 unit cases
+and 53 packed acceptance cases passed**, with no skips. The unit count is
+three lower than the historical run because upstream removed its obsolete
+cancelled-state data row on each TFM; that change was preserved. The new
+`NoProgressOption_IsRejectedAsUnknownOption` case and all canonical-progress
+cases still execute. Unlike the November 11 owner build, this strict build
+needs no MSTEST0037 demotion.
+
+The freshly packed core nupkg SHA-256 is
+`E86B9599C5E8BF7A0247D6EC15996BBB0BFE729CE1A3935B1ABDCEDDEEB072B1`;
+both acceptance caches matched that archive and all 20 physical consumer core
+DLLs matched its TFM-specific payloads. The real native SDK module invocation
+documented above was repeated against this run's source-generated MSTest
+`HelpInfo` output: **`Test` passed, exit 0, total 1, failed/skipped 0, no ANSI
+escapes**. The SDK's negative switches still belong to its own parser.
+
+**Test-value evidence:** these are executed post-rebase preservation runs,
+not a newly executed red phase or CI result. The earlier paired package
+failure/pass remains historical evidence for the unchanged rejection assertion.
+No new behavior is introduced by this rebase. Fresh reports and package/cache
+manifests are retained separately from the November 11 artifacts.
+
 ## Remaining prerequisite
 
-**MTP `--no-progress` removal is blocked**, not implemented. First migrate
-Arcade's `Microsoft.Testing.Platform.targets` to `--progress off`, publish a
-compatible Arcade SDK, and flow that dependency into TestFx. Then remove the
-MTP registration, initialization/warning state, resources, precedence handling,
-internal constant, and corresponding compatibility/help/info expectations.
-The existing alias and its tests remain until that prerequisite is satisfied.
+**The final MTP `--no-progress` removal is proposed in this follow-up, but
+blocked from merge.** Arcade's `Microsoft.Testing.Platform.targets` must use
+`--progress off`, a compatible Arcade SDK must be published, and that dependency
+must flow into TestFx before merging this branch. The current pin still passes
+the retired argument and would make the stock test runner fail command-line
+validation. This branch removes the MTP registration, initialization/warning
+state, resources, precedence handling, internal constant, and corresponding
+compatibility/help/info expectations; it does not bypass the dependency gate.
 
-The native SDK's separate `--no-ansi` spelling is also not migrated: a future
-SDK must honor `--ansi off` in its own renderer before the module-pool producer
-can replace that SDK-owned argument. Neither prerequisite authorizes changes to
-Arcade or the SDK in this PR.
+The native SDK's separately parsed `--no-ansi` and `--no-progress` options are
+not removed by this MTP-only change, and their retirement is not a prerequisite
+for closing #12314. The module pool correctly retains SDK-owned `--no-ansi`;
+replacing it would require support in the SDK renderer and remains outside this
+PR's scope.

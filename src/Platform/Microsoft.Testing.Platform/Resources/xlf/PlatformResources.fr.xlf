@@ -1262,11 +1262,6 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
         <target state="translated">Le fournisseur de télémétrie est déjà défini</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">avertissement : --no-progress est déconseillé, utilisez --progress off à la place.</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">Désolé, une fabrique « ITestFrameworkInvoker » est déjà définie</target>

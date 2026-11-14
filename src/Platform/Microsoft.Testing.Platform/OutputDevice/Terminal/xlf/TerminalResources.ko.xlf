@@ -461,11 +461,6 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
         <target state="translated">--ansi에는 값이 'auto', 'on'(또는 'true', 'enable', '1') 또는 'off'(또는 'false', 'disable', '0')인 단일 매개 변수가 필요합니다.</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
-      <trans-unit id="TerminalNoProgressOptionDescription">
-        <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="translated">[더 이상 사용되지 않음, 대신 '--progress off' 사용] 화면에 대한 보고 진행률을 비활성화합니다.</target>
-        <note>{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
@@ -498,21 +493,19 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <target state="translated"> | 아직 완료된 테스트 없음</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalProgressModeOptionDescription">
-        <source>Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="translated">진행률을 화면에 표시할지 여부를 제어합니다.
-유효한 값은 'auto'(기본값), 'on'('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
-'auto'는 터미널이 현재 위치에서 업데이트할 수 없는 경우(예: --ansi off를 사용하거나 CI 환경에서 실행하는 경우)를 제외하고 진행률을 표시합니다.
-이 옵션은 더 이상 사용되지 않는 --no-progress 플래그보다 우선합니다.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
-      </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--progress에는 값이 'auto', 'on'(또는 'true', 'enable', '1') 또는 'off'(또는 'false', 'disable', '0')인 단일 매개 변수가 필요합니다.</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressReportingOptionDescription">
+        <source>Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
         <source>[slow] still running after {0}: {1}</source>

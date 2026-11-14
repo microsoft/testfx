@@ -1262,11 +1262,6 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
         <target state="translated">Dostawca telemetrii jest już ustawiony</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">ostrzeżenie: --no-progress jest przestarzały; zamiast tego użyj --progress off.</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">Fabryka „ITestFrameworkInvoker” jest już ustawiona</target>

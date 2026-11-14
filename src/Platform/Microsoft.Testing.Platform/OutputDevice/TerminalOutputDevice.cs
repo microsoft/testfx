@@ -26,9 +26,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 {
     private const char Dash = '-';
 
-    // Guards the one-per-process deprecation warning emitted when the legacy --no-progress flag is used.
-    private static int s_noProgressDeprecationWarningEmitted;
-
     private readonly IConsole _console;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;

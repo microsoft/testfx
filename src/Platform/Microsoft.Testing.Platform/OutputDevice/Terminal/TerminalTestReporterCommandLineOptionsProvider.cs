@@ -12,7 +12,6 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [Embedded]
 internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
-    public const string NoProgressOption = "no-progress";
     public const string ProgressOption = "progress";
     public const string AnsiOption = "ansi";
     public const string OutputOption = "output";
@@ -41,8 +40,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             TerminalResources.TerminalTestReporterDisplayName,
             TerminalResources.TerminalTestReporterDescription,
             [
-                new(NoProgressOption, TerminalResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-                new(ProgressOption, TerminalResources.TerminalProgressModeOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ProgressOption, TerminalResources.TerminalProgressReportingOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(AnsiOption, TerminalResources.TerminalAnsiModeOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(OutputOption, TerminalResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStdoutOption, TerminalResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
@@ -57,7 +55,6 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
-            NoProgressOption => ValidationResult.ValidTask,
             ProgressOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalProgressOptionInvalidArgument),
@@ -93,10 +90,9 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
         };
 
     internal static bool IsProgressEnabled(ICommandLineOptions commandLineOptions)
-        => commandLineOptions.TryGetOptionArgumentList(ProgressOption, out string[]? arguments)
-            && arguments is { Length: > 0 }
-                ? !CommandLineOptionArgumentValidator.IsOffValue(arguments[0])
-                : !commandLineOptions.IsOptionSet(NoProgressOption);
+        => !commandLineOptions.TryGetOptionArgumentList(ProgressOption, out string[]? arguments)
+            || arguments is not { Length: > 0 }
+            || !CommandLineOptionArgumentValidator.IsOffValue(arguments[0]);
 
     /// <summary>
     /// Resolves <c>--show-flaky-tests</c>. See <see cref="FlakyTestsReportingOptions.IsEnabled"/>.
