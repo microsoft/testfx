@@ -1,0 +1,37 @@
+parameters:
+- name: fastAcceptanceTest
+  type: boolean
+  default: false
+
+steps:
+- task: DownloadBuildArtifacts@1
+  displayName: Download this run's Windows Release outputs
+  inputs:
+    buildType: current
+    downloadType: single
+    artifactName: '$(_WindowsBuildOutputsArtifact)'
+    downloadPath: '$(Agent.TempDirectory)/WindowsBuildOutputs'
+
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    ./eng/windows-build-outputs.ps1 -Action Import `
+      -Configuration '$(_BuildConfig)' `
+      -SourceVersion '$(Build.SourceVersion)' `
+      -ArchivePath '$(Agent.TempDirectory)/WindowsBuildOutputs/$(_WindowsBuildOutputsArtifact)/windows-build-outputs.zip' `
+      -NuGetPackagesRoot '$(Build.SourcesDirectory)/.packages'
+    Write-Host "##vso[task.setvariable variable=_WindowsBuildOutputTestArgs]-p:UseAppHost=false"
+  displayName: Verify and import Windows outputs
+
+# Bootstrap this OS's SDK/runtimes/workloads and restore its project graph. Do not
+# use cibuild.sh: it implicitly enables compilation and packing.
+- script: eng/common/build.sh
+    --configuration $(_BuildConfig)
+    --prepareMachine
+    --ci
+    --restore
+    /p:Test=false
+    /p:Publish=false
+    /p:NonWindowsBuild=true
+    /p:UseAppHost=false
+    /p:FastAcceptanceTest=${{ parameters.fastAcceptanceTest }}
+  displayName: Restore target-OS toolchain and dependencies (no build)

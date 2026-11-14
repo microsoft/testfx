@@ -57,6 +57,10 @@ parameters:
   displayName: "Skip tests"
   type: boolean
   default: False
+- name: UseWindowsBuildOutputs
+  displayName: "Trial Linux/macOS tests using Windows Release outputs"
+  type: boolean
+  default: false
 # The pinned public provider has been validated with bounded single-shard reads and this SDK.
 - name: EnableAffectedTests
   displayName: "Enable affected tests"
@@ -86,6 +90,8 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
+  - name: _WindowsBuildOutputTestArgs
+    value: ''
   # Microsoft.Testing.Platform report/dump arguments for the Windows Debug unit-test command that uses
   # --test-modules. That mode bypasses test/Directory.Build.targets, so the command must restore these options
   # explicitly. The full Release runs evaluate the test projects and receive the same options from that targets file.
@@ -148,6 +154,8 @@ stages:
       displayName: Validate CTS module selection
     - pwsh: ./eng/validate-collection-module-pool.ps1
       displayName: Validate bounded collection scheduling
+    - pwsh: ./eng/test-windows-build-outputs.ps1
+      displayName: Validate cross-platform output transport
     - pwsh: ./eng/test-report-comparison.ps1
       displayName: Validate report comparison
     - bash: |
@@ -280,6 +288,7 @@ stages:
           parameters:
             SkipTests: ${{ parameters.SkipTests }}
             EnableAffectedTests: ${{ parameters.EnableAffectedTests }}
+            UseWindowsBuildOutputs: ${{ and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}
 
       - ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableCTSCollection, true)) }}:
         - job: WindowsCTSComparison
@@ -365,8 +374,11 @@ stages:
         - template: /eng/pipelines/steps/test-windows-app-model.yml
 
       - job: Linux
-        dependsOn: DetectChanges
-        condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        dependsOn:
+        - DetectChanges
+        - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+          - Windows
+        condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), or(eq(${{ and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}, false), ne(dependencies.Windows.outputs['Release.ExportWindowsBuildOutputs.ArtifactName'], '')))
         ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
           timeoutInMinutes: 240
         ${{ else }}:
@@ -376,6 +388,9 @@ stages:
           demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         variables:
           - template: /eng/pipelines/variables/test-env-vars.yml
+          - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+            - name: _WindowsBuildOutputsArtifact
+              value: $[ dependencies.Windows.outputs['Release.ExportWindowsBuildOutputs.ArtifactName'] ]
         strategy:
           matrix:
             Release:
@@ -388,18 +403,26 @@ stages:
                 _CollectAffectedTests: true
                 _TestArtifactsName: AffectedTests
         steps:
+        - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+          - checkout: self
+            clean: true
         - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
           parameters:
             enabled: false
 
-        - script: eng/common/cibuild.sh
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            /p:Test=false
-            /p:Publish=false
-            /p:NonWindowsBuild=true
-            /p:FastAcceptanceTest=true
-          displayName: Build
+        - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+          - template: /eng/pipelines/steps/restore-windows-build-outputs.yml
+            parameters:
+              fastAcceptanceTest: true
+        - ${{ else }}:
+          - script: eng/common/cibuild.sh
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              /p:Test=false
+              /p:Publish=false
+              /p:NonWindowsBuild=true
+              /p:FastAcceptanceTest=true
+            displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           - template: /eng/pipelines/steps/test-non-windows.yml
@@ -412,11 +435,14 @@ stages:
                 affectedTestsMode: run
 
       - job: MacOS
-        dependsOn: DetectChanges
+        dependsOn:
+        - DetectChanges
+        - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+          - Windows
         # Hosted macOS agents have substantially longer and less predictable queue times than the public
         # Linux and Windows pools. Keep macOS coverage on main CI, nightly, and manually queued builds, but
         # exclude it from PR validation so agent availability does not delay the required PR status.
-        condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(variables['Build.Reason'], 'PullRequest'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(variables['Build.Reason'], 'PullRequest'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), or(eq(${{ and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}, false), ne(dependencies.Windows.outputs['Release.ExportWindowsBuildOutputs.ArtifactName'], '')))
         # Build, tests, and report merging have exhausted 90 minutes even when all tests pass.
         # Leave headroom for hosted-agent variability and artifact publishing, without changing hang detection.
         ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
@@ -429,6 +455,9 @@ stages:
           os: macOS
         variables:
           - template: /eng/pipelines/variables/test-env-vars.yml
+          - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+            - name: _WindowsBuildOutputsArtifact
+              value: $[ dependencies.Windows.outputs['Release.ExportWindowsBuildOutputs.ArtifactName'] ]
         strategy:
           matrix:
             Release:
@@ -441,18 +470,26 @@ stages:
                 _CollectAffectedTests: true
                 _TestArtifactsName: AffectedTests
         steps:
+        - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+          - checkout: self
+            clean: true
         - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
           parameters:
             enabled: true
 
-        - script: eng/common/cibuild.sh
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            /p:Test=false
-            /p:Publish=false
-            /p:NonWindowsBuild=true
-            /p:FastAcceptanceTest=true
-          displayName: Build
+        - ${{ if and(parameters.UseWindowsBuildOutputs, not(parameters.SkipTests)) }}:
+          - template: /eng/pipelines/steps/restore-windows-build-outputs.yml
+            parameters:
+              fastAcceptanceTest: true
+        - ${{ else }}:
+          - script: eng/common/cibuild.sh
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              /p:Test=false
+              /p:Publish=false
+              /p:NonWindowsBuild=true
+              /p:FastAcceptanceTest=true
+            displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           - template: /eng/pipelines/steps/test-non-windows.yml
