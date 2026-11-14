@@ -111,6 +111,15 @@ On Windows, `-pack` also runs `eng/verify-nupkgs.ps1`, which checks package meta
 
 For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
 
+Repository builds use MSBuild's experimental multithreaded mode by default,
+including desktop MSBuild on Windows and public/official CI. Windows builds
+require Visual Studio 2026 18.12 or newer. To diagnose a build without
+multithreading, use `build.cmd -mt:0` on Windows or
+`./build.sh --mt false` on Linux/macOS. Direct MSBuild invocations can use
+`/mt:false` to override the inherited `MSBUILDENABLEMULTITHREADED` default.
+Compatibility tests that deliberately opt out and BuildXL's separate native
+scheduler retain their existing behavior.
+
 ### Build layout
 
 MSTest uses Microsoft common infrastructure called [arcade](https://github.com/dotnet/arcade) as such all outputs follow this structure:
@@ -419,4 +428,8 @@ Because an `<Import>` cannot specify the SDK version in the same way as `<Projec
 
 ## Visual Studio version requirement
 
-If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher. Opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.
+Windows command-line builds require Visual Studio 2026 18.12 or newer for
+multithreaded desktop MSBuild, as specified by `tools.vs.version` in
+`global.json`. The repository uses the XML-based `TestFx.slnx` solution format,
+which these versions also support. The command-line multithreading default does
+not change Visual Studio's in-process IDE build scheduling.
