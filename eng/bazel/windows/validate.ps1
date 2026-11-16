@@ -199,8 +199,17 @@ try {
         if ($report.Scenario -cne $probe.Scenario -or ([Version]$report.Runtime).Major -ne $probe.Major) {
             throw "Consumer scenario/runtime mismatch for $($probe.Name)."
         }
-        $expectedCount = if ($probe.Scenario -eq 'packaged') { 2 } elseif ($probe.Scenario -eq 'desktop') { 3 } else { 4 }
-        if (@($report.SourceAssemblies).Count -ne $expectedCount) { throw "Missing source assembly evidence for $($probe.Name)." }
+        $expectedAssemblies = switch ($probe.Scenario) {
+            'packaged' { @('Microsoft.Testing.Extensions.PackagedApp', 'Microsoft.Testing.Platform') }
+            'desktop' { @('MSTest.Windows.UIAutomation', 'MSTest.TestFramework', 'MSTest.TestFramework.Extensions') }
+            'uwp' { @('MSTest.Uwp', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter', 'MSTest.TestFramework.Extensions') }
+            'winui' { @('MSTest.WinUI', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter', 'MSTest.TestFramework.Extensions') }
+        }
+        $actualAssemblies = @($report.SourceAssemblies.Name)
+        if ($actualAssemblies.Count -ne $expectedAssemblies.Count -or
+            (Compare-Object ($expectedAssemblies | Sort-Object -CaseSensitive) ($actualAssemblies | Sort-Object -CaseSensitive) -CaseSensitive)) {
+            throw "Unexpected source assembly identities for $($probe.Name)."
+        }
         if (@($report.SourceAssemblies | Where-Object PublicKeyToken -CNE 'b03f5f7f11d50a3a').Count -ne 0) {
             throw "Source assembly public-signing identity mismatch for $($probe.Name)."
         }
