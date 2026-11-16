@@ -532,8 +532,9 @@ public sealed partial class SdkTests
     private async Task AssertResolvedMSTestReferencesAsync(string projectDirectory, string? expectedAdapterPackageId, string reportName = "resolved-mstest-assets.txt")
     {
         string[] references = await File.ReadAllLinesAsync(Path.Join(projectDirectory, reportName), TestContext.CancellationToken);
-        Assert.ContainsSingle(references.Where(path => path.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
-        Assert.DoesNotContain(path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase), references);
+        string frameworkPath = Assert.ContainsSingle(references.Where(path => path.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
+        string compatibilityPath = Assert.ContainsSingle(references.Where(path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.AreEqual(Path.Join(Path.GetDirectoryName(frameworkPath), "MSTest.TestFramework.Extensions.dll"), compatibilityPath);
         foreach (string assembly in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll", "MSTest.Uwp.dll", "MSTest.WinUI.dll" })
         {
             string[] matches = references.Where(path => path.EndsWith(assembly, StringComparison.OrdinalIgnoreCase)).ToArray();

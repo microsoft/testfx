@@ -285,3 +285,21 @@ framework-behavior test, scheduling exclusion, package policy, or public API is
 needed for this construction-only change. The execution results above remain
 historical evidence for their explicitly identified revisions, not validation
 of a later rebase.
+
+### Incoming binary-compatibility facade
+
+The incoming explicit-package repair retains current main's non-UI type
+forwarders in `MSTest.TestFramework.Extensions.dll`, bundled beside core in
+`MSTest.TestFramework`, without restoring the retired extensions package owner
+or UI implementation. Inspected parent contract
+`a9406f988adb7cab787bddda02431ddfc232f948` contains a nonpackable
+`TestFramework.Compatibility` project and core-package DLL/XML mappings for each
+ordinary TFM. Its package tests check that the facade defines only `<Module>`
+and forwards the expected types to core.
+
+SDK composition assertions must therefore distinguish that facade from the
+removed implementation/package. Require one facade reference beside the single
+core reference, continue rejecting a separate extensions package in the resolved
+composition closure, and keep UI/adapter isolation assertions. Reconcile the
+ordinary-helper and UWP-tooling-opt-out expectations with the same parent repair;
+do not remove the facade or duplicate producer changes in this layer.
