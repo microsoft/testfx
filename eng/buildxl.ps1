@@ -47,6 +47,60 @@ function Get-BuildXLFileSystemMode([string[]] $Paths, [switch] $NoJournal) {
     return 'Journal'
 }
 
+function Initialize-VisualStudioTelemetryMacCache([string] $KeyName = 'Software\Microsoft\VisualStudio\Telemetry\PersistentPropertyBag') {
+    # Windows SDK MSIX tasks start Visual Studio telemetry, which launches getmac.exe without waiting when this
+    # per-user hash is missing. Native BuildXL fails a pip whose child outlives MSBuild by more than 500 ms.
+    # Cache the value Visual Studio telemetry would persist so no tool needs to run getmac inside the sandbox.
+    $valueName = 'mac.address'
+    try {
+        $cached = [Microsoft.Win32.Registry]::GetValue("HKEY_CURRENT_USER\$KeyName", $valueName, $null)
+        if ($cached -is [string]) {
+            # Mirror Visual Studio telemetry: parseable "d:" values are numbers; other strings need a lowercase hash.
+            $number = 0.0
+            $isNumber = $cached.StartsWith('d:', [StringComparison]::Ordinal) -and [double]::TryParse($cached.Substring(2), [ref] $number)
+            if (-not $isNumber -and $cached -cmatch '[a-f0-9]{64}') {
+                return
+            }
+        }
+
+        $output = @(& getmac.exe) -join "`n"
+        $code = $LASTEXITCODE
+        $mac = $null
+        if ($code -eq 0) {
+            $mac = [regex]::Matches($output, '(?:[a-z0-9]{2}[:\-]){5}[a-z0-9]{2}', 'IgnoreCase') |
+                Where-Object { $_.Value -notmatch '(?:00[:\-]){5}00' } |
+                Select-Object -First 1
+        }
+
+        if ($null -eq $mac) {
+            Write-Host "Visual Studio telemetry MAC hash not cached: getmac exited $code without a usable address."
+            return
+        }
+
+        $sha256 = [Security.Cryptography.SHA256]::Create()
+        try {
+            $digest = $sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($mac.Value))
+        }
+        finally {
+            $sha256.Dispose()
+        }
+
+        $hash = [BitConverter]::ToString($digest).Replace('-', '').ToLowerInvariant()
+        $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($KeyName)
+        try {
+            $key.SetValue($valueName, "s:$hash", [Microsoft.Win32.RegistryValueKind]::String)
+        }
+        finally {
+            $key.Dispose()
+        }
+
+        Write-Host 'Cached the Visual Studio telemetry MAC hash before starting BuildXL.'
+    }
+    catch {
+        Write-Host "Visual Studio telemetry MAC hash not cached: $($_.Exception.Message)"
+    }
+}
+
 if ($env:OS -ne 'Windows_NT' -or $env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
     throw 'The experimental BuildXL build requires Windows x64 and PowerShell 7.'
 }
@@ -244,6 +298,7 @@ try {
             Move-Item -LiteralPath $summary -Destination (Join-Path $history "BuildXL.Summary.$([Guid]::NewGuid().ToString('N')).md")
         }
 
+        Initialize-VisualStudioTelemetryMacCache
         $frameworkDescription = if ($TargetFramework) { $TargetFramework } else { 'project target frameworks; classic UAP excluded' }
         Write-Host "BuildXL: $relativeProject ($Configuration, $frameworkDescription). Outputs: $output"
         & $bxl "/config:$config" "/objectDirectory:$output\engine" `
