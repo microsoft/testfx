@@ -42,23 +42,29 @@ $(CommonProductDescription)]]></PackageDescription>
   <Target Name="_AddPackagedAppControllerToPackage" Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <ItemGroup>
       <_PackagedAppControllerFramework Include="$(SupportedNetFrameworks)" />
+      <!-- Each architecture needs its own complete layout: the apphost and the deps.json native assets are RID-specific.
+           Batching on Identity and ControllerRuntimeIdentifier of a single item list builds each pair exactly once. -->
+      <_PackagedAppControllerBuild Include="@(_PackagedAppControllerFramework)" ControllerRuntimeIdentifier="win-x64" />
+      <_PackagedAppControllerBuild Include="@(_PackagedAppControllerFramework)" ControllerRuntimeIdentifier="win-arm64" />
     </ItemGroup>
+    <!-- Builds are intentionally sequential: they share the controller's project references. -->
     <MSBuild Projects="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
              Targets="Build"
-             Properties="Configuration=$(Configuration);TargetFramework=%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0;RuntimeIdentifier=win-x64;SelfContained=false;UseAppHost=true;EnableWindowsTargeting=true"
+             Properties="Configuration=$(Configuration);TargetFramework=%(_PackagedAppControllerBuild.Identity)-windows10.0.19041.0;_PackagedAppControllerRuntimeIdentifier=%(_PackagedAppControllerBuild.ControllerRuntimeIdentifier);SelfContained=false;UseAppHost=true;EnableWindowsTargeting=true"
              RemoveProperties="TargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;UseAppHost;EnableWindowsTargeting" />
-    <Error Condition="!Exists('$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\mstest-appmodel-controller.exe')"
-           Text="The Windows packaged-app controller was not built for %(_PackagedAppControllerFramework.Identity). The integration package requires both win-x64 apphosts on every pack host." />
+    <Error Condition="!Exists('$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerBuild.Identity)-windows10.0.19041.0\%(_PackagedAppControllerBuild.ControllerRuntimeIdentifier)\mstest-appmodel-controller.exe')"
+           Text="The Windows packaged-app controller was not built for %(_PackagedAppControllerBuild.Identity) and %(_PackagedAppControllerBuild.ControllerRuntimeIdentifier). The integration package requires the win-x64 and win-arm64 apphosts on every pack host." />
     <ItemGroup>
-      <_PackagedAppControllerPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\*"
-                                         Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\.*">
-        <ControllerTargetFramework>%(_PackagedAppControllerFramework.Identity)</ControllerTargetFramework>
+      <_PackagedAppControllerPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerBuild.Identity)-windows10.0.19041.0\%(_PackagedAppControllerBuild.ControllerRuntimeIdentifier)\**\*"
+                                         Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerBuild.Identity)-windows10.0.19041.0\%(_PackagedAppControllerBuild.ControllerRuntimeIdentifier)\**\.*">
+        <ControllerTargetFramework>%(_PackagedAppControllerBuild.Identity)</ControllerTargetFramework>
+        <ControllerRuntimeIdentifier>%(_PackagedAppControllerBuild.ControllerRuntimeIdentifier)</ControllerRuntimeIdentifier>
       </_PackagedAppControllerPackageFile>
     </ItemGroup>
     <ItemGroup>
       <!-- Explicit file paths avoid host-dependent implicit directory mapping. -->
       <TfmSpecificPackageFile Include="@(_PackagedAppControllerPackageFile)">
-        <PackagePath>tools/AppModelController/%(_PackagedAppControllerPackageFile.ControllerTargetFramework)/$([System.String]::Copy('%(_PackagedAppControllerPackageFile.RecursiveDir)').Replace('\', '/').TrimStart('/'))%(_PackagedAppControllerPackageFile.Filename)%(_PackagedAppControllerPackageFile.Extension)</PackagePath>
+        <PackagePath>tools/AppModelController/%(_PackagedAppControllerPackageFile.ControllerTargetFramework)/%(_PackagedAppControllerPackageFile.ControllerRuntimeIdentifier)/$([System.String]::Copy('%(_PackagedAppControllerPackageFile.RecursiveDir)').Replace('\', '/').TrimStart('/'))%(_PackagedAppControllerPackageFile.Filename)%(_PackagedAppControllerPackageFile.Extension)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>

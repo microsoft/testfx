@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -29,7 +31,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string controller = Path.Combine(
             Environment.GetEnvironmentVariable("NUGET_PACKAGES")!,
             "microsoft.testing.extensions.packagedapp.msbuild", MicrosoftTestingPlatformVersion,
-            "tools", "AppModelController", "net10.0", "mstest-appmodel-controller.exe");
+            "tools", "AppModelController", "net10.0", RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64",
+            "mstest-appmodel-controller.exe");
         Dictionary<string, string?> environment = new()
         {
             ["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"] = mstest ? "msbuild;packagedapp;mstest" : "msbuild;packagedapp",
@@ -122,6 +125,56 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             },
             lines);
         AssertAlignedPackages(asset.TargetAssetPath);
+    }
+
+    [TestMethod]
+    [DataRow("-p:TestingPlatformPackagedAppControllerArchitecture=arm64", "win-arm64")]
+    [DataRow("-p:TestingPlatformPackagedAppControllerArchitecture=ARM64", "win-arm64")]
+    [DataRow("-p:TestingPlatformPackagedAppControllerArchitecture=x64", "win-x64")]
+    [DataRow("-p:NETCoreSdkRuntimeIdentifier=win-arm64", "win-arm64")]
+    [DataRow("-p:NETCoreSdkRuntimeIdentifier=win-x64", "win-x64")]
+    [DataRow("-p:NETCoreSdkRuntimeIdentifier=win-arm64 -p:TestingPlatformPackagedAppControllerArchitecture=x64", "win-x64")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_SelectsAndStagesControllerForRequestedArchitecture(string arguments, string runtimeIdentifier)
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.exe");
+
+        // Explicitly requesting arm64 on a computer that cannot run it is a misconfiguration the targets report as a warning.
+        bool warnsUnrunnableController = arguments.Contains("TestingPlatformPackagedAppControllerArchitecture=ARM64", StringComparison.OrdinalIgnoreCase)
+            && RuntimeInformation.OSArchitecture != Architecture.Arm64;
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\" {arguments}",
+            warnAsError: !warnsUnrunnableController,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        if (warnsUnrunnableController)
+        {
+            result.AssertOutputContains("selects the arm64 controller, but this computer does not run Windows on an arm64 processor");
+        }
+
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        string stagedDirectory = Path.GetDirectoryName(bootstrapFile)!;
+        Assert.AreEqual(runtimeIdentifier, Path.GetFileName(stagedDirectory));
+
+        // The apphost is the architecture-specific entry point, so its machine type proves which layout was staged.
+        using var peReader = new PEReader(File.OpenRead(Path.Combine(stagedDirectory, "mstest-appmodel-controller.exe")));
+        Machine expectedMachine = runtimeIdentifier == "win-arm64" ? Machine.Arm64 : Machine.Amd64;
+        Assert.AreEqual(expectedMachine, peReader.PEHeaders.CoffHeader.Machine);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ExplicitConsumer_UnsupportedControllerArchitectureFailsExplicitly()
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract -p:TestingPlatformPackagedAppControllerArchitecture=x86",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("TestingPlatformPackagedAppControllerArchitecture must be 'x64' or 'arm64' but was 'x86'.");
     }
 
     [TestMethod]
