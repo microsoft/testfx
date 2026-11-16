@@ -82,7 +82,7 @@ internal static class LibraryProbe
         }
 
         string otherFlavor = scenario == "uwp" ? "MSTest.WinUI" : "MSTest.Uwp";
-        if (File.Exists(Path.Combine(AppContext.BaseDirectory, otherFlavor + ".dll")))
+        if (File.Exists(Path.Join(AppContext.BaseDirectory, otherFlavor + ".dll")))
         {
             throw new InvalidOperationException("The Windows consumer contains the other flavor's UI attributes.");
         }
@@ -138,6 +138,12 @@ internal static class LibraryProbe
             || attributes?.GetType(deploymentItemName) is not null)
         {
             throw new InvalidOperationException("DeploymentItemAttribute must be defined in shared modern core and forwarded by the compatibility facade.");
+        }
+
+        if (compatibility.DefinedTypes.Any(type => type.IsPublic || type.IsNestedPublic)
+            || compatibility.GetForwardedTypes().Any(type => type.Assembly != framework))
+        {
+            throw new InvalidOperationException("The compatibility facade must only forward non-UI types to the ordinary shared core.");
         }
 
         string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];

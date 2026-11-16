@@ -31,7 +31,6 @@ public sealed class NativePackageTests
             "Microsoft.Testing.Extensions.TrxReport.Abstractions",
         ];
         Assert.AreSequenceEqual(names, assemblies.EnumerateObject().Select(property => property.Name).ToArray(), SequenceOrder.InAnyOrder);
-        Assert.IsFalse(File.Exists(Path.Combine(AppContext.BaseDirectory, "MSTest.TestFramework.Extensions.dll")));
 
         var loaded = new List<object>();
         foreach (string name in names)
@@ -49,7 +48,7 @@ public sealed class NativePackageTests
 
         string evidence = Environment.GetEnvironmentVariable("TESTFX_BAZEL_CONSUMER_EVIDENCE")
             ?? throw new InvalidOperationException("The consumer evidence path was not supplied.");
-        string reportPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(evidence))!, "loaded-assemblies-" + Guid.NewGuid().ToString("N") + ".json");
+        string reportPath = Path.Join(Path.GetDirectoryName(Path.GetFullPath(evidence))!, "loaded-assemblies-" + Guid.NewGuid().ToString("N") + ".json");
         using (FileStream report = File.Open(reportPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
         {
             JsonSerializer.Serialize(report, new
@@ -92,6 +91,12 @@ public sealed class NativePackageTests
         Assert.AreEqual("MSTest.TestFramework", typeof(TestContext).Assembly.GetName().Name);
         Assert.AreSame(typeof(Assert).Assembly, typeof(TestContext).Assembly);
         Assert.AreSame(typeof(Assert).Assembly, typeof(DeploymentItemAttribute).Assembly);
+        Assert.IsTrue(File.Exists(Path.Join(AppContext.BaseDirectory, "MSTest.TestFramework.Extensions.dll")), "The core package must provide the native compatibility facade.");
+        Assembly compatibility = Assembly.Load("MSTest.TestFramework.Extensions");
+        Assert.AreSame(typeof(TestContext), compatibility.GetType(typeof(TestContext).FullName!));
+        Assert.AreSame(typeof(DeploymentItemAttribute), compatibility.GetType(typeof(DeploymentItemAttribute).FullName!));
+        Assert.IsFalse(compatibility.DefinedTypes.Any(type => type.IsPublic || type.IsNestedPublic));
+        Assert.IsTrue(compatibility.GetForwardedTypes().All(type => type.Assembly == typeof(Assert).Assembly));
         string[] directories =
         [
             nameof(TestContext.TestRunDirectory),

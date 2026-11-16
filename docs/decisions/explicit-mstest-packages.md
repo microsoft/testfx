@@ -451,3 +451,53 @@ unavailable; no downstream enablement or backport is made.
 Owned mutation layouts and bad archive copies were removed. The isolated Bazel
 server (PID `92900`) shut down with exit **0**; no app registration, shared-cache
 cleanup or other-worktree cleanup was performed.
+
+Before publication, integrated SDK parent
+`06ee2b01d972423dd9d4f06b8ef5c8256cda9e3c`. Its only change from the tested
+parent was the SDK decision/evidence document; native/product inputs and the
+native patch hash above are unchanged.
+
+### Maintenance alignment: 2026-11-16
+
+The current-main binary-compatibility contract supersedes the earlier
+Extensions-DLL absence checks. Verified package-layer commit
+`a9406f988adb7cab787bddda02431ddfc232f948` contains the nonpackable
+`TestFramework.Compatibility` project. It emits the
+`MSTest.TestFramework.Extensions` facade for the ordinary core TFMs and references
+core in one direction only. Core's package owns its same-TFM facade DLL/XML;
+there is no separate facade package, dependency, UI implementation or UI type
+forwarder. The old implementation/project/package owner remains retired.
+
+Native parity must preserve that concrete contract rather than drop the facade
+or retain Windows-flavored core/facade copies. The native core package carries
+ordinary core plus its facade; modern UI packages depend on that core package.
+Desktop/UWP/WinUI probes must resolve both shared assemblies from the ordinary
+native producers. `TestContext` and `DeploymentItemAttribute` still resolve to
+one actual core definition through the facade. UI attributes remain exclusively
+in the selected UI assembly.
+
+| Requirement | Focused evidence to rerun after the verified SDK parent arrives |
+| --- | --- |
+| Same-TFM facade payload owned only by core | `Assert-PackageLayout` and the real native package consumers, including restored/cached/loaded hashes for the facade. |
+| Legacy non-UI names resolve to the one core definition | `NativePackageTests.PackagedTargetsProvideCoreAndParallelization` and `LibraryProbe.VerifyFrameworkApi`; reject public definitions or UI forwarding in the facade. |
+| No flavored core/facade or other-UI leakage | `windows_targeting_test`, the five staged Windows consumers, and per-assembly/TFM hash comparisons. |
+| First-use provenance and native net462 build | Missing/existing evidence-index regression; pinned net462 PlatformServices and adapter builds. |
+
+Preparation reproduced the native net462 metadata-reference failure and repaired
+its missing `System.Reflection.Metadata` dependency. The supplied package commit
+also contains that dependency, so integration must preserve the exact net462
+selection without adding a duplicate. The first-use provenance regression fails
+with the old unguarded read and passes with the matching `Test-Path` guard.
+These are preparation results, not final rebased-head or remote-CI evidence.
+Rebase and publication remain gated on the coordinator's verified final SDK
+parent. Launcher ownership, activation, cancellation and result/exit semantics
+are unchanged; the facade checks are nonvisual.
+
+The same two-case layout harness executed the actual `Assert-PackageLayout`
+function before and after the adaptation. `CoreOwnsSameFrameworkFacade` fails
+against the old source blob `42c5a5e6547a66ff36cc191bf083dfae9fcb46fe` because it
+rejects core's facade as a retired payload; the adapted function accepts it.
+`CoreRejectsMissingFacade` then verifies the precise missing same-TFM DLL error.
+The old run exits 1 and the adapted run exits 0 with both cases passing. These
+archives contain synthetic entry bytes: this proves the layout validator's
+contract, not CLR type forwarding, real package provenance or final CI.

@@ -111,6 +111,12 @@ def _targeting_tests_impl(ctx):
                 ("{} {} compile core".format(flavor, target.label), expected, compile_owners),
                 ("{} {} runtime core".format(flavor, target.label), expected, runtime_owners),
             ])
+    compile_owners, runtime_owners = _assembly_owners(ctx.attr.desktop[0], "MSTest.TestFramework.Extensions")
+    expected = [str(Label("//:framework_compatibility"))]
+    cases.extend([
+        ("Desktop compile compatibility facade", expected, compile_owners),
+        ("Desktop runtime compatibility facade", expected, runtime_owners),
+    ])
     for flavor, assembly_name, other in [("uwp", "MSTest.Uwp", "MSTest.WinUI"), ("winui", "MSTest.WinUI", "MSTest.Uwp")]:
         for kind in ["attributes", "services", "adapter", "probe"]:
             target = getattr(ctx.attr, flavor + "_" + kind)[0]
@@ -119,7 +125,7 @@ def _targeting_tests_impl(ctx):
                 (other, "", False),
                 ("MSTest.TestAdapter", "adapter_" + flavor, kind in ["adapter", "probe"]),
                 ("MSTestAdapter.PlatformServices", "platform_services_" + flavor, kind in ["services", "adapter", "probe"]),
-                ("MSTest.TestFramework.Extensions", "", False),
+                ("MSTest.TestFramework.Extensions", "framework_compatibility", kind == "probe"),
             ]:
                 compile_owners, runtime_owners = _assembly_owners(target, name)
                 expected = [str(Label("//:" + owner))] if present else []

@@ -114,8 +114,8 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             throw "$Id declares a private bundled assembly as package dependency: $($dependency.id)"
         }
     }
-    if (@($Archive.Entries | Where-Object Name -Like 'MSTest.TestFramework.Extensions.*').Count) {
-        throw "$Id contains a retired Extensions payload."
+    if ($Id -ne 'MSTest.TestFramework' -and @($Archive.Entries | Where-Object Name -Like 'MSTest.TestFramework.Extensions.*').Count) {
+        throw "$Id must obtain the compatibility facade from the shared core package."
     }
     foreach ($framework in $packageFrameworks) {
         switch ($Id) {
@@ -389,7 +389,7 @@ function Run-MSBuildConsumer($Consumer) {
         @{ Name = 'failure'; Filter = 'FullyQualifiedName~IntentionalFailure'; Exit = 1; Tests = @('IntentionalFailure'); Failed = 1; Message = 'BAZEL_INTENTIONAL_FAILURE' }
     )) {
         $name = "msbuild-$($scenario.Name)"
-        $previousEvidence = @(Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE).Count
+        $previousEvidence = if (Test-Path -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE) { @(Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE).Count } else { 0 }
         $arguments = "--filter $($scenario.Filter) --report-trx --report-trx-filename $name.trx --results-directory `"$results`""
         Push-Location $Consumer.Directory
         try {

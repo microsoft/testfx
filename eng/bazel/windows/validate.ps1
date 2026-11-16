@@ -233,16 +233,17 @@ try {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."
             }
         }
-        foreach ($core in @($report.SourceAssemblies | Where-Object Name -CEQ 'MSTest.TestFramework')) {
+        foreach ($core in @($report.SourceAssemblies | Where-Object { $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions') })) {
             $expectedCoreFramework = ".NETCoreApp,Version=v$($probe.Major).0"
-            # Portable native cores historically omit this attribute; Windows metadata is never valid here.
+            # Portable native shared assemblies can omit this attribute; Windows metadata is never valid here.
             if (($core.Framework -and $core.Framework -cne $expectedCoreFramework) -or $core.Platform -or $core.SupportedOS) {
-                throw 'A UI-specific core was selected instead of the ordinary shared core.'
+                throw "A UI-specific $($core.Name) was selected instead of the ordinary shared assembly."
             }
-            if ($coreHashes.ContainsKey($expectedCoreFramework) -and $coreHashes[$expectedCoreFramework] -cne $core.Sha256) {
-                throw 'Desktop and UI consumers did not load the same native core payload.'
+            $key = "$($core.Name)|$expectedCoreFramework"
+            if ($coreHashes.ContainsKey($key) -and $coreHashes[$key] -cne $core.Sha256) {
+                throw "Desktop and UI consumers did not load the same native $($core.Name) payload."
             }
-            $coreHashes[$expectedCoreFramework] = $core.Sha256
+            $coreHashes[$key] = $core.Sha256
         }
         if ($probe.Scenario -eq 'packaged' -and (Test-Path -LiteralPath (Join-Path $layout 'Microsoft.Windows.UI.Xaml.dll'))) {
             throw 'The ordinary WinRT profile leaked the UWP XAML projection.'
