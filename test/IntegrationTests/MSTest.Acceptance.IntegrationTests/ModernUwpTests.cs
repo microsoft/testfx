@@ -136,8 +136,10 @@ public sealed class ModernUwpTests : AcceptanceTestBase
                             packageIdentityName,
                             TestContext.CancellationToken);
 
+                    // InvokeTestingPlatform maps the host's failed-test exit (2) to an MSBuild failure (1).
+                    const int msbuildFailureExitCode = 1;
                     Assert.AreEqual(
-                        unsupportedDeployment ? 1 : 0,
+                        unsupportedDeployment ? msbuildFailureExitCode : 0,
                         run.ExitCode,
                         $"MTP failed to execute the real Modern UWP project '{build.ProjectPath}'. TRX: '{run.TrxPath}'. " +
                         $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +

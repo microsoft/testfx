@@ -18,6 +18,8 @@ It builds on the merged [#12412](https://github.com/microsoft/testfx/pull/12412)
 - Modern UWP/WinUI tests with method/class `DeploymentItemAttribute`, including
   inherited attributes, return an ordinary failed-test result before any test
   body, through reflection, Rooting and ReflectionFree metadata providers.
+  Ignored data sources and rows remain ignored for both folding strategies;
+  unsupported deployment is rejected only for rows that would execute.
   Classic UWP uses netstandard core without that attribute.
 - No new handshake, launcher, cancellation or cleanup policy is introduced.
   Existing MTP result/exit aggregation handles the failure; unaffected tests
@@ -165,6 +167,100 @@ here. Modern UWP discovery is not activation proof; the package-extraction layer
 owns the composed activation/release-branch evidence. No CI result is credited
 for this head. The comparison source is restored and the primary worktree was
 never mutated for the counterfactual.
+
+## Review corrections: 2026-11-16
+
+The layer was rebased onto freshly fetched main
+`ddb33a558d5200030053e571dba7a65de476f317`, preserving the new ordinary
+Extensions deployment forwarder and all four real-UWP localization cases.
+The originally observed remote head was
+`7b382c059ea63629db1f53d72632399af60c74ed`.
+
+The two live review findings concern separate boundaries:
+
+- The Modern UWP helper invokes desktop MSBuild's `InvokeTestingPlatform`
+  target. Its returned exit is MSBuild's failure code (1), not the direct
+  host's `ExitCode.AtLeastOneTestFailed` (2). Keep 1 and name/document that
+  boundary; the direct WinUI host still correctly asserts 2.
+- Checking deployment at `RunTestMethodAsync` entry bypasses both unfolded
+  `TestDataSourceIgnoreMessage` and folded `ITestDataSourceIgnoreCapability`.
+  The shared `ExecuteTestAsync` entry is after those decisions and the
+  `ITestDataRow` ignore decision, but still before initialization or test bodies.
+  Moving the existing check there preserves aggregation and per-row context
+  ownership without adding another ignore implementation.
+
+The existing three packed WinUI metadata-provider cases now include a folded
+method-level deployment source and an unfolded class-level deployment source.
+Each has one ignored and one active row. The TRX oracle binds each identity to
+its expected outcome, preserves the ignored reason, and checks that all six
+active deployment cases fail without the body marker. The metadata-provider
+control still passes. Each child should return 2 with six failed, one passed
+and two skipped results; the outer acceptance cases should pass.
+
+The first rebased build exposed missing forwarded API declarations: all six
+directory getters on the three UI Extensions targets, plus five internal
+directory labels on classic UWP. These exact additions are recorded in the
+unshipped baselines; no shipped API, forwarder or diagnostic was removed.
+The corrected 37-project shipping/fixture closure packs successfully on all
+declared TFMs with zero warnings and passes package content/metadata verification.
+
+The same three metadata-provider regressions executed in a separately packed
+pre-fix worktree and failed at the intended identity/outcome assertion:
+`FoldedDeployment` and `UnfoldedIgnoredRow` were failed, not ignored, and the
+folded active row was lost. All three execute and pass with the fix, alongside
+23 controls: **26 passed, 0 failed, 0 skipped**, outer exit 0. The independent
+execution plan and fresh TRX were reconciled. The same five `TestContextTests`
+also pass on net48, net10.0, net11.0 and WinUI: **20 passed, 0 failed, 0 skipped**.
+
+The real app-model preflight passed without changing Developer Mode or removing
+existing registrations. An additional three-row Modern UWP activation attempt
+was blocked before activation: the packaged app-model controller could not load
+`Microsoft.Testing.Extensions.CodeCoverage` 18.13.0.0 and produced no child TRX.
+All three outer rows failed; this is a launch/provenance gap, not regression
+sensitivity or proof of the failed-deployment exit. The attempted plain WinUI
+MSBuild wrapper probe also lacked the `InvokeTestingPlatform` import and is not
+credited as execution proof. The wrapper's exit mapping is established by the
+helper and `InvokeTestingPlatformTask` source, not by those setup failures.
+
+### Test-value evidence for the review correction
+
+The tested executable delta is based on
+`0cf6e3b3dd85faa223ddd321d989bb49716ad9bb`; its source/test/API patch SHA-256 is
+`A49183C031816E90BFF56BF0D26DDBB8D9ACC10A0C2B8DF7237BF8B64C7A9866`.
+The isolated comparison retains the selected WinUI assertions, with test patch
+`20C2EDCC5F29F6E22AA4C1D45B9E00FBDDB2A91E3C45733EB9D33F7A328914EA`
+and API-only build support patch
+`BFDFD170690A64A2D3B38EBC2301E2EC71D55FDE08B1F527A997AF506A566A10`,
+but keeps the original early deployment guard. Its three selected cases all
+execute and fail at the intended assertion, outer exit 2, with no skipped cases.
+The final-source three-case rerun passes, outer exit 0.
+
+Both variants use SDK `12.0.100-alpha.1.26562.108`, desktop MSBuild from
+Visual Studio `18.13.12409.143`, Release packages, and separate generated consumer
+caches. Each of the three copied WinUI runtimes matches its own packed runtime:
+SHA-256 `0E61177155B3844288F980C8F5184F3FCD4E69E101A9D8F903E9AB1FB4FA1007`
+before the fix and
+`4A801AA246303C6F550AAC6D11FDC464927313C697353B4B8A841D625C544E0E`
+with it. The adapter/framework package version is `5.0.0-dev`, MTP is `3.0.0-dev`.
+
+Commands executed from the respective worktree roots:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\pr12446-pack.slnf -bl
+.\build.cmd -c Release -msbuildEngine vs -projects artifacts\validation\pr12446-tests.slnf -bl
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~MSTest.Acceptance.IntegrationTests.WinUITests.|FullyQualifiedName~MSTest.Acceptance.IntegrationTests.CoreFrameworkAssemblyTests.|FullyQualifiedName~WindowsApplicationModelPackageTests.PackedMSTestTestFramework_DeploymentItemAvailability|FullyQualifiedName~IgnoreTests.WhenSpecificDataSourceIsIgnoredViaIgnoreMessageProperty" -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=artifacts\TestResults\Release\review-green -bl:artifacts\log\Release\review-green.binlog --show-test-results all
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~WinUITests.DeploymentItemsFailBeforeBodiesIncludingInheritedAttributes" -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=artifacts\TestResults\Release\review-final-regressions -bl:artifacts\log\Release\review-final-regressions.binlog --show-test-results all
+```
+
+These four commands exit 0. The pack filter includes the eight package-shape
+owners, the pack-time global-config generator, and all acceptance fixture package
+owners with their source dependencies (37 projects); the test filter includes
+the acceptance and framework-unit owners. The comparison uses the same pack
+filter, builds the acceptance project, and runs the same three-case selector
+into `review-red` instead of `review-final-regressions` (exit 2).
+The four framework unit hosts use
+`--treenode-filter "/*/*/TestContextTests/*"` with distinct TRX files; each exits 0.
+No historical CI result is credited for the rebased head.
 
 ## Delivery boundary
 
