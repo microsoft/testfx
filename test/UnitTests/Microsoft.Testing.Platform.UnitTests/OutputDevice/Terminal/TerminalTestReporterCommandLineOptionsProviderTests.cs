@@ -113,15 +113,8 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public void GetCommandLineOptions_StillIncludesNoProgressOption()
-    {
-        // Validate backward compatibility: --no-progress is preserved alongside --progress.
-        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
-
-        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
-        Assert.IsFalse(option.IsHidden);
-        Assert.IsTrue(option.IsBuiltIn);
-    }
+    public void GetCommandLineOptions_DoesNotIncludeNoProgressOption()
+        => Assert.DoesNotContain(static option => option.Name == "no-progress", _provider.GetCommandLineOptions());
 
     [TestMethod]
     [DataRow("minimal")]
@@ -168,32 +161,9 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
-    public void IsProgressEnabled_NoProgressOption_ReturnsFalse()
-    {
-        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
-        });
-
-        Assert.IsFalse(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
-    }
-
-    [TestMethod]
     public void IsProgressEnabled_NoProgressOptions_ReturnsTrue()
     {
         var options = new Helpers.TestCommandLineOptions([]);
-
-        Assert.IsTrue(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
-    }
-
-    [TestMethod]
-    public void IsProgressEnabled_ProgressOption_TakesPrecedenceOverNoProgressOption()
-    {
-        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["on"],
-            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
-        });
 
         Assert.IsTrue(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
     }
