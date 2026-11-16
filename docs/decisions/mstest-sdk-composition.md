@@ -265,3 +265,23 @@ runs. Actual UWP/WinUI activation remains layer 2's contract; native/Bazel parit
 remains layer 4's. No global developer-mode/registration settings were changed.
 No separately installed/shared packages were removed. The unrelated native
 net462 System.Reflection.Metadata baseline remains untouched.
+
+## Review follow-up: append-only test paths
+
+2026-11-16: the ten path-construction review threads concern paths beneath each
+test's generated asset directory. Their appended components are fixed filenames,
+repository-defined target frameworks, and the two explicitly enumerated adapter
+assembly names, not external input. Use `Path.Join` consistently in the new
+composition test file to state the append-only intent without silently discarding
+the asset root. Do not truncate target-framework values with `Path.GetFileName`.
+The owning acceptance project targets `$(NetCurrent)`, not its generated
+consumers' classic UAP or net462 frameworks; `Path.Join` is supported there and
+already used by sibling acceptance tests.
+
+This preserves the existing inputs, assertions, generated consumers, and
+method-level scheduling. Each case still owns a separate `TestAsset`; the
+assembly-scoped package cache remains immutable during execution. No new
+framework-behavior test, scheduling exclusion, package policy, or public API is
+needed for this construction-only change. The execution results above remain
+historical evidence for their explicitly identified revisions, not validation
+of a later rebase.

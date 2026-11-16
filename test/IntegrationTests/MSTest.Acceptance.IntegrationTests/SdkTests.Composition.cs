@@ -106,7 +106,7 @@ public sealed partial class SdkTests
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         using var assets = JsonDocument.Parse(
-            await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "obj", "project.assets.json"), TestContext.CancellationToken));
+            await File.ReadAllTextAsync(Path.Join(asset.TargetAssetPath, "obj", "project.assets.json"), TestContext.CancellationToken));
         string[] packages = Assert.ContainsSingle(assets.RootElement.GetProperty("targets").EnumerateObject()).Value
             .EnumerateObject().Select(package => package.Name).ToArray();
         Assert.Contains($"{firstPackage}/{MSTestVersion}", packages);
@@ -162,9 +162,9 @@ public sealed partial class SdkTests
                 .PatchCodeWithReplace("$MSBuildSdkExtrasVersion$", MSBuildSdkExtrasVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateClassicUwpVisualStudioToolsAsync(TestContext.CancellationToken);
-        string projectPath = Path.Combine(testAsset.TargetAssetPath, "ClassicUwp.csproj");
+        string projectPath = Path.Join(testAsset.TargetAssetPath, "ClassicUwp.csproj");
         BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
-            $"\"{tools.MSBuildPath}\" \"{projectPath}\" /restore /t:PrintClassicComposition /p:Configuration=Release /p:Platform=x64 /bl:\"{Path.Combine(testAsset.TargetAssetPath, "classic-uwp.binlog")}\"",
+            $"\"{tools.MSBuildPath}\" \"{projectPath}\" /restore /t:PrintClassicComposition /p:Configuration=Release /p:Platform=x64 /bl:\"{Path.Join(testAsset.TargetAssetPath, "classic-uwp.binlog")}\"",
             testAsset.TargetAssetPath,
             TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, $"{result.StandardOutput}{Environment.NewLine}{result.ErrorOutput}");
@@ -308,18 +308,18 @@ public sealed partial class SdkTests
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync($"{applicationModel}HelperSdk", source);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Combine(testAsset.TargetAssetPath, "helper.binlog")}\"",
+            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Join(testAsset.TargetAssetPath, "helper.binlog")}\"",
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
 
         await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectedAdapterPackageId);
         await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, expectedAdapterPackageId);
-        string[] copyLocal = await File.ReadAllLinesAsync(Path.Combine(testAsset.TargetAssetPath, "copy-local-assets.txt"), TestContext.CancellationToken);
+        string[] copyLocal = await File.ReadAllLinesAsync(Path.Join(testAsset.TargetAssetPath, "copy-local-assets.txt"), TestContext.CancellationToken);
         Assert.DoesNotContain(IsMSTestApplicationPayload, copyLocal);
         Assert.DoesNotContain(
             "031F8871-2660-4208-8F6B-FC142B40ABFF",
-            await File.ReadAllTextAsync(Path.Combine(testAsset.TargetAssetPath, "builder-hooks.txt"), TestContext.CancellationToken));
-        Assert.IsEmpty(Directory.GetFiles(Path.Combine(testAsset.TargetAssetPath, "bin", "Release", targetFramework), "*.dll", SearchOption.AllDirectories)
+            await File.ReadAllTextAsync(Path.Join(testAsset.TargetAssetPath, "builder-hooks.txt"), TestContext.CancellationToken));
+        Assert.IsEmpty(Directory.GetFiles(Path.Join(testAsset.TargetAssetPath, "bin", "Release", targetFramework), "*.dll", SearchOption.AllDirectories)
             .Where(IsMSTestApplicationPayload));
         await AssertGeneratedHelperSourcesAsync(testAsset.TargetAssetPath, targetFramework, enableSourceGeneration);
     }
@@ -394,27 +394,27 @@ public sealed partial class SdkTests
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync($"{applicationModel}ApplicationWithHelperSdk", source);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Combine(testAsset.TargetAssetPath, "application.binlog")}\"",
+            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Join(testAsset.TargetAssetPath, "application.binlog")}\"",
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
 
         string expectedAdapterPackageId = $"MSTest.{applicationModel}";
         await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, uiTargetFramework, expectedAdapterPackageId);
         await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, expectedAdapterPackageId);
-        string helperDirectory = Path.Combine(testAsset.TargetAssetPath, "Helper");
+        string helperDirectory = Path.Join(testAsset.TargetAssetPath, "Helper");
         await AssertResolvedMSTestCompositionAsync(helperDirectory, TargetFrameworks.NetCurrent, "MSTest.TestAdapter");
         await AssertGeneratedHelperSourcesAsync(helperDirectory, TargetFrameworks.NetCurrent, enableSourceGeneration: true);
 
-        string[] references = await File.ReadAllLinesAsync(Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"), TestContext.CancellationToken);
+        string[] references = await File.ReadAllLinesAsync(Path.Join(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"), TestContext.CancellationToken);
         foreach (string assembly in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll" })
         {
             string packagePath = Assert.ContainsSingle(references.Where(path => path.EndsWith(assembly, StringComparison.OrdinalIgnoreCase)));
-            string applicationPath = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", uiTargetFramework, assembly);
+            string applicationPath = Path.Join(testAsset.TargetAssetPath, "bin", "Release", uiTargetFramework, assembly);
             Assert.AreSequenceEqual(
                 SHA256.HashData(await File.ReadAllBytesAsync(packagePath, TestContext.CancellationToken)),
                 SHA256.HashData(await File.ReadAllBytesAsync(applicationPath, TestContext.CancellationToken)),
                 $"The application must copy {assembly} from {expectedAdapterPackageId}, not its ordinary helper.");
-            Assert.IsFalse(File.Exists(Path.Combine(helperDirectory, "bin", "Release", TargetFrameworks.NetCurrent, assembly)));
+            Assert.IsFalse(File.Exists(Path.Join(helperDirectory, "bin", "Release", TargetFrameworks.NetCurrent, assembly)));
         }
     }
 
@@ -455,7 +455,7 @@ public sealed partial class SdkTests
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync($"Mixed{applicationModel}CompositionSdk", source);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Combine(testAsset.TargetAssetPath, "multi-tfm.binlog")}\"",
+            $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Join(testAsset.TargetAssetPath, "multi-tfm.binlog")}\"",
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
 
@@ -473,7 +473,7 @@ public sealed partial class SdkTests
 
     private async Task AssertGeneratedHelperSourcesAsync(string projectDirectory, string targetFramework, bool enableSourceGeneration)
     {
-        string generatedDirectory = Path.Combine(projectDirectory, "obj", "Release", targetFramework, "generated");
+        string generatedDirectory = Path.Join(projectDirectory, "obj", "Release", targetFramework, "generated");
         string[] files = Directory.Exists(generatedDirectory)
             ? Directory.GetFiles(generatedDirectory, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
@@ -488,7 +488,7 @@ public sealed partial class SdkTests
     private async Task AssertResolvedMSTestCompositionAsync(string projectDirectory, string targetFramework, string? expectedAdapterPackageId)
     {
         using var assets = JsonDocument.Parse(
-            await File.ReadAllTextAsync(Path.Combine(projectDirectory, "obj", "project.assets.json"), TestContext.CancellationToken));
+            await File.ReadAllTextAsync(Path.Join(projectDirectory, "obj", "project.assets.json"), TestContext.CancellationToken));
         JsonProperty framework = Assert.ContainsSingle(
             assets.RootElement.GetProperty("project").GetProperty("frameworks").EnumerateObject()
                 .Where(property => property.Name == targetFramework || property.Value.GetProperty("targetAlias").GetString() == targetFramework));
@@ -531,7 +531,7 @@ public sealed partial class SdkTests
 
     private async Task AssertResolvedMSTestReferencesAsync(string projectDirectory, string? expectedAdapterPackageId, string reportName = "resolved-mstest-assets.txt")
     {
-        string[] references = await File.ReadAllLinesAsync(Path.Combine(projectDirectory, reportName), TestContext.CancellationToken);
+        string[] references = await File.ReadAllLinesAsync(Path.Join(projectDirectory, reportName), TestContext.CancellationToken);
         Assert.ContainsSingle(references.Where(path => path.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
         Assert.DoesNotContain(path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase), references);
         foreach (string assembly in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll", "MSTest.Uwp.dll", "MSTest.WinUI.dll" })
