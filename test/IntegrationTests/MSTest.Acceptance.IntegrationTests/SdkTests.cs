@@ -1447,6 +1447,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     public async Task MSTestSdk_UnpackagedWinUI_DefaultsToMtpWithoutPackagedAppLauncher()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1465,6 +1466,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     public async Task MSTestSdk_UnpackagedWinUIWithExplicitPackagedAppExtension_KeepsDirectLaunch()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1496,6 +1498,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     public async Task MSTestSdk_UnpackagedWinUI_AllowsVSTest()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1517,6 +1520,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     [DataRow(false)]
     [DataRow(true)]
     public async Task MSTestSdk_WinUIWithUwpTools_RejectsConflictingApplicationModels(bool useVSTest)
@@ -1536,6 +1540,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     [DataRow("net10.0-windows10.0.26100.0", "Windows_NT", "mstest-appmodel-controller.exe", "net10.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
     [DataRow("net11.0-windows10.0.26100.0", "Windows_NT", "mstest-appmodel-controller.exe", "net11.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
     [DataRow("net11.0-windows10.0.26100.0", "Unix", "", "", "")]
@@ -1559,6 +1564,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     public async Task MSTestSdk_WinUISeparateHost_KeepsGeneratedEntryPoint()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
