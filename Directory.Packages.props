@@ -153,7 +153,7 @@
     <PackageVersion Include="StrongNamer" Version="0.2.5" />    
     <PackageVersion Include="System.CommandLine" Version="3.0.0" />
     <PackageVersion Include="System.Management" Version="$(DotNetRuntimePackagesVersion)" />
-    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
   </ItemGroup>
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
