@@ -150,6 +150,13 @@
     -->
     <PackageVersion Include="Nerdbank.MessagePack" Version="1.4.95" />
     <PackageVersion Include="MessagePack" Version="3.1.12" />
+    <!--
+      System.Security.Cryptography.Pkcs comes transitively via NuGet.Packaging (brought by the
+      Microsoft.CodeAnalysis.*.Testing packages) at a vulnerable 9.0.x version. Projects referencing
+      those testing packages must also add an explicit <PackageReference Include="System.Security.Cryptography.Pkcs" />
+      because transitive pinning is disabled.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />    
     <PackageVersion Include="System.CommandLine" Version="3.0.0" />
     <PackageVersion Include="System.Management" Version="$(DotNetRuntimePackagesVersion)" />
