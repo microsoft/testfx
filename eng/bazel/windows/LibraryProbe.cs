@@ -81,6 +81,9 @@ internal static class LibraryProbe
 #else
 #error A Windows library probe scenario must be selected.
 #endif
+#if WINDOWS_DESKTOP_PROBE || WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
+        sourceAssemblies.Add(Assembly.Load("MSTest.TestFramework.Extensions"));
+#endif
         foreach (Assembly assembly in sourceAssemblies)
         {
             if (!assembly.GetCustomAttributes<AssemblyMetadataAttribute>()

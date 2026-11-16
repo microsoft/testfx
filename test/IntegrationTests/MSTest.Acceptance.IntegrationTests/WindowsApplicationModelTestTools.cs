@@ -215,17 +215,18 @@ internal static class WindowsApplicationModelTestTools
                     "/buildTransitive/uap10.0.16299/MSTest.TestAdapter.dll",
                     "/buildTransitive/uap10.0.16299/MSTestAdapter.PlatformServices.dll",
                     "/lib/netstandard2.0/MSTest.TestFramework.dll",
+                    "/lib/netstandard2.0/MSTest.TestFramework.Extensions.dll",
                     "/lib/uap10.0.16299/MSTest.Uwp.dll",
                 ],
                 [
                     "/mstest.testadapter/",
                     "/mstest.winui/",
-                    "MSTest.TestFramework.Extensions.dll",
                 ]),
             WindowsApplicationModelAssetKind.ModernUwp =>
             (
                 [
                     $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.Extensions.dll",
                     "/buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll",
                     "/buildTransitive/net10.0-windows10.0.17763/MSTestAdapter.PlatformServices.dll",
                     "/lib/net10.0-windows10.0.17763/MSTest.Uwp.dll",
@@ -233,12 +234,12 @@ internal static class WindowsApplicationModelTestTools
                 [
                     "/mstest.testadapter/",
                     "/mstest.winui/",
-                    "MSTest.TestFramework.Extensions.dll",
                 ]),
             WindowsApplicationModelAssetKind.WinUI =>
             (
                 [
                     $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.Extensions.dll",
                     "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
                     "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
                     "/lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
@@ -246,7 +247,6 @@ internal static class WindowsApplicationModelTestTools
                 [
                     "/mstest.testadapter/",
                     "/mstest.uwp/",
-                    "MSTest.TestFramework.Extensions.dll",
                 ]),
             _ => throw new ArgumentOutOfRangeException(nameof(assetKind), assetKind, "Unknown Windows application model."),
         };
