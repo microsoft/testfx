@@ -1262,11 +1262,6 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
         <target state="translated">Zprostředkovatel telemetrie je už nastavený.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">upozornění: příznak „--no-progress“ je zastaralý. Místo toho použijte příznak „--progress off“.</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">Objekt pro vytváření ITestFrameworkInvoker je už nastavený.</target>
