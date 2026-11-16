@@ -760,7 +760,7 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Assert.IsEmpty(attempt.RetryIds);
             Assert.IsEmpty(fixture.Warnings);
             AssertBefore(fixture, "complete-child:1", "grace-delay");
-            Assert.AreEqual(1, fixture.Events.Count(value => value == "grace-delay"));
+            Assert.ContainsSingle(fixture.Events.Where(value => value == "grace-delay"));
         }
         finally
         {
