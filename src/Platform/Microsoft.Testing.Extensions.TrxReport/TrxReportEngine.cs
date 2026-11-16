@@ -26,8 +26,8 @@ internal sealed partial class TrxReportEngine
     private const string UncategorizedTestListId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
 
     // The TRX schema requires a class name. When a test node has neither a fully qualified type name nor a test method
-    // identifier, use the same last-resort name as the VSTest TRX logger (Converter.GetTestClassName).
-    private const string FallbackClassName = "DefaultClassName";
+    // identifier, use an explicit placeholder so consumers can tell that the type information is unknown.
+    private const string FallbackClassName = "UnknownClass";
 
     private static readonly XNamespace NamespaceUri = XNamespace.Get("http://microsoft.com/schemas/VisualStudio/TeamTest/2010");
 

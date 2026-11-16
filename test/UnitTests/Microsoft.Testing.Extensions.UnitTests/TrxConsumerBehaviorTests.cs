@@ -104,7 +104,7 @@ public sealed class TrxConsumerBehaviorTests
         await fixture.FinishAsync(generator, session);
 
         XElement testMethod = fixture.Report.Descendants(Ns + "TestMethod").Single();
-        Assert.AreEqual("DefaultClassName", (string?)testMethod.Attribute("className"));
+        Assert.AreEqual("UnknownClass", (string?)testMethod.Attribute("className"));
         Assert.AreEqual("bare display name", (string?)testMethod.Attribute("name"));
         Assert.AreEqual("00:00:02.0000000", (string?)fixture.Report.Descendants(Ns + "UnitTestResult").Single().Attribute("duration"));
         Assert.AreEqual("Completed", (string?)fixture.Report.Descendants(Ns + "ResultSummary").Single().Attribute("outcome"));

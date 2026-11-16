@@ -753,7 +753,7 @@ public class TrxTests
         AssertTrxOutcome(xml, "Completed");
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         XElement testMethod = xml.Descendants(ns + "TestMethod").Single();
-        Assert.AreEqual("DefaultClassName", testMethod.Attribute("className")!.Value);
+        Assert.AreEqual("UnknownClass", testMethod.Attribute("className")!.Value);
         Assert.AreEqual("My display name", testMethod.Attribute("name")!.Value);
         Assert.AreEqual("00:00:03.0000000", xml.Descendants(ns + "UnitTestResult").Single().Attribute("duration")!.Value);
     }

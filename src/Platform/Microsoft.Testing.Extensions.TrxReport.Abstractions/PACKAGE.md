@@ -19,7 +19,7 @@ Reference this package from a testing-platform extension that needs to contribut
 A test framework that supports TRX reporting adds properties to its final test-node updates. The only required property is the final state:
 
 - **Required**: one final state, such as `PassedTestNodeStateProperty` or `FailedTestNodeStateProperty`. Updates without a final state are not reported.
-- **Recommended**: `TrxFullyQualifiedTypeNameProperty` or `TestMethodIdentifierProperty`, so tests are grouped under their real class. Without either, the class name is `DefaultClassName` and the method name is the test node's display name.
+- **Recommended**: `TrxFullyQualifiedTypeNameProperty` or `TestMethodIdentifierProperty`, so tests are grouped under their real class. Without either, the class name is the `UnknownClass` placeholder and the method name is the test node's display name.
 - **Optional**: `TimingProperty`, `TrxTestDefinitionName`, `TrxExceptionProperty`, `TrxMessagesProperty`, `TrxCategoriesProperty`, `TestMetadataProperty`, `TrxWorkItemsProperty`, and `FileArtifactProperty`.
 - **Duplicates**: providing more than one instance of a property makes report generation fail, except for `TestMetadataProperty` and `FileArtifactProperty`, which can have multiple instances.
 

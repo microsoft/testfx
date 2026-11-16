@@ -25,8 +25,8 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 /// so that the test is grouped under its real class.
 /// <see cref="TrxFullyQualifiedTypeNameProperty"/> supplies the TRX class name when present; otherwise,
 /// the namespace and type name from <see cref="TestMethodIdentifierProperty"/> are used.
-/// When neither property is present, the class name is <c>DefaultClassName</c>, the same placeholder the
-/// VSTest TRX logger uses, because the TRX schema requires a class name.
+/// When neither property is present, the class name is the <c>UnknownClass</c> placeholder because the TRX schema
+/// requires a class name.
 /// The method identifier supplies the method name when available; otherwise, <see cref="TestNode.DisplayName"/> is used.
 /// Source-file information is not required, and the reporter does not look up whether the class or method exists.
 /// </para>
