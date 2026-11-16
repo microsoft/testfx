@@ -919,6 +919,108 @@ public class RetryTests
     }
 
     [TestMethod]
+    [DataRow(true, false, DisplayName = "RetryRecovery_ConnectionBeforeExit")]
+    [DataRow(false, false, DisplayName = "RetryRecovery_ExitBeforeConnection")]
+    [DataRow(false, true, DisplayName = "RetryRecovery_GraceExpires")]
+    public async Task RetryConnectionGracePeriod_ProtocolFixtureOwnsOrderingAndCleanup(bool connectedBeforeExit, bool expireGrace)
+    {
+        var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken);
+        var connection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task completedExit = Task.FromResult(0);
+        Task? delay = null;
+        try
+        {
+            if (connectedBeforeExit)
+            {
+                connection.SetResult(true);
+            }
+
+            Task<Task> grace = InvokeRetryTestHostRunnerGracePeriodAsync(
+                completedExit, connection.Task, fixture.Tasks, fixture.Token);
+            if (connectedBeforeExit)
+            {
+                Assert.AreSame(completedExit, await grace);
+                Assert.IsNull(fixture.ConnectionGraceDelay);
+            }
+            else
+            {
+                Assert.IsFalse(grace.IsCompleted, grace.Exception?.ToString());
+                delay = Assert.IsInstanceOfType<Task>(fixture.ConnectionGraceDelay);
+                Assert.IsFalse(delay.IsCompleted);
+                if (expireGrace)
+                {
+                    fixture.ExpireConnectionGracePeriod();
+                }
+                else
+                {
+                    connection.SetResult(true);
+                }
+
+                Assert.AreSame(expireGrace ? delay : connection.Task, await grace);
+                if (!expireGrace)
+                {
+                    Assert.IsFalse(delay.IsCompleted, "Connection completion must not abandon its owned grace task.");
+                }
+            }
+        }
+        finally
+        {
+            connection.TrySetCanceled(TestContext.CancellationToken);
+            await fixture.CloseAsync();
+        }
+
+        if (delay is not null)
+        {
+            Assert.IsTrue(delay.IsCompleted, "Fixture cleanup must settle and observe the losing grace task.");
+        }
+    }
+
+    [TestMethod]
+    public async Task RetryConnectionGracePeriod_ProtocolFixtureCancellationIsObserved()
+    {
+        var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken);
+        using var cancellation = new CancellationTokenSource();
+        var connection = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? delay = null;
+        try
+        {
+            Task<Task> grace = InvokeRetryTestHostRunnerGracePeriodAsync(
+                Task.FromResult(0), connection.Task, fixture.Tasks, cancellation.Token);
+            Assert.IsFalse(grace.IsCompleted, grace.Exception?.ToString());
+            delay = Assert.IsInstanceOfType<Task>(fixture.ConnectionGraceDelay);
+            cancellation.Cancel();
+            OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => grace);
+            Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+            Assert.IsTrue(delay.IsCanceled);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            connection.TrySetCanceled(TestContext.CancellationToken);
+            await fixture.CloseAsync();
+        }
+
+        Assert.IsNotNull(delay);
+        Assert.IsTrue(delay.IsCompleted);
+    }
+
+    [TestMethod]
+    public async Task RetryConnectionGracePeriod_ProtocolFixtureRejectsUnexpectedDelays()
+    {
+        var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken);
+        try
+        {
+            Assert.ThrowsExactly<AssertFailedException>(() => fixture.Tasks.Delay(1));
+            Assert.ThrowsExactly<AssertFailedException>(
+                () => fixture.Tasks.Delay(TimeSpan.FromSeconds(2), fixture.Token));
+        }
+        finally
+        {
+            await fixture.CloseAsync();
+        }
+    }
+
+    [TestMethod]
     public async Task RunAttemptAsync_CanceledConnection_TerminatesCustomHandleBeforeDisposal()
     {
         ServiceProvider serviceProvider = new();
