@@ -229,6 +229,47 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+    [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "", false)]
+    [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "<TestingPlatformEnvironmentVariable Include=\"DOTNET_ROOT_ARM64\" Value=\"custom-root\" />", false)]
+    [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "", true)]
+    [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "", false)]
+    [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "<TestingPlatformEnvironmentVariable Include=\"DOTNET_ROOT_X64\" Value=\"custom-root\" />", false)]
+    [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "", true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_UsesControllerRuntimeRoot(
+        string sdkRuntimeIdentifier, string applicationRuntimeIdentifier, string rootVariable, string extraEnvironment, bool disableAutomaticRoot)
+    {
+        string disableRoot = disableAutomaticRoot ? "<TestingPlatformDisableAppHostDotnetRoot>true</TestingPlatformDisableAppHostDotnetRoot>" : string.Empty;
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            $"<UseWinUI>true</UseWinUI><RuntimeIdentifier>{applicationRuntimeIdentifier}</RuntimeIdentifier>{disableRoot}",
+            extraReferences: extraEnvironment);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string hostPath = Path.Combine(RootFinder.Find(), ".dotnet", "dotnet.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRuntimeContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:NETCoreSdkRuntimeIdentifier={sdkRuntimeIdentifier} -p:DOTNET_HOST_PATH=\"{hostPath}\" -p:{rootVariable}=",
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "runtime-contract.txt"), TestContext.CancellationToken);
+        string expectedRoot = extraEnvironment.Length == 0 ? Path.GetDirectoryName(hostPath)! : "custom-root";
+        string rootMessage = $"ControllerEnvironment={rootVariable}={expectedRoot}";
+        bool hasRoot = result.StandardOutput.Contains($"ControllerEnvironment={rootVariable}=", StringComparison.Ordinal);
+        Assert.AreEqual(
+            !disableAutomaticRoot,
+            hasRoot,
+            "The root injection must honor the disable switch and caller-provided roots.");
+        if (!disableAutomaticRoot)
+        {
+            result.AssertOutputContains(rootMessage);
+        }
+
+        Assert.AreEqual($"RuntimeIdentifier={sdkRuntimeIdentifier}", lines[0]);
+        Assert.AreEqual("Arguments=", lines[1], "Selecting the controller runtime must preserve the application's empty launch-profile argument tail.");
+        Assert.AreEqual("Command=mstest-appmodel-controller.exe", lines[2]);
+    }
+
+    [TestMethod]
     [DataRow("<RunCommand>custom-run.exe</RunCommand>", "custom-run.exe")]
     [DataRow("<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>", "PackagedConsumer.exe")]
     [OSCondition(OperatingSystems.Windows)]
@@ -776,6 +817,15 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                                   Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\bootstrap-file-path.txt" Overwrite="true"
                                   Lines="$(_TestingPlatformPackagedAppBootstrapFile)" />
+              </Target>
+              <Target Name="WriteRuntimeContract" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;ComputeRunArguments;_ConfigureTestingPlatformPackagedAppEnvironment">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt" Overwrite="true"
+                                  Lines="RuntimeIdentifier=$(RuntimeIdentifier)" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
+                <Message Importance="high" Text="ControllerEnvironment=%(TestingPlatformEnvironmentVariable.Identity)=%(TestingPlatformEnvironmentVariable.Value)" />
               </Target>
             </Project>
             #file Tests.cs

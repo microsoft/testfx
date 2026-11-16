@@ -87,6 +87,12 @@
       <TestingPlatformEnvironmentVariable Remove="TESTINGPLATFORM_PACKAGEDAPP_TARGET;MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" />
       <TestingPlatformEnvironmentVariable Include="TESTINGPLATFORM_PACKAGEDAPP_TARGET" Value="$(_TestingPlatformPackagedAppTarget)" />
       <TestingPlatformEnvironmentVariable Include="MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" Value="$(_TestingPlatformPackagedAppControllerExtensions)" />
+      <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT_ARM64"
+                                         Value="$([System.IO.Path]::GetDirectoryName('$(DOTNET_HOST_PATH)'))"
+                                         Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'arm64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64')) AND '$(TestingPlatformDisableAppHostDotnetRoot)' != 'true' AND '$(DOTNET_ROOT_ARM64)' == '' AND '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_ARM64'))' == '' AND Exists('$(DOTNET_HOST_PATH)')" />
+      <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT_X64"
+                                         Value="$([System.IO.Path]::GetDirectoryName('$(DOTNET_HOST_PATH)'))"
+                                         Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND !$(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64')) AND '$(TestingPlatformDisableAppHostDotnetRoot)' != 'true' AND '$(DOTNET_ROOT_X64)' == '' AND '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_X64'))' == '' AND Exists('$(DOTNET_HOST_PATH)')" />
     </ItemGroup>
   </Target>
 
@@ -112,6 +118,9 @@
       <!-- An empty argument tail must stay empty: dotnet run only applies launch-profile arguments
            when RunArguments is empty. Keep startup metadata beside the project-local sidecar. -->
       <RunArguments>$(_TestingPlatformPackagedAppRunArguments)</RunArguments>
+      <!-- The SDK chooses DOTNET_ROOT_<ARCH> from RuntimeIdentifier for the executable it starts. -->
+      <RuntimeIdentifier Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'arm64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64'))">$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
+      <RuntimeIdentifier Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND !$(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64'))">$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
       <_TestingPlatformPackagedAppConfigureRun>false</_TestingPlatformPackagedAppConfigureRun>
     </PropertyGroup>
   </Target>

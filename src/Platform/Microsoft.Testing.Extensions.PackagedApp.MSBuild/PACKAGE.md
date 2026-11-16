@@ -152,6 +152,12 @@ Windows 10 19041 or later. The targets use the native `win-arm64` controller whe
 is ARM64 and the `win-x64` controller otherwise, so an ARM64 machine needs no x64 runtime or emulation.
 Set `TestingPlatformPackagedAppControllerArchitecture` to `x64` or `arm64` to choose explicitly. The
 application itself may use another architecture.
+Native SDK launches use the controller architecture for runtime-root resolution when it matches
+the SDK. Direct MTP launches forward the SDK's runtime location from `DOTNET_HOST_PATH` when the
+caller has not provided the corresponding `DOTNET_ROOT_<ARCH>` and
+`TestingPlatformDisableAppHostDotnetRoot` is not enabled. If an explicitly selected controller
+architecture differs from the SDK, set `DOTNET_ROOT_ARM64` or `DOTNET_ROOT_X64` to a private
+installation containing that architecture's .NET 10 or later runtime.
 Unsigned layouts need Developer Mode or sideloading. UWP compilation continues
 to require the Visual Studio UWP workload.
 
