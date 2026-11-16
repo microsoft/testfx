@@ -40,7 +40,8 @@ application RID is unset or matches the selected controller and the SDK architec
 Otherwise, when the SDK architecture matches the controller and no controller root or opt-out was
 provided, the SDK's `CreateAppHost` task configures an architecture-specific template with the
 relative SDK runtime path. The template is packaged alongside each controller layout; only the
-consumer's staged apphost contains the local path. This preserves the explicit application RID
+consumer's staged outputs refer to the local path (through a directory junction across volumes).
+MTP-only environment items do not suppress this native SDK discovery. This preserves the explicit application RID
 and empty `RunArguments`, allowing `dotnet run` to apply named launch-profile arguments. A
 write-if-different runtime-root marker invalidates apphost generation when the root or opt-out
 changes, while unchanged runs remain incremental. The staged files participate in `Clean`.
@@ -85,6 +86,7 @@ When an explicit controller architecture differs from the SDK, the caller must p
   | Native SDK launch preserves an explicit application RID while selecting a compatible controller runtime. | `ComputeRunArguments_UsesControllerRuntimeRoot` covers default root, explicit root, and opt-out paths; `ComputeRunArguments_PreservesGlobalApplicationRuntimeIdentifier` passes the application RID globally; `DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments` executes the packaged controller through a named SDK launch profile. | Executed on x64 with a private SDK runtime and an ARM64 application RID; native ARM64 execution remains unverified. No output-layout change is intended. |
   | An x86 SDK does not forward its host folder as `DOTNET_ROOT_X64`. | The x86 row in `ComputeRunArguments_UsesControllerRuntimeRoot` asserts no root injection and preserves the application RID. | Nonvisual MSBuild/environment contract; the generated controller is not launched. |
   | Personalized staging remains incremental, responds to opt-out changes, and cleans generated files. | Both `ComputeRunArguments_StagedControllerIsIncrementalAndCleaned` rows check timestamps and cleanup; the cross-architecture row also disables and re-enables runtime-root configuration and compares the resulting apphost bytes. | Generated-consumer filesystem contract. |
+
 - The follow-up runtime-root change was validated against the packed
   `Microsoft.Testing.Extensions.PackagedApp.MSBuild.3.0.0-dev` consumer on Windows x64 with the
   pinned .NET SDK `12.0.100-alpha.1.26562.108`. The source/test patch at base
@@ -238,6 +240,119 @@ consumer restore before `--no-build`, and a cleanup invocation without the match
 RID; these were corrected before the final runs and are not red-phase evidence. Logs and reports
 remain under the results directory above.
 
+### Additional review follow-up (2026-11-16)
+
+The next review found two native-launch gaps: MTP-only environment items suppressed
+private SDK discovery despite not being forwarded by `dotnet run`, and a runtime root
+on another volume cannot be embedded as an app-relative path. The native SDK reads
+only command, arguments, working directory and RID/framework properties
+([SDK run contract](https://github.com/dotnet/sdk/blob/v10.0.100/src/Cli/dotnet/Commands/Run/RunCommand.cs)).
+
+Keep `TestingPlatformEnvironmentVariable` overrides scoped to direct MTP execution;
+only inherited architecture-specific root properties suppress native personalization.
+For cross-volume staging, use a project-owned Windows directory junction to the borrowed
+SDK and embed its relative name. [`mklink /J`](https://learn.microsoft.com/windows-server/administration/windows-commands/mklink)
+supports a local absolute target without symbolic-link privileges. The junction is
+unlinked (not recursively deleted) on root changes, opt-out and Clean. No SDK files
+belong to `FileWrites`. Same-volume launches retain the existing relative path.
+Paths are passed through child environment variables rather than interpolated into shell
+commands. This avoids copying an entire runtime or introducing another native launcher.
+Reusing `dotnet exec` remains unsuitable because it suppresses named-profile arguments.
+
+The real named-profile consumer test now crosses ordinary/cross-volume staging with
+absent/present MTP-only root items. It checks the controller identity, runtime host trace,
+and cross-volume cleanup without deleting the borrowed SDK. Cross-volume cases require
+the system temporary directory and repository SDK on different volumes; single-volume
+hosts report that capability gap instead of claiming coverage. Each case owns a unique
+project and temporary directory, with child-only environment overrides and no shared
+drive mappings or scheduling changes.
+
+The anonymous-token review fix removes the `OpenThreadToken`-based level query only
+from `CreateServerStream_AnUnauthorizedIdentityCannotConnect`; duplicated AppContainer
+tokens retain their guard. Windows documents that anonymous tokens cannot be opened
+([OpenThreadToken](https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-openthreadtoken)).
+Successful connections and exceptions other than exact access denied still fail.
+Only `IOException` with HRESULT `0x80070542` (`ERROR_BAD_IMPERSONATION_LEVEL`) reports
+an explicit capability-related inconclusive outcome; it is not evidence that the pipe
+denied access. Impersonation cleanup remains in `finally`.
+
+#### Follow-up execution evidence
+
+Source state: `e0600dc84d96f8f16b91b38f08139a6f5a3c0eec` plus the source/test binary
+patch SHA-256 `63D89A20A1FA7AD24548FE08338DD7FEC847DAC866A014E88C709BDC52A6C3F7`
+(documentation excluded). The pinned SDK, runner TFM and configuration are unchanged.
+Artifacts are retained under `artifacts\TestResults\Release\arm64-final-comments-20261116`.
+The final package SHA-256 is
+`EBCB9DCDF09AF867EC22AF09EAA7F48969B6ED1D63A416247A1517CD5A089420`;
+its target and the source target both hash to
+`C25B6AB3E3A58AE44339246F9DCCD82C04FC0E51672E89FCE8993E6C4D46B1DA`.
+Every one of the 17 generated consumers was checked for the exact package SHA-512,
+isolated cache and generated target import.
+
+| Requirement / case | Executed outcome |
+| --- | --- |
+| MTP-only roots do not suppress native discovery / `ComputeRunArguments_UsesControllerRuntimeRoot` and named-profile cases | Both simulated architecture directions pass; the real x64 controller uses the private runtime with the MTP-only item present or absent. |
+| Cross-volume launch / `DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments` | SDK on Q:, intermediates on C:, opposite global application RID: both MTP-item variants pass, including named-profile `--info`, controller identity and host-trace assertions. |
+| Junction lifetime / the same cross-volume cases | Unchanged staging preserves the apphost timestamp; opt-out unlinks the junction; re-enabling restores identical apphost bytes; Clean unlinks without deleting the borrowed SDK. |
+| Existing launch behavior / remaining focused cases | Explicit launch overrides, argument tails, global RID preservation and same-volume incremental staging/cleanup pass. |
+| Anonymous pipe denial / `CreateServerStream_AnUnauthorizedIdentityCannotConnect` | Source correction compiles. This host lacks usable impersonation: all three TFMs explicitly skip on error 1346. No successful denial execution or red/green proof is claimed. |
+
+Commands from the worktree root:
+
+```powershell
+.\build.cmd -pack -c Release -bl
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$results = 'artifacts\TestResults\Release\arm64-final-comments-20261116'
+.\.dotnet\dotnet.exe build $project -c Release -f net12.0 --no-restore "-bl:$results\acceptance-build.binlog" -v:quiet
+& "$results\run-focused.ps1" -Label discovery -Discovery
+& "$results\run-focused.ps1" -Label green-final
+& "$results\prepare-counterfactual.ps1"
+& "$results\run-focused.ps1" -Label counterfactual-red -Cache counterfactual-cache
+& "$results\run-focused.ps1" -Label green-confirmation
+& "$results\verify-provenance.ps1"
+foreach ($label in @('green-final', 'green-confirmation')) {
+    python .github\skills\testfx-acceptance-validation\scripts\verify_execution.py --trx "$results\$label\MSTest.Acceptance.IntegrationTests_net12.0_x64.trx" --expected-tests "$results\expected-tests.json" --started-after (Get-Content "$results\$label\started-after.txt") --process-exit-code 0
+}
+```
+
+Pack, build, discovery, both final runs, provenance checks and both execution gates
+exited 0. Discovery and both final executions reconcile to 17 cases, 17 passed,
+zero skipped. An initial run passed 15/17 because the cross-volume test expectation
+omitted the SDK-appended `net10.0` path segment; that test error was corrected before
+the recorded final runs.
+
+The PR's Windows Release path includes the acceptance project through the full
+`dotnet test --solution TestFx.slnx` invocation in
+`eng/pipelines/steps/test-windows-configuration-tests.yml`, gated by `SkipTests=false`
+and the product-change job conditions. These cases are Windows-only, not AppX activation
+tests; the cross-volume rows additionally require distinct SDK/temp volumes. This is
+static selection evidence, not proof that CI executed the new revision.
+
+**Test-value evidence:** the comparison keeps the exact final test assembly and
+repackages only the pre-fix target from the stated base into an isolated copy
+(package SHA-256 `2997C4ADC0BDEBED454C88AE651CF60FDB9AF58566188B56E59FA458AAE82DA1`;
+all other payload entries byte-identical). It executes all 17 cases, exits 2, and
+reports 12 passes and five failures: four runtime-root/host-trace assertions detect
+the missing native root selection; the fifth reproduces `AppRelativePathRootedException`
+in the generated consumer build. That build failure reproduces the reported symptom
+but is not counted as behavioral red-phase proof. The final package passes the
+same selection twice.
+
+Anonymous-token commands used the repository-local SDK and `Debug` unit-test project
+`test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj`:
+`dotnet test --project <project> --configuration Debug --framework net10.0 --filter
+FullyQualifiedName=Microsoft.Testing.Platform.UnitTests.NamedPipeServerSecurityTests.CreateServerStream_AnUnauthorizedIdentityCannotConnect
+--report-trx --results-directory artifacts/TestResults/pr12468-anonymous-baseline-20261116-01
+-bl:artifacts/log/Debug/pr12468-anonymous-baseline-{}.binlog` exited 0 with one skip.
+The same command after the fix, without `--framework` and with `anonymous-fixed`
+artifact paths, exited 2 with three failures (`net10.0`, `net11.0`, `net462`):
+`IOException` for invalid impersonation level instead of `UnauthorizedAccessException`.
+After adding the exact capability-error handling, the same three-TFM command using
+`artifacts/TestResults/pr12468-anonymous-capability-20261116-01` and
+`artifacts/log/Debug/pr12468-anonymous-capability-{}.binlog` exited 0 with zero passes,
+zero failures and three explicit skips. TRX, JUnit and CTRF were parsed. Denial on a
+capable host remains unverified; the skip is not counted as successful test-value evidence.
+
 ## Gaps
 
 - `--coverage` and `--hangdump` were not run with the `win-arm64` controller, and Test Explorer
@@ -245,12 +360,16 @@ remain under the results directory above.
 - The runtime-root matrix includes simulated SDK RIDs on Windows x64; the final real SDK/controller
   launch also ran on x64. Native ARM64 execution of these new paths remains unverified. The
   real SDK run used the pinned preview SDK, not a separate shipping .NET 10 SDK. CI was not checked.
-- Explicit roots known during MSBuild evaluation are preserved. Runtime-root overrides introduced
+- Inherited architecture-specific roots are preserved; MTP-only items remain scoped to direct MTP
+  execution. Runtime-root overrides introduced
   only by a launch profile after that evaluation have not been validated; the personalized
   apphost searches its app-relative location before environment/global locations.
 - An explicit controller architecture that differs from the SDK architecture requires a matching
   `DOTNET_ROOT_<ARCH>` when that runtime is privately installed; cross-architecture private SDK
   discovery is not inferred from `DOTNET_HOST_PATH`.
+- The cross-volume fallback requires Windows directory-junction support. UNC-hosted SDK
+  installations were not exercised. Anonymous-token denial still needs execution on a host
+  with the required impersonation privilege.
 - The Bazel `//:windows_controllers` validation build and the test harness RID constants
   (`win-x64` test applications) are unchanged; they describe the application under test, not the
   controller.

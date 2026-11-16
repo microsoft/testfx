@@ -263,7 +263,6 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string controllerRuntimeIdentifier = rootVariable == "DOTNET_ROOT_ARM64" ? "win-arm64" : "win-x64";
         bool configuresAppHost = sdkMatchesController
             && applicationRuntimeIdentifier != controllerRuntimeIdentifier
-            && !callerProvidedRoot
             && !disableAutomaticRoot;
         bool expectsRoot = callerProvidedRoot || (!disableAutomaticRoot && sdkMatchesController);
         Assert.AreEqual(
@@ -312,10 +311,28 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
     [OSCondition(OperatingSystems.Windows)]
-    public async Task DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments()
+    public async Task DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments(bool crossVolume, bool explicitMtpRoot)
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        string sdkRoot = Path.Combine(RootFinder.Find(), ".dotnet");
+        string intermediatePath = Path.Combine(Path.GetTempPath(), $"testfx-controller-{Guid.NewGuid():N}");
+        if (crossVolume && string.Equals(Path.GetPathRoot(intermediatePath), Path.GetPathRoot(sdkRoot), StringComparison.OrdinalIgnoreCase))
+        {
+            Assert.Inconclusive("Cross-volume controller validation requires the system temporary directory and SDK on different volumes.");
+        }
+
+        string intermediateProperty = crossVolume
+            ? $"<IntermediateOutputPath>{System.Security.SecurityElement.Escape(intermediatePath)}\\</IntermediateOutputPath>"
+            : string.Empty;
+        string rootVariable = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
+        // MTP-only items must neither leak into dotnet run nor disable its private SDK discovery.
+        string environmentItem = explicitMtpRoot ? $"<TestingPlatformEnvironmentVariable Include=\"{rootVariable}\" Value=\"mtp-only-root\" />" : string.Empty;
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{intermediateProperty}", extraReferences: environmentItem);
         string profiles = Path.Combine(asset.TargetAssetPath, "Properties");
         Directory.CreateDirectory(profiles);
         await File.WriteAllTextAsync(
@@ -335,28 +352,62 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string controllerRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64";
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string tracePath = Path.Combine(asset.TargetAssetPath, "host-trace.txt");
-        _ = await DotnetCli.RunAsync(
-            $"restore \"{asset.TargetAssetPath}\" --runtime {applicationRid}",
-            cancellationToken: TestContext.CancellationToken);
-        DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project \"{asset.TargetAssetPath}\" --no-build --runtime {applicationRid} --launch-profile ControllerInfo " +
-            $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
-            environmentVariables: new Dictionary<string, string?>
+        string controllerDirectory = Path.Combine(
+            crossVolume ? Path.Combine(intermediatePath, "net10.0", applicationRid) : Path.Combine(asset.TargetAssetPath, "obj", "Debug", "net10.0", applicationRid),
+            "PackagedAppController", controllerRid);
+        try
+        {
+            _ = await DotnetCli.RunAsync(
+                $"build \"{asset.TargetAssetPath}\" --runtime {applicationRid} -t:WriteRuntimeContract " +
+                $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:DOTNET_ROOT_X64= -p:DOTNET_ROOT_ARM64=",
+                cancellationToken: TestContext.CancellationToken);
+            DotnetMuxerResult result = await DotnetCli.RunAsync(
+                $"run --project \"{asset.TargetAssetPath}\" --no-build --runtime {applicationRid} --launch-profile ControllerInfo " +
+                $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+                environmentVariables: new Dictionary<string, string?>
+                {
+                    ["DOTNET_ROOT"] = null,
+                    ["DOTNET_ROOT_X64"] = null,
+                    ["DOTNET_ROOT_ARM64"] = null,
+                    ["DOTNET_HOST_TRACE"] = "1",
+                    ["DOTNET_HOST_TRACEFILE"] = tracePath,
+                },
+                cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, result.ExitCode, result.ToString());
+            result.AssertOutputContains($"Test module: {Path.Combine(controllerDirectory, "mstest-appmodel-controller.dll")}");
+            string runtimeLocation = crossVolume ? Path.Combine(controllerDirectory, "dotnet-runtime") : sdkRoot;
+            Assert.Contains(
+                $"Using app-relative location [{runtimeLocation}] as runtime location.",
+                await File.ReadAllTextAsync(tracePath, TestContext.CancellationToken));
+            if (crossVolume)
             {
-                ["DOTNET_ROOT"] = null,
-                ["DOTNET_ROOT_X64"] = null,
-                ["DOTNET_ROOT_ARM64"] = null,
-                ["DOTNET_HOST_TRACE"] = "1",
-                ["DOTNET_HOST_TRACEFILE"] = tracePath,
-            },
-            cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, result.ExitCode, result.ToString());
-        string controllerDll = Path.Combine(
-            asset.TargetAssetPath, "obj", "Debug", "net10.0", applicationRid, "PackagedAppController", controllerRid, "mstest-appmodel-controller.dll");
-        result.AssertOutputContains($"Test module: {controllerDll}");
-        Assert.Contains(
-            $"Using app-relative location [{Path.Combine(RootFinder.Find(), ".dotnet")}] as runtime location.",
-            await File.ReadAllTextAsync(tracePath, TestContext.CancellationToken));
+                Assert.AreEqual(sdkRoot, Directory.ResolveLinkTarget(runtimeLocation, returnFinalTarget: true)!.FullName);
+                string command = $"build \"{asset.TargetAssetPath}\" --runtime {applicationRid} -t:WriteRuntimeContract " +
+                    $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:DOTNET_ROOT_X64= -p:DOTNET_ROOT_ARM64=";
+                string apphost = Path.Combine(controllerDirectory, "mstest-appmodel-controller.exe");
+                DateTime timestamp = File.GetLastWriteTimeUtc(apphost);
+                byte[] apphostBytes = await File.ReadAllBytesAsync(apphost, TestContext.CancellationToken);
+                _ = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+                Assert.AreEqual(timestamp, File.GetLastWriteTimeUtc(apphost), "Unchanged cross-volume staging must remain incremental.");
+                _ = await DotnetCli.RunAsync(
+                    command + " -p:TestingPlatformDisableAppHostDotnetRoot=true", cancellationToken: TestContext.CancellationToken);
+                Assert.IsFalse(Directory.Exists(runtimeLocation), "Opt-out must remove the runtime junction.");
+                _ = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+                Assert.AreEqual(sdkRoot, Directory.ResolveLinkTarget(runtimeLocation, returnFinalTarget: true)!.FullName);
+                Assert.AreSequenceEqual(apphostBytes, await File.ReadAllBytesAsync(apphost, TestContext.CancellationToken));
+                _ = await DotnetCli.RunAsync(
+                    $"clean \"{asset.TargetAssetPath}\" --runtime {applicationRid}", cancellationToken: TestContext.CancellationToken);
+                Assert.IsFalse(Directory.Exists(runtimeLocation), "Clean must remove the junction without deleting the borrowed SDK.");
+                Assert.IsTrue(File.Exists(Path.Combine(sdkRoot, "dotnet.exe")));
+            }
+        }
+        finally
+        {
+            if (crossVolume && Directory.Exists(intermediatePath))
+            {
+                Directory.Delete(intermediatePath, recursive: true);
+            }
+        }
     }
 
     [TestMethod]
