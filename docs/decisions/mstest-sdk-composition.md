@@ -43,8 +43,8 @@ this layer does not enable a downstream or servicing release.
 ## Research and decision
 
 2026-11-13: the clean parent is
-`f9708f5edbd37215b7e53cef840ef1e29ddf3f93`. The frozen source ref and live
-#12435 head are `00428d48c212cf3630dcf6fa31d131c5ae745c98`; the carving input is
+`f9708f5edbd37215b7e53cef840ef1e29ddf3f93`. The frozen source ref and live #12435
+head are `00428d48c212cf3630dcf6fa31d131c5ae745c98`; the carving input is
 `8dd78e1347417e400c3ef8d786059a8bb346162f...refs/pr-stack/source/12435`.
 Reconcile that bounded slice with the parent rather than replacing whole files.
 
