@@ -596,3 +596,125 @@ passes. **Test-value evidence: executed, detected on the final tested revision.*
 The final Linux CI outcome, remote checks, native publication, and real UI
 activation remain separate evidence; no whole-stack green claim follows from
 these local results.
+
+## Packaged-controller fixture composition follow-up
+
+Azure build `1683623`, Windows Release log `150`, exposed six existing
+`PackagedAppIntegrationTests` failures. The generated projects pair
+`MSTest.TestAdapter` with `UseWinUI=true`; normal Rebuild and the incompatible
+platform probe now correctly reach the adapter-composition guard before their
+intended assertions. Property-only targets had concealed the same invalid
+setup because they do not compile. A fresh local selection reproduces all six
+failures with the unchanged fixture source
+`6079CAE07FDD913A1A4ED95F306462C77BED8D809D6C2A38E264AFE642665BB1`.
+
+The class contains two distinct contracts. UI-property, launcher-generation,
+and Rebuild fixtures must name an actual extracted UI package and compatible
+Windows TFM. The explicitly documented forced-loose sidecar tests instead
+build ordinary console hosts and exercise controller process routing without
+OS registration; keep their ordinary adapter/metapackage controls intact.
+This changes no production validation, package policy, public switch, or
+activation boundary.
+
+| Fixture input / callers | Correct shipping composition | Assertions retained |
+| --- | --- | --- |
+| Generated `UseWinUI=true` property/launcher/Rebuild projects | `MSTest.WinUI`, `net10.0-windows10.0.26100.0`; derive actual output and recipe paths from that TFM | Caller edits, copied launchers, incremental timestamps, Clean/Rebuild ownership, and exact launcher program/arguments |
+| Generated UWP model policy rows | `MSTest.Uwp`, compatible modern Windows TFM | Controller/helper selection and aligned package closure |
+| Ordinary/default and explicit UWP-tooling opt-out controls | `MSTest` or `MSTest.TestAdapter` plus shared core, ordinary net10.0 / net11.0 | Console custom-executable/environment controls, forced-loose sidecar results, cancellation and aggregate exits |
+| Deliberate MSBuild `OS=Unix` UI-policy row | Windows host with real UI package; not an actual Unix-host package test | Empty controller/extensions and the unchanged modeled-OS contract |
+| Incompatible platform assets | Valid WinUI composition plus the intentional `Microsoft.Testing.Platform.MSBuild` 1.0.0 pin | The exact existing version-alignment diagnostic, not restore/composition failure |
+
+Use explicit package identities in the policy data rather than silently mapping
+an ordinary package label to a UI package. Replace duplicate nonshipping
+ordinary-plus-UI rows with the corresponding actual UI composition while
+retaining every policy branch and ordinary control. UI-package rows alone
+carry the Windows-pack prerequisite. Preserve all six reported test identities
+and assertions for the fresh-cache wrong-fixture/correct-fixture comparison,
+then run the full class with normal assembly parallelism.
+
+### Executed fixture-correction evidence
+
+The final executable delta is based on
+`26aac9ff0e9b78ab2d0aebbd3eb66a30c9f6c652`, with fixture-source SHA-256
+`14CA8B2FC76AAB9118F95DE5FDC65949046AA710EB6C8236FFD0E206BFE641F5`
+and saved fixture-patch SHA-256
+`54A5292A51756BEE5ABCF932A01C470DF18CBFA940DC85B0ECC2AEC608B1FB1C`.
+Production, SDK policy/composition tests, lower package inputs, and main are
+unchanged. An initial build rejected `var` with IDE0008; it is corrected, not
+counted as red evidence. The final pinned 43-source pack and acceptance build
+passed with zero warnings/errors:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+```
+
+The generated filter contains the 43 source projects from the actual mutation
+catalog plus the owning acceptance project; it does not bypass the complete
+package-content validator. The outer host is net12.0, using SDK
+`12.0.100-alpha.1.26562.108` and desktop MSBuild `18.13.0.52701`.
+MSTest packages are `5.0.0-dev`; controller/platform packages are `3.0.0-dev`,
+except for the intentional incompatible MSBuild `1.0.0` pin.
+
+**Test-value evidence:** the unchanged six reported UIDs/assertions first
+reproduce the wrong-fixture failure (six executed/failed, zero skipped, exit 2).
+This is a fixture-failure baseline, not a production fault injection. After
+correcting only fixture inputs, the same six pass, and the final full-class
+selection executes all 68 cases successfully, zero skipped, exit 0. Both
+24-row policy matrices now contain 14 honest package/model combinations;
+duplicate invalid ordinary-plus-UI inputs are removed, every policy branch
+and ordinary control remains, and a real WinUI custom-executable row is added
+(87 total cases become 68).
+
+| Requirement | Executed evidence |
+| --- | --- |
+| Caller launcher ownership through Rebuild | `TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile` retains all seven rows, including the three failing Rebuild sequences; `TestExplorer_RebuildPreservesSourceCopiedCallerLaunchers` retains both bool rows. All pass. |
+| Intended incompatible-platform failure is not masked | `ExplicitConsumer_IncompatiblePlatformCannotSilentlyRun` passes its unchanged exact version-alignment assertion. A direct rebuild of the retained generated WinUI project exits 1 with that diagnostic, zero warnings, and no restore/composition error. |
+| Existing policy and ordinary runtime controls survive | Both 14-row policy methods, all three `ExplicitConsumer_PreservesCustomExecutableAndEnvironment` rows, ordinary custom-executable/runtime-result cases, suppressed launcher, cancellation marker, and all three mixed-TFM aggregation cases pass. |
+
+Final discovery is independently reconciled against 19 source-declared method
+groups before execution. Normal method-level CPU-count parallelism remains;
+each generated asset owns its random directory, child environment overrides
+stay child-local, and no locks/serialization or shared package eviction is added.
+The final run started at `2026-11-16T18:11:50.884436Z`:
+
+```powershell
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$filter = 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.PackagedAppIntegrationTests'
+$results = Join-Path $PWD 'artifacts\validation\packaged-full-final'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+The TRX execution gate verifies 68 planned/selected/executed/passed, zero
+failed/skipped. JUnit and CTRF exports independently contain all 68 passing
+cases. Ten current Shipping archives match their physical fresh-cache archives,
+including WinUI
+`BECB49AC34F68A5064B39DD49D7B75F3C26FF6E83A90FEED422995AEDB933290`,
+UWP `D9F061C454F2E7E41DB26EBBDD7252820CCA0E0F4CD19704D238C284ED091216`,
+and ordinary adapter
+`003EA040EE62C081B39F6478BA0E7BF514F4CABC6772FABD82742E074AF3D87A`.
+Resolved assets, launchers, reports, commands, and complete identities/hashes
+are retained under `artifacts\validation\packaged-*`.
+
+The rebuilt final acceptance DLL SHA-256 is
+`2CBE0CC51408FEB4631553F597F7D3B890E0DADCDF6403C7AE04560E37AFB87E`.
+To avoid describing the older DBFE DLL as final, both late helper cases are
+also rebound to this DLL with separate fresh caches. The archived independently
+repacked counterfactual SDK (`C91364ED...`) has exactly the same ten `Sdk/`
+payloads as the newly packed SDK except for `Sdk/Sdk.targets`. With only the
+defective helper selection restored, the same two UIDs execute and fail the
+intended adapter/core-closure assertion before compilation (exit 2); the current
+packed SDK
+`6118DD776CDEAD72FA1F68C1876AEE98304E4DCFEFFB255FA829C753501B8591`
+passes both (exit 0, zero skipped). The SDK source and composition-test source
+remain unchanged; the historical 84-case/DBFE results retain their original
+revision attribution.
+
+```powershell
+$lateUids = '113f6bd7-9b59-8fba-9d37-9ecdcf938bbf', '1b0a5108-fe73-8583-b0c6-cca4003c2c2f'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter-uid $lateUids -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+This correction validates MSBuild/launcher composition and forced-loose process
+contracts, not new real UI activation or rendered IDE behavior. Exact new-head
+remote CI remains required; the old Windows Release failure and external top
+layer brownout/merge-ref blockers are not silently reclassified as green.

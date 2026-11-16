@@ -11,7 +11,12 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFixture>
 {
+    private const string WindowsTargetFramework = "net10.0-windows10.0.26100.0";
+
     public TestContext TestContext { get; set; }
+
+    private static string? WindowsPackageIgnoreMessage
+        => OperatingSystem.IsWindows() ? null : "UI composition packages are produced only by Windows packs.";
 
     [TestMethod]
     [DataRow("--help", false)]
@@ -21,7 +26,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [OSCondition(OperatingSystems.Windows)]
     public async Task ShippingController_FilterHelpAndInfoRequireMSTestToken(string option, bool mstest)
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", "<UseWinUI>true</UseWinUI>");
         DotnetMuxerResult restore = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
             cancellationToken: TestContext.CancellationToken);
@@ -81,24 +86,39 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         }
     }
 
-    public static IEnumerable<(string Package, string Properties, bool Controller, bool Helper)> ConsumerContracts()
+    public static IEnumerable<TestDataRow<(string Package, string Properties, bool Controller, bool Helper)>> ConsumerContracts()
     {
         foreach (string package in new[] { "MSTest", "MSTest.TestAdapter" })
         {
-            yield return (package, "<UseWinUI>true</UseWinUI>", true, true);
-            yield return (package, "<UseUwp>true</UseUwp>", true, true);
-            yield return (package, "<UseUwpTools>true</UseUwpTools>", true, true);
-            yield return (package, "<UseUwp>true</UseUwp><UseUwpTools>false</UseUwpTools>", false, true);
-            yield return (package, "<UseWinUI>true</UseWinUI><WindowsPackageType>None</WindowsPackageType>", false, true);
-            yield return (package, "<UseWinUI>true</UseWinUI><UseVSTest>true</UseVSTest>", false, true);
-            yield return (package, "<UseWinUI>true</UseWinUI><IsTestApplication>false</IsTestApplication>", false, true);
-            yield return (package, "<UseWinUI>true</UseWinUI><OutputType>Library</OutputType>", false, true);
-            yield return (package, "<UseWinUI>true</UseWinUI><EnableMSTestRunner>false</EnableMSTestRunner>", false, false);
-            yield return (package, "<UseWinUI>true</UseWinUI><EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>", false, true);
-            yield return (package, "<UseWinUI>true</UseWinUI><OS>Unix</OS>", false, true);
-            yield return (package, string.Empty, false, true);
+            yield return new((package, "<UseUwp>true</UseUwp><UseUwpTools>false</UseUwpTools>", false, true));
+            yield return new((package, string.Empty, false, true));
+        }
+
+        (string Package, string Properties, bool Controller, bool Helper)[] uiCases =
+        [
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI>", true, true),
+            ("MSTest.Uwp", "<UseUwp>true</UseUwp>", true, true),
+            ("MSTest.Uwp", "<UseUwpTools>true</UseUwpTools>", true, true),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><WindowsPackageType>None</WindowsPackageType>", false, true),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><UseVSTest>true</UseVSTest>", false, true),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><IsTestApplication>false</IsTestApplication>", false, true),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><OutputType>Library</OutputType>", false, true),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><EnableMSTestRunner>false</EnableMSTestRunner>", false, false),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>", false, true),
+            ("MSTest.WinUI", "<UseWinUI>true</UseWinUI><OS>Unix</OS>", false, true),
+        ];
+        foreach ((string Package, string Properties, bool Controller, bool Helper) testCase in uiCases)
+        {
+            yield return new(testCase) { IgnoreMessage = WindowsPackageIgnoreMessage };
         }
     }
+
+    public static IEnumerable<TestDataRow<string>> ExecutableOverridePackages =>
+    [
+        new("MSTest"),
+        new("MSTest.TestAdapter"),
+        new("MSTest.WinUI") { IgnoreMessage = WindowsPackageIgnoreMessage },
+    ];
 
     [TestMethod]
     [DynamicData(nameof(ConsumerContracts))]
@@ -125,13 +145,13 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
-    [DataRow("MSTest")]
-    [DataRow("MSTest.TestAdapter")]
+    [DynamicData(nameof(ExecutableOverridePackages))]
     public async Task ExplicitConsumer_PreservesCustomExecutableAndEnvironment(string package)
     {
         using TestAsset asset = await GenerateConsumerAsync(
             package,
-            "<UseWinUI>true</UseWinUI><TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>");
+            (package == "MSTest.WinUI" ? "<UseWinUI>true</UseWinUI>" : string.Empty)
+                + "<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
             cancellationToken: TestContext.CancellationToken);
@@ -149,7 +169,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     {
         _ = helper;
         using TestAsset asset = await GenerateConsumerAsync(package, properties);
-        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.exe");
+        string executable = Path.Combine(GetConsumerOutputDirectory(asset, package), "PackagedConsumer.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
@@ -181,8 +201,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [OSCondition(OperatingSystems.Windows)]
     public async Task ComputeRunArguments_PreservesExplicitOverrides(string properties, string expectedCommand)
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{properties}");
-        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.exe");
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", $"<UseWinUI>true</UseWinUI>{properties}");
+        string executable = Path.Combine(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
@@ -201,7 +221,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task ComputeRunArguments_ResolvesRelativeTargetAndPreservesTailWithoutAppHost()
     {
         using TestAsset asset = await GenerateConsumerAsync(
-            "MSTest.TestAdapter",
+            "MSTest.WinUI",
             """
             <UseWinUI>true</UseWinUI>
             <UseAppHost>false</UseAppHost>
@@ -231,7 +251,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [OSCondition(OperatingSystems.Windows)]
     public async Task ComputeRunArguments_NoAppHostWithoutStagedExecutableFailsExplicitly()
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI><UseAppHost>false</UseAppHost>");
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", "<UseWinUI>true</UseWinUI><UseAppHost>false</UseAppHost>");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract",
             failIfReturnValueIsNotZero: false,
@@ -244,7 +264,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [OSCondition(OperatingSystems.Windows)]
     public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned()
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", "<UseWinUI>true</UseWinUI>");
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
         DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
@@ -272,10 +292,10 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task TestExplorer_GeneratesIncrementalExecutableAndRecipeLaunchers(bool specialPath)
     {
         using TestAsset asset = await GenerateConsumerAsync(
-            "MSTest.TestAdapter",
+            "MSTest.WinUI",
             """
             <UseWinUI>true</UseWinUI>
-            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net10.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\$ConsumerTargetFramework$\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
             """ + (specialPath ? """<IntermediateOutputPath>obj\controller's &amp; special path\</IntermediateOutputPath>""" : string.Empty));
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
@@ -284,7 +304,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string bootstrapFile = (await File.ReadAllTextAsync(
             Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
         string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
-        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0");
+        string directory = GetConsumerOutputDirectory(asset, "MSTest.WinUI");
         string[] launchers =
         [
             Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
@@ -323,10 +343,10 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile(bool generateFirst, string operation)
     {
         using TestAsset asset = await GenerateConsumerAsync(
-            "MSTest.TestAdapter",
+            "MSTest.WinUI",
             """
             <UseWinUI>true</UseWinUI>
-            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net10.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\$ConsumerTargetFramework$\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
             """);
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
@@ -336,7 +356,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             Assert.AreEqual(0, first.ExitCode, first.ToString());
         }
 
-        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0");
+        string directory = GetConsumerOutputDirectory(asset, "MSTest.WinUI");
         string[] launchers =
         [
             Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
@@ -396,10 +416,10 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task TestExplorer_RebuildPreservesSourceCopiedCallerLaunchers(bool generateFirst)
     {
         using TestAsset asset = await GenerateConsumerAsync(
-            "MSTest.TestAdapter",
+            "MSTest.WinUI",
             """
             <UseWinUI>true</UseWinUI>
-            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net10.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\$ConsumerTargetFramework$\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
             """,
             extraReferences: """
                 <None Include="CallerExecutable.json" TargetPath="PackagedConsumer.launcher.config.json" CopyToOutputDirectory="Always" />
@@ -422,7 +442,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, rebuild.ExitCode, rebuild.ToString());
-        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0");
+        string directory = GetConsumerOutputDirectory(asset, "MSTest.WinUI");
         foreach (string launcher in new[] { "PackagedConsumer.launcher.config.json", "PackagedConsumer.build.launcher.config.json" })
         {
             Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(Path.Combine(directory, launcher), TestContext.CancellationToken), launcher);
@@ -436,13 +456,13 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [OSCondition(OperatingSystems.Windows)]
     public async Task TestExplorer_PreservesExplicitLauncherOptOuts(string properties)
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{properties}");
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", $"<UseWinUI>true</UseWinUI>{properties}");
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, result.ToString());
-        Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "PackagedConsumer.launcher.config.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.launcher.config.json")));
     }
 
     [TestMethod]
@@ -470,7 +490,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [OSCondition(OperatingSystems.Windows)]
     public async Task ExplicitConsumer_MissingPayloadFailsWithoutFallback()
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", "<UseWinUI>true</UseWinUI>");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteContract -p:_TestingPlatformPackagedAppPackageRoot=\"{asset.TargetAssetPath}{Path.DirectorySeparatorChar}missing{Path.DirectorySeparatorChar}\"",
             failIfReturnValueIsNotZero: false,
@@ -485,7 +505,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task ExplicitConsumer_IncompatiblePlatformCannotSilentlyRun()
     {
         using TestAsset asset = await GenerateConsumerAsync(
-            "MSTest.TestAdapter",
+            "MSTest.WinUI",
             "<UseWinUI>true</UseWinUI>",
             extraReferences: "<PackageReference Include=\"Microsoft.Testing.Platform.MSBuild\" Version=\"[1.0.0]\" />");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
@@ -612,12 +632,24 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         }
     }
 
+    private static string GetConsumerTargetFramework(string package)
+        => package is "MSTest.WinUI" or "MSTest.Uwp" ? WindowsTargetFramework : "net10.0";
+
+    private static string GetConsumerOutputDirectory(TestAsset asset, string package)
+        => Path.Combine(asset.TargetAssetPath, "bin", "Debug", GetConsumerTargetFramework(package));
+
     private static Task<TestAsset> GenerateConsumerAsync(
         string package, string properties, string outcome = "Passed", string extraReferences = "", bool multiTarget = false)
     {
-        string references = package == "MSTest"
-            ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
-            : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+        string references = package switch
+        {
+            "MSTest" => $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />",
+            "MSTest.TestAdapter" => $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />",
+            "MSTest.WinUI" or "MSTest.Uwp" => $"<PackageReference Include=\"{package}\" Version=\"{MSTestVersion}\" />",
+            _ => throw new ArgumentOutOfRangeException(nameof(package), package, "Unsupported consumer composition."),
+        };
+        string targetFramework = GetConsumerTargetFramework(package);
+        properties = properties.Replace("$ConsumerTargetFramework$", targetFramework, StringComparison.Ordinal);
         string test = outcome == "Empty"
             ? string.Empty
             : $$"""
@@ -692,7 +724,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             #file PackagedConsumer.csproj
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
-                {{(multiTarget ? "<TargetFrameworks>net10.0;net11.0</TargetFrameworks>" : "<TargetFramework>net10.0</TargetFramework>")}}
+                {{(multiTarget ? "<TargetFrameworks>net10.0;net11.0</TargetFrameworks>" : $"<TargetFramework>{targetFramework}</TargetFramework>")}}
+                {{(targetFramework == WindowsTargetFramework ? "<EnableWindowsTargeting>true</EnableWindowsTargeting>" : string.Empty)}}
                 <OutputType>Exe</OutputType>
                 <EnableMSTestRunner>true</EnableMSTestRunner>
                 <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
