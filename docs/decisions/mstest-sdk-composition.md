@@ -303,3 +303,97 @@ core reference, continue rejecting a separate extensions package in the resolved
 composition closure, and keep UI/adapter isolation assertions. Reconcile the
 ordinary-helper and UWP-tooling-opt-out expectations with the same parent repair;
 do not remove the facade or duplicate producer changes in this layer.
+
+## Rebased validation: 2026-11-16
+
+The tested source is `1c1e120fa04496e32c5bd4fdadb74f1f60944aec`, replayed
+onto the coordinator-verified package tip
+`c2afb4ae801c8961bc459edd297668c6fd705ff4`. That parent contains shared-core
+`3af2ff923500f02dba67400a5a52f6d995d32097` and frozen main
+`c094c9cfc610ed31cdb4d22877ad7ce26cd881a5`. Only the four SDK-layer commits
+were replayed; the one conflict was a helper comment, resolved in favor of the
+incoming forwarding facade. The producer's compatibility project, package
+ownership, and classic-UWP runtime allowlist are unchanged by this layer.
+
+The pinned SDK is now `12.0.100-alpha.1.26562.108`, desktop MSBuild
+`18.13.0.52701`, outer host `net12.0`. Generated consumers still exercise
+net10.0/net11.0, their Windows variants, net462, netstandard2.0, and classic UAP.
+The source filter contains the exact 43 `src/` entries in `TestFx.slnx`,
+including `TestFramework.Compatibility`, plus the MSTest acceptance owner.
+From this worktree:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+python .github\scripts\check_action_pins.py
+```
+
+Pack/build **exit 0, 0 warnings, 0 errors**, including package-content and
+metadata validation. The action-pin audit **exit 0**, checking 2,769 references
+in 60 files. These are fresh results, not the failed old-head pipeline.
+
+The focused selector is the earlier eight-clause `$selected` array plus
+`FullyQualifiedName=MSTest.Acceptance.IntegrationTests.CoreFrameworkAssemblyTests.PackedExtensionsForwardMovedTypesToCore`,
+with the same classic-UWP exclusion. `TESTFX_COLLECTION_NUGET_CACHE` points to
+the marked, task-owned `artifacts\validation\cache-current`, and
+`Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup=0` retains generated
+consumers for provenance. Both overrides are local to the command process.
+The remaining environment and `$project` match the earlier command block.
+
+```powershell
+$results = Join-Path $PWD 'artifacts\validation\green-current'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+The source/data-row plan independently reconciles **80 distinct discovered
+cases**: the same 76 bounded SDK cases plus four packed-facade metadata cases.
+Discovery and execution both **exit 0**; **80 executed/passed, 0 failed/skipped**.
+The named classic-UWP filter above was then run alone with
+`TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1` and
+`$results=artifacts\validation\green-classic`: discovery and execution
+**exit 0**, **1 executed/passed, 0 failed/skipped**. This only evaluates the
+real packed classic composition with desktop MSBuild; it does not activate or
+register an app. Total: **81 distinct passed cases**.
+
+Fresh TRX/JUnit/CTRF exports account for all 80 and 1 cases respectively. Both
+TRX files pass `verify_execution.py` with the independently reconciled expected
+names, captured start time, and actual exit 0. One initial verifier invocation
+converted its JSON timestamp to PowerShell's locale display string; preserving
+the ISO string with `ConvertFrom-Json -DateKind String` fixed that evidence-only
+invocation without changing or rerunning the product.
+
+All 74 generated `project.assets.json` files use the owned current cache.
+The following archives match their physical cached copies byte-for-byte:
+
+| Package | Version | Packed and cached SHA-256 |
+| --- | --- | --- |
+| MSTest.TestFramework | 5.0.0-dev | `7604F60D56A986AF0298D7455752CE2B7F12012DB40487BF2BC42697150F106C` |
+| MSTest.Sdk | 5.0.0-dev | `394F7C284C7E2774BA9C54FC1680ED8DFD244A0BB733856FFC234CACF4E06935` |
+| MSTest.TestAdapter | 5.0.0-dev | `72089E45E2AAB4B65EC4ED2476B6779753CFC5D7AA0714961FB70F068E18D460` |
+| MSTest.Uwp | 5.0.0-dev | `80CAC5B437498343B02B3E6E70FCCE2D6F1F84551E2847A37588AA9786296042` |
+| MSTest.WinUI | 5.0.0-dev | `E73DAA750205C10C7A90A1072FDEEEFA6F098D032977BD850CFEC7E4D81B1C8B` |
+| MSTest.SourceGeneration | 5.0.0-dev | `0F4CEFBE54ECC46CD4E8DC9F8142F2243BD80FFE0DB627228E609FF73B997E2C` |
+| Microsoft.Testing.Platform | 3.0.0-dev | `08237DC421DBA1770533B5D57497F367B63BF7F60DDA53D23561546C581CB9C2` |
+| Microsoft.Testing.Platform.MSBuild | 3.0.0-dev | `F048C82F94A12C4F02DAAF20AA216C2072D5A47A2B3F0CF779F4AD89F9625723` |
+| Microsoft.Testing.Extensions.PackagedApp.MSBuild | 3.0.0-dev | `2E501725365983D0180789BFB42D05870AC24C983CAF6D93F4A9AE7EECB6E099` |
+
+The six ordinary VSTest/standalone/CPM Debug/Release multi-TFM cases run actual
+net462 consumers; all 24 copied core/facade/adapter/services payloads match
+their selected cache assets. UI-with-helper cases also retain copied
+adapter/services hash comparisons. Composition checks require the facade beside
+the one core reference while rejecting a separate extensions package. The four
+metadata cases prove that each ordinary facade contains no implementation
+type definitions beyond `<Module>` and forwards the exact expected types.
+
+### Test-value evidence for the follow-up
+
+**Executed: preservation passed** for all 81 cases on the rebased source.
+The path-construction change preserves the trusted relative inputs and
+assertions; the facade-aware adjustment follows the preserved incoming package
+contract. No runtime/package behavior was added by these follow-up fixes.
+The historical paired 21-detection/6-preservation experiment above remains
+bound to its original revisions and was not rerun as a new counterfactual for
+this rebase. Fresh counterfactual sensitivity is therefore **unverified**, not
+inferred from this green run. Actual UI activation/native compilation remain
+the adjacent layers' responsibilities; whole-stack CI and release-branch
+validation are not established by these local results.
