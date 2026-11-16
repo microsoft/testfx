@@ -43,6 +43,15 @@ steps:
         exit 0
       }
       Write-Host "Affected-test Git baseline: $($baseline.Trim())."
+      $seedScript = Join-Path $repository 'eng/seed-affected-tests-cache.ps1'
+      if ($env:TESTFX_AFFECTED_TESTS_SEED -ne '0' -and (Test-Path -LiteralPath $seedScript)) {
+        try {
+          & $seedScript -Repository $repository -CommonCommit $baseline.Trim()
+        }
+        catch {
+          Write-Host "##vso[task.logissue type=warning]Affected-test cache seed failed: $($_.Exception.Message)"
+        }
+      }
     }
     $binlogName = switch ($affectedTestsMode) {
       'collect' { 'TestCollect' }
