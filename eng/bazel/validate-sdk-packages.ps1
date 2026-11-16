@@ -340,7 +340,7 @@ try {
                 Name = "sdk-$($model.ToLowerInvariant())-$framework"
                 Framework = "$framework-windows10.0.26100.0"
                 Properties = "<EnableWindowsTargeting>true</EnableWindowsTargeting><MSTestApplicationModel>$model</MSTestApplicationModel>"
-                Expected = @('MSTest.TestFramework', "MSTest.$model", 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage')
+                Expected = @('MSTest.TestFramework', "MSTest.$model", 'Microsoft.Testing.Extensions.TrxReport', 'Microsoft.Testing.Extensions.CodeCoverage', 'Microsoft.Testing.Extensions.PackagedApp.MSBuild')
             }
         }
     }

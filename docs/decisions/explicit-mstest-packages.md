@@ -378,6 +378,7 @@ The known native net462 PlatformServices System.Reflection.Metadata failure has
 only static baseline attribution and was not repaired or experimentally chased.
 The coordinator retains downstream rollout/servicing ownership; layers 3 and 4
 retain their explicitly deferred policy/native-package responsibilities.
+
 ## Native parity slice: layer 4
 
 2026-11-13: carve only the residual native rules, probes and validators from
@@ -501,3 +502,26 @@ rejects core's facade as a retired payload; the adapted function accepts it.
 The old run exits 1 and the adapted run exits 0 with both cases passing. These
 archives contain synthetic entry bytes: this proves the layout validator's
 contract, not CLR type forwarding, real package provenance or final CI.
+
+Interim execution at `ebc0578dab5bc5e97f8f0965fd53d718218a2cdf`, based on released
+SDK parent `848e85672405fb84c0526048dd8d225bc883b4b3`, passed the maintained native
+MSTest validator with ten real archives, fresh net10/net11 consumers, MSBuild
+invocation and satellite removal/restoration. The same compiled
+`PackagedTargetsProvideCoreAndParallelization` test also passed, failed its
+explicit facade-presence assertion after removing only the DLL from an owned
+publish copy, and passed after restoration: one executed case and exits 0/2/0.
+Windows validation passed all five CLR probes, exact 26/5 compatibility
+inventories and four additional unit suites (1,096 passed, 13 existing skips).
+The full native graph and composed-product validator also passed on Windows.
+These results do not claim final repaired-stack CI.
+
+The native SDK validator exposed a stale expectation in this layer's four new
+UI evaluation cases: packaged UWP/WinUI test applications correctly receive
+`Microsoft.Testing.Extensions.PackagedApp.MSBuild` from the shipping SDK's
+`Runner/Common.targets`. Preserve that helper and its aligned MTP version in
+the expected package set rather than disabling the existing SDK behavior.
+After that expectation-only correction, the native SDK/meta-package validator
+passed all fourteen evaluations, five real consumer builds, default/minimal SDK
+runner checks, `dotnet test`, and VSTest execution, including their expected
+failure and empty-selection exits. UI evaluation remains policy coverage, not
+native XAML application compilation or activation.
