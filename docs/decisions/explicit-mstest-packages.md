@@ -192,6 +192,19 @@ then passed the existing complete harness: 12 executed, 12 passed, 0 failed,
 0 skipped. The harness stages isolated snapshots and preserves the actual task
 host/incrementality scenarios; it does not rebuild product assemblies.
 
+CI subsequently composed the stack with main
+`94711f3b4db336920e628039fdd54437458ae441` (#12490 and #12489). The coordinator
+explicitly advanced the bottom to that revision rather than discarding its
+restore/coverage and net462-timeout changes. The layer replay onto verified
+`500f4f0c50401dd1e1945a846b3d183a379d5ddf` preserved the upstream deterministic
+mapped-NuGet exclusion `^[\\/]_\d+[\\/].*` in both the production output and
+exact expected XML, alongside the facade assembly-name correction. The actual
+merged twelve-case incrementality harness passed all twelve cases with no
+skips. All six-build-validated sample project blobs and the existing managed
+product package hashes remained unchanged by that replay. These are explicit
+revision/source-equivalence checks, not a claim that older CI runs tested a
+later Git head.
+
 ## Historical validation and demonstration
 
 | Requirement | Existing automated evidence | Surface / limitation |
