@@ -5,6 +5,7 @@ using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 
 using Moq;
@@ -727,6 +728,39 @@ public sealed class RetryArtifactRecoveryProtocolTests
                 attempt.ManifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Times.Never);
             fixture.FileSystem.Verify(value => value.DeleteFile(attempt.ManifestPath), Times.Once);
             fixture.AssertInputsPreserved();
+        }
+        finally
+        {
+            await fixture.CloseAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task Orchestrate_ChildExitBeforeServerConnectionCompletesUsesGracePeriod()
+    {
+        var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken);
+        var connectionReleased = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // The pipe server serves the child before WaitConnectionAsync completes. Hold its final connection log until
+        // the runner schedules the grace delay, so the child deterministically exits first and the pending connection
+        // must win the grace period for the attempt results to be consumed.
+        fixture.Logger.Setup(value => value.LogAsync(
+            It.IsAny<LogLevel>(), It.Is<string>(message => message.StartsWith("Client connected to ", StringComparison.Ordinal)),
+            It.IsAny<Exception>(), It.IsAny<Func<string, Exception?, string>>()))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>(
+                (level, message, error, _) => fixture.Logs.Enqueue((level, message, error)))
+            .Returns(connectionReleased.Task);
+        fixture.OnGraceDelay = () => connectionReleased.TrySetResult(true);
+        fixture.ChildBody = PassedAttemptAsync;
+        try
+        {
+            Assert.AreEqual(0, await fixture.RunAsync());
+
+            Attempt attempt = Assert.ContainsSingle(fixture.Attempts);
+            Assert.IsEmpty(attempt.RetryIds);
+            Assert.IsEmpty(fixture.Warnings);
+            AssertBefore(fixture, "complete-child:1", "grace-delay");
+            Assert.AreEqual(1, fixture.Events.Count(value => value == "grace-delay"));
         }
         finally
         {

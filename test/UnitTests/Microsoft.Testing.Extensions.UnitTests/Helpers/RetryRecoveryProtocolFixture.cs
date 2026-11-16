@@ -40,7 +40,7 @@ internal sealed class RetryRecoveryProtocolFixture
     public const string DiagnosticDestinationVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
 
     private readonly CancellationTokenSource _lifetime;
-    private readonly ProtocolTasks _tasks = new();
+    private readonly ProtocolTasks _tasks;
     private readonly ServiceProvider _services = new();
     private readonly Func<IServiceProvider, ITestHostApplicationLifetime> _lifecycleFactory;
     private readonly ICompositeExtensionFactory _consumerFactory;
@@ -52,6 +52,7 @@ internal sealed class RetryRecoveryProtocolFixture
 
     public RetryRecoveryProtocolFixture(CancellationToken cancellationToken, int maxRetries = 1)
     {
+        _tasks = new(this);
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _lifetime.CancelAfter(TimeSpan.FromMinutes(1));
         Root = Path.Combine(Path.GetTempPath(), "retry-protocol-" + Guid.NewGuid().ToString("N"));
@@ -227,6 +228,8 @@ internal sealed class RetryRecoveryProtocolFixture
     public ConcurrentQueue<string> Events { get; } = new();
 
     public ConcurrentQueue<(LogLevel Level, string Message, Exception? Error)> Logs { get; } = new();
+
+    public Action? OnGraceDelay { get; set; }
 
     public ConcurrentQueue<(string Source, string Destination, bool Overwrite)> Copies { get; } = new();
 
@@ -636,7 +639,7 @@ internal sealed class RetryRecoveryProtocolFixture
 #endif
     }
 
-    private sealed class ProtocolTasks : ITask
+    private sealed class ProtocolTasks(RetryRecoveryProtocolFixture owner) : ITask
     {
         private readonly ConcurrentQueue<Task> _work = new();
 
@@ -653,7 +656,21 @@ internal sealed class RetryRecoveryProtocolFixture
         public Task Delay(int millisecondDelay) => throw new AssertFailedException("Retry recovery must not schedule an unowned delay.");
 
         public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken)
-            => throw new AssertFailedException("Retry recovery must not schedule an unowned delay.");
+        {
+            // NamedPipeServer starts serving requests before WaitConnectionAsync completes, so a fast child can
+            // finish its session and exit first. The runner then races the pending connection against a short
+            // grace delay. That path is only legitimate once the child has connected.
+            if (!owner.Events.Any(static value => value.StartsWith("connected-child:", StringComparison.Ordinal)))
+            {
+                throw new AssertFailedException("Retry recovery must not schedule a delay before the child connected.");
+            }
+
+            var delay = Task.Delay(timeSpan, cancellationToken);
+            _work.Enqueue(delay.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default));
+            owner.Events.Enqueue("grace-delay");
+            owner.OnGraceDelay?.Invoke();
+            return delay;
+        }
 
         public async Task DrainAsync()
         {
