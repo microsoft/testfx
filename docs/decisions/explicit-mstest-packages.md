@@ -121,6 +121,42 @@ Final-head package consumption, execution counts, provenance, and remote CI will
 be recorded once performed. The older evidence in the next section remains
 historical; it does not prove the rebased facade layout.
 
+The first committed maintenance head,
+`a9406f988adb7cab787bddda02431ddfc232f948`, passed all 57 independently discovered
+package/consumer/Playwright cases, including all six precompiled Playwright rows
+and seven hashed ordinary/UI core consumers. Both packaged WinUI activation cases
+also passed, as did real modern UWP net10/net11, unsupported deployment, and
+unpackaged WinUI.
+
+Real classic UWP exposed a distinct facade-deployment defect: all three unchanged
+SDK/metapackage/direct-package cases executed and failed their layout assertion
+because `MSTest.TestFramework.Extensions.dll` was missing. The classic test source
+blob was `6dcd56b32e0b6b39715f13058ec669ce30878cc1`. Its binlog confirms that
+`ResolvePackageAssets` supplied the netstandard facade as `RuntimeCopyLocalItems`,
+but SDK-style UWP disables their default copying and the adapter's existing
+explicit runtime allowlist omitted it. The initial hypothesis that the old layout
+assertion should be renamed was rejected after this trace. The correction retains
+the assertion and adds only the facade to that existing UWP copy list; no new
+application-model or helper-copy policy is introduced.
+
+The same three retained tests then executed and passed after the pinned Release
+repack, with no skips and outer exit zero. The test blob stayed unchanged.
+Production patch SHA-256:
+`F68B4DAB401172220AEF0FDC59C2A328B83C5295CD15C3E365CEF26DA86B71D4`.
+The pre-fix outer run exited 2 with exactly the three missing-facade layout
+assertions; the fixed run exited 0 and also verified all six associated child
+results in each classic app. Both variants used separate fresh marked consumer
+caches and SDK `12.0.100-alpha.1.26562.108`.
+
+Before publication, main advanced once through the Arcade update
+[#12480](https://github.com/microsoft/testfx/pull/12480). The coordinator froze the
+maintenance wave on main `c094c9cfc610ed31cdb4d22877ad7ce26cd881a5` and released
+new shared-core parent `3af2ff923500f02dba67400a5a52f6d995d32097`. Its delta from
+the first parent contains only the four Arcade metadata/script files and no
+product/test source drift. The layer is replayed from the exact previous parent,
+not from an inferred fork. The results above remain earlier-wave evidence;
+final-new-pin pack and consumer results must be recorded separately.
+
 ## Historical validation and demonstration
 
 | Requirement | Existing automated evidence | Surface / limitation |
