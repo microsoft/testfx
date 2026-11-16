@@ -152,8 +152,8 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                     throw "$Id must use package-local targets, not a shared wrapper directory."
                 }
                 if (@($Archive.Entries | Where-Object { $_.FullName -like '*/MSTest.TestFramework.dll' -or
-                    $_.FullName -like 'lib/*/MSTest.Uwp.dll' -and $Id -ne 'MSTest.Uwp' -or
-                    $_.FullName -like 'lib/*/MSTest.WinUI.dll' -and $Id -ne 'MSTest.WinUI' }).Count) {
+                    ($_.FullName -like 'lib/*/MSTest.Uwp.dll' -and $Id -ne 'MSTest.Uwp') -or
+                    ($_.FullName -like 'lib/*/MSTest.WinUI.dll' -and $Id -ne 'MSTest.WinUI') }).Count) {
                     throw "$Id must depend on shared core and isolate its own UI assembly."
                 }
             }

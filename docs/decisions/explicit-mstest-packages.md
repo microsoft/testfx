@@ -651,3 +651,46 @@ commands, effective target/cache and loaded paths. The old-archive and mutation
 probes are layout evidence, not legacy test execution. No assembly scheduling,
 production lifecycle, package versions, official package policy or lower-layer
 source changed.
+
+### UI package isolation guard: 2026-11-16
+
+Review on `bb5012718fdeb0d82bdc9eb2cd29fe106bc4e9b7` identified a validator
+defect, not a new archive-layout requirement. PowerShell evaluates `-and` and
+`-or` at equal precedence, left to right. The combined predicate therefore
+allowed a bundled core DLL in either UI archive and a foreign UWP DLL in the
+WinUI archive. Parenthesize each flavor-specific conjunction so the existing
+shared-core and cross-flavor requirements remain independent.
+
+Six fixed-input probes use the real native UWP/WinUI archives: two valid controls,
+core DLL insertion into each archive, and both cross-flavor DLL insertions.
+The four mutations retain each original nuspec and add only one real DLL copied
+from the native producer. On the original maintained function, all six execute;
+three pass and three fail the expected-rejection assertion, exit 1, with no skips.
+`CoreInUwp`, `CoreInWinUI` and `UwpInWinUI` are incorrectly accepted. The reverse
+cross-flavor mutation is already rejected and remains a control.
+
+With explicit conjunction parentheses, the same six archives, assertions and
+selection execute and pass, exit 0 with zero skips. Each input archive hash is
+identical across the pair. The validator source hashes are
+`A5D6E4C6332A26F1DDFC9FE8C9EB7384173FF73EC9067D675299A3B84DE3CE1A` before and
+`62334CD8DFF849B02AEE69C9C1C940FB324DD25B331361ED89F206E963E68ACA` after.
+The one-file validator patch against the recorded base has SHA-256
+`54674D28C4E71C7CAAA87E4FEB35362104718EDA2E522CAFC0204799D025C03F`.
+
+`pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-mstest-packages.ps1
+-OutputRoot Q:\tfb\n12451-80f9f2\ui-isolation-review-4588012054\modern
+-IncludeWindowsPlatformPackages -VerifySatelliteSensitivity` also returns 0:
+ten real archives, fresh net10/net11 positive/failure/empty consumers, MSBuild
+parent exits 0/1 and satellite removal/restoration. All ten archive hashes are
+unchanged from the preceding adapter-boundary validation, so the existing SDK,
+CLR and core-only net462 proofs remain product-equivalent rather than rerun claims.
+No compiled product, package version, dependency closure, lifecycle or lower-layer
+source changed.
+
+The fixed-input harness is retained as `regression.ps1`, with `cases.json`,
+`before.json`/`after.json`, logs and `evidence-summary.json`, under
+`Q:\tfb\n12451-80f9f2\ui-isolation-review-4588012054`. It AST-loads the actual
+maintained validator functions, not a copied predicate. These are executed
+archive-rejection assertions; the normal package gate separately executes the
+real native tests. The bounded mixed-operator check of the layer's other changed
+PowerShell validators found only explicitly parenthesized conjunctions.
