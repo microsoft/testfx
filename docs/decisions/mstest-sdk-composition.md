@@ -397,3 +397,86 @@ this rebase. Fresh counterfactual sensitivity is therefore **unverified**, not
 inferred from this green run. Actual UI activation/native compilation remain
 the adjacent layers' responsibilities; whole-stack CI and release-branch
 validation are not established by these local results.
+
+## Review follow-up: late helper opt-in and packed hook contract
+
+The 2026-11-16 review identified two paths outside the earlier selection.
+`PackedMSTestUwp_PropsRegisterMSTestBuilderHook` still inspected the props asset
+after hook registration moved to targets. Keep the relocation and point the
+renamed package-contract test at the actual packed targets.
+
+The helper adapter decision also prematurely captured
+`EnableMSTestSourceGeneration` during property evaluation, before
+`Directory.Build.targets` is imported. Source-generator package items see that
+late opt-in, but the cached helper boolean does not. Restore item-evaluation
+conditions for helper package selection. Resource suppression depends only on
+being a helper, not on whether the generator was selected early, so apply it to
+all SDK helpers without caching the generator-dependent decision. Moving the
+boolean below the bottom SDK import would not also handle callers that layer
+MSTest.Sdk before a separately imported Web SDK.
+
+Retain the six helper scenarios and add late opt-in with and without CPM.
+For each new scenario, resolve and report the real packaged composition before
+compilation and assert the adapter package is present. This yields a meaningful
+outer assertion if the adapter is missing, rather than counting a generated-code
+compiler failure as counterfactual proof. The correct variant must then compile,
+emit the three generated sources, omit the MSTest application hook, and copy no
+adapter/UI payloads. Keep identical tests for the packed wrong/correct variants,
+separate their effective caches, and retain method-level scheduling.
+
+### Executed review regression evidence
+
+The wrong production state is
+`48df01a9820c77d2c514237d468158d863005d3c` plus retained-test patch SHA-256
+`1DCB84807307035B5DA875899C899D86A2013326577792C7BE7E4BF7A31FF6FE`.
+The correct state adds only SDK policy patch SHA-256
+`6931C0854E84E7EF6EC7B6F1CCA5C30EF16B14205245D25881870ABE2D9E3F57`.
+Both states were freshly built/packed with the same pinned toolchain and
+43-source-plus-owner filter, **exit 0, 0 warnings/errors**:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+```
+
+Each variant first discovers the eight source-declared helper rows using
+`--list-tests json` and the helper method's fully qualified filter. The two
+late-opt-in rows, with and without CPM, have identical selected UIDs in both
+variants:
+
+```powershell
+$uids = @(
+  '113f6bd7-9b59-8fba-9d37-9ecdcf938bbf'
+  '1b0a5108-fe73-8583-b0c6-cca4003c2c2f'
+)
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter-uid @uids -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Use the marked `cache-late-red` / `cache-late-green` collection caches and
+`red-late` / `green-late` result directories under `artifacts\validation`.
+The acceptance DLL is identical in both runs:
+`C3885C66CAFD37A63782124A6C35450D9879A1805D8C5DCB1001D224FD2E6A19`.
+The retained composition-test source is also identical:
+`00FDC767A585270142CA5C9DF70D9991C585DDAFD42A96871EB0C1284BE603DA`.
+Physical SDK `5.0.0-dev` archives equal their respective cached copies:
+
+| Variant | SDK archive SHA-256 | Executed result |
+| --- | --- | --- |
+| Wrong early snapshot | `3593B8D1BF9B40F316686D17D0F895E4F24EFDF09FF8C3C0F8F4AC3963CA6A1E` | Exit 2; 2 executed failures, 0 skipped |
+| Correct item-phase selection | `554A15F28F7F6B372B589B33BD8D4E018DFD6FEC54FC84F4B26D452D4ADADEF7` | Exit 0; same 2 executed/passed, 0 skipped |
+
+Both red children successfully complete restore/`ResolveReferences` before
+the intended outer sequence assertion: expected core plus
+`MSTest.TestAdapter/5.0.0-dev`, actual core only. Neither compiler errors nor
+setup failures are counted. The green cases subsequently compile generated
+hooks and retain the payload, application-hook, generated-source-count, and
+reference-isolation assertions. Fresh green TRX passes `verify_execution.py`.
+This is **executed: detected** for the reported late-opt-in defect.
+
+Separately, the original packed-UWP props test was reproduced on the published
+package: **1 executed assertion failure, exit 2**, because the GUID is absent
+from props. The renamed targets test preserves the exact GUID/type assertions
+and passes: **1 executed, exit 0**. A preservation selection of all eight
+helper rows, all eight existing source-generation opt-in cases, and that
+renamed package contract passes: **17 executed/passed, 0 failed/skipped,
+exit 0**. Publication remains held for the coordinator's ordered lower repair
+wave; these local results do not supersede any failing remote check.

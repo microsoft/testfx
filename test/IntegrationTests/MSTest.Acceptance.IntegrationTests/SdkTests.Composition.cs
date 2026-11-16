@@ -250,14 +250,17 @@ public sealed partial class SdkTests
 
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
-    [DataRow("Default", false, null)]
-    [DataRow("Default", true, "MSTest.TestAdapter")]
-    [DataRow("Uwp", false, "MSTest.Uwp")]
-    [DataRow("Uwp", true, "MSTest.Uwp")]
-    [DataRow("WinUI", false, "MSTest.WinUI")]
-    [DataRow("WinUI", true, "MSTest.WinUI")]
+    [DataRow("Default", false, null, false, false)]
+    [DataRow("Default", true, "MSTest.TestAdapter", true, false)]
+    [DataRow("Uwp", false, "MSTest.Uwp", false, false)]
+    [DataRow("Uwp", true, "MSTest.Uwp", true, false)]
+    [DataRow("WinUI", false, "MSTest.WinUI", false, false)]
+    [DataRow("WinUI", true, "MSTest.WinUI", true, false)]
+    [DataRow("Default", true, "MSTest.TestAdapter", false, true)]
+    [DataRow("Default", true, "MSTest.TestAdapter", true, true)]
     public async Task MSTestSdk_Helper_KeepsOnlyRequiredCompileTimeComposition(
-        string applicationModel, bool enableSourceGeneration, string? expectedAdapterPackageId)
+        string applicationModel, bool enableSourceGeneration, string? expectedAdapterPackageId,
+        bool useCentralPackageManagement, bool lateSourceGenerationOptIn)
     {
         const string Source = """
             #file Helper.csproj
@@ -300,13 +303,35 @@ public sealed partial class SdkTests
             .PatchCodeWithReplace("$TargetFramework$", targetFramework)
             .PatchCodeWithReplace("$ApplicationModel$", applicationModel)
             .PatchCodeWithReplace("$TestMethodAttribute$", applicationModel == "Default" ? "TestMethod" : "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethod")
-            .PatchCodeWithReplace("$EnableSourceGeneration$", enableSourceGeneration.ToString());
-        if (enableSourceGeneration)
+            .PatchCodeWithReplace("$EnableSourceGeneration$", lateSourceGenerationOptIn ? string.Empty : enableSourceGeneration.ToString());
+        if (useCentralPackageManagement)
         {
             source += CompositionCentralPackageManagementSource;
         }
 
+        if (lateSourceGenerationOptIn)
+        {
+            source += """
+
+                #file Directory.Build.targets
+                <Project>
+                  <PropertyGroup>
+                    <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
+                  </PropertyGroup>
+                </Project>
+                """;
+        }
+
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync($"{applicationModel}HelperSdk", source);
+        if (lateSourceGenerationOptIn)
+        {
+            DotnetMuxerResult resolution = await DotnetCli.RunAsync(
+                $"msbuild \"{Path.Join(testAsset.TargetAssetPath, "Helper.csproj")}\" -restore -t:ResolveReferences;WriteHelperComposition -p:Configuration=Release -bl:\"{Path.Join(testAsset.TargetAssetPath, "helper-resolution.binlog")}\"",
+                cancellationToken: TestContext.CancellationToken);
+            resolution.AssertExitCodeIs(0);
+            await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectedAdapterPackageId);
+        }
+
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{testAsset.TargetAssetPath}\" -c Release -bl:\"{Path.Join(testAsset.TargetAssetPath, "helper.binlog")}\"",
             cancellationToken: TestContext.CancellationToken);

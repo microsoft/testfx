@@ -26,15 +26,8 @@
     <_MSTestAdapterPackageId Condition=" '$(_MSTestApplicationModel)' == 'Uwp' ">MSTest.Uwp</_MSTestAdapterPackageId>
     <_MSTestAdapterPackageId Condition=" '$(_MSTestApplicationModel)' == 'WinUI' ">MSTest.WinUI</_MSTestAdapterPackageId>
 
-    <_MSTestSdkHelperNeedsAdapter>false</_MSTestSdkHelperNeedsAdapter>
-    <_MSTestSdkHelperNeedsAdapter
-      Condition=" '$(IsTestApplication)' != 'true'
-                  AND ('$(_MSTestApplicationModel)' == 'Uwp' OR '$(_MSTestApplicationModel)' == 'WinUI'
-                       OR ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
-                           AND ('$(EnableMSTestSourceGeneration)' == 'true'
-                                OR ('$(UseVSTest)' == 'false' AND '$(PublishAot)' == 'true')))) ">true</_MSTestSdkHelperNeedsAdapter>
     <!-- A helper compiles against UI APIs/runtime hooks supplied by its eventual test application. -->
-    <EnableMSTestV2CopyResources Condition=" '$(_MSTestSdkHelperNeedsAdapter)' == 'true' ">false</EnableMSTestV2CopyResources>
+    <EnableMSTestV2CopyResources Condition=" '$(IsTestApplication)' != 'true' ">false</EnableMSTestV2CopyResources>
   </PropertyGroup>
 
   <!-- Import Runner.targets -->
@@ -78,7 +71,12 @@
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(_MSTestSdkHelperNeedsAdapter)' == 'true' ">
+  <!-- Item evaluation observes source-generation opt-ins from Directory.Build.targets. -->
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'true'
+                         AND ('$(_MSTestApplicationModel)' == 'Uwp' OR '$(_MSTestApplicationModel)' == 'WinUI'
+                              OR ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
+                                  AND ('$(EnableMSTestSourceGeneration)' == 'true'
+                                       OR ('$(UseVSTest)' == 'false' AND '$(PublishAot)' == 'true')))) ">
     <!-- Ordinary helpers need only core, except when generated code requires the adapter's runtime hooks. -->
     <PackageReference Include="$(_MSTestAdapterPackageId)" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
