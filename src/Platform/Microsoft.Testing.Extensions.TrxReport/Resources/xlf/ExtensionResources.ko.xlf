@@ -104,22 +104,22 @@
       </trans-unit>
       <trans-unit id="TrxModeInvalidValue">
         <source>'--trx-mode' expects 'in-process' or 'out-of-process'</source>
-        <target state="new">'--trx-mode' expects 'in-process' or 'out-of-process'</target>
+        <target state="translated">'--trx-mode'에는 'in-process' 또는 'out-of-process'가 필요합니다.</target>
         <note>Do not localize option name {Locked="--trx-mode"} or mode names {Locked="in-process"}{Locked="out-of-process"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOptionDescription">
         <source>TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</source>
-        <target state="new">TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</target>
+        <target state="translated">TRX 생성 모드: 'in-process'는 컨트롤러 기반 복구를 사용하지 않도록 설정하고, 'out-of-process'는 컨트롤러 기반 복구를 사용하도록 설정합니다(지원되는 플랫폼의 기본값). '--report-trx'가 필요합니다.</target>
         <note>Do not localize format name {Locked="TRX"}, mode names {Locked="in-process"}{Locked="out-of-process"}, or option name {Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOutOfProcessNotSupported">
         <source>'--trx-mode out-of-process' is not supported on this platform</source>
-        <target state="new">'--trx-mode out-of-process' is not supported on this platform</target>
+        <target state="translated">'--trx-mode out-of-process'는 이 플랫폼에서 지원되지 않습니다.</target>
         <note>Do not localize option and value {Locked="--trx-mode out-of-process"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeRequiresTrxReport">
         <source>'--trx-mode' requires '--report-trx' to be enabled</source>
-        <target state="new">'--trx-mode' requires '--report-trx' to be enabled</target>
+        <target state="translated">'--trx-mode'을 사용하려면 '--report-trx'를 사용하도록 설정해야 합니다.</target>
         <note>Do not localize option names {Locked="--trx-mode"}{Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
