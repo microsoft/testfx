@@ -7,8 +7,10 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Microsoft.Testing.Extensions;
 
+#if !TESTFX_REPOSITORY_OPENTELEMETRY
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+#endif
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
@@ -16,6 +18,15 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 [assembly: Parallelize(Scope = ExecutionScope.ClassLevel, Workers = 0)]
 #else
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+#endif
+
+#if TESTFX_ANALYZER_CHILD_PROBES
+// Mirrors MSTest.Analyzers.UnitTests/Program.cs, whose tests relaunch this application
+// as a controlled child.
+if (MSTest.Analyzers.Test.AnalyzerProcessCompatibilityTests.TryRunControlledChild())
+{
+    return 17;
+}
 #endif
 
 string? resultsDirectory = Environment.GetEnvironmentVariable("TEST_UNDECLARED_OUTPUTS_DIR");
@@ -65,9 +76,14 @@ builder.AddCtrfReportProvider();
 #if TESTFX_TELEMETRY
 builder.AddAppInsightsTelemetryProvider();
 #endif
+#if TESTFX_REPOSITORY_OPENTELEMETRY
+// Mirrors the MSBuild hosts that link test/Utilities/TestFxOpenTelemetry.cs.
+using IDisposable? telemetry = builder.AddTestFxOpenTelemetry();
+#else
 builder.AddOpenTelemetryProvider(
     tracing => tracing.AddTestingPlatformInstrumentation(),
     metrics => metrics.AddTestingPlatformInstrumentation());
+#endif
 
 using ITestApplication application = await builder.BuildAsync();
 return await application.RunAsync();

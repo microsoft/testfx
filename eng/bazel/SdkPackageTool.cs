@@ -135,7 +135,7 @@ var request = new
         ProjectUrl = "https://github.com/microsoft/testfx",
         Repository = new { Type = "git", Url = "https://github.com/microsoft/testfx" },
         ReleaseNotes = ExpandMetadata(Property(sourceProperties, "PackageReleaseNotes"))
-            + "\nExperimental native Bazel build, not an official release. Portable .NET 8/9/10/11 package scope; Windows, .NET Framework, UWP and NativeAOT execution are not validated.",
+            + "\nExperimental native Bazel build, not an official release. Portable .NET 10/11 package scope; Windows, .NET Framework, UWP and NativeAOT execution are not validated.",
     },
     PackageTypes = Array.Empty<string>(),
     DependencyGroups = input.PackageId == "MSTest"

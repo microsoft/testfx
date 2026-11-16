@@ -45,6 +45,9 @@ parameters:
 variables:
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
   # Cannot use key:value syntax in root defined variables
+  # Include desktop MSBuild and direct dotnet build/test steps, not only Arcade's dotnet builds.
+  - name: MSBUILDENABLEMULTITHREADED
+    value: '1'
   - name: _TeamName
     value: MSTest
   - name: _RunAsInternal

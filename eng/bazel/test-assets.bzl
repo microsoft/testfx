@@ -2,7 +2,7 @@
 
 load("@rules_dotnet//dotnet/private:providers.bzl", "DotnetAssemblyRuntimeInfo", "DotnetBinaryInfo")
 load("@rules_dotnet//dotnet/private/transitions:tfm_transition.bzl", "tfm_transition")
-load(":defs.bzl", "PORTABLE_FRAMEWORKS")
+load(":defs.bzl", "PORTABLE_FRAMEWORKS", "TEST_LAUNCHER_UNIX_PROLOGUE", "TEST_LAUNCHER_WINDOWS_PROLOGUE")
 
 def _fixture_app_impl(ctx):
     binary = ctx.attr.binary
@@ -83,11 +83,25 @@ def _published_test_impl(ctx):
     runner = runfile
     arguments = ""
     extra_runfiles = ctx.runfiles()
+    tool_variables = []
+    for target, variable in ctx.attr.tools.items():
+        tool = target[DefaultInfo]
+        tool_executable = tool.files_to_run.executable
+        if not tool_executable:
+            fail("Expected an executable tool: %s" % target.label)
+        # Only Windows apphosts carry an extension; dotted assembly names make File.extension unreliable elsewhere.
+        main_dll = (tool_executable.path[:-len(".exe")] if tool_executable.extension == "exe" else tool_executable.path) + ".dll"
+        dlls = [file for file in tool.files.to_list() if file.path == main_dll]
+        if len(dlls) != 1:
+            fail("Expected the framework-dependent main DLL beside %s" % tool_executable.path)
+        tool_path = dlls[0].short_path
+        tool_variables.append((variable, tool_path[3:] if tool_path.startswith("../") else ctx.workspace_name + "/" + tool_path))
+        extra_runfiles = extra_runfiles.merge(tool.default_runfiles).merge(ctx.runfiles(transitive_files = tool.files))
     if ctx.attr.writable_layout:
         tool = ctx.attr._writable_launcher[DefaultInfo]
         tool_path = tool.files_to_run.executable.short_path
         runner = tool_path[3:] if tool_path.startswith("../") else ctx.workspace_name + "/" + tool_path
-        extra_runfiles = tool.default_runfiles.merge(ctx.runfiles(transitive_files = tool.files))
+        extra_runfiles = extra_runfiles.merge(tool.default_runfiles).merge(ctx.runfiles(transitive_files = tool.files))
         arguments = (' "%TEST_SRCDIR%\\' + runtime_directory.replace("/", "\\") + '" "' + runtime.sdk_version + '" "%TEST_SRCDIR%\\' + runfile.replace("/", "\\") + '"') if is_windows else (
             ' "${TEST_SRCDIR}/' + runtime_directory + '" "' + runtime.sdk_version + '" "${TEST_SRCDIR}/' + runfile + '"'
         )
@@ -95,19 +109,30 @@ def _published_test_impl(ctx):
         content = "\r\n".join([
             "@echo off",
             "setlocal DisableDelayedExpansion",
+        ] + TEST_LAUNCHER_WINDOWS_PROLOGUE + [
             'set "DOTNET_ROOT=%TEST_SRCDIR%\\' + runtime_directory.replace("/", "\\") + '"',
             'set "PATH=%DOTNET_ROOT%;%PATH%"',
+        ] + [
+            'set "' + variable + "=%TEST_SRCDIR%\\" + location.replace("/", "\\") + '"'
+            for variable, location in tool_variables
+        ] + [
             ('call ' if ctx.attr.writable_layout else "") + '"%TEST_SRCDIR%\\' + runner.replace("/", "\\") + '"' + arguments + ' %*',
             "exit /b %ERRORLEVEL%",
             "",
         ])
     else:
+        # Do not exec: the prologue's EXIT trap removes the pipe directory; errexit keeps the exit code.
         content = "\n".join([
             "#!/usr/bin/env bash",
             "set -euo pipefail",
+        ] + TEST_LAUNCHER_UNIX_PROLOGUE + [
             'export DOTNET_ROOT="${TEST_SRCDIR}/' + runtime_directory + '"',
             'export PATH="${DOTNET_ROOT}:${PATH}"',
-            'exec "${TEST_SRCDIR}/' + runner + '"' + arguments + ' "$@"',
+        ] + [
+            "export " + variable + '="${TEST_SRCDIR}/' + location + '"'
+            for variable, location in tool_variables
+        ] + [
+            '"${TEST_SRCDIR}/' + runner + '"' + arguments + ' "$@"',
             "",
         ])
     ctx.actions.write(launcher, content, is_executable = True)
@@ -128,6 +153,8 @@ testfx_published_test = rule(
         "files": attr.label_keyed_string_dict(allow_files = True),
         "repository_marker": attr.bool(default = False),
         "env_inherit": attr.string_list(),
+        # Framework-dependent tools; each value names the variable that receives the absolute main DLL path.
+        "tools": attr.label_keyed_string_dict(cfg = "target"),
         "writable_layout": attr.bool(default = False),
         "_writable_launcher": attr.label(default = "//eng/bazel:writable_test_launcher", executable = True, cfg = "exec"),
     },

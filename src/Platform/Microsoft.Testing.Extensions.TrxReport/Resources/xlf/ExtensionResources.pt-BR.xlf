@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="TrxModeOptionDescription">
         <source>TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</source>
-        <target state="new">TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</target>
+        <target state="translated">TRX modo de geração: 'in-process' desabilita a recuperação com suporte de controlador; 'out-of-process' o habilita (o padrão em plataformas com suporte). Requer '--report-trx'.</target>
         <note>Do not localize format name {Locked="TRX"}, mode names {Locked="in-process"}{Locked="out-of-process"}, or option name {Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOutOfProcessNotSupported">

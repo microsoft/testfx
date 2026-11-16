@@ -2,6 +2,7 @@
 
 load("@rules_dotnet//dotnet:defs.bzl", "publish_binary")
 load(":defs.bzl", "testfx_analyzer", "testfx_binary", "testfx_library", "testfx_test")
+load(":test-assets.bzl", "testfx_published_test")
 
 def portable_samples():
     for name, project, defines, minimum in [
@@ -14,7 +15,7 @@ def portable_samples():
         testfx_binary(
             name = name,
             project = project,
-            target_frameworks = ["net8.0"],
+            target_frameworks = ["net10.0"],
             polyfills = False,
             linked_srcs = ["//eng/bazel:TestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
             defines = defines,
@@ -32,7 +33,7 @@ def portable_samples():
         name = "custom_report",
         project = "samples/public/mstest-runner/CustomReportExtension/CustomReportExtension",
         linked_srcs = ["//eng/bazel:PortableTestFrameworkMetadata.cs"],
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         usings = ["Microsoft.VisualStudio.TestTools.UnitTesting"],
         generate_documentation_file = False,
@@ -55,7 +56,7 @@ def portable_samples():
     testfx_library(
         name = "ensure_framework",
         project = "samples/public/mstest-runner/EnsureTestFramework/EnsureTestFramework",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         generate_documentation_file = False,
         deps = [":platform"],
@@ -64,7 +65,7 @@ def portable_samples():
         name = "ensure_sample",
         project = "samples/public/mstest-runner/EnsureTestFramework/MyTestProject",
         linked_srcs = ["//eng/bazel:PortableTestFrameworkMetadata.cs"],
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         generate_documentation_file = False,
         deps = [":ensure_framework", ":platform"],
@@ -81,7 +82,7 @@ def portable_samples():
         name = "otel_sample",
         project = "samples/public/MTPOTel",
         linked_srcs = ["//eng/bazel:PortableTestFrameworkMetadata.cs"],
-        target_frameworks = ["net9.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         generate_documentation_file = False,
         deps = [
@@ -146,19 +147,32 @@ def portable_samples():
     testfx_binary(
         name = "aot_sample",
         project = "samples/public/DemoMSTestSdk/ProjectWithNativeAOT",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         polyfills = False,
         linked_srcs = ["//eng/bazel:TestMain.cs", "//eng/bazel:PortableTestFrameworkMetadata.cs"],
         analyzer_configs = ["//eng/bazel:reflection-free.globalconfig"],
         generate_documentation_file = False,
         deps = [":adapter", ":framework", ":framework_extensions", ":platform_services", ":trx", ":sample_source_generator"],
     )
+    # The pinned rules_dotnet links NativeAOT only for Linux and macOS; it fails analysis for Windows.
+    native_aot_hosts = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    })
     publish_binary(
         name = "aot_publish",
         binary = ":aot_sample",
-        target_framework = "net8.0",
+        target_framework = "net10.0",
         native_aot = True,
-        tags = ["manual"],
+        target_compatible_with = native_aot_hosts,
+    )
+    testfx_published_test(
+        name = "aot_publish_test",
+        binary = ":aot_publish",
+        args = ["--minimum-expected-tests", "1"],
+        size = "small",
+        target_compatible_with = native_aot_hosts,
     )
 
     native.filegroup(
