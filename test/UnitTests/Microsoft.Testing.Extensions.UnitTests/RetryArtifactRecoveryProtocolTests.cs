@@ -740,6 +740,7 @@ public sealed class RetryArtifactRecoveryProtocolTests
     {
         var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken);
         var connectionReleased = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration cancellationRegistration = fixture.Token.Register(() => connectionReleased.TrySetResult(true));
 
         // The pipe server serves the child before WaitConnectionAsync completes. Hold its final connection log until
         // the runner schedules the grace delay, so the child deterministically exits first and the pending connection
