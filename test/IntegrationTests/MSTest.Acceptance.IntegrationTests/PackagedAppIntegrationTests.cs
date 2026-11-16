@@ -232,6 +232,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "", false)]
     [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "<TestingPlatformEnvironmentVariable Include=\"DOTNET_ROOT_ARM64\" Value=\"custom-root\" />", false)]
     [DataRow("win-arm64", "win-x64", "DOTNET_ROOT_ARM64", "", true)]
+    [DataRow("win-x86", "win-x64", "DOTNET_ROOT_X64", "", false)]
     [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "", false)]
     [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "<TestingPlatformEnvironmentVariable Include=\"DOTNET_ROOT_X64\" Value=\"custom-root\" />", false)]
     [DataRow("win-x64", "win-arm64", "DOTNET_ROOT_X64", "", true)]
@@ -255,18 +256,107 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string expectedRoot = extraEnvironment.Length == 0 ? Path.GetDirectoryName(hostPath)! : "custom-root";
         string rootMessage = $"ControllerEnvironment={rootVariable}={expectedRoot}";
         bool hasRoot = result.StandardOutput.Contains($"ControllerEnvironment={rootVariable}=", StringComparison.Ordinal);
+        bool callerProvidedRoot = extraEnvironment.Length != 0;
+        bool sdkMatchesController = sdkRuntimeIdentifier.EndsWith(
+            rootVariable == "DOTNET_ROOT_ARM64" ? "-arm64" : "-x64",
+            StringComparison.Ordinal);
+        string controllerRuntimeIdentifier = rootVariable == "DOTNET_ROOT_ARM64" ? "win-arm64" : "win-x64";
+        bool configuresAppHost = sdkMatchesController
+            && applicationRuntimeIdentifier != controllerRuntimeIdentifier
+            && !callerProvidedRoot
+            && !disableAutomaticRoot;
+        bool expectsRoot = callerProvidedRoot || (!disableAutomaticRoot && sdkMatchesController);
         Assert.AreEqual(
-            !disableAutomaticRoot,
+            expectsRoot,
             hasRoot,
             "The root injection must honor the disable switch and caller-provided roots.");
-        if (!disableAutomaticRoot)
+        if (expectsRoot)
         {
             result.AssertOutputContains(rootMessage);
         }
 
-        Assert.AreEqual($"RuntimeIdentifier={sdkRuntimeIdentifier}", lines[0]);
-        Assert.AreEqual("Arguments=", lines[1], "Selecting the controller runtime must preserve the application's empty launch-profile argument tail.");
+        Assert.AreEqual($"RuntimeIdentifier={applicationRuntimeIdentifier}", lines[0]);
+        Assert.AreEqual("Arguments=", lines[1], "The apphost command must preserve the application's empty launch-profile argument tail.");
         Assert.AreEqual("Command=mstest-appmodel-controller.exe", lines[2]);
+        string controllerPath = lines[3]["RunCommandPath=".Length..];
+        Assert.IsTrue(File.Exists(controllerPath), $"Expected staged controller apphost at '{controllerPath}'.");
+        string expectedRelativeRoot = configuresAppHost
+            ? Path.GetRelativePath(Path.GetDirectoryName(controllerPath)!, Path.GetDirectoryName(hostPath)!)
+            : string.Empty;
+        Assert.AreEqual($"ControllerRuntimeRoot={expectedRelativeRoot}", lines[4]);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_PreservesGlobalApplicationRuntimeIdentifier()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            "<UseWinUI>true</UseWinUI>");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string hostPath = Path.Combine(RootFinder.Find(), ".dotnet", "dotnet.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRuntimeContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\" -p:RuntimeIdentifier=win-x64 -p:NETCoreSdkRuntimeIdentifier=win-arm64 -p:DOTNET_HOST_PATH=\"{hostPath}\" -p:DOTNET_ROOT_ARM64=",
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "runtime-contract.txt"), TestContext.CancellationToken);
+        Assert.AreEqual("RuntimeIdentifier=win-x64", lines[0], "The global application RID must remain unchanged.");
+        Assert.AreEqual("Arguments=", lines[1]);
+        Assert.AreEqual("Command=mstest-appmodel-controller.exe", lines[2]);
+        string controllerPath = lines[3]["RunCommandPath=".Length..];
+        Assert.IsTrue(File.Exists(controllerPath), $"Expected staged controller apphost at '{controllerPath}'.");
+        Assert.AreEqual(
+            $"ControllerRuntimeRoot={Path.GetRelativePath(Path.GetDirectoryName(controllerPath)!, Path.GetDirectoryName(hostPath)!)}",
+            lines[4]);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments()
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        string profiles = Path.Combine(asset.TargetAssetPath, "Properties");
+        Directory.CreateDirectory(profiles);
+        await File.WriteAllTextAsync(
+            Path.Combine(profiles, "launchSettings.json"),
+            """
+            {
+              "profiles": {
+                "ControllerInfo": {
+                  "commandName": "Project",
+                  "commandLineArgs": "--info"
+                }
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+        string applicationRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-x64" : "win-arm64";
+        string controllerRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64";
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string tracePath = Path.Combine(asset.TargetAssetPath, "host-trace.txt");
+        _ = await DotnetCli.RunAsync(
+            $"restore \"{asset.TargetAssetPath}\" --runtime {applicationRid}",
+            cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run --project \"{asset.TargetAssetPath}\" --no-build --runtime {applicationRid} --launch-profile ControllerInfo " +
+            $"-p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["DOTNET_ROOT"] = null,
+                ["DOTNET_ROOT_X64"] = null,
+                ["DOTNET_ROOT_ARM64"] = null,
+                ["DOTNET_HOST_TRACE"] = "1",
+                ["DOTNET_HOST_TRACEFILE"] = tracePath,
+            },
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string controllerDll = Path.Combine(
+            asset.TargetAssetPath, "obj", "Debug", "net10.0", applicationRid, "PackagedAppController", controllerRid, "mstest-appmodel-controller.dll");
+        result.AssertOutputContains($"Test module: {controllerDll}");
+        Assert.Contains(
+            $"Using app-relative location [{Path.Combine(RootFinder.Find(), ".dotnet")}] as runtime location.",
+            await File.ReadAllTextAsync(tracePath, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -335,12 +425,16 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     [OSCondition(OperatingSystems.Windows)]
-    public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned()
+    public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned(bool crossArchitecture)
     {
         using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
-        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
+        string applicationRid = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-x64" : "win-arm64";
+        string runtimeArgument = crossArchitecture ? $" -p:RuntimeIdentifier={applicationRid} -p:DOTNET_ROOT_X64= -p:DOTNET_ROOT_ARM64=" : string.Empty;
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"{runtimeArgument}";
         DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, first.ExitCode, first.ToString());
         string bootstrapFile = (await File.ReadAllTextAsync(
@@ -348,12 +442,21 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
         DateTime bootstrapTimestamp = File.GetLastWriteTimeUtc(bootstrapFile);
         DateTime controllerTimestamp = File.GetLastWriteTimeUtc(controller);
+        byte[] controllerBytes = await File.ReadAllBytesAsync(controller, TestContext.CancellationToken);
         DotnetMuxerResult second = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, second.ExitCode, second.ToString());
         Assert.AreEqual(bootstrapTimestamp, File.GetLastWriteTimeUtc(bootstrapFile));
         Assert.AreEqual(controllerTimestamp, File.GetLastWriteTimeUtc(controller));
+        if (crossArchitecture)
+        {
+            _ = await DotnetCli.RunAsync(
+                command + " -p:TestingPlatformDisableAppHostDotnetRoot=true", cancellationToken: TestContext.CancellationToken);
+            _ = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+            Assert.AreSequenceEqual(controllerBytes, await File.ReadAllBytesAsync(controller, TestContext.CancellationToken));
+        }
+
         DotnetMuxerResult clean = await DotnetCli.RunAsync(
-            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+            $"clean \"{asset.TargetAssetPath}\"{runtimeArgument}", cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, clean.ExitCode, clean.ToString());
         Assert.IsFalse(File.Exists(bootstrapFile));
         Assert.IsFalse(File.Exists(controller));
@@ -825,6 +928,10 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                                   Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
                                   Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="$([MSBuild]::Escape('RunCommandPath=$(RunCommand)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\runtime-contract.txt"
+                                  Lines="$([MSBuild]::Escape('ControllerRuntimeRoot=$(_TestingPlatformPackagedAppRelativeDotNet)'))" />
                 <Message Importance="high" Text="ControllerEnvironment=%(TestingPlatformEnvironmentVariable.Identity)=%(TestingPlatformEnvironmentVariable.Value)" />
               </Target>
             </Project>

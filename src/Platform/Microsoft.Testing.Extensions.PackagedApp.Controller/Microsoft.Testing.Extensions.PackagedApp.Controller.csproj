@@ -31,4 +31,14 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
 
+  <Target Name="_CopyPackagedAppControllerAppHostTemplate"
+          AfterTargets="CopyFilesToOutputDirectory"
+          Condition="'$(AppHostSourcePath)' != ''">
+    <Copy SourceFiles="$(AppHostSourcePath)"
+          DestinationFiles="$(TargetDir)mstest-appmodel-controller.apphost-template"
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
+    </Copy>
+  </Target>
+
 </Project>

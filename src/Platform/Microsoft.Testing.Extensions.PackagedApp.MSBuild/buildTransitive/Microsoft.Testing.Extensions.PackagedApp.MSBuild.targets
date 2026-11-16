@@ -82,6 +82,12 @@
       <_TestingPlatformPackagedAppTarget Condition="'$(TestingPlatformPackagedAppTargetPath)' != ''">$(TestingPlatformPackagedAppTargetPath)</_TestingPlatformPackagedAppTarget>
       <_TestingPlatformPackagedAppTarget>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_TestingPlatformPackagedAppTarget)'))</_TestingPlatformPackagedAppTarget>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'arm64'">
+      <_TestingPlatformPackagedAppHasExplicitControllerRuntimeRoot Condition="'$(DOTNET_ROOT_ARM64)' != '' OR '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_ARM64'))' != ''">true</_TestingPlatformPackagedAppHasExplicitControllerRuntimeRoot>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64'">
+      <_TestingPlatformPackagedAppHasExplicitControllerRuntimeRoot Condition="'$(DOTNET_ROOT_X64)' != '' OR '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_X64'))' != ''">true</_TestingPlatformPackagedAppHasExplicitControllerRuntimeRoot>
+    </PropertyGroup>
     <ItemGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
       <!-- Keep these protocol identifiers compatible with existing applications. -->
       <TestingPlatformEnvironmentVariable Remove="TESTINGPLATFORM_PACKAGEDAPP_TARGET;MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" />
@@ -92,7 +98,7 @@
                                          Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'arm64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64')) AND '$(TestingPlatformDisableAppHostDotnetRoot)' != 'true' AND '$(DOTNET_ROOT_ARM64)' == '' AND '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_ARM64'))' == '' AND Exists('$(DOTNET_HOST_PATH)')" />
       <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT_X64"
                                          Value="$([System.IO.Path]::GetDirectoryName('$(DOTNET_HOST_PATH)'))"
-                                         Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND !$(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64')) AND '$(TestingPlatformDisableAppHostDotnetRoot)' != 'true' AND '$(DOTNET_ROOT_X64)' == '' AND '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_X64'))' == '' AND Exists('$(DOTNET_HOST_PATH)')" />
+                                         Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-x64')) AND '$(TestingPlatformDisableAppHostDotnetRoot)' != 'true' AND '$(DOTNET_ROOT_X64)' == '' AND '@(TestingPlatformEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_ROOT_X64'))' == '' AND Exists('$(DOTNET_HOST_PATH)')" />
     </ItemGroup>
   </Target>
 
@@ -102,6 +108,9 @@
           AfterTargets="ComputeRunArguments"
           DependsOnTargets="_PrepareTestingPlatformPackagedAppController"
           Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_TestingPlatformPackagedAppApplicationRuntimeIdentifier>$(RuntimeIdentifier)</_TestingPlatformPackagedAppApplicationRuntimeIdentifier>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(StartAction)' != 'Program'">
       <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' == 'true'">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_TestingPlatformPackagedAppDefaultRunCommand>
       <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' != 'true'">dotnet</_TestingPlatformPackagedAppDefaultRunCommand>
@@ -118,9 +127,9 @@
       <!-- An empty argument tail must stay empty: dotnet run only applies launch-profile arguments
            when RunArguments is empty. Keep startup metadata beside the project-local sidecar. -->
       <RunArguments>$(_TestingPlatformPackagedAppRunArguments)</RunArguments>
-      <!-- The SDK chooses DOTNET_ROOT_<ARCH> from RuntimeIdentifier for the executable it starts. -->
-      <RuntimeIdentifier Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'arm64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64'))">$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
-      <RuntimeIdentifier Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND !$(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64'))">$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
+      <!-- Preserve an explicitly selected application RID; only align an unset or matching RID. -->
+      <RuntimeIdentifier Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'arm64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-arm64')) AND ('$(_TestingPlatformPackagedAppApplicationRuntimeIdentifier)' == '' OR '$(_TestingPlatformPackagedAppApplicationRuntimeIdentifier)' == '$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)')">$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
+      <RuntimeIdentifier Condition="'$(_TestingPlatformPackagedAppControllerArchitecture)' == 'x64' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-x64')) AND ('$(_TestingPlatformPackagedAppApplicationRuntimeIdentifier)' == '' OR '$(_TestingPlatformPackagedAppApplicationRuntimeIdentifier)' == '$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)')">$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)</RuntimeIdentifier>
       <_TestingPlatformPackagedAppConfigureRun>false</_TestingPlatformPackagedAppConfigureRun>
     </PropertyGroup>
   </Target>
@@ -132,13 +141,22 @@
     <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
       <_TestingPlatformPackagedAppRunControllerDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'PackagedAppController', '$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)'))</_TestingPlatformPackagedAppRunControllerDirectory>
       <_TestingPlatformPackagedAppBootstrapFile>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.bootstrap</_TestingPlatformPackagedAppBootstrapFile>
+      <_TestingPlatformPackagedAppRuntimeRootFile>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.runtime-root</_TestingPlatformPackagedAppRuntimeRootFile>
+      <_TestingPlatformPackagedAppRelativeDotNet />
+      <!-- A global application RID cannot be replaced. Configure the controller's own apphost
+           instead of adding a dotnet exec prefix, which would suppress launch-profile arguments. -->
+      <_TestingPlatformPackagedAppRelativeDotNet Condition="'$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.EndsWith('-$(_TestingPlatformPackagedAppControllerArchitecture)')) AND '$(RuntimeIdentifier)' != '' AND '$(RuntimeIdentifier)' != '$(_TestingPlatformPackagedAppControllerRuntimeIdentifier)' AND '$(TestingPlatformDisableAppHostDotnetRoot)' != 'true' AND '$(_TestingPlatformPackagedAppHasExplicitControllerRuntimeRoot)' != 'true' AND Exists('$(DOTNET_HOST_PATH)')">$([MSBuild]::MakeRelative('$(_TestingPlatformPackagedAppRunControllerDirectory)', $([System.IO.Path]::GetDirectoryName('$(DOTNET_HOST_PATH)'))))</_TestingPlatformPackagedAppRelativeDotNet>
     </PropertyGroup>
     <ItemGroup Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != ''">
-      <_TestingPlatformPackagedAppControllerFile Include="$(_TestingPlatformPackagedAppControllerDirectory)**\*" />
+      <_TestingPlatformPackagedAppControllerFile Include="$(_TestingPlatformPackagedAppControllerDirectory)**\*"
+                                               Exclude="$(_TestingPlatformPackagedAppControllerDirectory)mstest-appmodel-controller.apphost-template" />
+      <_TestingPlatformPackagedAppControllerFile Remove="$(_TestingPlatformPackagedAppControllerDirectory)mstest-appmodel-controller.exe"
+                                               Condition="'$(_TestingPlatformPackagedAppRelativeDotNet)' != ''" />
       <_TestingPlatformPackagedAppBootstrapLine Include="--internal-packagedapp-controller-v1" />
       <_TestingPlatformPackagedAppBootstrapLine Include="$([MSBuild]::Escape('$(_TestingPlatformPackagedAppTarget)'))" />
       <_TestingPlatformPackagedAppBootstrapLine Include="$([MSBuild]::Escape('$(_TestingPlatformPackagedAppControllerExtensions)'))" />
       <FileWrites Include="$(_TestingPlatformPackagedAppBootstrapFile)" />
+      <FileWrites Include="$(_TestingPlatformPackagedAppRuntimeRootFile);$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestingPlatformPackagedAppControllerFile)"
           DestinationFiles="@(_TestingPlatformPackagedAppControllerFile->'$(_TestingPlatformPackagedAppRunControllerDirectory)%(RecursiveDir)%(Filename)%(Extension)')"
@@ -151,6 +169,25 @@
                       WriteOnlyWhenDifferent="true"
                       Encoding="UTF-8"
                       Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != ''" />
+    <WriteLinesToFile File="$(_TestingPlatformPackagedAppRuntimeRootFile)"
+                      Lines="$([MSBuild]::Escape('$(_TestingPlatformPackagedAppRelativeDotNet)'))"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true"
+                      Encoding="UTF-8"
+                      Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != ''" />
+  </Target>
+
+  <Target Name="_CreateTestingPlatformPackagedAppRunAppHost"
+          AfterTargets="_PrepareTestingPlatformPackagedAppController"
+          Inputs="$(_TestingPlatformPackagedAppControllerDirectory)mstest-appmodel-controller.apphost-template;$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.dll;$(_TestingPlatformPackagedAppRuntimeRootFile)"
+          Outputs="$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe"
+          Condition="'$(_TestingPlatformPackagedAppRelativeDotNet)' != ''">
+    <CreateAppHost AppHostSourcePath="$(_TestingPlatformPackagedAppControllerDirectory)mstest-appmodel-controller.apphost-template"
+                   AppHostDestinationPath="$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe"
+                   AppBinaryName="mstest-appmodel-controller.dll"
+                   IntermediateAssembly="$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.dll"
+                   DotNetSearchLocations="AppRelative;EnvironmentVariable;Global"
+                   AppRelativeDotNet="$(_TestingPlatformPackagedAppRelativeDotNet)" />
   </Target>
 
   <Target Name="_GetTestingPlatformPackagedAppLauncherPaths"

@@ -32,14 +32,23 @@ AUMID.
 | Shared layout | Two complete layouts, no deduplication. | One portable layout with two renamed apphosts needs custom apphost generation and untested multi-RID `deps.json` resolution for about 10-12 MB per TFM. |
 | Staging | The consumer's `obj\PackagedAppController\<rid>\` folder is keyed by RID so switching architecture cannot reuse another architecture's files. | A shared folder relies on `SkipUnchangedFiles` size and timestamp comparison. |
 | Build input | A private `_PackagedAppControllerRuntimeIdentifier` global property selects the RID. `RuntimeIdentifier` stays a local property, so an outer `-r` cannot leak in. | Passing `RuntimeIdentifier` was already a silent no-op because of `TreatAsLocalProperty`. |
-| Runtime discovery | Native SDK launches resolve the controller runtime using the controller RID, not the packaged application's RID. Direct MTP launches receive the matching SDK root from `DOTNET_HOST_PATH` when the caller has not supplied an architecture-specific root. | The framework-dependent controller apphost cannot locate a private SDK installation from the application RID when the two architectures differ. |
+| Runtime discovery | Native SDK launches align an unset or matching application RID with the controller. Preserve a different explicit application RID and configure the staged controller apphost with its matching SDK's relative runtime path, unless the caller supplied a controller root or disabled automatic root handling. Direct MTP launches receive the matching SDK root only when the SDK RID matches the controller architecture. | An x86 SDK root is not a valid `DOTNET_ROOT_X64`. A `dotnet exec` prefix would suppress launch-profile arguments. |
 
 `_TestArchitecture` continues to describe the packaged application for logs. For native SDK
-launches, the targets update `RuntimeIdentifier` after `ComputeRunArguments` only when the selected
-controller and SDK architectures match, so the SDK chooses the matching `DOTNET_ROOT_<ARCH>` while
-keeping the existing executable command and argument tail. For direct MTP launches, the targets
-forward the matching SDK root to the controller unless the caller supplied that root already or
-set `TestingPlatformDisableAppHostDotnetRoot`.
+launches, the targets update `RuntimeIdentifier` after `ComputeRunArguments` only when the
+application RID is unset or matches the selected controller and the SDK architectures match.
+Otherwise, when the SDK architecture matches the controller and no controller root or opt-out was
+provided, the SDK's `CreateAppHost` task configures an architecture-specific template with the
+relative SDK runtime path. The template is packaged alongside each controller layout; only the
+consumer's staged apphost contains the local path. This preserves the explicit application RID
+and empty `RunArguments`, allowing `dotnet run` to apply named launch-profile arguments. A
+write-if-different runtime-root marker invalidates apphost generation when the root or opt-out
+changes, while unchanged runs remain incremental. The staged files participate in `Clean`.
+For direct MTP
+launches, the targets forward the matching SDK root to the controller unless the caller supplied
+that root already or set `TestingPlatformDisableAppHostDotnetRoot`. Root forwarding requires an
+exact SDK architecture suffix (`-arm64` or `-x64`), so an x86 SDK is never treated as an x64
+runtime root.
 When an explicit controller architecture differs from the SDK, the caller must provide a matching
 `DOTNET_ROOT_<ARCH>` if the runtime is not installed in the standard location.
 
@@ -50,10 +59,18 @@ When an explicit controller architecture differs from the SDK, the caller must p
   asserts together with each `deps.json` `runtimeTarget` and every listed runtime asset.
 - Real consumer builds assert the selected, staged layout (including the apphost machine type) for
   the override and SDK-RID paths, plus the explicit error for an unsupported value.
-- `ComputeRunArguments_UsesControllerRuntimeRoot` asserts both cross-architecture directions,
-  preserves the empty argument tail and controller command, and honors caller-supplied
-  `DOTNET_ROOT_ARM64`/`DOTNET_ROOT_X64` values and the disable switch.
-- On a Windows 11 ARM64 machine (Debug, `.\build.cmd -pack`), both the native `win-arm64` and the
+- `ComputeRunArguments_UsesControllerRuntimeRoot` asserts both cross-architecture directions and
+  that an x86 SDK does not populate `DOTNET_ROOT_X64`,
+  preserves caller-supplied `DOTNET_ROOT_ARM64`/`DOTNET_ROOT_X64` values and the disable switch,
+  and verifies the controller apphost and its configured runtime root.
+- `ComputeRunArguments_PreservesGlobalApplicationRuntimeIdentifier` asserts that a global
+  `RuntimeIdentifier=win-x64` remains unchanged while the matching ARM64 controller apphost is
+  configured with the SDK root.
+- `DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments` runs the real SDK with
+  the opposite application RID and a named profile containing `--info`. It checks the actual
+  packaged controller module and its app-relative runtime discovery.
+- In the original PR author's validation, on a Windows 11 ARM64 machine
+  (Debug, `.\build.cmd -pack`), both the native `win-arm64` and the
   `win-x64` controllers ran `--info` on `net10.0` and `net11.0`. `PackagedAppIntegrationTests` and
   `WindowsApplicationModelPackageTests` passed (128/128), including the tests that launch the
   packaged controller.
@@ -64,8 +81,10 @@ When an explicit controller architecture differs from the SDK, the caller must p
 
   | Requirement / risk | Automated E2E evidence | Rendered check / gap |
   | --- | --- | --- |
-  | Direct MTP receives the SDK-matching root only by default, while preserving caller override and opt-out behavior. | Six `ComputeRunArguments_UsesControllerRuntimeRoot` rows build generated consumers against the packed package and assert the emitted controller environment. | Nonvisual MSBuild/environment contract; the generated controller is not launched. |
-  | Native SDK launch selects the controller RID without changing its command or empty argument tail. | The same rows assert `RuntimeIdentifier`, `RunCommand`, and `RunArguments`. | Nonvisual launch-property contract; a real native SDK/controller launch with a private cross-architecture runtime remains unverified. |
+  | Direct MTP receives the SDK-matching root only by default, while preserving caller override and opt-out behavior. | Seven `ComputeRunArguments_UsesControllerRuntimeRoot` rows build generated consumers against the packed package and assert the emitted controller environment. | Nonvisual MSBuild/environment contract; the generated controller is not launched. |
+  | Native SDK launch preserves an explicit application RID while selecting a compatible controller runtime. | `ComputeRunArguments_UsesControllerRuntimeRoot` covers default root, explicit root, and opt-out paths; `ComputeRunArguments_PreservesGlobalApplicationRuntimeIdentifier` passes the application RID globally; `DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments` executes the packaged controller through a named SDK launch profile. | Executed on x64 with a private SDK runtime and an ARM64 application RID; native ARM64 execution remains unverified. No output-layout change is intended. |
+  | An x86 SDK does not forward its host folder as `DOTNET_ROOT_X64`. | The x86 row in `ComputeRunArguments_UsesControllerRuntimeRoot` asserts no root injection and preserves the application RID. | Nonvisual MSBuild/environment contract; the generated controller is not launched. |
+  | Personalized staging remains incremental, responds to opt-out changes, and cleans generated files. | Both `ComputeRunArguments_StagedControllerIsIncrementalAndCleaned` rows check timestamps and cleanup; the cross-architecture row also disables and re-enables runtime-root configuration and compares the resulting apphost bytes. | Generated-consumer filesystem contract. |
 - The follow-up runtime-root change was validated against the packed
   `Microsoft.Testing.Extensions.PackagedApp.MSBuild.3.0.0-dev` consumer on Windows x64 with the
   pinned .NET SDK `12.0.100-alpha.1.26562.108`. The source/test patch at base
@@ -117,10 +136,118 @@ When an explicit controller architecture differs from the SDK, the caller must p
   This follow-up exercised the generated packed consumer on Windows x64 with simulated SDK/app
   RIDs; it did not execute the new runtime-root behavior on a native ARM64 machine.
 
+### Review-comment follow-up (2026-11-16)
+
+Delivery verification found that the initial `dotnet exec` fallback suppresses
+`launchSettings.json` command-line arguments: the .NET SDK applies those only when the
+computed command arguments are empty
+([SDK 10 source](https://github.com/dotnet/sdk/blob/v10.0.100/src/Cli/dotnet/Commands/Run/RunCommand.cs)).
+A real x64 SDK launch with a global `win-arm64` application RID did start the controller
+through this fallback, but that is not sufficient compatibility evidence. The fallback was
+replaced with a staged apphost configured through the SDK's `CreateAppHost` task:
+the package supplies the architecture-correct unbound apphost template, and the consumer
+embeds a relative path to its matching SDK installation. This keeps `RunArguments` empty
+for launch profiles and leaves global application properties untouched. Explicit roots
+and the opt-out continue to use normal apphost discovery. No new public API or runtime
+dependency is required.
+
+The two review comments on PR [#12468](https://github.com/microsoft/testfx/pull/12468) identified
+that an x86 SDK must not be forwarded as `DOTNET_ROOT_X64`, and that a globally supplied application
+RID must not be overwritten. The implementation requires a nonempty SDK RID with the matching
+architecture suffix before forwarding a runtime root or personalizing the staged apphost. The
+application RID remains unchanged.
+
+The rejected DLL draft had eight passing generated-consumer cases and eight corresponding
+pre-fix failures, but did not exercise launch-profile arguments. Its source/test patch hash was
+`3d57a297aecbe2c5f6ba9a984d6a0ed43118224c375de1d305312ffd05ebfbb0`, and its package hash was
+`D31DD7F39860B6F88C411D7DE1706B8F5F3641A2CF798B3A1A96531120FBAE1A`. Those historical logs remain
+under `artifacts\TestResults\Release\arm64-review-comments-final-4d67e213565348eaadd1d535f86bdf07`;
+they are not evidence for the final apphost implementation.
+
+### Final apphost evidence
+
+The tested source/test patch is based on PR head `d5f0a44a69324fcc641844c400b68fa07c3cd9b6`;
+the PR merge base is `548d3bfc1567fe0aa3663d8dacbe78ab33cedf6e`. The binary Git diff of the
+controller project, packaged targets, and acceptance test file has SHA-256
+`3A6820C6DA5044E8B92C9D98B725B0E6B804CB6EFF84DEC6C75DF0D9E0FBF585`. The decision record is excluded
+from that hash. The same test assembly and source (SHA-256
+`F132DEAE81CEEA6B0DB22B9D33D98E5475C9E7E81A3C7DF50E31393B4D8828F9`) ran in all comparisons.
+
+| Variant | Package SHA-256 | Imported target SHA-256 |
+| --- | --- | --- |
+| Final apphost | `D48AB7C3158191FD60E44B237AF931734445F20198B1684E2F283F27F4D8BF1E` | `64C61C1592392B593F4678403FA0C14388B0DBD69F9AE66A3EC21011DCCEC4A3` |
+| Targeted pre-fix comparison | `0252FAE4CFB88E171B9491F2964A6631B2F27A549C4C1CDB71F5E0E1C4A532BD` | `7290CBDB4DBF83D428EC1CBC405CD3D8EDC0F538C1068BBBCAD9FA10D372691D` |
+
+Both variants use `Microsoft.Testing.Extensions.PackagedApp.MSBuild/3.0.0-dev`. The comparison
+repacked a separate copy of the final package with only its `buildTransitive` target replaced by
+the exact target from `d5f0a44a69324fcc641844c400b68fa07c3cd9b6`; every other archive payload was
+verified byte-identical. This is a targeted package counterfactual, not a full base-revision
+rebuild. Separate run-owned caches contain the corresponding archives, SHA-512 metadata, and
+extracted targets. All 14 generated consumers in each final run were checked for the expected
+package SHA-512, cache folder, and generated target import.
+
+**Test-value evidence:**
+
+| Contract / cases | Pre-fix target | Final apphost |
+| --- | --- | --- |
+| Reject the x86 SDK root / one runtime-root row | Executed: detected, expected no injected root but received one. | Passed. |
+| Preserve explicit application RIDs / six runtime-root rows and the global-RID case | Executed: detected, expected application RID but received controller RID. | Seven passed. |
+| Named profile and private runtime / real SDK launch | The controller launched, but the app-relative runtime-routing assertion failed. This does not independently prove a launch-profile defect in the base target. | Passed: profile `--info` reached the staged x64 controller, whose host trace selected the repository's private runtime through its app-relative path. |
+| Explicit launch overrides, argument tail, incremental staging and cleanup / five cases | Five passed; preservation checks. | Five passed, including opt-out/re-enable apphost regeneration. |
+
+Independent discovery found 14 cases. The final implementation ran 14/14 passed, 0 skipped
+(exit 0), the comparison ran 14 executed, 9 failed, 5 passed, 0 skipped (exit 2), and a confirming
+final-package run again passed 14/14 (exit 0). Both final green runs passed `verify_execution.py`.
+There were no compilation, restore, or launch failures counted as counterfactual proof.
+The assembly remains MSTest on MTP, method-level parallelism with `Workers=0`: each case owns
+its generated project, staging files, profile and trace; environment overrides are child-only.
+No new lock, scheduling change, or shared mutable test asset was introduced.
+
+Commands ran from the worktree root on Windows x64, pinned SDK
+`12.0.100-alpha.1.26562.108`, Release acceptance runner `net12.0`, generated consumer `net10.0`.
+The real controller selected the private `Microsoft.NETCore.App/11.0.0` runtime. The package
+contains all four net10.0/net11.0, x64/ARM64 unbound templates.
+
+```powershell
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$results = 'artifacts\TestResults\Release\arm64-apphost-followup-983c2055'
+.\build.cmd -pack -c Release -bl
+.\.dotnet\dotnet.exe build $project -c Release -f net12.0 --no-restore "-bl:$results\acceptance-build-final.binlog" -v:quiet
+
+$uids = @(
+    'ComputeRunArguments_UsesControllerRuntimeRoot',
+    'ComputeRunArguments_PreservesGlobalApplicationRuntimeIdentifier',
+    'DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments',
+    'ComputeRunArguments_StagedControllerIsIncrementalAndCleaned',
+    'ComputeRunArguments_PreservesExplicitOverrides',
+    'ComputeRunArguments_ResolvesRelativeTargetAndPreservesTailWithoutAppHost'
+) | ForEach-Object { "MSTest.Acceptance.IntegrationTests.PackagedAppIntegrationTests.$_" }
+.\.dotnet\dotnet.exe test --project $project -c Release -f net12.0 --no-build --list-tests -p:UsingDotNetTest=true -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= "-bl:$results\discovery.binlog" -- --filter-uid $uids
+
+# These retained scripts run the selector above with separate result folders and cache variants.
+& "$results\run-focused.ps1" -Label green-final -Cache green-cache
+& "$results\prepare-counterfactual.ps1"
+& "$results\run-focused.ps1" -Label counterfactual-red -Cache counterfactual-cache -ExpectFailure
+& "$results\run-focused.ps1" -Label green-confirmation -Cache green-cache
+& "$results\verify-provenance.ps1"
+```
+
+Final packing, acceptance build, discovery, execution gates and provenance checks exited 0.
+Earlier attempts exposed two test-formatting errors, a missing collection-cache marker, a missing
+consumer restore before `--no-build`, and a cleanup invocation without the matching application
+RID; these were corrected before the final runs and are not red-phase evidence. Logs and reports
+remain under the results directory above.
+
 ## Gaps
 
 - `--coverage` and `--hangdump` were not run with the `win-arm64` controller, and Test Explorer
   was not exercised on ARM64.
+- The runtime-root matrix includes simulated SDK RIDs on Windows x64; the final real SDK/controller
+  launch also ran on x64. Native ARM64 execution of these new paths remains unverified. The
+  real SDK run used the pinned preview SDK, not a separate shipping .NET 10 SDK. CI was not checked.
+- Explicit roots known during MSBuild evaluation are preserved. Runtime-root overrides introduced
+  only by a launch profile after that evaluation have not been validated; the personalized
+  apphost searches its app-relative location before environment/global locations.
 - An explicit controller architecture that differs from the SDK architecture requires a matching
   `DOTNET_ROOT_<ARCH>` when that runtime is privately installed; cross-architecture private SDK
   discovery is not inferred from `DOTNET_HOST_PATH`.
