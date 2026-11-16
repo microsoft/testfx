@@ -96,6 +96,19 @@ friend grant then built all five declared unit-test TFMs with zero warnings or
 errors. Markdown `MD018` was reproduced and corrected with an explicit PR link.
 These build/lint observations are not behavioral red-phase test evidence.
 
+Azure build 1683532 at `852e5580048a8f5aa0e74c1bd362bc3de76b2265`
+also exposed nine SDK evaluation rows restoring `MSTest.WinUI` on Linux, where
+`NonWindowsTests.slnf` intentionally does not produce that package. Only the six
+package-consuming test methods now require Windows-produced packed assets.
+All nine rows and assertions remain, including the explicit Unix MSBuild
+OS-property simulation executed on Windows. The console control stays
+cross-platform; no synthetic UI package or SDK selection policy is introduced.
+The acceptance-owner-only rebuild used `/p:BuildProjectReferences=false`, without
+rebuilding or repacking product code. Independent discovery and fresh TRX
+validation confirmed all nine guarded rows plus the console control executed and
+passed on Windows (10/10, zero skips), including the Unix/empty-controller row.
+Consumed SDK, core and WinUI package hashes match the preserved shipping packages.
+
 The dedicated facade builds all four declared TFMs. Its binaries contain only
 the `<Module>` type definition and respectively 5, 12, 6, and 6 forwarders for
 netstandard2.0, net462, net10.0, and net11.0. Eight ordinary public API baseline
