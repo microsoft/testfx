@@ -157,6 +157,26 @@ product/test source drift. The layer is replayed from the exact previous parent,
 not from an inferred fork. The results above remain earlier-wave evidence;
 final-new-pin pack and consumer results must be recorded separately.
 
+Corrected-head Linux shipping/attachment CI passed. Azure build 1683240 then
+exposed a separate sample-version regression: the three public UWP/WinUI samples
+still pin published MSTest/SDK 4.5.3, where the extracted package IDs do not exist.
+Unconditional new package references failed restore (`NU1101`), and the classic
+sample's explicit new Uwp DLL path failed copy (`MSB3030`). The samples now retain
+their original package references/UAP payload below major 5 and select the new
+owners for 5+, including prereleases. The actual MSBuild version intrinsic was
+checked with 4.5.3, 5.0.0-dev, and 5.0.0.
+
+All three actual public samples then restored/built with their published 4.5.3
+pins, warnings as errors, and binary logs (exit zero). Isolated short-path copies
+of the same source also restored/built against locally packed MSTest/SDK
+5.0.0-dev and aligned MTP 3.0.0-dev (exit zero). The VSTest host/object model was
+aligned with the producer's `MicrosoftNETTestSdkVersion`, 18.12.0. An initial
+attempt retaining the older public VSTest pin correctly failed restore with
+`NU1605`; it was a mixed-version setup failure, not a product red phase.
+The restored core/Uwp/WinUI/SDK package archives in the isolated cache match the
+shipping producer SHA-256 values. The correction changes neither SDK
+application-model policy nor package binaries.
+
 ## Historical validation and demonstration
 
 | Requirement | Existing automated evidence | Surface / limitation |
