@@ -764,6 +764,7 @@ public sealed class RetryArtifactRecoveryProtocolTests
         }
         finally
         {
+            connectionReleased.TrySetResult(true);
             await fixture.CloseAsync();
         }
     }
