@@ -74,6 +74,7 @@
   <Folder Name="/src/3 - TestFramework/">
     <Project Path="src/TestFramework/MSTest.Uwp/MSTest.Uwp.csproj" />
     <Project Path="src/TestFramework/MSTest.WinUI/MSTest.WinUI.csproj" />
+    <Project Path="src/TestFramework/TestFramework.Compatibility/TestFramework.Compatibility.csproj" />
     <Project Path="src/TestFramework/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj" />
     <Project Path="src/TestFramework/TestFramework/TestFramework.csproj" />
     <Project Path="src/TestFramework/TestFramework.SourceGeneration/TestFramework.SourceGeneration.csproj" />

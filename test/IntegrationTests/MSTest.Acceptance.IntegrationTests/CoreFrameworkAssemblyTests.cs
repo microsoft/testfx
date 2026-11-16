@@ -16,14 +16,10 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DataRow("lib/netstandard2.0", false, false, DisplayName = "NetStandardForwarders")]
     [DataRow("lib/net462", true, true, DisplayName = "NetFrameworkForwarders")]
-    [DataRow("lib/uap10.0", false, false, DisplayName = "ClassicUwpForwarders")]
-    [DataRow("buildTransitive/net10.0", true, false, DisplayName = "Net10Forwarders")]
-    [DataRow("buildTransitive/net11.0", true, false, DisplayName = "Net11Forwarders")]
-    [DataRow("buildTransitive/net10.0/uwp", false, false, DisplayName = "ModernUwpForwarders")]
-    [DataRow("buildTransitive/net10.0/winui", false, false, DisplayName = "WinUIForwarders")]
+    [DataRow("lib/net10.0", true, false, DisplayName = "Net10Forwarders")]
+    [DataRow("lib/net11.0", true, false, DisplayName = "Net11Forwarders")]
     public void PackedExtensionsForwardMovedTypesToCore(string assetFolder, bool supportsDeployment, bool supportsPrivateHelpers)
     {
         string package = Path.Join(Constants.ArtifactsPackagesShipping, $"MSTest.TestFramework.{MSTestVersion}.nupkg");
@@ -36,9 +32,11 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         image.Position = 0;
         using var pe = new PEReader(image);
         MetadataReader metadata = pe.GetMetadataReader();
+        Assert.AreSequenceEqual(
+            ["<Module>"],
+            metadata.TypeDefinitions.Select(handle => metadata.GetString(metadata.GetTypeDefinition(handle).Name)));
         ExportedType[] forwardedTypes = metadata.ExportedTypes
             .Select(metadata.GetExportedType)
-            .Where(type => metadata.GetString(type.Namespace) == "Microsoft.VisualStudio.TestTools.UnitTesting")
             .ToArray();
         List<string> expected = ["ITestRunInfo", "MessageLevel", "PlannedTest", "TestContext", "TestRun"];
         if (supportsDeployment)
@@ -56,6 +54,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             forwardedTypes.Select(type => metadata.GetString(type.Name)).Order(StringComparer.Ordinal));
         foreach (ExportedType type in forwardedTypes)
         {
+            Assert.AreEqual("Microsoft.VisualStudio.TestTools.UnitTesting", metadata.GetString(type.Namespace));
             Assert.IsTrue(type.IsForwarder);
             Assert.AreEqual(HandleKind.AssemblyReference, type.Implementation.Kind);
             Assert.AreEqual(
@@ -106,6 +105,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         List<(string Package, string Name, string Asset)> assemblies =
         [
             ("MSTest.TestFramework", "MSTest.TestFramework", coreAsset),
+            ("MSTest.TestFramework", "MSTest.TestFramework.Extensions", coreAsset),
         ];
         if (uiPackage.Length != 0)
         {
@@ -154,11 +154,13 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         string expectedOutput = uiPackage.Length == 0
             ? $"""
             {Path.Join(output, "MSTest.TestFramework.dll")}
+            {Path.Join(output, "MSTest.TestFramework.Extensions.dll")}
             {copiedResource}
             Packed framework ownership and API shape passed.
             """
             : $"""
             {Path.Join(output, "MSTest.TestFramework.dll")}
+            {Path.Join(output, "MSTest.TestFramework.Extensions.dll")}
             {Path.Join(output, uiPackage + ".dll")}
             {copiedResource}
             Packed framework ownership and API shape passed.
@@ -192,8 +194,8 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
           </ItemGroup>
           <Target Name="ReportFrameworkAssets" AfterTargets="Build">
             <ItemGroup>
-              <_FrameworkCompile Include="@(ReferencePath)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
-              <_FrameworkRuntime Include="@(ReferenceCopyLocalPaths)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
+              <_FrameworkCompile Include="@(ReferencePath)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
+              <_FrameworkRuntime Include="@(ReferenceCopyLocalPaths)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
             </ItemGroup>
             <WriteLinesToFile File="$(MSBuildProjectDirectory)\resolved-framework-assets.txt" Lines="@(_FrameworkCompile->'compile=%(FullPath)');@(_FrameworkRuntime->'runtime=%(FullPath)')" Overwrite="true" />
           </Target>
@@ -227,6 +229,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assert.IsNull(typeof(TestContext).GetProperty("DataRow"));
         Assert.IsNull(typeof(TestContext).GetProperty("DataConnection"));
         Console.WriteLine(core.Location);
+        Console.WriteLine(extensions.Location);
         if ("$UiPackage$".Length != 0)
         {
             Assembly ui = Assembly.Load("$UiPackage$");

@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [assembly: TypeForwardedTo(typeof(PlannedTest))]
 #pragma warning restore MSTESTEXP
 
-#if !NETSTANDARD2_0 && !WINDOWS_UWP && !WIN_UI
+#if !NETSTANDARD2_0
 [assembly: TypeForwardedTo(typeof(DeploymentItemAttribute))]
 #endif
 

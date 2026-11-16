@@ -82,6 +82,7 @@ filegroup(
         ":crashdump",
         ":ctrf",
         ":framework",
+        ":framework_compatibility",
         ":github_report",
         ":globalconfigs_generator",
         ":hangdump",

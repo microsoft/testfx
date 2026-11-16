@@ -26,6 +26,7 @@ public sealed class WindowsApplicationModelPackageTests
             TargetFramework={{targetFramework}}
             UseUwpTools=true
             /lib/{{targetFramework.Split('-')[0]}}/MSTest.TestFramework.dll
+            /lib/{{targetFramework.Split('-')[0]}}/MSTest.TestFramework.Extensions.dll
             /buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll
             /buildTransitive/net10.0-windows10.0.17763/MSTestAdapter.PlatformServices.dll
             /lib/net10.0-windows10.0.17763/MSTest.Uwp.dll
@@ -257,7 +258,9 @@ public sealed class WindowsApplicationModelPackageTests
                 $"buildTransitive/{framework}/_localization/fr/MSTestAdapter.PlatformServices.resources.dll",
             ]);
         using ZipArchive archive = ZipFile.OpenRead(package);
-        Assert.DoesNotContain(entry => entry.Name == "MSTest.TestFramework.dll", archive.Entries);
+        Assert.DoesNotContain(
+            entry => entry.Name is "MSTest.TestFramework.dll" or "MSTest.TestFramework.Extensions.dll",
+            archive.Entries);
         using var reader = new StreamReader(archive.GetEntry(packageId + ".nuspec")!.Open());
         var nuspec = XDocument.Parse(reader.ReadToEnd());
         XElement[] dependencies = nuspec.Descendants().Where(element => element.Name.LocalName == "dependency").ToArray();

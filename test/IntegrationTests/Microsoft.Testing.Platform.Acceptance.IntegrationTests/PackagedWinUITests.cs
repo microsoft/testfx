@@ -968,6 +968,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string[] required =
         [
             "/lib/net10.0/MSTest.TestFramework.dll",
+            "/lib/net10.0/MSTest.TestFramework.Extensions.dll",
             "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
             "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
             "/lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
@@ -977,7 +978,6 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         [
             "/mstest.testadapter/",
             "/mstest.uwp/",
-            "MSTest.TestFramework.Extensions.dll",
             "/lib/net10.0/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];
 

@@ -809,13 +809,13 @@ namespace MSTestSdkTest
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
-        // Ordinary helpers reference only the shared framework.
+        // Ordinary helpers reference shared core and its forwarding-only compatibility facade.
         Assert.Contains(r => r.Text.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase), references);
-        Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase), references);
+        Assert.Contains(r => r.Text.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase), references);
         Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.Uwp.dll", StringComparison.OrdinalIgnoreCase), references);
         Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.WinUI.dll", StringComparison.OrdinalIgnoreCase), references);
 
-        // No adapter, no extensions, no vstest sdk
+        // No adapter, no MTP extensions, no vstest sdk
         Assert.DoesNotContain(r => r.Text.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase), references);
         Assert.DoesNotContain(r => r.Text.Contains("Microsoft.Testing.Extensions.", StringComparison.OrdinalIgnoreCase), references);
 
@@ -1386,8 +1386,7 @@ namespace MSTestWebTest
         Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", adapterPath, adapterPath);
         Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", frameworkPath, frameworkPath);
         Assert.DoesNotContain(
-            path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)
-                || path.EndsWith("MSTest.Uwp.dll", StringComparison.OrdinalIgnoreCase)
+            path => path.EndsWith("MSTest.Uwp.dll", StringComparison.OrdinalIgnoreCase)
                 || path.EndsWith("MSTest.WinUI.dll", StringComparison.OrdinalIgnoreCase),
             resolvedAssets);
         Assert.DoesNotContain(

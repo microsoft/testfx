@@ -46,6 +46,14 @@ def mstest_libraries():
         deps = [":assert_generator_plugin"],
     )
     testfx_library(
+        name = "framework_compatibility",
+        project = "src/TestFramework/TestFramework.Compatibility",
+        target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
+        assembly_name = "MSTest.TestFramework.Extensions",
+        polyfills = False,
+        deps = [":framework"],
+    )
+    testfx_library(
         name = "platform_services",
         project = "src/Adapter/MSTestAdapter.PlatformServices",
         target_frameworks = DESKTOP_FRAMEWORKS,

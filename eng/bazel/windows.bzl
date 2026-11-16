@@ -105,6 +105,7 @@ def _windows_library(name, target_frameworks, linked_srcs = [], minimum_version 
 
 def _mstest_flavor(flavor, framework, symbol, projection_deps):
     core = "framework_" + flavor
+    compatibility = "framework_compatibility_" + flavor
     extensions = "framework_extensions_" + flavor
     services = "platform_services_" + flavor
     adapter = "adapter_" + flavor
@@ -136,6 +137,15 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             "MSTest.Performance.Benchmarks",
         ],
         deps = [":assert_generator_plugin"],
+    )
+    _windows_library(
+        name = compatibility,
+        project = "src/TestFramework/TestFramework.Compatibility",
+        assembly_name = "MSTest.TestFramework.Extensions",
+        target_frameworks = [framework],
+        emit_supported_os = False,
+        polyfills = False,
+        deps = [":" + core],
     )
     _windows_library(
         name = extensions,
@@ -417,20 +427,20 @@ def windows_libraries():
         "windows_probe_desktop",
         _DESKTOP_FRAMEWORKS[0],
         "desktop",
-        [":windows_ui_automation", ":framework"],
+        [":windows_ui_automation", ":framework", ":framework_compatibility"],
         project_sdk = "windowsdesktop",
     )
     _library_probe(
         "windows_probe_uwp",
         "net10.0-windows10.0.17763.0",
         "uwp",
-        [":adapter_uwp", ":platform_services_uwp", ":framework_extensions_uwp", ":framework_uwp"],
+        [":adapter_uwp", ":platform_services_uwp", ":framework_extensions_uwp", ":framework_uwp", ":framework_compatibility_uwp"],
     )
     _library_probe(
         "windows_probe_winui",
         "net10.0-windows10.0.18362.0",
         "winui",
-        [":adapter_winui", ":platform_services_winui", ":framework_extensions_winui", ":framework_winui"],
+        [":adapter_winui", ":platform_services_winui", ":framework_extensions_winui", ":framework_winui", ":framework_compatibility_winui"],
     )
     native.filegroup(
         name = "windows_probes",

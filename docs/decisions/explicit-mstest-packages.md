@@ -19,12 +19,15 @@ ordinary `lib/<tfm>` assets, and carries its own build assets and satellites.
 Modern net10.0 Windows assets also support compatible net11.0 consumers. Neither
 UI package depends on the ordinary adapter or the other UI flavor.
 
-Extensions is retired, not retained as a live compatibility stub. Its existing
-API records are byte-preserving `.txt.history` moves, outside release promotion.
-Consumers must update UI package/assembly references and recompile at this
-intentional next-major boundary. Ordinary and net462 resolver/configuration
-behavior remain unchanged. `AppModel` moves unchanged into PlatformServices,
-where its actual callers already live.
+The old Extensions implementation and package-owner project are retired. Its
+existing API records are byte-preserving `.txt.history` moves, outside release
+promotion. A forwarding-only compatibility assembly preserves the non-UI types
+already moved to core, including the upstream Playwright binary-compatibility
+repair. It contains no UI definitions, resources, or selection logic. Consumers
+must still update UI package/assembly references and recompile: one facade cannot
+forward the same UI identity to both new packages. Ordinary and net462
+resolver/configuration behavior remain unchanged. `AppModel` moves unchanged
+into PlatformServices, where its actual callers already live.
 
 The SDK automatically selects the existing application model using `UseWinUI`,
 `UseUwpTools`, early `UseUwp`, and classic `uap` inference. An explicit
@@ -51,7 +54,8 @@ The carving input is
 `8dd78e1347417e400c3ef8d786059a8bb346162f...refs/pr-stack/source/12435`.
 Parent changes must be reconciled, not replaced with old snapshots.
 
-Keeping Extensions would preserve the hidden UI asset-swapping package design.
+Keeping the original Extensions project would preserve the hidden UI
+asset-swapping package design.
 Copying the full source SDK/native policy would defeat the smaller review.
 The chosen boundary extracts the source's package owners and small exact-version
 packing hook, retaining existing runtime and helper policy. Ordinary adapter
@@ -59,7 +63,65 @@ restore/build still expose UI variants; pack must narrow both NuGet's public
 framework list and Sdk.Extras' cached flavor matrix so UI payloads and dependency
 groups cannot leak.
 
-## Validation and demonstration
+### 2026-11-16 maintenance and compatibility follow-through
+
+The maintenance rebase uses verified parent
+`984c2c635742d3d9699f488af36d25dff48e0f85`, which includes main
+`ddb33a558d5200030053e571dba7a65de476f317`. Main now requires the existing
+`MSTest.TestFramework.Extensions` non-UI type forwarders: removing that assembly
+would regress already-compiled `Microsoft.Playwright.MSTest.v4` consumers.
+This supersedes the earlier blanket clean-break decision for non-UI types only.
+
+The compatibility project has one dependency, on core. Core packing collects its
+same-TFM DLL and XML after the repository solution's complete Build phase, with
+an explicit missing-output error. The compatibility project is non-packable and
+is included in the actual solution/filter inputs. There is no reverse project
+reference, nested restore/build, new package, or UI asset selection in the facade.
+The existing exact package-shape verifier is retained and its affected baselines
+will be regenerated from the repacked products, not replaced with file counts.
+
+| Preserved contract | Focused evidence planned for this revision |
+| --- | --- |
+| Forwarded non-UI identity, no duplicate implementation | Existing `PackedExtensionsForwardMovedTypesToCore` rows, adapted to ordinary core assets and checking facade type definitions |
+| Already-compiled external consumers | Existing `PlaywrightSdkTests` under MTP and VSTest |
+| Exact core pin, UI isolation and consumed binaries | Existing package-content and `PackedConsumersUseSharedCoreAndSelectedUiPackage` cases, plus representative real UI consumers |
+| WinUI startup guard tests remain executable | Existing four `UITestMethodStartupWaitTests` cases; conditional new-owner reference and friend access only |
+
+The original Linux pack binlog records `NU5129` with the core entry item's
+`PackagePath=buildTransitive\`. The item now specifies its complete package
+filename, avoiding platform-dependent trailing-directory path handling.
+The original Windows unit build was reproduced: only the WinUI TFM failed with
+`CS0234` for `AppContainer`. The conditional new-owner reference and matching
+friend grant then built all five declared unit-test TFMs with zero warnings or
+errors. Markdown `MD018` was reproduced and corrected with an explicit PR link.
+These build/lint observations are not behavioral red-phase test evidence.
+
+The dedicated facade builds all four declared TFMs. Its binaries contain only
+the `<Module>` type definition and respectively 5, 12, 6, and 6 forwarders for
+netstandard2.0, net462, net10.0, and net11.0. Eight ordinary public API baseline
+files were retained byte-for-byte, as were all 28 inert historical records from
+the released parent. No UI definition or resource is compiled into the facade.
+
+The 43-project actual-source solution filter passed the pinned Release repack,
+including strict metadata and updated exact package-shape validation. The first
+repack failed only because the old shapes still described the retired UI layout;
+regenerating those intentional shapes and repacking passed without suppressions.
+The four existing startup-guard tests were independently discovered and all four
+executed and passed, with no skips. These commands exited zero:
+
+```powershell
+.\build.cmd -c Release -msbuildEngine vs -projects src\TestFramework\TestFramework.Compatibility\TestFramework.Compatibility.csproj -bl
+.\build.cmd -c Release -msbuildEngine vs -projects test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\MSTestAdapter.PlatformServices.UnitTests.csproj -bl
+.\eng\verify-nupkgs.ps1 -configuration Release -updateBaselines
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer2-maintenance-pack.slnf -bl
+.\build.cmd -c Release -msbuildEngine vs -projects artifacts\validation\layer2-maintenance-tests.slnf -bl
+```
+
+Final-head package consumption, execution counts, provenance, and remote CI will
+be recorded once performed. The older evidence in the next section remains
+historical; it does not prove the rebased facade layout.
+
+## Historical validation and demonstration
 
 | Requirement | Existing automated evidence | Surface / limitation |
 | --- | --- | --- |
@@ -211,7 +273,8 @@ All four packages are `5.0.0-dev`; the aligned MTP runtime family is `3.0.0-dev`
 
 ## Open questions and deferred proof
 
-No shipping-source fix was needed after the pushed checkpoint. Live CI execution,
+The historical checkpoint below was followed by the maintenance fixes and
+compatibility follow-through above. Its old results do not prove live CI execution,
 full native Bazel execution, x86/ARM64 activation, native shipping .NET 10 SDK
 runner interoperability and release-branch/backport validation are not claimed.
 The known native net462 PlatformServices System.Reflection.Metadata failure has

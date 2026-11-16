@@ -20,6 +20,7 @@
       "src\\Platform\\Microsoft.Testing.Extensions.PackagedApp.MSBuild\\Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj",
       "src\\TestFramework\\MSTest.Uwp\\MSTest.Uwp.csproj",
       "src\\TestFramework\\MSTest.WinUI\\MSTest.WinUI.csproj",
+      "src\\TestFramework\\TestFramework.Compatibility\\TestFramework.Compatibility.csproj",
       "src\\TestFramework\\TestFramework.Windows.UIAutomation\\TestFramework.Windows.UIAutomation.csproj",
       "src\\TestFramework\\TestFramework.SourceGeneration\\TestFramework.SourceGeneration.csproj",
       "src\\TestFramework\\TestFramework\\TestFramework.csproj",

@@ -11,6 +11,7 @@
 
     <PackageId>MSTest.TestFramework</PackageId>
     <IsPackable>true</IsPackable>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddMSTestCompatibilityFacade</TargetsForTfmSpecificContentInPackage>
     <PackageTags>$(CommonPackageTags) MSTest TestFramework Framework</PackageTags>
     <PackageDescription><![CDATA[Write tests and shared test libraries with the MSTest framework. Add MSTest.TestAdapter to run ordinary tests, MSTest.Uwp for UWP tests, or MSTest.WinUI for WinUI tests.
 
@@ -73,6 +74,18 @@ $(CommonProductDescription)]]></PackageDescription>
          namespace, internal ctor, static Instance helper, string.IsNullOrEmpty). -->
     <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\CIEnvironmentDetector.cs" Link="Internal\CIEnvironmentDetector.cs" />
   </ItemGroup>
+
+  <Target Name="_AddMSTestCompatibilityFacade">
+    <PropertyGroup>
+      <_MSTestCompatibilityOutput>$(ArtifactsBinDir)TestFramework.Compatibility\$(Configuration)\$(TargetFramework)\MSTest.TestFramework.Extensions</_MSTestCompatibilityOutput>
+    </PropertyGroup>
+    <Error Condition=" !Exists('$(_MSTestCompatibilityOutput).dll') or !Exists('$(_MSTestCompatibilityOutput).xml') "
+           Text="Build TestFramework.Compatibility for $(TargetFramework) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).dll" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.dll" />
+      <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).xml" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.xml" />
+    </ItemGroup>
+  </Target>
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);TESTFRAMEWORK_CI_DETECTOR</DefineConstants>
