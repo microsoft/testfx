@@ -579,16 +579,36 @@ failure/pass remains historical evidence for the unchanged rejection assertion.
 No new behavior is introduced by this rebase. Fresh reports and package/cache
 manifests are retained separately from the November 11 artifacts.
 
+### 2026-11-16: Arcade dependency flow
+
+The fixed Arcade package has flowed into TestFx. Main commit `e7d16118330b957e7c1d389efb1108bcf33362c2`
+([#12475](https://github.com/microsoft/testfx/pull/12475)) updated `global.json` to
+pin Arcade **12.0.0-beta.26563.1**, and `eng/Version.Details.xml` records its
+source as `d3c2ebbd7d9a81318117839335ba7e8540c3d77f`, the
+[dotnet/arcade#17784](https://github.com/dotnet/arcade/pull/17784) merge
+commit. That commit changes the stock
+`Microsoft.Testing.Platform.targets` runner arguments from `--no-progress` to
+`--progress off`; the restored 12.0.0-beta.26563.1 package's target contains
+`--progress off`. This branch inherited the pin by merging main at
+`ec14e620adabc527c141732c6fa8a8264216a857`.
+
+This was established by inspecting the pinned dependency metadata, the Arcade
+commit, and the restored package target. No stock Arcade `-test` run or
+published-head CI result is claimed for this pin. The November 11 and November
+13 entries above remain historical observations of their earlier pins
+(**12.0.0-beta.26560.9** and **12.0.0-beta.26562.1**), not the current state.
+
 ## Remaining prerequisite
 
-**The final MTP `--no-progress` removal is proposed in this follow-up, but
-blocked from merge.** Arcade's `Microsoft.Testing.Platform.targets` must use
-`--progress off`, a compatible Arcade SDK must be published, and that dependency
-must flow into TestFx before merging this branch. The current pin still passes
-the retired argument and would make the stock test runner fail command-line
-validation. This branch removes the MTP registration, initialization/warning
-state, resources, precedence handling, internal constant, and corresponding
-compatibility/help/info expectations; it does not bypass the dependency gate.
+**The Arcade dependency flow is complete; no further Arcade package update is
+required for this removal.** The current pin, Arcade **12.0.0-beta.26563.1**
+from `d3c2ebbd7d9a81318117839335ba7e8540c3d77f`, passes `--progress off`
+instead of the retired argument. Validating the stock Arcade runner
+(`build.cmd -test` / `build.sh -test`) on this pin, together with published-head
+CI, remains outstanding and must pass before merge. This branch removes the MTP
+registration, initialization/warning state, resources, precedence handling,
+internal constant, and corresponding compatibility/help/info expectations; it
+does not fork the runner or strip arguments.
 
 The native SDK's separately parsed `--no-ansi` and `--no-progress` options are
 not removed by this MTP-only change, and their retirement is not a prerequisite
