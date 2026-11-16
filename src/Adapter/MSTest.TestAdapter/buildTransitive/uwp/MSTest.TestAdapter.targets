@@ -32,6 +32,7 @@
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.TrxReport.Abstractions'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Extensions.TrxReport'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.Testing.Platform'
+                 OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'MSTest.TestFramework.Extensions'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.CoreUtilities'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.PlatformAbstractions'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.VisualStudio.TestPlatform.ObjectModel' ">
