@@ -21,7 +21,6 @@ $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $frameworks = @('net10.0', 'net11.0')
 $coreFrameworks = @('netstandard2.0', 'net462') + $frameworks
-$adapterFrameworks = if ($IsWindows) { @('net462') + $frameworks } else { $frameworks }
 $platformFrameworks = @{
     'MSTest.Uwp' = 'net10.0-windows10.0.17763'
     'MSTest.WinUI' = 'net10.0-windows10.0.18362'
@@ -101,7 +100,7 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
     $groups = @($Metadata.SelectNodes('./*[local-name()="dependencies"]/*[local-name()="group"]'))
     $packageFrameworks = switch ($Id) {
         'MSTest.TestFramework' { $coreFrameworks }
-        'MSTest.TestAdapter' { $adapterFrameworks }
+        'MSTest.TestAdapter' { $frameworks }
         { $platformFrameworks.ContainsKey($_) } { @($platformFrameworks[$Id]) }
         default { $frameworks }
     }
@@ -136,11 +135,8 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                     $null = Get-ZipHash $Archive "buildTransitive/$framework/MSTest.TestAdapter.$extension"
                 }
                 $null = Get-ZipHash $Archive "buildTransitive/$framework/Parallelize.targets"
-                if (@($Archive.Entries | Where-Object { ($_.FullName -like 'buildTransitive/*.dll' -and $_.FullName -cne 'buildTransitive/net462/MSTest.TestFramework.dll') -or $_.FullName -like '*/_localization/*' }).Count) {
+                if (@($Archive.Entries | Where-Object { $_.FullName -like 'buildTransitive/*.dll' -or $_.FullName -like '*/_localization/*' }).Count) {
                     throw 'The adapter must ship its assemblies and satellites as lib assets, not build payloads.'
-                }
-                if ($framework -eq 'net462') {
-                    $null = Get-ZipHash $Archive 'buildTransitive/net462/MSTest.TestFramework.dll'
                 }
             }
             { $platformFrameworks.ContainsKey($_) } {
@@ -208,8 +204,8 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             foreach ($folder in $catalog.Folders) { $null = Get-ZipHash $Archive "$folder/$culture/$($catalog.Assembly).resources.dll" }
         }
     }
-    if ($Id -eq 'MSTest.TestAdapter' -and @($Archive.Entries | Where-Object FullName -Match '(^|/)(winui|uwp|uap[^/]*|net\d+\.\d+-windows[^/]*)(/|$)').Count) {
-        throw 'The ordinary adapter must not ship UI flavor payloads or build assets.'
+    if ($Id -eq 'MSTest.TestAdapter' -and @($Archive.Entries | Where-Object FullName -Match '(^|/)(net4\d+|winui|uwp|uap[^/]*|net\d+\.\d+-windows[^/]*)(/|$)').Count) {
+        throw 'The ordinary adapter must not ship legacy or UI flavor payloads or build assets.'
     }
     foreach ($group in $groups) {
         $dependencies = @($group.SelectNodes('./*[local-name()="dependency"]'))
@@ -223,7 +219,6 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             { $_ -in @('MSTest.TestAdapter', 'MSTest.Uwp', 'MSTest.WinUI') } {
                 $ids = @('Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.Telemetry', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.TestPlatform.ObjectModel')
                 if ($IsWindows -or $Id -ne 'MSTest.TestAdapter') { $ids += 'MSTest.TestFramework' }
-                if ($group.targetFramework -eq 'net462') { $ids += @('System.Memory', 'System.Threading.Tasks.Extensions', 'System.Reflection.Metadata') }
                 Assert-Names $ids @($dependencies | ForEach-Object id) "$Id dependencies"
                 if ($platformFrameworks.ContainsKey($Id)) {
                     $core = @($dependencies | Where-Object id -CEQ 'MSTest.TestFramework')
@@ -468,22 +463,6 @@ try {
         finally { $archive.Dispose() }
     }
     Assert-Names $expectedIds @($packages.Keys) 'Native feed'
-    if ($IsWindows) {
-        $coreArchive = [System.IO.Compression.ZipFile]::OpenRead($packages['MSTest.TestFramework'].Path)
-        $adapterArchive = $null
-        try {
-            $adapterArchive = [System.IO.Compression.ZipFile]::OpenRead($packages['MSTest.TestAdapter'].Path)
-            if ((Get-ZipHash $adapterArchive 'buildTransitive/net462/MSTest.TestFramework.dll') -cne
-                (Get-ZipHash $coreArchive 'lib/net462/MSTest.TestFramework.dll')) {
-                throw 'The net462 VSTest resolver copy must match ordinary net462 core.'
-            }
-        }
-        finally {
-            $coreArchive.Dispose()
-            if ($adapterArchive) { $adapterArchive.Dispose() }
-        }
-    }
-
     $sdkVersion = [regex]::Match((Get-Content -LiteralPath (Join-Path $root 'MODULE.bazel') -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value
     if (-not $sdkVersion) { throw 'Could not identify the native toolchain SDK.' }
     $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }

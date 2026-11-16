@@ -570,3 +570,84 @@ hashes. Evidence paths are local, not public artifact URLs. Native classic UAP,
 MSTest XAML/UI-thread application activation, other architectures and release
 branches remain unclaimed; the real activation above uses the native console
 app-model host. No rollout/backport or merge action is performed.
+
+### Native adapter package support boundary: 2026-11-16
+
+Review on `204d4850de60b2b2fbc28a4a1934ad73f2b2c673` identified an accidental
+Windows-only `net462` adapter package group. The native adapter's first-party
+dependency packages expose only `net10.0` and `net11.0` runtime assets.
+A real `net462` SDK-style consumer of native `MSTest.TestAdapter`
+`5.0.0-preview.bazel` fails restore with exit 1 / `NU1202` at native
+`Microsoft.Testing.Extensions.TrxReport.Abstractions`
+`3.0.0-preview.bazel`; this is not a net10 proxy or a legacy runtime failure.
+The physical nuspecs confirm the same incompatible boundary for native
+Telemetry, Platform.MSBuild and Platform. Four resolved native cache archives
+match the captured producer hashes; the consumer has a fresh owned cache,
+explicit source mapping and no fallback package folders.
+
+The chosen contract restores the existing portable-only adapter archive:
+`net10.0` and `net11.0`, on every producer OS. Remove the misleading legacy
+dependency group and payload rather than extending all native MTP packages to
+.NET Framework. A full legacy runtime package closure was not designed or
+validated here. Keep the existing native net462 compile labels and the
+independently consumable ordinary core/facade package unchanged. This does not
+change official MSBuild-produced packages or claim native legacy adapter support.
+
+The maintained package validator requires exactly the two supported adapter
+groups and rejects legacy adapter build payloads. The same assertion rejects
+the original real archive and passes the freshly repacked archive. A separate
+layout mutation removes only the original nuspec's net462 group while retaining
+its real payload; the explicit legacy-payload assertion rejects that too.
+Each layout probe executes once with zero skips, using the same validator bytes.
+
+The post-fix legacy adapter restore has an important NuGet distinction:
+build-only packages without a `lib` folder restore successfully when no framework
+group matches, but contribute no assets. The actual net462 restore exits 0 and
+selects only the adapter identity, with no dependencies, build, compile or runtime
+assets. It does **not** enable or validate a native legacy adapter runtime.
+The initial postprocessing expectation of a direct adapter `NU1202` was wrong;
+the real assets were inspected rather than inventing that diagnostic. Adding
+marker libraries or unsupported-framework guard assets solely to force it was
+not necessary for the existing portable-only archive contract.
+
+The executed reproduction uses the pinned native SDK
+`11.0.100-rc.3.26522.148`, working directory
+`Q:\tfb\n12451-80f9f2\net462-review-4587032669\red\consumer`:
+`dotnet restore LegacyConsumer.csproj --configfile NuGet.config --packages
+Q:\tfb\n12451-80f9f2\net462-review-4587032669\red\confirmed-packages
+--disable-build-servers
+-bl:Q:\tfb\n12451-80f9f2\net462-review-4587032669\red\restore-confirmed.binlog
+--nologo -v:minimal` returned 1. Its source/layout identity, original package
+hashes, exact command, NU1202 diagnostic and effective net462 assets/cache are
+retained in `restore-evidence.json`, `producer-packages.json`, the copied
+nuspecs and restore log beside that binlog.
+
+The implementation was validated as base
+`204d4850de60b2b2fbc28a4a1934ad73f2b2c673` plus the two-file native rules/validator
+patch SHA-256
+`86A8AA8C30892EF6C97777D863F8044C4E34F7BBBF9A9632F723C7E5B2BEAA0D`.
+The original adapter archive is
+`6129E376D454AC01B0EF15E1F6BCE854504AD9F558B6E8875990BA1B4991E50D`;
+the corrected archive is
+`9652B932323E13E15B4C44B622A07FF642679268D5F59505824E697299A2807D`.
+The other nine archive hashes, including core and both UI packages, are unchanged.
+
+| Requirement / exact check | Executed evidence |
+| --- | --- |
+| No misleading legacy adapter group / `NativeAdapterPortableLayout` | Actual maintained function fails on the original archive, exit 1, reporting three groups instead of net10/net11; the same function passes the repacked archive, exit 0. |
+| No unadvertised legacy payload / `NativeAdapterRejectsLegacyPayloadWithoutLegacyGroup` | Owned original-archive mutation retains real legacy bytes but removes the legacy nuspec group. Exit 1 at the explicit legacy-payload assertion; no setup/compiler failure is counted. |
+| Real supported package consumers | `pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-mstest-packages.ps1 -OutputRoot Q:\tfb\n12451-80f9f2\net462-review-4587032669\modern -IncludeWindowsPlatformPackages -VerifySatelliteSensitivity`: exit 0; ten archives, real net10/net11 positive/failure/empty cases, MSBuild parent exits 0/1 and satellite removal/restoration, with new cache/loaded hashes. |
+| SDK composition survives the archive boundary | `pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-sdk-packages.ps1 -EvidenceRoot Q:\tfb\n12451-80f9f2\net462-review-4587032669\sdk -Jobs 2`: exit 0; fourteen evaluations, five builds, actual SDK/metapackage runs and native `dotnet test`. |
+| Compile labels, Windows CLR ownership and 26/5 inventories remain intact | `pwsh -NoLogo -NoProfile -File .\eng\bazel\windows\validate.ps1 -ArtifactsDirectory Q:\tfb\n12451-80f9f2\net462-review-4587032669\windows`: exit 0; five real CLR probes and four additional unit suites. No registration or XAML activation is claimed. |
+| Independently usable native net462 core/facade | Pinned native SDK builds `green\core-consumer\CoreConsumer.csproj` in Release, exit 0; its actual `.NETFramework,Version=v4.6.2` executable exits 0 on CLR `4.0.30319.42000`. Both forwarded identities and archive/cache/loaded core/facade hashes match. |
+| Unsupported legacy adapter is not misreported as runtime coverage | `green\legacy-consumer\LegacyConsumer.csproj` restore exits 0 with only the package identity and no selected assets. This is recorded as NuGet's compatible-empty build-package behavior, not a passing legacy adapter scenario. |
+
+These runs use distinct task-owned feeds/caches and retain commands, binlogs,
+TRX, physical nuspecs, manifests and source identities under
+`Q:\tfb\n12451-80f9f2\net462-review-4587032669`. The core-only executable and
+unsupported-restore records are `green\core-evidence.json` and
+`green\legacy-restore-evidence.json`; they include the exact native SDK path,
+commands, effective target/cache and loaded paths. The old-archive and mutation
+probes are layout evidence, not legacy test execution. No assembly scheduling,
+production lifecycle, package versions, official package policy or lower-layer
+source changed.
