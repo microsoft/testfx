@@ -104,22 +104,22 @@
       </trans-unit>
       <trans-unit id="TrxModeInvalidValue">
         <source>'--trx-mode' expects 'in-process' or 'out-of-process'</source>
-        <target state="new">'--trx-mode' expects 'in-process' or 'out-of-process'</target>
+        <target state="translated">'--trx-mode' には 'in-process' または 'out-of-process' が必要です</target>
         <note>Do not localize option name {Locked="--trx-mode"} or mode names {Locked="in-process"}{Locked="out-of-process"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOptionDescription">
         <source>TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</source>
-        <target state="new">TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</target>
+        <target state="translated">TRX 生成モード: 'in-process' はコントローラーによる回復を無効にし、'out-of-process' は回復を有効にします (サポートされているプラットフォームでの既定値)。'--report-trx' が必要です。</target>
         <note>Do not localize format name {Locked="TRX"}, mode names {Locked="in-process"}{Locked="out-of-process"}, or option name {Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOutOfProcessNotSupported">
         <source>'--trx-mode out-of-process' is not supported on this platform</source>
-        <target state="new">'--trx-mode out-of-process' is not supported on this platform</target>
+        <target state="translated">'--trx-mode out-of-process' は、このプラットフォームではサポートされていません</target>
         <note>Do not localize option and value {Locked="--trx-mode out-of-process"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeRequiresTrxReport">
         <source>'--trx-mode' requires '--report-trx' to be enabled</source>
-        <target state="new">'--trx-mode' requires '--report-trx' to be enabled</target>
+        <target state="translated">'--trx-mode' では'--report-trx' を有効にする必要があります</target>
         <note>Do not localize option names {Locked="--trx-mode"}{Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">

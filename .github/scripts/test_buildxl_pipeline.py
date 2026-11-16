@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -19,6 +21,20 @@ CACHE_STEP = "Cache BuildXL actions"
 BUILD_STEP = "Build repository with BuildXL"
 COLLECT_STEP = "Collect BuildXL engine and project logs"
 PUBLISH_STEP = "Publish BuildXL build logs"
+MAC_CACHE_HELPER = "Initialize-VisualStudioTelemetryMacCache"
+GETMAC_OUTPUT = "\n".join(
+    [
+        "",
+        "Physical Address    Transport Name",
+        "=================== ==========================================================",
+        "00-00-00-00-00-00   Media disconnected",
+        r"3C-52-82-AB-CD-EF   \Device\Tcpip_{6B29FC40-CA47-1067-B31D-00DD010662DA}",
+        r"0A-1B-2C-3D-4E-5F   \Device\Tcpip_{0F0E0D0C-0B0A-0908-0706-050403020100}",
+    ]
+)
+# Visual Studio telemetry hashes the first non-zero address exactly as getmac prints it.
+SEEDED_MAC_HASH = "s:" + hashlib.sha256(b"3C-52-82-AB-CD-EF").hexdigest()
+CACHED_HASH = "0123456789abcdef" * 4
 
 
 def mappings(value):
@@ -554,6 +570,204 @@ Write-Output ('BUILDXL_FILE_SYSTEM_RESULT=' + ($result | ConvertTo-Json -Compres
         self.assertEqual("FullHashing", result["Mode"])
         self.assertEqual([], result["Queries"])
         self.assertIn("-NoJournal", diagnostics)
+
+    def test_wrapper_seeds_telemetry_mac_cache_only_before_native_buildxl(self) -> None:
+        lines = [
+            line.strip()
+            for line in (ROOT / "eng" / "buildxl.ps1").read_text(encoding="utf-8").splitlines()
+        ]
+        calls = [index for index, line in enumerate(lines) if line == MAC_CACHE_HELPER]
+        self.assertEqual(1, len(calls))
+        prepare_only = lines.index("if ($PrepareOnly) {")
+        msbuild_engine = lines.index("if ($Engine -eq 'MSBuild') {")
+        native_build = [
+            index for index, line in enumerate(lines) if line.startswith("& $bxl ")
+        ]
+        self.assertEqual(1, len(native_build))
+        self.assertLess(prepare_only, msbuild_engine)
+        self.assertLess(msbuild_engine, calls[0])
+        self.assertLess(calls[0], native_build[0])
+
+    def telemetry_mac_cache(
+        self, initial: dict | None, getmac: dict
+    ) -> tuple[dict, str]:
+        fixture = base64.b64encode(
+            json.dumps({"Initial": initial, "GetMac": getmac}).encode("utf-8")
+        ).decode("ascii")
+        script = r"""
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
+Set-StrictMode -Version 2.0
+$tokens = $null
+$parseErrors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    '__DRIVER__', [ref] $tokens, [ref] $parseErrors)
+if ($parseErrors.Count -ne 0) { throw 'The driver must parse before extracting its helper.' }
+$helpers = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq '__HELPER__'
+}, $true))
+if ($helpers.Count -ne 1) { throw 'Expected exactly one __HELPER__ helper.' }
+# Load only the actual helper; never execute driver setup, restore or build code.
+. ([scriptblock]::Create($helpers[0].Extent.Text))
+$fixture = [Text.Encoding]::UTF8.GetString(
+    [Convert]::FromBase64String('__FIXTURE__')) | ConvertFrom-Json -AsHashtable
+# A unique per-test key keeps the real Visual Studio telemetry cache untouched.
+$keyName = 'Software\TestFx.BuildXL.Tests.' + [Guid]::NewGuid().ToString('N')
+$getmacCalls = 0
+$global:LASTEXITCODE = 0
+function getmac.exe {
+    if ($args.Count -ne 0) { throw 'Visual Studio telemetry runs getmac without arguments.' }
+    $script:getmacCalls++
+    if ($script:fixture.GetMac.Throw) { throw 'getmac is unavailable.' }
+    $global:LASTEXITCODE = $script:fixture.GetMac.ExitCode
+    Write-Output ($script:fixture.GetMac.Output -split "`n")
+}
+try {
+    if ($null -ne $fixture.Initial) {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($keyName)
+        try {
+            $kind = [Microsoft.Win32.RegistryValueKind] $fixture.Initial.Kind
+            $key.SetValue('mac.address', $fixture.Initial.Value, $kind)
+        }
+        finally {
+            $key.Dispose()
+        }
+    }
+
+    __HELPER__ -KeyName $keyName
+    $result = [ordered]@{ KeyExists = $false; Value = $null; Kind = $null; GetMacCalls = $getmacCalls }
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($keyName)
+    if ($null -ne $key) {
+        try {
+            $result.KeyExists = $true
+            if ($key.GetValueNames() -contains 'mac.address') {
+                $result.Value = $key.GetValue('mac.address')
+                $result.Kind = $key.GetValueKind('mac.address').ToString()
+            }
+        }
+        finally {
+            $key.Dispose()
+        }
+    }
+}
+finally {
+    [Microsoft.Win32.Registry]::CurrentUser.DeleteSubKeyTree($keyName, $false)
+}
+Write-Output ('BUILDXL_MAC_CACHE_RESULT=' + ($result | ConvertTo-Json -Compress))
+"""
+        script = (
+            script.replace(
+                "__DRIVER__", str(ROOT / "eng" / "buildxl.ps1").replace("'", "''")
+            )
+            .replace("__HELPER__", MAC_CACHE_HELPER)
+            .replace("__FIXTURE__", fixture)
+        )
+        command = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+        process = subprocess.run(
+            [
+                "pwsh", "-NoLogo", "-NoProfile", "-NonInteractive",
+                "-OutputFormat", "Text", "-EncodedCommand", command,
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        self.assertEqual(0, process.returncode, process.stdout + process.stderr)
+        self.assertEqual("", process.stderr.strip())
+        marker = "BUILDXL_MAC_CACHE_RESULT="
+        results = [
+            line.removeprefix(marker)
+            for line in process.stdout.splitlines() if line.startswith(marker)
+        ]
+        self.assertEqual(1, len(results), process.stdout)
+        diagnostics = "\n".join(
+            line for line in process.stdout.splitlines() if not line.startswith(marker)
+        )
+        return json.loads(results[0]), diagnostics
+
+    @unittest.skipUnless(sys.platform == "win32", "Uses the current user's registry.")
+    def test_missing_telemetry_mac_cache_is_seeded_with_visual_studio_hash(self) -> None:
+        result, diagnostics = self.telemetry_mac_cache(
+            None, {"Throw": False, "ExitCode": 0, "Output": GETMAC_OUTPUT}
+        )
+        self.assertEqual(
+            {
+                "KeyExists": True, "Value": SEEDED_MAC_HASH,
+                "Kind": "String", "GetMacCalls": 1,
+            },
+            result,
+        )
+        self.assertIn("Cached the Visual Studio telemetry MAC hash", diagnostics)
+
+    @unittest.skipUnless(sys.platform == "win32", "Uses the current user's registry.")
+    def test_accepted_telemetry_mac_cache_is_preserved_without_getmac(self) -> None:
+        cases = (
+            ("string-prefix", "s:" + CACHED_HASH),
+            ("repeated-string-prefix", "s:s:" + CACHED_HASH),
+            ("unprefixed", CACHED_HASH),
+            ("non-numeric-double-prefix", "d:" + CACHED_HASH),
+        )
+        for name, value in cases:
+            with self.subTest(case=name):
+                result, diagnostics = self.telemetry_mac_cache(
+                    {"Kind": "String", "Value": value},
+                    {"Throw": False, "ExitCode": 0, "Output": GETMAC_OUTPUT},
+                )
+                self.assertEqual(
+                    {"KeyExists": True, "Value": value, "Kind": "String", "GetMacCalls": 0},
+                    result,
+                )
+                self.assertEqual("", diagnostics.strip())
+
+    @unittest.skipUnless(sys.platform == "win32", "Uses the current user's registry.")
+    def test_rejected_telemetry_mac_cache_is_replaced(self) -> None:
+        cases = (
+            ("uppercase-hash", "String", "s:" + CACHED_HASH.upper()),
+            ("short-hash", "String", "s:" + CACHED_HASH[:-1]),
+            ("numeric-double", "String", "d:" + "1" * 64),
+            ("dword", "DWord", 42),
+        )
+        for name, kind, value in cases:
+            with self.subTest(case=name):
+                result, _ = self.telemetry_mac_cache(
+                    {"Kind": kind, "Value": value},
+                    {"Throw": False, "ExitCode": 0, "Output": GETMAC_OUTPUT},
+                )
+                self.assertEqual(
+                    {
+                        "KeyExists": True, "Value": SEEDED_MAC_HASH,
+                        "Kind": "String", "GetMacCalls": 1,
+                    },
+                    result,
+                )
+
+    @unittest.skipUnless(sys.platform == "win32", "Uses the current user's registry.")
+    def test_unusable_getmac_result_writes_nothing_and_continues(self) -> None:
+        cases = (
+            ("nonzero-exit", {"Throw": False, "ExitCode": 1, "Output": GETMAC_OUTPUT},
+             "getmac exited 1"),
+            ("zero-address-only", {
+                "Throw": False, "ExitCode": 0,
+                "Output": "00-00-00-00-00-00   Media disconnected",
+            }, "getmac exited 0"),
+            ("empty-output", {"Throw": False, "ExitCode": 0, "Output": ""},
+             "getmac exited 0"),
+            ("unavailable", {"Throw": True, "ExitCode": 0, "Output": ""},
+             "getmac is unavailable."),
+        )
+        for name, getmac, diagnostic in cases:
+            with self.subTest(case=name):
+                result, diagnostics = self.telemetry_mac_cache(None, getmac)
+                self.assertEqual(
+                    {"KeyExists": False, "Value": None, "Kind": None, "GetMacCalls": 1},
+                    result,
+                )
+                self.assertIn("Visual Studio telemetry MAC hash not cached", diagnostics)
+                self.assertIn(diagnostic, diagnostics)
 
     def assert_collected(
         self,

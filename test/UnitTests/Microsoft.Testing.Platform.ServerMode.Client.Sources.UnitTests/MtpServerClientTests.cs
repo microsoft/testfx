@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Client;
@@ -24,6 +25,14 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 public sealed class MtpServerClientTests
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan WorkerCleanupTimeout = TimeSpan.FromSeconds(30);
+
+    // Launching this assembly as a real child uses MtpServerProcessTests' bounds. They guard a deadlock or a blocked
+    // stdout pipe, not startup performance: the profiled child has one minute to connect, and the watchdog around a
+    // launch also leaves time for teardown. These launches do not run in parallel because the parent's thread pool must
+    // drain the child's stdout and accept its connection, and this assembly's deliberately blocking tests can starve it.
+    private static readonly TimeSpan ChildConnectionTimeout = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan ChildLaunchWatchdogTimeout = TimeSpan.FromMinutes(2);
 
     // A representative server-initiated request method. The platform has no such constant yet; the client
     // dispatches any server request generically, so a literal is sufficient to exercise the decline/handle path.
@@ -307,18 +316,28 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    [DoNotParallelize] // Launches a real child; see ChildConnectionTimeout.
     public async Task Launch_OwnsTheConnectedChildAndSharesShutdown()
     {
         MtpServerClientOptions options = new()
         {
-            ConnectionTimeout = DefaultTimeout,
+            ConnectionTimeout = ChildConnectionTimeout,
             EnvironmentVariables = { [MtpServerProcessTests.StandardOutputFloodEnvironmentVariable] = "1" },
         };
-        using var client = MtpServerClient.Launch(typeof(MtpServerClientTests).Assembly.Location, options);
+        // Exercise the synchronous API without blocking a test-pool worker that the redirected-output
+        // reader and connection callbacks need. Await the original worker, including failed-start cleanup.
+        Task<MtpServerClient> launch = Task.Factory.StartNew(
+            () => MtpServerClient.Launch(typeof(MtpServerClientTests).Assembly.Location, options),
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+        using MtpServerClient client = await launch.ConfigureAwait(false);
 
         Assert.IsGreaterThan(0, client.ProcessId);
         Assert.IsNull(client.ServerExitCode);
-        await WithTimeoutAsync(client.ShutdownAsync()).ConfigureAwait(false);
+        Task shutdown = client.ShutdownAsync();
+        Assert.AreSame(shutdown, client.ShutdownAsync());
+        await WithTimeoutAsync(shutdown).ConfigureAwait(false);
         Assert.AreEqual(0, client.ProcessId);
         Assert.IsNull(client.ServerExitCode);
         client.Dispose();
@@ -358,23 +377,26 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    [DoNotParallelize] // Launches a real child; see ChildConnectionTimeout.
     public async Task LaunchAsync_DoesNotCaptureTheCallingSynchronizationContext()
     {
         MtpServerClient? client = null;
         try
         {
-            await AssertCompletesWithoutPumpingAsync(async () =>
-            {
-                client = await MtpServerClient.LaunchAsync(
-                    typeof(MtpServerClientTests).Assembly.Location,
-                    new MtpServerClientOptions
-                    {
-                        ConnectionTimeout = DefaultTimeout,
-                        EnvironmentVariables = { [MtpServerProcessTests.StandardOutputFloodEnvironmentVariable] = "1" },
-                    },
-                    TestContext.CancellationToken).ConfigureAwait(false);
-                return client;
-            });
+            await AssertCompletesWithoutPumpingAsync(
+                async () =>
+                {
+                    client = await MtpServerClient.LaunchAsync(
+                        typeof(MtpServerClientTests).Assembly.Location,
+                        new MtpServerClientOptions
+                        {
+                            ConnectionTimeout = ChildConnectionTimeout,
+                            EnvironmentVariables = { [MtpServerProcessTests.StandardOutputFloodEnvironmentVariable] = "1" },
+                        },
+                        TestContext.CancellationToken).ConfigureAwait(false);
+                    return client;
+                },
+                ChildLaunchWatchdogTimeout);
 
             Assert.IsNotNull(client);
             Assert.IsGreaterThan(0, client.ProcessId);
@@ -616,21 +638,87 @@ public sealed class MtpServerClientTests
     [DataRow(true)]
     public async Task InitializeAsync_ShowMessageTopLevelFieldDoesNotAcknowledgeRouting(bool nestedFalse)
     {
-        using FakeMtpServer server = new();
-        IDictionary<string, object?> response = SerializerUtilities.Serialize(server.InitializeResponse);
-        response[JsonRpcStrings.ShowMessage] = true;
+        var testing = new Dictionary<string, object?>();
         if (nestedFalse)
         {
-            var serializedCapabilities = (IDictionary<string, object?>)response[JsonRpcStrings.Capabilities]!;
-            var testing = (IDictionary<string, object?>)serializedCapabilities[JsonRpcStrings.Testing]!;
             testing[JsonRpcStrings.ShowMessage] = false;
         }
 
-        server.InitializeResponseOverride = response;
-        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = true });
+        var response = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.ShowMessage] = true,
+            [JsonRpcStrings.ProtocolVersion] = JsonRpcProtocolVersions.Current,
+            [JsonRpcStrings.Capabilities] = new Dictionary<string, object?> { [JsonRpcStrings.Testing] = testing },
+        };
+        IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
+        var reply = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        RequestMessage? initializeRequest = null;
+        int reads = 0;
+        using ControlledMessageHandler handler = new()
+        {
+            ReadAsyncCallback = _ => Interlocked.Increment(ref reads) == 1
+                ? reply.Task
+                : Task.FromResult<RpcMessage?>(null),
+            WriteAsyncCallback = async (message, _) =>
+            {
+                if (message is RequestMessage request)
+                {
+                    initializeRequest = request;
+                    string json = await formatter.SerializeAsync(new ResponseMessage(request.Id, response)).ConfigureAwait(false);
+#if NETCOREAPP
+                    reply.TrySetResult(formatter.Deserialize<RpcMessage>(Encoding.UTF8.GetBytes(json)));
+#else
+                    reply.TrySetResult(formatter.Deserialize<RpcMessage>(json));
+#endif
+                }
+            },
+        };
+        using MtpJsonRpcConnection connection = new(handler);
+        using MtpServerClient client = new(connection, new MtpServerClientOptions { ShowMessage = true });
+        connection.Start();
+        Task readLoop = GetReadLoop(connection);
+        Exception? testFailure = null;
+        try
+        {
+            // Keep both shipping JSON formatters in the test without depending on socket scheduling.
+            // Rendezvous with the actual read loop, then return EOF after its one correlated response.
+            await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+            cancellation.CancelAfter(DefaultTimeout);
+            MtpServerCapabilities capabilities = await client.InitializeAsync(cancellation.Token).ConfigureAwait(false);
 
-        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
-        Assert.AreEqual(nestedFalse ? false : null, capabilities.ShowMessage);
+            Assert.AreEqual(nestedFalse ? false : null, capabilities.ShowMessage);
+            Assert.AreSame(capabilities, client.Capabilities);
+            Assert.IsNotNull(initializeRequest);
+            Assert.AreEqual(JsonRpcMethods.Initialize, initializeRequest.Method);
+            var args = (InitializeRequestArgs)initializeRequest.Params!;
+            Assert.IsTrue(args.Capabilities.ShowMessage);
+        }
+        catch (Exception ex)
+        {
+            testFailure = ex;
+        }
+        finally
+        {
+            // Release and join the original worker even if readiness, cancellation, or an assertion fails.
+            // Cleanup has its own budget and must not inherit the request's canceled token.
+            reply.TrySetResult(null);
+            try
+            {
+                await WithTimeoutAsync(readLoop, WorkerCleanupTimeout).ConfigureAwait(false);
+            }
+            catch (Exception cleanupFailure)
+            {
+                testFailure = testFailure is null
+                    ? cleanupFailure
+                    : new AggregateException("Initialization failed and its read loop did not stop cleanly.", testFailure, cleanupFailure);
+            }
+        }
+
+        if (testFailure is not null)
+        {
+            ExceptionDispatchInfo.Capture(testFailure).Throw();
+        }
     }
 
     [TestMethod]
@@ -2459,17 +2547,17 @@ public sealed class MtpServerClientTests
         return tcs.Task;
     }
 
-    private static async Task<T> WithTimeoutAsync<T>(Task<T> task)
+    private static async Task<T> WithTimeoutAsync<T>(Task<T> task, TimeSpan? timeout = null)
     {
-        Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
+        Task completed = await Task.WhenAny(task, Task.Delay(timeout ?? DefaultTimeout)).ConfigureAwait(false);
         return completed != task
             ? throw new TimeoutException("Timed out waiting for the operation to complete.")
             : await task.ConfigureAwait(false);
     }
 
-    private static async Task WithTimeoutAsync(Task task)
+    private static async Task WithTimeoutAsync(Task task, TimeSpan? timeout = null)
     {
-        Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
+        Task completed = await Task.WhenAny(task, Task.Delay(timeout ?? DefaultTimeout)).ConfigureAwait(false);
         if (completed != task)
         {
             throw new TimeoutException("Timed out waiting for the operation to complete.");
@@ -2494,10 +2582,10 @@ public sealed class MtpServerClientTests
         throw new InvalidOperationException("Unreachable.");
     }
 
-    private static async Task<T> AssertCompletesWithoutPumpingAsync<T>(Func<Task<T>> action)
+    private static async Task<T> AssertCompletesWithoutPumpingAsync<T>(Func<Task<T>> action, TimeSpan? timeout = null)
     {
         Task<T> task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(task, context).ConfigureAwait(false);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(task, context, timeout).ConfigureAwait(false);
         T result = await task.ConfigureAwait(false);
 
         Assert.IsTrue(
@@ -2551,25 +2639,26 @@ public sealed class MtpServerClientTests
         }
     }
 
-    private static async Task<bool> CompletesWithoutPumpingAsync(Task task, QueueingSynchronizationContext context)
+    private static async Task<bool> CompletesWithoutPumpingAsync(Task task, QueueingSynchronizationContext context, TimeSpan? timeout = null)
     {
         try
         {
-            Task completed = await WithTimeoutAsync(Task.WhenAny(task, context.ContinuationPosted)).ConfigureAwait(false);
+            Task completed = await WithTimeoutAsync(Task.WhenAny(task, context.ContinuationPosted), timeout).ConfigureAwait(false);
             return completed == task && context.PostCount == 0;
         }
         finally
         {
-            DrainContextUntilCompleted(context, task);
+            DrainContextUntilCompleted(context, task, timeout);
             // Join completion without rethrowing faults that the caller asserts separately.
-            _ = await WithTimeoutAsync(Task.WhenAny(task)).ConfigureAwait(false);
+            _ = await WithTimeoutAsync(Task.WhenAny(task), timeout).ConfigureAwait(false);
         }
     }
 
-    private static void DrainContextUntilCompleted(QueueingSynchronizationContext context, Task task)
+    private static void DrainContextUntilCompleted(QueueingSynchronizationContext context, Task task, TimeSpan? timeout = null)
     {
+        TimeSpan limit = timeout ?? DefaultTimeout;
         var stopwatch = Stopwatch.StartNew();
-        while (!task.IsCompleted && stopwatch.Elapsed < DefaultTimeout)
+        while (!task.IsCompleted && stopwatch.Elapsed < limit)
         {
             if (!context.TryRunOne())
             {

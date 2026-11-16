@@ -210,6 +210,10 @@ internal sealed class RetryRecoveryProtocolFixture
 
     public CancellationToken Token => _lifetime.Token;
 
+    public ITask Tasks => _tasks;
+
+    public Task? ConnectionGraceDelay => _tasks.ConnectionGraceDelay;
+
     public Mock<IFileSystem> FileSystem { get; } = new(MockBehavior.Strict);
 
     public Mock<IEnvironment> Environment { get; } = new(MockBehavior.Strict);
@@ -254,6 +258,8 @@ internal sealed class RetryRecoveryProtocolFixture
 
     public string[] Warnings => [.. Logs.Where(value => value.Level == LogLevel.Warning).Select(value => value.Message)];
 
+    public void ExpireConnectionGracePeriod() => _tasks.ExpireConnectionGracePeriod();
+
     public ArtifactProbe WatchKind(string kind) => Watch([kind], []);
 
     public ArtifactProbe WatchExtension(string extension) => Watch([], [extension]);
@@ -293,13 +299,14 @@ internal sealed class RetryRecoveryProtocolFixture
 
             if (_orchestration is { IsCompleted: false })
             {
+                using var cleanupTimeout = new CancellationTokenSource(TimeSpan.FromMinutes(1));
                 try
                 {
-                    await _orchestration.WithCancellationAsync(Token);
+                    await _orchestration.WithCancellationAsync(cleanupTimeout.Token);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (!cleanupTimeout.IsCancellationRequested && _orchestration.IsCanceled)
                 {
-                    // The invocation was canceled by this fixture's failure guard.
+                    // Join the canceled invocation before releasing its clients and services.
                 }
             }
         }
@@ -639,6 +646,9 @@ internal sealed class RetryRecoveryProtocolFixture
     private sealed class ProtocolTasks : ITask
     {
         private readonly ConcurrentQueue<Task> _work = new();
+        private readonly ConcurrentQueue<TaskCompletionSource<bool>> _connectionGracePeriods = new();
+
+        public Task? ConnectionGraceDelay { get; private set; }
 
         public Task Run(Action action) => Track(Task.Run(action));
 
@@ -653,10 +663,55 @@ internal sealed class RetryRecoveryProtocolFixture
         public Task Delay(int millisecondDelay) => throw new AssertFailedException("Retry recovery must not schedule an unowned delay.");
 
         public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken)
-            => throw new AssertFailedException("Retry recovery must not schedule an unowned delay.");
+        {
+            Assert.AreEqual(TimeSpan.FromSeconds(1), timeSpan, "Only the retry connection grace period is expected.");
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _connectionGracePeriods.Enqueue(completion);
+            Task delay = WaitForGracePeriodAsync(completion, cancellationToken);
+            ConnectionGraceDelay = delay;
+            _work.Enqueue(ObserveGracePeriodAsync(delay, cancellationToken));
+            return delay;
+
+            static async Task WaitForGracePeriodAsync(TaskCompletionSource<bool> completion, CancellationToken cancellationToken)
+            {
+                using CancellationTokenRegistration registration = cancellationToken.Register(
+                    static state => ((TaskCompletionSource<bool>)state!).TrySetResult(true), completion);
+                await completion.Task.ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            static async Task ObserveGracePeriodAsync(Task delay, CancellationToken cancellationToken)
+            {
+                try
+                {
+                    await delay.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Cleanup observes cancellation; the caller still receives the canceled delay.
+                }
+            }
+        }
+
+        public void ExpireConnectionGracePeriod()
+        {
+            if (_connectionGracePeriods.TryDequeue(out TaskCompletionSource<bool>? completion))
+            {
+                completion.TrySetResult(true);
+            }
+            else
+            {
+                Assert.Fail("No connection grace period is pending.");
+            }
+        }
 
         public async Task DrainAsync()
         {
+            while (_connectionGracePeriods.TryDequeue(out TaskCompletionSource<bool>? completion))
+            {
+                completion.TrySetResult(true);
+            }
+
             using var timeout = new CancellationTokenSource();
             var guard = Task.Delay(TimeSpan.FromMinutes(1), timeout.Token);
             try

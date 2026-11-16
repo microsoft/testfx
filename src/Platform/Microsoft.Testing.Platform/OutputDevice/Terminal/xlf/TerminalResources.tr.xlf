@@ -409,7 +409,7 @@
       </trans-unit>
       <trans-unit id="RuntimeFramework">
         <source>runtime: {0}</source>
-        <target state="new">runtime: {0}</target>
+        <target state="translated">çalışma zamanı: {0}</target>
         <note>{0} is the executing runtime framework, shown after the target framework and process architecture when the runtime differs or the target is unknown.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
@@ -451,9 +451,9 @@
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</target>
+        <target state="translated">ANSI kaçış karakterlerinin yayılıp yayılmadığını denetleyin.
+Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).
+'on', stdout yeniden yönlendirilmiş olsa bile ANSI kaçış kodlarını (imleç hareketi dahil) zorlar; yalnızca renkleri istiyorsanız --progress off ile eşleştirin.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -503,10 +503,10 @@ Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: 'Normal
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-This option takes precedence over the deprecated --no-progress flag.</target>
+        <target state="translated">İlerlemenin ekrana bildirilip bildirilmediğini denetler.
+Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).
+Terminal yerinde güncelleştirilemiyorsa (örneğin --ansi off veya CI ortamında olduğu gibi) 'auto' ilerleme durumunu gösterir.
+Bu seçenek, kullanım dışı bırakılan --no-progress bayrağından önceliklidir.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">

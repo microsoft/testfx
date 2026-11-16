@@ -10,3 +10,9 @@
 *REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string?
 *REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string?
 *REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestTempDirectory.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory.get -> string? (forwarded, contained in MSTest.TestFramework)
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory.get -> string? (forwarded, contained in MSTest.TestFramework)
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory.get -> string? (forwarded, contained in MSTest.TestFramework)
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string? (forwarded, contained in MSTest.TestFramework)
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string? (forwarded, contained in MSTest.TestFramework)
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestTempDirectory.get -> string? (forwarded, contained in MSTest.TestFramework)

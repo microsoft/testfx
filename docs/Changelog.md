@@ -34,6 +34,7 @@ For the Microsoft.Testing.Platform changes included with this release, see [3.0.
 
 ### Fixed
 
+* Preserve binary references to MSTest APIs relocated into the core framework, including existing Playwright integrations and legacy assembly-qualified configuration names.
 * Allow `UseVSTest=true` for unpackaged WinUI applications in `MSTest.Sdk`, while retaining Microsoft.Testing.Platform as the default host, by @Evangelink in [#12121](https://github.com/microsoft/testfx/pull/12121)
 * Exclude copied MSTest adapter satellite assemblies from PRI resource indexing to avoid WinUI packaging build failures, by @dotMorten in [#12134](https://github.com/microsoft/testfx/pull/12134)
 

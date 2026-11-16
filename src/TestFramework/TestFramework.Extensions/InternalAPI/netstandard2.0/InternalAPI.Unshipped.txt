@@ -1,1 +1,12 @@
 #nullable enable
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.CreateFromOwnedArrays(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, string![]! testCategories, System.Collections.Generic.KeyValuePair<string!, string!>[]! testProperties) -> Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest! (forwarded, contained in MSTest.TestFramework)
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.set -> void (forwarded, contained in MSTest.TestFramework)
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.SetCurrent(Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo? info) -> void (forwarded, contained in MSTest.TestFramework)
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.set -> void (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectoryLabel -> string! (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassNameLabel -> string! (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectoryLabel -> string! (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestNameLabel -> string! (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectoryLabel -> string! (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectoryLabel -> string! (forwarded, contained in MSTest.TestFramework)
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectoryLabel -> string! (forwarded, contained in MSTest.TestFramework)

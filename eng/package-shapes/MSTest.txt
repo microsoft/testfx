@@ -1,0 +1,12 @@
+# Expected files of the MSTest NuGet package, validated by eng/verify-nupkgs.ps1 after pack.
+# After an intentional package layout change, regenerate with: .\eng\verify-nupkgs.ps1 -configuration <Configuration> -updateBaselines
+Icon.png
+MSTest.nuspec
+PACKAGE.md
+[Content_Types].xml
+_rels/.rels
+lib/net10.0/_._
+lib/net11.0/_._
+lib/net462/_._
+lib/uap10.0.16299/_._
+package/services/metadata/core-properties/{guid}.psmdcp

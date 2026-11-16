@@ -69,6 +69,15 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_FileLogPath",
     ];
 
+    // The repository build enables multithreaded MSBuild through these variables. Generated assets model consumer
+    // builds, so they opt in only through UseMultithreadedMSBuild or explicit test settings: some SDK tasks (for
+    // example the browser-wasm JsonToItemsTaskFactory) cannot run in the out-of-process TaskHost that -mt requires.
+    private static readonly string[] MultithreadedMSBuildEnvironmentVariables =
+    [
+        "MSBUILDENABLEMULTITHREADED",
+        "MSBUILDFORCEMULTITHREADED",
+    ];
+
     [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
@@ -111,7 +120,8 @@ public static class DotnetCli
             {
                 // Skip all unwanted environment variables.
                 string? key = entry.Key.ToString();
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase)
+                    || MultithreadedMSBuildEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }

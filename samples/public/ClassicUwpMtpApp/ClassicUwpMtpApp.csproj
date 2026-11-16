@@ -35,6 +35,8 @@
     </Compile>
     <AppxManifest Include="Package.appxmanifest" />
     <Content Include="Assets\**\*" />
+    <None Remove="Strings\**\*.resw" />
+    <PRIResource Include="Strings\**\*.resw" Exclude="@(PRIResource)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +51,21 @@
              Link="MSTest.TestFramework.Extensions.dll"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="TargetFramework=$(TargetFramework);UseUwpTools=$(UseUwpTools);UseWinUI=$(UseWinUI);MSBuildRuntimeType=$(MSBuildRuntimeType);NETCoreSdkVersion=$(NETCoreSdkVersion);NuGetPackageRoot=$(NuGetPackageRoot)"
+      Overwrite="true" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-assets.txt"
+      Lines="@(ReferencePath->'%(FullPath)')"
+      Overwrite="false" />
+    <WriteLinesToFile
+      File="$(IntermediateOutputPath)resolved-mstest-runtime-assets.txt"
+      Lines="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)|%(FullPath)')"
+      Overwrite="true" />
+  </Target>
 
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" />
   <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />

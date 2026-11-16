@@ -64,13 +64,22 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
             "--report-trx --report-trx-filename deployment.trx",
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-        result.AssertOutputContainsSummary(failed: 4, passed: 1, skipped: 0);
         string reportPath = Assert.ContainsSingle(Directory.GetFiles(asset.TargetAssetPath, "deployment.trx", SearchOption.AllDirectories));
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var report = XDocument.Load(reportPath);
         XElement[] results = [.. report.Descendants(ns + "UnitTestResult")];
         Assert.AreSequenceEqual(
-            ["ClassDeployment:Failed", "InheritedClassDeployment:Failed", "InheritedMethodDeployment:Failed", "MetadataProviderIsSelected:Passed", "MethodDeployment:Failed"],
+            [
+                "ClassDeployment:Failed",
+                "FoldedActiveRow:Failed",
+                "FoldedDeployment:NotExecuted",
+                "InheritedClassDeployment:Failed",
+                "InheritedMethodDeployment:Failed",
+                "MetadataProviderIsSelected:Passed",
+                "MethodDeployment:Failed",
+                "UnfoldedActiveRow:Failed",
+                "UnfoldedIgnoredRow:NotExecuted",
+            ],
             results.Select(test => $"{test.Attribute("testName")!.Value}:{test.Attribute("outcome")!.Value}").Order(StringComparer.Ordinal));
         foreach (XElement failed in results.Where(test => (string?)test.Attribute("outcome") == "Failed"))
         {
@@ -80,6 +89,13 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
             Assert.DoesNotContain("DEPLOYMENT_BODY_EXECUTED", failed.Value);
         }
 
+        foreach (XElement ignored in results.Where(test => (string?)test.Attribute("outcome") == "NotExecuted"))
+        {
+            Assert.AreEqual("disabled", ignored.Descendants(ns + "Message").Single().Value);
+            Assert.DoesNotContain("DEPLOYMENT_BODY_EXECUTED", ignored.Value);
+        }
+
+        result.AssertOutputContainsSummary(failed: 6, passed: 1, skipped: 2);
         TestContext.WriteLine($"Packed WinUI deployment guard: {sourceGenMode}; TRX: {reportPath}");
     }
 
@@ -179,6 +195,12 @@ public class TestClass1
             [DeploymentItem("not-deployed.txt")]
             public void MethodDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
 
+            [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+            [DeploymentItem("not-deployed.txt")]
+            [DataRow(1, IgnoreMessage = "disabled")]
+            [DataRow(2, DisplayName = "FoldedActiveRow")]
+            public void FoldedDeployment(int value) => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+
             [TestMethod]
             public void MetadataProviderIsSelected()
             {
@@ -196,6 +218,11 @@ public class TestClass1
         {
             [TestMethod]
             public void ClassDeployment() => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
+
+            [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+            [DataRow(1, IgnoreMessage = "disabled", DisplayName = "UnfoldedIgnoredRow")]
+            [DataRow(2, DisplayName = "UnfoldedActiveRow")]
+            public void UnfoldedDeployment(int value) => Assert.Fail("DEPLOYMENT_BODY_EXECUTED");
         }
 
         public abstract class MethodDeploymentBase

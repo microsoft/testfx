@@ -37,7 +37,9 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
 /// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
 /// project): they still serialize against every other test in the assembly that mutates environment variables, but
-/// can run in parallel with tests that never touch environment variables at all. The two raw-listener methods carry
+/// can run in parallel with tests that never touch environment variables at all. SDK-building checks that require
+/// enabled providers arrange <c>OTEL_SDK_DISABLED=false</c> inside that scope so inherited configuration or another
+/// test cannot replace either provider with a no-op provider. The two raw-listener methods carry
 /// a method-level write <see cref="ResourceLockAttribute"/> on
 /// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> instead:
 /// <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers an unfiltered listener against the
@@ -251,59 +253,73 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
     [TestMethod]
     [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public void AddTestingPlatformInstrumentation_ConfiguresDurationHistogramBoundaries()
-    {
-        CapturingMetricExporter exporter = new();
-        using BaseExportingMetricReader reader = new(exporter);
-
-        using (var provider = new OpenTelemetryProvider(
-            withMetrics: metrics => metrics
-                .AddTestingPlatformInstrumentation()
-                .AddReader(reader)))
-        using (var service = new OpenTelemetryPlatformService())
-        {
-            service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(0.25);
-            service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestRunDuration).Record(60);
-        }
-
-        AssertHistogramBounds(
-            exporter,
-            TestingPlatformSemanticConventions.Metrics.TestCaseDuration,
-            [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300]);
-        AssertHistogramBounds(
-            exporter,
-            TestingPlatformSemanticConventions.Metrics.TestRunDuration,
-            [1, 5, 10, 30, 60, 120, 300, 600, 1800, 3600]);
-    }
-
-    [TestMethod]
-    public void OpenTelemetryProvider_InvokesConfigurationDelegatesAndDisposesBothProviders()
-    {
-        CapturingActivityExporter activityExporter = new([], namePrefix: string.Empty);
-        CapturingMetricExporter metricExporter = new();
-        bool tracingConfigured = false;
-        bool metricsConfigured = false;
-        using SimpleActivityExportProcessor activityProcessor = new(activityExporter);
-        using BaseExportingMetricReader metricReader = new(metricExporter);
-        var provider = new OpenTelemetryProvider(
-            tracing =>
+        => WithEnvironment(
+            new()
             {
-                tracingConfigured = true;
-                tracing.AddProcessor(activityProcessor);
+                ["OTEL_SDK_DISABLED"] = "false",
             },
-            metrics =>
+            () =>
             {
-                metricsConfigured = true;
-                metrics.AddReader(metricReader);
+                CapturingMetricExporter exporter = new();
+                using BaseExportingMetricReader reader = new(exporter);
+
+                using (var provider = new OpenTelemetryProvider(
+                    withMetrics: metrics => metrics
+                        .AddTestingPlatformInstrumentation()
+                        .AddReader(reader)))
+                using (var service = new OpenTelemetryPlatformService())
+                {
+                    service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(0.25);
+                    service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestRunDuration).Record(60);
+                }
+
+                AssertHistogramBounds(
+                    exporter,
+                    TestingPlatformSemanticConventions.Metrics.TestCaseDuration,
+                    [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300]);
+                AssertHistogramBounds(
+                    exporter,
+                    TestingPlatformSemanticConventions.Metrics.TestRunDuration,
+                    [1, 5, 10, 30, 60, 120, 300, 600, 1800, 3600]);
             });
 
-        provider.Dispose();
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void OpenTelemetryProvider_InvokesConfigurationDelegatesAndDisposesBothProviders()
+        => WithEnvironment(
+            new()
+            {
+                ["OTEL_SDK_DISABLED"] = "false",
+            },
+            () =>
+            {
+                CapturingActivityExporter activityExporter = new([], namePrefix: string.Empty);
+                CapturingMetricExporter metricExporter = new();
+                bool tracingConfigured = false;
+                bool metricsConfigured = false;
+                using SimpleActivityExportProcessor activityProcessor = new(activityExporter);
+                using BaseExportingMetricReader metricReader = new(metricExporter);
+                var provider = new OpenTelemetryProvider(
+                    tracing =>
+                    {
+                        tracingConfigured = true;
+                        tracing.AddProcessor(activityProcessor);
+                    },
+                    metrics =>
+                    {
+                        metricsConfigured = true;
+                        metrics.AddReader(metricReader);
+                    });
 
-        Assert.IsTrue(tracingConfigured);
-        Assert.IsTrue(metricsConfigured);
-        Assert.AreEqual(1, activityExporter.ShutdownCount);
-        Assert.AreEqual(1, metricExporter.ShutdownCount);
-    }
+                provider.Dispose();
+
+                Assert.IsTrue(tracingConfigured);
+                Assert.IsTrue(metricsConfigured);
+                Assert.AreEqual(1, activityExporter.ShutdownCount);
+                Assert.AreEqual(1, metricExporter.ShutdownCount);
+            });
 
     [TestMethod]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
@@ -723,62 +739,70 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
     [TestMethod]
     [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public void EndToEnd_InstrumentationAndResource_ExportSpanWithSemanticConventionTagsAndResource()
-    {
-        string namePrefix = $"e2e-{Guid.NewGuid():N}-";
-        List<Activity> exported = [];
-        CapturingActivityExporter exporter = new(exported, namePrefix);
-
-        // The built TracerProvider (disposed by the using below) takes ownership of the processor added through
-        // AddProcessor and disposes it — and the exporter it wraps — on Dispose, so there is no undisposed local.
-        using (TracerProvider tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .AddTestingPlatformInstrumentation()
-            .ConfigureResource(resource => resource.AddTestingPlatformResource())
-            .AddProcessor(new SimpleActivityExportProcessor(exporter))
-            .Build())
-        {
-            using var service = new OpenTelemetryPlatformService();
-            using var handler = new OpenTelemetryResultHandler(service);
-
-            var testNode = new TestNode
+        => WithEnvironment(
+            new()
             {
-                Uid = new TestNodeUid("MyNamespace.MyTests.MyTest"),
-                DisplayName = namePrefix + "MyTest",
-                Properties = new PropertyBag(
-                    new TestMethodIdentifierProperty(
-                        assemblyFullName: "MyAssembly",
-                        @namespace: "MyNamespace",
-                        typeName: "MyTests",
-                        methodName: "MyTest",
-                        methodArity: 0,
-                        parameterTypeFullNames: [],
-                        returnTypeFullName: "System.Void"),
-                    new TestFileLocationProperty("/repo/src/MyTests.cs", new LinePositionSpan(new LinePosition(10, 0), new LinePosition(12, 0))),
-                    new StandardOutputProperty("hello from the test")),
-            };
+                ["OTEL_SDK_DISABLED"] = "false",
+            },
+            () =>
+            {
+                string namePrefix = $"e2e-{Guid.NewGuid():N}-";
+                List<Activity> exported = [];
+                CapturingActivityExporter exporter = new(exported, namePrefix);
 
-            handler.NotifyInProgress(testNode, parentUid: null);
-            handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
-        }
+                // Also cover provider-construction failures; SDK processor disposal is idempotent.
+                using SimpleActivityExportProcessor activityProcessor = new(exporter);
+                using (TracerProvider tracerProvider = Sdk.CreateTracerProviderBuilder()
+                    .AddTestingPlatformInstrumentation()
+                    .ConfigureResource(resource => resource.AddTestingPlatformResource())
+                    .AddProcessor(activityProcessor)
+                    .Build())
+                {
+                    using var service = new OpenTelemetryPlatformService();
+                    using var handler = new OpenTelemetryResultHandler(service);
 
-        Activity activity = exported.Single();
-        Assert.AreEqual(namePrefix + "MyTest", activity.GetTagItem("test.case.name"));
-        Assert.AreEqual("MyNamespace.MyTests.MyTest", activity.GetTagItem("code.function.name"));
-        Assert.AreEqual("MyTests", activity.GetTagItem("test.suite.name"));
-        Assert.AreEqual("/repo/src/MyTests.cs", activity.GetTagItem("code.file.path"));
-        Assert.AreEqual("pass", activity.GetTagItem("test.case.result.status"));
-        Assert.AreEqual("hello from the test", activity.GetTagItem("test.output.stdout"));
+                    var testNode = new TestNode
+                    {
+                        Uid = new TestNodeUid("MyNamespace.MyTests.MyTest"),
+                        DisplayName = namePrefix + "MyTest",
+                        Properties = new PropertyBag(
+                            new TestMethodIdentifierProperty(
+                                assemblyFullName: "MyAssembly",
+                                @namespace: "MyNamespace",
+                                typeName: "MyTests",
+                                methodName: "MyTest",
+                                methodArity: 0,
+                                parameterTypeFullNames: [],
+                                returnTypeFullName: "System.Void"),
+                            new TestFileLocationProperty("/repo/src/MyTests.cs", new LinePositionSpan(new LinePosition(10, 0), new LinePosition(12, 0))),
+                            new StandardOutputProperty("hello from the test")),
+                    };
 
-        Assert.IsNotNull(exporter.CapturedResource);
-        Dictionary<string, object> resourceAttributes = [];
-        foreach (KeyValuePair<string, object> attribute in exporter.CapturedResource.Attributes)
-        {
-            resourceAttributes[attribute.Key] = attribute.Value;
-        }
+                    handler.NotifyInProgress(testNode, parentUid: null);
+                    handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+                }
 
-        Assert.IsTrue(resourceAttributes.ContainsKey("service.name"));
-        Assert.AreEqual(Environment.MachineName, resourceAttributes["host.name"]);
-    }
+                Assert.AreEqual(1, exporter.ShutdownCount);
+                Activity activity = exported.Single();
+                Assert.AreEqual(namePrefix + "MyTest", activity.GetTagItem("test.case.name"));
+                Assert.AreEqual("MyNamespace.MyTests.MyTest", activity.GetTagItem("code.function.name"));
+                Assert.AreEqual("MyTests", activity.GetTagItem("test.suite.name"));
+                Assert.AreEqual("/repo/src/MyTests.cs", activity.GetTagItem("code.file.path"));
+                Assert.AreEqual("pass", activity.GetTagItem("test.case.result.status"));
+                Assert.AreEqual("hello from the test", activity.GetTagItem("test.output.stdout"));
+
+                Assert.IsNotNull(exporter.CapturedResource);
+                Dictionary<string, object> resourceAttributes = [];
+                foreach (KeyValuePair<string, object> attribute in exporter.CapturedResource.Attributes)
+                {
+                    resourceAttributes[attribute.Key] = attribute.Value;
+                }
+
+                Assert.IsTrue(resourceAttributes.ContainsKey("service.name"));
+                Assert.AreEqual(Environment.MachineName, resourceAttributes["host.name"]);
+            });
 
     private static Func<string, string?> Env(Dictionary<string, string?> values)
         => name => values.TryGetValue(name, out string? value) ? value : null;

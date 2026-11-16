@@ -217,3 +217,180 @@ from `3b5bbfdc52fe23bdc5fcd90053d4a6f4b33a4490` failed the same assertion
 The full updated harness passed **12/12**, zero failures/skips, and the pipeline
 YAML parsed successfully. The coverage writer and WinUI target implementations
 are unchanged. Actual hosted artifact upload remains a CI verification gate.
+
+### Coverage-template follow-up, 2026-11-12
+
+The follow-up starts from main
+`197a27d91f418ca4c46eb747f9e24dbdc5080af6`, after the incremental fixes merged.
+The coverage target is 324 lines including unrelated test configuration; its
+static XML is expressed as individually named, XML-escaped MSBuild items.
+Per-suite scoping is intentional and is not part of this simplification.
+
+Keep reference selection, aliases, extension handling, linked-source opt-in and
+regex/XML escaping in the target. Move only fixed collector XML into
+`eng/CodeCoverage.config.template`, inserting the four existing dynamic sections
+through their raw `Value` metadata. The existing inline task remains the writer,
+including its raw-lines call, compatibility marker, absolute destination and
+complete UTF-8-BOM byte comparison. Read the template as lines and write with the
+existing `StreamWriter`, preserving the historical trimming, indentation and
+host-native newlines rather than reserializing XML.
+
+The no-change alternative retains noisy escaped static XML. Grouping multiline
+MSBuild metadata introduces XML-normalized line endings and more normalization
+plumbing; an XML serializer would also change the independently pinned output.
+Neither alternative was implemented. A general template engine or separate
+build-task project is unnecessary. The selected template is repository-only,
+already covered by the affected-test `eng/**` rule; it must also be copied and
+hashed alongside the target in each isolated regression fixture.
+
+Before editing the generator, the following command passed **5/5** existing
+coverage cases, zero skips, exit **0**, with **12/12** successful inner MSBuild
+invocations on the pinned SDK `12.0.100-alpha.1.26556.115`:
+
+```powershell
+.\eng\test-build-incrementality.ps1 -ArtifactsDirectory Q:\cov-1f692bff-7b0d6731\baseline -TestName 'Coverage*'
+```
+
+The exact-byte oracle, metadata probe, same-length/corrupt/missing-output
+transitions and both four-project `-mt` cases are unchanged. Source-hash and
+parent-environment guards passed. An earlier setup attempt could not find the
+pinned SDK and did not enter MSBuild; it is not behavioral red evidence. The SDK
+was then bootstrapped into this worktree using `eng/common/tools.ps1`, without
+changing shared caches or borrowing another checkout's toolchain.
+
+The harness remains an ordered PowerShell suite, with four isolated MSBuild
+projects only in its existing parallel cases. The new template is read-only
+input, copied to each fixture's own root. No test-assembly scheduler, resource
+declaration, output sharing or lifecycle changes are needed. The completed
+preservation checks below passed without changing the existing assertions.
+
+#### Executed preservation evidence
+
+The tested generator and fixture-support identities are:
+
+| File | Before SHA-256 | After SHA-256 |
+| --- | --- | --- |
+| `test/Directory.Build.targets` | `0213787D77109374A7342BBCBD66CA3602F2B7A6A2152657694A8BCF4A4C2EC9` | `AE28244D41ACC0DC0BB50F3F95AA50D3DBB35BB40DCE3C04AA93E6A5CB774A87` |
+| `eng/test-build-incrementality.ps1` | `D83743A1652FA8660B3B03E43CD317877C6BD956ADD8A445D8759A6ACC5F21E5` | `123296CF9C3D4F8A13AEC75E3FF7C4CC9480B40EF08B5E83FA4D03F5BA7D4F71` |
+| `eng/CodeCoverage.config.template` | Not present | `AA549C42C2FE3B7B0C76232112B5C46895FC141D376E1BDAB7477F511F5743F8` |
+
+Using the final harness for both sides, the two focused commands below each passed
+**5/5**, no failures/skips, exit **0**, with **12** successful inner builds per
+command. The baseline uses the original target snapshot, never a modified
+source file or restored source timestamp.
+
+```powershell
+$evidence = 'Q:\cov-1f692bff-7b0d6731'
+$baseline = "$evidence\baseline\r-73a40ee8694d457db2c713b22cd7fa9d\inputs\coverage.targets"
+.\eng\test-build-incrementality.ps1 -ArtifactsDirectory "$evidence\baseline-final-harness" -TestName 'Coverage*' -CoverageTargetsPath $baseline
+.\eng\test-build-incrementality.ps1 -ArtifactsDirectory "$evidence\head-focused" -TestName 'Coverage*'
+.\eng\test-build-incrementality.ps1 -ArtifactsDirectory "$evidence\head-all"
+```
+
+The last command passed the full **12/12** suite, no failures/skips, exit **0**,
+with **38/38** successful inner builds. Every build retained a unique nonempty
+binlog and raw stdout/stderr. Source-hash and parent-environment guards passed,
+including the new template and read-only Windows SDK/App SDK inputs.
+
+**Test-value evidence:** this is executed green/green preservation, not a bug
+fix requiring behavioral red evidence.
+
+| Contract | Unchanged cases passing before and after |
+| --- | --- |
+| Complete BOM/XML/regex bytes, legacy whitespace and unchanged timestamp | `CoverageSettingsPreserveExactBytesAndTimestamp` |
+| Same-length changes, linked-source opt-in/out, portable paths and missing/corrupt recovery | `CoverageSettingsRefreshInputsAndRecoverMissingOutput`, `CoverageSettingsPreserveExactBytesAndTimestamp` |
+| Raw metadata rather than item identities; project-relative destination under `-mt` | `CoverageWriterPreservesValueMetadataAndProjectRelativePath` |
+| Four distinct project scopes and no external task host | `CoverageParallelProjectsStayInProcess`, `CoverageParallelProjectsStayInProcessStrict` |
+
+Real `Microsoft.Testing.Platform.UnitTests.csproj` generation also passed for
+`net10.0` and `net462`, twice each: **4/4** builds, exit **0**, using the pinned
+SDK and `-m:4 -mt -nr:false`. An unavailable `MSBUILDTASKHOSTLOCATION` ensured
+in-process execution. The existing settings validator passed on every output;
+ordered includes were exactly `Microsoft.Testing.Platform.dll`,
+`Microsoft.Testing.Platform.AI.dll` and the opted-in unit assembly
+(`.dll` on .NET, `.exe` on .NET Framework). Source includes retained physical
+and SourceLink-remapped production paths, excluding tests. Repeat builds kept
+both output hashes and timestamps. These invoke the actual project's generator
+with its normal imports, not product compilation or coverage collection.
+
+Eight additional isolated probes passed, including LF versus CRLF template
+inputs, raw mixed-newline `Value` metadata containing another literal section
+marker, empty module scope, and in-process `-mt` generation on desktop MSBuild
+`18.13.0.52701`. Only original template lines are interpreted; inserted values
+are neither normalized nor reprocessed. A directory-valued output and a missing
+template each produced the expected explicit task failure (MSBuild exit **1**);
+recovery passed without altering the previously correct output. Original
+source hashes and timestamps remained unchanged throughout these probes.
+
+The source-bound `results.json`, `real-project-runs.json` and
+`template-probe-runs.json` under `$evidence` retain commands, hosts, exits,
+selected identities, logs and binlogs. Reproduction scripts are retained in the
+local session artifacts as `validate-real-coverage.ps1` and
+`validate-coverage-template-probes.ps1`. The first real-project wrapper had a
+PowerShell interpolation parse error, corrected before any MSBuild execution;
+it is not a product failure or preservation result.
+
+#### Responsibility and size
+
+| File | Before lines | After lines | Responsibility |
+| --- | ---: | ---: | --- |
+| `test/Directory.Build.targets` | 324 | 315 | Unchanged scope/escaping rules, four dynamic sections and existing writer |
+| `eng/CodeCoverage.config.template` | 0 | 29 | Literal static XML and four fixed insertion points |
+| `eng/test-build-incrementality.ps1` | 933 | 943 | Copy/hash the companion template into each isolated fixture |
+| `docs/decisions/msbuild-incremental-builds.md` | 219 | 357 | Maintained rationale and preservation evidence |
+
+Coverage-settings item declarations decrease from **31 to 6**; the three scope
+rules and three dynamic `Value` definitions are unchanged. Total generator
+size grows from **324 to 344 lines** across two files; including fixture support,
+the implementation/support delta is **+30 lines**. The simplification is removal
+of 25 named/escaped static item wrappers and separation of reviewable collector
+policy from MSBuild scope logic, not a net-line or performance improvement.
+It adds one small template read and invocation-local lookup. No global
+configuration, general template engine, dependency, task project or shipping
+API is introduced.
+
+Native Linux/macOS hosts were not exercised; portable-path inputs are not
+native-host proof. Hosted CI and actual coverage collection/merge were not run
+for this representation-only follow-up. Shared caches, pre-existing SDK
+installations, other checkouts and the preceding PR branch were untouched.
+No GitHub publication was performed. The existing incremental write and
+in-process routing guarantees were verified without repeating the earlier benchmark.
+
+#### Review clarification, 2026-11-13
+
+The original attribute-metadata values are not the serialized indentation:
+MSBuild trims their single XML elements. The unchanged byte oracle explicitly
+records this distinction; it compares complete byte arrays without normalizing
+whitespace. A direct same-fixture comparison against the baseline target also
+passed for ordinary scope (1,465 bytes), linked EXE/DLL scope (1,753 bytes each)
+and empty scope (1,271 bytes), preserving the baseline output's timestamp.
+Adding the proposed indentation would change, not restore, the output contract.
+
+The lines-only task call is intentional: `WriteMetadataProbe` exercises raw
+`Value` serialization without a template. Coverage generation always supplies
+an absolute template path; deleting that fixture-local companion fails with
+`FileNotFoundException` and MSBuild exit 1, without corrupting existing output.
+The conditional fixture copies permit comparison with pre-template target
+snapshots; a missing required production companion does not select a fallback.
+
+Restore the precise source comment about measuring **all** production bodies,
+including compatibility helpers and opt-out-marked code. No generated XML or
+collector policy changes. The five existing `Coverage*` cases passed again
+(exit 0, no skips), and six direct comparison/compatibility/failure checks
+passed across ten uniquely logged builds (nine successes, one intended failure).
+
+#### User-requested template indentation, 2026-11-13
+
+The later explicit formatting request intentionally supersedes byte preservation
+for the static XML indentation only. Indent those elements according to their
+nesting and update the literal exact-byte oracle, without normalizing its inputs.
+Keep the four section markers, dynamic `Value` metadata, collector settings,
+encoding, newline handling and unchanged-output suppression intact.
+
+On base `c0d7cf449a5633ee18a485bb04761e00957fbf19`, the existing `Coverage*`
+selection passed 5/5 before editing. The same selection with the updated literal
+oracle passed 5/5 after formatting, including filter validation and strict
+in-process routing. The old unindented generator fails the updated exact-byte
+assertion after a successful build, proving the new expectation detects this
+intentional formatting change. Exactly eight template lines gain 36 spaces;
+their element values and all four markers are unchanged.

@@ -404,6 +404,16 @@ public sealed class TestFxOpenTelemetryTests
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
+
+        // Bazel-built hosts resolve dependencies through runtimeconfig probing paths relative to Bazel's
+        // test directory, but MSTest moves this process to the module directory. Start the child, and any
+        // host its controllers relaunch, from the directory those probes expect.
+        if (Environment.GetEnvironmentVariable("TEST_SRCDIR") is { Length: > 0 } runfiles
+            && Environment.GetEnvironmentVariable("TEST_WORKSPACE") is { Length: > 0 } workspace)
+        {
+            startInfo.WorkingDirectory = Path.Combine(runfiles, workspace);
+        }
+
         startInfo.ArgumentList.Add(module);
         if (scenario is "help" or "info")
         {
@@ -421,6 +431,8 @@ public sealed class TestFxOpenTelemetryTests
         startInfo.ArgumentList.Add("off");
         startInfo.ArgumentList.Add("--progress");
         startInfo.ArgumentList.Add("off");
+        startInfo.ArgumentList.Add("--results-directory");
+        startInfo.ArgumentList.Add(Path.Combine(TestContext.TestTempDirectory!, "host-results"));
         RemoveAffectedTestEnvironment(startInfo);
         foreach (string key in startInfo.Environment.Keys.Where(key => key.StartsWith("TESTINGPLATFORM_", StringComparison.OrdinalIgnoreCase)).ToArray())
         {

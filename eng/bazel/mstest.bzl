@@ -87,7 +87,10 @@ def mstest_libraries():
         deps = [":framework", ":framework_extensions"] + testfx_compatibility_select([
             "@paket.compatibility_mstest//system.memory",
             "@paket.compatibility_mstest//system.threading.tasks.extensions",
-        ]),
+        ]) + select({
+            "//eng/bazel/compatibility:net462": ["@paket.compatibility_mstest//system.reflection.metadata"],
+            "//conditions:default": [],
+        }),
     )
     testfx_library(
         name = "adapter",

@@ -2237,6 +2237,39 @@ bootstrap actions retain SDK 10.0.401, and the actual `net10.0` reference pack
 remains 10.0.14. Other host archives have verified published checksums, but their
 native execution was not repeated by this refresh.
 
+### SDK pin refresh (2026-11-13)
+
+Both `global.json` pins and the opt-in engineering registration advance to
+`12.0.100-alpha.1.26562.108` and runtime `12.0.0-alpha.1.26562.108`, the build
+selected for every host by the public .NET 12 daily `productCommit-<rid>.txt`
+links. All six archive SHA-512 values were checked against the version-specific
+`https://ci.dot.net/public-checksums/Sdk/12.0.100-alpha.1.26562.108/` manifests.
+
+The SDK's `.version` identifies commit `8b22ce04ad5fa175ef5cd8f96c38fcba40e173dc`;
+the executed compiler is
+`5.14.0-1.26562.108 (8b22ce04ad5fa175ef5cd8f96c38fcba40e173dc)`.
+Its runtimeconfig requests the matching runtime. The bundled maximum/default
+target remains `net12.0`, and C# 15.0 and F# 11.2 remain the verified language
+versions. The default published SDK 11, SDK 10 bootstrap, and independently
+pinned .NET 8/9/10/11 target-pack graph are unchanged.
+
+All 12 verifier fixtures pass. With the same valid four-framework fixture and
+real compiler, the previous verifier (blob
+`1d6497f20cd2d11ac088a4b516c1bd54a1ec6548`, run from an isolated copy) rejects
+the new SDK with `Unexpected compiler identity: 5.14.0-1.26562.108` after
+compiler exit 0, while the updated verifier accepts the identical input.
+
+The opt-in Windows `//:platform` build succeeds with 79 native actions in
+task-owned output/cache roots. Native `//:protocol_contract_tests` (28 cases)
+and `//:simple1_test` (one case) pass on the .NET 12 host with fresh TRX
+results. The `//:simple1_test` closure now includes the source-built MSTest
+graph, so the action-graph audit covers 215 declared source actions instead of
+16; all use the new engineering SDK, the two bootstrap actions retain SDK
+10.0.401, and the actual `net10.0` reference pack remains 10.0.14. That audit
+must pass `-TargetFrameworks net10.0` because these targets compile only that
+framework. The repository build also succeeds with the new SDK. Other host
+archives were checked only against published checksums, and CI was not run.
+
 ### Narrow, reversible registration decision
 
 Use the pinned rules' existing `dotnet_sdk_repositories` and
@@ -4073,3 +4106,350 @@ recorded source, not a new full-product rerun of this lifecycle correction.
 Hosted cache authorization, transfer costs and main-seed behavior still require
 CI. Local logs, BEP, policy/source hashes and counterfactual records are retained
 under the session's `bazel-review-d9e8c1dc` evidence.
+
+## Windows CI parity expansion (2026-11-13)
+
+### Problem and contract
+
+The user asked to extend Bazel as close as possible to normal CI's build and test
+coverage. Keep the GitHub Bazel workflow optional and non-required; do not change
+the shipping Arcade pipeline or claim full parity until the remaining execution,
+packaging, and application-model gaps are closed. Native targets must continue
+to compile TestFx directly and execute selected tests without test-result cache
+reuse. Failed tests remain visible; known host failures must not be excluded or
+reported as passes.
+
+### Research and decision
+
+The existing Windows validator already builds the Windows-qualified libraries
+and seven real library consumers, and checks their TFM/runtime/hash provenance.
+`//:managed_compatibility` already compiles 26 `netstandard2.0` and five
+`net462` source variants. The existing native test targets cover all 13 original
+unit-test projects, but the complete `//:all_unit_tests` aggregate includes the
+full MTP suite, which has two confirmed host-dependent impersonation failures
+(Win32 1346). Its assertions and test selection must remain unchanged.
+
+The Windows workflow now runs the existing compatibility and Windows-native
+validation on the GitHub Windows runner, plus four existing unit suites
+(`msbuild_tests`, `server_client_tests`, `terminal_contract_tests`, and
+`self_real_tests`) beyond the portable baseline. This adds useful native
+coverage without creating a new test harness, hiding failures, or invoking
+MSBuild for producer builds. The step uses the existing Bazel output/cache and
+retains its logs, inventories, test reports, and provenance under the
+workflow's existing artifact directory.
+
+This is not a full test-TFM matrix: these existing native executable targets
+still select modern TFMs, and `net462` currently cannot be launched through
+`rules_dotnet`'s normal apphost path. The current windows validator does not
+compile XAML; native WinUI application, classic UWP/AppContainer, and full
+package-consuming acceptance validation remain separate gates. The 30-minute
+matrix-job timeout is raised to 60 minutes for the expanded Windows workload.
+No XAML compiler bridge or test suppression is included.
+
+The first local run of the expanded validator failed while compiling the exact
+`net462` `platform_services` variant: `TypeCache.ProviderDiscovery.Metadata.cs`
+uses `System.Reflection.Metadata`, but the Bazel compatibility target omitted
+that package reference. The normal project declares the package for `net462`;
+the compatibility Paket lock already resolves it transitively through
+`Microsoft.TestPlatform.ObjectModel`. Add that locked package only to the
+`net462` Bazel variant, rather than broadening the `netstandard2.0` or modern
+dependency graphs. This failure is a real compatibility build gap, not a
+toolchain/setup failure.
+
+After that build fix, the second local run passed the compatibility build,
+Windows library build, and Windows-targeting tests, then exposed a separate
+existing Bazel test-target gap: recent extension tests use the `ctrf` extern
+alias declared by their project file, but `extension_tests_binary` had not
+configured the CTRF reference's aliases. The native `:ctrf` dependency was
+already present through the shared test dependency list; its Bazel alias
+configuration now matches the project file's `global,ctrf` pair. No test source
+or assertions changed. The next local compilation then showed that MSBuild
+links `test/Utilities/TestFxOpenTelemetry.cs` through `test/Directory.Build.targets`,
+while the native Bazel target had omitted that shared test helper. Link the same
+source into the Bazel test binary; this aligns its test inputs with MSBuild and
+does not alter test assertions.
+
+### Validation plan and matrix
+
+| Requirement / risk | Automated E2E evidence | Rendered check / gap |
+| --- | --- | --- |
+| Legacy source builds are included | `//:managed_compatibility` inventory asserts 26 exact `netstandard2.0` and five exact `net462` outputs. | Nonvisual compiler/metadata evidence. |
+| Windows TFMs use native compiler actions and run in their target layout | `eng/bazel/windows/validate.ps1` builds `//:windows_libraries` and `//:windows_probes`; its seven consumers check runtime, loaded assembly hash, TFM and platform metadata. | No XAML UI is compiled or rendered. |
+| Additional existing unit suites execute rather than reuse cached results | Explicitly run `msbuild_tests`, `server_client_tests`, `terminal_contract_tests`, and `self_real_tests` with `--nocache_test_results`; require a complete TRX with no failed or unknown outcomes and at least one pass for each target. | Nonvisual test-result evidence. The analyzer and extensions suites currently have native-test-fixture mismatches; full MTP remains blocked by two known runner failures. |
+| Existing portable behavior remains covered | `.github/workflows/bazel.yml` retains `validate.ps1` and `validate-packages.ps1` on both OSes. | Linux remains on its current supported portable matrix. |
+
+Exploratory local runs attempted all six additional suites. The analyzer suite
+had 16 failures: ten `GlobalConfigGeneratorContinuationTests` threw a
+`NullReferenceException` in `GetToolPath()` because Bazel's test assembly lacks
+the expected `AssemblyConfigurationAttribute`; six process tests received the
+native runner's parallelization banner where they expect a ready marker. The
+extensions suite had seven failures: its build-configuration metadata assertion
+failed, and six child test-host launches could not resolve `Azure.AI.OpenAI`
+from the Bazel runfiles. Keep these suites out of the workflow rather than
+waiving those failures. The four selected suites passed in the same run.
+
+### Local validation
+
+The final local source state was based on `9d93a40e7fd3c5c43bbbb9dea07f699655a4d456`;
+the expanded validator retained its tracked diff as `source.patch` alongside
+the logs and test reports in
+`Q:\tfb\6bc82916c23e\windows-validation\20261113-111234-f16993fa`. Under Bazel
+9.1.1 and the rules_dotnet .NET SDK `11.0.100-rc.3.26522.148`:
+
+| Command | Result |
+| --- | --- |
+| `.\eng\bazel\windows\validate.ps1` | Exit 0: exact 26 `netstandard2.0` and five `net462` variants built; both Windows-targeting tests passed; all seven packaged/desktop/UWP/WinUI consumers passed with staged-layout assembly hashes verified. |
+| `.\eng\bazel.ps1 test //:msbuild_tests //:server_client_tests //:terminal_contract_tests //:self_real_tests --jobs=2 --nocache_test_results --noshow_progress --show_result=0` | Exit 0: 1,109 results, 1,096 passed, 13 skipped, zero failures. |
+| `.\eng\bazel\validate.ps1 -EvidenceRoot 'Q:\tfb\6bc82916c23e\windows-validation\portable-baseline'` | Exit 0: portable build/test matrix, report, failure, empty-selection, mixed-result, and toolchain-provenance checks passed. |
+| `.\eng\bazel\validate-packages.ps1 -EvidenceRoot 'Q:\tfb\6bc82916c23e\windows-validation\package-validation'` | Exit 0: package archives, four TFM consumers, and runtime pass/failure/zero-result paths passed. |
+
+| Suite | Total | Passed | Skipped |
+| --- | ---: | ---: | ---: |
+| `msbuild_tests` | 466 | 461 | 5 |
+| `server_client_tests` | 603 | 595 | 8 |
+| `terminal_contract_tests` | 16 | 16 | 0 |
+| `self_real_tests` | 24 | 24 | 0 |
+| **Total** | **1,109** | **1,096** | **13** |
+
+The original `net462` compilation failure with the package absent, followed by
+the same compatibility build succeeding with the locked reference, provides
+build-graph regression evidence; this is not a product-behavior red/green test.
+PowerShell parsing, workflow YAML parsing, and `git diff --check` also passed.
+This change is local and is not yet verified by a GitHub-hosted workflow. XAML
+compilation, AppContainer activation, and rendered UI checks do not apply to
+the changed build-validation behavior.
+
+## Build and test the full Bazel graph in CI (2026-11-13)
+
+### Problem and contract
+
+The user asked: "Let's make sure our bazel pipelines are building and testing
+everything". Before this change, the GitHub Bazel workflow built and tested
+named aggregates such as `//:portable_tests`. Every target outside them went
+unexercised, including the analyzer, extension and full Microsoft.Testing.Platform
+suites that the Windows CI parity expansion above deliberately left out because
+they failed. A new test target also needed a workflow edit before CI ran it.
+
+The contract for both GitHub workflow jobs (Windows and Linux) is:
+
+- Build `//...` and run every automatic test target in `//...` with
+  `--nocache_test_results`. A failing test fails the job; no failure is waived.
+- Every test target must report `PASSED`, except an explicit per-host list of
+  targets that Bazel itself reports `SKIPPED` because the host cannot build them.
+  Any other outcome, an unlisted skip, a missing target or an unexpected target
+  fails validation.
+- Adding a test target needs no workflow change. Deleting tests, or hiding a
+  target from `//...` by tagging it `manual` without a dependent wrapper, fails
+  validation through a test-count floor and an exact allowlist of manual targets
+  unreachable from `//...`.
+- Intentionally failing targets stay outside `//...`, and the validator asserts
+  that each one fails with its expected exit code and message.
+- The shipping Arcade pipeline is unchanged. The Bazel workflow remains optional
+  and non-required.
+
+### Research and decisions
+
+A red baseline of `bazel build //...` and `bazel test //...` on Windows and
+Linux exposed three classes of failure: analysis failures, compile failures and
+test failures.
+
+**Frameworks.** Bazel still built `net8.0` and `net9.0` variants that MSBuild no
+longer ships. `SupportedNetFrameworks` in `Directory.Build.props` is
+`net10.0;net11.0`, and the sample projects target `net10.0`. `PORTABLE_FRAMEWORKS`
+now matches MSBuild. Single-framework helpers (compatibility, reference-alias,
+server-client validation, terminal-contract standalone and sample targets) move
+from `net8.0`/`net9.0` to `net10.0`, and the Windows packaged projection uses its
+.NET 10 package for every packaged TFM. The remaining `net8.0` strings in
+`windows.bzl` name package `lib` folders, not product TFMs. Keeping the old
+frameworks would have doubled the matrix to validate TFMs the product no longer
+supports.
+
+**Analysis.** A per-TFM `publish_binary` or Windows-TFM target cannot be analyzed
+in another framework's configuration, so `//...` failed analysis on them. These
+targets are now tagged `manual` and stay reachable through their existing
+`testfx_matrix` and `select` wrappers. `//...` therefore still builds them as
+dependencies. Satellite assemblies inherit their main assembly's tags. The
+validator queries the manual targets that no automatic target depends on and
+requires that set to equal six known negatives: three intentionally failing
+sample probes and three reference-alias analysis failures. A newly unreachable
+manual target fails validation instead of silently dropping out of CI.
+
+**Native host parity.** The previously excluded suites failed because Bazel's
+native hosts did not mirror their MSBuild project hosts:
+
+- Native test assemblies lacked the `AssemblyConfigurationAttribute` that MSBuild
+  stamps. The shared `PortableTestFrameworkMetadata.cs` now stamps it from the
+  `DEBUG` define, and the MTP unit tests link that file too.
+- The analyzer and MTP `Program.cs` files run controlled child probes. The
+  Bazel entry points now run the same probes under `TESTFX_ANALYZER_CHILD_PROBES`
+  and `TESTFX_MTP_CHILD_PROBES`.
+- The extension host links `TestFxOpenTelemetry.cs`, like
+  `test/Directory.Build.targets`, and stamps `TestFx.NETCoreSdkVersion` from the
+  resolved toolchain.
+- The MTP unit tests embed the platform version, as the project does, and link
+  the two shared helpers that their project file links.
+- The global-config generator tests receive a framework-dependent Bazel publish
+  of the generator through `TESTFX_BAZEL_GLOBAL_CONFIGS_GENERATOR`, because
+  Bazel has no MSBuild `artifacts` layout. MSBuild runs keep the original path,
+  including its configuration-directory assertion.
+- Child-process tests now start the child on the runtime that runs the test
+  host (`RuntimeEnvironment.GetRuntimeDirectory()`), not on a path relative to
+  the MSBuild `artifacts` layout. Bazel-built hosts resolve dependencies through
+  runtimeconfig probing paths, which are relative to the launch directory that
+  MSTest replaces, so these tests forward the absolute probing directories or
+  launch from the runfiles root.
+- Tests that copy read-only build outputs now clear the read-only attribute.
+  Tests that wrote under the read-only application directory now use the
+  temporary directory.
+
+None of these change test selection or assertions.
+
+**Linux sandbox.** Bazel's Linux sandbox exposed three more host differences:
+
+- MTP defaults its working and results directories to the read-only
+  application directory. The test launchers now set
+  `DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY` to `TEST_TMPDIR`.
+- MTP pipes on Unix are domain sockets limited to about 104 bytes, and Bazel's
+  nested sandbox `TMPDIR` exceeds that. The launchers create a short private
+  `TESTINGPLATFORM_PIPE_DIRECTORY` and remove it on exit. They no longer `exec`,
+  so the cleanup trap runs; `errexit` preserves the exit code.
+- Analysis-only Windows targeting tests pin their RID to `win-x64`, so they
+  analyze without Windows apphost or runtime packs on Linux.
+
+**Product fix.** `TelemetryManager` created the telemetry sentinel directory
+with `Directory.CreateDirectory`, bypassing its injected `IFileSystem`, while
+writing the sentinel file through that abstraction. It now calls
+`fileSystem.CreateDirectory`. `TelemetryManagerTests` verifies that call.
+
+**Impersonation.** Two named-pipe security tests failed on Windows hosts without
+`SeImpersonatePrivilege`. There, `ImpersonateNamedPipeClient` yields an
+identification-level token and the probe fails with Win32 1346. Those tests now
+detect the downgrade and report Inconclusive with an explanation. Assertions are
+unchanged, and elevated hosts still run them.
+
+**Sample source.** `CustomReportExtension` matched the obsolete
+`CancelledTestNodeStateProperty`, which #12322 removed from source. Bazel
+compiles the samples against source, so the arm is removed. The sample's MSBuild
+build against MSTest 4.5.3 still compiles, and cancelled nodes now fall through
+to the existing default arm.
+
+**Host-incompatible targets.** The pinned rules_dotnet links NativeAOT only for
+Linux and macOS and fails analysis for Windows. `aot_publish` and the new
+`aot_publish_test` therefore use `target_compatible_with`. Bazel builds and runs
+them on Linux, skips them on Windows, and the Windows validator lists that skip.
+`platform_services_tests` is a Windows filesystem contract that the MSBuild
+`NonWindowsTests.slnf` also excludes, so it is the Linux/macOS host skip. macOS is
+not in the workflow matrix, so the macOS NativeAOT path remains unvalidated.
+
+**Workflow.** Both jobs keep using `eng/bazel/validate.ps1`, now scoped to the
+full graph:
+
+- `build-all` and `cached-build` on `//...`.
+- The unreachable-manual and test-count guards.
+- `all-tests` with `--keep_going --nocache_test_results`.
+- The outcome guard, and strict TRX checks that require a complete report with no
+  failed or unknown outcomes for every target that ran.
+- The existing failure, empty-selection and mixed-result checks.
+- New assertions that each reference-alias negative fails analysis with its
+  expected message.
+
+The workflow path filters now include `samples/**`, and the job timeout rises to
+90 minutes. `eng/bazel/windows/validate.ps1` keeps its stricter four-suite
+re-execution, so the Windows gate stays self-contained, even though `//...`
+already runs those suites.
+
+The Azure DevOps definition `azure-pipelines-bazel.yml` is still not registered
+in dnceng-public. Registering it needs an Azure DevOps administrator and is
+outside this change. Only the GitHub workflow enforces this contract.
+
+### Validation plan and matrix
+
+| Requirement / risk | Automated evidence | Gap |
+| --- | --- | --- |
+| Every target builds | `build-all` and `cached-build` on `//...`. | None for the two CI hosts. |
+| Every automatic test runs uncached and passes | `all-tests` on `//...`; the outcome guard requires `PASSED` for every queried test except the listed host skips; strict TRX checks for every target that ran. | macOS is not in the matrix. |
+| Tests cannot silently drop out of CI | A test-count floor of 35 and an exact allowlist of six unreachable manual targets. | A target replaced one-for-one stays within the floor; review still applies. |
+| Intentional failures still fail | The mixed-result step expects exit 3; each reference-alias negative expects exit 1 and its message. | None. |
+| NativeAOT consumer works | `aot_publish_test` runs the AOT sample and requires its single test to pass. | Windows is unsupported upstream, and macOS is not in CI. |
+| Workflow contract | `.github/scripts/test_bazel_cache.py` asserts the step name, the full-graph build and test, and the guards. | Not run on a hosted runner from this branch. |
+
+### Local validation
+
+All runs used Bazel 9.1.1 and rules_dotnet .NET SDK `11.0.100-rc.3.26522.148`,
+from a working tree based on `bb99b2c77543888679b8db19ae926d9f7962a0e8`.
+
+| Run | Command | Result |
+| --- | --- | --- |
+| Windows 11 x64 | `pwsh -NoProfile -File eng/bazel/validate.ps1 -Jobs 4 -EvidenceRoot <dir>` | Exit 0: "Bazel built //..., ran 35 automatic tests (1 host-incompatible), and passed composed-product validation." 34 test targets `PASSED`; `//:aot_publish_test` `SKIPPED`. `all-tests` took 128.2 s. The 22 TRX reports hold 127,026 cases: 126,984 passed, 42 not executed, none failed. |
+| Debian 13 x64 (WSL 2) | The same command with `-EvidenceRoot /root/val-evidence` | Exit 0 with the same message. 34 test targets `PASSED`, including `//:aot_publish_test`; `//:platform_services_tests` `SKIPPED`. `all-tests` took 91.6 s. The 22 TRX reports hold 125,553 cases: 125,417 passed, 136 not executed, none failed. |
+| MSBuild, Windows | `.dotnet\dotnet.exe build` of `Microsoft.Testing.Platform.UnitTests` (`net10.0`, `net11.0`, `net462`), `Microsoft.Testing.Extensions.UnitTests`, `MSTest.Analyzers.UnitTests` and `MSTest.GlobalConfigsGenerator` | Every build exited 0. On the `net10.0` MSBuild outputs, the changed test classes ran with `--filter`: platform 114 passed and 2 Inconclusive; extensions 74 passed; `GlobalConfigGeneratorContinuationTests` 10 passed and 1 conditional skip, through the MSBuild generator path and its configuration-directory assertion. The `CustomReportExtension` sample also built against the MSTest 4.5.3 and Microsoft.Testing.Platform 2.5.3 packages. |
+| `TelemetryManager` red/green | The `net10.0` test assembly with `--filter FullyQualifiedName~TelemetryManagerTests`, rebuilt with and without the fix | With `Directory.CreateDirectory` restored: exit 2, 14 of 15 passed; `TelemetryManager_SentinelIsWrittenPerUserAndAvoidsShowingNoticeOnSubsequentRuns` failed with "Expected invocation on the mock once, but was 0 times: f => f.CreateDirectory(...)". With the fix: exit 0, 15 of 15 passed. |
+| Workflow contract red/green | `python .github/scripts/test_bazel_cache.py`, first in a scratch copy holding the base revision's `validate.ps1` | Base: exit 1; `test_validation_builds_and_tests_the_full_graph` failed both its full-graph build and full-graph test subtests. With this change: 14 tests OK. |
+
+Both `validate.ps1` runs returned the expected exit code from all 14 steps:
+
+- 0 from `build-all`, `cached-build`, both queries, `all-tests`, `discovery`,
+  `reports` and `toolchain-provenance`.
+- 2 from `failed-test`, 9 from `empty-selection` and 3 from `mixed-results`.
+- 1 from each reference-alias negative.
+
+Both runs declared 775 compiler actions in the managed graph.
+
+The two Windows Inconclusive results are the named-pipe impersonation tests;
+this shell lacks `SeImpersonatePrivilege`. The Linux run used a copy whose 47
+changed files matched the Windows worktree by content hash when the run started.
+
+The Windows MSBuild acquisition in `eng\build.ps1` could not complete:
+`global.json` pins runtime `11.0.100`, which the public feeds do not serve. That
+pin predates this change. The projects were therefore built with the SDK that
+`eng\build.ps1` had already restored into `.dotnet`.
+
+The initial local validation preceded the first hosted run. The follow-up below
+tracks the hosted failures and their repairs.
+
+### Hosted validation follow-up (2026-11-13)
+
+The first hosted run,
+[43494273125](https://github.com/microsoft/testfx/actions/runs/43494273125),
+exposed two gaps that local full-graph validation did not cover:
+
+- The Linux full-graph step passed, but `validate-packages.ps1` still required
+  four self-contained publishers after the portable matrix changed to
+  net10.0/net11.0. Its native query returns exactly those two publishers. Keep
+  the cardinality guard, but derive its expected count from the validator's
+  framework list; the existing per-publisher check already rejects unexpected
+  or duplicate frameworks. Removing the guard would conceal missing outputs.
+- Windows analyzer tests could not initialize NuGet's machine-wide settings.
+  Bazel inherits environment names case-sensitively, whereas Windows resolves
+  them case-insensitively. The rule requested uppercase `PROGRAMFILES` names,
+  which match the local shell, but not the hosted runner's `ProgramFiles` and
+  `ProgramFiles(x86)` spelling. Reproducing those spellings in a child process
+  at `bf07eed116fa73aace608716c59a54059e19a7b8` made all 11
+  `AssertionArgsShouldAvoidConditionalAccessAnalyzerTests` cases fail with the
+  same `ConfigurationDefaults` / null `path1` error (Bazel exit 3).
+  Preserve both established spellings in the rule rather than modifying
+  machine settings or weakening the analyzer tests.
+
+These are launcher/validation repairs, not changes to product behavior or test
+scheduling. The existing analyzer tests and the real package consumer validator
+remain the oracles. Validation must cover both Windows environment spellings,
+the net10.0/net11.0 self-contained layouts and their pass/failure/empty exits,
+and the complete Windows/Linux hosted jobs before claiming hosted success.
+
+Local repair validation used Bazel 9.1.1 and SDK
+`11.0.100-rc.3.26522.148`, with the two rule/validator changes above applied to
+`bf07eed116fa73aace608716c59a54059e19a7b8`:
+
+| Contract | Command / source state | Observed result |
+| --- | --- | --- |
+| Analyzer runner inherits Windows installation paths | `pwsh -NoLogo -NoProfile -File eng/bazel.ps1 test //:analyzer_tests --nocache_test_results --test_arg=--filter --test_arg=FullyQualifiedName~AssertionArgsShouldAvoidConditionalAccessAnalyzerTests --jobs=4 --noshow_progress`, launched with only mixed-case `ProgramFiles` / `ProgramFiles(x86)` names | Before the rule fix: Bazel exit 3, 11 failed at NuGet initialization. After: exit 0, the same 11 cases executed and passed. Repeating with uppercase names also passed all 11. TRX counters were checked. This proves launcher initialization, not new analyzer behavior. |
+| Package validation matches the supported runtime matrix | `pwsh -NoLogo -NoProfile -File eng/bazel/validate-packages.ps1 -Jobs 4 -EvidenceRoot <dir>` | Exit 0. Three aligned `3.0.0-preview.bazel` packages were restored into an isolated consumer cache; net10.0/net11.0 builds passed. The package consumer and both staged self-contained hosts returned 0/2/9 for pass/failure/empty selections. Each passing TRX contained one passing test, and each host loaded CoreLib from its own staged layout. |
+| Complete Windows graph with hosted environment spelling | `pwsh -NoLogo -NoProfile -File eng/bazel/validate.ps1 -Jobs 4 -EvidenceRoot <dir>`, launched with mixed-case installation-path names | Exit 0: all 35 automatic targets accounted for, 34 passed and only the documented Windows NativeAOT target skipped. All 14 validation steps had their expected exits. The analyzer suite executed 3,050 passing cases with one conditional skip; the strict fresh-TRX gate accepted all 22 reporting targets. |
+| Workflow contracts and action pins | `python .github/scripts/test_bazel_cache.py`; `python .github/scripts/check_action_pins.py` | Exit 0 for both: 14 contract tests passed; the action-pin audit checked 2,769 references in 60 files. |
+
+The package validator's pre-fix failure is preserved in the hosted run above:
+native publishing succeeded, then the obsolete four-publisher assertion failed.
+The fix retains the count and unique-framework checks rather than accepting a
+partial matrix. Local logs and TRX are retained under
+`artifacts/bazel-ci-repair`; hosted results will be linked in the PR at the
+tested source revision.

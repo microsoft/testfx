@@ -26,41 +26,43 @@ public sealed class CommandLineTests
     [DynamicData(nameof(ParserTestsData), DynamicDataDisplayName = nameof(ParserTestDataFormat))]
     public void ParserTests(int testNum, string[] args, (string RspFileName, string RspFileContent)[]? rspFiles, CommandLineParseResultWrapper parseResultWrapper)
     {
+        string directory = CreateResponseFileDirectory();
         try
         {
-            if (rspFiles is not null)
+            Dictionary<string, string> responseFilePaths = [];
+            foreach ((string rspFileName, _) in rspFiles ?? [])
             {
-                foreach ((string rspFileName, string rspFileContent) in rspFiles)
-                {
-                    File.WriteAllText(rspFileName, rspFileContent);
-                }
+                responseFilePaths[rspFileName] = Path.Combine(directory, rspFileName);
             }
 
-            CommandLineParseResult result = CommandLineParser.Parse(args, new SystemEnvironment());
+            foreach ((string rspFileName, string rspFileContent) in rspFiles ?? [])
+            {
+                IEnumerable<string> lines = rspFileContent
+                    .Split(["\r\n", "\n"], StringSplitOptions.None)
+                    .Select(line => ResolveResponseFileReference(line, responseFilePaths, quote: true));
+                File.WriteAllText(responseFilePaths[rspFileName], string.Join(Environment.NewLine, lines));
+            }
+
+            string[] resolvedArgs = [.. args.Select(arg => ResolveResponseFileReference(arg, responseFilePaths, quote: false))];
+            CommandLineParseResult result = CommandLineParser.Parse(resolvedArgs, new SystemEnvironment());
             Assert.AreEqual(parseResultWrapper.Result, result, $"Test num '{testNum}' failed");
         }
         finally
         {
-            if (rspFiles is not null)
-            {
-                foreach ((string rspFileName, _) in rspFiles)
-                {
-                    File.Delete(rspFileName);
-                }
-            }
+            Directory.Delete(directory, recursive: true);
         }
     }
 
     [TestMethod]
     public void Parser_NestedResponseFiles_ProvidesExpandedArgumentsForProcessRelaunch()
     {
-        string id = Guid.NewGuid().ToString("N");
-        string outerResponseFile = $"{id}-outer.rsp";
-        string nestedResponseFile = $"{id}-nested.rsp";
+        string directory = CreateResponseFileDirectory();
+        string outerResponseFile = Path.Combine(directory, "outer.rsp");
+        string nestedResponseFile = Path.Combine(directory, "nested.rsp");
 
         try
         {
-            File.WriteAllText(outerResponseFile, $"--inside b{Environment.NewLine}@{nestedResponseFile}");
+            File.WriteAllText(outerResponseFile, $"--inside b{Environment.NewLine}\"@{nestedResponseFile}\"");
             File.WriteAllText(nestedResponseFile, "--nested c");
 
             CommandLineParseResult result = CommandLineParser.Parse(
@@ -74,19 +76,19 @@ public sealed class CommandLineTests
         }
         finally
         {
-            File.Delete(outerResponseFile);
-            File.Delete(nestedResponseFile);
+            Directory.Delete(directory, recursive: true);
         }
     }
 
     [TestMethod]
     public void Parser_RecursiveResponseFile_ReturnsError()
     {
-        string responseFile = $"{Guid.NewGuid():N}.rsp";
+        string directory = CreateResponseFileDirectory();
+        string responseFile = Path.Combine(directory, "recursive.rsp");
 
         try
         {
-            File.WriteAllText(responseFile, $"@{responseFile}");
+            File.WriteAllText(responseFile, $"\"@{responseFile}\"");
 
             CommandLineParseResult result = CommandLineParser.Parse([$"@{responseFile}"], new SystemEnvironment());
 
@@ -95,9 +97,19 @@ public sealed class CommandLineTests
         }
         finally
         {
-            File.Delete(responseFile);
+            Directory.Delete(directory, recursive: true);
         }
     }
+
+    // MSTest uses the test application directory as the working directory, which can be read-only
+    // (for example, in a Bazel sandbox), so response files live in a unique temporary directory.
+    private static string CreateResponseFileDirectory()
+        => Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).FullName;
+
+    private static string ResolveResponseFileReference(string argument, Dictionary<string, string> responseFilePaths, bool quote)
+        => argument.StartsWith("@", StringComparison.Ordinal) && responseFilePaths.TryGetValue(argument[1..], out string? path)
+            ? quote ? $"\"@{path}\"" : $"@{path}"
+            : argument;
 
     public static string ParserTestDataFormat(MethodInfo methodInfo, object?[]? data)
     {

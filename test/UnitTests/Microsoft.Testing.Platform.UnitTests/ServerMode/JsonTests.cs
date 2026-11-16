@@ -475,6 +475,18 @@ public sealed class JsonTests
     }
 
     [TestMethod]
+    public void Deserialize_UntypedDictionary_WithDuplicateKeys_UsesLastValue()
+    {
+        Json json = new();
+        const string payload = """{"duplicate": 1, "duplicate": 2}""";
+
+        IDictionary<string, object?> actual = json.Deserialize<IDictionary<string, object?>>(Encoding.UTF8.GetBytes(payload).AsMemory());
+
+        Assert.HasCount(1, actual);
+        Assert.AreEqual(2, actual["duplicate"]);
+    }
+
+    [TestMethod]
     public void Deserialize_UntypedArray_WithNonInt32Numbers_StjPath_PreservesNumericType()
     {
         // Arrange

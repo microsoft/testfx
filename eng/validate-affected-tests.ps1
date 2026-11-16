@@ -755,6 +755,80 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
     Write-Output "Non-Windows rollout self-tests: $($cases.Count + 5) passed."
 }
 
+$script:CacheSeedInvocationPattern = '(?s)\$seedScript = Join-Path \$repository ''eng/seed-affected-tests-cache\.ps1''\s*' +
+    'if \(\$env:TESTFX_AFFECTED_TESTS_SEED -ne ''0'' -and \(Test-Path -LiteralPath \$seedScript\)\) \{\s*' +
+    'try \{\s*& \$seedScript -Repository \$repository -CommonCommit \$baseline\.Trim\(\)\s*\}\s*' +
+    'catch \{\s*Write-Host "##vso\[task\.logissue type=warning\]Affected-test cache seed failed'
+
+function Assert-AffectedTestsCacheSeedWiring {
+    param([string]$Template)
+
+    # The run block is the only top-level step block that starts with this condition; it closes at four-space indentation.
+    $runBlock = [regex]::Match($Template, '(?s)if \(\$affectedTestsMode -eq ''run''\) \{(?<body>.*?)\r?\n    \}')
+    if (-not $runBlock.Success) {
+        throw "AffectedTestsCacheSeedWiring: the affected-test run block is missing."
+    }
+
+    $runBody = $runBlock.Groups["body"].Value
+    $seed = [regex]::Match($runBody, $script:CacheSeedInvocationPattern)
+    $baselineIndex = $runBody.IndexOf('$baseline = & git -C $repository merge-base HEAD refs/remotes/origin/main', [System.StringComparison]::Ordinal)
+    if (-not $seed.Success -or $baselineIndex -lt 0 -or $seed.Index -lt $baselineIndex) {
+        throw ("AffectedTestsCacheSeedWiring: pull-request selection must seed the provider cache for the merge base, " +
+            "with the TESTFX_AFFECTED_TESTS_SEED opt-out, before dotnet test, and fail open with a warning.")
+    }
+}
+
+function Invoke-AffectedTestsCacheSeedSelfTest {
+    param([string]$Template, [string]$SeedScriptPath)
+
+    & (Get-Process -Id $PID).Path -NoProfile -File $SeedScriptPath -SelfTest
+    if ($LASTEXITCODE -ne 0) {
+        throw "The affected-test cache seed self-test failed with exit code $LASTEXITCODE."
+    }
+
+    Assert-AffectedTestsCacheSeedWiring $Template
+    Write-Output "PASS AffectedTestsCacheSeedWiring"
+
+    $seedBlock = [regex]::Match($Template, '(?s)      \$seedScript = Join-Path.*?\r?\n      \}\r?\n')
+    if (-not $seedBlock.Success) {
+        throw "Self-test could not locate the affected-test cache seed block."
+    }
+
+    $cases = @(
+        @{
+            Name = "CacheSeedRemovalIsRejected"
+            Template = $Template.Replace($seedBlock.Value, "")
+            ExpectedFailure = "AffectedTestsCacheSeedWiring"
+        },
+        @{
+            Name = "CacheSeedAfterTestsIsRejected"
+            Template = $Template.Replace($seedBlock.Value, "").Replace("& dotnet test @testArguments", "& dotnet test @testArguments`n" + $seedBlock.Value)
+            ExpectedFailure = "AffectedTestsCacheSeedWiring"
+        },
+        @{
+            Name = "CacheSeedWithoutOptOutIsRejected"
+            Template = $Template.Replace("`$env:TESTFX_AFFECTED_TESTS_SEED -ne '0' -and ", "")
+            ExpectedFailure = "AffectedTestsCacheSeedWiring"
+        },
+        @{
+            Name = "CacheSeedWithoutBaselineIsRejected"
+            Template = $Template.Replace(" -CommonCommit `$baseline.Trim()", "")
+            ExpectedFailure = "AffectedTestsCacheSeedWiring"
+        },
+        @{
+            Name = "CacheSeedFailingClosedIsRejected"
+            Template = $Template.Replace("task.logissue type=warning]Affected-test cache seed failed", "task.logissue type=error]Affected-test cache seed failed")
+            ExpectedFailure = "AffectedTestsCacheSeedWiring"
+        }
+    )
+    Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{ Template = $Template } -Validator {
+        param($Template)
+        Assert-AffectedTestsCacheSeedWiring $Template
+    }
+
+    Write-Output "Affected-test cache seed self-tests: $($cases.Count + 1) passed."
+}
+
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $versionsPropsPath = Join-Path $repoRoot "eng/Versions.props"
@@ -1164,9 +1238,11 @@ if ($SelfTest) {
     & (Join-Path $repoRoot "eng/validate-affected-test-git.ps1")
     Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $templateWithoutComments $windowsBuildTemplate
     Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate $affectedTestsPackageVersion
+    Invoke-AffectedTestsCacheSeedSelfTest $templateWithoutComments (Join-Path $repoRoot "eng/seed-affected-tests-cache.ps1")
 } else {
     Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $templateWithoutComments $windowsBuildTemplate
     Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate
+    Assert-AffectedTestsCacheSeedWiring $templateWithoutComments
 }
 
 $ctsTestTemplate = Get-Content -LiteralPath (Join-Path $repoRoot "eng/pipelines/steps/test-cts-comparison.yml") -Raw

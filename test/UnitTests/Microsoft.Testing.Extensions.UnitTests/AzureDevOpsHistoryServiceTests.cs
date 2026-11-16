@@ -26,7 +26,7 @@ public sealed class AzureDevOpsHistoryServiceTests
     [TestMethod]
     public void QuarantineFile_IgnoresCommentsAndBlanksAndMatchesGlobsCaseSensitively()
     {
-        string quarantineFilePath = Path.Combine(AppContext.BaseDirectory, $"{Guid.NewGuid():N}.quarantine.txt");
+        string quarantineFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.quarantine.txt");
         File.WriteAllText(quarantineFilePath, "# comment\n\nNamespace.Tests.FlakyTest\nNamespace.Tests.Slow*\nNamespace.Tests.Quarantined?\n");
 
         try
@@ -478,7 +478,7 @@ public sealed class AzureDevOpsHistoryServiceTests
     [TestMethod]
     public async Task Reporter_AnnotatesQuarantinedFailuresAndEmitsBuildTagOnceAsync()
     {
-        string quarantineFilePath = Path.Combine(AppContext.BaseDirectory, $"{Guid.NewGuid():N}.quarantine.txt");
+        string quarantineFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.quarantine.txt");
         File.WriteAllText(quarantineFilePath, "Namespace.Tests.Quarantined\n");
 
         try

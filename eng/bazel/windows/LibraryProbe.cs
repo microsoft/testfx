@@ -58,7 +58,7 @@ internal static class LibraryProbe
 
         Assembly desktopExtensions = Assembly.Load("MSTest.TestFramework.Extensions");
         sourceAssemblies.Add(windowTest.Assembly);
-        sourceAssemblies.Add(VerifyFrameworkApi(desktopExtensions));
+        sourceAssemblies.Add(VerifyFrameworkApi(desktopExtensions, forwardsDeployment: true));
         sourceAssemblies.Add(desktopExtensions);
         runtimeAssemblies.Add(automation);
 #elif WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
@@ -68,7 +68,7 @@ internal static class LibraryProbe
         scenario = "winui";
 #endif
         Assembly extensions = Assembly.Load("MSTest.TestFramework.Extensions");
-        Assembly framework = VerifyFrameworkApi(extensions);
+        Assembly framework = VerifyFrameworkApi(extensions, forwardsDeployment: false);
         Type uiMethod = extensions.GetType(
             "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute", throwOnError: true)!;
         if (!typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).IsAssignableFrom(uiMethod))
@@ -103,22 +103,22 @@ internal static class LibraryProbe
     }
 
 #if WINDOWS_DESKTOP_PROBE || WINDOWS_UWP_PROBE || WINDOWS_WINUI_PROBE
-    private static Assembly VerifyFrameworkApi(Assembly extensions)
+    private static Assembly VerifyFrameworkApi(Assembly extensions, bool forwardsDeployment)
     {
         Assembly framework = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Assembly;
         Type context = typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext);
         if (framework.GetName().Name != "MSTest.TestFramework" || context.Assembly != framework
-            || extensions.GetType(context.FullName!) is not null)
+            || extensions.GetType(context.FullName!) != context)
         {
-            throw new InvalidOperationException("TestContext must be defined in the core framework, not Extensions.");
+            throw new InvalidOperationException("TestContext must be defined in the core framework and forwarded by Extensions.");
         }
 
         const string deploymentItemName = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
         Type? deploymentItem = framework.GetType(deploymentItemName);
         if (deploymentItem is null || deploymentItem.Assembly != framework
-            || extensions.GetType(deploymentItemName) is not null)
+            || extensions.GetType(deploymentItemName) != (forwardsDeployment ? deploymentItem : null))
         {
-            throw new InvalidOperationException("DeploymentItemAttribute must be defined in shared modern core, including for UI consumers.");
+            throw new InvalidOperationException("DeploymentItemAttribute must be defined in shared modern core with the expected Extensions forwarder.");
         }
 
         string[] directories = ["TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory"];

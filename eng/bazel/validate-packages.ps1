@@ -22,7 +22,7 @@ $directory = if ($EvidenceRoot) { Join-Path $EvidenceRoot $run } else { Join-Pat
 $feed = Join-Path $directory 'feed'
 $consumer = Join-Path $directory 'consumer'
 New-Item -ItemType Directory -Path $feed, $consumer | Out-Null
-$frameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+$frameworks = @('net10.0', 'net11.0')
 $expectedPackageIds = @('Microsoft.Testing.Platform', 'Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.TrxReport')
 $seenPackages = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $seenRuntimes = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
@@ -222,7 +222,9 @@ try {
     Set-Location $root
     $null = Invoke-Step 'publish' $bazel @('build', '//:published_samples', "--jobs=$Jobs", '--noshow_progress', '--show_result=0')
     $published = @(& $bazel cquery 'filter("explorer_net[0-9]+_0$", deps(//:published_samples))' --output=starlark '--starlark:expr=str(target.label) + "|" + providers(target)["DefaultInfo"].files_to_run.executable.path' --noshow_progress)
-    if ($LASTEXITCODE -ne 0 -or $published.Count -ne 4) { throw 'Expected four native self-contained publishers.' }
+    if ($LASTEXITCODE -ne 0 -or $published.Count -ne $frameworks.Count) {
+        throw "Expected $($frameworks.Count) native self-contained publishers, one per framework."
+    }
     $env:DOTNET_ROOT = Join-Path $directory 'missing-runtime'
     $env:DOTNET_ROOT_X64 = $env:DOTNET_ROOT
     foreach ($publishedTarget in $published) {
