@@ -16,10 +16,6 @@ internal static class RuntimeProvenance
         const int expectedMajor = 11;
 #elif NET10_0
         const int expectedMajor = 10;
-#elif NET9_0
-        const int expectedMajor = 9;
-#elif NET8_0
-        const int expectedMajor = 8;
 #else
 #error The runtime validation asset must target a supported portable framework.
 #endif

@@ -31,7 +31,8 @@ def extension_unit_tests():
             "test/Utilities/TestFxOpenTelemetry.cs",
             "test/Utilities/ValidationResultExtensions.cs",
         ],
-        defines = ["TESTFX_TELEMETRY", "TESTFX_CRASHDUMP_IGNORE_UNSUPPORTED"],
+        defines = ["TESTFX_TELEMETRY", "TESTFX_CRASHDUMP_IGNORE_UNSUPPORTED", "TESTFX_REPOSITORY_OPENTELEMETRY"],
+        sdk_version_metadata = True,
         usings = ["Microsoft.Testing.TestInfrastructure", "Polyfills"],
         generate_documentation_file = False,
         reference_aliases = {

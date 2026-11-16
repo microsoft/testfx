@@ -285,18 +285,26 @@ class WorkflowCacheTests(unittest.TestCase):
 
     def test_cache_hits_never_skip_validation_or_test_execution(self) -> None:
         for name in (
-            "Build, test, and validate native consumers",
+            "Build and test the full Bazel graph (//...) and validate native consumers",
             "Validate native packages and self-contained runtimes",
         ):
             step = next(step for step in self.steps if step.get("name") == name)
             self.assertNotIn("if", step)
         source = (ROOT / "eng" / "bazel" / "validate.ps1").read_text(encoding="utf-8")
-        for name in ("portable-tests", "mixed-results"):
+        for name in ("all-tests", "mixed-results"):
             arguments = re.search(
-                rf"Invoke-BazelStep '{name}' @\((.*?)\)", source, re.DOTALL
+                rf"Invoke-BazelStep '{name}' (.*?)\)\s*\d*\s*$",
+                source,
+                re.DOTALL | re.MULTILINE,
             )
             self.assertIsNotNone(arguments)
             self.assertIn("'--nocache_test_results'", arguments.group(1))
+
+    def test_validation_builds_and_tests_the_full_graph(self) -> None:
+        source = (ROOT / "eng" / "bazel" / "validate.ps1").read_text(encoding="utf-8")
+        for name, command in (("build-all", "build"), ("all-tests", "test")):
+            with self.subTest(step=name):
+                self.assertIn(f"Invoke-BazelStep '{name}' @('{command}', '//...'", source)
 
     def test_server_stops_before_save_and_profiles_remain_evidence(self) -> None:
         stop = next(

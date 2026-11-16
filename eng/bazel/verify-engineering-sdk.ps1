@@ -14,9 +14,9 @@ param(
     [Parameter(Mandatory)]
     [string] $OutputPath,
 
-    [ValidateSet('net8.0', 'net9.0', 'net10.0', 'net11.0')]
-    [ValidateCount(1, 4)]
-    [string[]] $TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+    [ValidateSet('net10.0', 'net11.0')]
+    [ValidateCount(1, 2)]
+    [string[]] $TargetFrameworks = @('net10.0', 'net11.0')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,8 +34,6 @@ $compilerVersion = "5.14.0-1.26562.108 ($sdkCommit)"
 $runtimeVersion = '12.0.0-alpha.1.26562.108'
 $bootstrapVersion = '10.0.401'
 $packVersions = [ordered]@{
-    'net8.0' = '8.0.33'
-    'net9.0' = '9.0.22'
     'net10.0' = '10.0.14'
     'net11.0' = '11.0.0-rc.3.26522.148'
 }

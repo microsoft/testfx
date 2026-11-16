@@ -200,7 +200,7 @@ def native_mstest_packages():
     for framework in PORTABLE_FRAMEWORKS:
         suffix = framework.replace(".", "_")
         _asset(framework_files, "framework_build_" + suffix, framework_project + "/build/" + framework + "/MSTest.TestFramework.targets", "build/" + framework + "/MSTest.TestFramework.targets")
-        _asset(framework_files, "framework_transitive_" + suffix, framework_project + "/buildTransitive/net8.0AndLater/MSTest.TestFramework.targets", "buildTransitive/" + framework + "/MSTest.TestFramework.targets")
+        _asset(framework_files, "framework_transitive_" + suffix, framework_project + "/buildTransitive/net10.0AndLater/MSTest.TestFramework.targets", "buildTransitive/" + framework + "/MSTest.TestFramework.targets")
         for extension in ["props", "targets"]:
             filename = "MSTest.TestAdapter." + extension
             _asset(adapter_files, "adapter_build_" + suffix + "_" + extension, adapter_project + "/build/" + framework + "/" + filename, "build/" + framework + "/" + filename)

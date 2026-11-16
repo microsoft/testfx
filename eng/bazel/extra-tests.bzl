@@ -53,11 +53,14 @@ def extra_unit_tests():
             name = configuration,
             flag_values = {"@rules_dotnet//dotnet:target_framework": framework},
         )
+        # The alias below reaches the publish for the active TFM; the others
+        # cannot be analyzed in that configuration.
         publish_binary(
             name = application,
             binary = ":server_client_tests_binary",
             target_framework = framework,
             self_contained = True,
+            tags = ["manual"],
         )
         server_applications[":" + configuration] = ":" + application
     native.alias(

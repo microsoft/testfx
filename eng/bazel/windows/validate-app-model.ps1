@@ -120,7 +120,7 @@ try {
     $hostLayout = Copy-Publish '//:windows_app_model' 'TestFx.Bazel.AppModelHost' $layout
     if (-not $HostOnly) {
         $controllers = [ordered]@{}
-        foreach ($framework in @('net8', 'net9')) {
+        foreach ($framework in @('net10', 'net11')) {
             $controllers[$framework] = Copy-Publish "//:windows_controller_$framework" 'mstest-appmodel-controller' (Join-Path $directory "controller-$framework")
         }
         $sdkVersion = [regex]::Match((Get-Content -LiteralPath 'MODULE.bazel' -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value

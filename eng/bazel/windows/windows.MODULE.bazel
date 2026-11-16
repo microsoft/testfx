@@ -4,7 +4,7 @@ windows_paket.parse(
     lock = "//eng/bazel/windows:paket.lock",
     repo_prefix = "windows.",
 )
-use_repo(windows_paket, "windows.coverage", "windows.main", "windows.sdk17763", "windows.sdk18362", "windows.sdk19041", "windows.sdk19041net10")
+use_repo(windows_paket, "windows.coverage", "windows.main", "windows.sdk17763", "windows.sdk18362", "windows.sdk19041net10")
 
 # The test-tools feed does not expose a package hash through NuGet registration.
 # Pin the controller's actual payload, independently of the metadata-only lock.

@@ -182,6 +182,7 @@ public sealed class TelemetryManagerTests
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // And sentinel was written to filesystem.
+        fileSystemMock.Verify(f => f.CreateDirectory(Path.GetDirectoryName(path)!), Times.Once);
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Once);
 
         // Act - on next run the file already exists.

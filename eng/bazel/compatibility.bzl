@@ -167,7 +167,7 @@ def compatibility_libraries():
         generate_documentation_file = False,
         langversion = "preview",
         nullable = "enable",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         deps = [
             ":platform_netstandard2_0",
             ":trx_netstandard2_0",
@@ -189,7 +189,7 @@ def compatibility_libraries():
         name = "framework_netstandard2_0_consumer",
         srcs = ["//eng/bazel:CompatibilityConsumer.cs"],
         out = "CompatibilityConsumer",
-        target_frameworks = ["net8.0"],
+        target_frameworks = ["net10.0"],
         langversion = "preview",
         nullable = "enable",
         generate_documentation_file = False,

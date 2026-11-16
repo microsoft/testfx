@@ -6,12 +6,6 @@ strategy: min
 
 nuget Microsoft.WindowsAppSDK == 1.8.251003001
 
-group sdk19041
-    source https://api.nuget.org/v3/index.json
-    storage: none
-    strategy: min
-    nuget Microsoft.Windows.SDK.NET.Ref == 10.0.19041.57
-
 group sdk19041net10
     source https://api.nuget.org/v3/index.json
     storage: none
