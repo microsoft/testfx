@@ -97,6 +97,9 @@ public sealed class AssemblyOSConditionTests : AcceptanceTestBase<NopAssetFixtur
                 ["DOTNET_CLI_UI_LANGUAGE"] = "en-US",
                 ["VSLANG"] = "1033",
                 ["TESTINGPLATFORM_AZDO_OUTPUT"] = "off",
+                // vstest.console kills testhost 100 ms after closing the session by default,
+                // which can interrupt the consumer's ProcessExit provenance probe.
+                ["VSTEST_TESTHOST_SHUTDOWN_TIMEOUT"] = "60000",
             },
             workingDirectory: asset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
@@ -363,14 +366,26 @@ internal static class Probe
         Type providerType = adapter.GetType("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider", throwOnError: true)!;
         object provider = providerType.GetProperty("Instance", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
         object operations = provider.GetType().GetProperty("ReflectionOperations")!.GetValue(provider)!;
-        File.WriteAllLines(Path.Combine(Evidence, "metadata.txt"), new[]
+        string[] products = loaded
+            .Where(assembly => !assembly.IsDynamic && assembly.GetName().Name is "MSTest.TestFramework" or "MSTestAdapter.PlatformServices" or "Microsoft.Testing.Platform")
+            .Select(assembly => $"{assembly.GetName().Name}|{assembly.Location}|{Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location)))}")
+            .ToArray();
+        // Publish each file atomically and write metadata last, so an interrupted
+        // probe cannot leave partial evidence behind a complete-looking metadata file.
+        WriteAtomically("products.txt", products);
+        WriteAtomically("metadata.txt", new[]
         {
             operations.GetType().Name,
             (typeof(Probe).Assembly.GetType("MSTest.SourceGenerated.MSTestReflectionMetadata") is not null).ToString(),
         });
-        File.WriteAllLines(Path.Combine(Evidence, "products.txt"), loaded
-            .Where(assembly => !assembly.IsDynamic && assembly.GetName().Name is "MSTest.TestFramework" or "MSTestAdapter.PlatformServices" or "Microsoft.Testing.Platform")
-            .Select(assembly => $"{assembly.GetName().Name}|{assembly.Location}|{Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location)))}"));
+    }
+
+    private static void WriteAtomically(string fileName, string[] lines)
+    {
+        string path = Path.Combine(Evidence, fileName);
+        string temporaryPath = path + ".tmp";
+        File.WriteAllLines(temporaryPath, lines);
+        File.Move(temporaryPath, path, overwrite: true);
     }
 }
 

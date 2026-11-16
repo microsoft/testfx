@@ -1,6 +1,6 @@
 {
   "tools": {
-    "dotnet": "12.0.100-alpha.1.26556.115",
+    "dotnet": "12.0.100-alpha.1.26562.108",
     "runtimes": {
       "dotnet": [
         "10.0.15",
@@ -16,14 +16,14 @@
       ]
     },
     "vs": {
-      "version": "17.14.10",
+      "version": "18.12",
       "components": [
         "Microsoft.VisualStudio.Workload.Universal"
       ]
     }
   },
   "sdk": {
-    "version": "12.0.100-alpha.1.26556.115",
+    "version": "12.0.100-alpha.1.26562.108",
     "paths": [
       ".dotnet",
       "$host$"
@@ -66,7 +66,7 @@
     }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26562.1",
+    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26563.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

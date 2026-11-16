@@ -626,11 +626,42 @@ build-policy change has no visual surface; dependency manifests, binary
 comparisons, executed consumers, and transcripts are the demonstration.
 Fresh Azure Pipelines and Linux/macOS runs are not claimed.
 
+## CI follow-up: .NET 11 GA runtime pin
+
+[#12459](https://github.com/microsoft/testfx/pull/12459) bumped `global.json`
+`tools.runtimes` to `10.0.15` and `11.0.100`. `11.0.100` is the .NET 11 SDK
+version; the GA runtime and ASP.NET Core runtime are `11.0.0`, so Arcade's
+`dotnet-install` returned 404 for every `11.0.100` runtime and restore failed
+before any build. [#12460](https://github.com/microsoft/testfx/pull/12460)
+pinned the three .NET 11 runtime entries to `11.0.0`.
+
+The runtime bump alone leaves the pack pins stale. The pinned `12.0.100-alpha`
+SDK still bundles prerelease `11.0.0-rc.3` packs for `net11.0`, so the existing
+`StartsWith('12.')` guards in `eng/Net11FrameworkReferences.targets` never
+fired. That was harmless only while `global.json` also pinned the rc.3 runtime.
+The guards now also match `11.` versions, and
+`Net10RuntimeVersion`/`Net11RuntimeVersion` follow the `global.json` runtimes
+(`10.0.15`, `11.0.0`). Windows SDK projection references use `10.*` versions
+and stay excluded.
+
+Evidence, all on Windows x64 with the minimal-`PATH` repository toolchain:
+
+| State | Command | Result |
+| --- | --- | --- |
+| `global.json` from #12459 | `eng\common\build.ps1 -restore` | Exit `1`; three `dotnet-install failed ... version '11.0.100'` errors. |
+| `global.json` from #12460 | `eng\common\build.ps1 -restore` | Exit `0`; installed runtime and ASP.NET Core `11.0.0` (x64, x86). |
+| `global.json` from #12459, targets unchanged | `FrameworkTargetingTests.NativeAotCompilerPack` | 2 failed: ILCompiler `10.0.14` vs `10.0.15`; `11.0.0-rc.3.26522.148` vs `11.0.100`. Exit `2`. |
+| `global.json` from #12460, targets unchanged | Same selection | 2 failed: `10.0.14` vs `10.0.15`; `11.0.0-rc.3.26522.148` vs `11.0.0`. Exit `2`. |
+| `global.json` from #12460, targets corrected | `FrameworkTargetingTests` (all four cases) | 4 passed, 0 failed/skipped. Exit `0`; the packed net10/net11 consumers ran on .NET 10 and .NET 11. |
+
+Bazel's independent SDK/runtime pins (`MODULE.bazel`, `eng/bazel/*`) still
+reference rc.3 and are not changed here.
+
 ## Open questions
 
 This change is scoped to `main`; no downstream rollout or servicing/backport is
-authorized. The .NET 11 runtime remains prerelease and must continue to flow
-with future dependency updates.
+authorized. The .NET 11 runtime is now GA (`11.0.0`) and must continue to flow
+with future servicing updates.
 
 Linux/macOS CI and WASI runtime execution were not run locally. Focused Release
 validation for the compiler-pack repair is recorded above; the separate current

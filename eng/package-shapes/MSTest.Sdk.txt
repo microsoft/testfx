@@ -1,0 +1,19 @@
+# Expected files of the MSTest.Sdk NuGet package, validated by eng/verify-nupkgs.ps1 after pack.
+# After an intentional package layout change, regenerate with: .\eng\verify-nupkgs.ps1 -configuration <Configuration> -updateBaselines
+# PDB files are excluded because this package only contains them in some build modes.
+Icon.png
+MSTest.Sdk.nuspec
+PACKAGE.md
+Sdk/Features/Aspire.targets
+Sdk/Features/Playwright.targets
+Sdk/Features/WindowsUIAutomation.targets
+Sdk/Runner/ClassicEngine.targets
+Sdk/Runner/Common.targets
+Sdk/Runner/NativeAOT.targets
+Sdk/Runner/Runner.targets
+Sdk/Sdk.props
+Sdk/Sdk.targets
+Sdk/VSTest/VSTest.targets
+[Content_Types].xml
+_rels/.rels
+package/services/metadata/core-properties/{guid}.psmdcp
