@@ -91,8 +91,9 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 /// <para>
 /// Provide one final state and at most one instance of each identity or optional property above,
 /// except <see cref="TestMetadataProperty"/> and <see cref="FileArtifactProperty"/>, which can have multiple instances.
-/// Providing more than one instance of any other property makes report generation fail.
-/// <see cref="StandardOutputProperty"/> and <see cref="TestFileLocationProperty"/> are not consumed by the TRX reporter.
+/// Providing more than one instance of a consumed singleton property makes report generation fail.
+/// Unconsumed properties such as <see cref="StandardOutputProperty"/> and
+/// <see cref="TestFileLocationProperty"/> are ignored.
 /// </para>
 /// </remarks>
 /// <seealso href="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-test-reports#visual-studio-test-reports-trx">TRX report extension documentation</seealso>
