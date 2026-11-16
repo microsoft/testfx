@@ -509,3 +509,90 @@ the main TRX passes the execution gate, and all nine physical cached shipping
 archives match the fresh pack. Windows coverage is therefore preserved at
 **84 distinct executed cases**, not replaced by ignores. Actual non-Windows
 execution remains for the final rebased CI revision.
+
+## Final released-parent validation
+
+Tested source `1a6465dbd8210914c235e416e03a28ed44e1f96e` replays exactly
+the eight SDK-layer commits onto package
+`8ea111255a978a37df350221fa9ed4b244a32c32`. Its verified base snapshot is
+`0e22cd431656c944906bdb547648d84369471c95`; frozen rebase anchor
+`94711f3b4db336920e628039fdd54437458ae441` is an ancestor. No moving-main
+rebase or lower-layer producer fix is added here. SDK
+`12.0.100-alpha.1.26562.108` and desktop MSBuild `18.13.0.52701` remain pinned.
+
+The exact 43-source-plus-acceptance filter is unchanged. The final selector is
+the original eight-clause selection plus the four forwarding metadata rows
+and `PackedMSTestUwp_TargetsRegisterMSTestBuilderHook`; it excludes classic UWP
+for its separate run. `HelperCompositionData` now supplies eight rows.
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer3-delivery.slnf -bl
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+python .github\scripts\check_action_pins.py
+```
+
+Final build/pack **exit 0, 0 warnings/errors**, including content/metadata
+validation. Main discovery/execution **exit 0**, **83 selected/executed/passed,
+0 failed/skipped**. Separate classic discovery/execution **exit 0**, **1
+selected/executed/passed, 0 failed/skipped**. Both fresh report triplets and
+execution gates reconcile all **84 distinct cases**. The marked
+`cache-final-wave` backs `green-final-wave` / `green-final-wave-classic`;
+all 76 newly generated assets files use that exact cache. All 24 copied
+core/facade/adapter/services payloads in the six real net462 compatibility
+consumers match their selected cache assets. The pin audit passes all 2,769
+references in 60 files.
+
+| Final shipping package | Version | Packed and cached SHA-256 |
+| --- | --- | --- |
+| MSTest.TestFramework | 5.0.0-dev | `D52EF11D0BB46BF7F5DFDAEA6F983B853F0E9780031EE3A63384C34AEAA14ED6` |
+| MSTest.Sdk | 5.0.0-dev | `B92DEC7F376DC95F342C6F542E6AF8B7C6BDCA80DF450EFE5B2012870065908A` |
+| MSTest.TestAdapter | 5.0.0-dev | `EFD4DB311CE24552E148010C730BD870A72958D1B2618377D7BC100E39A35A01` |
+| MSTest.Uwp | 5.0.0-dev | `6C64B7D953142088158F3ED862D1916EC18D060ADA280D65AA2189C560FFEC74` |
+| MSTest.WinUI | 5.0.0-dev | `CDAA78ECCDA386330C957A2A9423EE21679DCFC7D72696123B6675F4596BB184` |
+| MSTest.SourceGeneration | 5.0.0-dev | `1DAA99AB82885A5A3CD1C7CC9831CF374805D38113EC955E6985E0B42D3DA486` |
+| Microsoft.Testing.Platform | 3.0.0-dev | `3E13D55F6CCDE0B189F5743738F4EA6427CB4425C8FBC5E1A53C7BC313C92DDE` |
+| Microsoft.Testing.Platform.MSBuild | 3.0.0-dev | `456F5D76CA4B19DBAFC4B9F76A5C6152AB13BA205DD59BE0F1F8ADCB38BEB0B0` |
+| Microsoft.Testing.Extensions.PackagedApp.MSBuild | 3.0.0-dev | `483A1F68F88E8C726AD7AF8CFBF1615DCF8477CE70EEC0CD5C3DEF793DE48ED1` |
+
+### Same-final-test late-helper counterfactual
+
+The final tested acceptance DLL is
+`DBFE4718471B05822EDFD93C2A359E467EA85EAACBCBA4D1EA78C06F356679DE`;
+the final composition-test source is
+`C856E44E155BD8957DA9E4D7D73A61F36E0DAB4EA6F8D96B8C579E8B88B9BFFB`.
+Both stay byte-identical across the paired runs, using the same two UIDs listed
+above. This rebinds the proof after the platform-selection changes; it does not
+reuse the earlier `C388...` assembly.
+
+Create a task-owned detached comparison at that exact final source and restore
+only the defective helper snapshot in `Sdk.targets`: patch SHA-256
+`049666D1EBB69D88B793372267AF5845DCDD5C61AD89DDEB0292D839652B02BD`.
+Repack through the same complete 43-source entry point, **exit 0, 0
+warnings/errors**. An initial SDK-only pack failed the repository's expected
+package-inventory guard because the other required packages were absent;
+that setup attempt is not red proof. No guard was bypassed; the full filtered
+pack satisfies it.
+
+Compare all ten SDK props/targets assets: only `Sdk/Sdk.targets` differs.
+Use the final original-worktree acceptance DLL, changing only the owned
+shipping feed's SDK archive, never its other packages or source. Restore the
+good archive in `finally`; its exact hash is verified after restoration.
+Run the identical UID command above with separate
+`cache-late-red-final` / `cache-late-green-final` caches and
+`red-late-final` / `green-late-final` results:
+
+| Contract | Wrong SDK | Correct final SDK |
+| --- | --- | --- |
+| Late helper opt-in without CPM | Intended outer package-sequence assertion after successful restore/ResolveReferences | Passed; then compiled and checked generated hooks/payload isolation |
+| Same late opt-in with CPM | Same intended assertion | Passed with aligned implicit PackageVersion |
+| Outer execution | Exit 2; 2 executed failures, 0 skipped | Exit 0; same 2 executed/passed, 0 skipped |
+| SDK archive/cache SHA-256 | `C91364EDF4A4026A3B9D5995A7329B1BBEB6682BF814D637F20365588403B8F2` | `B92DEC7F376DC95F342C6F542E6AF8B7C6BDCA80DF450EFE5B2012870065908A` |
+
+Both red assertions require adapter plus core but observe core only.
+Compiler/setup failures and skipped tests are not counted. Fresh paired
+TRX/JUnit/CTRF exports account for both cases; the final green execution gate
+passes. **Test-value evidence: executed, detected on the final tested revision.**
+The final Linux CI outcome, remote checks, native publication, and real UI
+activation remain separate evidence; no whole-stack green claim follows from
+these local results.
