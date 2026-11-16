@@ -257,6 +257,12 @@ public sealed class MtpServerClientInProcessTests
         var callbackEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var server = new InProcessServerFixture();
 
+        // The connection timeout must outlast every wait below so that only the gated callback can complete the
+        // launch. With the default 20s, thread-pool starvation (seen on net462 under method-level parallelism)
+        // could delay this test past the timeout, failing the launch before IsCompleted was observed.
+        MtpServerClientOptions options = CreateOptions();
+        options.ConnectionTimeout = TimeSpan.FromMinutes(5);
+
         // StartNew intentionally does not unwrap the launch task: this test must observe whether invoking the
         // async factory itself returns while the callback is blocked in its synchronous prefix.
         Task<Task<MtpServerClient>> invocation = Task.Factory.StartNew(
@@ -267,7 +273,7 @@ public sealed class MtpServerClientInProcessTests
                     releaseCallback.Wait(serverToken);
                     return server.RunAsync(arguments, serverToken);
                 },
-                CreateOptions(),
+                options,
                 TestContext.CancellationToken),
             CancellationToken.None,
             TaskCreationOptions.DenyChildAttach,

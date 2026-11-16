@@ -76,7 +76,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
     <!-- Keep a version mirrored by dotnet-public; the internal pipeline rejects mixed external feeds. -->
-    <PackageVersion Include="StyleCop.Analyzers" Version="1.3.171-beta" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.3.180" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
     <!-- If this gets updated, please revise if the explicit dependency on System.Diagnostics.DiagnosticSource is still needed -->
@@ -148,12 +148,17 @@
       AND <PackageReference Include="MessagePack" /> entries, otherwise the transitive (vulnerable)
       versions get restored. See PR #9120 / #9124 for context.
     -->
-    <PackageVersion Include="Nerdbank.MessagePack" Version="1.4.95" />
+    <PackageVersion Include="Nerdbank.MessagePack" Version="1.4.104" />
     <PackageVersion Include="MessagePack" Version="3.1.12" />
+    <!--
+      Keep the analyzer-testing dependency aligned with the runtime packages.
+      Transitive pinning is disabled, so consumers also need an explicit PackageReference.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />    
     <PackageVersion Include="System.CommandLine" Version="3.0.0" />
     <PackageVersion Include="System.Management" Version="$(DotNetRuntimePackagesVersion)" />
-    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
   </ItemGroup>
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
