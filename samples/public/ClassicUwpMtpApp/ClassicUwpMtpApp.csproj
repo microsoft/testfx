@@ -43,7 +43,16 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.14" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(MSTestVersion)', '5.0'))">
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\uap10.0\MSTest.TestFramework.dll"
+             Link="MSTest.TestFramework.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\uap10.0\MSTest.TestFramework.Extensions.dll"
+             Link="MSTest.TestFramework.Extensions.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(MSTestVersion)', '5.0'))">
     <Content Include="$(NuGetPackageRoot)\mstest.testframework\$(MSTestVersion)\lib\netstandard2.0\MSTest.TestFramework.dll"
              Link="MSTest.TestFramework.dll"
              CopyToOutputDirectory="PreserveNewest" />
