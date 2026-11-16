@@ -177,6 +177,21 @@ The restored core/Uwp/WinUI/SDK package archives in the isolated cache match the
 shipping producer SHA-256 values. The correction changes neither SDK
 application-model policy nor package binaries.
 
+The same Azure build's Debug incrementality step found five exact coverage-XML
+assertions still referring to the retired project filename. The coverage emitter
+had lost the old assembly-name mapping, so the fixture produced
+`TestFramework.Extensions.dll` instead of `MSTest.TestFramework.Extensions.dll`.
+The fixture now uses the real replacement `TestFramework.Compatibility.csproj`,
+and its existing mapping names the facade assembly. No expected XML bytes, BOM,
+line endings, regex semantics, or timestamp assertions were weakened.
+With that retained migrated fixture (blob
+`c070441e074aefb7aa6add325ffee8583b8f6c43`), the focused
+`CoverageSettingsPreserveExactBytesAndTimestamp` case first executed and failed
+on the missing assembly-name mapping. Adding the one production metadata mapping
+then passed the existing complete harness: 12 executed, 12 passed, 0 failed,
+0 skipped. The harness stages isolated snapshots and preserves the actual task
+host/incrementality scenarios; it does not rebuild product assemblies.
+
 ## Historical validation and demonstration
 
 | Requirement | Existing automated evidence | Surface / limitation |
