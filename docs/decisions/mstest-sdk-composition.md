@@ -480,3 +480,32 @@ helper rows, all eight existing source-generation opt-in cases, and that
 renamed package contract passes: **17 executed/passed, 0 failed/skipped,
 exit 0**. Publication remains held for the coordinator's ordered lower repair
 wave; these local results do not supersede any failing remote check.
+
+### Host-specific UI package prerequisites
+
+The original-head Linux run, Azure build `1683255`, log `130`, reports 27
+composition failures because `NonWindowsTests.slnf` does not pack `MSTest.Uwp`
+or `MSTest.WinUI`. A `WindowsApplicationModel` category routes the dedicated
+Windows job but does not exclude regular Linux acceptance execution.
+
+Keep all UI cases executing on Windows, where their real packages are built.
+For mixed ordinary/UI data sources, use `TestDataRow.IgnoreMessage` only on the
+UI-package rows on other hosts; ordinary/default and late-helper CPM/non-CPM
+rows must remain runnable there. UI-only package consumers use the existing
+`OSCondition` convention. Do not ignore the whole SDK class, disable Linux
+acceptance, manufacture UI packages, or count these intentional non-Windows
+skips as executed package validation. Fresh Windows execution and the final
+Linux CI results must be reported separately.
+
+On `20f41894676a00f06f58e1b411c4e097b5db82ae` plus test-selection patch
+`54B0C94BC8ECF64BD53B0AC8BF9A9763D8E33F2699459417C0BE99A674872A49`,
+the pinned Release build/pack passes with **0 warnings/errors, exit 0**.
+The same focused selector, extended with the relocated UWP contract, discovers
+and executes **83 Windows cases: all passed, 0 skipped, exit 0**. Separate
+classic discovery/execution also passes **1 case, 0 skipped, exit 0**.
+Both use fresh marked `cache-platform` restores and `green-platform` /
+`green-platform-classic` results. TRX/JUnit/CTRF account for the selected cases;
+the main TRX passes the execution gate, and all nine physical cached shipping
+archives match the fresh pack. Windows coverage is therefore preserved at
+**84 distinct executed cases**, not replaced by ignores. Actual non-Windows
+execution remains for the final rebased CI revision.
