@@ -525,3 +525,48 @@ passed all fourteen evaluations, five real consumer builds, default/minimal SDK
 runner checks, `dotnet test`, and VSTest execution, including their expected
 failure and empty-selection exits. UI evaluation remains policy coverage, not
 native XAML application compilation or activation.
+
+### Final native validation: 2026-11-16
+
+Real package/SDK/controller validation was repeated at
+`ad6ebd567cfe46e7f3f85de00ea3c8d760cecebb` on repaired SDK parent
+`a84c52f49168d02ca50b6335f7c8eb2132aa2d77`, not borrowed from the interim
+parent. Final implementation `abf2b526d70c2b1dd938cfd8c5b3876bb27e285a`
+replays unchanged onto SDK `619c3129e23a478b480a6e401ab61fbfc662f7f2`.
+The only difference between those tested and publication trees is the
+unconsumed mutation catalog. Their `src` and `test` trees, native rules,
+scripts, fixtures and documentation were verified identical before this
+evidence-only addition. The inherited exact-identity, 26/5 inventory, net462
+metadata dependency and lower OpenTelemetry environment repairs remain intact.
+
+Bazel is `9.1.1`; its pinned SDK/runtime are
+`11.0.100-rc.3.26522.148` / `11.0.0-rc.3.26522.148`. Consumer publishes run their
+actual self-contained net10/net11 runtimes. Output/server and same-version
+consumer feeds/caches are task-owned.
+
+| Exact command | Observed result |
+| --- | --- |
+| `pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-mstest-packages.ps1 -OutputRoot Q:\tfb\n12451-80f9f2\m-final -IncludeWindowsPlatformPackages -VerifySatelliteSensitivity` | Exit 0; ten real archives, fresh net10/net11 and MSBuild consumers, exact loaded/cache hashes, intended failure/empty exits and satellite removal/restoration. |
+| `pwsh -NoLogo -NoProfile -File .\eng\bazel\validate-sdk-packages.ps1 -EvidenceRoot Q:\tfb\n12451-80f9f2\s-final -Jobs 2` | Exit 0; all fourteen package-policy evaluations, five consumer builds, real SDK/default/minimal and metapackage execution, native `dotnet test`, and expected negative exits. |
+| `pwsh -NoLogo -NoProfile -File .\eng\bazel\windows\validate-app-model.ps1 -ArtifactsDirectory Q:\tfb\n12451-80f9f2\a-final` | Exit 0; real registration/activation, suppressed launcher, both net10/net11 controllers, discovery without handshake, failure/zero-result paths and sixteen append-only provenance records. The owned registration was removed. |
+| `.\eng\bazel.ps1 test //:sdk_package_tests //:build_tools_tests //:windows_targeting_test //:windows_asset_selection_test --jobs=2 --nocache_test_results --test_output=errors --noshow_progress --show_result=0` | Exit 0; 15 SDK cases and 13 build-tool cases executed/passed with no skips, plus both executed analysis cases. |
+| `python .github\scripts\test_mutation_testing.py` and `python .github\scripts\mutation_testing.py matrix --manifest eng\mutation-testing\modules.json --repository-root .` | Both exit 0; 37 catalog tests, 43 source projects = 32 enabled modules + 11 explicit exclusions. |
+| `markdownlint-cli2 docs\decisions\explicit-mstest-packages.md` | Exit 0; the touched record passes the existing repository rules. |
+
+The facade shipping-layout experiment was repeated against the final freshly
+published net11 consumer, keeping its compiled test DLL unchanged:
+`PackagedTargetsProvideCoreAndParallelization` executes once and passes with
+the facade, fails its explicit facade-presence assertion after deleting only
+that DLL from an owned copy (exit 2), and passes after restoration. The paired
+TRX files and input hashes are retained. The first-use provenance guard also
+passes both missing/existing-index cases; its old unguarded source fails the
+missing-index case. These are controlled input/layout experiments, not claims
+that a pristine parent or a particular CI thread interleaving was executed.
+
+Final raw logs/binlogs/TRX, package and loaded-bit manifests are retained under
+the task-owned output root. The app-model validator's existing null revision
+field is supplemented by a source-state record and matching captured input
+hashes. Evidence paths are local, not public artifact URLs. Native classic UAP,
+MSTest XAML/UI-thread application activation, other architectures and release
+branches remain unclaimed; the real activation above uses the native console
+app-model host. No rollout/backport or merge action is performed.
