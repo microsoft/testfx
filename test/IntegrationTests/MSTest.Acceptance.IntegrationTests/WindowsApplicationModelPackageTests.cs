@@ -105,7 +105,8 @@ public sealed class WindowsApplicationModelPackageTests
     [DataRow("MSTest.TestAdapter", "buildTransitive", "MSTest.TestAdapter.dll", false)]
     [DataRow("Microsoft.Testing.Platform", "lib", "Microsoft.Testing.Platform.dll", true)]
     [DataRow("Microsoft.Testing.Extensions.PackagedApp", "lib", "Microsoft.Testing.Extensions.PackagedApp.dll", true)]
-    [DataRow("Microsoft.Testing.Extensions.PackagedApp.MSBuild", "tools/AppModelController", "mstest-appmodel-controller.exe", true)]
+    [DataRow("Microsoft.Testing.Extensions.PackagedApp.MSBuild", "tools/AppModelController", "win-x64/mstest-appmodel-controller.exe", true)]
+    [DataRow("Microsoft.Testing.Extensions.PackagedApp.MSBuild", "tools/AppModelController", "win-arm64/mstest-appmodel-controller.exe", true)]
     public void PackedPackages_TargetOnlySupportedNetFrameworks(
         string packageId, string folder, string assembly, bool platformVersion)
     {
@@ -327,34 +328,45 @@ public sealed class WindowsApplicationModelPackageTests
             "Controller ZIP entries must use canonical single-slash paths on every producer host.");
 
         string[] targetFrameworks = ["net10.0", "net11.0"];
+        (string RuntimeIdentifier, Machine Machine)[] architectures = [("win-x64", Machine.Amd64), ("win-arm64", Machine.Arm64)];
         foreach (string targetFramework in targetFrameworks)
         {
-            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);
-            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.dll", entries);
-            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.deps.json", entries);
-            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.runtimeconfig.json", entries);
-            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Platform.dll", entries);
-            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Extensions.PackagedApp.dll", entries);
-            Assert.Contains($"tools/AppModelController/{targetFramework}/fr/Microsoft.Testing.Extensions.PackagedApp.resources.dll", entries);
-            Assert.DoesNotContain($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller", entries);
-
-            ZipArchiveEntry depsEntry = archive.GetEntry($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.deps.json")!;
-            using var reader = new StreamReader(depsEntry.Open());
-            using var deps = System.Text.Json.JsonDocument.Parse(reader.ReadToEnd());
-            string runtimeTarget = deps.RootElement.GetProperty("runtimeTarget").GetProperty("name").GetString()!;
-            foreach (System.Text.Json.JsonProperty library in deps.RootElement.GetProperty("targets").GetProperty(runtimeTarget).EnumerateObject())
+            Assert.DoesNotContain($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);
+            foreach ((string runtimeIdentifier, Machine machine) in architectures)
             {
-                foreach (System.Text.Json.JsonProperty assetGroup in library.Value.EnumerateObject().Where(property => property.Name is "runtime" or "native" or "runtimeTargets" or "resources"))
+                string layout = $"tools/AppModelController/{targetFramework}/{runtimeIdentifier}";
+                Assert.Contains($"{layout}/mstest-appmodel-controller.exe", entries);
+                Assert.Contains($"{layout}/mstest-appmodel-controller.dll", entries);
+                Assert.Contains($"{layout}/mstest-appmodel-controller.deps.json", entries);
+                Assert.Contains($"{layout}/mstest-appmodel-controller.runtimeconfig.json", entries);
+                Assert.Contains($"{layout}/Microsoft.Testing.Platform.dll", entries);
+                Assert.Contains($"{layout}/Microsoft.Testing.Extensions.PackagedApp.dll", entries);
+                Assert.Contains($"{layout}/fr/Microsoft.Testing.Extensions.PackagedApp.resources.dll", entries);
+                Assert.DoesNotContain($"{layout}/mstest-appmodel-controller", entries);
+
+                // The apphost and the native diagnostics reader are the architecture-specific binaries in the layout.
+                Assert.AreEqual(machine, GetPortableExecutableMachine(archive.GetEntry($"{layout}/mstest-appmodel-controller.exe")!), $"{layout} apphost");
+                Assert.AreEqual(machine, GetPortableExecutableMachine(archive.GetEntry($"{layout}/msdia140.dll")!), $"{layout} msdia140");
+
+                ZipArchiveEntry depsEntry = archive.GetEntry($"{layout}/mstest-appmodel-controller.deps.json")!;
+                using var reader = new StreamReader(depsEntry.Open());
+                using var deps = System.Text.Json.JsonDocument.Parse(reader.ReadToEnd());
+                string runtimeTarget = deps.RootElement.GetProperty("runtimeTarget").GetProperty("name").GetString()!;
+                Assert.EndsWith($"/{runtimeIdentifier}", runtimeTarget);
+                foreach (System.Text.Json.JsonProperty library in deps.RootElement.GetProperty("targets").GetProperty(runtimeTarget).EnumerateObject())
                 {
-                    foreach (System.Text.Json.JsonProperty asset in assetGroup.Value.EnumerateObject())
+                    foreach (System.Text.Json.JsonProperty assetGroup in library.Value.EnumerateObject().Where(property => property.Name is "runtime" or "native" or "runtimeTargets" or "resources"))
                     {
-                        string relativePath = assetGroup.Name switch
+                        foreach (System.Text.Json.JsonProperty asset in assetGroup.Value.EnumerateObject())
                         {
-                            "resources" => $"{asset.Value.GetProperty("locale").GetString()}/{Path.GetFileName(asset.Name)}",
-                            "runtimeTargets" => asset.Name,
-                            _ => Path.GetFileName(asset.Name),
-                        };
-                        Assert.Contains($"tools/AppModelController/{targetFramework}/{relativePath}", entries, $"Missing runtime asset for {library.Name}.");
+                            string relativePath = assetGroup.Name switch
+                            {
+                                "resources" => $"{asset.Value.GetProperty("locale").GetString()}/{Path.GetFileName(asset.Name)}",
+                                "runtimeTargets" => asset.Name,
+                                _ => Path.GetFileName(asset.Name),
+                            };
+                            Assert.Contains($"{layout}/{relativePath}", entries, $"Missing runtime asset for {library.Name}.");
+                        }
                     }
                 }
             }
@@ -503,6 +515,17 @@ public sealed class WindowsApplicationModelPackageTests
                 type => $"{reader.GetString(type.Namespace)}.{reader.GetString(type.Name)}",
                 type => type.Attributes,
                 StringComparer.Ordinal);
+    }
+
+    private static Machine GetPortableExecutableMachine(ZipArchiveEntry entry)
+    {
+        using Stream stream = entry.Open();
+        using var image = new MemoryStream();
+        stream.CopyTo(image);
+        image.Position = 0;
+        using var peReader = new PEReader(image);
+
+        return peReader.PEHeaders.CoffHeader.Machine;
     }
 
     private static void AssertPackageContainsAllEntries(string packagePath, IEnumerable<string> expectedEntries)
