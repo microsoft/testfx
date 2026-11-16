@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" />
-    <!-- Lift the vulnerable version that flows transitively through NuGet.Packaging. -->
+    <!-- Align the dependency from NuGet.Packaging with the runtime packages. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
 

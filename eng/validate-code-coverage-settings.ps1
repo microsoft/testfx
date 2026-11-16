@@ -142,8 +142,23 @@ foreach ($settingsFile in $SettingsFiles) {
     $packagePath = $context.PackagesRoot.TrimEnd("\", "/") + $packageSeparator +
         "coverage-validation/1.0.0/src/Source.cs".Replace("/", $packageSeparator)
     Assert-PatternMatch $sourceExcludes $packagePath $true "NuGet package sources are not excluded by '$settingsFile'."
-    Assert-PatternMatch $sourceExcludes "/_1/coverage-validation/1.0.0/src/Source.cs" $true "Deterministically mapped NuGet package sources are not excluded by '$settingsFile'."
-    Assert-PatternMatch $sourceExcludes "/_/src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs" $false "Remapped production sources must remain measurable in '$settingsFile'."
+    foreach ($path in @(
+        "/_1/coverage-validation/1.0.0/src/Source.cs",
+        "\_1\coverage-validation\1.0.0\src\Source.cs",
+        "/_12/coverage-validation/1.0.0/src/Source.cs",
+        "\_12\coverage-validation\1.0.0\src\Source.cs"
+    )) {
+        Assert-PatternMatch $sourceExcludes $path $true "Deterministically mapped NuGet package sources are not excluded by '$settingsFile'."
+    }
+
+    foreach ($path in @(
+        "/_/src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs",
+        "\_\src\Platform\Microsoft.Testing.Platform\Helpers\TaskExtensions.cs",
+        "/_/src/Polyfills/Index.cs",
+        "\_\src\Polyfills\Index.cs"
+    )) {
+        Assert-PatternMatch $sourceExcludes $path $false "Remapped production sources must remain measurable in '$settingsFile'."
+    }
 
     foreach ($path in @(
         "C:\coverage-validation\src\Polyfills\Index.cs",
