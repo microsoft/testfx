@@ -752,12 +752,12 @@ public sealed class OpenTelemetryProviderExtensionsTests
                 List<Activity> exported = [];
                 CapturingActivityExporter exporter = new(exported, namePrefix);
 
-                // The built TracerProvider (disposed by the using below) takes ownership of the processor added through
-                // AddProcessor and disposes it — and the exporter it wraps — on Dispose, so there is no undisposed local.
+                // Also cover provider-construction failures; SDK processor disposal is idempotent.
+                using SimpleActivityExportProcessor activityProcessor = new(exporter);
                 using (TracerProvider tracerProvider = Sdk.CreateTracerProviderBuilder()
                     .AddTestingPlatformInstrumentation()
                     .ConfigureResource(resource => resource.AddTestingPlatformResource())
-                    .AddProcessor(new SimpleActivityExportProcessor(exporter))
+                    .AddProcessor(activityProcessor)
                     .Build())
                 {
                     using var service = new OpenTelemetryPlatformService();
@@ -784,6 +784,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
                     handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
                 }
 
+                Assert.AreEqual(1, exporter.ShutdownCount);
                 Activity activity = exported.Single();
                 Assert.AreEqual(namePrefix + "MyTest", activity.GetTagItem("test.case.name"));
                 Assert.AreEqual("MyNamespace.MyTests.MyTest", activity.GetTagItem("code.function.name"));
