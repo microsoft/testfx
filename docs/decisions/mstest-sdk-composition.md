@@ -718,3 +718,27 @@ This correction validates MSBuild/launcher composition and forced-loose process
 contracts, not new real UI activation or rendered IDE behavior. Exact new-head
 remote CI remains required; the old Windows Release failure and external top
 layer brownout/merge-ref blockers are not silently reclassified as green.
+
+## 2026-11-17 conflict and review follow-up
+
+The remote PR head was rewritten to
+`0afc810d4d0369a157c1461158fd6aab713825a7` after this workspace last ran.
+The clean local tip was preserved before aligning with that authoritative
+head. Merge the current intended package-layer base,
+`d5829b074608323d4e53f6bdce3da20a8154793c`, without a force-push.
+Retain this layer's composition checks, private helper references, late
+source-generation opt-in, and target-time hook registration. Preserve the
+base's RID-specific controller layouts, architecture/runtime-root tests, and
+retry-fixture rendezvous changes. Newly inherited UI-property fixtures must
+use `MSTest.WinUI` and its Windows TFM, just like this layer's existing fixtures;
+the forced-loose ordinary controls remain ordinary.
+
+Four remaining review comments concern append-only paths in
+`PackagedAppIntegrationTests`. Use the existing `Path.Join` convention for
+the reviewed output/helper paths; do not introduce redundant validation for
+constant filenames or the closed TFM mapping. The previously addressed packed
+hook test and late-helper regression stay intact and are selected again.
+Validation will use a fresh current pack, short task-owned consumer caches,
+the existing assembly parallelism, paired green-before/green-after path cases,
+and focused packaged/SDK regression cases. No new test framework, shipping API,
+UI activation behavior, or unrelated native work is introduced.

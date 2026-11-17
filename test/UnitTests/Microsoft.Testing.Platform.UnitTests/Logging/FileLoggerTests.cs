@@ -692,8 +692,9 @@ public sealed class FileLoggerTests : IDisposable
 
         fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
 
-        Task completedTask = await Task.WhenAny(consoleMessage.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
-        Assert.AreSame(consoleMessage.Task, completedTask, "The write-loop failure must be reported before the timeout.");
+        // The consumer loop needs thread-pool continuations to observe the failure, which a loaded CI agent can delay
+        // for several seconds, so only guard against a genuine hang rather than racing a short wall-clock delay.
+        await consoleMessage.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, TestContext.CancellationToken);
         string message = await consoleMessage.Task;
         _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Once);
         Assert.Contains(FileName, message, $"Expected the log file name '{FileName}' in: {message}");

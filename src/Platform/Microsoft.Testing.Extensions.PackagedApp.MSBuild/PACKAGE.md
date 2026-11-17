@@ -2,7 +2,7 @@
 
 Run packaged Windows test applications from MSBuild through an out-of-process
 Microsoft.Testing.Platform controller. This package supplies shared targets and
-complete, framework-dependent `win-x64` controller layouts for .NET 10 and .NET 11.
+complete, framework-dependent `win-x64` and `win-arm64` controller layouts for .NET 10 and .NET 11.
 The controller is an executable, not code loaded into MSBuild, so desktop
 `.NET Framework` MSBuild and `dotnet msbuild` use the same process contract.
 
@@ -147,8 +147,17 @@ The legacy executable name `mstest-appmodel-controller.exe` and the
 `MSTEST_APPMODEL_CONTROLLER_EXTENSIONS` and `TESTINGPLATFORM_PACKAGEDAPP_TARGET`
 environment identifiers are intentionally preserved for compatibility.
 
-The x64 controller needs a .NET 10 or later runtime (roll-forward is enabled) and
-Windows 10 19041 or later. The application itself may use another architecture.
+The controller needs a .NET 10 or later runtime of its own architecture (roll-forward is enabled) and
+Windows 10 19041 or later. The targets use the native `win-arm64` controller when the .NET SDK in use
+is ARM64 and the `win-x64` controller otherwise, so an ARM64 machine needs no x64 runtime or emulation.
+Set `TestingPlatformPackagedAppControllerArchitecture` to `x64` or `arm64` to choose explicitly. The
+application itself may use another architecture.
+Native SDK launches use the controller architecture for runtime-root resolution when it matches
+the SDK. Direct MTP launches forward the SDK's runtime location from `DOTNET_HOST_PATH` when the
+caller has not provided the corresponding `DOTNET_ROOT_<ARCH>` and
+`TestingPlatformDisableAppHostDotnetRoot` is not enabled. If an explicitly selected controller
+architecture differs from the SDK, set `DOTNET_ROOT_ARM64` or `DOTNET_ROOT_X64` to a private
+installation containing that architecture's .NET 10 or later runtime.
 Unsigned layouts need Developer Mode or sideloading. UWP compilation continues
 to require the Visual Studio UWP workload.
 

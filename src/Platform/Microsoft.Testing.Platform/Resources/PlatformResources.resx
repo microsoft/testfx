@@ -917,10 +917,6 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
     <value>from</value>
     <comment>from followed by a file name to point to the file from which test is originating</comment>
   </data>
-  <data name="TerminalNoProgressDeprecatedWarning" xml:space="preserve">
-    <value>warning: --no-progress is deprecated; use --progress off instead.</value>
-    <comment>{Locked="--no-progress"}{Locked="--progress off"}</comment>
-  </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
     <value>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
     <comment>{Locked=&quot;timeout&quot;}{Locked=&quot;&apos;ms&apos;&quot;}{Locked=&quot;mil(s)&quot;}{Locked=&quot;millisecond(s)&quot;}{Locked=&quot;&apos;s&apos;&quot;}{Locked=&quot;sec(s)&quot;}{Locked=&quot;&apos;second(s)&apos;&quot;}{Locked=&quot;&apos;m&apos;&quot;}{Locked=&quot;min(s)&quot;}{Locked=&quot;minute(s)&quot;}{Locked=&quot;&apos;h&apos;&quot;}{Locked=&quot;hour(s)&quot;}{Locked=&quot;&apos;d&apos;&quot;}{Locked=&quot;day(s)&quot;}{Locked=&quot;500ms&quot;}{Locked=&quot;5400s&quot;}{Locked=&quot;90m&quot;}{Locked=&quot;1.5h&quot;}{Locked=&quot;1d&quot;}</comment>

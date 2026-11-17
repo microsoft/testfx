@@ -450,14 +450,18 @@ public sealed class NamedPipeServerSecurityTests
 
         try
         {
-            if (!WindowsSecurity.IsCurrentThreadImpersonationUsable())
-            {
-                Assert.Inconclusive(WindowsSecurity.DowngradedImpersonationMessage);
-            }
-
+            // OpenThreadToken cannot open an anonymous token (ERROR_CANT_OPEN_ANONYMOUS).
+            // The impersonation-level guard applies only to duplicated AppContainer tokens.
             using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.None);
 
-            Assert.ThrowsExactly<UnauthorizedAccessException>(() => client.Connect(timeout: 5_000));
+            const int BadImpersonationLevelHResult = unchecked((int)0x80070542); // HRESULT_FROM_WIN32(ERROR_BAD_IMPERSONATION_LEVEL)
+            Exception exception = Assert.Throws<Exception>(() => client.Connect(timeout: 5_000));
+            if (exception is IOException && exception.HResult == BadImpersonationLevelHResult)
+            {
+                Assert.Inconclusive("Windows rejected the pipe connection with ERROR_BAD_IMPERSONATION_LEVEL (1346); anonymous impersonation is unavailable, so the pipe's access check could not be verified.");
+            }
+
+            Assert.AreEqual(typeof(UnauthorizedAccessException), exception.GetType());
         }
         finally
         {

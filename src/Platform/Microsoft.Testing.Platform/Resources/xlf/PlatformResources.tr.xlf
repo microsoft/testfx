@@ -1262,11 +1262,6 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
         <target state="translated">Telemetri sağlayıcısı zaten ayarlanmış</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">uyarı: --no-progress kullanım dışıdır; bunun yerine --progress off kullanın.</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">Bir 'ITestFrameworkInvoker' fabrikası zaten ayarlanmış</target>

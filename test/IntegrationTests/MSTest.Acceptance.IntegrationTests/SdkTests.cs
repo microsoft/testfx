@@ -1532,6 +1532,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
     [DataRow(false)]
     [DataRow(true)]
     public async Task MSTestSdk_WinUIWithUwpTools_RejectsConflictingApplicationModels(bool useVSTest)
