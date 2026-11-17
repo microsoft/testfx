@@ -129,6 +129,10 @@
     <value>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</value>
     <comment>{0} is the deployment item path. {1} is the output directory.</comment>
   </data>
+  <data name="DeploymentItemNotSupportedForUi" xml:space="preserve">
+    <value>DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</value>
+    <comment>Do not localize the API name {Locked="DeploymentItemAttribute"} or the application-model names {Locked="UWP"}{Locked="WinUI"}.</comment>
+  </data>
   <data name="DeploymentErrorFailedToAccesOutputDirectory" xml:space="preserve">
     <value>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</value>
     <comment>{0} is the deployment item path. {1} is the output directory. {2} is the exception type. {3} is the exception message.</comment>

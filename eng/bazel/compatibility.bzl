@@ -13,7 +13,7 @@ _PROJECTS = {
         "crashdump",
         "ctrf",
         "framework",
-        "framework_extensions",
+        "framework_compatibility",
         "github_report",
         "hangdump",
         "hosting",
@@ -36,7 +36,7 @@ _PROJECTS = {
     "net462": [
         "adapter",
         "framework",
-        "framework_extensions",
+        "framework_compatibility",
         "mstest_hosting",
         "platform_services",
     ],

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="12.0.0-beta.26563.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="12.0.0-beta.26565.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d3c2ebbd7d9a81318117839335ba7e8540c3d77f</Sha>
+      <Sha>28463b67ff4f7c01701c2a24fb23d36af978923c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="12.0.0-beta.26563.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="12.0.0-beta.26565.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d3c2ebbd7d9a81318117839335ba7e8540c3d77f</Sha>
+      <Sha>28463b67ff4f7c01701c2a24fb23d36af978923c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="12.0.0-beta.26563.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="12.0.0-beta.26565.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d3c2ebbd7d9a81318117839335ba7e8540c3d77f</Sha>
+      <Sha>28463b67ff4f7c01701c2a24fb23d36af978923c</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.13.0-preview.26563.2">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
@@ -21,13 +21,13 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>8fc900ee2501f8892e89a7ecd92d973d2c8b08e0</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="5.0.0-preview.26563.12">
+    <Dependency Name="MSTest" Version="5.0.0-preview.26566.10">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>c13a89ea4ba21cf01b4e9286dd5f5c4710570847</Sha>
+      <Sha>deac74e7492726957bb878ce27b9c6a1114d1beb</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="3.0.0-preview.26563.12">
+    <Dependency Name="Microsoft.Testing.Platform" Version="3.0.0-preview.26566.10">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>c13a89ea4ba21cf01b4e9286dd5f5c4710570847</Sha>
+      <Sha>deac74e7492726957bb878ce27b9c6a1114d1beb</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

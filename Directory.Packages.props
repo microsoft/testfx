@@ -150,6 +150,11 @@
     -->
     <PackageVersion Include="Nerdbank.MessagePack" Version="1.4.104" />
     <PackageVersion Include="MessagePack" Version="3.1.12" />
+    <!--
+      Keep the analyzer-testing dependency aligned with the runtime packages.
+      Transitive pinning is disabled, so consumers also need an explicit PackageReference.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />    
     <PackageVersion Include="System.CommandLine" Version="3.0.0" />
     <PackageVersion Include="System.Management" Version="$(DotNetRuntimePackagesVersion)" />

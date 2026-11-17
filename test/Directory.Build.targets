@@ -170,7 +170,7 @@
         <CoverageAssemblyName>%(ProjectReference.Filename)</CoverageAssemblyName>
         <!-- These projects use assembly names that differ from their project file names. -->
         <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework' ">MSTest.TestFramework</CoverageAssemblyName>
-        <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework.Extensions' ">MSTest.TestFramework.Extensions</CoverageAssemblyName>
+        <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework.Compatibility' ">MSTest.TestFramework.Extensions</CoverageAssemblyName>
       </_CodeCoverageProjectReference>
       <!-- Some unit suites compile product implementations as linked sources under test-only conditional symbols. -->
       <_CodeCoverageProjectReference Include="$(MSBuildProjectFullPath)"
@@ -197,6 +197,10 @@
       <!-- Anchor inside the function so its result is not normalized as an absolute path on Unix. -->
       <_CodeCoverageExcludedSource Include="Packages" Condition=" '$(NuGetPackageRoot)' != '' ">
         <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(NuGetPackageRoot)').Insert(0, '^')).*</Pattern>
+      </_CodeCoverageExcludedSource>
+      <!-- Deterministic (CI) builds map the repository to /_/ and other source roots, such as NuGet package folders, to /_1/, /_2/, ... -->
+      <_CodeCoverageExcludedSource Include="MappedPackages">
+        <Pattern>^[\\/]_\d+[\\/].*</Pattern>
       </_CodeCoverageExcludedSource>
       <_CodeCoverageExcludedSource Include="Artifacts">
         <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(ArtifactsDir)').Insert(0, '^')).*</Pattern>

@@ -263,7 +263,7 @@ function New-CoverageFixture {
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\$(FixtureModule).csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework.Compatibility.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Infrastructure.csproj" IsTestInfrastructure="true" />
     <ProjectReference Include="$(RepoRoot)test\Other.Tests.csproj" />
   </ItemGroup>
@@ -323,7 +323,9 @@ function Get-ExpectedCoverageBytes {
             '        <Source>^[\\/]_[\\/]src[\\/].*</Source>', '      </Include>'))
     }
     $lines.Add('      <Exclude>')
-    foreach ($path in @($Packages, $Artifacts, "$($Fixture.Root)\test\Utilities\Microsoft.Testing.TestInfrastructure\")) {
+    $lines.Add("        <Source>$(ConvertTo-XmlText ("^" + [regex]::Escape($Packages) + ".*"))</Source>")
+    $lines.Add('        <Source>^[\\/]_\d+[\\/].*</Source>')
+    foreach ($path in @($Artifacts, "$($Fixture.Root)\test\Utilities\Microsoft.Testing.TestInfrastructure\")) {
         $pattern = ConvertTo-XmlText ("^" + [regex]::Escape($path) + ".*")
         $lines.Add("        <Source>$pattern</Source>")
     }

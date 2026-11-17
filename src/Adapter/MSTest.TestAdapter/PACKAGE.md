@@ -24,17 +24,12 @@ Supported platforms:
 
 - .NET 4.6.2+
 - .NET 10.0+
-- .NET 10.0 Windows.18362+ (WinUI)
-- UWP 10.0.16299
-- UWP 10.0.17763 with .NET 10+
 
-## Classic UWP dependencies
-
-The classic UWP adapter payload contains the adapter and its platform-services
-assembly. Microsoft.Testing.Platform and its extensions are restored from their
-own NuGet packages rather than duplicated inside this package. The classic UWP
-bootstrap also depends on the TRX reporting and Retry packages. The adapter's
-build targets include the resolved runtime assemblies in the AppX deployment.
+Use `MSTest.Uwp` for classic or modern UWP applications and `MSTest.WinUI` for
+packaged or unpackaged WinUI applications. Those packages own their matching
+UI attributes, adapters, platform services and satellites. This ordinary adapter
+no longer switches assemblies based on `UseWinUI` or `UseUwpTools`; do not
+combine it with either UI package.
 
 ## F# modules
 

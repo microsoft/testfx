@@ -1,26 +1,7 @@
-﻿<Project>
-
-  <PropertyGroup>
-    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
-  </PropertyGroup>
-
-  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
-    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
-    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -28,13 +9,13 @@
     <AssemblyName>MSTest.TestFramework</AssemblyName>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
-    <!-- TestFramework.Extensions.csproj is what we actually package as "MSTest.TestFramework", and it bundles
-         this assembly into its lib folder. This project is never packed on its own (IsPackable=false) and uses a
-         distinct PackageId so it is not seen as a circular/self reference. Because Extensions references it
-         directly, NuGet would still surface it as a package dependency, so TestFramework.Extensions.csproj
-         removes this "NotPublishable" dependency from the produced package (see _RemoveNonPublishableCoreDependency). -->
-    <PackageId>NotPublishable</PackageId>
-    <IsPackable>false</IsPackable>
+    <PackageId>MSTest.TestFramework</PackageId>
+    <IsPackable>true</IsPackable>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddMSTestCompatibilityFacade</TargetsForTfmSpecificContentInPackage>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework Framework</PackageTags>
+    <PackageDescription><![CDATA[Write tests and shared test libraries with the MSTest framework. Add MSTest.TestAdapter to run ordinary tests, MSTest.Uwp for UWP tests, or MSTest.WinUI for WinUI tests.
+
+$(CommonProductDescription)]]></PackageDescription>
     <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>
 
     <!-- Treat "missing XML doc comment for publicly visible type or member" as a build error so
@@ -64,7 +45,7 @@
     <AdditionalFiles Include="InternalAPI\net462\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' AND '$(TargetFramework)' != '$(WinUiMinimum)' ">
+  <ItemGroup>
     <AdditionalFiles Include="PublicAPI\desktop\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\desktop\PublicAPI.Unshipped.txt" />
     <AdditionalFiles Include="InternalAPI\desktop\InternalAPI.Shipped.txt" />
@@ -77,6 +58,15 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" />
+    <None Include="MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\MSTest.TestFramework.targets" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="Internal\RoslynHashCode.cs" />
     <!-- Single source of truth for CI environment detection lives in Microsoft.Testing.Platform. The
@@ -84,6 +74,18 @@
          namespace, internal ctor, static Instance helper, string.IsNullOrEmpty). -->
     <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\CIEnvironmentDetector.cs" Link="Internal\CIEnvironmentDetector.cs" />
   </ItemGroup>
+
+  <Target Name="_AddMSTestCompatibilityFacade">
+    <PropertyGroup>
+      <_MSTestCompatibilityOutput>$(ArtifactsBinDir)TestFramework.Compatibility\$(Configuration)\$(TargetFramework)\MSTest.TestFramework.Extensions</_MSTestCompatibilityOutput>
+    </PropertyGroup>
+    <Error Condition=" !Exists('$(_MSTestCompatibilityOutput).dll') or !Exists('$(_MSTestCompatibilityOutput).xml') "
+           Text="Build TestFramework.Compatibility for $(TargetFramework) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).dll" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.dll" />
+      <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).xml" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.xml" />
+    </ItemGroup>
+  </Target>
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);TESTFRAMEWORK_CI_DETECTOR</DefineConstants>
@@ -103,7 +105,6 @@
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Extensions.Hosting" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
@@ -120,8 +121,5 @@
          structs (see GenerateAssertInterpolatedStringAppendMethodsAttribute). -->
     <ProjectReference Include="..\TestFramework.SourceGeneration\TestFramework.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
-
-  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
 </Project>

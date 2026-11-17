@@ -1262,11 +1262,6 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">원격 분석 공급자가 이미 설정되어 있습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalNoProgressDeprecatedWarning">
-        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="translated">경고: --no-progress는 더 이상 사용되지 않습니다. 대신 --progress off를 사용하세요.</target>
-        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">'ITestFrameworkInvoker' 팩터리가 이미 설정됨</target>

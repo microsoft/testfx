@@ -461,11 +461,6 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
         <target state="translated">--ansi ожидает один параметр со значением "auto", "on" (или "true", "enable", "1") либо "off" (или "false", "disable", "0").</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
-      <trans-unit id="TerminalNoProgressOptionDescription">
-        <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="translated">[Не рекомендуется, используйте вместо этого "--progress off"] Отключить вывод информации о ходе выполнения на экран.</target>
-        <note>{Locked="--progress off"}</note>
-      </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
@@ -498,21 +493,19 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <target state="translated"> | тесты пока не завершены</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalProgressModeOptionDescription">
-        <source>Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).
-This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="translated">Управляйте тем, отображаются ли сведения о ходе выполнения на экране.
-Допустимые значения: "auto" (по умолчанию), 'on' (также принимает "true", "enable", "1") и "off" (также принимает "false", "disable", "0").
-"auto" показывает ход выполнения, если терминал не может обновляться на месте (например, с --ansi off или в CI).
-Этот параметр имеет приоритет над устаревшим флагом --no-progress.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}{Locked="--no-progress"}</note>
-      </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">Параметр --progress ожидает один параметр со значением "auto", "on" (или "true", "enable", "1") или "off" (или "false", "disable", "0").</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressReportingOptionDescription">
+        <source>Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
         <source>[slow] still running after {0}: {1}</source>
