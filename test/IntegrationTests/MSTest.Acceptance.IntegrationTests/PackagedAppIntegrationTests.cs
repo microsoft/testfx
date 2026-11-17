@@ -158,7 +158,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task ExplicitConsumer_SelectsAndStagesControllerForRequestedArchitecture(string arguments, string runtimeIdentifier)
     {
         using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", "<UseWinUI>true</UseWinUI>");
-        string executable = Path.Combine(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.exe");
+        string executable = Path.Join(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.exe");
 
         // Explicitly requesting arm64 on a computer that cannot run it is a misconfiguration the targets report as a warning.
         bool warnsUnrunnableController = arguments.Contains("TestingPlatformPackagedAppControllerArchitecture=ARM64", StringComparison.OrdinalIgnoreCase)
@@ -222,7 +222,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     {
         _ = helper;
         using TestAsset asset = await GenerateConsumerAsync(package, properties);
-        string executable = Path.Combine(GetConsumerOutputDirectory(asset, package), "PackagedConsumer.exe");
+        string executable = Path.Join(GetConsumerOutputDirectory(asset, package), "PackagedConsumer.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
@@ -339,7 +339,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments(bool crossVolume, bool explicitMtpRoot)
     {
         string sdkRoot = Path.Combine(RootFinder.Find(), ".dotnet");
-        string intermediatePath = Path.Combine(Path.GetTempPath(), $"testfx-controller-{Guid.NewGuid():N}");
+        // Leave room for the Windows TFM and app-relative runtime junction within Windows loader path limits.
+        string intermediatePath = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         if (crossVolume && string.Equals(Path.GetPathRoot(intermediatePath), Path.GetPathRoot(sdkRoot), StringComparison.OrdinalIgnoreCase))
         {
             Assert.Inconclusive("Cross-volume controller validation requires the system temporary directory and SDK on different volumes.");
@@ -437,7 +438,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task ComputeRunArguments_PreservesExplicitOverrides(string properties, string expectedCommand)
     {
         using TestAsset asset = await GenerateConsumerAsync("MSTest.WinUI", $"<UseWinUI>true</UseWinUI>{properties}");
-        string executable = Path.Combine(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.exe");
+        string executable = Path.Join(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
@@ -710,7 +711,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, result.ToString());
-        Assert.IsFalse(File.Exists(Path.Combine(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.launcher.config.json")));
+        Assert.IsFalse(File.Exists(Path.Join(GetConsumerOutputDirectory(asset, "MSTest.WinUI"), "PackagedConsumer.launcher.config.json")));
     }
 
     [TestMethod]
@@ -884,7 +885,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         => package is "MSTest.WinUI" or "MSTest.Uwp" ? WindowsTargetFramework : "net10.0";
 
     private static string GetConsumerOutputDirectory(TestAsset asset, string package)
-        => Path.Combine(asset.TargetAssetPath, "bin", "Debug", GetConsumerTargetFramework(package));
+        => Path.Join(asset.TargetAssetPath, "bin", "Debug", GetConsumerTargetFramework(package));
 
     private static Task<TestAsset> GenerateConsumerAsync(
         string package, string properties, string outcome = "Passed", string extraReferences = "", bool multiTarget = false)

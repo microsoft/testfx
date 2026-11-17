@@ -742,3 +742,85 @@ Validation will use a fresh current pack, short task-owned consumer caches,
 the existing assembly parallelism, paired green-before/green-after path cases,
 and focused packaged/SDK regression cases. No new test framework, shipping API,
 UI activation behavior, or unrelated native work is introduced.
+
+The first current-pack selection passed 129 of 131 cases. Both new cross-volume
+controller rows failed to load a runtime assembly through a 261-character
+junction path after adopting the required Windows TFM. The actual SDK file
+exists and the host trace identifies the long app-relative path. Remove only
+the descriptive prefix from the per-case GUID temporary-directory name,
+retaining unique ownership and all runtime-root, launch-profile, incrementality,
+opt-out, and cleanup assertions. This is a fixture path-budget correction,
+not a production change or regression-sensitivity failure.
+
+### Executed review validation
+
+The resolved merge is `1b851be53b35c880ddf41a9ba7a60cbe95c8fdff`.
+The common/UWP adapter targets, SDK targets, and platform props retain the exact
+`0afc810d4d0369a157c1461158fd6aab713825a7` bytes. The retry fixture equals the
+new parent, not an SDK-layer modification. The final fixture patch SHA-256 is
+`6CD402FF9509332EB313E48D400B6C5D8F51479308116D378FF6C168A4E86EFE`;
+fixture source is `07D0D982C74580999639032554782F3124288A21B64A1260C1DB9869F6D82CDA`
+and the rebuilt acceptance DLL is
+`B1C9842DE9CFF21641CB244F01D42C244E3EC8B12CBBF51F857C469E32544453`.
+
+Both merged-state and reviewed-state packs use SDK
+`12.0.100-alpha.1.26562.108`, Release, desktop MSBuild, and the 43 actual source
+entries in `TestFx.slnx` plus the exact acceptance owner. Each pack exits **0**,
+with **0 warnings/errors**, and passes package-content/metadata validation:
+
+```powershell
+.\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\review-20261117\pack.slnf -bl
+```
+
+After shortening only the fixture's temporary path, rebuild the owning project;
+no shipping input or packed archive changes:
+
+```powershell
+.\build.cmd -c Release -msbuildEngine vs -projects test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -bl
+```
+
+That build also exits **0**, **0 warnings/errors**. The final source-plan and
+independent JSON discovery agree on **131 distinct cases**: the full packaged
+class's 88 cases plus 43 focused SDK/package/compatibility cases. Execute with
+normal method-level CPU-count parallelism and a fresh short marked cache,
+`artifacts\rv17d`. Only the selected build-only classic UWP case needs the
+command-local `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1`; no application registration
+or activation is performed.
+
+```powershell
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$filter = 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.PackagedAppIntegrationTests|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_ExplicitApplicationModel_SelectsCompositionBeforeLateToolingImports|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.ExplicitPackages_RejectConflictingAdaptersBeforeCompilation|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_Helper_KeepsOnlyRequiredCompileTimeComposition|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_MixedOrdinaryAndUiTargetFrameworks_SelectOneCompositionPerInnerFramework|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SourceGenerationNonAotTests.MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.WindowsApplicationModelPackageTests.PackedMSTestUwp_TargetsRegisterMSTestBuilderHook|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.WindowsApplicationModelPackageTests.PackedIntegration_AppModelControllerContainsCompleteMtpOnlyRuntime|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.WindowsApplicationModelPackageTests.PackedPackages_TargetOnlySupportedNetFrameworks|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_VSTest|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone|FullyQualifiedName=MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_CentralPackageManagement_Standalone'
+$results = Join-Path $PWD 'artifacts\validation\review-20261117\focused-rerun'
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --list-tests json --filter $filter -p:UsingDotNetTest=true '-p:TestingPlatformCommandLineArguments=' '-p:TestRunnerAdditionalArguments=' "-bl:$results\discovery.binlog"
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build --filter $filter -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" --show-test-results failed
+```
+
+Discovery and execution exit **0**; **131 executed/passed, 0 failed/skipped**.
+The existing execution gate reconciles fresh TRX identities/times/counters, and
+JUnit/CTRF independently contain the same 131 passing cases. The earlier failed
+131-case run remains separate and is not relabeled green.
+
+| Requirement | Evidence |
+| --- | --- |
+| Four path comments and matching inherited path site | Identical selectors/assertions for `ComputeRunArguments_SelectsSidecarOnlyForPackagedMtpApplication` (14), `ComputeRunArguments_PreservesExplicitOverrides` (2), `TestExplorer_PreservesExplicitLauncherOptOuts` (3), and `ExplicitConsumer_SelectsAndStagesControllerForRequestedArchitecture` (6): **25 green before / 25 green after**, repeated against the final DLL; all exits 0, no skips. |
+| Preserve merged architecture/runtime-root behavior | All 88 `PackagedAppIntegrationTests` cases pass, including the four `DotnetRun_CrossArchitectureApplicationPreservesLaunchProfileArguments` rows, cross-volume junction cleanup, caller launchers, cancellation, failure/empty results, and mixed-TFM aggregation. |
+| Keep prior review fixes and composition contracts | The 43 selected helper/late-CPM/model/conflict/inner-TFM/classic/packed-hook/package-layout/ordinary-runner cases pass; exact names are in the selector above. |
+
+**Test-value evidence:** path construction is behavior-preserving; green/green
+is the appropriate comparison, not a fabricated failing production mutation.
+The new-base fixture path correction keeps every existing assertion and both
+cross-volume rows enabled. Local Windows proof is not final-head Linux or CI
+proof, real UI activation, or native/Bazel validation.
+
+All ten selected current package archives match the effective `rv17d` cache.
+Examples: SDK `45BB940B7669D920CBC8BD2F7208E2F898FD2B39FC0FE47B2227B420470032D4`,
+WinUI `1E3C26E8E5DB11422D26D11FCD00D1594AAEE583321A86008577BA7726FA0A3C`,
+and controller integration
+`B42DAFFA466D5CC7DC08FAF86A87C16A303DA3EA8973FECF2EB7233E4591D082`.
+MSTest is `5.0.0-dev`; platform/controller packages are `3.0.0-dev`.
+The 126 generated assets files use that exact cache; all 18 copied net462
+core/adapter/services DLLs match current packages. Four successful app-relative
+runtime trace markers are retained, and the cross-volume GUID intermediates
+are removed. Logs, binlogs, reports, plans, hashes, and resolved identities stay
+under `artifacts\validation\review-20261117`; they are local, not published CI
+artifacts. Shared dependency caches and borrowed SDKs remain untouched.
