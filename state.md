@@ -17,7 +17,7 @@
 - Task 4 (Maintain PRs): 2026-10-19 (confirmed no open perf-improver PRs via search_pull_requests, 0 results)
 - Task 5 (Comment Issues): 2026-10-19 (no open performance-labeled issues found via list_issues label:performance state:OPEN; reviewed #3495 again via get_comments - no new human comments since 2026-07-30 beyond the efficiency-improver bot comment, skipped per anti-spam policy)
 - Task 6 (Infrastructure): 2026-10-19 (confirmed perf-timing-nightly.yml run #119 (2026-10-19 06:18 UTC, commit ef4ea6d) completed with conclusion=success - 15th consecutive clean nightly run since PR #11743 regression-detection script merged, infra remains solid, no further action needed)
-- Task 7 (Monthly Summary): 2026-10-19 (updated October issue #11691 - body was clean again, no duplication bug observed, did a normal update)
+- Task 7 (Monthly Summary): 2026-11-17 (rolled over: closed #11691, created November issue)
 
 Full history of individual PRs/fixes from July-August 2026 and early September 2026 is condensed in the "September 2026 Runs" and "August 2026 Runs Summary" sections below (all cross-referenced by PR number).
 
