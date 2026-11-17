@@ -31,6 +31,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
 
+  <!-- The template is an unsigned SDK apphost by design. eng/SignCheckExclusionsFile.txt marks it DO-NOT-SIGN. -->
   <Target Name="_CopyPackagedAppControllerAppHostTemplate"
           AfterTargets="CopyFilesToOutputDirectory"
           Condition="'$(AppHostSourcePath)' != ''">

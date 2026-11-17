@@ -1,5 +1,6 @@
 # Expected files of the MSTest.Uwp NuGet package, validated by eng/verify-nupkgs.ps1 after pack.
 # After an intentional package layout change, regenerate with: .\eng\verify-nupkgs.ps1 -configuration <Configuration> -updateBaselines
+# PDB files are excluded because this package only contains them in some build modes.
 Icon.png
 MSTest.Uwp.nuspec
 PACKAGE.md

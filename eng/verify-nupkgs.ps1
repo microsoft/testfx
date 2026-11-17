@@ -130,7 +130,14 @@ function Confirm-NugetPackages {
         "MSTest.Windows.UIAutomation"
     )
     # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
-    $packagesWithOptionalPdbFiles = @("MSTest.Extensions.Hosting", "MSTest.Sdk", "MSTest.Windows.UIAutomation")
+    $packagesWithOptionalPdbFiles = @(
+        "MSTest.Extensions.Hosting"
+        "MSTest.Sdk"
+        "MSTest.TestFramework"
+        "MSTest.Uwp"
+        "MSTest.WinUI"
+        "MSTest.Windows.UIAutomation"
+    )
     $baselineDirectory = Join-Path $PSScriptRoot "package-shapes"
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
