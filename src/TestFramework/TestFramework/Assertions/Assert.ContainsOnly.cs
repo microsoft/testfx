@@ -22,7 +22,7 @@ public sealed partial class Assert
     /// non-matching element. Predicate and enumeration exceptions are not converted into assertion failures.
     /// </remarks>
     /// <exception cref="AssertFailedException">The collection or predicate is null, or an element does not match the predicate.</exception>
-    public static void ContainsOnly<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void ContainsOnly<T>(Func<T, bool> predicate, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => ContainsOnlyCore(predicate, collection, message, predicateExpression, collectionExpression);
 
     /// <summary>
@@ -38,7 +38,7 @@ public sealed partial class Assert
     /// non-matching element. Predicate and enumeration exceptions are not converted into assertion failures.
     /// </remarks>
     /// <exception cref="AssertFailedException">The collection or predicate is null, or an element does not match the predicate.</exception>
-    public static void ContainsOnly(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void ContainsOnly(Func<object?, bool> predicate, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.ContainsOnly");
         CheckParameterNotNull(collection, "Assert.ContainsOnly", nameof(collection));
@@ -62,8 +62,8 @@ public sealed partial class Assert
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
     /// <remarks>An empty array passes. Evaluation stops at the first non-matching element.</remarks>
     /// <exception cref="AssertFailedException">The array or predicate is null, or an element does not match the predicate.</exception>
-    public static void ContainsOnly<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsOnlyCore(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+    public static void ContainsOnly<T>(Func<T, bool> predicate, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsOnlyCore(predicate, (IEnumerable<T>?)collection, message, predicateExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether every element in the collection matches the predicate.
@@ -77,7 +77,7 @@ public sealed partial class Assert
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
     /// <remarks>An empty collection passes. Evaluation stops at the first non-matching element.</remarks>
     /// <exception cref="AssertFailedException">The collection or predicate is null, or an element does not match the predicate.</exception>
-    public static void ContainsOnly<T, TCollection>(Func<T, bool> predicate, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void ContainsOnly<T, TCollection>(Func<T, bool> predicate, [NotNull] TCollection? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T>
         => ContainsOnlyCore(predicate, collection, message, predicateExpression, collectionExpression);
 
@@ -149,7 +149,7 @@ public sealed partial class Assert
     }
 #endif
 
-    private static void ContainsOnlyCore<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message, string predicateExpression, string collectionExpression)
+    private static void ContainsOnlyCore<T>(Func<T, bool> predicate, [NotNull] IEnumerable<T>? collection, string? message, string predicateExpression, string collectionExpression)
     {
         TelemetryCollector.TrackAssertionCall("Assert.ContainsOnly");
         CheckParameterNotNull(collection, "Assert.ContainsOnly", nameof(collection));

@@ -24,10 +24,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T>(T expected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Contains");
-        ContainsCore(expected, collection, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
+        ContainsCore(expected, collection!, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains(object? expected, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Contains");
         ContainsCore(expected, collection, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
@@ -66,10 +66,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T>(T expected, [NotNull] IEnumerable<T>? collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Contains");
-        ContainsCore(expected, collection, comparer, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
+        ContainsCore(expected, collection!, comparer, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
     }
 
     /// <summary>
@@ -87,7 +87,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains(object? expected, [NotNull] IEnumerable? collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Contains");
         ContainsCore(expected, collection, comparer, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
@@ -108,10 +108,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T>(Func<T, bool> predicate, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Contains");
-        ContainsCore(predicate, collection, "Assert.Contains", message, predicateExpression, collectionExpression, shouldContain: true);
+        ContainsCore(predicate, collection!, "Assert.Contains", message, predicateExpression, collectionExpression, shouldContain: true);
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains(Func<object?, bool> predicate, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Contains");
         ContainsCore(predicate, collection, "Assert.Contains", message, predicateExpression, collectionExpression, shouldContain: true);
@@ -145,8 +145,8 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
-    public static void Contains<T>(T expected, T[] collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => Contains(expected, (IEnumerable<T>)collection, message, expectedExpression, collectionExpression);
+    public static void Contains<T>(T expected, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(expected, (IEnumerable<T>?)collection, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified array contains the given element using the specified equality comparer.
@@ -158,8 +158,8 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
-    public static void Contains<T>(T expected, T[] collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => Contains(expected, (IEnumerable<T>)collection, comparer, message, expectedExpression, collectionExpression);
+    public static void Contains<T>(T expected, [NotNull] T[]? collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(expected, (IEnumerable<T>?)collection, comparer, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified array contains an element that matches the given predicate.
@@ -170,8 +170,8 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="predicateExpression">The syntactic expression of predicate as given by the compiler via caller argument expression.</param>
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
-    public static void Contains<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => Contains(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+    public static void Contains<T>(Func<T, bool> predicate, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(predicate, (IEnumerable<T>?)collection, message, predicateExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -190,9 +190,9 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <remarks>The collection may contain null elements even when <paramref name="expected"/> is not null.</remarks>
-    public static void Contains<T, TCollection>(T expected, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T, TCollection>(T expected, [NotNull] TCollection? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T?>
-        => Contains(expected, (IEnumerable<T?>)collection, message, expectedExpression, collectionExpression);
+        => Contains(expected, (IEnumerable<T?>?)collection, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -212,10 +212,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <remarks>The collection may contain null elements even when <paramref name="expected"/> is not null.</remarks>
-    public static void Contains<T, TCollection>(T expected, TCollection collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T, TCollection>(T expected, [NotNull] TCollection? collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T?>
         // Equality comparers accept null operands. Preserve T for compatibility with non-nullable comparers.
-        => Contains(expected, (IEnumerable<T>)collection, comparer, message, expectedExpression, collectionExpression);
+        => Contains(expected, (IEnumerable<T>?)collection, comparer, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains an element that matches the given predicate.
@@ -233,9 +233,9 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T, TCollection>(Func<T, bool> predicate, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T, TCollection>(Func<T, bool> predicate, [NotNull] TCollection? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T>
-        => Contains(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+        => Contains(predicate, (IEnumerable<T>?)collection, message, predicateExpression, collectionExpression);
 
 #endif
 
