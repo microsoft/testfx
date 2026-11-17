@@ -480,6 +480,12 @@ namespace $AssetName$
         {
             Assert.AreEqual("$PackageIdentityName$", Package.Current.Id.Name);
             Assert.IsFalse(string.IsNullOrWhiteSpace(Package.Current.Id.FamilyName));
+            string[] directories = { "TestRunDirectory", "DeploymentDirectory", "ResultsDirectory", "TestRunResultsDirectory", "TestResultsDirectory", "TestTempDirectory" };
+            foreach (string directory in directories)
+            {
+                TestContext.Properties[directory] = "not-a-ui-directory";
+                Assert.IsNull(typeof(TestContext).GetProperty(directory).GetValue(TestContext), directory);
+            }
         }
 
         [UITestMethod]
