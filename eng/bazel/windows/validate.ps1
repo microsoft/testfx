@@ -199,8 +199,17 @@ try {
         if ($report.Scenario -cne $probe.Scenario -or ([Version]$report.Runtime).Major -ne $probe.Major) {
             throw "Consumer scenario/runtime mismatch for $($probe.Name)."
         }
-        $expectedCount = if ($probe.Scenario -eq 'packaged') { 2 } elseif ($probe.Scenario -eq 'desktop') { 3 } else { 4 }
-        if (@($report.SourceAssemblies).Count -ne $expectedCount) { throw "Missing source assembly evidence for $($probe.Name)." }
+        $expectedAssemblies = switch ($probe.Scenario) {
+            'packaged' { @('Microsoft.Testing.Extensions.PackagedApp', 'Microsoft.Testing.Platform') }
+            'desktop' { @('MSTest.Windows.UIAutomation', 'MSTest.TestFramework', 'MSTest.TestFramework.Extensions') }
+            'uwp' { @('MSTest.Uwp', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter', 'MSTest.TestFramework.Extensions') }
+            'winui' { @('MSTest.WinUI', 'MSTest.TestFramework', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter', 'MSTest.TestFramework.Extensions') }
+        }
+        $actualAssemblies = @($report.SourceAssemblies.Name)
+        if ($actualAssemblies.Count -ne $expectedAssemblies.Count -or
+            (Compare-Object ($expectedAssemblies | Sort-Object -CaseSensitive) ($actualAssemblies | Sort-Object -CaseSensitive) -CaseSensitive)) {
+            throw "Unexpected source assembly identities for $($probe.Name)."
+        }
         if (@($report.SourceAssemblies | Where-Object PublicKeyToken -CNE 'b03f5f7f11d50a3a').Count -ne 0) {
             throw "Source assembly public-signing identity mismatch for $($probe.Name)."
         }
@@ -214,10 +223,10 @@ try {
         }
         $windowsAssemblies = @($report.SourceAssemblies | Where-Object {
             $_.Name -in @('Microsoft.Testing.Extensions.PackagedApp', 'MSTest.Windows.UIAutomation') -or
-            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
+            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.Uwp', 'MSTest.WinUI', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
         })
         foreach ($assembly in $windowsAssemblies) {
-            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions')) { '10.0.17763.0' } else { $probe.Platform }
+            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.WinUI')) { '10.0.17763.0' } else { $probe.Platform }
             if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
                 $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."

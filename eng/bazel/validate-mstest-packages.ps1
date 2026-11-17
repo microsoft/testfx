@@ -101,13 +101,12 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
     foreach ($framework in $frameworks) {
         switch ($Id) {
             'MSTest.TestFramework' {
-                foreach ($extension in @('dll', 'xml', 'pdb')) {
-                    $null = Get-ZipHash $Archive "lib/$framework/MSTest.TestFramework.$extension"
-                    $null = Get-ZipHash $Archive "buildTransitive/$framework/MSTest.TestFramework.Extensions.$extension"
+                foreach ($name in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions')) {
+                    foreach ($extension in @('dll', 'xml', 'pdb')) {
+                        $null = Get-ZipHash $Archive "lib/$framework/$name.$extension"
+                    }
                 }
-                if ($Archive.GetEntry("lib/$framework/MSTest.TestFramework.Extensions.dll")) { throw 'Framework.Extensions must not be an implicit lib asset for modern .NET.' }
-                $null = Get-ZipHash $Archive "build/$framework/MSTest.TestFramework.targets"
-                $null = Get-ZipHash $Archive "buildTransitive/$framework/MSTest.TestFramework.targets"
+                $null = Get-ZipHash $Archive 'buildTransitive/MSTest.TestFramework.targets'
             }
             'MSTest.TestAdapter' {
                 foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
@@ -196,7 +195,7 @@ function New-Expectations([string] $Framework, [string] $Path) {
         $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[$id].Path)
         try {
             $names = switch ($id) {
-                'MSTest.TestFramework' { @("lib/$Framework/MSTest.TestFramework.dll", "buildTransitive/$Framework/MSTest.TestFramework.Extensions.dll") }
+                'MSTest.TestFramework' { @("lib/$Framework/MSTest.TestFramework.dll", "lib/$Framework/MSTest.TestFramework.Extensions.dll") }
                 'MSTest.TestAdapter' { @("buildTransitive/$Framework/MSTest.TestAdapter.dll", "buildTransitive/$Framework/MSTestAdapter.PlatformServices.dll") }
                 'Microsoft.Testing.Platform.MSBuild' { @("lib/$Framework/Microsoft.Testing.Extensions.MSBuild.dll") }
                 default { @("lib/$Framework/$id.dll") }
