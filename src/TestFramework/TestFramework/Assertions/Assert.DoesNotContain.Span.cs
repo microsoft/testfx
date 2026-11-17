@@ -28,10 +28,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(T notExpected, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        ContainsCore(notExpected, collection, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
-    }
+        => ContainsCore(notExpected, collection, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified span does not contain the specified item.
@@ -104,10 +101,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(T notExpected, ReadOnlySpan<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        ContainsCore(notExpected, collection, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
-    }
+        => ContainsCore(notExpected, collection, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified span does not contain the specified item.
@@ -182,10 +176,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        ContainsCore(predicate, collection, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
-    }
+        => ContainsCore(predicate, collection, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified span does not contain an element matching the given predicate.

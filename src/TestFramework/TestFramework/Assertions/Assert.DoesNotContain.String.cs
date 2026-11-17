@@ -73,10 +73,7 @@ public sealed partial class Assert
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        ContainsCore(substring, value, comparisonType, "Assert.DoesNotContain", message, substringExpression, valueExpression, shouldContain: false);
-    }
+        => ContainsCore(substring, value, comparisonType, "Assert.DoesNotContain", message, substringExpression, valueExpression, shouldContain: false);
 
     #endregion // DoesNotContain
 
