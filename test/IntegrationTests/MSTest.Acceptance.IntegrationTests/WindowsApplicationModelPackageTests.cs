@@ -321,20 +321,20 @@ public sealed class WindowsApplicationModelPackageTests
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
-    public void PackedMSTestUwp_PropsRegisterMSTestBuilderHook()
+    public void PackedMSTestUwp_TargetsRegisterMSTestBuilderHook()
     {
         string packagePath = GetExactCurrentPackagePath("MSTest.Uwp");
         using ZipArchive archive = ZipFile.OpenRead(packagePath);
-        ZipArchiveEntry propsEntry = archive.GetEntry("buildTransitive/uap10.0.16299/MSTest.Uwp.props")
-            ?? throw new AssertFailedException($"Package '{packagePath}' does not contain the classic UWP props.");
-        using var reader = new StreamReader(propsEntry.Open());
-        string props = reader.ReadToEnd();
+        ZipArchiveEntry targetsEntry = archive.GetEntry("buildTransitive/uap10.0.16299/MSTest.Uwp.targets")
+            ?? throw new AssertFailedException($"Package '{packagePath}' does not contain the classic UWP targets.");
+        using var reader = new StreamReader(targetsEntry.Open());
+        string targets = reader.ReadToEnd();
 
-        Assert.Contains("031F8871-2660-4208-8F6B-FC142B40ABFF", props, propsEntry.FullName);
+        Assert.Contains("031F8871-2660-4208-8F6B-FC142B40ABFF", targets, targetsEntry.FullName);
         Assert.Contains(
             "Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook",
-            props,
-            propsEntry.FullName);
+            targets,
+            targetsEntry.FullName);
     }
 
     [TestMethod]
