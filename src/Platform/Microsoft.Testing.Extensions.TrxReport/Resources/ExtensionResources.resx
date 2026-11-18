@@ -274,6 +274,26 @@ Example: 'MyReport_{tfm}.trx'.</value>
     <value>Enable generating TRX report.</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
+  <data name="TrxInvalidTestResultsErrorMessage" xml:space="preserve">
+    <value>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</value>
+    <comment>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxInvalidTestResultsDetailsHeader" xml:space="preserve">
+    <value>Details for the authors of the reporting component:</value>
+    <comment>Header of the technical details listed after this line.</comment>
+  </data>
+  <data name="TrxInvalidTestResultDuplicateProperties" xml:space="preserve">
+    <value>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</value>
+    <comment>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</comment>
+  </data>
+  <data name="TrxInvalidTestResultConflictingTestDefinitionName" xml:space="preserve">
+    <value>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</value>
+    <comment>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</comment>
+  </data>
+  <data name="TrxInvalidTestResultsMoreDetails" xml:space="preserve">
+    <value>... and {0} more omitted test result(s).</value>
+    <comment>{0} is the number of omitted test results whose details are not listed.</comment>
+  </data>
   <data name="UnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Requests of type '{0}' is not supported</value>
     <comment>{0} is the unsupported request type name.</comment>

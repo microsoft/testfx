@@ -31,6 +31,20 @@ internal static class TrxTestResultExtractor
     /// </summary>
     public static (TrxTestResult Result, bool WasTruncated) Extract(TestNodeUpdateMessage message)
     {
+        (TrxTestResult result, bool wasTruncated, IReadOnlyList<(string PropertyType, int Count)>? duplicateProperties) = ExtractAndValidate(message);
+        return duplicateProperties is [var firstDuplicate, ..]
+            ? throw new InvalidOperationException($"Found multiple properties of type '{firstDuplicate.PropertyType}'.")
+            : (result, wasTruncated);
+    }
+
+    /// <summary>
+    /// Same as <see cref="Extract(TestNodeUpdateMessage)"/>, but instead of throwing when a property type that TRX
+    /// can only represent once is present several times on the same message, reports every such type (with its
+    /// number of occurrences) so that the caller can surface the producer bug without crashing the test session.
+    /// When duplicates are reported, the returned result must not be rendered.
+    /// </summary>
+    public static (TrxTestResult Result, bool WasTruncated, IReadOnlyList<(string PropertyType, int Count)>? DuplicateProperties) ExtractAndValidate(TestNodeUpdateMessage message)
+    {
         TestNode testNode = message.TestNode;
 
         TestNodeStateProperty state = testNode.Properties.Single<TestNodeStateProperty>();
@@ -39,8 +53,8 @@ internal static class TrxTestResultExtractor
         // Single-pass collection of all non-state properties: replaces 7 × SingleOrDefault<T>()
         // + 2 × OfType<T>() with one GetStructEnumerator() walk, saving 8 linked-list traversals
         // and 2 array allocations per test result. Singleton-typed properties use the local
-        // GetSingleOrDefaultValue helper to preserve the throw-on-duplicate invariant that
-        // SingleOrDefault<T>() provided; TestMetadataProperty and FileArtifactProperty are
+        // GetSingleOrDefaultValue helper to detect duplicates (which SingleOrDefault<T>() used to
+        // reject) and report them to the caller; TestMetadataProperty and FileArtifactProperty are
         // intentionally multi-valued and accumulate into lists.
         TimingProperty? timing = null;
         TrxTestDefinitionName? trxDefName = null;
@@ -52,30 +66,39 @@ internal static class TrxTestResultExtractor
         TrxWorkItemsProperty? trxWorkItems = null;
         List<TrxTestMetadata>? metadata = null;
         List<TrxTestFileArtifact>? artifacts = null;
+        Dictionary<Type, int>? duplicateCounts = null;
 
         PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
             switch (enumerator.Current)
             {
-                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
-                case TrxTestDefinitionName d: trxDefName = GetSingleOrDefaultValue(trxDefName, d); break;
-                case TrxFullyQualifiedTypeNameProperty f: fqtn = GetSingleOrDefaultValue(fqtn, f); break;
-                case TestMethodIdentifierProperty m: methodId = GetSingleOrDefaultValue(methodId, m); break;
-                case TrxExceptionProperty e: trxException = GetSingleOrDefaultValue(trxException, e); break;
-                case TrxMessagesProperty msg: trxMessages = GetSingleOrDefaultValue(trxMessages, msg); break;
-                case TrxCategoriesProperty c: trxCategories = GetSingleOrDefaultValue(trxCategories, c); break;
-                case TrxWorkItemsProperty w: trxWorkItems = GetSingleOrDefaultValue(trxWorkItems, w); break;
+                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t, ref duplicateCounts); break;
+                case TrxTestDefinitionName d: trxDefName = GetSingleOrDefaultValue(trxDefName, d, ref duplicateCounts); break;
+                case TrxFullyQualifiedTypeNameProperty f: fqtn = GetSingleOrDefaultValue(fqtn, f, ref duplicateCounts); break;
+                case TestMethodIdentifierProperty m: methodId = GetSingleOrDefaultValue(methodId, m, ref duplicateCounts); break;
+                case TrxExceptionProperty e: trxException = GetSingleOrDefaultValue(trxException, e, ref duplicateCounts); break;
+                case TrxMessagesProperty msg: trxMessages = GetSingleOrDefaultValue(trxMessages, msg, ref duplicateCounts); break;
+                case TrxCategoriesProperty c: trxCategories = GetSingleOrDefaultValue(trxCategories, c, ref duplicateCounts); break;
+                case TrxWorkItemsProperty w: trxWorkItems = GetSingleOrDefaultValue(trxWorkItems, w, ref duplicateCounts); break;
                 case TestMetadataProperty md: (metadata ??= []).Add(new TrxTestMetadata { Key = md.Key, Value = md.Value }); break;
                 case FileArtifactProperty fa: (artifacts ??= []).Add(new TrxTestFileArtifact { FullPath = fa.FileInfo.FullName }); break;
             }
         }
 
-        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+        // Keeps the first occurrence and counts further occurrences so the caller can report the producer bug.
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property, ref Dictionary<Type, int>? duplicateCounts)
             where TProperty : IProperty
-            => existingProperty is not null
-                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-                : property;
+        {
+            if (existingProperty is null)
+            {
+                return property;
+            }
+
+            duplicateCounts ??= [];
+            duplicateCounts[typeof(TProperty)] = duplicateCounts.TryGetValue(typeof(TProperty), out int count) ? count + 1 : 2;
+            return existingProperty;
+        }
 
         bool wasTruncated = false;
 
@@ -126,7 +149,19 @@ internal static class TrxTestResultExtractor
             FileArtifacts = artifacts,
         };
 
-        return (result, wasTruncated);
+        List<(string PropertyType, int Count)>? duplicateProperties = null;
+        if (duplicateCounts is not null)
+        {
+            duplicateProperties = [];
+            foreach (KeyValuePair<Type, int> duplicate in duplicateCounts)
+            {
+                duplicateProperties.Add((duplicate.Key.FullName ?? duplicate.Key.Name, duplicate.Value));
+            }
+
+            duplicateProperties.Sort(static (left, right) => string.CompareOrdinal(left.PropertyType, right.PropertyType));
+        }
+
+        return (result, wasTruncated, duplicateProperties);
     }
 
     private static string? TruncateIfNeeded(string? value, ref bool wasTruncated)

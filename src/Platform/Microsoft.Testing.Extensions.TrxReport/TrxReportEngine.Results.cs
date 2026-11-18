@@ -25,19 +25,8 @@ internal sealed partial class TrxReportEngine
 
         foreach (TrxTestResult testResult in testResults)
         {
-            // If already a guid (it's the case for at least MSTest), use that guid directly.
-            // Otherwise, convert the string to a guid.
-            if (!Guid.TryParse(testResult.Uid, out Guid guid))
-            {
-                guid = GuidFromString(testResult.Uid);
-            }
-
-            // NOTE: In VSTest, MSTestDiscoverer.TmiTestId property is preferred if present.
-            string id = guid.ToString();
+            (string id, string testDefinitionName, bool isExplicitlyProvided) = GetTestDefinitionIdentity(testResult.Uid, testResult.DisplayName, testResult.TrxTestDefinitionName);
             string testResultDisplayName = RemoveInvalidXmlChar(testResult.DisplayName)!;
-            (string testDefinitionName, bool isExplicitlyProvided) = testResult.TrxTestDefinitionName is { } explicitName
-                ? (RemoveInvalidXmlChar(explicitName)!, true)
-                : (testResultDisplayName, false);
 
             string executionId = Guid.NewGuid().ToString();
 
