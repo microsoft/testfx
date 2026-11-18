@@ -308,6 +308,148 @@ public sealed class AppInsightsProviderTests
     }
 
     [TestMethod]
+    [DataRow("COPILOT_CLI", "1", "true")]
+    [DataRow("CLAUDECODE", "1", "true")]
+    [DataRow("AI_AGENT", "github_copilot_app_agent", "true")]
+    [DataRow("AI_AGENT", "unknown", "false")]
+    [DataRow("COPILOT_CLI", "", "false")]
+    [DataRow("COPILOT_CLI", null, "false")]
+    public async Task LogEvent_ReportsLLMContext(string variable, string? value, string expected)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable(variable)).Returns(value);
+
+        (Dictionary<string, string> properties, _) = await TrackEventAsync(
+            new Dictionary<string, object>(),
+            environment: environment.Object);
+
+        Assert.ContainsEntry("is llm", expected, properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "not_present", properties);
+    }
+
+    [TestMethod]
+    [DataRow(null, "not_present")]
+    [DataRow("", "not_present")]
+    [DataRow("aBCDEfAB-1234-1567-8ABC-DEFaBCDEF012", "aBCDEfAB-1234-1567-8ABC-DEFaBCDEF012")]
+    [DataRow("aBCDEfAB-1234-4567-9ABC-DEFaBCDEF012", "aBCDEfAB-1234-4567-9ABC-DEFaBCDEF012")]
+    [DataRow("aBCDEfAB-1234-8567-bABC-DEFaBCDEF012", "aBCDEfAB-1234-8567-bABC-DEFaBCDEF012")]
+    [DataRow("00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000")]
+    [DataRow("build-investigation-42", "a5b5273cea99d1a7df8e81f234369666daf7d810c64d852df129ae276d5167b2")]
+    [DataRow("BUILD-INVESTIGATION-42", "8495a77b0853a7baf0eaccc4f2cb4b53bd36872da0f13744527a2f8c4142a30f")]
+    [DataRow(" build-investigation-42 ", "d7bdcf1b188a689f9649ea46a5257b1e5310a1780ce5e884752643cad50ad9f5")]
+    [DataRow(" ", "36a9e7f1c95b82ffb99743e0c5c4ce95d83c9a430aac59f84ef3cbfab6145068")]
+    [DataRow("not_present", "edcc84b8e36c26b675c1b102b0e42f3507eee0afe5fbda7c203e9cbb758390e3")]
+    [DataRow("aBCDEfAB-1234-9567-8ABC-DEFaBCDEF012", "3409b6c07099e67716e185a5c8269e3548739d63d5e29e140b91654768e95708")]
+    [DataRow("aBCDEfAB-1234-4567-CABC-DEFaBCDEF012", "114b0c8fb3a916f8d4ec944818aade5fa3b6ff70a8f03af7f348508ca1683920")]
+    [DataRow("aBCDEfAB-1234-0567-8ABC-DEFaBCDEF012", "c31e983f514112a8db5f7badc6a10bd62fec9b8c6b8c4a4697996d5374c7b0fb")]
+    [DataRow("{aBCDEfAB-1234-4567-8ABC-DEFaBCDEF012}", "3c8cd2ea1393a621bec3d2bc462291191a0a67b1c20c4a599ea545ea1ed69eb7")]
+    [DataRow("aBCDEfAB-1234-4567-8ABC-DEFaBCDEF012\n", "de43912d6c54f9f27884ba6f98e7cd82f11eded3fd0551bfc48b471e41ade046", DisplayName = "Copilot UUID with trailing newline")]
+    [DataRow("caf\u00e9", "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e")]
+    public async Task LogEvent_NormalizesCopilotSessionId(string? sessionId, string expected)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable("COPILOT_AGENT_SESSION_ID")).Returns(sessionId);
+
+        (Dictionary<string, string> properties, _) = await TrackEventAsync(
+            new Dictionary<string, object>(),
+            environment: environment.Object);
+
+        Assert.ContainsEntry("CopilotAgentSessionId", expected, properties);
+        Assert.DoesNotContain("copilot agent session id", properties.Keys);
+        Assert.ContainsEntry("session id", "sessionId", properties);
+        Assert.ContainsEntry("is llm", "false", properties);
+    }
+
+    [TestMethod]
+    public async Task LogEvent_SnapshotsContextBeforeQueueingWithoutMutatingCallerProperties()
+    {
+        TaskCompletionSource<bool> startConsumer = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> allEventsTracked = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITask> task = new();
+#if NETCOREAPP
+        task.Setup(x => x.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<Task> loop, CancellationToken _) => RunConsumerAsync(loop));
+#else
+        task.Setup(x => x.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<Task> loop, string _, CancellationToken _) => RunConsumerAsync(loop));
+#endif
+
+        List<(string Name, Dictionary<string, string> Properties)> events = [];
+        Mock<ITelemetryClient> client = new();
+        client.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string name, Dictionary<string, string> properties, Dictionary<string, double> _) =>
+            {
+                events.Add((name, properties));
+                if (events.Count == 3)
+                {
+                    allEventsTracked.TrySetResult(true);
+                }
+            });
+        Mock<ITelemetryClientFactory> factory = new();
+        factory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(client.Object);
+        Mock<IEnvironment> environment = new();
+        string? currentId = "build-investigation-42";
+        string? currentAgent = "github_copilot_app_agent";
+        environment.Setup(x => x.GetEnvironmentVariable("COPILOT_AGENT_SESSION_ID")).Returns(() => currentId);
+        environment.Setup(x => x.GetEnvironmentVariable("AI_AGENT")).Returns(() => currentAgent);
+
+        AppInsightsProvider provider = CreateProvider(factory, environment: environment.Object, task: task.Object);
+        Dictionary<string, object> callerProperties = new()
+        {
+            ["is llm"] = false,
+            ["CopilotAgentSessionId"] = "caller-supplied",
+        };
+
+        try
+        {
+            await provider.LogEventAsync("first", callerProperties, CancellationToken.None);
+            currentId = "aBCDEfAB-1234-4567-8ABC-DEFaBCDEF012";
+            currentAgent = null;
+            await provider.LogEventAsync("second", callerProperties, CancellationToken.None);
+            currentId = null;
+            await provider.LogEventAsync("third", callerProperties, CancellationToken.None);
+            currentId = "later-context";
+            currentAgent = "github_copilot_app_agent";
+
+            Assert.HasCount(2, callerProperties);
+            Assert.IsFalse((bool)callerProperties["is llm"]);
+            Assert.AreEqual("caller-supplied", callerProperties["CopilotAgentSessionId"]);
+            callerProperties.Clear();
+            startConsumer.SetResult(true);
+            await WaitForSignalAsync(allEventsTracked.Task, "Telemetry consumer did not track the three queued events.");
+        }
+        finally
+        {
+            startConsumer.TrySetResult(true);
+#if NETCOREAPP
+            await provider.DisposeAsync();
+#else
+            provider.Dispose();
+#endif
+        }
+
+        Assert.HasCount(3, events);
+        Assert.AreEqual("first", events[0].Name);
+        Assert.AreEqual("second", events[1].Name);
+        Assert.AreEqual("third", events[2].Name);
+        Assert.ContainsEntry("is llm", "true", events[0].Properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "a5b5273cea99d1a7df8e81f234369666daf7d810c64d852df129ae276d5167b2", events[0].Properties);
+        Assert.ContainsEntry("is llm", "false", events[1].Properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "aBCDEfAB-1234-4567-8ABC-DEFaBCDEF012", events[1].Properties);
+        Assert.ContainsEntry("is llm", "false", events[2].Properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "not_present", events[2].Properties);
+
+        Task RunConsumerAsync(Func<Task> loop)
+            => Task.Run(
+                async () =>
+                {
+                    await startConsumer.Task;
+                    await loop();
+                },
+                TestContext.CancellationToken);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task LogEvent_DevelopmentRepositoryProperty_MatchesConfiguration(bool isDevelopmentRepository)
