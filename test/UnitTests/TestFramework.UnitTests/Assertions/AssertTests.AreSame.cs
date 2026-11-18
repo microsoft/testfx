@@ -333,4 +333,51 @@ public partial class AssertTests
                 Assert.AreNotSame(notExpected, actual)
                 """);
     }
+
+    public void AreSame_MixedValueAndReferenceFailuresExposeBothValuesWithoutValueTypeWarning()
+    {
+        object expected = 1;
+        object actual = new();
+        Action action = () => Assert.AreSame(expected, actual);
+
+        AssertFailedException exception = action.Should().ThrowExactly<AssertFailedException>().Which;
+        exception.Message.Should().NotContain("Do not pass value types to AreSame");
+        exception.ExpectedText.Should().Be($"System.Int32 (hash: 0x{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(expected):X})");
+        exception.ActualText.Should().Be($"System.Object (hash: 0x{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(actual):X})");
+    }
+
+    public void AreSameAndAreNotSame_UsePlaceholdersWhenExpressionsAreEmpty()
+    {
+        object expected = new();
+        object actual = new();
+
+        Action sameEmptyExpected = () => Assert.AreSame(expected, actual, expectedExpression: string.Empty, actualExpression: "actual");
+        sameEmptyExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+                .Should().Contain("Assert.AreSame(<expected>, actual)");
+
+        Action sameEmptyActual = () => Assert.AreSame(expected, actual, expectedExpression: "expected", actualExpression: string.Empty);
+        sameEmptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+                .Should().Contain("Assert.AreSame(expected, <actual>)");
+
+        object shared = new();
+        Action notSameEmptyExpected = () => Assert.AreNotSame(shared, shared, notExpectedExpression: string.Empty, actualExpression: "actual");
+        notSameEmptyExpected.Should().ThrowExactly<AssertFailedException>().Which.Message
+                .Should().Contain("Assert.AreNotSame(<notExpected>, actual)");
+
+        Action notSameEmptyActual = () => Assert.AreNotSame(shared, shared, notExpectedExpression: "notExpected", actualExpression: string.Empty);
+        notSameEmptyActual.Should().ThrowExactly<AssertFailedException>().Which.Message
+                .Should().Contain("Assert.AreNotSame(notExpected, <actual>)");
+    }
+
+    public void AreSameAndAreNotSameInterpolatedHandlers_FailWithOnlyAFormattedMessageValue()
+    {
+        int value = 42;
+        object same = new();
+
+        Action areSame = () => Assert.AreSame(new object(), new object(), $"{value}");
+        areSame.Should().ThrowExactly<AssertFailedException>().Which.Message.Should().Contain("42");
+
+        Action areNotSame = () => Assert.AreNotSame(same, same, $"{value}");
+        areNotSame.Should().ThrowExactly<AssertFailedException>().Which.Message.Should().Contain("42");
+    }
 }

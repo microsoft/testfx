@@ -453,6 +453,21 @@ public partial class AssertTests : TestContainer
                 """);
     }
 
+    public void AreAllOfType_Generic_MultipleNullElements_ReportsEveryIndex()
+    {
+        Action action = () => Assert.AreAllOfType<string>(new object?[] { null, "a", null });
+        action.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Expected all items in collection to be of the specified type.
+
+            expected type: System.String (or derived)
+            mismatches:    [index 0: <null>, index 2: <null>]
+            collection:    [null, "a", null]
+
+            Assert.AreAllOfType<TExpected>(new object?[] { null, "a", null })
+            """);
+    }
+
     public void AreAllOfType_Generic_HasMismatch_ShouldFail()
     {
         Action action = () => Assert.AreAllOfType<string>(new object[] { "a", 42, "b", true });

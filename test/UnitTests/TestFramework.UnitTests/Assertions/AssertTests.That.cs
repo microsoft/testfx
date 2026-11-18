@@ -1557,6 +1557,23 @@ public partial class AssertTests : TestContainer
         ex.Message.Should().Contain(nameof(AssertTests));
     }
 
+    private static class NestedDiagnosticMethods
+    {
+        public static int Combine(int left, int right) => left + right;
+    }
+
+    public void That_NestedStaticMethodKeepsItsDeclaringTypeAndArgumentList()
+    {
+        int left = 5;
+        int right = 7;
+        int expected = 0;
+
+        Action act = () => Assert.That(() => NestedDiagnosticMethods.Combine(left, right) == expected, conditionExpression: "nested method");
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("AssertTests.NestedDiagnosticMethods.Combine(left, right) = 12");
+    }
+
     public void That_InstanceMethodOnThis_RendersAsThisMethod()
     {
         int expected = 0;
@@ -1576,6 +1593,35 @@ public partial class AssertTests : TestContainer
 
         AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
         ex.Message.Should().Contain($"this.{nameof(AssertTestsExtensions.GetGreeting)}");
+    }
+
+    public void That_ExtensionMethodOnCapturedLocal_RendersTheLocalReceiver()
+    {
+        string receiver = "hello";
+        string separator = " ";
+        string suffix = "!";
+        string expected = "different";
+
+        Action act = () => Assert.That(() => receiver.AddSuffix(separator, suffix) == expected, conditionExpression: "extension receiver");
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("receiver.AddSuffix(separator, suffix) = \"hello !\"");
+        ex.Message.Should().NotContain("this.AddSuffix");
+    }
+
+    public void That_RepeatedMethodCallsWithDifferentValuesKeepDistinctDetailEntries()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(
+            () => counter.Increment() + counter.Increment() + counter.Increment() == -1,
+            conditionExpression: "repeated calls");
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("counter.Increment() = 1");
+        ex.Message.Should().Contain("counter.Increment() (2) = 2");
+        ex.Message.Should().Contain("counter.Increment() (3) = 3");
+        counter.Count.Should().Be(3);
     }
 
     private sealed class GetterBox
@@ -1839,7 +1885,12 @@ public partial class AssertTests : TestContainer
             (typeof(decimal), 1.5m, "decimal", "1.5"),
             (typeof(bool), true, "bool", "True"),
             (typeof(string), "data", "string", "\"data\""),
+            (typeof(string), "{", "string", "\"{\""),
+            (typeof(string), "}", "string", "\"}\""),
+            (typeof(string), "{item}", "string", "\"{item}\""),
             (typeof(char), 'q', "char", "q"),
+            (typeof(char), '{', "char", "'{'"),
+            (typeof(char), '}', "char", "'}'"),
             (typeof(string), "new <>f__AnonymousType", "string", "\"new <>f__AnonymousType\""),
             (typeof(string), "value((", "string", "\"value((\""),
         ];
@@ -1971,6 +2022,8 @@ public partial class AssertTests : TestContainer
 internal static class AssertTestsExtensions
 {
     public static string GetGreeting(this AssertTests _) => "hello";
+
+    public static string AddSuffix(this string value, string separator, string suffix) => value + separator + suffix;
 }
 
 internal static class MutableBoxHelper

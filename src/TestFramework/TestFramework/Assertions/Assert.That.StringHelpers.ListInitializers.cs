@@ -10,6 +10,7 @@ public static partial class AssertExtensions
 {
     // Hoisted to a static field so TryMatchListInitPattern is allocation-free on the
     // diagnostic text cleanup hot path (CleanListInitializers can call it repeatedly).
+    private const string CharAddArgumentPrefix = "Void Add(Char)(";
     private static readonly string[] ListInitCollectionTypes = ["List", "IList", "ICollection", "IEnumerable"];
 
     /// <summary>
@@ -40,12 +41,54 @@ public static partial class AssertExtensions
 
                 while (braceEnd < input.Length && braceCount > 0)
                 {
-                    if (input[braceEnd] == '{')
+                    char current = input[braceEnd];
+                    if (current is '"' or '\'')
                     {
+                        char quote = current;
+                        braceEnd++;
+                        while (braceEnd < input.Length)
+                        {
+                            if (input[braceEnd] == '\\' && braceEnd + 1 < input.Length)
+                            {
+                                braceEnd += 2;
+                                continue;
+                            }
+
+                            if (input[braceEnd] == quote)
+                            {
+                                braceEnd++;
+                                break;
+                            }
+
+                            braceEnd++;
+                        }
+
+                        continue;
+                    }
+
+                    if (current == '{')
+                    {
+                        // Expression diagnostics render a brace-valued char as
+                        // `Void Add(Char)({)` (unlike string values, which are quoted).
+                        // It is an argument value, not a nested initializer delimiter.
+                        if (braceEnd >= CharAddArgumentPrefix.Length
+                            && HasSubstringAt(input, braceEnd - CharAddArgumentPrefix.Length, CharAddArgumentPrefix))
+                        {
+                            braceEnd++;
+                            continue;
+                        }
+
                         braceCount++;
                     }
-                    else if (input[braceEnd] == '}')
+                    else if (current == '}')
                     {
+                        if (braceEnd >= CharAddArgumentPrefix.Length
+                            && HasSubstringAt(input, braceEnd - CharAddArgumentPrefix.Length, CharAddArgumentPrefix))
+                        {
+                            braceEnd++;
+                            continue;
+                        }
+
                         braceCount--;
                     }
 
@@ -78,6 +121,11 @@ public static partial class AssertExtensions
                         foreach (Match addMatch in addMatches)
                         {
                             string argument = addMatch.Groups[1].Value;
+                            if (genericType == "char" && argument is "{" or "}")
+                            {
+                                argument = $"'{argument}'";
+                            }
+
                             arguments.Add(argument);
                         }
 

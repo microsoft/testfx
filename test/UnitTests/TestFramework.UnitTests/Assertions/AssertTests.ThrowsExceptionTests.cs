@@ -511,6 +511,26 @@ public partial class AssertTests
                 """);
     }
 
+    public void Throws_WhenUnexpectedExceptionIsGeneric_RendersFriendlyActualTypeInEvidence()
+    {
+        Action action = () => Assert.Throws<ArgumentException>(() => throw new ThrowsTestGenericException<int>());
+
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Contain(
+                "actual exception: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ThrowsTestGenericException<System.Int32>:");
+    }
+
+    public void Throws_WhenExpectedGenericTypeHasShortNameOrMultipleArguments_RendersTypeArguments()
+    {
+        Action shortType = () => Assert.Throws<ShortException<int>>(() => throw new InvalidOperationException("oops"));
+        shortType.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Contain("Expected exception of type ShortException<Int32> (or derived)");
+
+        Action multipleArguments = () => Assert.Throws<PairGenericException<int, string>>(() => throw new InvalidOperationException("oops"));
+        multipleArguments.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Contain("Expected exception of type PairGenericException<Int32, String> (or derived)");
+    }
+
     public void Throws_ActionOverloads_KeepStrictnessInstanceAndLazyMessage()
     {
         var original = new ArgumentNullException("value", "original cause");
@@ -562,8 +582,43 @@ public partial class AssertTests
             .And.Contain("original cause")
             .And.EndWith("Assert.ThrowsExactly<ArgumentException>(throwing)");
     }
+
+    public async Task Throws_MessageBuilderOverloadsReturnTheThrownException()
+    {
+        var original = new ArgumentNullException("value");
+        Action throwing = () => throw original;
+        Func<Task> throwingAsync = () => Task.FromException(original);
+
+        Assert.Throws<ArgumentException>(throwing, messageBuilder: _ => "unused")
+            .Should().BeSameAs(original);
+        Assert.ThrowsExactly<ArgumentNullException>(throwing, messageBuilder: _ => "unused")
+            .Should().BeSameAs(original);
+        (await Assert.ThrowsAsync<ArgumentException>(throwingAsync, messageBuilder: _ => "unused"))
+            .Should().BeSameAs(original);
+        (await Assert.ThrowsExactlyAsync<ArgumentNullException>(throwingAsync, messageBuilder: _ => "unused"))
+            .Should().BeSameAs(original);
+    }
+
+    public async Task ThrowsAsync_StringMessageOverloadsReturnTheThrownException()
+    {
+        var original = new ArgumentNullException("value");
+        Func<Task> throwing = () => Task.FromException(original);
+
+        (await Assert.ThrowsAsync<ArgumentException>(throwing, "exception context"))
+            .Should().BeSameAs(original);
+        (await Assert.ThrowsExactlyAsync<ArgumentNullException>(throwing, "exception context"))
+            .Should().BeSameAs(original);
+    }
 }
 
 internal sealed class ThrowsTestGenericException<T> : Exception
+{
+}
+
+internal sealed class ShortException<T> : Exception
+{
+}
+
+internal sealed class PairGenericException<TFirst, TSecond> : Exception
 {
 }

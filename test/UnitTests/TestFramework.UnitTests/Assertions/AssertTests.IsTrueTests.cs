@@ -348,4 +348,28 @@ public partial class AssertTests
 
     public void IsTrueBooleanInterpolatedStringMessageShouldNotFailWithTrue()
         => Assert.IsTrue(true, $"User-provided message. Input: {true}");
+
+    public void IsTrueAndIsFalseFailuresExposeExpectedAndActualValues()
+    {
+        Action isTrue = () => Assert.IsTrue(false);
+        AssertFailedException isTrueFailure = isTrue.Should().ThrowExactly<AssertFailedException>().Which;
+        isTrueFailure.ExpectedText.Should().Be("true");
+        isTrueFailure.ActualText.Should().Be("false");
+
+        Action isFalse = () => Assert.IsFalse(true);
+        AssertFailedException isFalseFailure = isFalse.Should().ThrowExactly<AssertFailedException>().Which;
+        isFalseFailure.ExpectedText.Should().Be("false");
+        isFalseFailure.ActualText.Should().Be("true");
+    }
+
+    public void BooleanInterpolatedHandlers_FailWithOnlyAFormattedMessageValue()
+    {
+        int value = 42;
+
+        Action isTrue = () => Assert.IsTrue(false, $"{value}");
+        isTrue.Should().ThrowExactly<AssertFailedException>().Which.Message.Should().Contain("42");
+
+        Action isFalse = () => Assert.IsFalse(true, $"{value}");
+        isFalse.Should().ThrowExactly<AssertFailedException>().Which.Message.Should().Contain("42");
+    }
 }

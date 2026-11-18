@@ -277,4 +277,76 @@ public partial class AssertTests
                 Assert.DoesNotMatchRegex(pattern, value)
                 """);
     }
+
+    public void RegexAssertions_NullPatternOverloadsFailAsAssertion()
+    {
+        Action[] actions =
+        [
+            () => Assert.MatchesRegex((string)null!, "value"),
+            () => Assert.MatchesRegex((Regex)null!, "value"),
+            () => Assert.DoesNotMatchRegex((string)null!, "value"),
+            () => Assert.DoesNotMatchRegex((Regex)null!, "value"),
+        ];
+
+        foreach (Action action in actions)
+        {
+            action.Should().ThrowExactly<AssertFailedException>();
+        }
+    }
+
+    public void RegexAssertions_NullInputsReportAssertionAndParameterNames()
+    {
+        (Action Assertion, string ExpectedMessage)[] cases =
+        [
+            (
+                () => Assert.MatchesRegex(new Regex("value"), null),
+                "Assert.MatchesRegex failed. The parameter 'value' is invalid. The value cannot be null."),
+            (
+                () => Assert.MatchesRegex("value", null),
+                "Assert.MatchesRegex failed. The parameter 'value' is invalid. The value cannot be null."),
+            (
+                () => Assert.DoesNotMatchRegex(new Regex("value"), null),
+                "Assert.DoesNotMatchRegex failed. The parameter 'value' is invalid. The value cannot be null."),
+            (
+                () => Assert.DoesNotMatchRegex("value", null),
+                "Assert.DoesNotMatchRegex failed. The parameter 'value' is invalid. The value cannot be null."),
+            (
+                () => Assert.MatchesRegex((Regex)null!, "value"),
+                "Assert.MatchesRegex failed. The parameter 'pattern' is invalid. The value cannot be null."),
+            (
+                () => Assert.MatchesRegex((string)null!, "value"),
+                "Assert.MatchesRegex failed. The parameter 'pattern' is invalid. The value cannot be null."),
+            (
+                () => Assert.DoesNotMatchRegex((Regex)null!, "value"),
+                "Assert.DoesNotMatchRegex failed. The parameter 'pattern' is invalid. The value cannot be null."),
+            (
+                () => Assert.DoesNotMatchRegex((string)null!, "value"),
+                "Assert.DoesNotMatchRegex failed. The parameter 'pattern' is invalid. The value cannot be null."),
+        ];
+
+        foreach ((Action assertion, string expectedMessage) in cases)
+        {
+            assertion.Should().ThrowExactly<AssertFailedException>()
+                .Which.Message.Should().Be(expectedMessage);
+        }
+    }
+
+    public void RegexAssertions_EmptyArgumentExpressionsOmitCallSite()
+    {
+        Action matches = () => Assert.MatchesRegex(
+            new Regex("^expected$"),
+            "actual",
+            patternExpression: string.Empty,
+            valueExpression: string.Empty);
+        matches.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().NotContain("Assert.MatchesRegex(");
+
+        Action doesNotMatch = () => Assert.DoesNotMatchRegex(
+            new Regex("actual"),
+            "actual",
+            patternExpression: string.Empty,
+            valueExpression: string.Empty);
+        doesNotMatch.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().NotContain("Assert.DoesNotMatchRegex(");
+    }
 }

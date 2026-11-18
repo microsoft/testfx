@@ -197,13 +197,16 @@ public sealed partial class Assert
     /// or <paramref name="value"/> MatchesRegex <paramref name="pattern"/>.
     /// </exception>
     public static void DoesNotMatchRegex([NotNull] string? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => DoesNotMatchRegex(ToRegex(pattern), value, message, patternExpression, valueExpression);
+        => DoesNotMatchRegex(ToRegexForAssertion(pattern, "Assert.DoesNotMatchRegex"), value, message, patternExpression, valueExpression);
 
     #endregion // DoesNotMatchRegex
 
     private static Regex ToRegex([NotNull] string? pattern)
+        => ToRegexForAssertion(pattern, "Assert.MatchesRegex");
+
+    private static Regex ToRegexForAssertion([NotNull] string? pattern, string assertionName)
     {
-        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
+        CheckParameterNotNull(pattern, assertionName, "pattern");
         if (pattern.Length > MaximumCachedRegexPatternLength)
         {
             return new Regex(pattern);
