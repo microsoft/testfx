@@ -48,10 +48,10 @@ internal sealed class TrxReportGenerator :
 
     // Mirrors TrxReportEngine's TestDefinition deduplication so conflicting results are detected (and omitted) while
     // they stream in, together with the producer that reported them, instead of failing report generation at the end.
-    private readonly Dictionary<string, (string TestDefinitionName, bool IsExplicitlyProvided, string     Producer)> _testDefinitionsById = [with(StringComparer.Ordinal)];
+    private readonly Dictionary<string, (string TestDefinitionName, bool IsExplicitlyProvided, string Producer)> _testDefinitionsById = [with(StringComparer.Ordinal)];
     private readonly List<string> _invalidTestResultDetails = [];
     private readonly List<string> _invalidTestResultProducers = [];
-        private readonly bool _isEnabled;
+    private readonly bool _isEnabled;
     private int _invalidTestResultCount;
     private TrxResultStreamingStore? _streamingStore;
     private bool _crashRecoveryUnavailable;

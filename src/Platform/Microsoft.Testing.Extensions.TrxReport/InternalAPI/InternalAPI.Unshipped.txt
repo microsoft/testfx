@@ -16,3 +16,4 @@ static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFr
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResultExtractor.ExtractAndValidate(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! message) -> (Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! Result, bool WasTruncated, System.Collections.Generic.IReadOnlyList<(string! PropertyType, int Count)>? DuplicateProperties)
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.RunErrors.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.RunErrors.set -> void
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.GetTestDefinitionIdentity(string! uid, string! displayName, string? explicitTestDefinitionName) -> (string! Id, string! TestDefinitionName, bool IsExplicitlyProvided)
