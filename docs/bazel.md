@@ -4,7 +4,7 @@ This branch provides a **staged development build, not a drop-in replacement for
 the shipping MSBuild/Arcade pipeline**. The portable graph compiles 35 projects
 under `src` for .NET 10/11, the repository's `SupportedNetFrameworks`, without
 running MSBuild or consuming its outputs.
-Separate compatibility targets provide 26 netstandard2.0 and five net462 source
+Separate compatibility targets provide 27 netstandard2.0 and five net462 source
 variants. Native packaging now produces ten experimental MTP/MSTest/analyzer/SDK
 NuGets, alongside self-contained test hosts. Existing release, signing-service,
 and official packing workflows remain unchanged.
@@ -107,7 +107,7 @@ runfiles settings.
 | --- | --- |
 | `//:managed` | 35 source projects in the selected framework configuration (net10.0 by default). |
 | `//:managed_all` | The same graph built for net10.0 and net11.0, retaining fixed-framework analyzers/generators and server-client validation. |
-| `//:managed_compatibility` | All 26 netstandard2.0 and five net462 source variants, with exact-framework inventories. |
+| `//:managed_compatibility` | All 27 netstandard2.0 and five net462 source variants, with exact-framework inventories. |
 | `//:managed_netstandard2_0`, `//:managed_net462` | The respective compatibility subgraphs; individual labels use `_netstandard2_0` or `_net462` suffixes. |
 | `//:explorer_released` | Existing platform explorer compiled against its released MTP 2.5.2 packages. |
 | `//:explorer` | The same sample compiled against this checkout's MTP and TRX assemblies. |

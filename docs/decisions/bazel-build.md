@@ -4494,6 +4494,15 @@ Contract:
 The samples are build-only because their tests fail on purpose. Supporting
 changes:
 
+- `packaged_app_msbuild` joins the netstandard2.0 compatibility list, so
+  `//:managed_netstandard2_0` now has 27 exact-framework assemblies instead of
+  26. `eng/bazel/windows/validate.ps1` asserts the new count. The 26 recorded
+  in earlier sections describes the graph before this change. The first hosted
+  Windows run on `955273520a07423985e9fe3fd9091f8c07601e2a` failed on the old
+  count. A local `//:managed_netstandard2_0` build then produced 27 entries,
+  all with `target_framework` `netstandard2.0`, one of them
+  `Microsoft.Testing.Extensions.PackagedApp.MSBuild`.
+
 - A Paket `samples` group (NUnit 5.0.0, NUnit3TestAdapter 6.3.1,
   xunit.v3.mtp-v2 4.0.3), exposed as `testsupport.samples` in `MODULE.bazel`.
 - `testfx_package_files` moved from `windows.bzl` to `defs.bzl` so samples can
