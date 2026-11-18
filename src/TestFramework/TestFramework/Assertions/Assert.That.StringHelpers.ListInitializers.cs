@@ -11,6 +11,8 @@ public static partial class AssertExtensions
     // Hoisted to a static field so TryMatchListInitPattern is allocation-free on the
     // diagnostic text cleanup hot path (CleanListInitializers can call it repeatedly).
     private const string CharAddArgumentPrefix = "Void Add(Char)(";
+    private const string StringAddArgumentPrefix = "Void Add(System.String)(";
+    private const string StringAddArgumentSuffix = "\")";
     private static readonly string[] ListInitCollectionTypes = ["List", "IList", "ICollection", "IEnumerable"];
 
     /// <summary>
@@ -42,53 +44,27 @@ public static partial class AssertExtensions
                 while (braceEnd < input.Length && braceCount > 0)
                 {
                     char current = input[braceEnd];
-                    if (current is '"' or '\'')
+
+                    // Expression diagnostics render char operands unquoted (e.g. `Void Add(Char)({)`
+                    // or `Void Add(Char)(')`). Such an operand is a value, never a brace or quote delimiter.
+                    if (HasSubstringAt(input, braceEnd - CharAddArgumentPrefix.Length, CharAddArgumentPrefix))
                     {
-                        char quote = current;
                         braceEnd++;
-                        while (braceEnd < input.Length)
-                        {
-                            if (input[braceEnd] == '\\' && braceEnd + 1 < input.Length)
-                            {
-                                braceEnd += 2;
-                                continue;
-                            }
+                        continue;
+                    }
 
-                            if (input[braceEnd] == quote)
-                            {
-                                braceEnd++;
-                                break;
-                            }
-
-                            braceEnd++;
-                        }
-
+                    if (current == '"')
+                    {
+                        braceEnd = SkipRenderedStringConstant(input, braceEnd);
                         continue;
                     }
 
                     if (current == '{')
                     {
-                        // Expression diagnostics render a brace-valued char as
-                        // `Void Add(Char)({)` (unlike string values, which are quoted).
-                        // It is an argument value, not a nested initializer delimiter.
-                        if (braceEnd >= CharAddArgumentPrefix.Length
-                            && HasSubstringAt(input, braceEnd - CharAddArgumentPrefix.Length, CharAddArgumentPrefix))
-                        {
-                            braceEnd++;
-                            continue;
-                        }
-
                         braceCount++;
                     }
                     else if (current == '}')
                     {
-                        if (braceEnd >= CharAddArgumentPrefix.Length
-                            && HasSubstringAt(input, braceEnd - CharAddArgumentPrefix.Length, CharAddArgumentPrefix))
-                        {
-                            braceEnd++;
-                            continue;
-                        }
-
                         braceCount--;
                     }
 
@@ -147,6 +123,22 @@ public static partial class AssertExtensions
         }
 
         return result.ToString();
+    }
+
+    /// <summary>
+    /// Returns the index just past a string constant that starts at <paramref name="quoteIndex"/>.
+    /// Expression diagnostics render string constants as raw text between double quotes, without
+    /// escaping, so a whole <c>Add(String)</c> operand ends at the first <c>")</c>; this keeps values that
+    /// contain quotes, braces, or a trailing backslash intact. Other string constants end at the next quote.
+    /// </summary>
+    private static int SkipRenderedStringConstant(string input, int quoteIndex)
+    {
+        int contentStart = quoteIndex + 1;
+        int closingQuote = HasSubstringAt(input, quoteIndex - StringAddArgumentPrefix.Length, StringAddArgumentPrefix)
+            ? input.IndexOf(StringAddArgumentSuffix, contentStart, StringComparison.Ordinal)
+            : input.IndexOf('"', contentStart);
+
+        return closingQuote < 0 ? input.Length : closingQuote + 1;
     }
 
     private static bool TryMatchListInitPattern(string input, int startIndex, out string collectionType, out int patternEnd)

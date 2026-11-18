@@ -1889,9 +1889,13 @@ public partial class AssertTests : TestContainer
             (typeof(string), "}", "string", "\"}\""),
             (typeof(string), "{item}", "string", "\"{item}\""),
             (typeof(string), "a\\\"{b", "string", "\"a\\\"{b\""),
+            (typeof(string), "a\\", "string", "\"a\\\""),
+            (typeof(string), "a\"b", "string", "\"a\"b\""),
             (typeof(char), 'q', "char", "q"),
             (typeof(char), '{', "char", "'{'"),
             (typeof(char), '}', "char", "'}'"),
+            (typeof(char), '\'', "char", "'"),
+            (typeof(char), '"', "char", "\""),
             (typeof(string), "new <>f__AnonymousType", "string", "\"new <>f__AnonymousType\""),
             (typeof(string), "value((", "string", "\"value((\""),
         ];
