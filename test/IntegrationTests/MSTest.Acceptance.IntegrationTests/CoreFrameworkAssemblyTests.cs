@@ -65,6 +65,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
+    [DataRow("net10.0-windows10.0.18362.0", false, true, true, "MSTest.Uwp", DisplayName = "ModernUwpMinimum")]
     [DataRow("net10.0-windows10.0.26100.0", false, false, false, "", DisplayName = "OrdinaryWindows")]
     [DataRow("net10.0-windows10.0.26100.0", true, false, false, "MSTest.WinUI", DisplayName = "WinUI")]
     [DataRow("net10.0-windows10.0.26100.0", false, true, true, "MSTest.Uwp", DisplayName = "ModernUwp")]
@@ -76,7 +77,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         string targetFramework, bool useWinUI, bool useUwpTools, bool useUwp, string uiPackage)
     {
         string coreAsset = $"lib/{targetFramework.Split('-')[0]}";
-        string uiTfm = useWinUI ? "net10.0-windows10.0.18362" : "net10.0-windows10.0.17763";
+        const string uiTfm = "net10.0-windows10.0.18362";
         string source = ConsumerSource
             .Replace("$TargetFramework$", targetFramework, StringComparison.Ordinal)
             .Replace("$MSTestVersion$", MSTestVersion, StringComparison.Ordinal)

@@ -9,7 +9,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(WinUiMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
@@ -57,8 +57,8 @@ $(CommonProductDescription)]]></PackageDescription>
     <DefineConstants>$(DefineConstants);CLASSIC_UWP</DefineConstants>
   </PropertyGroup>
 
-  <!-- Modern UWP and WinUI share one adapter build at their common OS floor. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+  <!-- Modern UWP and WinUI share one adapter build at Windows 18362. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 

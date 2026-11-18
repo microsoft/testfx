@@ -28,9 +28,9 @@ public sealed class WindowsApplicationModelPackageTests
             UseUwpTools=true
             /lib/{{targetFramework.Split('-')[0]}}/MSTest.TestFramework.dll
             /lib/{{targetFramework.Split('-')[0]}}/MSTest.TestFramework.Extensions.dll
-            /buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll
-            /buildTransitive/net10.0-windows10.0.17763/MSTestAdapter.PlatformServices.dll
-            /lib/net10.0-windows10.0.17763/MSTest.Uwp.dll
+            /buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll
+            /buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll
+            /lib/net10.0-windows10.0.18362/MSTest.Uwp.dll
             """;
         File.WriteAllText(reportPath, report);
 
@@ -45,11 +45,11 @@ public sealed class WindowsApplicationModelPackageTests
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
         Assert.Contains($"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll", wrongFramework.Message);
 
-        File.WriteAllText(reportPath, report.Replace("/buildTransitive/net10.0-windows10.0.17763/", "/buildTransitive/net10.0/", StringComparison.Ordinal));
+        File.WriteAllText(reportPath, report.Replace("/buildTransitive/net10.0-windows10.0.18362/", "/buildTransitive/net10.0/", StringComparison.Ordinal));
         AssertFailedException ordinaryPayload = Assert.ThrowsExactly<AssertFailedException>(() =>
             WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                 reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
-        Assert.Contains("/buildTransitive/net10.0-windows10.0.17763/MSTest.TestAdapter.dll", ordinaryPayload.Message);
+        Assert.Contains("/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll", ordinaryPayload.Message);
     }
 
     [TestMethod]
@@ -174,7 +174,7 @@ public sealed class WindowsApplicationModelPackageTests
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     [DataRow("MSTest.Uwp", "lib/uap10.0.16299/MSTest.Uwp.dll", false)]
-    [DataRow("MSTest.Uwp", "lib/net10.0-windows10.0.17763/MSTest.Uwp.dll", false)]
+    [DataRow("MSTest.Uwp", "lib/net10.0-windows10.0.18362/MSTest.Uwp.dll", false)]
     [DataRow("MSTest.WinUI", "lib/net10.0-windows10.0.18362/MSTest.WinUI.dll", true)]
     public void PackedUIFramework_SealsConcreteUIAttributes(string packageId, string assemblyPath, bool winUI)
     {
@@ -242,7 +242,7 @@ public sealed class WindowsApplicationModelPackageTests
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DataRow("MSTest.Uwp", "uap10.0.16299")]
-    [DataRow("MSTest.Uwp", "net10.0-windows10.0.17763")]
+    [DataRow("MSTest.Uwp", "net10.0-windows10.0.18362")]
     [DataRow("MSTest.WinUI", "net10.0-windows10.0.18362")]
     public void PackedUIFramework_OwnsItsPayloadWithoutAnotherAdapter(string packageId, string framework)
     {
@@ -306,10 +306,12 @@ public sealed class WindowsApplicationModelPackageTests
 
         foreach (string assemblyName in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll" })
         {
-            string modernUwpPath = $"buildTransitive/net10.0-windows10.0.17763/{assemblyName}";
+            string modernUwpPath = $"buildTransitive/net10.0-windows10.0.18362/{assemblyName}";
             string winUIPath = $"buildTransitive/net10.0-windows10.0.18362/{assemblyName}";
-            ZipArchiveEntry modernUwpEntry = modernUwp.GetEntry(modernUwpPath)!;
-            ZipArchiveEntry winUIEntry = winUI.GetEntry(winUIPath)!;
+            ZipArchiveEntry? modernUwpEntry = modernUwp.GetEntry(modernUwpPath);
+            ZipArchiveEntry? winUIEntry = winUI.GetEntry(winUIPath);
+            Assert.IsNotNull(modernUwpEntry, $"MSTest.Uwp must contain {modernUwpPath}.");
+            Assert.IsNotNull(winUIEntry, $"MSTest.WinUI must contain {winUIPath}.");
 
             using Stream modernUwpStream = modernUwpEntry.Open();
             using Stream winUIStream = winUIEntry.Open();

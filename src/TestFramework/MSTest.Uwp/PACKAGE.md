@@ -6,9 +6,12 @@ and their localized resources. It depends on the matching `MSTest.TestFramework`
 package, not on `MSTest.TestAdapter` or `MSTest.WinUI`.
 
 Supported targets are classic `uap10.0.16299` and modern
-`net10.0-windows10.0.17763.0`, including compatible .NET 11 UWP consumers.
+`net10.0-windows10.0.18362.0`, including compatible .NET 11 UWP consumers.
+Modern consumers targeting Windows 17763 must raise their Windows target to
+18362 or later.
 The application still owns its UWP tooling, runtime, manifest and activation.
-Modern UWP does not use WinUI assets.
+Modern UWP shares the adapter binaries with WinUI but retains its own UWP
+framework and does not depend on `MSTest.WinUI` or the Windows App SDK.
 
 Reference this package instead of the `MSTest` metapackage or ordinary adapter
 for modern UWP. `MSTest.Sdk` selects it from the existing UWP tooling properties,
