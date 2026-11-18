@@ -41,7 +41,7 @@ config({
         msBuildRuntime: "DotNetCore",
         msBuildSearchLocations: [Environment.getDirectoryValue("TESTFX_BUILDXL_MSBUILD")],
         dotNetSearchLocations: [Environment.getDirectoryValue("DOTNET_ROOT")],
-        initialTargets: ["Build"],
+        initialTargets: Environment.getStringValue("TESTFX_BUILDXL_PACK") === "true" ? ["Build", "Pack"] : ["Build"],
         environment: Map.empty<string, string>().addRange(
             ["PATH", Environment.getStringValue("PATH")],
             ["SystemRoot", Environment.getStringValue("SystemRoot")],
@@ -73,6 +73,13 @@ config({
             ["ShouldUnsetParentConfigurationAndPlatform", "false"],
             ["EnableProjectDataOnBuild", "false"],
             ["UseSharedCompilation", "true"],
+            // Bazel reads the checked-in XLF files; do not rewrite them from the resx files during the build.
+            ["UpdateXlfOnBuild", "false"],
+            ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_PACK") === "true",
+                ["TestFxBuildXLPack", "true"],
+                ["ArtifactsPackagesDir", Environment.getStringValue("TESTFX_BUILDXL_PACKAGES")],
+                // Outer builds of multi-targeting projects do not import CustomBeforeDirectoryBuildTargets.
+                ["CustomAfterMicrosoftCommonCrossTargetingTargets", Environment.getStringValue("TESTFX_BUILDXL_ROOT") + "/eng/buildxl/msbuild.targets"]),
             ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS") !== "*",
                 ["CustomAfterMicrosoftCommonTargets", Environment.getStringValue("TESTFX_BUILDXL_ADDITIONAL_TARGETS")]),
             ...addIf<[string, string]>(Environment.getStringValue("TESTFX_BUILDXL_TFM") !== "*",

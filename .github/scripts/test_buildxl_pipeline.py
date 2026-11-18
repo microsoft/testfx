@@ -7,10 +7,14 @@ import base64
 import hashlib
 import json
 from pathlib import Path
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+import uuid
+import xml.etree.ElementTree as ET
 
 import yaml
 
@@ -19,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 JOURNAL_STEP = "Initialize BuildXL change journal"
 CACHE_STEP = "Cache BuildXL actions"
 BUILD_STEP = "Build repository with BuildXL"
+TEST_STEP = "Run Bazel-matched unit tests with BuildXL outputs"
 COLLECT_STEP = "Collect BuildXL engine and project logs"
 PUBLISH_STEP = "Publish BuildXL build logs"
 MAC_CACHE_HELPER = "Initialize-VisualStudioTelemetryMacCache"
@@ -35,6 +40,11 @@ GETMAC_OUTPUT = "\n".join(
 # Visual Studio telemetry hashes the first non-zero address exactly as getmac prints it.
 SEEDED_MAC_HASH = "s:" + hashlib.sha256(b"3C-52-82-AB-CD-EF").hexdigest()
 CACHED_HASH = "0123456789abcdef" * 4
+PACK_ONLY_PROPERTIES = {
+    "TestFxBuildXLPack": "true",
+    "ArtifactsPackagesDir": "PACKAGES\\",
+    "CustomAfterMicrosoftCommonCrossTargetingTargets": "MSBUILD.targets",
+}
 
 
 def mappings(value):
@@ -68,7 +78,15 @@ class BuildXLPipelineTests(unittest.TestCase):
             )
         )
         cls.job = cls.template["jobs"][0]
-        cls.steps = cls.job["steps"]
+        cls.raw_steps = cls.job["steps"]
+        # Flatten compile-time conditional step groups so steps can be found and ordered by position.
+        cls.steps = []
+        for entry in cls.raw_steps:
+            keys = list(entry)
+            if len(keys) == 1 and keys[0].startswith("${{"):
+                cls.steps.extend(entry[keys[0]])
+            else:
+                cls.steps.append(entry)
 
     def step(self, display_name: str) -> dict:
         matches = [
@@ -93,9 +111,17 @@ class BuildXLPipelineTests(unittest.TestCase):
         imports = [
             entry[gate] for entry in build_stage["jobs"] if gate in entry
         ]
-        # A direct build-stage gate cannot be nested under SkipTests.
+        # A direct build-stage gate cannot be nested under SkipTests; SkipTests is forwarded to the test step only.
         self.assertEqual(
-            [[{"template": "/eng/pipelines/jobs/buildxl.yml"}]], imports
+            [
+                [
+                    {
+                        "template": "/eng/pipelines/jobs/buildxl.yml",
+                        "parameters": {"SkipTests": "${{ parameters.SkipTests }}"},
+                    }
+                ]
+            ],
+            imports,
         )
         all_imports = [
             node["template"]
@@ -104,6 +130,19 @@ class BuildXLPipelineTests(unittest.TestCase):
         ]
         self.assertEqual(["/eng/pipelines/jobs/buildxl.yml"], all_imports)
         self.assertNotIn("SkipTests", self.job.get("condition", ""))
+
+    def test_skip_tests_removes_only_the_unit_test_step(self) -> None:
+        self.assertEqual(
+            [{"name": "SkipTests", "type": "boolean", "default": False}],
+            self.template["parameters"],
+        )
+        gate = "${{ if eq(parameters.SkipTests, false) }}"
+        self.assertEqual(
+            [[self.step(TEST_STEP)]],
+            [entry[gate] for entry in self.raw_steps if gate in entry],
+        )
+        for name in (BUILD_STEP, COLLECT_STEP, PUBLISH_STEP):
+            self.assertIn(self.step(name), self.raw_steps, name)
 
     def test_pipeline_does_not_import_the_legacy_benchmark(self) -> None:
         names = [parameter["name"] for parameter in self.pipeline["parameters"]]
@@ -257,6 +296,250 @@ class BuildXLPipelineTests(unittest.TestCase):
     def test_buildxl_does_not_publish_synthetic_test_results(self) -> None:
         for node in mappings(self.job):
             self.assertNotRegex(node.get("task", ""), r"(?i)^PublishTestResults(?:@|$)")
+
+    def test_unit_tests_run_only_after_a_successful_native_build_and_block_the_job(self) -> None:
+        tests = self.step(TEST_STEP)
+        # Pin the complete command: the build step's retry must not rerun tests and a failure must fail the job.
+        self.assertEqual(
+            [
+                r".\eng\buildxl\run-unit-tests.ps1 -Configuration '$(BuildXLConfiguration)'",
+                "exit $LASTEXITCODE",
+            ],
+            tests["pwsh"].strip().splitlines(),
+        )
+        self.assertIs(True, tests.get("enabled", True))
+        # The default condition is succeeded(): never test outputs from a failed or partial build.
+        self.assertNotIn("condition", tests)
+        self.assertNotIn("continueOnError", tests)
+        self.assertNotIn("retryCountOnTaskFailure", tests)
+        # The step timeout leaves the job budget for evidence collection and publication.
+        self.assertLess(tests["timeoutInMinutes"], self.job["timeoutInMinutes"])
+        build_index = self.steps.index(self.step(BUILD_STEP))
+        tests_index = self.steps.index(tests)
+        self.assertLess(build_index, tests_index)
+        self.assertLess(tests_index, self.steps.index(self.step(COLLECT_STEP)))
+
+    def test_unit_test_runner_uses_the_bazel_dogfood_workload_and_matches_its_assemblies(self) -> None:
+        workload = json.loads(
+            (ROOT / "eng" / "bazel" / "dogfood-workload.json").read_text(encoding="utf-8")
+        )
+        runner = (ROOT / "eng" / "buildxl" / "run-unit-tests.ps1").read_text(encoding="utf-8")
+        self.assertIn("eng\\bazel\\dogfood-workload.json", runner)
+        self.assertIn("eng\\bazel\\dogfood-results.psm1", runner)
+        self.assertEqual("net10.0", workload["targetFramework"])
+        self.assertEqual(13, len(workload["tests"]))
+        for test in workload["tests"]:
+            project = ROOT / "test" / "UnitTests" / test["project"] / f"{test['project']}.csproj"
+            self.assertTrue(project.is_file(), project)
+        solution = (ROOT / "TestFx.slnx").read_text(encoding="utf-8")
+        for test in workload["tests"]:
+            self.assertIn(f"{test['project']}.csproj", solution, test["label"])
+
+    def run_unit_test_runner(self, *arguments: str) -> subprocess.CompletedProcess:
+        if sys.platform != "win32":
+            self.skipTest("The BuildXL unit-test runner is Windows-only.")
+
+        return subprocess.run(
+            [
+                "pwsh", "-NoLogo", "-NoProfile", "-NonInteractive", "-OutputFormat", "Text",
+                "-File", str(ROOT / "eng" / "buildxl" / "run-unit-tests.ps1"), *arguments,
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+    def test_unit_test_runner_fails_closed_without_build_output(self) -> None:
+        output_id = "runner-missing-" + uuid.uuid4().hex[:12]
+        output = ROOT / "artifacts" / "buildxl-runs" / output_id
+        self.assertFalse(output.exists())
+        process = self.run_unit_test_runner("-Configuration", "Debug", "-OutputId", output_id)
+        self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+        self.assertIn("toolchain.json", process.stdout + process.stderr)
+        self.assertFalse(output.exists(), "A failed precondition must not create evidence.")
+
+    def test_unit_test_runner_rejects_build_output_without_a_successful_build(self) -> None:
+        output_id = "runner-partial-" + uuid.uuid4().hex[:12]
+        output = ROOT / "artifacts" / "buildxl-runs" / output_id
+        revision = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        try:
+            (output / "logs").mkdir(parents=True)
+            (output / "toolchain.json").write_text(
+                json.dumps(
+                    {
+                        "SourceRevision": revision,
+                        "Sdk": "0.0.0",
+                        "Engine": "BuildXL",
+                        "Configuration": "Debug",
+                        "DotNetRoot": str(ROOT / ".dotnet"),
+                        "Project": "TestFx.slnx",
+                        "TargetFramework": "Project defaults",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (output / "logs" / "phase-timings.json").write_text(
+                json.dumps({"RestoreExitCode": 0, "BuildExitCode": 1}),
+                encoding="utf-8",
+            )
+            process = self.run_unit_test_runner("-Configuration", "Debug", "-OutputId", output_id)
+            self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+            self.assertIn("The build did not succeed", process.stdout + process.stderr)
+            self.assertFalse(
+                (output / "logs" / "unit-tests").exists(),
+                "No suite may run against a failed build.",
+            )
+        finally:
+            shutil.rmtree(output, ignore_errors=True)
+
+    def test_unit_test_runner_rejects_build_output_narrower_than_the_workload(self) -> None:
+        revision = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        cases = {
+            "project": ("src\\TestFramework\\TestFramework\\TestFramework.csproj", "Project defaults"),
+            "framework": ("TestFx.slnx", "netstandard2.0"),
+        }
+        for case, (project, framework) in cases.items():
+            with self.subTest(case=case):
+                output_id = "runner-scope-" + uuid.uuid4().hex[:12]
+                output = ROOT / "artifacts" / "buildxl-runs" / output_id
+                try:
+                    (output / "logs").mkdir(parents=True)
+                    (output / "toolchain.json").write_text(
+                        json.dumps(
+                            {
+                                "SourceRevision": revision,
+                                "Sdk": "0.0.0",
+                                "Engine": "MSBuild",
+                                "Configuration": "Debug",
+                                "DotNetRoot": str(ROOT / ".dotnet"),
+                                "Project": project,
+                                "TargetFramework": framework,
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    (output / "logs" / "phase-timings.json").write_text(
+                        json.dumps({"RestoreExitCode": 0, "BuildExitCode": 0}),
+                        encoding="utf-8",
+                    )
+                    process = self.run_unit_test_runner("-Configuration", "Debug", "-OutputId", output_id)
+                    self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+                    self.assertIn(
+                        f"The build output covers {project} ({framework}), not the workload.",
+                        process.stdout + process.stderr,
+                    )
+                    self.assertFalse(
+                        (output / "logs" / "unit-tests").exists(),
+                        "No suite may run against assemblies outside the recorded build scope.",
+                    )
+                finally:
+                    shutil.rmtree(output, ignore_errors=True)
+
+    def test_unit_test_summary_reports_pack_from_the_recorded_build_targets(self) -> None:
+        if sys.platform != "win32":
+            self.skipTest("The BuildXL unit-test runner is Windows-only.")
+        dotnet_root = ROOT / ".dotnet"
+        if not (dotnet_root / "dotnet.exe").is_file():
+            self.skipTest("The repository-local .NET SDK is not restored.")
+        runtimes = subprocess.run(
+            [str(dotnet_root / "dotnet.exe"), "--list-runtimes"],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        major = re.search(r"^Microsoft\.NETCore\.App (\d+)\.", runtimes, re.MULTILINE).group(1)
+        revision = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        cases = {
+            "Build;Pack": ("| Build (includes Pack) | 34.5 |", "| Pack | included in Build |"),
+            "Build": ("| Build | 34.5 |", "| Pack | not run |"),
+            None: ("| Build | 34.5 |", "| Pack | not run |"),
+        }
+        for targets, (build_row, pack_row) in cases.items():
+            with self.subTest(targets=targets):
+                output_id = "runner-summary-" + uuid.uuid4().hex[:12]
+                output = ROOT / "artifacts" / "buildxl-runs" / output_id
+                try:
+                    # A one-suite workload over a placeholder assembly reaches the summary without real build outputs;
+                    # the suite itself fails because the placeholder is not a test host.
+                    assembly = output / "bin" / "Placeholder.UnitTests" / "Debug" / "net10.0"
+                    assembly.mkdir(parents=True)
+                    (assembly / "Placeholder.UnitTests.dll").write_bytes(b"")
+                    workload = output / "workload.json"
+                    workload.write_text(
+                        json.dumps(
+                            {
+                                "schemaVersion": 1,
+                                "name": "summary",
+                                "identityPolicy": "trx",
+                                "targetFramework": "net10.0",
+                                "tests": [
+                                    {
+                                        "label": "//:placeholder_tests",
+                                        "project": "Placeholder.UnitTests",
+                                        "assembly": "Placeholder.UnitTests",
+                                        "runtime": "sdk",
+                                    }
+                                ],
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    (output / "toolchain.json").write_text(
+                        json.dumps(
+                            {
+                                "SourceRevision": revision,
+                                "Sdk": f"{major}.0.100",
+                                "Engine": "BuildXL",
+                                "Configuration": "Debug",
+                                "DotNetRoot": str(dotnet_root),
+                                "Project": "TestFx.slnx",
+                                "TargetFramework": "Project defaults",
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    phases = {"RestoreExitCode": 0, "BuildExitCode": 0, "RestoreSeconds": 12.5, "BuildSeconds": 34.5}
+                    if targets is not None:
+                        phases["Targets"] = targets
+                    (output / "logs").mkdir()
+                    (output / "logs" / "phase-timings.json").write_text(json.dumps(phases), encoding="utf-8")
+                    process = self.run_unit_test_runner(
+                        "-Configuration", "Debug", "-OutputId", output_id, "-Workload", str(workload)
+                    )
+                    self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+                    summary = (output / "logs" / "unit-tests" / "unit-test-summary.md").read_text(
+                        encoding="utf-8-sig"
+                    ).replace("\r\n", "\n")
+                    phase_table = re.sub(
+                        r"(?m)^(\| Unit tests \(1 suites, 2 at a time\) \| )[\d.]+ \|$",
+                        r"\1<seconds> |",
+                        summary.split("\n\n")[1],
+                    )
+                    self.assertEqual(
+                        "\n".join(
+                            [
+                                "| Phase | Seconds |",
+                                "| --- | ---: |",
+                                "| Restore | 12.5 |",
+                                build_row,
+                                "| Runtime bootstrap (outside the test phase) | 0 |",
+                                "| Unit tests (1 suites, 2 at a time) | <seconds> |",
+                                pack_row,
+                            ]
+                        ),
+                        phase_table.strip(),
+                    )
+                finally:
+                    shutil.rmtree(output, ignore_errors=True)
 
     def test_collector_runs_always_after_native_build(self) -> None:
         collector = self.step(COLLECT_STEP)
@@ -587,6 +870,251 @@ Write-Output ('BUILDXL_FILE_SYSTEM_RESULT=' + ($result | ConvertTo-Json -Compres
         self.assertLess(prepare_only, msbuild_engine)
         self.assertLess(msbuild_engine, calls[0])
         self.assertLess(calls[0], native_build[0])
+
+    def driver_settings(self, pack: bool) -> dict:
+        script = r"""
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version 2.0
+$tokens = $null
+$parseErrors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    '__DRIVER__', [ref] $tokens, [ref] $parseErrors)
+if ($parseErrors.Count -ne 0) { throw 'The driver must parse before extracting its settings.' }
+$assignments = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.AssignmentStatementAst]
+}, $true))
+$initial = @($assignments | Where-Object { $_.Left.Extent.Text -eq '$properties' -and $_.Operator -eq 'Equals' })
+if ($initial.Count -ne 1) { throw 'Expected exactly one $properties initialization.' }
+# Only the if statements that directly append to $properties; never execute restore or build code.
+$updates = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.IfStatementAst] -and $null -eq $node.ElseClause -and
+        @($node.Clauses | ForEach-Object { $_.Item2.Statements } | Where-Object {
+            $_ -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+                $_.Left.Extent.Text -eq '$properties' -and $_.Operator -eq 'PlusEquals'
+        }).Count -gt 0
+}, $true) | Sort-Object { $_.Extent.StartOffset })
+function Get-AssignedValue([string] $Target) {
+    $found = @($assignments | Where-Object { $_.Left.Extent.Text -eq $Target })
+    if ($found.Count -ne 1) { throw "Expected exactly one assignment to $Target." }
+    return & ([scriptblock]::Create($found[0].Right.Extent.Text))
+}
+$Configuration = 'Release'
+$bin = 'BIN\'
+$obj = 'OBJ\'
+$msbuildTargets = 'MSBUILD.targets'
+$packages = 'PACKAGES\'
+$TargetFramework = ''
+$AdditionalTargets = ''
+$Pack = [switch]::new('__PACK__' -eq 'true')
+. ([scriptblock]::Create($initial[0].Extent.Text))
+foreach ($update in $updates) {
+    . ([scriptblock]::Create($update.Extent.Text))
+}
+$targets = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.HashtableAst]
+}, $true) | ForEach-Object { $_.KeyValuePairs } | Where-Object { $_.Item1.Extent.Text -eq 'Targets' } |
+    ForEach-Object { & ([scriptblock]::Create($_.Item2.Extent.Text)) })
+$msbuildTargetArguments = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.ExpandableStringExpressionAst] -and $node.Value.StartsWith('/t:')
+}, $true) | ForEach-Object { & ([scriptblock]::Create($_.Extent.Text)) })
+$result = [ordered]@{
+    Properties = @($properties)
+    PackEnvironment = Get-AssignedValue '$env:TESTFX_BUILDXL_PACK'
+    PackagesEnvironment = Get-AssignedValue '$env:TESTFX_BUILDXL_PACKAGES'
+    Targets = $targets
+    MSBuildTargets = $msbuildTargetArguments
+}
+Write-Output ('BUILDXL_DRIVER_SETTINGS=' + ($result | ConvertTo-Json -Compress))
+"""
+        script = script.replace(
+            "__DRIVER__", str(ROOT / "eng" / "buildxl.ps1").replace("'", "''")
+        ).replace("__PACK__", "true" if pack else "false")
+        command = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+        process = subprocess.run(
+            [
+                "pwsh", "-NoLogo", "-NoProfile", "-NonInteractive",
+                "-OutputFormat", "Text", "-EncodedCommand", command,
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        self.assertEqual(0, process.returncode, process.stdout + process.stderr)
+        self.assertEqual("", process.stderr.strip())
+        marker = "BUILDXL_DRIVER_SETTINGS="
+        results = [
+            line.removeprefix(marker)
+            for line in process.stdout.splitlines() if line.startswith(marker)
+        ]
+        self.assertEqual(1, len(results), process.stdout)
+        settings = json.loads(results[0])
+        self.assertTrue(
+            all(item.startswith("/p:") and "=" in item for item in settings["Properties"]),
+            settings["Properties"],
+        )
+        settings["Properties"] = dict(
+            item.removeprefix("/p:").split("=", 1) for item in settings["Properties"]
+        )
+        return settings
+
+    def test_pack_is_opt_in_and_every_driver_path_agrees_on_targets(self) -> None:
+        build = self.driver_settings(pack=False)
+        pack = self.driver_settings(pack=True)
+
+        self.assertEqual("false", build["PackEnvironment"])
+        self.assertEqual(["Build", "Build"], build["Targets"])
+        self.assertEqual(["/t:Build"], build["MSBuildTargets"])
+        self.assertEqual("false", build["Properties"]["UpdateXlfOnBuild"])
+        self.assertFalse(set(PACK_ONLY_PROPERTIES) & set(build["Properties"]))
+
+        self.assertEqual("true", pack["PackEnvironment"])
+        self.assertEqual(["Build;Pack", "Build;Pack"], pack["Targets"])
+        self.assertEqual(["/t:Build;Pack"], pack["MSBuildTargets"])
+        self.assertEqual({**build["Properties"], **PACK_ONLY_PROPERTIES}, pack["Properties"])
+        self.assertEqual(
+            pack["Properties"]["ArtifactsPackagesDir"], pack["PackagesEnvironment"]
+        )
+
+    def test_native_config_mirrors_the_driver_build_and_pack_settings(self) -> None:
+        config = (ROOT / "eng" / "buildxl" / "config.dsc").read_text(encoding="utf-8")
+        initial_targets = re.search(
+            r'initialTargets: Environment\.getStringValue\("TESTFX_BUILDXL_PACK"\) === "true"'
+            r" \? \[([^\]]*)\] : \[([^\]]*)\],",
+            config,
+        )
+        self.assertIsNotNone(initial_targets, "initialTargets must be selected by TESTFX_BUILDXL_PACK.")
+        build = self.driver_settings(pack=False)
+        pack = self.driver_settings(pack=True)
+        self.assertEqual(
+            pack["Targets"][0].split(";"), re.findall(r'"(\w+)"', initial_targets.group(1))
+        )
+        self.assertEqual(
+            build["Targets"][0].split(";"), re.findall(r'"(\w+)"', initial_targets.group(2))
+        )
+
+        block = config.split("globalProperties: Map.empty<string, string>().addRange(", 1)[1]
+        block = block.split("logVerbosity:", 1)[0]
+        unconditional, *conditional = block.split("...addIf<[string, string]>(")
+        groups = {}
+        for chunk in conditional:
+            condition = re.match(
+                r'Environment\.getStringValue\("(\w+)"\) (===|!==) "([^"]*)",', chunk
+            )
+            self.assertIsNotNone(condition, chunk)
+            groups[condition.groups()] = chunk
+
+        def names(text: str) -> set[str]:
+            return set(re.findall(r'\[\s*"(\w+)",', text))
+
+        def literals(text: str) -> dict[str, str]:
+            return dict(re.findall(r'\[\s*"(\w+)",\s*"([^"]*)"\]', text))
+
+        pack_group = groups[("TESTFX_BUILDXL_PACK", "===", "true")]
+        self.assertEqual(set(build["Properties"]), names(unconditional))
+        self.assertEqual(set(PACK_ONLY_PROPERTIES), names(pack_group))
+        for name, value in {**literals(unconditional), **literals(pack_group)}.items():
+            with self.subTest(property=name):
+                self.assertEqual(pack["Properties"][name], value)
+        self.assertIn(
+            '["ArtifactsPackagesDir", Environment.getStringValue("TESTFX_BUILDXL_PACKAGES")]',
+            pack_group,
+        )
+
+    def test_pack_targets_load_only_in_pack_mode_and_address_graph_nodes(self) -> None:
+        buildxl = ROOT / "eng" / "buildxl"
+        imports = ET.parse(buildxl / "msbuild.targets").getroot().findall("Import")
+        self.assertEqual(
+            [("pack.targets", "'$(TestFxBuildXLPack)' == 'true'")],
+            [(item.get("Project"), " ".join(item.get("Condition", "").split())) for item in imports],
+        )
+
+        pack = ET.parse(buildxl / "pack.targets").getroot()
+        # A packing node exempted from isolation against itself re-runs its inner builds and double-writes obj files.
+        self.assertIn(
+            "$(MSBuildProjectFullPath)",
+            [item.get("Remove") for item in pack.iter("GraphIsolationExemptReference")],
+        )
+        address = pack.find("Target[@Name='_TestFxBuildXLAddressGraphInnerBuilds']")
+        self.assertIsNotNone(address)
+        self.assertEqual("_SdkPrepareProjectFlavorMatrix", address.get("AfterTargets"))
+        self.assertEqual(
+            ["%(_SdkProjectFlavorMatrixItem.UndefineProperties);BuildProjectReferences"],
+            [item.text for item in address.iter("UndefineProperties")],
+        )
+
+    def test_pack_overrides_track_the_product_targets_they_replace(self) -> None:
+        def normalized(element: ET.Element | None, attribute: str) -> str:
+            self.assertIsNotNone(element)
+            return " ".join(element.get(attribute, "").split())
+
+        overrides = ET.parse(ROOT / "eng" / "buildxl" / "pack.targets").getroot()
+        analyzers = ET.parse(
+            ROOT / "src" / "Analyzers" / "MSTest.Analyzers.Package" / "MSTest.Analyzers.Package.csproj"
+        ).getroot()
+        product = analyzers.find("Target[@Name='_GenerateGlobalConfigs']/Exec")
+        override = overrides.find("Target[@Name='_GenerateGlobalConfigs']")
+        self.assertIsNotNone(override)
+        generator = override.find("PropertyGroup/_TestFxGlobalConfigsGenerator")
+        self.assertEqual(
+            normalized(product, "EnvironmentVariables"),
+            normalized(override.find("Exec"), "EnvironmentVariables"),
+        )
+        self.assertTrue(normalized(product, "WorkingDirectory").endswith(r"\MSTest.GlobalConfigsGenerator"))
+        self.assertEqual(
+            r"$(ArtifactsBinDir)MSTest.GlobalConfigsGenerator\$(Configuration)\$(NetCurrent)"
+            r"\MSTest.GlobalConfigsGenerator.dll",
+            generator.text,
+        )
+        generator_project = ET.parse(
+            ROOT / "src" / "Analyzers" / "MSTest.GlobalConfigsGenerator" / "MSTest.GlobalConfigsGenerator.csproj"
+        ).getroot()
+        self.assertEqual("$(NetCurrent)", generator_project.findtext("PropertyGroup/TargetFramework"))
+        solution = ET.parse(ROOT / "TestFx.slnx").getroot()
+        self.assertEqual(
+            ["src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj"],
+            [
+                dependency.get("Project")
+                for dependency in solution.findall(
+                    ".//Project[@Path='src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj']"
+                    "/BuildDependency"
+                )
+            ],
+        )
+
+        packaged_app = ET.parse(
+            ROOT / "src" / "Platform" / "Microsoft.Testing.Extensions.PackagedApp.MSBuild"
+            / "Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj"
+        ).getroot()
+        product = packaged_app.find("Target[@Name='_AddPackagedAppControllerToPackage']")
+        override = overrides.find("Target[@Name='_AddPackagedAppControllerToPackage']")
+        self.assertEqual(normalized(product, "Condition"), normalized(override, "Condition"))
+        self.assertIsNotNone(product.find("MSBuild"))
+        self.assertIsNone(override.find("MSBuild"))
+        for path, attribute in (
+            ("ItemGroup/_PackagedAppControllerFramework", "Include"),
+            ("Error", "Condition"),
+            ("Error", "Text"),
+            ("ItemGroup/_PackagedAppControllerPackageFile", "Include"),
+            ("ItemGroup/_PackagedAppControllerPackageFile", "Exclude"),
+            ("ItemGroup/TfmSpecificPackageFile", "Include"),
+        ):
+            with self.subTest(element=path, attribute=attribute):
+                self.assertEqual(
+                    normalized(product.find(path), attribute),
+                    normalized(override.find(path), attribute),
+                )
+        for path in (
+            "ItemGroup/_PackagedAppControllerPackageFile/ControllerTargetFramework",
+            "ItemGroup/TfmSpecificPackageFile/PackagePath",
+        ):
+            with self.subTest(element=path):
+                self.assertEqual(product.findtext(path), override.findtext(path))
 
     def telemetry_mac_cache(
         self, initial: dict | None, getmac: dict

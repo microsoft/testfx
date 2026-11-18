@@ -31,3 +31,14 @@ group benchmarks
     strategy: min
 
     nuget BenchmarkDotNet == 0.15.8
+
+// Third-party test frameworks used only by the build-only TestFx.slnx samples.
+group samples
+    source https://api.nuget.org/v3/index.json
+    framework: >= net8.0
+    storage: none
+    strategy: min
+
+    nuget NUnit == 5.0.0
+    nuget NUnit3TestAdapter == 6.3.1
+    nuget xunit.v3.mtp-v2 == 4.0.3

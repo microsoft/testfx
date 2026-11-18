@@ -76,6 +76,6 @@ paket.parse(
     lock = "//eng/bazel/tests-support:paket.lock",
     repo_prefix = "testsupport.",
 )
-use_repo(paket, "testsupport.analyzers", "testsupport.benchmarks", "testsupport.main")
+use_repo(paket, "testsupport.analyzers", "testsupport.benchmarks", "testsupport.main", "testsupport.samples")
 
 include("//eng/bazel/windows:windows.MODULE.bazel")

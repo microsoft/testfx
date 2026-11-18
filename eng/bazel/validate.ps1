@@ -32,8 +32,9 @@ $minimumTests = 35
 # Manual targets that no automatic `//...` target depends on through any select() branch. The query is
 # unconfigured, so it proves reachability rather than that every branch is built: per-framework test
 # applications are selected for the active framework only, and test targets run on net10.0 by design
-# (`//:managed_all` builds the product graph for every framework). A manual target that is not in this
-# list, or a listed target that no longer exists, fails validation.
+# (`//:managed_all` builds the product graph and `//:unit_test_apps_all` every unit-test application for
+# every framework). A manual target that is not in this list, or a listed target that no longer exists,
+# fails validation.
 $unreachableManualTargets = [ordered]@{
     '//:custom_report_failure_probe' = 'Intentionally failing sample; asserted by the mixed-results step.'
     '//:ensure_failure_probe' = 'Intentionally failing sample; asserted by the mixed-results step.'

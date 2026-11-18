@@ -4453,3 +4453,153 @@ The fix retains the count and unique-framework checks rather than accepting a
 partial matrix. Local logs and TRX are retained under
 `artifacts/bazel-ci-repair`; hosted results will be linked in the PR at the
 tested source revision.
+
+## Equal-work comparison scope (2026-11-17)
+
+### Problem and contract
+
+The Bazel-versus-BuildXL comparison was unequal. BuildXL builds all of
+`TestFx.slnx` (66 projects, 161 per-framework builds). The dogfood workload
+builds only what the 13 unit suites need, at net10.0. The request was to
+"make bazel do all tfms + projects" while BuildXL also builds satellites from
+XLF and packs, and to name everything one engine does that the other does not.
+The BuildXL side, the measured results and the full asymmetry lists are in the
+[BuildXL record](buildxl-build.md#equal-work-measurement).
+
+Contract:
+
+- Tests are unchanged. There are still 35 automatic test targets, the new
+  targets are build-only, and the unit suites still run on net10.0 only.
+- The default dogfood workload is unchanged. Its scope hash is identical with
+  and without this change (see validation). The full graph is opt-in through
+  `dogfood.ps1 -FullGraph`.
+- The hosted workflow is affected. `.github/workflows/bazel.yml` runs
+  `eng/bazel/validate.ps1`, which builds and tests `//...` on
+  `windows-latest` and `ubuntu-latest`. The new targets therefore add build
+  work to both hosted jobs. That cost was not measured, so hosted job times
+  recorded before this change (median about 17 minutes) are not comparable
+  with later ones.
+
+### Added to the graph
+
+| Target | Project | Frameworks | Notes |
+| --- | --- | --- | --- |
+| `unit_test_apps_all` | The 13 unit-test apps and `test_infrastructure` | net10.0, net11.0 | A `testfx_matrix` over the new `unit_test_apps` filegroup. The projects target both frameworks in MSBuild, and Bazel now builds both; tests still run on net10.0. |
+| `xunit_mtp_playground` | `samples/CtrfPlayground/XunitMtp` | net10.0 | Hand-written `eng/bazel/XunitMtpMain.cs` replaces the entry point the package targets generate. The package's `_content` sources are compiled in. |
+| `nunit_playground` | `samples/NUnitPlayground` | net10.0 | `eng/bazel/NUnitPlaygroundMain.cs` replaces `Program.cs`, without the preview AffectedTests extension. NUnit3TestAdapter is imported from `build/net8.0`, with its MTP dependencies resolved to the repository projects. |
+| `ctrf_playground` | `samples/CtrfPlayground/Mtp` | net10.0 | The shared `TestMain.cs` replaces `Program.cs`, again without AffectedTests. |
+| `fx_extensibility_net462` | `samples/FxExtensibility` | net462 | A compatibility variant of the `manual` library. |
+| `packaged_app_msbuild` | `Microsoft.Testing.Extensions.PackagedApp.MSBuild` | netstandard2.0, net10.0 | No compiled sources (`allow_empty_sources`); `buildTransitive` is excluded. |
+
+The samples are build-only because their tests fail on purpose. Supporting
+changes:
+
+- `packaged_app_msbuild` joins the netstandard2.0 compatibility list, so
+  `//:managed_netstandard2_0` now has 27 exact-framework assemblies instead of
+  26. `eng/bazel/windows/validate.ps1` asserts the new count. The 26 recorded
+  in earlier sections describes the graph before this change. The first hosted
+  Windows run on `955273520a07423985e9fe3fd9091f8c07601e2a` failed on the old
+  count. A local `//:managed_netstandard2_0` build then produced 27 entries,
+  all with `target_framework` `netstandard2.0`, one of them
+  `Microsoft.Testing.Extensions.PackagedApp.MSBuild`.
+
+- A Paket `samples` group (NUnit 5.0.0, NUnit3TestAdapter 6.3.1,
+  xunit.v3.mtp-v2 4.0.3), exposed as `testsupport.samples` in `MODULE.bazel`.
+- `testfx_package_files` moved from `windows.bzl` to `defs.bzl` so samples can
+  reuse it.
+- `testfx_library` and its variants accept `allow_empty_sources`.
+
+### Not modeled
+
+Each gap below is something only BuildXL builds:
+
+- F# `FSharpPlayground`: needs rules_dotnet's F# rules plus FSharp.Core,
+  StreamJsonRpc, MessagePack and Nerdbank.MessagePack. Not tried.
+- `Playground`: net10.0 and net462 with many extra packages, such as the
+  OpenTelemetry exporter and `Microsoft.Extensions.Logging.Console`. Not tried.
+- net12.0 projects, including `Performance.Runner`: the default Bazel SDK,
+  11.0.100-rc.3, cannot target net12.0. They were not tried under the dogfood
+  engineering toolchain (SDK 12).
+- net4x and WinUI unit-test hosts, and the Windows-TFM test projects. One net4x
+  host was probed and failed (below).
+- The pack-time controller layout of `PackagedApp.MSBuild`.
+- The acceptance-test projects, and `Dependabot.Dependencies`, which is
+  restore-only.
+
+net462 probe: a net462 `DotnetTestProtocolContract.UnitTests` app was
+appended to `BUILD.bazel` temporarily, then removed.
+
+- As a `testfx_binary`, analysis failed in rules_dotnet's net462
+  `apphost_pack` transition.
+- As a `testfx_library`, compilation failed:
+  - linked platform IPC sources were missing (`INamedPipeSerializer`,
+    `NamedPipeSerializer<>`, `NamedPipeBase`);
+  - `ExecutionScope` was ambiguous;
+  - `CommandLineOptionMessages` was inaccessible.
+- Only five libraries have net462 variants. The test-support Paket groups
+  also target `>= net8.0`, so net4x hosts would need compatible test packages
+  too.
+
+### `-FullGraph` and the concurrent-change guard
+
+`dogfood.ps1 -FullGraph` builds `//...` instead of only the selected unit
+targets, then runs the same unit suites. It applies to the native modes only;
+`-Mode MSBuild -FullGraph` throws before any work starts. It adds
+`BuildTargets = //...` to the scope, so it gets its own scope hash and its
+results are never pooled with the default workload's. The Azure pipeline does
+not pass it.
+
+The first cold full-graph run took much longer than expected. Profiling showed
+the cause was `--guard_against_concurrent_changes`, which makes Bazel recheck
+each action's inputs:
+
+| Run | Guard | Build (s) | Dogfood total (s) |
+| --- | --- | ---: | ---: |
+| `prof02`, profiled | Yes | 521.1 (critical path 84.5) | Not measured |
+| `prof01`, profiled | No | 331.3 (critical path 78.5) | Not measured |
+| `fg-run` | Yes | 533.4 | 710.3 |
+| `fg-noguard` | No | 337.4 | 503.9 |
+
+With the guard, `TestFxMetadata` actions went from about 1.3 s to 3.7 s.
+
+Decision: pass the guard only in `BuildCache` and `Cached`, which upload to the
+persistent shared action cache. `Cold` uses a per-run cache, and the harness
+already fails a run whose source changed while it ran. Alternatives:
+
+- Keeping the guard everywhere was rejected: it added about 190 s, or 58%, to a
+  cold full-graph build.
+- Dropping it everywhere was rejected: the shared cache could then store
+  outputs built from source that changed mid-action.
+
+The hosted Bazel workflow never passed the guard. Scoped Bazel timings taken
+earlier with the guard should be read as upper bounds.
+
+In Azure, history trends group runs by `CacheKey`, which hashes `MODULE.bazel`
+and `MODULE.bazel.lock`. This change edits both, so Azure trends do not mix
+Cold samples taken with and without the guard.
+
+### Validation
+
+All runs were local, on Windows x64, at
+`172f4e9dcdeb2de086df30d813d2fe4d1f2db869` plus this change.
+
+| Contract | Command | Result |
+| --- | --- | --- |
+| The expanded graph builds | `eng\bazel.ps1 build //... //:unit_test_apps_all --compilation_mode=opt --keep_going` | Exit 0. 192.1 s, critical path 49.2 s, 4,636 actions (1,191 action-cache hits). The cache was warm, so this is not a timing. |
+| The new samples discover tests | The `nunit_playground` and `xunit_mtp_playground` binaries | They discover 2 and 7 tests. |
+| Validator invariants hold | The unreachable-manual-targets and automatic-test queries from `eng\bazel\validate.ps1` | Exactly the 6 allowlisted manual targets and 35 automatic tests. |
+| The default scope is unchanged; `-FullGraph` is separate | `dogfood.ps1 -Mode Cold -Prepare`, with and without `-FullGraph`, plus the HEAD copy of the script | The default hash is identical before and after (`EBD2B6A4...`). `-FullGraph` gets a different hash. `-Mode MSBuild -FullGraph` exits 1 before creating `RunRoot`. |
+| Harness and workflow contracts | `test-dogfood-results.ps1`, `test-dogfood-runner.ps1`, `test-dogfood-comparison.ps1`; `python .github/scripts/test_bazel_cache.py` | All exit 0; 14 Python contract tests passed. |
+| Equal-work run | `eng\bazel\dogfood.ps1 -Mode Cold -FullGraph -Jobs 32 -TestJobs 2` | The build succeeded: 2,224 targets, 5,835 actions. TRX counters matched BuildXL for all 12 suites that ran. 12 of 13 suites passed. The harness reports failure only because `adapter_tests` cannot start under the local output root (`MAX_PATH`), so it writes no TRX. |
+
+Not run locally: the full `validate.ps1`, `windows\validate.ps1`,
+`validate-packages.ps1`, and any Linux build. No new target sets
+`target_compatible_with`. The existing net462 compatibility variants are
+equally unconstrained and are already part of the hosted `ubuntu-latest`
+`//...` build, so the new targets are expected to build on Linux. The first
+proof will be that hosted job.
+
+The guard selection has no automated test: it is inline in `dogfood.ps1`,
+and the dogfood contract tests cover only the extracted process helpers. The
+recorded invocations confirm it. `fg-run`'s build command line contains
+`--guard_against_concurrent_changes`; no `fg-noguard` evidence file does.
