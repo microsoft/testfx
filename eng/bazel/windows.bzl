@@ -1,7 +1,7 @@
 """Native Windows library inputs; no XAML compiler or MSBuild invocation."""
 
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "import_library", "publish_binary")
-load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_library", "testfx_matrix")
+load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_library", "testfx_matrix", "testfx_package_files")
 
 _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 _SHARED = "src/Platform/SharedExtensionHelpers"
@@ -12,27 +12,9 @@ _PACKAGED_FRAMEWORKS = [tfm + "-windows10.0.19041.0" for tfm in PORTABLE_FRAMEWO
 _DESKTOP_FRAMEWORKS = [tfm + "-windows7.0" for tfm in PORTABLE_FRAMEWORKS]
 _CODE_COVERAGE_VERSION = "18.13.0-preview.26527.4"
 
-def _package_files_impl(ctx):
-    selected = []
-    files = ctx.files.package
-    for suffix in ctx.attr.suffixes:
-        matches = [file for file in files if file.path.endswith("/" + suffix)]
-        if len(matches) != 1:
-            fail("Expected exactly one '{}' in {}, found {}".format(suffix, ctx.attr.package.label, matches))
-        selected.extend(matches)
-    return [DefaultInfo(files = depset(selected))]
-
-_package_files = rule(
-    implementation = _package_files_impl,
-    attrs = {
-        "package": attr.label(mandatory = True),
-        "suffixes": attr.string_list(mandatory = True),
-    },
-)
-
 def _projection(name, group, version, framework):
     package = "@windows." + group + "//microsoft.windows.sdk.net.ref:files"
-    _package_files(
+    testfx_package_files(
         name = name + "_dlls",
         package = package,
         suffixes = [
@@ -40,12 +22,12 @@ def _projection(name, group, version, framework):
             "lib/" + framework + "/WinRT.Runtime.dll",
         ],
     )
-    _package_files(
+    testfx_package_files(
         name = name + "_analyzer",
         package = package,
         suffixes = ["analyzers/dotnet/cs/WinRT.SourceGenerator.dll"],
     )
-    _package_files(
+    testfx_package_files(
         name = name + "_nupkg",
         package = package,
         suffixes = ["microsoft.windows.sdk.net.ref." + version + ".nupkg"],
@@ -295,7 +277,7 @@ def _controller():
         "nupkg": ["microsoft.testing.extensions.codecoverage." + _CODE_COVERAGE_VERSION + ".nupkg"],
     }
     for group, files in groups.items():
-        _package_files(name = "windows_coverage_" + group, package = package, suffixes = files)
+        testfx_package_files(name = "windows_coverage_" + group, package = package, suffixes = files)
     import_library(
         name = "windows_code_coverage",
         library_name = "Microsoft.Testing.Extensions.CodeCoverage",

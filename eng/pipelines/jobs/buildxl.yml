@@ -75,6 +75,15 @@ jobs:
     # the single retry remains a backstop for other teardown races.
     retryCountOnTaskFailure: 1
 
+  # Runs the Bazel dogfood workload's unit suites from the BuildXL outputs, uncached, so restore, build and
+  # tests can be compared with Bazel. Results are retained as files under logs\unit-tests; they are not published
+  # as Azure DevOps test results.
+  - pwsh: |
+      .\eng\buildxl\run-unit-tests.ps1 -Configuration '$(BuildXLConfiguration)'
+      exit $LASTEXITCODE
+    displayName: Run Bazel-matched unit tests with BuildXL outputs
+    timeoutInMinutes: 30
+
   - pwsh: |
       $root = '$(Build.SourcesDirectory)\artifacts\buildxl'
       $evidence = '$(BuildXLArtifacts)'

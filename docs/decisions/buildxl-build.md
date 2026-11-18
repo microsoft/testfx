@@ -1,5 +1,537 @@
 # BuildXL build: research and decisions
 
+## 2026-11-17: run the Bazel-matched unit suites on BuildXL outputs
+
+### Problem and contract
+
+The Bazel and BuildXL CI legs were not comparable per phase: Bazel restores,
+builds and runs 13 unit suites, while BuildXL only built. Whole-job medians
+(Bazel about 17 minutes, BuildXL about 16 minutes build-only) therefore mix
+different work. The request: run at least the exact same tests as Bazel on
+BuildXL so restore, build and test time can be compared precisely.
+
+Confirmed requirements: the same test selection as Bazel's `windows-net10-unit`
+dogfood workload (`eng\bazel\dogfood-workload.json`), per-phase timings, and no
+change to the shipping Arcade jobs.
+
+Assumptions (unattended work, reversible): the matched set is the 13 net10.0
+product unit suites; Debug is the GitHub-Bazel-comparable leg (`fastbuild`),
+while the dogfood experiment is Release/`opt`, so both BuildXL legs run tests.
+
+Non-goals: native BuildXL test pips, acceptance suites, the 3 Bazel-specific
+suites, the 8 compatibility/graph-analysis targets, the 11 samples (including
+the 3 scale samples), and pack. These stay Bazel-only and are listed as gaps.
+
+Failure contract: the test step runs only after a successful native build,
+refuses to run against output from a different revision, configuration or
+failed build, fails the job when any matched suite fails, is not retried, and
+never uses `continueOnError`.
+
+### Alternatives and decision
+
+| Option | Outcome |
+| --- | --- |
+| Do nothing; keep comparing job medians | Rejected: different work, not a precise comparison. |
+| Native BuildXL test pips | Rejected: tests are sandbox-hostile (child processes, network, temp state), would be cached and not comparable to Bazel's uncached run, and need a second graph. |
+| Extend `eng\bazel\dogfood.ps1` | Rejected: coupled to Bazel, its lock and source state. |
+| Run tests in the build step | Rejected: that script is pinned by contract tests and is the only step allowed to retry; a retried test run would double count. |
+| **Separate post-build step, `eng\buildxl\run-unit-tests.ps1`** | **Chosen.** It executes uncached assemblies from `<out>\bin`, reuses Bazel's TRX identity parser (`eng\bazel\dogfood-results.psm1`) and the same workload file, so the same tests are provable by hash. |
+
+`eng\buildxl.ps1` now also writes `logs\phase-timings.json` (restore and build
+seconds and exit codes) from its `finally` block, and `toolchain.json` gains an
+additive `DotNetRoot`. The runner writes `logs\unit-tests\unit-test-timings.json`,
+`unit-test-summary.md`, per-suite TRX and stdout/stderr. The existing collector
+already copies `logs` recursively, so no allowlist changes.
+
+Hosting mirrors Bazel's `runtime` policy in the workload. The 11 `sdk` suites run
+on the repository SDK's bundled runtime; `analyzer_tests` and
+`server_client_tests` (`selfContained`) run on a private runtime at the version
+the workload pins (10.0.14), installed with `eng\common\dotnet-install.ps1` into
+`artifacts\buildxl-tools\runtimes\<version>` before the test stopwatch starts
+(reported separately as `RuntimeInstallSeconds`). Two consequences of building
+with MSBuild instead of Bazel:
+
+- The SDK here ships only a runtime newer than the net10.0 target, and
+  MSBuild-built runtimeconfigs carry no roll-forward policy, so the `sdk` suites
+  run with `DOTNET_ROLL_FORWARD=LatestMajor` (the Bazel-built ones carry that
+  policy themselves). The private-runtime suites use `LatestPatch`.
+- `analyzer_tests` reads the global-config generator through
+  `TESTFX_BAZEL_GLOBAL_CONFIGS_GENERATOR`, the hook Bazel uses
+  (`eng\bazel\analyzer-tests.bzl`). The runner points it at the generator
+  BuildXL built, which targets the repository's current framework, so that suite
+  keeps `DOTNET_ROOT` on the SDK root while the test process itself runs on
+  10.0.14 through `--fx-version`.
+
+Comparability limits:
+
+- `SelectionHash` proves test identity, not the host runtime or the build
+  configuration; the report records `Runtime`, `RollForward` and `BazelRuntime`
+  per suite.
+- Debug BuildXL against the GitHub Bazel job (`fastbuild`) is the comparable
+  pair; Release BuildXL pairs with the Release/`opt` dogfood experiment.
+- BuildXL packs only with the opt-in `eng\buildxl.ps1 -Pack` (see
+  [opt-in pack](#2026-11-17-xlf-parity-and-opt-in-pack-on-buildxl)); the CI legs
+  and the runs below do not pass it (`Pack | not run` in the summary). Bazel's
+  pack validation builds experimental native packages, not the 33 MSBuild `Pack`
+  outputs, so package work is not equal even with `-Pack`.
+- BuildXL's job still builds the whole solution, so its build phase covers more
+  projects than Bazel's matched set; compare the `Build` row as "what each
+  engine needs to produce the tests", not as the same compile graph.
+
+Reconsider if hosted runs show the test step dominating job time (consider
+sharding) or if the CI legs adopt `-Pack`.
+
+### Research and experiments
+
+All runs below used revision `172f4e9dcdeb2de086df30d813d2fe4d1f2db869` plus the
+uncommitted changes of this task, repository-pinned SDK `12.0.100-alpha.1.26562.108`,
+Windows x64, 32 logical processors, Debug, output id `parity-debug`.
+
+1. Cold BuildXL Debug build (`eng\buildxl.ps1`): 228 pips, 0 cache hits, 67
+   projects; restore 12.3 s, build 388.9 s. The output layout is
+   `bin\<Project>\Debug\net10.0\<assembly>.dll`, which the runner relies on.
+2. First runner attempt failed before any test: the repository `.dotnet` has no
+   10.x runtime. Outcome: install the workload-pinned runtime privately, as
+   Bazel does.
+3. Second attempt, abandoned design (every suite on the SDK root with
+   `LatestPatch`): the 11 `sdk` suites produced no TRX. `--report-trx` makes the
+   Microsoft.Testing.Platform controller start a child host as
+   `<root>\dotnet.exe <dll>` without `--fx-version`; that child could not
+   resolve `Microsoft.NETCore.App 10.0.0` (exit `-2147450730`, framework
+   missing). Probes on `Microsoft.Testing.Platform.UnitTests`: `LatestPatch`
+   fails; `LatestMajor` runs and writes a TRX. Decision: `LatestMajor` for `sdk`
+   suites.
+4. Same attempt, `analyzer_tests`: 10 of 3051 tests failed, all in
+   `GlobalConfigGeneratorContinuationTests`, because the tool path falls back to
+   `artifacts\bin\MSTest.GlobalConfigsGenerator\...\net12.0`, which the BuildXL
+   layout does not produce. Decision: use Bazel's environment-variable hook and
+   a precondition that exactly one built generator exists.
+5. Final design, full run: 13 of 13 suites pass, exit 0 (see Validation).
+
+Untried: running the matched suites on the 12 runtime only, or building the
+generator for net10.0; both would change what is being compared.
+
+### Validation and demonstration
+
+Command: `pwsh -NoProfile -File .\eng\buildxl\run-unit-tests.ps1 -Configuration Debug -OutputId parity-debug`.
+
+| Phase | Seconds |
+| --- | ---: |
+| Restore | 12.3 |
+| Build (cold, 0 cache hits) | 388.9 |
+| Runtime bootstrap | 0 (runtime already installed; a cold install was not timed) |
+| Unit tests, 13 suites, 2 concurrent | 119.6 (final run; an earlier identical run took 128.4) |
+| Pack | not run |
+
+| Suite | Total | Passed | Skipped | Runtime |
+| --- | ---: | ---: | ---: | --- |
+| `adapter_tests` | 197 | 197 | 0 | SDK |
+| `analyzer_tests` | 3051 | 3050 | 1 | 10.0.14 |
+| `extension_tests` | 3876 | 3850 | 26 | SDK |
+| `framework_tests` | 1679 | 1679 | 0 | SDK |
+| `msbuild_tests` | 466 | 461 | 5 | SDK |
+| `platform_services_tests` | 1474 | 1474 | 0 | SDK |
+| `platform_tests` | 4159 | 4157 | 2 | SDK |
+| `protocol_contract_tests` | 28 | 28 | 0 | SDK |
+| `self_real_tests` | 24 | 24 | 0 | SDK |
+| `server_client_tests` | 603 | 595 | 8 | 10.0.14 |
+| `source_generation_tests` | 199 | 199 | 0 | SDK |
+| `terminal_contract_tests` | 16 | 16 | 0 | SDK |
+| `vstest_bridge_tests` | 210 | 210 | 0 | SDK |
+
+Total 15,982 tests, 15,940 passed, 42 skipped, 0 failed, 0 other. Per-suite
+`SelectionHash` and `OutcomeHash`, TRX SHA-256 and stdout/stderr are in
+`logs\unit-tests\unit-test-timings.json` next to the TRX files.
+
+Coverage matrix:
+
+| Requirement / risk | Evidence |
+| --- | --- |
+| Same tests as Bazel | The runner reads `eng\bazel\dogfood-workload.json` and Bazel's TRX parser; contract test `test_unit_test_runner_uses_the_bazel_dogfood_workload_and_matches_its_assemblies`. Verified against a local Bazel `opt` run: identical `SelectionHash` and per-test outcomes in all 13 suites (see the parity measurement below). |
+| Runs only after a good build, blocks the job | `test_unit_tests_run_only_after_a_successful_native_build_and_block_the_job`; no retry, no `continueOnError`. |
+| Fails closed | Executed: no output (`test_unit_test_runner_fails_closed_without_build_output`), failed build (`test_unit_test_runner_rejects_build_output_without_a_successful_build`), configuration mismatch, revision mismatch, missing generator, missing test assembly: each exit 1 with a specific message and no tests started. |
+| Timeout and cleanup | `-TestTimeoutSeconds 4`: 10 suites killed, exit 1, report `Success=False`, no test host left running. |
+| Failing suites are reported | Attempts 3 and 4 above: runner exited 1 with per-suite errors. |
+| Rendered surface | Terminal text and Azure DevOps summary markdown only; the Azure DevOps summary tab was not inspected (no hosted run). |
+
+`python .github\scripts\test_buildxl_pipeline.py`: 38 tests, OK.
+
+### Local parity measurement: Bazel `opt` vs BuildXL Release
+
+Both engines ran on the same 32-core Windows machine, one after the other, at
+source `172f4e9dcdeb2de086df30d813d2fe4d1f2db869` plus this change. Each engine
+ran once. Settings:
+
+- Action caches were cold: BuildXL had 0 of 228 cache hits, and Bazel used a
+  fresh output root and an empty disk cache.
+- The NuGet cache and Bazel download cache were warm.
+- Bazel used 32 jobs and BuildXL used its default scheduler.
+- Both engines ran 2 test suites at a time.
+- Neither engine packed. BuildXL can with `-Pack`; see
+  [opt-in pack](#2026-11-17-xlf-parity-and-opt-in-pack-on-buildxl).
+
+Commands:
+
+- Bazel: `eng\bazel\dogfood.ps1 -Mode Cold -Jobs 32 -TestJobs 2`. Its
+  workload configuration is `Release`, which builds with
+  `--compilation_mode=opt` for net10.0.
+- BuildXL: `eng\buildxl.ps1 -Configuration Release -OutputId parity-release`,
+  then `eng\buildxl\run-unit-tests.ps1 -Configuration Release -OutputId parity-release`.
+
+The Bazel run below had already downloaded its dependencies; a first run that
+also downloaded them took 499 s.
+
+| Phase | Bazel `opt` (s) | BuildXL Release (s) |
+| --- | ---: | ---: |
+| Restore | No separate step. Target selection (7.0) plus fetch, extraction and analysis (27.4) | 7.0 (MSBuild restore) |
+| Build | 206.2 actions (234.4 for the whole `bazel build` command) | 268.5 (about 13 s graph construction, 255.4 pips) |
+| Tests, 13 suites, 2 concurrent | 129.3, 12 of 13 suites (`adapter_tests` failed to start) | 111.1, 13 of 13 suites |
+| Extra steps | 14.9 (toolchain and runtime queries, `testlogs`, `shutdown`) | 4.8 (installs the private 10.0.14 runtime) |
+| Pack | Not run | Not run |
+| Wall clock | 391.2 | 394.0 |
+
+The Bazel figures above include `--guard_against_concurrent_changes`, which
+the dogfood harness then passed in every mode. A later profile found that the
+flag alone costs minutes on a cold full-graph build (see the
+[equal-work measurement](#equal-work-measurement)). This scoped run was not
+repeated without it, so treat its Bazel build time as an upper bound.
+
+All 13 suites ran the same tests on both engines: 15,972 tests with equal
+`SelectionHash` values and equal per-test outcomes.
+`adapter_tests` was run manually from Bazel's output for this comparison.
+Summed per-suite test time:
+
+| Suites | Bazel (s) | BuildXL (s) |
+| --- | ---: | ---: |
+| The 12 that Bazel ran | 211.6 | 186.7 |
+
+The largest gap is `analyzer_tests`: Bazel 76.7 s, BuildXL 50.1 s. The other
+suites are within a few seconds of each other.
+
+What one engine does that the other does not:
+
+- **Build scope.**
+  - BuildXL builds the whole `TestFx.slnx`: 66 projects, with 161 per-framework
+    builds plus 66 outer builds. The per-framework builds are net10.0 61,
+    net11.0 47, netstandard2.0 30, net462 14, net472 3, net48 3 and net12.0 3.
+    BuildXL also builds the acceptance tests, performance projects, 5 samples
+    and the packaging projects.
+  - Bazel builds only what the 13 suites need: about 51 assemblies for
+    net10.0, plus netstandard2.0 for the analyzers and generators and the
+    libraries they reference.
+  - Bazel runs 432 C# compile actions:
+    - 364 build satellite resource assemblies (13 cultures);
+    - the rest build the assemblies, with reference assemblies compiled as
+      separate actions.
+  - BuildXL therefore does about 3 times more per-framework compilation work.
+- **Extra Bazel actions:**
+  - It generates XLF, RESX, metadata and analyzer global configurations.
+    BuildXL builds the same 13-culture satellites from the checked-in XLF
+    files and generates the global configurations only with `-Pack`.
+  - It creates publish layouts and apphost shims for 5 suites.
+  - It builds runfiles and symlink trees (630 symlink actions).
+  - It runs extra `bazel` commands after the build.
+- **Extra BuildXL work:** it installs the private 10.0.14 runtime. The
+  self-contained analyzer and server-client suites run on 10.0.14 in both
+  engines; the other suites run on the SDK runtime.
+- **Restore.** BuildXL restores explicitly against a warm NuGet cache. Bazel
+  fetches and extracts its external repositories while it analyzes the build,
+  so the two "restore" numbers cover different work.
+- **Configuration.** Bazel used `opt` and BuildXL used Release. The hosted
+  Bazel job uses `fastbuild`.
+- **Test launch.**
+  - Bazel starts tests through `.bat` launchers and runfiles, and copies a
+    writable layout for `platform_services_tests`.
+  - BuildXL runs `dotnet exec` or the apphost directly.
+- **`adapter_tests` fails locally under Bazel.** Its apphost cannot load
+  `System.Runtime.InteropServices` because the path is too long. The path is
+  261 characters: the dogfood output base
+  `<drive>:\tfbd\<hash>\o\...\adapter_tests.bat.runfiles` plus the long
+  engineering-SDK repository name.
+  - The same binaries pass through a 180-character junction: 197 tests in
+    3.6 s.
+  - They fail through a 299-character junction.
+  - Hosted CI uses a different output root and passes this suite.
+
+### Open questions
+
+- No hosted run was authorized. The first Azure DevOps run must confirm the
+  agent can download the 10.0.14 runtime (a new network dependency for this
+  job, shared with Bazel), the real test phase duration on `NetCore-Public`,
+  and the step timeout (30 minutes).
+- Bazel/BuildXL selection and outcome equality is verified locally (see the
+  parity measurement). It has not been checked against a hosted run.
+- The local Bazel dogfood path overflows `MAX_PATH` for `adapter_tests`. Fix
+  by shortening the runfiles or SDK repository name, or by giving it a short
+  writable layout like `platform_services_tests`.
+- Debug test counts can differ from Release/`opt`; compare like with like.
+- Owner for the follow-up above: the BuildXL/Bazel comparison maintainer.
+
+## 2026-11-17: XLF parity and opt-in pack on BuildXL
+
+### Problem and contract
+
+For a fair Bazel/BuildXL comparison, BuildXL must also do the work of Bazel's
+full `//...` build that it skipped: build localized satellites from the
+checked-in XLF files (Bazel reads XLF and never rewrites it), pack, and generate
+the analyzer global configurations (`_GenerateGlobalConfigs`).
+
+Contract: packing is opt-in (`eng\buildxl.ps1 -Pack`); the default stays
+`Build` only and the CI job is unchanged. `-Pack` produces the same 33 `.nupkg`
+files as `.\build.cmd -pack` (every project with `IsPackable=true`) in the
+output's own `packages\<Configuration>\Shipping|NonShipping`, without changing
+product projects. Failures fail the command.
+
+### XLF finding
+
+- BuildXL already built satellites from the checked-in XLF files through
+  XliffTasks (`TranslateSourceFromXlf`), as Bazel does. In the full Release
+  build there are 1,092 satellite assemblies: net10.0 299 (23 localized
+  projects x 13 cultures), net11.0 299, netstandard2.0 273, net462 65, and
+  156 across the Windows TFMs.
+- It also synced RESX into XLF, which Bazel does not. Arcade's
+  `Localization.targets` sets `UpdateXlfOnBuild=true` unless
+  `ContinuousIntegrationBuild=true`; the outer-build binlog of `xlf-before`
+  shows `UpdateXlfOnBuild` running. The driver and `config.dsc` now set
+  `UpdateXlfOnBuild=false` on every build, which fails that target's condition,
+  so only the verify-only path below remains; after the runs, `git status` shows
+  no XLF or RESX change.
+- The verify-only `_UpdateXlf` (`AllowModification=false`, about 0.1 s per
+  project) still runs because `ErrorOnOutOfDateXlf` stays true. It is kept so
+  that a stale XLF fails rather than silently differing; Bazel has no such check.
+
+### Pack design
+
+| Option | Outcome |
+| --- | --- |
+| Run `build.cmd -pack` after BuildXL | Rejected: not scheduled or cached by BuildXL; rebuilds. |
+| A second BuildXL graph with `Pack` | Not tried: repeats graph construction and splits the build-to-pack dependency. |
+| **`initialTargets: ["Build", "Pack"]` in the same graph** | **Chosen.** Still 228 pips; packing runs inside the existing project pips. |
+
+`eng\buildxl\pack.targets` is imported by `msbuild.targets` only when
+`TestFxBuildXLPack=true`. It is never read by build-only runs, so the CI cache
+key is unchanged. It contains:
+
+- `ProjectReferenceTargets` for `Pack`: `_GetProjectVersion` on references
+  and the inner-build targets NuGet calls from a multi-targeting outer build.
+- An isolation exemption for product projects. NuGet's
+  `_GetProjectReferenceVersions` calls every project in `project.assets.json`,
+  including ones with no graph edge. The packing project is removed from its
+  own exemption.
+- `BuildProjectReferences` undefined in MSBuild.Sdk.Extras' flavor matrix so
+  that its inner calls address the graph's inner nodes.
+- Overrides of two product targets. The product target's original behavior
+  does not work under isolation:
+
+  | Target | Product behavior | Override |
+  | --- | --- | --- |
+  | `_GenerateGlobalConfigs` | `dotnet run --no-build`, which re-evaluates the generator without the redirected `ArtifactsBinDir` | Runs the graph's `$(NetCurrent)` generator with the same `OUTPUT_PATH` (ordered by the `TestFx.slnx` `BuildDependency`) |
+  | `_AddPackagedAppControllerToPackage` | Nested `Build` of the win-x64 controller with different global properties | Packs the controller outputs the graph already built through the `ProjectReference` |
+
+- `CustomAfterMicrosoftCommonCrossTargetingTargets`, because outer builds do not
+  import `CustomBeforeDirectoryBuildTargets`.
+
+### Experiments
+
+All runs were Release, at `172f4e9dc` plus uncommitted changes, on 32 logical
+processors, each with a fresh `-OutputId` and 0 cache hits.
+
+1. **`xlf-before`** (TestFramework, before the XLF change): 9 pips, exit 0.
+   `UpdateXlfOnBuild` ran, and there were 13 satellites per TFM.
+2. **`pack-small`** (TrxReport, `-Pack`): 12 pips, exit 0.
+3. **`pack-dev`** (`TestFx.slnx`, `-Pack`): exit 1 after 181 s, with DX0500, a
+   double write of `TestFramework.Extensions.csproj.AssemblyReference.cache`.
+   MSBuild.Sdk.Extras' `_WalkEachTargetPerFramework` calls inner builds with
+   `BuildProjectReferences=false`, a configuration the graph never built. The
+   project's self-exemption let it run that build unisolated, rewriting the
+   inner node's `obj` file.
+   - Fix: remove the self-exemption and undefine the property.
+4. **`pack-tfx`** (TestFramework.Extensions): 19 pips, exit 0.
+5. **`pack-dev2`** (`TestFx.slnx`): 228 pips, exit 0, all 33 packages (32
+   Shipping, 1 NonShipping).
+   - `MSTest.Analyzers` contains 4 `globalconfigs/*.globalconfig`.
+   - `PackagedApp.MSBuild` contains `tools/AppModelController/net10.0` (141
+     files) and `net11.0` (140 files).
+6. **Cold timing, one sample each.** Both runs are below; pack-cold's packages
+   were later scrubbed by the next graph (see the catch-all output note below),
+   so its package list was taken from `BuildXL.log`:
+
+| Run | Restore (s) | Build (s) | Pip execution (s) | Pips | Wall (s) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `pack-cold` (`Build;Pack`) | 7.5 | 241.1 | 220.9 | 228 | 250 |
+| `build-cold` (`Build`, run straight after) | 6.9 | 265.8 | 248.1 | 228 | 274 |
+| `pack-dev2` (`Build;Pack`) | 7.2 | 277.1 | 260.0 | 228 | 286 |
+
+Packing adds no pips. Its cost was below this machine's run-to-run spread:
+241-277 s with pack and 266-269 s without (including the parity baseline
+above), so these samples do not measure the overhead.
+
+### Remaining asymmetry
+
+- Bazel packs only its 8 experimental native packages; BuildXL `-Pack` packs
+  the 33 MSBuild packages.
+- The solution-level `_VerifyNuGetPackages` (`eng\AfterSolutionBuild.targets`)
+  does not run: the graph has no solution node.
+- XLF is verified (`_UpdateXlf`) only on BuildXL.
+- BuildXL also builds `Dependabot.Dependencies`, which `TestFx.slnx` marks
+  `Build="false"`; the graph still produced its net10.0 assembly.
+
+### Validation
+
+- `python .github\scripts\test_buildxl_pipeline.py`: 42 tests, OK. The 4 new
+  tests check:
+  - the driver's targets and properties in both modes;
+  - that `config.dsc` matches the driver;
+  - the pack import and graph addressing;
+  - that the overrides still match the product targets they replace.
+- Sensitivity: three faults were injected together and then restored. With
+  them, 3 of the 4 new tests failed; after restoring, all 4 pass. The faults
+  were:
+  - `Pack` dropped from `initialTargets`;
+  - `UpdateXlfOnBuild=true` in the driver;
+  - the self-exemption `Remove` dropped.
+- Not run: the MSBuild reference pack (`-Engine MSBuild -Pack`), a hosted job,
+  and a byte comparison against Arcade's packages.
+
+### Equal-work measurement
+
+Goal: give both engines the same kind of work, then name everything that still
+differs. For this run:
+
+- Bazel built the whole graph (`//...`) before testing, through the new
+  `eng\bazel\dogfood.ps1 -FullGraph` switch. That covers every TFM and project
+  Bazel models, including the net10.0 and net11.0 unit-test apps; see the
+  [Bazel record](bazel-build.md#equal-work-comparison-scope-2026-11-17).
+- BuildXL built `TestFx.slnx`, built satellites from the XLF files and packed,
+  as described above.
+- Both ran the same 13 unit suites, 2 at a time.
+
+Both engines ran once, one after the other, on the same idle 32-core Windows
+machine at `172f4e9dcdeb2de086df30d813d2fe4d1f2db869` plus this change:
+
+- Action caches were cold (BuildXL 0 of 228 cache hits; Bazel a fresh output
+  root and disk cache). The NuGet and Bazel download caches were warm.
+- Both used SDK `12.0.100-alpha.1.26562.108` and its 12.0 runtime. Bazel gets
+  it from the dogfood engineering toolchain
+  (`DOGFOOD_TOOLCHAIN|12.0.100-alpha.1.26562.108` in its toolchain query).
+
+Commands:
+
+- Bazel: `eng\bazel\dogfood.ps1 -Mode Cold -FullGraph -Jobs 32 -TestJobs 2`.
+- BuildXL: `eng\buildxl.ps1 -Configuration Release -Pack -OutputId eq-pack`,
+  then `eng\buildxl\run-unit-tests.ps1 -Configuration Release -OutputId eq-pack`.
+
+| Phase | Bazel `//...` `opt` (s) | BuildXL Release + pack (s) |
+| --- | ---: | ---: |
+| Restore | No separate step: target selection 6.7; fetching is inside build | 7.8 (MSBuild restore) |
+| Build | 337.4 (533.4 with the guard, see below) | 318.0 (299.5 executing pips) |
+| Tests, 2 concurrent | 136.1, 12 of 13 suites | 109.0, 13 of 13 suites |
+| Extra steps | 15.4: toolchain 4.4, execution root 0.9, published runtimes 7.4, `testlogs` 1.4, `shutdown` 1.3 | 4.6: installs the private 10.0.14 runtime |
+| Total | 503.9 (harness wall clock, including 8.4 s of harness overhead) | 439.4 (sum of phases; driver overhead not timed) |
+
+Bazel's build analyzed 2,224 targets and ran 5,835 actions (critical path
+85.3 s). BuildXL ran 228 pips, one per project build. The units differ, so
+the counts are not comparable. The largest Bazel action groups were:
+
+| Bazel action | Count |
+| --- | ---: |
+| `Symlink` | 1,573 |
+| `CSharpCompile` | 1,182 |
+| `TestFxMetadata` | 1,155 |
+| `TestFxXlf` (78 RESX files x 13 cultures) | 1,014 |
+| `FileWrite` | 344 |
+| Runfiles and repository-mapping actions (4 kinds, 92 each) | 368 |
+| `TestFxResx` | 78 |
+| `NuGetPack` | 8 |
+
+Both engines executed the same tests. Each suite's TRX counters match, and no
+test failed:
+
+| Suite | Passed / total | Bazel (s) | BuildXL (s) |
+| --- | ---: | ---: | ---: |
+| adapter | 197 / 197 on BuildXL only | 4.2, failed to start | 4.8 |
+| extension | 3,842 / 3,868 | 21.2 | 26.9 |
+| framework | 1,677 / 1,677 | 8.9 | 9.9 |
+| analyzer | 3,050 / 3,051 | 64.7 | 50.9 |
+| msbuild | 461 / 466 | 2.9 | 2.9 |
+| platform | 4,157 / 4,159 | 11.6 | 11.4 |
+| protocol contract | 28 / 28 | 1.7 | 1.8 |
+| self real examples | 24 / 24 | 2.3 | 2.0 |
+| platform services | 1,474 / 1,474 | 41.5 | 41.0 |
+| server client | 595 / 603 | 28.0 | 27.8 |
+| source generation | 199 / 199 | 10.1 | 9.5 |
+| terminal contract | 16 / 16 | 2.1 | 1.8 |
+| VSTest bridge | 210 / 210 | 2.0 | 2.1 |
+| **12 suites both ran** | **15,733 / 15,775** | **197.0** | **188.0** |
+
+`adapter_tests` fails to start under the local Bazel output root because of
+`MAX_PATH`, as in the [parity measurement](#local-parity-measurement-bazel-opt-vs-buildxl-release).
+
+What only Bazel does:
+
+- Builds targets outside `TestFx.slnx`: the non-solution samples, its own
+  build-tool, analysis and compatibility test targets and probes, and the
+  Blazor WebAssembly publish with static web assets.
+- Uses hand-written entry points for the xunit and NUnit samples instead of
+  the generated `Program.cs`.
+- Creates publish layouts, 16 apphost shims and about 1,940 symlink and
+  runfiles actions.
+- Converts XLF to RESX (1,014 actions) and writes assembly metadata (1,155
+  actions) as separate actions. BuildXL does both inside each project's pip.
+- Runs 5 extra `bazel` commands after the build, and fetches and extracts
+  external repositories during analysis, inside the build time.
+
+What only BuildXL does:
+
+- Builds projects Bazel does not model: the acceptance tests,
+  `Performance.Runner`, the net12.0 projects, the net4x and WinUI test hosts,
+  the Windows TFMs, the F# `FSharpPlayground`, `Playground` and
+  `Dependabot.Dependencies`.
+- Verifies XLF (`_UpdateXlf`).
+- Packs 33 MSBuild packages; Bazel packs 8 native packages.
+- Installs the private 10.0.14 runtime, timed separately above.
+- Runs `adapter_tests` (197 tests, 4.8 s).
+
+What both or neither do:
+
+- Both build 13-culture satellites from the checked-in XLF files and generate
+  the analyzer global configurations.
+- Both run tests for net10.0 only. The analyzer and server-client suites run
+  self-contained on 10.0.14; the others run on the SDK's 12.0 runtime.
+- Neither runs `_VerifyNuGetPackages`.
+- Bazel uses `opt` and BuildXL uses Release.
+
+Reading the result:
+
+- Neither engine strictly does more build work, so the 19 s build gap is not
+  engine efficiency alone. It is also well within BuildXL's run-to-run spread:
+  its three cold `Build;Pack` builds on this machine took 241.1, 277.1 and
+  318.0 s (`pack-cold`, `pack-dev2` and this run; see the
+  [experiments](#experiments)). Bazel's two cold full-graph builds without
+  the guard took 331.3 s (profiled) and 337.4 s.
+- Bazel's test phase was 27 s longer with one fewer suite. `analyzer_tests`
+  explains 14 s; the rest is spread across launchers and scheduling (the test
+  command's critical path was 131.8 s).
+- In the earlier full-graph run with `--guard_against_concurrent_changes`, the
+  Bazel build took 533.4 s and the harness 710.3 s. Profiles of the same
+  build were 521.1 s with the flag and 331.3 s without. The flag makes Bazel
+  check each action's inputs; `TestFxMetadata` actions went from about 1.3 s
+  to 3.7 s. The harness now passes it only in the `BuildCache` and `Cached`
+  modes, which share a persistent disk cache. `Cold` mode uses a per-run cache
+  and already fails if the source changes during the measured run.
+
+Open items:
+
+- Every figure above comes from one run per engine. Repeat both several times,
+  and on hosted agents, before reading anything into gaps smaller than the
+  77 s BuildXL spread above.
+- The scoped parity measurement above has not been repeated without the guard.
+- In `eq-pack`, BuildXL wrote `FailedPips` dumps for three
+  `Microsoft.Testing.Platform.MSBuild.csproj` pips even though the build
+  succeeded and stored their cache entries. The cause is unknown.
+- Bazel gaps are listed in the
+  [Bazel record](bazel-build.md#equal-work-comparison-scope-2026-11-17).
+
 ## 2026-11-11: preserve journals when a query fails
 
 Review of `9435e80cf4736dc2cfaadf843bb88d821fd928b3` identified an
@@ -275,7 +807,8 @@ The entry point is the existing Windows solution, `TestFx.slnx`,
 rather than a second manually maintained project list. Preserve each project's
 declared target frameworks, project references, analyzers, generators, and build
 checks. Include product, test, utility, and sample projects selected by that
-solution; do not execute tests, pack, sign, or replace the shipping Arcade jobs.
+solution; do not pack, sign, or replace the shipping Arcade jobs. Tests are no
+longer excluded: see [2026-11-17](#2026-11-17-run-the-bazel-matched-unit-suites-on-buildxl-outputs).
 The solution remains the maintained project inventory; do not add a separate
 manually curated project allowlist.
 
@@ -391,6 +924,11 @@ exclude the modern Windows TFMs. The build remains experimental; the executed
 coverage and any additional limitations are recorded below rather than inferred
 from the solution's existence.
 `-SkipRestore` is available only after a successful matching restore.
+`-Pack` runs `Build;Pack` in the same graph and writes the packages to
+`<output>\packages\<Configuration>\Shipping|NonShipping` instead of Arcade's
+`artifacts\packages`; see
+[opt-in pack](#2026-11-17-xlf-parity-and-opt-in-pack-on-buildxl). Every build
+sets `UpdateXlfOnBuild=false`, so BuildXL never rewrites the checked-in XLF files.
 
 Binaries are in `artifacts\buildxl\bin`, intermediates in
 `artifacts\obj\buildxl`, and the local action cache and engine logs are under
@@ -534,7 +1072,9 @@ recover from any remaining Windows child-process teardown race; a second
 failure still fails the job.
 The native engine's stdout/stderr reaches the Azure task directly instead of
 being redirected to a benchmark sample log. Tests are compiled as part of the
-solution; they are not executed or represented as synthetic benchmark tests.
+solution and are not represented as synthetic benchmark tests. Since
+2026-11-17 a separate step also executes the Bazel-matched unit suites from the
+BuildXL outputs (see that entry).
 The ordinary Arcade build/pack/test jobs remain the shipping authority.
 
 The job retains `toolchain.json`, the consumed `config.dsc`, engine `logs`

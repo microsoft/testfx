@@ -583,6 +583,18 @@ workload. Remove any `.bazelrc.local` override in an isolated checkout rather
 than letting local options silently change the experiment. Windows x64, the
 repository's normal build prerequisites and symlink capability are required.
 
+`-FullGraph` (native modes only) builds `//...`, every project and target
+framework that Bazel models, before running the same unit suites. Use it to
+compare with an engine that builds the whole solution, such as BuildXL. It also
+changes the scope fingerprint, so its results are not comparable with the
+default workload. The CI pipeline does not use it.
+
+`--guard_against_concurrent_changes` is passed only in `BuildCache` and
+`Cached` modes, which share the persistent action cache. `Cold` uses a per-run
+cache and fails if the source changes during the run; the flag added minutes
+to a cold full-graph build. See the
+[equal-work measurement](decisions/bazel-build.md#equal-work-comparison-scope-2026-11-17).
+
 Azure caches downloaded archives and the action store separately. It does not
 cache the output/server tree or extracted repositories with machine-specific
 links. Compatible prefix restores allow reuse across commits; per-run keys
