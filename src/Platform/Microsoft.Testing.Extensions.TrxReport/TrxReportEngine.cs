@@ -85,6 +85,13 @@ internal sealed partial class TrxReportEngine
     /// </summary>
     public IReadOnlyList<string> AttachmentWarnings { get; private set; } = [];
 
+    /// <summary>
+    /// Gets or sets run-level errors detected before the report is generated (for example, test results that were
+    /// omitted because their producer reported data that TRX cannot represent). Each entry is rendered as an
+    /// <c>Error</c> <c>RunInfo</c>.
+    /// </summary>
+    public IReadOnlyList<string> RunErrors { get; set; } = [];
+
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await ReportFileWriterHelper.RetryWhenIOExceptionAsync(_clock, async () =>
         {
