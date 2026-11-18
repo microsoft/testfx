@@ -9,7 +9,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
@@ -49,7 +49,7 @@ $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
@@ -57,8 +57,8 @@ $(CommonProductDescription)]]></PackageDescription>
     <DefineConstants>$(DefineConstants);CLASSIC_UWP</DefineConstants>
   </PropertyGroup>
 
-  <!-- Properties specific to WinUI -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
+  <!-- Modern UWP and WinUI share one adapter build at their common OS floor. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 
@@ -91,16 +91,16 @@ $(CommonProductDescription)]]></PackageDescription>
   <ItemGroup>
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="BannedSymbols.txt" />
-    <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
-    <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\classicuwp\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\classicuwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
-    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
-    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
-    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
-    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
-    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
-    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -115,7 +115,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <!-- Keep the classic UWP connect-back bootstrap in sync with the PackagedApp launcher option parsing. -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.PackagedApp\CommandLineOptionParser.cs" Link="Shared\CommandLineOptionParser.cs" />
   </ItemGroup>

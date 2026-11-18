@@ -4,6 +4,7 @@
 using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -294,6 +295,29 @@ public sealed class WindowsApplicationModelPackageTests
                 "buildTransitive/uap10.0.16299/MSTestAdapter.PlatformServices.dll",
             ],
             assemblies);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
+    public void PackedModernUwpAndWinUI_ContainIdenticalAdapterAssemblies()
+    {
+        using ZipArchive modernUwp = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.Uwp"));
+        using ZipArchive winUI = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.WinUI"));
+
+        foreach (string assemblyName in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll" })
+        {
+            string modernUwpPath = $"buildTransitive/net10.0-windows10.0.17763/{assemblyName}";
+            string winUIPath = $"buildTransitive/net10.0-windows10.0.18362/{assemblyName}";
+            ZipArchiveEntry modernUwpEntry = modernUwp.GetEntry(modernUwpPath)!;
+            ZipArchiveEntry winUIEntry = winUI.GetEntry(winUIPath)!;
+
+            using Stream modernUwpStream = modernUwpEntry.Open();
+            using Stream winUIStream = winUIEntry.Open();
+            Assert.AreEqual(
+                Convert.ToHexString(SHA256.HashData(modernUwpStream)),
+                Convert.ToHexString(SHA256.HashData(winUIStream)),
+                $"{assemblyName} differs between {modernUwpPath} and {winUIPath}.");
+        }
     }
 
     [TestMethod]
