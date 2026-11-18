@@ -82,10 +82,10 @@ including the SDK key's presence and the old space-separated key's absence.
 
 ## Validation notes and remaining work
 
-Initial setup required `-msbuildEngine dotnet` (VS18.12 unavailable), fixture
-packages, and explicit diagnostic directories for banner-suppressed runs.
-Restoring older source needed `-t:Rebuild` to avoid a stale DLL; these setup
-failures were not counted as behavioral evidence.
+CI exposed a Release-only failure: the namespace import for `RoslynString` was
+guarded by `#if DEBUG`. The import is now unconditional. Release packing passes
+for all three product TFMs, and 190 Release provider cases pass across .NET 10/11
+and Framework 4.6.2/4.7.2 (49/49/46/46). This fixes compilation, not runtime behavior.
 
 Full commands, reports, patches, and DLL hashes remain in session artifacts under
 `sdk-key-alignment`: `validate.ps1`, `comparison-provenance.json`, and
