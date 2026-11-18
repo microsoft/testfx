@@ -9,6 +9,7 @@ Builds real shipping packages and tests an isolated, non-shipping MSTest package
 Run from this worktree only. Outputs are retained in a fresh artifacts/package-split directory.
 Never run concurrently with another producer build in the same worktree.
 No global cache eviction or production-file edits are performed. Native builds are opt-in.
+Native prerequisite checks are read-only; machine settings such as Developer Mode are never changed.
 ModernUwpLaunch additionally attempts activation and removes only its unique AppX registration.
 Use short RunRoot/ProbeName values for native runs: Windows native loaders have path limits.
 #>
@@ -686,11 +687,39 @@ foreach ($variant in @('baseline', 'candidate')) {
 }
 
 if ($NativeBuild) {
-    $preflight = Invoke-Recorded 'native-preflight' 'powershell.exe' @('-NoProfile', '-File', "$repository/eng/pipelines/test-windows-app-model-preflight.ps1") $repository
-    if ($preflight.Exit -ne 0) { throw 'Native preflight failed. See native-preflight.log; no native probes attempted.' }
+    # Read-only checks: unlike the CI agent preflight, never provision Developer Mode or remove
+    # registrations. Build-only runs need MSBuild; desktop/activation checks apply only to launches.
+    $prerequisiteFailures = [Collections.Generic.List[string]]::new()
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
-    $vs = (& $vswhere -latest -prerelease -products '*' -requires Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -format json | ConvertFrom-Json)[0]
-    $msbuild = Join-Path $vs.installationPath 'MSBuild/Current/Bin/MSBuild.exe'
+    $vs = if (Test-Path -LiteralPath $vswhere -PathType Leaf) {
+        & $vswhere -latest -prerelease -products '*' -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -format json |
+            ConvertFrom-Json | Select-Object -First 1
+    }
+    $msbuild = if ($vs) { Join-Path $vs.installationPath 'MSBuild/Current/Bin/MSBuild.exe' }
+    if (-not $msbuild -or -not (Test-Path -LiteralPath $msbuild -PathType Leaf)) {
+        $prerequisiteFailures.Add('No Visual Studio instance with desktop MSBuild and the complete UWP support component group was found.')
+    }
+    if ($ModernUwpLaunch) {
+        # Group policy, when configured, overrides the local Developer Mode setting.
+        $developerMode = foreach ($key in @('HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock')) {
+            $property = Get-ItemProperty -LiteralPath $key -Name 'AllowDevelopmentWithoutDevLicense' -ErrorAction SilentlyContinue
+            if ($null -ne $property) { $property.AllowDevelopmentWithoutDevLicense; break }
+        }
+        if ($developerMode -ne 1) {
+            $prerequisiteFailures.Add('ModernUwpLaunch requires Developer Mode to be enabled already; this harness never changes it.')
+        }
+        $session = (Get-Process -Id $PID).SessionId
+        $explorer = @(Get-Process -Name explorer -ErrorAction SilentlyContinue | Where-Object SessionId -eq $session)
+        if (-not [Environment]::UserInteractive -or $session -le 0 -or $explorer.Count -eq 0) {
+            $prerequisiteFailures.Add("ModernUwpLaunch requires an interactive desktop session with explorer.exe; current session is $session.")
+        }
+    }
+    Write-Utf8 "$RunRoot/logs/native-prerequisites.json" (@{
+        msbuild = $msbuild; modernUwpLaunch = $ModernUwpLaunch.IsPresent; failures = @($prerequisiteFailures)
+    } | ConvertTo-Json -Depth 4)
+    if ($prerequisiteFailures.Count -ne 0) {
+        throw "Native prerequisites failed; no native probes attempted:$([Environment]::NewLine)- $($prerequisiteFailures -join "$([Environment]::NewLine)- ")"
+    }
     foreach ($variant in @('baseline', 'candidate')) {
         foreach ($model in @('ClassicUwp', 'ModernUwp', 'WinUI')) {
             $name = "${variant}Native${model}Build"

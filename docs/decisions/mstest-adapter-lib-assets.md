@@ -736,6 +736,11 @@ Use fresh short `RunRoot` and `ProbeName` values for another run; existing evide
 is protected against overwrite and native loaders have path-length constraints.
 Omit native switches for managed-only probes. `-NativeBuild` by itself does not
 launch apps. `-Only` selects exact probe names and fails on unmatched names.
+Native prerequisite checks are read-only and harness-local: `-NativeBuild`
+requires only a UWP-capable Visual Studio with desktop MSBuild, while
+`-ModernUwpLaunch` additionally requires Developer Mode to be enabled already
+and an interactive desktop. The harness never changes machine settings; the
+recorded runs above predate this split and used the CI agent preflight.
 
 Each evidence directory contains `results.json`, `harness-provenance.json`,
 `package-provenance.json`, exact `logs/*.command.json` invocations, binlogs,
