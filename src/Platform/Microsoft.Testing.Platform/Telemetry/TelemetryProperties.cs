@@ -9,6 +9,8 @@ internal static class TelemetryProperties
     public const string SessionId = "session id";
     public const string ReporterIdPropertyName = "reporter id";
     public const string IsCIPropertyName = "is ci";
+    public const string IsLLMPropertyName = "is llm";
+    public const string CopilotAgentSessionIdPropertyName = "copilot agent session id";
 
     public const string VersionValue = "20";
 
