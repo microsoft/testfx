@@ -442,7 +442,7 @@ function Invoke-Probe([string] $Name, [scriptblock] $Body, [string] $ExpectedFai
     if ($Only.Count -ne 0 -and $Name -notin $Only) { return }
     try {
         & $Body
-        if ($ExpectedFailure) { throw "ASSERTION: counterfactual unexpectedly passed ($ExpectedFailure)" }
+        if ($ExpectedFailure) { throw "COUNTERFACTUAL: expected defect was not detected ($ExpectedFailure)" }
         $results.Add(@{ name = $Name; outcome = 'Passed'; diagnostic = '' })
         Write-Host "PASS $Name"
     }
@@ -757,7 +757,7 @@ if (@(Get-AppxPackage -Name '$identity').Count -ne 0) { throw 'Owned registratio
 "@
                     try {
                         [IO.Directory]::CreateDirectory("$directory/results") | Out-Null
-                        $arguments = "--report-trx --report-trx-filename native.trx --results-directory $directory/results --diagnostic --diagnostic-output-directory $directory/results"
+                        $arguments = "--report-trx --report-trx-filename native.trx --results-directory %22$directory/results%22 --diagnostic --diagnostic-output-directory %22$directory/results%22"
                         $run = Invoke-Recorded "$name-execution" $msbuild @('NativeProbe.csproj', '/t:InvokeTestingPlatform', '/p:Configuration=Release',
                             '/p:Platform=x64', "/p:TestingPlatformCommandLineArguments=$arguments", "/bl:$RunRoot/logs/$name-execution.binlog") $directory $environment
                         Write-Utf8 "$directory/native-scope.json" (@{ build = 'Passed'; launch = 'Attempted'; launchExit = $run.Exit; packageIdentity = $identity } | ConvertTo-Json -Depth 4)
