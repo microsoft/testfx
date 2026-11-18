@@ -27,7 +27,7 @@ When telemetry is enabled, every usage event includes:
 - `is llm`: `true` when the platform's existing environment detector recognizes
   an AI agent, otherwise `false`. Detection is heuristic; `false` does not prove
   a human invocation. Only the boolean is collected, not the marker values.
-- `copilot agent session id`: the nonempty `COPILOT_AGENT_SESSION_ID`, normalized
+- `CopilotAgentSessionId`: the nonempty `COPILOT_AGENT_SESSION_ID`, normalized
   to match the .NET SDK's `CopilotAgentSessionId` and Copilot telemetry.
   Canonical UUIDs (versions 1-8 with RFC variant, or the nil UUID) are preserved
   exactly. Other values become lowercase SHA-256 of their original UTF-8 bytes,

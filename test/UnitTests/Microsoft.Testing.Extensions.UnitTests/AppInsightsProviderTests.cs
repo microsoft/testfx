@@ -324,7 +324,7 @@ public sealed class AppInsightsProviderTests
             environment: environment.Object);
 
         Assert.ContainsEntry("is llm", expected, properties);
-        Assert.ContainsEntry("copilot agent session id", "not_present", properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "not_present", properties);
     }
 
     [TestMethod]
@@ -354,7 +354,8 @@ public sealed class AppInsightsProviderTests
             new Dictionary<string, object>(),
             environment: environment.Object);
 
-        Assert.ContainsEntry("copilot agent session id", expected, properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", expected, properties);
+        Assert.DoesNotContain("copilot agent session id", properties.Keys);
         Assert.ContainsEntry("session id", "sessionId", properties);
         Assert.ContainsEntry("is llm", "false", properties);
     }
@@ -396,7 +397,7 @@ public sealed class AppInsightsProviderTests
         Dictionary<string, object> callerProperties = new()
         {
             ["is llm"] = false,
-            ["copilot agent session id"] = "caller-supplied",
+            ["CopilotAgentSessionId"] = "caller-supplied",
         };
 
         try
@@ -412,7 +413,7 @@ public sealed class AppInsightsProviderTests
 
             Assert.HasCount(2, callerProperties);
             Assert.IsFalse((bool)callerProperties["is llm"]);
-            Assert.AreEqual("caller-supplied", callerProperties["copilot agent session id"]);
+            Assert.AreEqual("caller-supplied", callerProperties["CopilotAgentSessionId"]);
             callerProperties.Clear();
             startConsumer.SetResult(true);
             await WaitForSignalAsync(allEventsTracked.Task, "Telemetry consumer did not track the three queued events.");
@@ -432,11 +433,11 @@ public sealed class AppInsightsProviderTests
         Assert.AreEqual("second", events[1].Name);
         Assert.AreEqual("third", events[2].Name);
         Assert.ContainsEntry("is llm", "true", events[0].Properties);
-        Assert.ContainsEntry("copilot agent session id", "a5b5273cea99d1a7df8e81f234369666daf7d810c64d852df129ae276d5167b2", events[0].Properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "a5b5273cea99d1a7df8e81f234369666daf7d810c64d852df129ae276d5167b2", events[0].Properties);
         Assert.ContainsEntry("is llm", "false", events[1].Properties);
-        Assert.ContainsEntry("copilot agent session id", "aBCDEfAB-1234-4567-8ABC-DEFaBCDEF012", events[1].Properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "aBCDEfAB-1234-4567-8ABC-DEFaBCDEF012", events[1].Properties);
         Assert.ContainsEntry("is llm", "false", events[2].Properties);
-        Assert.ContainsEntry("copilot agent session id", "not_present", events[2].Properties);
+        Assert.ContainsEntry("CopilotAgentSessionId", "not_present", events[2].Properties);
 
         Task RunConsumerAsync(Func<Task> loop)
             => Task.Run(

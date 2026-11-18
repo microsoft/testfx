@@ -54,8 +54,9 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
                     .ToDictionary(m => m.Groups["key"].Value, m => m.Groups["value"].Value);
                 Assert.Contains("is llm", properties.Keys, telemetryEvent.Value);
                 Assert.AreEqual(context.ExpectedLLM, properties["is llm"], telemetryEvent.Value);
-                Assert.Contains("copilot agent session id", properties.Keys, telemetryEvent.Value);
-                Assert.AreEqual(context.ExpectedSessionId, properties["copilot agent session id"], telemetryEvent.Value);
+                Assert.Contains("CopilotAgentSessionId", properties.Keys, telemetryEvent.Value);
+                Assert.AreEqual(context.ExpectedSessionId, properties["CopilotAgentSessionId"], telemetryEvent.Value);
+                Assert.DoesNotContain("copilot agent session id", properties.Keys, telemetryEvent.Value);
                 Assert.AreEqual("11111111-2222-4333-8444-555555555555", properties["session id"], telemetryEvent.Value);
             }
         }

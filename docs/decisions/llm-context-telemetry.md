@@ -8,7 +8,7 @@ usage collector:
 | Property | Value |
 | --- | --- |
 | `is llm` | Existing `LLMEnvironmentDetector` result as `true`/`false`; a heuristic, not proof of human/agent authorship. |
-| `copilot agent session id` | Normalized `COPILOT_AGENT_SESSION_ID`, or `not_present` when absent/empty. |
+| `CopilotAgentSessionId` | Normalized `COPILOT_AGENT_SESSION_ID`, or `not_present` when absent/empty. |
 
 Match the SDK's `CopilotAgentSessionId`: preserve canonical UUID versions 1-8
 with RFC variant, plus the nil UUID, including original casing. Hash other
@@ -37,60 +37,61 @@ private: TestFx's existing hasher uppercases inputs and would break correlation;
 `Guid.TryParse` accepts UUID forms outside Copilot's contract. Collecting agent
 names/raw marker values or adding OpenTelemetry tags is outside scope.
 
+Use the SDK's exact correlation key to simplify cross-product queries. Keep
+`is llm` distinct from SDK's `llm`, which contains agent names rather than a boolean.
+
 ## Test-value evidence
 
-Validated on 2026-11-18 with SDK `12.0.100-alpha.1.26562.108`, Debug builds.
-Base: `28c534d9fd47856682e8d1c14f54a10a1b4a08bf`.
+SDK-key alignment validated on 2026-11-18, Debug, SDK `12.0.100-alpha.1.26562.108`.
+Base: `53b0b9bd9df4f856498e18dec978ca86c9753cfc`.
 Behavioral `src`/`test` patch SHA-256:
-`51bb4966e403e758b6f4c331080004821ae2c87cfde414f892c915dd0f906044`.
+`c6abdb455adf3e0e0634e1dfedb99d8397ff21d98d640e8a7408618de3a41fbf`.
 This document is excluded from that patch identity.
 
 | Contract | Tests |
 | --- | --- |
 | Detection and correlation | `LogEvent_ReportsLLMContext` (6 cases), `LogEvent_NormalizesCopilotSessionId` (17 cases: UUIDs, absence, casing, whitespace, malformed IDs, UTF-8). |
 | Queueing and ownership | `LogEvent_SnapshotsContextBeforeQueueingWithoutMutatingCallerProperties`: three distinguishable events, changing context, overrides, and dictionary reuse. |
-| Opt-outs | `TelemetryManager_WhenDisabled_DoesNotCreateContextCollector`, plus packaged tests with the real provider registered. |
+| Opt-outs | Packaged environment-variable and `TestApplicationOptions` tests with the real provider registered. |
 | Shipping boundary | `Telemetry_Context_IsIncludedInEveryUsageEvent`: four contexts per runtime; checks each event's fields, identity, and unchanged platform session ID. |
 
 | Selection | Passed / executed | Result |
 | --- | --- | --- |
 | Provider tests: .NET 10 / 11 / Framework 4.6.2 / 4.7.2 | 57 / 57, 57 / 57, 54 / 54, 54 / 54 | Exit 0 |
-| Manager/detector tests: .NET 10 / 11 / Framework 4.6.2 | 30 / 30 on each | Exit 0 |
 | Packaged acceptance: .NET 10 / 11 / Framework 4.6.2 | 15 / 15 | Exit 0 |
 
-Total: **312 unit and 15 acceptance cases passed**, no failures/skips.
+Current alignment: **222 unit and 15 acceptance cases passed**, no failures/skips.
 TRX/JUnit/CTRF counts were reconciled; method-level parallelization was preserved.
 The acceptance host runs on .NET 12. Its custom-framework children intentionally
 exit 8 (`ZeroTests`), exercising startup/shutdown telemetry rather than counting
 zero-test runs as regression tests.
 
-**Executed counterfactual:** removing both fields before enqueueing, with the
-same tests retained, produced 24 intended assertion failures and 33 passes on
-.NET 10 (exit 2). Restoring the provider and forcing a rebuild recovered to
-57 passes (exit 0). This is feature-removal evidence, not a pristine-base run.
-Mutation patch SHA-256:
-`15d8df8a7812dc2fd699e6aa4e5c294e0666b50a17280a38ba111a7235058d20`.
+**Executed regression check:** the same 17 `LogEvent_NormalizesCopilotSessionId`
+cases ran in an isolated output copy with the preserved pre-rename provider.
+All 17 failed specifically because `CopilotAgentSessionId` was missing (exit 2).
+Replacing only that DLL with the rebuilt provider yielded 17 passes (exit 0);
+test assembly bytes were unchanged. Both runs also checked report counts.
+The initial feature's separate field-removal check detected 24 failures before
+key alignment; its earlier reports remain archived.
 
 Both changed `3.0.0-dev` packages packed successfully. All six executed consumer
 DLLs matched their NuGet payload hashes, using `netstandard2.0` assets on
 .NET Framework. Isolated restores and actual loaded assembly paths were checked.
-The packaged scenarios verified 24 usage events across 12 context-specific launches.
+The packaged scenarios verified 24 usage events across 12 context-specific launches,
+including the SDK key's presence and the old space-separated key's absence.
 
 ## Validation notes and remaining work
 
-The default build could not find Visual Studio 18.12; supported
-`-msbuildEngine dotnet` builds passed instead. Fixture package prerequisites were
-packed separately. Tests use an explicit diagnostic directory because agent-aware
-banner suppression hides the diagnostic-file announcement. A stale comparison
-DLL after copying older source was identified by hashes and corrected with
-`-t:Rebuild`; setup/build failures were not counted as behavioral evidence.
+Initial setup required `-msbuildEngine dotnet` (VS18.12 unavailable), fixture
+packages, and explicit diagnostic directories for banner-suppressed runs.
+Restoring older source needed `-t:Rebuild` to avoid a stale DLL; these setup
+failures were not counted as behavioral evidence.
 
-Full commands, reports, patches, binlogs, and DLL hashes remain in session
-artifacts, including `run-unit-validation.ps1` and
-`consumer-provenance-complete\provenance.json`. The temporary comparison export
-was removed. Fixture-only MSTest packages are retained under `fixture-packages`;
-copy them to `artifacts\packages\Debug\Shipping` before a local acceptance rerun
-without a full pack. Final `.\eng\verify-nupkgs.ps1 -configuration Debug` passed.
+Full commands, reports, patches, and DLL hashes remain in session artifacts under
+`sdk-key-alignment`: `validate.ps1`, `comparison-provenance.json`, and
+`consumer-provenance-complete\provenance.json`. Fixture-only packages were restored
+temporarily for acceptance and removed afterward; the isolated comparison output
+is also cleaned up. Final `.\eng\verify-nupkgs.ps1 -configuration Debug` passed.
 
 This is nonvisual metadata; backend ingestion/dashboard queries were not verified.
 Before release, update the
