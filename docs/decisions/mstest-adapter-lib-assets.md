@@ -389,8 +389,8 @@ build/discovery cannot demonstrate a localized user-visible result.
   ordinary package needs no model selector. The netfx PackageReference,
   packages.config (fresh install and in-place upgrade), SDK build/publish and
   transitive `ProjectReference` paths for the ordinary package are answered in
-  the shipping implementation section. Native AOT, single-file and runtime-store
-  publish remain untested.
+  the shipping implementation section. Runtime-store publish is covered by the
+  review follow-up below. Native AOT and single-file publish remain untested.
 - Legacy consumers and downstream VSTest tests hard-code the existing package
   directories. No rollout, release-branch servicing, or downstream migration has
   been authorized.
@@ -504,6 +504,7 @@ The alternatives were:
 | Pack layout | `_AddTestAdapterPackageFiles` in `MSTest.TestAdapter.csproj` | Packs DLLs and satellites into `lib/<tfm>`. |
 | Sidecar exclusion | `_AddMSTestAdapterNuspecReferences`, after `Pack` | NuGet's MSBuild pack cannot emit `<references>`, so the packed nuspec is rewritten. Each group lists only the two adapter assemblies. The `net462` `MSTest.TestFramework.dll` sidecar needed by VSTest's resolver (#4537, #4426, #6625) stays in the package, but it is neither a compile nor a runtime reference. |
 | SDK policy | `_MSTestApplyAdapterPackageAssetPolicy`, after `ResolvePackageAssets` | Removes adapter runtime items for `IsTestApplication=false`. Removes satellites for non-test applications, for `EnableMSTestV2CopyResources=false`, and under VSTest for cultures outside the build-machine UI hierarchy. Under MTP, all cultures permitted by `SatelliteResourceLanguages` are kept, as before. |
+| SDK runtime-store publish policy | `_MSTestApplyAdapterPublishAssetPolicy`, after `_ResolveCopyLocalAssetsForPublish` | Runtime-store publish (`--manifest`, `PreserveStoreLayout`) re-resolves the publish assets from the assets file instead of reusing the filtered copy-local items. This target applies the same removals to `_ResolvedCopyLocalPublishAssets`. Otherwise it is a no-op. |
 | Non-SDK policy | `_MSTestApplyAdapterNonSdkAssetPolicy`, after `ResolveAssemblyReferences` | Applies the same policy to non-SDK PackageReference and packages.config projects, and also applies `SatelliteResourceLanguages`, which their resolvers ignore. |
 | packages.config fallback | `_MSTestAddPackagesConfigAdapterReferences` | Adds any missing `lib\net462` HintPath reference when a non-SDK project has no `PackageReference` items. This covers projects upgraded in place, which never received NuGet's install-time references. |
 | Layout consumers | `eng/package-shapes`, `eng/bazel/*`, acceptance tests, `PACKAGE.md` | Move to the `lib/<tfm>` paths. The previous `NU5127`/`NU5128`/`NU5100` suppressions are removed; the pack has no warnings without them. |
@@ -651,11 +652,60 @@ with each package placed in `artifacts\packages\Debug\Shipping` in turn:
 The packages.config RED→GREEN result and the Bazel satellite counterfactual
 above are consumer-level counterparts.
 
+### Review follow-up: runtime-store publish and packages.config upgrade tests
+
+The PR review raised two issues:
+
+- **Runtime-store publish bypassed the policy.** `dotnet publish --manifest`
+  reruns NuGet asset resolution for publish and ignores the copy-local items
+  that `_MSTestApplyAdapterPackageAssetPolicy` filtered. Under VSTest, all 13
+  adapter cultures were published instead of the build-machine UI culture.
+  With `EnableMSTestV2CopyResources=false`, all 13 were still published. With
+  `IsTestApplication=false`, both adapter DLLs were published. The baseline
+  `buildTransitive` injection did not have this gap. The fix is
+  `_MSTestApplyAdapterPublishAssetPolicy`.
+- **The packages.config upgrade had no automated test.** It is now covered.
+
+Acceptance tests:
+
+- `SdkTests.RuntimeStorePublish_AppliesAdapterAssetPolicy` publishes against a
+  store manifest with `DOTNET_CLI_UI_LANGUAGE=fr`. It asserts the published
+  adapter assemblies and satellite cultures:
+  - `VSTestDefault`: `fr`.
+  - `VSTestWithoutCopyResources`: no cultures.
+  - `MTPDefault`: all 13 cultures.
+  - `NotTestApplication`: no adapter assemblies.
+- `PackagesConfigUpgradeTests.UpgradedProjectWithoutAdapterReferences_CopiesAdapterAndRunsTests`
+  is Windows-only. It needs Visual Studio `MSBuild.exe` and `vstest.console`,
+  and is reported inconclusive without them. The test:
+  - restores the package;
+  - generates a packages.config project with no adapter `<Reference>` items;
+  - builds it;
+  - asserts both adapter DLLs are copied;
+  - runs `vstest.console` without `/TestAdapterPath` and expects 2/2 passed.
+
+Each test was run with both new targets removed from the packed
+`MSTest.TestAdapter.targets`, then with the restored targets. The commands:
+
+- `.\build.cmd -pack -projects <MSTest.TestAdapter.csproj>`.
+- `MSTest.Acceptance.IntegrationTests.exe --progress off --ansi off --filter "FullyQualifiedName~RuntimeStorePublish|FullyQualifiedName~PackagesConfigUpgrade"`.
+
+| Targets | Result |
+| --- | --- |
+| `_MSTestApplyAdapterPublishAssetPolicy` and `_MSTestAddPackagesConfigAdapterReferences` removed | 4 failed, 1 passed (exit code not retained). `MTPDefault`, the control row, passed. The other three runtime-store rows reported the unwanted cultures or adapter DLLs listed above. The packages.config test reported "MSTest.TestAdapter.dll was not copied". |
+| Restored (packed file verified to contain both targets) | 5/5 passed, exit 0 |
+
+The same executable, filtered with
+`"FullyQualifiedName~SdkTests|FullyQualifiedName~SatelliteResourceLanguages|FullyQualifiedName~FrameworkTargeting|FullyQualifiedName~WindowsApplicationModelPackage|FullyQualifiedName~CppCliVSTest|FullyQualifiedName~CoreFrameworkAssembly|FullyQualifiedName~PackagesConfigUpgrade"`,
+exited 0: 239 passed and 1 skipped (`MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition`, which needs
+the gated Windows application-model environment).
+
 ### Remaining gaps
 
 - No CI run has validated this revision.
 - `MSTest.Uwp` and `MSTest.WinUI` are unchanged and were not re-run natively.
-- Native AOT, single-file, and runtime-store publishing are untested.
+- Native AOT and single-file publishing are untested. Runtime-store publishing
+  is covered only by the four scenarios listed in the review follow-up.
 - Visual Studio design-time builds and Test Explorer were not exercised.
 - Consumers outside this repository that hard-code the former
   `buildTransitive/<tfm>` DLL paths have not been audited.

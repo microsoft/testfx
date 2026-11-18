@@ -102,6 +102,29 @@
     </ItemGroup>
   </Target>
 
+  <!-- Runtime-store publish (PreserveStoreLayout or TargetManifestFiles) re-resolves the files to publish from the assets
+       file instead of reusing the filtered copy-local items, so apply the same policy to them. Otherwise this is a no-op.
+       The SDK filters SatelliteResourceLanguages afterwards. -->
+  <Target Name="_MSTestApplyAdapterPublishAssetPolicy"
+          AfterTargets="_ResolveCopyLocalAssetsForPublish"
+          DependsOnTargets="_MSTestComputeAdapterPackageAssetPolicyInputs"
+          Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND '$(UsingMicrosoftNETSdk)' == 'true' ">
+    <ItemGroup>
+      <_MSTestAdapterPublishAsset Include="@(_ResolvedCopyLocalPublishAssets)"
+                                  Condition=" '%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)' == 'MSTest.TestAdapter' " />
+      <_MSTestAdapterPublishAsset Update="@(_MSTestAdapterPublishAsset)">
+        <_MSTestCulture>$([System.String]::Copy('%(_MSTestAdapterPublishAsset.Culture)').ToLowerInvariant())</_MSTestCulture>
+      </_MSTestAdapterPublishAsset>
+      <_MSTestAdapterPublishAssetToRemove Include="@(_MSTestAdapterPublishAsset)"
+                                          Condition=" '$(IsTestApplication)' == 'false'
+                                                      OR ('%(_MSTestAdapterPublishAsset._MSTestCulture)' != ''
+                                                          AND ('$(EnableMSTestV2CopyResources)' != 'true'
+                                                               OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterPublishAsset._MSTestCulture);'))))) " />
+
+      <_ResolvedCopyLocalPublishAssets Remove="@(_MSTestAdapterPublishAssetToRemove)" />
+    </ItemGroup>
+  </Target>
+
   <!--
     packages.config projects: NuGet adds the lib/net462 references to the project file only on install. Projects upgraded
     from a version that injected these references from this file (for example by bumping package versions in place) do
