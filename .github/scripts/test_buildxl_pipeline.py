@@ -78,7 +78,15 @@ class BuildXLPipelineTests(unittest.TestCase):
             )
         )
         cls.job = cls.template["jobs"][0]
-        cls.steps = cls.job["steps"]
+        cls.raw_steps = cls.job["steps"]
+        # Flatten compile-time conditional step groups so steps can be found and ordered by position.
+        cls.steps = []
+        for entry in cls.raw_steps:
+            keys = list(entry)
+            if len(keys) == 1 and keys[0].startswith("${{"):
+                cls.steps.extend(entry[keys[0]])
+            else:
+                cls.steps.append(entry)
 
     def step(self, display_name: str) -> dict:
         matches = [
@@ -103,9 +111,17 @@ class BuildXLPipelineTests(unittest.TestCase):
         imports = [
             entry[gate] for entry in build_stage["jobs"] if gate in entry
         ]
-        # A direct build-stage gate cannot be nested under SkipTests.
+        # A direct build-stage gate cannot be nested under SkipTests; SkipTests is forwarded to the test step only.
         self.assertEqual(
-            [[{"template": "/eng/pipelines/jobs/buildxl.yml"}]], imports
+            [
+                [
+                    {
+                        "template": "/eng/pipelines/jobs/buildxl.yml",
+                        "parameters": {"SkipTests": "${{ parameters.SkipTests }}"},
+                    }
+                ]
+            ],
+            imports,
         )
         all_imports = [
             node["template"]
@@ -114,6 +130,19 @@ class BuildXLPipelineTests(unittest.TestCase):
         ]
         self.assertEqual(["/eng/pipelines/jobs/buildxl.yml"], all_imports)
         self.assertNotIn("SkipTests", self.job.get("condition", ""))
+
+    def test_skip_tests_removes_only_the_unit_test_step(self) -> None:
+        self.assertEqual(
+            [{"name": "SkipTests", "type": "boolean", "default": False}],
+            self.template["parameters"],
+        )
+        gate = "${{ if eq(parameters.SkipTests, false) }}"
+        self.assertEqual(
+            [[self.step(TEST_STEP)]],
+            [entry[gate] for entry in self.raw_steps if gate in entry],
+        )
+        for name in (BUILD_STEP, COLLECT_STEP, PUBLISH_STEP):
+            self.assertIn(self.step(name), self.raw_steps, name)
 
     def test_pipeline_does_not_import_the_legacy_benchmark(self) -> None:
         names = [parameter["name"] for parameter in self.pipeline["parameters"]]
@@ -365,6 +394,102 @@ class BuildXLPipelineTests(unittest.TestCase):
             )
         finally:
             shutil.rmtree(output, ignore_errors=True)
+
+    def test_unit_test_summary_reports_pack_from_the_recorded_build_targets(self) -> None:
+        if sys.platform != "win32":
+            self.skipTest("The BuildXL unit-test runner is Windows-only.")
+        dotnet_root = ROOT / ".dotnet"
+        if not (dotnet_root / "dotnet.exe").is_file():
+            self.skipTest("The repository-local .NET SDK is not restored.")
+        runtimes = subprocess.run(
+            [str(dotnet_root / "dotnet.exe"), "--list-runtimes"],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        major = re.search(r"^Microsoft\.NETCore\.App (\d+)\.", runtimes, re.MULTILINE).group(1)
+        revision = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        cases = {
+            "Build;Pack": ("| Build (includes Pack) | 34.5 |", "| Pack | included in Build |"),
+            "Build": ("| Build | 34.5 |", "| Pack | not run |"),
+            None: ("| Build | 34.5 |", "| Pack | not run |"),
+        }
+        for targets, (build_row, pack_row) in cases.items():
+            with self.subTest(targets=targets):
+                output_id = "runner-summary-" + uuid.uuid4().hex[:12]
+                output = ROOT / "artifacts" / "buildxl-runs" / output_id
+                try:
+                    # A one-suite workload over a placeholder assembly reaches the summary without real build outputs;
+                    # the suite itself fails because the placeholder is not a test host.
+                    assembly = output / "bin" / "Placeholder.UnitTests" / "Debug" / "net10.0"
+                    assembly.mkdir(parents=True)
+                    (assembly / "Placeholder.UnitTests.dll").write_bytes(b"")
+                    workload = output / "workload.json"
+                    workload.write_text(
+                        json.dumps(
+                            {
+                                "schemaVersion": 1,
+                                "name": "summary",
+                                "identityPolicy": "trx",
+                                "targetFramework": "net10.0",
+                                "tests": [
+                                    {
+                                        "label": "//:placeholder_tests",
+                                        "project": "Placeholder.UnitTests",
+                                        "assembly": "Placeholder.UnitTests",
+                                        "runtime": "sdk",
+                                    }
+                                ],
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    (output / "toolchain.json").write_text(
+                        json.dumps(
+                            {
+                                "SourceRevision": revision,
+                                "Sdk": f"{major}.0.100",
+                                "Engine": "BuildXL",
+                                "Configuration": "Debug",
+                                "DotNetRoot": str(dotnet_root),
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    phases = {"RestoreExitCode": 0, "BuildExitCode": 0, "RestoreSeconds": 12.5, "BuildSeconds": 34.5}
+                    if targets is not None:
+                        phases["Targets"] = targets
+                    (output / "logs").mkdir()
+                    (output / "logs" / "phase-timings.json").write_text(json.dumps(phases), encoding="utf-8")
+                    process = self.run_unit_test_runner(
+                        "-Configuration", "Debug", "-OutputId", output_id, "-Workload", str(workload)
+                    )
+                    self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+                    summary = (output / "logs" / "unit-tests" / "unit-test-summary.md").read_text(
+                        encoding="utf-8-sig"
+                    ).replace("\r\n", "\n")
+                    phase_table = re.sub(
+                        r"(?m)^(\| Unit tests \(1 suites, 2 at a time\) \| )[\d.]+ \|$",
+                        r"\1<seconds> |",
+                        summary.split("\n\n")[1],
+                    )
+                    self.assertEqual(
+                        "\n".join(
+                            [
+                                "| Phase | Seconds |",
+                                "| --- | ---: |",
+                                "| Restore | 12.5 |",
+                                build_row,
+                                "| Runtime bootstrap (outside the test phase) | 0 |",
+                                "| Unit tests (1 suites, 2 at a time) | <seconds> |",
+                                pack_row,
+                            ]
+                        ),
+                        phase_table.strip(),
+                    )
+                finally:
+                    shutil.rmtree(output, ignore_errors=True)
 
     def test_collector_runs_always_after_native_build(self) -> None:
         collector = self.step(COLLECT_STEP)

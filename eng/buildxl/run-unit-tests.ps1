@@ -434,14 +434,17 @@ finally {
         $lines.Add('')
         $lines.Add('| Phase | Seconds |')
         $lines.Add('| --- | ---: |')
+        # eng\buildxl.ps1 -Pack runs Build;Pack as one MSBuild invocation, so packing is timed inside the Build phase.
+        $packed = $null -ne $phases -and 'Targets' -in $phases.PSObject.Properties.Name -and
+            @(([string] $phases.Targets) -split ';') -contains 'Pack'
         if ($null -ne $phases) {
             $lines.Add("| Restore | $($phases.RestoreSeconds) |")
-            $lines.Add("| Build | $($phases.BuildSeconds) |")
+            $lines.Add("| $(if ($packed) { 'Build (includes Pack)' } else { 'Build' }) | $($phases.BuildSeconds) |")
         }
 
         $lines.Add("| Runtime bootstrap (outside the test phase) | $($report.RuntimeInstallSeconds) |")
         $lines.Add("| Unit tests ($($suites.Count) suites, $TestJobs at a time) | $($report.TestSeconds) |")
-        $lines.Add('| Pack | not run |')
+        $lines.Add("| Pack | $(if ($packed) { 'included in Build' } else { 'not run' }) |")
         $lines.Add('')
         $lines.Add('| Suite | Runtime | Seconds | Total | Passed | Failed | Skipped | Selection hash |')
         $lines.Add('| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |')

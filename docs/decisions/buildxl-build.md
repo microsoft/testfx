@@ -25,7 +25,8 @@ the 3 scale samples), and pack. These stay Bazel-only and are listed as gaps.
 Failure contract: the test step runs only after a successful native build,
 refuses to run against output from a different revision, configuration or
 failed build, fails the job when any matched suite fails, is not retried, and
-never uses `continueOnError`.
+never uses `continueOnError`. Queueing the pipeline with `SkipTests=true` removes
+only this step at template-expansion time; the native build still runs.
 
 ### Alternatives and decision
 
@@ -71,7 +72,9 @@ Comparability limits:
   pair; Release BuildXL pairs with the Release/`opt` dogfood experiment.
 - BuildXL packs only with the opt-in `eng\buildxl.ps1 -Pack` (see
   [opt-in pack](#2026-11-17-xlf-parity-and-opt-in-pack-on-buildxl)); the CI legs
-  and the runs below do not pass it (`Pack | not run` in the summary). Bazel's
+  and the runs below do not pass it (`Pack | not run` in the summary). With
+  `-Pack`, Build and Pack are one MSBuild invocation, so the summary reads
+  `Build (includes Pack)` and `Pack | included in Build`. Bazel's
   pack validation builds experimental native packages, not the 33 MSBuild `Pack`
   outputs, so package work is not equal even with `-Pack`.
 - BuildXL's job still builds the whole solution, so its build phase covers more
@@ -531,6 +534,26 @@ Open items:
   succeeded and stored their cache entries. The cause is unknown.
 - Bazel gaps are listed in the
   [Bazel record](bazel-build.md#equal-work-comparison-scope-2026-11-17).
+
+### Review corrections
+
+Two defects that review of this change found:
+
+- The unit-test summary always printed `Pack | not run`, even after a
+  `-Pack` build. It now reads the recorded `Targets` from
+  `logs\phase-timings.json`.
+- The new unit-test step ignored the pipeline's `SkipTests`. The BuildXL
+  template now declares `SkipTests`, `azure-pipelines.yml` forwards it, and a
+  compile-time `${{ if }}` removes only the test step.
+
+Evidence: `test_unit_test_summary_reports_pack_from_the_recorded_build_targets`
+runs the real runner on fabricated build output for `Build;Pack`, `Build` and
+an absent `Targets`. `test_skip_tests_removes_only_the_unit_test_step` and the
+updated `test_buildxl_is_enabled_by_default_independently_of_skip_tests` cover
+the pipeline gate. With the three production files reverted, those tests failed
+(the Pack row mismatch, a missing template `parameters` block, and an import
+without `SkipTests`). With the fix, `python .github\scripts\test_buildxl_pipeline.py`
+ran 44 tests, all passing.
 
 ## 2026-11-11: preserve journals when a query fails
 
@@ -1058,8 +1081,8 @@ This replaces the previous `EnableBuildXLPerformance` queue-time parameter.
 The existing trusted path classification and unknown-classification fallback
 are preserved. The gate now accepts **product or sample changes**, because
 samples are part of the solution; infrastructure-only and XML-doc-only changes
-retain their exclusions. `SkipTests` still controls product tests, not these
-build-only jobs.
+retain their exclusions. `SkipTests` does not omit these jobs; since
+2026-11-17 it removes only their Bazel-matched unit-test step.
 
 Each entry invokes `eng/buildxl.ps1 -Project TestFx.slnx` with its configuration,
 CPU-sized concurrency, tracked shared compilation, and automatic filesystem
