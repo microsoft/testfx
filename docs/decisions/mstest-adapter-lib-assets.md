@@ -1,4 +1,10 @@
-# MSTest adapter library assets: experiment
+# MSTest adapter library assets: experiments and rewrite design
+
+The November 12-13 sections preserve the earlier single-package experiments.
+Their package-split exclusion and toolchain limitations describe those runs,
+not the current proposal. The [November 18 design](#three-package-families-design-2026-11-18)
+investigates separate component packages and compatibility metapackages, without
+changing shipping defaults.
 
 ## Problem and contract
 
@@ -443,3 +449,329 @@ The remaining Retry recovery-delay and Playwright failures also occur on
 They are not attributed to the UWP resource changes or changed in this PR.
 Full modern UWP activation still requires the capable CI agent; a new pending
 run must not be presented as passing evidence.
+
+## Three package families design: 2026-11-18
+
+### Problem, scope and decision
+
+Design baseline: `28a041287150a48ad48134672c472a481fecf492`.
+The current [explicit package design](explicit-mstest-packages.md) combines UI
+framework APIs with an application-model-specific adapter, platform services
+and runner integration. A UI test library cannot choose just the UI framework
+through those package IDs. The [SDK composition contract](mstest-sdk-composition.md)
+already distinguishes applications from helpers; the new package graph must
+preserve that distinction rather than infer intent from `OutputType`.
+
+The requested work is a rewrite design with executable feasibility experiments,
+not an unconditional migration of shipping packages. The candidate separates
+framework, adapter and convenience layers. Existing `MSTest.Uwp` and
+`MSTest.WinUI` names remain combined entry points; new component names provide
+the narrower choices. This favors an additive migration over requiring every
+application to edit its package references.
+
+The DLL directory alone is not the defect. `buildTransitive` can legitimately
+own build integration. The problem is owning consumer DLL/reference/dependency
+semantics there and coupling those semantics to a framework reference. Moving
+DLLs without removing the reverse dependency does not make a framework clean.
+Likewise, a plain package reference does not unconditionally change a library
+to an executable: the SDK's application policy and runner opt-in are separate.
+
+### Package graph and asset ownership
+
+| Package | Owns | Dependency direction |
+| --- | --- | --- |
+| `MSTest.TestFramework` | Shared framework and existing compatibility facade | No adapter or UI dependency |
+| `MSTest.TestFramework.Uwp` / `.WinUI` | Existing UI framework DLL and its framework-specific runtime dependencies | Exact aligned core; no adapter, MTP runner, composition marker or builder hook |
+| `MSTest.TestAdapter` | Ordinary adapter/services implementations, resources and integration | Required framework and ordinary execution dependencies |
+| `MSTest.TestAdapter.Uwp` / `.WinUI` | Corresponding adapter/services implementations, resources and integration | Matching framework component and required model-specific execution dependencies; no ordinary or other-model adapter |
+| `MSTest` | Existing ordinary convenience dependency set | Ordinary framework/adapter and existing applicable tooling |
+| `MSTest.Uwp` / `.WinUI` | Compatibility/convenience composition, not implementation DLLs | Matching framework and adapter components, preserving the existing convenience contract |
+
+For example:
+
+```text
+MSTest.WinUI
+  +-- MSTest.TestFramework.WinUI
+  |     +-- MSTest.TestFramework
+  +-- MSTest.TestAdapter.WinUI
+        +-- MSTest.TestFramework.WinUI
+        +-- model-specific execution dependencies
+```
+
+The repeated framework edge converges on one aligned package. This graph must
+not include `MSTest -> MSTest.TestAdapter` underneath `MSTest.WinUI`.
+Adapter variants contain alternate implementations of the same assembly
+identities; they replace, rather than extend, the ordinary adapter. Extracting
+a common runtime adapter core is a different project and is not required here.
+
+Preserve `MSTest.Uwp.dll`, `MSTest.WinUI.dll`, `MSTest.TestAdapter.dll` and
+`MSTestAdapter.PlatformServices.dll` assembly/type identities even though some
+package IDs change. Moving a package owner is not a reason to rename a public
+assembly, move a type again, or undo the existing core facade.
+
+Component DLLs and satellites belong in supported `lib/<tfm>` groups. A genuine
+`ref/<tfm>` assembly is optional if a separately justified compile/runtime split
+needs it; a `ref` directory alone does not solve runtime selection. Classic UAP
+and modern UWP can remain separate TFM groups within the UWP adapter package.
+WinUI is a different package, so a newer Windows platform version cannot make
+a UWP package resolve a WinUI implementation.
+
+Retain only integration in `build`/`buildTransitive`: runner registration,
+parallelization defaults, composition validation and required model-specific
+deployment hooks. No adapter/services DLLs should remain there or in `tools`
+in the final layout. Ordinary .NET Framework VSTest adjacent-framework lookup
+and classic UAP explicit deployment still need an equivalent working solution;
+neither is waived by the `lib` goal.
+
+### Consumer and compatibility contract
+
+| Consumer | Intended reference/selection | Required observable outcome |
+| --- | --- | --- |
+| Ordinary framework library | `MSTest.TestFramework` | Framework APIs without adapter/runner payload |
+| UI framework library | `MSTest.TestFramework.Uwp` or `.WinUI` | Actual UI APIs compile; output stays a library; no adapter/services or MTP registration/dependency introduced by the framework |
+| Explicit application | Matching framework and one adapter, or matching metapackage | Correct compile/runtime/resource identity and execution |
+| Existing UI application | Existing `MSTest.Uwp` / `.WinUI` reference | Same assembly identities and application behavior with no required reference edit, where the compatibility probes establish this |
+| SDK application | Existing application-model inference/override before restore | One compatible adapter for each inner TFM across ClassicEngine, VSTest and NativeAOT paths |
+| Source-generated helper | Framework plus only required private compile-time runtime-hook APIs | `IsTestApplication=false`; no application registration or leaking adapter runtime dependency; final app owns the model-specific runtime |
+| Conflicting compositions | Two different adapter models, including transitive paths | Explicit failure before compilation, not duplicate output DLLs or arbitrary last-copy wins |
+
+Framework packages must not import the adapter's `PackageDependencies.props`
+or retain a private dependency on it. Keep genuine UI framework dependencies;
+"clean" does not mean discarding Windows API dependencies needed by the UI DLL.
+
+Existing meta-package IDs are compatibility entry points, not proof of
+compatibility. Preserve relevant props/targets entry points and marker semantics
+for older SDKs without double-registering hooks. New adapter owners supply the
+canonical registration and validation. Evaluate conflicts by adapter identity:
+framework plus its adapter is valid, while ordinary and UI adapters remain
+incompatible. Preserve current-inner-TFM and excluded-build-asset validation.
+
+Consumers that hard-code physical DLL paths inside a package cannot be covered
+by an XML forwarder. If they require the old `buildTransitive` DLL paths,
+supporting them and eliminating every DLL there are conflicting requirements.
+Identify those consumers and choose a documented migration/major-release
+boundary rather than claiming both guarantees.
+
+Standard NuGet assets change meaningful behavior:
+
+- Honor `ExcludeAssets=compile` and `ExcludeAssets=runtime`; never re-inject
+  excluded files through manual references.
+- `PrivateAssets` controls propagation, not use by the declaring project.
+  Check ProjectReference and packed-helper consumers independently.
+- Check metapackage asset exclusions through the dependency graph; moving an
+  asset into a dependency can change which exclusion applies.
+- Retain satellite identity and honor explicit `SatelliteResourceLanguages`.
+  The earlier move from build-machine-culture filtering to normal NuGet
+  resource delivery was a visible output-size/language-policy difference.
+- Preserve exact UI/core alignment, central version-management behavior and
+  complete per-TFM dependency groups. Component versions must not silently mix.
+
+Package selection belongs to SDK/project evaluation before restore. A restored
+metapackage cannot reliably inject new flavor dependencies after restore.
+`MSTestApplicationModel` remains the existing selection contract; introduce no
+new competing model selector or invented app-model RID. Retain the distinction
+between a framework-only helper and a generated helper that needs compile-time
+adapter APIs.
+
+No launcher handshake, app ownership/lifetime, cancellation, child/parent exit,
+fallback, retry or multi-module aggregation change is intended. Validation must
+compose aligned framework, adapter, SDK, MTP and packaged-app components instead
+of claiming that local unit tests establish those unchanged runtime contracts.
+
+### Alternatives and migration gates
+
+| Choice | Decision |
+| --- | --- |
+| Keep the current combined layout | Lowest immediate upgrade risk, but framework-only consumption remains unavailable |
+| One adapter package, `lib` plus post-restore model selector | Feasible historical managed experiment; retains SDK resolved-item coupling and does not by itself separate framework ownership |
+| Separate component packages and retain old UI IDs as metapackages | Preferred design to test: explicit ownership and native model selection; additional package/version management and compatibility work |
+| Make old UI IDs framework-only | Reject as the default transition: existing applications would lose their adapter |
+| Unify runtime adapter implementations | Defer; much broader conditional-runtime behavior change |
+
+Implementation should proceed behind evidence gates:
+
+1. Construct isolated candidate packages from current built shipping DLLs.
+   Compare real consumers with the baseline and a deliberately wrong
+   composition using retained assertions. Do not edit shipping defaults.
+2. If the experiment supports the design, add production component owners,
+   dependency metadata, library assets and adapter-owned integration. Preserve
+   assembly identities and compatibility entry points. Update exact package
+   shape checks from actual packed output.
+3. Update all SDK injection paths together, including generated helpers,
+   central management, VSTest and NativeAOT. Re-run old-SDK consumers separately
+   from the aligned new SDK; passing only the new pair is not compatibility.
+4. Require native classic/modern UWP, packaged/unpackaged WinUI, ordinary
+   net462 VSTest and supported publish-mode evidence before enabling the layout.
+   A temporary legacy DLL exception must be labeled as incomplete migration.
+5. Decide release targeting, downstream migration and servicing before shipping.
+   No release branch or backport is selected by this experiment. Keep one
+   rollout owner through dependency flow and any temporary-shim retirement.
+
+The newly introduced UI IDs' release status has not been established here.
+If they are unreleased, a pre-release correction may cost less than permanent
+compatibility machinery. Do not infer this from a development version number.
+
+### Experiment matrix and evidence policy
+
+The current test work owns the reproducible package experiment; the historical
+hashes/counts above are not evidence for the split. Each run must record the
+source revision, script identity, input/candidate package hashes, SDK, consumer
+cache, exact command, exit and named assertion outcomes.
+
+| Requirement | Experiment | Full-product gate beyond managed probes |
+| --- | --- | --- |
+| Framework-only UI APIs | Compile actual UWP/WinUI attributes; inspect references, packages, hooks and library output | Real helper consumed by the corresponding native app |
+| Native flavor selection | Same recent Windows TFM with separate adapter IDs; assert both DLL hashes, compile/runtime/publish/deps paths | Execute actual modern UWP and WinUI layouts |
+| Existing convenience references | Baseline SDK plus old UI package IDs resolving candidate metapackages | Old supported SDK/package combinations and IDE discovery |
+| Helper privacy | Generated helper plus model-specific application, including packed-helper dependency inspection | Native/AOT supported helper path |
+| Asset semantics | Compile/runtime exclusions and French-only satellites | PRI, localized runtime lookup and application-owned resources |
+| Ordinary execution | Actual MTP and VSTest named cases against aligned packages | .NET Framework resolver and other supported publish modes |
+| Composition errors | Ordinary/UI and UWP/WinUI conflicts, transitive/excluded imports, valid mixed-TFM control | Non-SDK marker fallback and design-time integration |
+| Regression sensitivity | Same assertions against baseline or a buildable wrong-flavor candidate | No restore/compiler/setup failure counted as a behavioral red result |
+
+This is nonvisual packaging research. A transcript and exact resolved/output
+identity checks are the appropriate evidence now; eventual IDE/discovery or
+localized UI changes still require inspecting the real rendered surface.
+Native preflight failures, unrun paths and expected counterfactual assertion
+failures must remain distinct from passing cases.
+
+### Current experiment results
+
+The reproducible harness is
+[`eng/experimental/Test-PackageSplit.ps1`](../../eng/experimental/Test-PackageSplit.ps1).
+It builds current producers, snapshots real packages, constructs separate
+baseline/candidate feeds and caches, and preserves implementation DLL bytes.
+Trial packages are explicitly labeled local experiments, not shipping artifacts.
+The core and SDK archives are unchanged; candidate adapter integration removes
+manual DLL/resource injection and validates the new adapter package identities.
+No shipping package owner or SDK default is changed.
+
+The final comparison is retained under `artifacts/package-split/a/f`.
+It records 27 probes: 23 passed, two expected baseline cleanliness assertion
+failures, two compatibility failures, and zero setup failures. Four managed
+TRX reports contain eight executed/passed cases. Actual modern UWP launches
+contain six baseline passes and five candidate passes plus one candidate
+failure. Combined TRX totals are 20 executed, 19 passed, one failed, zero skipped.
+Build-only probes are not counted as executed MSTest cases.
+
+| Requirement | Evidence |
+| --- | --- |
+| Framework-only libraries compile real APIs without runner payload | `FrameworkOnlyOrdinary`, `FrameworkOnlyWinUI`, `FrameworkOnlyUwp` passed; UI cases compile `AppContainer.UITestMethod` and assert library output, no adapter/MTP packages/payload and no application hooks |
+| Cleanliness assertion sensitivity | `BaselineFrameworkOnlyWinUI`, `BaselineFrameworkOnlyUwp` build successfully, then fail the same contamination assertion with the original combined packages |
+| Native NuGet flavor selection at the same Windows TFM | `AdapterOrdinary`, `AdapterWinUI`, `AdapterUwp` passed: both implementation DLLs match original producer bytes in compile, build, publish and dependency-manifest paths |
+| Asset exclusion and localization policy | `AdapterUwpExcludeCompile`, `AdapterUwpExcludeRuntime`, `AdapterUwpFrenchOnly` passed; exact reference/payload absence and two French satellite hashes/deps entries checked |
+| Existing UI package IDs with the unmodified baseline SDK | `LegacyWinUIBaselineSdk`, `LegacyUwpBaselineSdk` passed build/publish with the correct flavor and no ordinary adapter; this is the current-source SDK, not historical released SDK coverage |
+| Generated helpers | `baselineSdkHelperNoRuntime`, `candidateSdkHelperNoRuntime`, `SdkWinUIWithOrdinaryGeneratedHelper`, `SdkUwpWithOrdinaryGeneratedHelper` passed source generation, private compile-hook and no-runtime-leak checks |
+| Real managed execution | `baselineManagedMtp`, `candidateManagedMtp`, `baselineManagedVstest`, `candidateManagedVstest` each execute `AdapterLoadsFromConsumerOutput` and `FrenchAdapterResourceIsAvailable`: eight passes |
+| Classic UWP native build | `baselineNativeClassicUwpBuild` passed; `candidateNativeClassicUwpBuild` failed at the unchanged legacy DLL path |
+| Modern UWP native build and activation | `baselineNativeModernUwpBuild`, `candidateNativeModernUwpBuild` both build and launch; only the candidate's `AdapterFailureMessages_UseNeutralFallbackForFrench` fails |
+| WinUI native build | `baselineNativeWinUIBuild`, `candidateNativeWinUIBuild` passed and produced deployment recipes; neither app was launched |
+
+#### Discovered incompatibilities and proposed treatment
+
+**Classic UWP has a physical-path compatibility break.** The unchanged consumer
+copies `mstest.uwp/5.0.0-dev/lib/uap10.0.16299/MSTest.Uwp.dll` directly.
+That file no longer belongs to the candidate metapackage, producing `MSB3030`.
+This is a demonstrated build-compatibility failure, not behavioral red-phase
+proof and not evidence that native UAP cannot consume library assets.
+
+For the production rewrite, migrate that consumer to the actual resolved UI
+assembly instead of a versioned metapackage path, and ensure the adapter-owned
+classic deployment logic copies it. Retain the unchanged legacy-path probe as
+a documented compatibility boundary. Do not copy duplicate implementation DLLs
+into metapackages merely to make the experiment green. If external callers
+depend on those physical paths, they need an explicit migration/release decision.
+Classic UWP runtime has not been validated after that migration.
+
+**Modern UWP gains French adapter translations.** The identical
+`AdapterFailureMessages_UseNeutralFallbackForFrench` case passes against the
+baseline and fails against the candidate. It expects
+`The parameter should not be null or empty.` but receives
+`Le paramètre ne doit pas être null ou vide. (Parameter 'fileName')`.
+The exception remains `ArgumentException` with parameter `fileName`; standard
+library satellites change the message language. Application English/French
+resource cases, the plain test, the UI-dispatcher test and the English adapter
+message case all pass in both native apps.
+
+The proposed rewrite policy is to adopt normal NuGet satellite delivery and
+document this intentional localization change, rather than preserve a deployment
+workaround by silently suppressing translations. This is not a claim of
+behavioral compatibility. Keep the unchanged fallback assertion in the comparison;
+when production policy is approved, add a positive localized-message assertion
+while retaining application-resource and exception-identity checks.
+
+These results support separate ownership and native asset selection but reject
+the claim that converting the old UI IDs into metapackages is a completely
+drop-in replacement.
+
+#### Reproduction and provenance
+
+The producer closure contains 30 real projects and 22 shipping packages at
+`28a041287150a48ad48134672c472a481fecf492`. The pinned SDK is
+`12.0.100-alpha.1.26562.108`; packages use MSTest `5.0.0-dev` and MTP `3.0.0-dev`.
+Managed and modern native consumers use `net10.0-windows10.0.26100.0`; classic
+uses `uap10.0.16299`; native builds are Release x64. These are local results,
+not CI or release-branch validation.
+
+Final executed commands, from the repository root:
+
+```powershell
+& .\eng\experimental\Test-PackageSplit.ps1 -Stage Pack `
+    -RunRoot "$PWD\artifacts\package-split\a"
+# Exit 0: real producer build/pack and immutable snapshot.
+
+& .\eng\experimental\Test-PackageSplit.ps1 -Stage Probe `
+    -RunRoot "$PWD\artifacts\package-split\a" -ProbeName f `
+    -NativeBuild -ModernUwpLaunch
+# Exit 1: the two compatibility failures above; neither is ignored.
+```
+
+The initial `r/f` run explicitly disabled NuGet auditing. That suppression was
+unnecessary and removed from producer, managed and native invocations before
+the final `a/f` repack/comparison. Effective restore records confirm auditing
+enabled for all 30 producers and 29 consumers/helpers, with no `NU19xx`
+diagnostics. The two compatibility findings and all case counts are unchanged.
+
+Use fresh short `RunRoot` and `ProbeName` values for another run; existing evidence
+is protected against overwrite and native loaders have path-length constraints.
+Omit native switches for managed-only probes. `-NativeBuild` by itself does not
+launch apps. `-Only` selects exact probe names and fails on unmatched names.
+
+Each evidence directory contains `results.json`, `harness-provenance.json`,
+`package-provenance.json`, exact `logs/*.command.json` invocations, binlogs,
+consumer assets/output manifests and TRX. The producer root contains the
+immutable package snapshot, `source.json` and `producer-packages.json`.
+Consumer cache package hashes are checked against the selected feed; finding a
+same-version package in a global cache is not accepted as provenance.
+
+The final run's executed harness SHA-256 is
+`D334EC0585BDE63A5EF41A03BD6433320324C699C112929EB169D69B5D75FA76`.
+Candidate archive timestamps can change per-run package hashes; the manifest
+and original-producer DLL hashes bind each actual comparison.
+
+Selection guards were also executed: selecting `FrameworkOnlyOrdinary` alone
+exits zero with exactly one result and no fabricated native results. Selecting
+`candidateNativeClassicUwpBuild` without enabling native builds exits one with
+`Requested probes were not run`, rather than treating an unrun case as passed.
+
+#### Test-value evidence and remaining gates
+
+The two framework cleanliness controls retain the same APIs/assertions across
+successful baseline/candidate builds and detect the baseline's unwanted runner
+dependencies. The native French-fallback assertion detects an actual changed
+outcome after real packaged activation. Both are executed sensitivity evidence.
+The classic-path build failure is separately classified; it is not counted as
+an executed failing test.
+
+Still unproved: classic UWP launch after consumer-path migration, WinUI launch,
+native UI launch specifically through MSTest.Sdk, published older SDK versions,
+other TFMs/RIDs, .NET Framework VSTest adjacent-framework resolution,
+NativeAOT/special publish modes, incompatible-flavor co-installation and the full
+non-SDK/CPM/multi-TFM matrix. Helper ProjectReference probes do not replace
+packed-helper downstream dependency checks. No UI/IDE rendered inspection,
+shipping metadata/signing validation, release enablement or publication is claimed.
+
+Both owned modern UWP registrations were removed and their absence verified.
+Task-owned feeds, caches, outputs, reports and logs remain under ignored
+`artifacts/package-split` for reproduction; no shared/global cache was cleared.
+Internal test research/plan/status files remain outside version control.
