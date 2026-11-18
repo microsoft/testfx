@@ -110,14 +110,16 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             }
             'MSTest.TestAdapter' {
                 foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
-                    $null = Get-ZipHash $Archive "buildTransitive/$framework/$name.dll"
+                    $null = Get-ZipHash $Archive "lib/$framework/$name.dll"
                 }
                 foreach ($extension in @('props', 'targets')) {
                     $null = Get-ZipHash $Archive "build/$framework/MSTest.TestAdapter.$extension"
                     $null = Get-ZipHash $Archive "buildTransitive/$framework/MSTest.TestAdapter.$extension"
                 }
                 $null = Get-ZipHash $Archive "buildTransitive/$framework/Parallelize.targets"
-                if (@($Archive.Entries | Where-Object FullName -Like 'lib/*').Count) { throw 'The adapter must not expose a lib folder.' }
+                if (@($Archive.Entries | Where-Object { $_.FullName -like 'buildTransitive/*.dll' -or $_.FullName -like '*/_localization/*' }).Count) {
+                    throw 'The adapter must ship its assemblies and satellites as lib assets, not build payloads.'
+                }
             }
             'Microsoft.Testing.Platform.MSBuild' {
                 $null = Get-ZipHash $Archive "lib/$framework/Microsoft.Testing.Extensions.MSBuild.dll"
@@ -148,8 +150,8 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             @{ Directory = 'src\TestFramework\TestFramework\Resources\xlf'; Stem = 'FrameworkMessages'; Assembly = 'MSTest.TestFramework'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
         }
         'MSTest.TestAdapter' {
-            @{ Directory = 'src\Adapter\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @('buildTransitive/_localization') }
-            @{ Directory = 'src\Adapter\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @('buildTransitive/_localization') }
+            @{ Directory = 'src\Adapter\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
+            @{ Directory = 'src\Adapter\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
         }
     }
     foreach ($catalog in $catalogs) {
@@ -196,7 +198,7 @@ function New-Expectations([string] $Framework, [string] $Path) {
         try {
             $names = switch ($id) {
                 'MSTest.TestFramework' { @("lib/$Framework/MSTest.TestFramework.dll", "lib/$Framework/MSTest.TestFramework.Extensions.dll") }
-                'MSTest.TestAdapter' { @("buildTransitive/$Framework/MSTest.TestAdapter.dll", "buildTransitive/$Framework/MSTestAdapter.PlatformServices.dll") }
+                'MSTest.TestAdapter' { @("lib/$Framework/MSTest.TestAdapter.dll", "lib/$Framework/MSTestAdapter.PlatformServices.dll") }
                 'Microsoft.Testing.Platform.MSBuild' { @("lib/$Framework/Microsoft.Testing.Extensions.MSBuild.dll") }
                 default { @("lib/$Framework/$id.dll") }
             }
@@ -206,8 +208,8 @@ function New-Expectations([string] $Framework, [string] $Path) {
     }
     $resources = @(
         @{ Assembly = 'MSTest.TestFramework'; Package = 'MSTest.TestFramework'; Folder = "lib/$Framework"; Source = 'src\TestFramework\TestFramework\Resources'; Stem = 'FrameworkMessages'; BaseName = 'Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages'; Key = 'AccessStringInvalidSyntax' },
-        @{ Assembly = 'MSTestAdapter.PlatformServices'; Package = 'MSTest.TestAdapter'; Folder = 'buildTransitive/_localization'; Source = 'src\Adapter\MSTestAdapter.PlatformServices\Resources'; Stem = 'Resource'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource'; Key = 'CannotFindFile' },
-        @{ Assembly = 'MSTest.TestAdapter'; Package = 'MSTest.TestAdapter'; Folder = 'buildTransitive/_localization'; Source = 'src\Adapter\MSTest.TestAdapter\Resources'; Stem = 'PlatformAdapterResources'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources'; Key = 'MSTestExtensionDescription' }
+        @{ Assembly = 'MSTestAdapter.PlatformServices'; Package = 'MSTest.TestAdapter'; Folder = "lib/$Framework"; Source = 'src\Adapter\MSTestAdapter.PlatformServices\Resources'; Stem = 'Resource'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource'; Key = 'CannotFindFile' },
+        @{ Assembly = 'MSTest.TestAdapter'; Package = 'MSTest.TestAdapter'; Folder = "lib/$Framework"; Source = 'src\Adapter\MSTest.TestAdapter\Resources'; Stem = 'PlatformAdapterResources'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources'; Key = 'MSTestExtensionDescription' }
     )
     foreach ($resource in $resources) {
         [xml]$catalog = Get-Content -LiteralPath (Join-Path $root "$($resource.Source)\xlf\$($resource.Stem).ko.xlf") -Raw
@@ -436,7 +438,7 @@ try {
             Where-Object Name -NE "MSTest.TestAdapter.$mstestVersion.nupkg" |
             Copy-Item -Destination $mutationFeed
         $request = Get-Content -LiteralPath $packages['MSTest.TestAdapter'].Request -Raw | ConvertFrom-Json
-        $removed = 'buildTransitive/_localization/ko/MSTest.TestAdapter.resources.dll'
+        $removed = 'lib/net11.0/ko/MSTest.TestAdapter.resources.dll'
         if (@($request.files | Where-Object target -EQ $removed).Count -ne 1) { throw 'The counterfactual must remove exactly one adapter satellite.' }
         $request.files = @($request.files | Where-Object target -NE $removed)
         foreach ($file in $request.files) { $file.source = Join-Path $executionRoot $file.source }

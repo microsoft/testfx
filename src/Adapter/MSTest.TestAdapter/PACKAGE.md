@@ -31,6 +31,18 @@ UI attributes, adapters, platform services and satellites. This ordinary adapter
 no longer switches assemblies based on `UseWinUI` or `UseUwpTools`; do not
 combine it with either UI package.
 
+## Package assets
+
+The adapter and platform-services assemblies, and their satellite resources, are
+ordinary NuGet `lib/<tfm>` assets. NuGet resolves them as package references and
+copies them through the standard copy-local and satellite pipelines, so
+`ExcludeAssets`, `SatelliteResourceLanguages` and publish behave as they do for
+any package. Excluding `runtime` assets therefore removes the adapter from the
+test output. Projects with `IsTestApplication=false` reference the adapter without
+copying it or its satellites. Projects using `packages.config` receive the
+adapter references from the package build targets when the project file does not
+already reference them.
+
 ## F# modules
 
 F# modules can contain test functions without a `[<TestClass>]` attribute:

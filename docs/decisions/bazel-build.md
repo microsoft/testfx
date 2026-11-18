@@ -1575,6 +1575,9 @@ existing consumer targets:
   `buildTransitive/_localization/<culture>`. The existing common hooks select
   binaries, copy requested cultures, generate parallelization attributes, and
   register MSTest's builder hook. PlatformServices is not a package.
+  *Update (2026-11-18):* the ordinary adapter now ships both binaries under
+  `lib/<tfm>` with their satellites under `lib/<tfm>/<culture>`; see
+  [MSTest adapter library assets](mstest-adapter-lib-assets.md#shipping-implementation-ordinary-adapter-lib-assets).
 - The portable adapter closure needs the existing TRX abstractions package,
   native Telemetry, and native Platform.MSBuild. Extensions.MSBuild is private
   payload of Platform.MSBuild, not a separately published package. The adapter's
@@ -1730,7 +1733,7 @@ no shipping leg, servicing branch, or package publication is enabled here.
 | Target | Package / result | Native payload contract |
 | --- | --- | --- |
 | `//:framework_package` | `MSTest.TestFramework`, MSTest version family | Core DLL/docs/PDBs/satellites in `lib/<tfm>`; Extensions DLL/docs/PDBs and existing hooks in `buildTransitive/<tfm>`. |
-| `//:adapter_package` | `MSTest.TestAdapter`, MSTest version family | Adapter and PlatformServices in `buildTransitive/<tfm>`, shared localized satellites, and unchanged registration/resource/parallelization hooks. |
+| `//:adapter_package` | `MSTest.TestAdapter`, MSTest version family | Adapter and PlatformServices with their localized satellites in `lib/<tfm>` (no assemblies under `buildTransitive`), and unchanged registration/resource/parallelization hooks. |
 | `//:telemetry_package` | `Microsoft.Testing.Extensions.Telemetry`, MTP version family | Four portable assemblies/resources, existing build hooks, native platform bound and locked external dependencies. |
 | `//:platform_msbuild_package` | `Microsoft.Testing.Platform.MSBuild`, MTP version family | Portable Extensions.MSBuild in `lib/<tfm>`; genuine netstandard task/platform binaries and selected runtime companions in `_MSBuildTasks/netstandard2.0`; unchanged root-relative build assets. |
 | `//:mstest_packages` | Four packages above | Does not change the existing MTP-only `//:packages` aggregate. |

@@ -101,8 +101,8 @@ public sealed class FrameworkTargetingTests : AcceptanceTestBase<NopAssetFixture
 
         var host = TestHost.LocateFrom(asset.TargetAssetPath, assetName, targetFramework);
         await AssertMatchingAssemblyAsync("MSTest.TestFramework", MSTestVersion, $"lib/{targetFramework}/MSTest.TestFramework.dll", host.DirectoryName);
-        await AssertMatchingAssemblyAsync("MSTest.TestAdapter", MSTestVersion, $"buildTransitive/{targetFramework}/MSTest.TestAdapter.dll", host.DirectoryName);
-        await AssertMatchingAssemblyAsync("MSTest.TestAdapter", MSTestVersion, $"buildTransitive/{targetFramework}/MSTestAdapter.PlatformServices.dll", host.DirectoryName);
+        await AssertMatchingAssemblyAsync("MSTest.TestAdapter", MSTestVersion, $"lib/{targetFramework}/MSTest.TestAdapter.dll", host.DirectoryName);
+        await AssertMatchingAssemblyAsync("MSTest.TestAdapter", MSTestVersion, $"lib/{targetFramework}/MSTestAdapter.PlatformServices.dll", host.DirectoryName);
         await AssertMatchingAssemblyAsync("Microsoft.Testing.Platform", MicrosoftTestingPlatformVersion, $"lib/{targetFramework}/Microsoft.Testing.Platform.dll", host.DirectoryName);
 
         TestHostResult result = await host.ExecuteAsync(cancellationToken: TestContext.CancellationToken);

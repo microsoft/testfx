@@ -45,7 +45,9 @@
     </TestingPlatformBuilderHook>
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- MSTest.TestAdapter ships its assemblies as lib/<tfm> assets that NuGet references. Only the UI packages
+       (MSTest.Uwp and MSTest.WinUI) still inject their payload as explicit references. -->
+  <ItemGroup Condition=" '$(_MSTestOrdinaryAdapterReferenced)' != 'true' ">
     <Reference Include="MSTest.TestAdapter">
       <HintPath>$(_MSTestAdapterPayloadRoot)MSTest.TestAdapter.dll</HintPath>
       <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
@@ -55,6 +57,112 @@
       <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
     </Reference>
   </ItemGroup>
+
+  <!--
+    Applies the MSTest.TestAdapter copy-local policy to the lib/<tfm> assets that NuGet resolves:
+    - non-test applications (IsTestApplication=false) reference the adapter without copying it;
+    - EnableMSTestV2CopyResources=false skips the localized satellites;
+    - under VSTest the UI language is the build-machine culture, so only that culture hierarchy is copied
+      (MTP selects the language at run time, so every culture allowed by SatelliteResourceLanguages is kept).
+    The package's nuspec <references> keep the .NET Framework TestFramework sidecar out of compile and runtime assets.
+  -->
+  <Target Name="_MSTestComputeAdapterPackageAssetPolicyInputs">
+    <ItemGroup>
+      <_MSTestAdapterSatelliteResourceLanguage Include="$(SatelliteResourceLanguages)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MSTestUICultureHierarchy>;$([System.Globalization.CultureInfo]::CurrentUICulture.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name);</_MSTestUICultureHierarchy>
+      <_MSTestUICultureHierarchy>$([System.String]::Copy('$(_MSTestUICultureHierarchy)').ToLowerInvariant())</_MSTestUICultureHierarchy>
+      <_MSTestAdapterSatelliteResourceLanguages Condition=" '$(SatelliteResourceLanguages)' != '' ">;@(_MSTestAdapterSatelliteResourceLanguage);</_MSTestAdapterSatelliteResourceLanguages>
+      <_MSTestAdapterSatelliteResourceLanguages>$([System.String]::Copy('$(_MSTestAdapterSatelliteResourceLanguages)').ToLowerInvariant())</_MSTestAdapterSatelliteResourceLanguages>
+      <_MSTestAdapterPackageLibRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'lib').ToLowerInvariant())</_MSTestAdapterPackageLibRoot>
+    </PropertyGroup>
+  </Target>
+
+  <!-- SDK projects: ResolvePackageAssets already honors SatelliteResourceLanguages, and its item lists also feed
+       deps.json and publish. -->
+  <Target Name="_MSTestApplyAdapterPackageAssetPolicy"
+          AfterTargets="ResolvePackageAssets"
+          DependsOnTargets="_MSTestComputeAdapterPackageAssetPolicyInputs"
+          Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND '$(UsingMicrosoftNETSdk)' == 'true' ">
+    <ItemGroup>
+      <_MSTestAdapterRuntimeAssetToRemove Include="@(RuntimeCopyLocalItems)"
+                                          Condition=" '$(IsTestApplication)' == 'false' AND '%(RuntimeCopyLocalItems.NuGetPackageId)' == 'MSTest.TestAdapter' " />
+      <_MSTestAdapterResourceAsset Include="@(ResourceCopyLocalItems)" Condition=" '%(ResourceCopyLocalItems.NuGetPackageId)' == 'MSTest.TestAdapter' " />
+      <_MSTestAdapterResourceAsset Update="@(_MSTestAdapterResourceAsset)">
+        <_MSTestCulture>$([System.String]::Copy('%(_MSTestAdapterResourceAsset.Culture)').ToLowerInvariant())</_MSTestCulture>
+      </_MSTestAdapterResourceAsset>
+      <_MSTestAdapterResourceAssetToRemove Include="@(_MSTestAdapterResourceAsset)"
+                                           Condition=" '$(IsTestApplication)' == 'false'
+                                                       OR '$(EnableMSTestV2CopyResources)' != 'true'
+                                                       OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterResourceAsset._MSTestCulture);'))) " />
+
+      <RuntimeCopyLocalItems Remove="@(_MSTestAdapterRuntimeAssetToRemove)" />
+      <ResourceCopyLocalItems Remove="@(_MSTestAdapterResourceAssetToRemove)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    packages.config projects: NuGet adds the lib/net462 references to the project file only on install. Projects upgraded
+    from a version that injected these references from this file (for example by bumping package versions in place) do
+    not have them, so add whichever adapter reference is missing. PackageReference projects are left to NuGet so that
+    IncludeAssets/ExcludeAssets are honored.
+  -->
+  <Target Name="_MSTestAddPackagesConfigAdapterReferences"
+          BeforeTargets="ResolveAssemblyReferences"
+          Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND '$(UsingMicrosoftNETSdk)' != 'true' AND '@(PackageReference)' == '' ">
+    <ItemGroup>
+      <_MSTestExistingReferenceKey Include="@(Reference)" />
+      <_MSTestExistingReferenceKey Include="%(Reference.HintPath)" Condition=" '%(Reference.HintPath)' != '' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MSTestExistingReferenceKeys>;@(_MSTestExistingReferenceKey);</_MSTestExistingReferenceKeys>
+      <_MSTestExistingReferenceKeys>$(_MSTestExistingReferenceKeys.ToLowerInvariant().Replace('/', '\'))</_MSTestExistingReferenceKeys>
+      <_MSTestAdapterPackageLibNet462>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'lib', 'net462'))</_MSTestAdapterPackageLibNet462>
+    </PropertyGroup>
+    <ItemGroup>
+      <_MSTestExistingReferenceKey Remove="@(_MSTestExistingReferenceKey)" />
+      <Reference Include="MSTest.TestAdapter"
+                 Condition=" !$(_MSTestExistingReferenceKeys.Contains(';mstest.testadapter;')) AND !$(_MSTestExistingReferenceKeys.Contains(';mstest.testadapter,')) AND !$(_MSTestExistingReferenceKeys.Contains('\mstest.testadapter.dll;')) ">
+        <HintPath>$(_MSTestAdapterPackageLibNet462)MSTest.TestAdapter.dll</HintPath>
+      </Reference>
+      <Reference Include="MSTestAdapter.PlatformServices"
+                 Condition=" !$(_MSTestExistingReferenceKeys.Contains(';mstestadapter.platformservices;')) AND !$(_MSTestExistingReferenceKeys.Contains(';mstestadapter.platformservices,')) AND !$(_MSTestExistingReferenceKeys.Contains('\mstestadapter.platformservices.dll;')) ">
+        <HintPath>$(_MSTestAdapterPackageLibNet462)MSTestAdapter.PlatformServices.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Non-SDK projects: PackageReference (ResolveNuGetPackageAssets) and packages.config (HintPath references found by
+    ResolveAssemblyReferences) both copy every satellite found next to the adapter, regardless of
+    SatelliteResourceLanguages. Assets are identified by their location in this package's lib folder.
+  -->
+  <Target Name="_MSTestApplyAdapterNonSdkAssetPolicy"
+          AfterTargets="ResolveAssemblyReferences"
+          DependsOnTargets="_MSTestComputeAdapterPackageAssetPolicyInputs"
+          Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND '$(UsingMicrosoftNETSdk)' != 'true' ">
+    <ItemGroup>
+      <_MSTestAdapterCopyLocalAsset Include="@(ReferenceCopyLocalPaths)"
+                                    Condition=" $([System.String]::Copy('%(ReferenceCopyLocalPaths.FullPath)').ToLowerInvariant().StartsWith('$(_MSTestAdapterPackageLibRoot)')) " />
+      <_MSTestAdapterSatelliteAsset Include="@(ReferenceSatellitePaths)"
+                                    Condition=" $([System.String]::Copy('%(ReferenceSatellitePaths.FullPath)').ToLowerInvariant().StartsWith('$(_MSTestAdapterPackageLibRoot)')) " />
+      <_MSTestAdapterAsset Include="@(_MSTestAdapterCopyLocalAsset);@(_MSTestAdapterSatelliteAsset)" />
+      <_MSTestAdapterAsset Update="@(_MSTestAdapterAsset)">
+        <_MSTestCulture>$([System.String]::Copy('%(_MSTestAdapterAsset.DestinationSubDirectory)').TrimEnd('\').TrimEnd('/').ToLowerInvariant())</_MSTestCulture>
+      </_MSTestAdapterAsset>
+
+      <_MSTestAdapterAssetToRemove Include="@(_MSTestAdapterAsset)"
+                                   Condition=" '$(IsTestApplication)' == 'false'
+                                               OR ('%(_MSTestAdapterAsset._MSTestCulture)' != ''
+                                                   AND ('$(EnableMSTestV2CopyResources)' != 'true'
+                                                        OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterAsset._MSTestCulture);')))
+                                                        OR ('$(_MSTestAdapterSatelliteResourceLanguages)' != '' AND !$([System.String]::Copy('$(_MSTestAdapterSatelliteResourceLanguages)').Contains(';%(_MSTestAdapterAsset._MSTestCulture);'))))) " />
+
+      <ReferenceCopyLocalPaths Remove="@(_MSTestAdapterAssetToRemove)" />
+      <ReferenceSatellitePaths Remove="@(_MSTestAdapterAssetToRemove)" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
@@ -138,7 +246,7 @@
 
   <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
   <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild"
-          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' "
+          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' AND '$(_MSTestOrdinaryAdapterReferenced)' != 'true' "
           DependsOnTargets="GetMSTestV2CultureHierarchy"
           Inputs="@(MSTestV2Files)"
           Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)%(FileName)%(Extension)')">
@@ -158,7 +266,7 @@
   <Target Name="_RegisterMSTestV2ResourcesForClean"
           BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
           DependsOnTargets="GetMSTestV2CultureHierarchy"
-          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' ">
+          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' AND '$(_MSTestOrdinaryAdapterReferenced)' != 'true' ">
     <ItemGroup>
       <FileWrites Include="@(MSTestV2Files->'$(TargetDir)%(UICulture)%(FileName)%(Extension)')" />
     </ItemGroup>

@@ -349,10 +349,10 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests : AcceptanceTe
         string package = Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestAdapter.{MSTestVersion}.nupkg");
         string packageTfm = tfm.StartsWith("net4", StringComparison.Ordinal) ? "net462" : tfm;
         using ZipArchive archive = ZipFile.OpenRead(package);
-        ZipArchiveEntry entry = archive.GetEntry($"buildTransitive/{packageTfm}/MSTestAdapter.PlatformServices.dll")!;
+        ZipArchiveEntry entry = archive.GetEntry($"lib/{packageTfm}/MSTestAdapter.PlatformServices.dll")!;
         using Stream packedAssembly = entry.Open();
         string expectedHash = Convert.ToHexString(SHA256.HashData(packedAssembly));
-        string restoredAssembly = Path.Combine(packageRoot, "buildTransitive", packageTfm, "MSTestAdapter.PlatformServices.dll");
+        string restoredAssembly = Path.Combine(packageRoot, "lib", packageTfm, "MSTestAdapter.PlatformServices.dll");
         Assert.AreEqual(expectedHash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(restoredAssembly))),
             "The generated consumer must restore the just-packed adapter, not a stale same-version cache.");
         TestContext.WriteLine($"MSTest.TestAdapter/{MSTestVersion}; package: {package}; SHA256: {Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(package)))}");
