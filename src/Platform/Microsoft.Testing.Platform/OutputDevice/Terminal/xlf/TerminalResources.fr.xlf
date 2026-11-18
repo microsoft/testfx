@@ -502,9 +502,9 @@ Les valeurs valides sont 'Minimal', 'Normal', 'Detailed'. La valeur par défaut 
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <target state="translated">Contrôlez si la progression est indiquée à l’écran.
+Les valeurs valides sont 'auto' (par défaut), 'on' (accepte également 'true', 'enable', '1') ou 'off' (accepte également 'false', 'disable', '0').
+'auto' affiche la progression, sauf si le terminal ne peut pas être mis à jour sur place (par exemple avec --ansi off ou dans CI).</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
