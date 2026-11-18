@@ -502,9 +502,9 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <target state="translated">画面に進行状況を表示するかどうかを制御します。
+有効な値は、'auto' (既定値)、'on' ('true'、'enable'、'1' も指定可能)、または 'off' ('false'、'disable'、'0' も指定可能) です。
+'auto' は、ターミナルがその場で更新できない場合を除き、進行状況を表示します (たとえば --ansi off や CI で)。</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
