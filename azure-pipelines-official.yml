@@ -103,7 +103,7 @@ extends:
       image: windows.vs2026preview.scout.amd64
       os: windows
     settings:
-      networkIsolationPolicy: Permissive,CFSClean
+      networkIsolationPolicy: DefaultDeny,CFSClean
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
