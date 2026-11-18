@@ -749,6 +749,15 @@ immutable package snapshot, `source.json` and `producer-packages.json`.
 Consumer cache package hashes are checked against the selected feed; finding a
 same-version package in a global cache is not accepted as provenance.
 
+The pack-stage snapshot now selects each shipping producer's evaluated
+`PackageId`, `PackageVersion` and `PackageOutputPath` after the successful pack,
+rather than globbing the shared Shipping directory. This excludes older versions
+and unrelated packages without deleting other builds' artifacts or relying on
+timestamps (an up-to-date pack may retain its output timestamp). Queries and
+binlogs are retained as `logs/producer-output-*`; a failed query or missing
+expected archive fails the pack stage. The repository package-shape gate and
+normal producer output locations are unchanged.
+
 The final run's executed harness SHA-256 is
 `D334EC0585BDE63A5EF41A03BD6433320324C699C112929EB169D69B5D75FA76`.
 Candidate archive timestamps can change per-run package hashes; the manifest
@@ -758,6 +767,38 @@ Selection guards were also executed: selecting `FrameworkOnlyOrdinary` alone
 exits zero with exactly one result and no fabricated native results. Selecting
 `candidateNativeClassicUwpBuild` without enabling native builds exits one with
 `Requested probes were not run`, rather than treating an unrun case as passed.
+
+#### Producer snapshot review correction
+
+The shared-output glob could include an older version even after a successful
+pack, causing an otherwise fresh probe to reject an ambiguous producer version.
+An exploratory NuGet `_GetOutputItemsFromPack` query returned `Skipped` without
+restore-style initialization; evaluated package properties provide the needed
+identities without depending on that private target or changing package output
+and validation infrastructure.
+
+The correction was checked from parent
+`250355b259b6bd27723b1e768b680076c641b99b`, with harness SHA-256
+`11093F7B4371108345A3741902DEA23A7A896FD4A109A3D4A9825BADB19EA39B`:
+
+```powershell
+& .\eng\experimental\Test-PackageSplit.ps1 -Stage Pack -RunRoot "$PWD\artifacts\package-split\h"
+# Exit 0: 30 producer queries, 22 shipping packages; package-shape validation retained.
+& .\eng\experimental\Test-PackageSplit.ps1 -Stage Probe -RunRoot "$PWD\artifacts\package-split\h" -ProbeName p -Only FrameworkOnlyOrdinary,FrameworkOnlyWinUI,FrameworkOnlyUwp
+# Exit 0: all three selected build/cleanliness probes passed.
+```
+
+**Test-value evidence:** a session-local `CurrentOnly` check executed the actual
+snapshot assignment from both source states against isolated files and stubbed
+MSBuild metadata. Its fixed expectation was exactly `Current.2.0.0.nupkg`, with
+matching copied bytes and no changes to shared files. The parent failed that
+assertion (exit 1), including the older version, an unrelated package and
+non-packable/non-shipping outputs; the correction passed (exit 0), even with old
+timestamps on every fixture. `MissingOutput` and `QueryFailure` also passed,
+confirming explicit failures instead of substitution or a partial-success result.
+These are focused harness checks, not native runtime evidence. The real pack
+and three consumer probes above verify the metadata-query integration; the
+full native/managed comparison matrix was not rerun.
 
 #### Test-value evidence and remaining gates
 

@@ -147,9 +147,19 @@ if ($Stage -eq 'Pack') {
     if ($result.Exit -ne 0) { throw "Producer pack failed; see $RunRoot/logs/producer-pack.log" }
     Copy-Item "$repository/artifacts/log/Release/Build.binlog" "$RunRoot/producer.binlog"
     [IO.Directory]::CreateDirectory("$RunRoot/producer-feed") | Out-Null
-    $snapshot = @(Get-ChildItem "$repository/artifacts/packages/Release/Shipping" -Filter '*.nupkg' | ForEach-Object {
-        Copy-Item $_.FullName "$RunRoot/producer-feed/"
-        @{ file = $_.Name; sha256 = (Get-FileHash $_.FullName).Hash; produced = $_.LastWriteTimeUtc.ToString('o') }
+    # Select the successful producer closure's exact package identities, not older/unrelated
+    # archives in shared output. Timestamps cannot identify an up-to-date pack's outputs.
+    $snapshot = @(foreach ($project in ($projects | Sort-Object)) {
+        $name = 'producer-output-' + [IO.Path]::GetFileNameWithoutExtension($project)
+        $output = Invoke-Recorded $name "$repository/.dotnet/dotnet.exe" @('msbuild', $project, '-nologo',
+            '-p:Configuration=Release', '-getProperty:IsPackable,IsShipping,PackageOutputPath,PackageId,PackageVersion',
+            "-bl:$RunRoot/logs/$name.binlog") $repository
+        if ($output.Exit -ne 0) { throw "Producer output query failed; see $RunRoot/logs/$name.log" }
+        $metadata = ($output.Output | ConvertFrom-Json).Properties
+        if ($metadata.IsPackable -ne 'true' -or $metadata.IsShipping -ne 'true') { continue }
+        $file = Get-Item -LiteralPath (Join-Path $metadata.PackageOutputPath "$($metadata.PackageId).$($metadata.PackageVersion).nupkg")
+        Copy-Item -LiteralPath $file.FullName "$RunRoot/producer-feed/"
+        @{ file = $file.Name; sha256 = (Get-FileHash $file.FullName).Hash; produced = $file.LastWriteTimeUtc.ToString('o') }
     })
     if ($snapshot.Count -eq 0) { throw 'Producer pack returned no shipping packages.' }
     Write-Utf8 "$RunRoot/producer-packages.json" (ConvertTo-Json -InputObject $snapshot -Depth 4)
