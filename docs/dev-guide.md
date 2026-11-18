@@ -60,10 +60,19 @@ cache the existing MSBuild projects on Windows x64. Its default entry point is
 `TestFx.slnx`, preserving project-specific target frameworks except classic UAP,
 which requires desktop MSBuild. Separate Debug and Release pipeline legs build
 the solution and retain engine counters and project binlogs for later analysis.
+After a successful build, each leg also runs the same 13 net10.0 unit suites that
+the Bazel dogfood workload runs, from the BuildXL outputs, and retains restore,
+build and test timings plus per-suite test-identity hashes so the Bazel and
+BuildXL phases can be compared; see
+[running the matched unit suites](decisions/buildxl-build.md#2026-11-17-run-the-bazel-matched-unit-suites-on-buildxl-outputs).
 Outputs are isolated; the Arcade build remains the shipping authority.
 The driver enables tracked shared compilation, sizes concurrency to the available
 CPUs, and automatically falls back to full input hashing when change journals
-are unavailable without modifying local volume settings. CI initializes the
+are unavailable without modifying local volume settings. It never rewrites the
+checked-in XLF files, and `-Pack` (opt-in, not used by CI) also packs the 33
+NuGet packages in the same graph; see
+[opt-in pack](decisions/buildxl-build.md#2026-11-17-xlf-parity-and-opt-in-pack-on-buildxl).
+CI initializes the
 checkout volume's change journal before restoring the action cache between
 compatible runs; existing journals are preserved, and initialization failures
 fail the job. The Windows CI agent must run elevated.

@@ -1,0 +1,6 @@
+;; Exclusions for the SignCheck validation run by eng/common/core-templates/post-build/post-build.yml.
+;; Format: https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.SignCheckLibrary/README.md#exclusions-file
+
+;; The packaged-app controller ships a copy of the SDK apphost template that consumer builds patch with CreateAppHost.
+;; Like the runtime apphost.exe it is copied from, the template must stay unsigned.
+*mstest-appmodel-controller.apphost-template;;Template, DO-NOT-SIGN, https://github.com/dotnet/core-setup/pull/7549

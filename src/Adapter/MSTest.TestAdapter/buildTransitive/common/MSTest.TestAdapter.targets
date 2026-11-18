@@ -17,14 +17,42 @@
   <PropertyGroup>
     <_MSTestAdapterPayloadRoot Condition=" '$(_MSTestAdapterPayloadRoot)' == '' ">$(MSBuildThisFileDirectory)</_MSTestAdapterPayloadRoot>
     <_MSTestAdapterLocalizationRoot Condition=" '$(_MSTestAdapterLocalizationRoot)' == '' ">$(MSBuildThisFileDirectory)..\_localization\</_MSTestAdapterLocalizationRoot>
+    <_MSTestAdapterCompositionDependsOn Condition=" '$(UsingMicrosoftNETSdk)' == 'true' AND '$(TargetFramework)' != '' ">ResolvePackageAssets</_MSTestAdapterCompositionDependsOn>
   </PropertyGroup>
+
+  <Target Name="_MSTestValidateAdapterComposition" BeforeTargets="PrepareForBuild" DependsOnTargets="$(_MSTestAdapterCompositionDependsOn)">
+    <!-- Resolve the current inner TFM even when a package's build assets are excluded. -->
+    <ItemGroup>
+      <_MSTestResolvedAdapterComposition Include="@(PackageDependencies)"
+                                         Condition=" '%(PackageDependencies.Identity)' == 'MSTest.TestAdapter' OR '%(PackageDependencies.Identity)' == 'MSTest.Uwp' OR '%(PackageDependencies.Identity)' == 'MSTest.WinUI' " />
+    </ItemGroup>
+    <Error Condition=" @(_MSTestResolvedAdapterComposition->Count()) &gt; 1
+                       OR ('$(_MSTestUwpAdapterReferenced)' == 'true' AND ('$(_MSTestWinUIAdapterReferenced)' == 'true' OR '$(_MSTestOrdinaryAdapterReferenced)' == 'true'))
+                       OR ('$(_MSTestWinUIAdapterReferenced)' == 'true' AND '$(_MSTestOrdinaryAdapterReferenced)' == 'true') "
+           Text="Reference exactly one MSTest adapter composition: MSTest.TestAdapter, MSTest.Uwp, or MSTest.WinUI. Do not combine a UI package with the MSTest metapackage or another adapter package." />
+    <Error Condition=" '$(_MSTestOrdinaryAdapterReferenced)' == 'true' AND ('$(UseWinUI)' == 'true' OR '$(UseUwpTools)' == 'true') "
+           Text="MSTest.TestAdapter no longer selects UI payloads. Reference MSTest.Uwp for UWP or MSTest.WinUI for WinUI instead." />
+    <Error Condition=" ('$(_MSTestUwpAdapterReferenced)' == 'true' AND '$(UseWinUI)' == 'true')
+                       OR ('$(_MSTestWinUIAdapterReferenced)' == 'true' AND '$(UseUwpTools)' == 'true') "
+           Text="The selected MSTest UI package does not match the application's UWP or WinUI model." />
+  </Target>
+
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'false' ">
+    <!-- Stable extension identity: entry-point generation registers MSTest last. -->
+    <TestingPlatformBuilderHook Include="031F8871-2660-4208-8F6B-FC142B40ABFF">
+      <DisplayName>MSTest</DisplayName>
+      <TypeFullName>Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="MSTest.TestAdapter">
       <HintPath>$(_MSTestAdapterPayloadRoot)MSTest.TestAdapter.dll</HintPath>
+      <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
     </Reference>
     <Reference Include="MSTestAdapter.PlatformServices">
       <HintPath>$(_MSTestAdapterPayloadRoot)MSTestAdapter.PlatformServices.dll</HintPath>
+      <Private Condition=" '$(IsTestApplication)' == 'false' ">false</Private>
     </Reference>
   </ItemGroup>
 

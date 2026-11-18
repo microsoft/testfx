@@ -5,7 +5,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
-    private static void ContainsCore<T>(T expected, IEnumerable<T> collection, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
+    // Generic collection helpers preserve LINQ's null validation and exception behavior.
+    private static void ContainsCore<T>(T expected, [NotNull] IEnumerable<T> collection, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         if (collection.Contains(expected) == shouldContain)
@@ -16,7 +17,7 @@ public sealed partial class Assert
         ReportContainsFailure(expected, message, expectedExpression, collectionExpression, shouldContain);
     }
 
-    private static void ContainsCore<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
+    private static void ContainsCore<T>(T expected, [NotNull] IEnumerable<T> collection, IEqualityComparer<T> comparer, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         if (collection.Contains(expected, comparer) == shouldContain)
@@ -27,7 +28,7 @@ public sealed partial class Assert
         ReportContainsFailure(expected, message, expectedExpression, collectionExpression, shouldContain, comparer);
     }
 
-    private static void ContainsCore(object? expected, IEnumerable collection, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
+    private static void ContainsCore(object? expected, [NotNull] IEnumerable? collection, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         CheckParameterNotNull(collection, assertMethodName, "collection");
@@ -40,7 +41,7 @@ public sealed partial class Assert
         ReportContainsFailure(expected, message, expectedExpression, collectionExpression, shouldContain);
     }
 
-    private static void ContainsCore(object? expected, IEnumerable collection, IEqualityComparer comparer, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
+    private static void ContainsCore(object? expected, [NotNull] IEnumerable? collection, IEqualityComparer comparer, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         CheckParameterNotNull(collection, assertMethodName, "collection");
@@ -54,7 +55,7 @@ public sealed partial class Assert
         ReportContainsFailure(expected, message, expectedExpression, collectionExpression, shouldContain, comparer);
     }
 
-    private static void ContainsCore<T>(Func<T, bool> predicate, IEnumerable<T> collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
+    private static void ContainsCore<T>(Func<T, bool> predicate, [NotNull] IEnumerable<T> collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         if (!shouldContain)
@@ -75,7 +76,7 @@ public sealed partial class Assert
         ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
     }
 
-    private static void ContainsCore(Func<object?, bool> predicate, IEnumerable collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
+    private static void ContainsCore(Func<object?, bool> predicate, [NotNull] IEnumerable? collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         CheckParameterNotNull(collection, assertMethodName, "collection");
@@ -177,7 +178,7 @@ public sealed partial class Assert
     }
 #endif
 
-    private static void ContainsCore(string substring, string value, StringComparison comparisonType, string assertMethodName, string? message, string substringExpression, string valueExpression, bool shouldContain)
+    private static void ContainsCore([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string assertMethodName, string? message, string substringExpression, string valueExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);
         CheckParameterNotNull(value, assertMethodName, "value");

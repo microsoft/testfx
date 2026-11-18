@@ -15,7 +15,7 @@ load("//eng/bazel:platform.bzl", "platform_libraries")
 load("//eng/bazel:reference-alias-tests.bzl", "reference_alias_tests")
 load("//eng/bazel:sdk-packages.bzl", "sdk_packages")
 load("//eng/bazel:server-client.bzl", "server_client_library")
-load("//eng/bazel:samples.bzl", "portable_samples")
+load("//eng/bazel:samples.bzl", "portable_samples", "slnx_samples")
 load("//eng/bazel:tests.bzl", "unit_tests")
 load("//eng/bazel:windows.bzl", "windows_libraries")
 load("//eng/bazel/windows:asset_selection_tests.bzl", "windows_asset_selection_tests")
@@ -52,6 +52,8 @@ analyzer_unit_tests()
 native_packages()
 
 portable_samples()
+
+slnx_samples()
 
 reference_alias_tests()
 
@@ -112,6 +114,32 @@ filegroup(
 testfx_matrix(
     name = "managed_all",
     target = ":managed",
+)
+
+# The unit-test projects target net10.0 and net11.0 in MSBuild; tests run on net10.0 only.
+filegroup(
+    name = "unit_test_apps",
+    srcs = [
+        ":adapter_tests_app",
+        ":analyzer_tests_binary",
+        ":extension_tests_binary",
+        ":framework_tests_app",
+        ":msbuild_tests_binary",
+        ":platform_services_tests_app",
+        ":platform_tests_app",
+        ":protocol_contract_tests_app",
+        ":self_real_tests_app",
+        ":server_client_tests_binary",
+        ":source_generation_tests_app",
+        ":terminal_contract_tests_app",
+        ":test_infrastructure",
+        ":vstest_bridge_tests_app",
+    ],
+)
+
+testfx_matrix(
+    name = "unit_test_apps_all",
+    target = ":unit_test_apps",
 )
 
 # Short executable labels avoid Windows' doubled runfiles batch-file paths.

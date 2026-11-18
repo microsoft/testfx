@@ -211,6 +211,17 @@ def extension_libraries():
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "mstest-appmodel-controller"],
         deps = [":platform"],
     )
+    # The MSBuild integration assembly has no compiled sources of its own; its bootstrap source is a
+    # consumer-side buildTransitive asset. Its pack-only controller layout is not modeled here.
+    _extension(
+        name = "packaged_app_msbuild",
+        product = "Microsoft.Testing.Extensions.PackagedApp.MSBuild",
+        build_info = False,
+        target_frameworks = ["netstandard2.0", "net10.0"],
+        exclude = ["src/Platform/Microsoft.Testing.Extensions.PackagedApp.MSBuild/buildTransitive/**"],
+        allow_empty_sources = True,
+        deps = [":platform_msbuild"] + testfx_compatibility_select([], [":packaged_app"]),
+    )
     _extension(
         name = "ai",
         product = "Microsoft.Testing.Platform.AI",

@@ -25,8 +25,8 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsCore(notExpected, collection, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
+    public static void DoesNotContain<T>(T notExpected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsCore(notExpected, collection!, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -42,7 +42,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(object? notExpected, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => ContainsCore(notExpected, collection, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
@@ -61,8 +61,8 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsCore(notExpected, collection, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
+    public static void DoesNotContain<T>(T notExpected, [NotNull] IEnumerable<T>? collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsCore(notExpected, collection!, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -79,7 +79,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(object? notExpected, [NotNull] IEnumerable? collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => ContainsCore(notExpected, collection, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
@@ -97,8 +97,8 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsCore(predicate, collection, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
+    public static void DoesNotContain<T>(Func<T, bool> predicate, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsCore(predicate, collection!, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -114,7 +114,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(Func<object?, bool> predicate, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => ContainsCore(predicate, collection, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
 
 #if NETCOREAPP3_1_OR_GREATER
@@ -128,8 +128,8 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
-    public static void DoesNotContain<T>(T notExpected, T[] collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => DoesNotContain(notExpected, (IEnumerable<T>)collection, message, notExpectedExpression, collectionExpression);
+    public static void DoesNotContain<T>(T notExpected, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(notExpected, (IEnumerable<T>?)collection, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified array does not contain the specified item using the specified equality comparer.
@@ -141,8 +141,8 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
-    public static void DoesNotContain<T>(T notExpected, T[] collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => DoesNotContain(notExpected, (IEnumerable<T>)collection, comparer, message, notExpectedExpression, collectionExpression);
+    public static void DoesNotContain<T>(T notExpected, [NotNull] T[]? collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(notExpected, (IEnumerable<T>?)collection, comparer, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified array contains no element that matches the given predicate.
@@ -153,8 +153,8 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="predicateExpression">The syntactic expression of predicate as given by the compiler via caller argument expression.</param>
     /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => DoesNotContain(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+    public static void DoesNotContain<T>(Func<T, bool> predicate, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(predicate, (IEnumerable<T>?)collection, message, predicateExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -173,9 +173,9 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <remarks>The collection may contain null elements even when <paramref name="notExpected"/> is not null.</remarks>
-    public static void DoesNotContain<T, TCollection>(T notExpected, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T, TCollection>(T notExpected, [NotNull] TCollection? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T?>
-        => DoesNotContain(notExpected, (IEnumerable<T?>)collection, message, notExpectedExpression, collectionExpression);
+        => DoesNotContain(notExpected, (IEnumerable<T?>?)collection, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -195,10 +195,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <remarks>The collection may contain null elements even when <paramref name="notExpected"/> is not null.</remarks>
-    public static void DoesNotContain<T, TCollection>(T notExpected, TCollection collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T, TCollection>(T notExpected, [NotNull] TCollection? collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T?>
         // Equality comparers accept null operands. Preserve T for compatibility with non-nullable comparers.
-        => DoesNotContain(notExpected, (IEnumerable<T>)collection, comparer, message, notExpectedExpression, collectionExpression);
+        => DoesNotContain(notExpected, (IEnumerable<T>?)collection, comparer, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains no element that matches the given predicate.
@@ -216,9 +216,9 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T, TCollection>(Func<T, bool> predicate, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T, TCollection>(Func<T, bool> predicate, [NotNull] TCollection? collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         where TCollection : IEnumerable<T>
-        => DoesNotContain(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+        => DoesNotContain(predicate, (IEnumerable<T>?)collection, message, predicateExpression, collectionExpression);
 
 #endif
 

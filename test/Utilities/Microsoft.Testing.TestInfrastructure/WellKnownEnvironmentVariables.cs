@@ -86,6 +86,7 @@ public static class WellKnownEnvironmentVariables
         "TESTINGPLATFORM_TELEMETRY_OPTOUT",
         "DOTNET_NOLOGO",
         "TESTINGPLATFORM_NOBANNER",
+        "COPILOT_AGENT_SESSION_ID",
 
         // Azure DevOps output device opt-out. Tests inject this explicitly when needed, so we
         // keep the parent process value from bleeding into child test hosts.

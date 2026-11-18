@@ -25,6 +25,10 @@ param(
 
     [string[]] $Targets = @(),
 
+    # Build the whole graph (every project and target framework) before running the selected unit suites, for
+    # comparisons with engines that build the full solution. The default builds only what the suites need.
+    [switch] $FullGraph,
+
     [switch] $Prepare
 )
 
@@ -34,6 +38,7 @@ if (-not $IsWindows -or [Runtime.InteropServices.RuntimeInformation]::OSArchitec
     throw 'The initial dogfood contract requires Windows x64.'
 }
 if ($TestJobs -gt $Jobs) { throw 'TestJobs cannot exceed Jobs.' }
+if ($FullGraph -and $Mode -eq 'MSBuild') { throw 'FullGraph applies only to the native modes.' }
 
 $repo = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $RunRoot = [IO.Path]::GetFullPath($RunRoot)
@@ -113,6 +118,8 @@ $scope = [ordered]@{
     Coverage = $false
     AffectedTests = $false
 }
+# Added only when requested so that the default scope, and therefore the CI cache key, is unchanged.
+if ($FullGraph) { $scope.BuildTargets = @('//...') }
 $scopeHash = Get-TextHash ($scope | ConvertTo-Json -Depth 6 -Compress)
 $programFilesSdks = foreach ($folder in @("$env:ProgramFiles\dotnet\sdk", "${env:ProgramFiles(x86)}\dotnet\sdk")) {
     if (Test-Path -LiteralPath $folder) {
@@ -319,7 +326,7 @@ $bazelFlags = @(
     "--repository_cache=$CacheRoot\downloads",
     "--repo_contents_cache=$shortRoot\repositories",
     '--remote_cache=', '--remote_executor=', '--bes_backend=',
-    '--lockfile_mode=error', '--guard_against_concurrent_changes',
+    '--lockfile_mode=error',
     '--experimental_convenience_symlinks=ignore',
     '--noshow_progress', '--show_result=0', '--color=no', '--curses=no'
 )
@@ -372,7 +379,12 @@ try {
             "--test_env=TESTFX_DOGFOOD_HOST=$compatibilityKey",
             $(if ($Mode -eq 'Cached') { '--cache_test_results=auto' } else { '--cache_test_results=no' })
         )
-        $build = Invoke-Bazel 'build' 'build' (@($selection.label) + $flags + "--build_event_json_file=$RunRoot\build.bep.jsonl")
+        # Only the persistent shared action cache needs upload-time input checks. Cold runs use a
+        # per-run cache plus the source-state check below; the guard there added about 190 seconds
+        # to a full-graph cold build and is not used by the hosted Bazel workflow.
+        if ($Mode -ne 'Cold') { $flags += '--guard_against_concurrent_changes' }
+        [string[]] $buildTargets = if ($FullGraph) { @($scope.BuildTargets) } else { @($selection.label) }
+        $build = Invoke-Bazel 'build' 'build' ($buildTargets + $flags + "--build_event_json_file=$RunRoot\build.bep.jsonl")
         $report.BuildSeconds = $build.Seconds
         $report.BuildEvents = Read-BazelDogfoodEvents -Path (Join-Path $RunRoot 'build.bep.jsonl')
         if ($build.ExitCode -ne 0 -or -not $report.BuildEvents.Success) { throw 'Native build failed; no successful timing sample.' }

@@ -25,6 +25,10 @@ internal sealed partial class TrxReportEngine
     private const string UnitTestTypeGuid = "13CDC9D9-DDB5-4fa4-A97D-D965CCFC6D4B";
     private const string UncategorizedTestListId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
 
+    // The TRX schema requires a class name. When a test node has neither a fully qualified type name nor a test method
+    // identifier, use an explicit placeholder so consumers can tell that the type information is unknown.
+    private const string FallbackClassName = "UnknownClass";
+
     private static readonly XNamespace NamespaceUri = XNamespace.Get("http://microsoft.com/schemas/VisualStudio/TeamTest/2010");
 
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
@@ -80,6 +84,13 @@ internal sealed partial class TrxReportEngine
     /// <c>ResultFile</c> is a <c>RunInfo</c> buried in the generated TRX.
     /// </summary>
     public IReadOnlyList<string> AttachmentWarnings { get; private set; } = [];
+
+    /// <summary>
+    /// Gets or sets run-level errors detected before the report is generated (for example, test results that were
+    /// omitted because their producer reported data that TRX cannot represent). Each entry is rendered as an
+    /// <c>Error</c> <c>RunInfo</c>.
+    /// </summary>
+    public IReadOnlyList<string> RunErrors { get; set; } = [];
 
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await ReportFileWriterHelper.RetryWhenIOExceptionAsync(_clock, async () =>

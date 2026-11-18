@@ -18,6 +18,7 @@ param(
     [ValidateRange(1, 64)]
     [int] $Jobs = [Math]::Min(64, [Environment]::ProcessorCount),
     [string] $AdditionalTargets = '',
+    [switch] $Pack,
     [switch] $PrepareOnly,
     [switch] $SkipRestore,
     [switch] $NoJournal
@@ -182,7 +183,8 @@ $environmentNames = @(
     'PATH', 'DOTNET_INSTALL_DIR', 'DOTNET_NOLOGO', 'NUGET_PACKAGES', 'MSBUILDDEBUGPATH', 'MSBUILDENABLEMULTITHREADED',
     'DOTNET_ROOT', 'DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR', 'DOTNET_MULTILEVEL_LOOKUP', 'DOTNET_CLI_TELEMETRY_OPTOUT',
     'TESTFX_BUILDXL_ROOT', 'TESTFX_BUILDXL_PROJECT', 'TESTFX_BUILDXL_CONFIGURATION', 'TESTFX_BUILDXL_TFM',
-    'TESTFX_BUILDXL_MSBUILD', 'TESTFX_BUILDXL_BIN', 'TESTFX_BUILDXL_OBJ', 'TESTFX_BUILDXL_ADDITIONAL_TARGETS'
+    'TESTFX_BUILDXL_MSBUILD', 'TESTFX_BUILDXL_BIN', 'TESTFX_BUILDXL_OBJ', 'TESTFX_BUILDXL_ADDITIONAL_TARGETS',
+    'TESTFX_BUILDXL_PACK', 'TESTFX_BUILDXL_PACKAGES'
 )
 $originalEnvironment = @{}
 foreach ($name in $environmentNames) {
@@ -205,16 +207,20 @@ try {
     $bin = Join-Path $output 'bin\'
     $obj = if ($OutputId) { Join-Path $repo "artifacts\obj\buildxl-runs\$OutputId\" } else { Join-Path $repo 'artifacts\obj\buildxl\' }
     $logs = Join-Path $output 'logs'
+    $packages = Join-Path $output "packages\$Configuration\"
     New-Item -ItemType Directory -Path $logs -Force | Out-Null
+    $msbuildTargets = Join-Path $PSScriptRoot 'buildxl\msbuild.targets'
     $properties = @(
         "/p:Configuration=$Configuration",
         "/p:ArtifactsBinDir=$bin",
         "/p:ArtifactsObjDir=$obj",
-        "/p:CustomBeforeDirectoryBuildTargets=$(Join-Path $PSScriptRoot 'buildxl\msbuild.targets')",
+        "/p:CustomBeforeDirectoryBuildTargets=$msbuildTargets",
         '/p:SkipUapTargetFramework=true',
         '/p:ShouldUnsetParentConfigurationAndPlatform=false',
         '/p:EnableProjectDataOnBuild=false',
-        '/p:UseSharedCompilation=true'
+        '/p:UseSharedCompilation=true',
+        # Bazel reads the checked-in XLF files; do not rewrite them from the resx files during the build.
+        '/p:UpdateXlfOnBuild=false'
     )
     if ($TargetFramework) {
         $properties += "/p:TargetFrameworks=$TargetFramework"
@@ -222,6 +228,14 @@ try {
 
     if ($AdditionalTargets) {
         $properties += "/p:CustomAfterMicrosoftCommonTargets=$AdditionalTargets"
+    }
+
+    if ($Pack) {
+        $properties += @(
+            '/p:TestFxBuildXLPack=true',
+            "/p:ArtifactsPackagesDir=$packages",
+            "/p:CustomAfterMicrosoftCommonCrossTargetingTargets=$msbuildTargets"
+        )
     }
 
     $env:DOTNET_ROOT = $sdk
@@ -236,6 +250,8 @@ try {
     $env:TESTFX_BUILDXL_BIN = $bin
     $env:TESTFX_BUILDXL_OBJ = $obj
     $env:TESTFX_BUILDXL_ADDITIONAL_TARGETS = if ($AdditionalTargets) { $AdditionalTargets } else { '*' }
+    $env:TESTFX_BUILDXL_PACK = if ($Pack) { 'true' } else { 'false' }
+    $env:TESTFX_BUILDXL_PACKAGES = $packages
 
     $revision = & git -C $repo rev-parse HEAD
     if ($LASTEXITCODE -ne 0) {
@@ -249,9 +265,11 @@ try {
         BuildXL = $version
         BuildXLPackageSha256 = $packageHash
         Engine = $Engine
+        DotNetRoot = $sdk
         Project = $relativeProject
         Configuration = $Configuration
         TargetFramework = if ($TargetFramework) { $TargetFramework } else { 'Project defaults' }
+        Targets = if ($Pack) { 'Build;Pack' } else { 'Build' }
         SkipUapTargetFramework = $true
         Jobs = $Jobs
         ProcessorCount = [Environment]::ProcessorCount
@@ -264,10 +282,28 @@ try {
         NoJournalRequested = $NoJournal.IsPresent
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'toolchain.json') -Encoding utf8
 
+    # Wall-clock phase timings so restore and build can be compared with other build systems; unit tests are timed by
+    # eng\buildxl\run-unit-tests.ps1. The file is rewritten in the finally block because every path below calls exit.
+    $phaseTimingsPath = Join-Path $logs 'phase-timings.json'
+    Remove-Item -LiteralPath $phaseTimingsPath -Force -ErrorAction SilentlyContinue
+    $phases = [ordered]@{
+        SchemaVersion = 1
+        Engine = $Engine
+        Configuration = $Configuration
+        Targets = if ($Pack) { 'Build;Pack' } else { 'Build' }
+        RestoreSeconds = $null
+        RestoreExitCode = $null
+        BuildSeconds = $null
+        BuildExitCode = $null
+    }
+
     Push-Location $repo
     try {
         if (-not $SkipRestore) {
+            $phaseWatch = [Diagnostics.Stopwatch]::StartNew()
             & $dotnet msbuild $projectPath /t:Restore @properties /nr:false /nologo /v:minimal "/bl:$logs\restore.binlog"
+            $phases.RestoreExitCode = $LASTEXITCODE
+            $phases.RestoreSeconds = [math]::Round($phaseWatch.Elapsed.TotalSeconds, 3)
             if ($LASTEXITCODE -ne 0) {
                 exit $LASTEXITCODE
             }
@@ -278,7 +314,10 @@ try {
         }
 
         if ($Engine -eq 'MSBuild') {
-            & $dotnet msbuild $projectPath /t:Build @properties "/m:$Jobs" /nr:false /nologo /v:minimal "/bl:$logs\build.binlog"
+            $phaseWatch = [Diagnostics.Stopwatch]::StartNew()
+            & $dotnet msbuild $projectPath "/t:$(if ($Pack) { 'Build;Pack' } else { 'Build' })" @properties "/m:$Jobs" /nr:false /nologo /v:minimal "/bl:$logs\build.binlog"
+            $phases.BuildExitCode = $LASTEXITCODE
+            $phases.BuildSeconds = [math]::Round($phaseWatch.Elapsed.TotalSeconds, 3)
             exit $LASTEXITCODE
         }
 
@@ -301,12 +340,16 @@ try {
         Initialize-VisualStudioTelemetryMacCache
         $frameworkDescription = if ($TargetFramework) { $TargetFramework } else { 'project target frameworks; classic UAP excluded' }
         Write-Host "BuildXL: $relativeProject ($Configuration, $frameworkDescription). Outputs: $output"
+        $phaseWatch = [Diagnostics.Stopwatch]::StartNew()
         & $bxl "/config:$config" "/objectDirectory:$output\engine" `
             "/cacheDirectory:$output\cache" "/logsDirectory:$logs" "/maxProc:$Jobs" /server- /remoteTelemetry- /trackBuildsInUserFolder- @journalArguments
+        $phases.BuildExitCode = $LASTEXITCODE
+        $phases.BuildSeconds = [math]::Round($phaseWatch.Elapsed.TotalSeconds, 3)
         exit $LASTEXITCODE
     }
     finally {
         Pop-Location
+        $phases | ConvertTo-Json | Set-Content -LiteralPath $phaseTimingsPath -Encoding utf8
     }
 }
 finally {

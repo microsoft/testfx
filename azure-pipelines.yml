@@ -231,9 +231,12 @@ stages:
       name: detect
       displayName: Classify changed files
 
-  # Native BuildXL builds are independent of SkipTests and the product test matrix.
+  # The native BuildXL build is independent of SkipTests and the product test matrix; SkipTests removes only its
+  # Bazel-matched unit-test step.
   - ${{ if eq(parameters.EnableBuildXL, true) }}:
     - template: /eng/pipelines/jobs/buildxl.yml
+      parameters:
+        SkipTests: ${{ parameters.SkipTests }}
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

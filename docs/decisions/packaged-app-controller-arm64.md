@@ -41,6 +41,10 @@ Otherwise, when the SDK architecture matches the controller and no controller ro
 provided, the SDK's `CreateAppHost` task configures an architecture-specific template with the
 relative SDK runtime path. The template is packaged alongside each controller layout; only the
 consumer's staged outputs refer to the local path (through a directory junction across volumes).
+Like the SDK apphost it is copied from, the template stays unsigned: `CreateAppHost` patches its
+bytes, which would invalidate a signature. `eng/SignCheckExclusionsFile.txt` marks it
+`DO-NOT-SIGN` for the official signing validation, which first failed on main builds after this
+change.
 MTP-only environment items do not suppress this native SDK discovery. This preserves the explicit application RID
 and empty `RunArguments`, allowing `dotnet run` to apply named launch-profile arguments. A
 write-if-different runtime-root marker invalidates apphost generation when the root or opt-out

@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security.Cryptography;
+
 #if NETCOREAPP
 using System.Threading.Channels;
 #endif
 
-#if DEBUG
 using Microsoft.Testing.Platform;
-#endif
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -60,6 +60,7 @@ internal sealed partial class AppInsightsProvider :
         TelemetryProperties.VersionPropertyName,
         TelemetryProperties.ReporterIdPropertyName,
         TelemetryProperties.SessionId,
+        TelemetryProperties.CopilotAgentSessionIdPropertyName,
         TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName,
         TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName,
         TelemetryProperties.HostProperties.OSDescriptionPropertyName,
@@ -310,6 +311,40 @@ internal sealed partial class AppInsightsProvider :
         // We multiply by 100 because Ticks are 100 ns, and we want to report ns.
         (value.UtcTicks - 621355968000000000L) * 100;
 
+    private static string NormalizeCopilotAgentSessionId(string? sessionId)
+    {
+        if (RoslynString.IsNullOrEmpty(sessionId))
+        {
+            return "not_present";
+        }
+
+        if (GetCopilotSessionUuidPattern().IsMatch(sessionId))
+        {
+            return sessionId;
+        }
+
+        // Unlike HashWithNormalizedCasing, Copilot hashes the original UTF-8 bytes.
+        using var sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(sessionId));
+#if NET9_0_OR_GREATER
+        return Convert.ToHexStringLower(hash);
+#else
+        return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+#endif
+    }
+
+    // Match the SDK/Copilot contract: canonical UUID versions 1-8 with RFC variant, or nil.
+#if NET7_0_OR_GREATER
+    [GeneratedRegex(@"\A(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)\z",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GetCopilotSessionUuidPattern();
+#else
+    private static Regex GetCopilotSessionUuidPattern()
+        => new(
+            @"\A(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)\z",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+#endif
+
 #if DEBUG
     private static string AssertHashed(string key, string value)
     {
@@ -365,15 +400,25 @@ internal sealed partial class AppInsightsProvider :
 #endif
         }
 
-#if NETCOREAPP
-        await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(ContinueOnCapturedContext);
-#else
+#if !NETCOREAPP
         if (cancellationToken.IsCancellationRequested)
         {
             return Task.FromCanceled(cancellationToken);
         }
+#endif
 
-        _payloads.Write((eventName, paramsMap));
+        // Capture context before queueing; the environment and caller's dictionary can change.
+        var payload = new Dictionary<string, object>(paramsMap)
+        {
+            [TelemetryProperties.IsLLMPropertyName] = new LLMEnvironmentDetector(_environment).IsLLMEnvironment(),
+            [TelemetryProperties.CopilotAgentSessionIdPropertyName] =
+                NormalizeCopilotAgentSessionId(_environment.GetEnvironmentVariable("COPILOT_AGENT_SESSION_ID")),
+        };
+
+#if NETCOREAPP
+        await _payloads.Writer.WriteAsync((eventName, payload), cancellationToken).ConfigureAwait(ContinueOnCapturedContext);
+#else
+        _payloads.Write((eventName, payload));
         return Task.CompletedTask;
 #endif
     }

@@ -14,7 +14,7 @@ using SL = Microsoft.Build.Logging.StructuredLogger;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class SdkTests : AcceptanceTestBase<NopAssetFixture>
+public sealed partial class SdkTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestSdk";
 
@@ -1250,18 +1250,22 @@ namespace MSTestWebTest
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController()
+    [DataRow("net10.0-windows10.0.26100.0", "net10.0")]
+    [DataRow("net11.0-windows10.0.26100.0", "net11.0")]
+    public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController(string targetFramework, string controllerTfm)
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpSdk",
             """
             <UseUwp>true</UseUwp>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
-            """);
+            """,
+            targetFramework: targetFramework,
+            expectedAdapterPackageId: "MSTest.Uwp");
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
         result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
-        result.AssertOutputContains("ControllerTfm=net11.0");
+        result.AssertOutputContains($"ControllerTfm={controllerTfm}");
         result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx;mstest;EndContract");
         result.AssertOutputContains("MSTest.Uwp");
         result.AssertOutputContains("MSTest.TestFramework");
@@ -1282,7 +1286,8 @@ namespace MSTestWebTest
             <UseUwpTools>true</UseUwpTools>
             <UseVSTest>false</UseVSTest>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
-            """);
+            """,
+            expectedAdapterPackageId: "MSTest.Uwp");
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
         result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
@@ -1389,6 +1394,10 @@ namespace MSTestWebTest
             path => path.EndsWith("MSTest.Uwp.dll", StringComparison.OrdinalIgnoreCase)
                 || path.EndsWith("MSTest.WinUI.dll", StringComparison.OrdinalIgnoreCase),
             resolvedAssets);
+        await AssertResolvedMSTestCompositionAsync(
+            testAsset.TargetAssetPath,
+            $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0",
+            "MSTest.TestAdapter");
         Assert.DoesNotContain(
             path => path.Contains("Microsoft.Testing.Extensions.PackagedApp", StringComparison.OrdinalIgnoreCase),
             resolvedAssets);
@@ -1439,7 +1448,8 @@ namespace MSTestWebTest
             <UseUwp>true</UseUwp>
             <UseUwpTools>false</UseUwpTools>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
-            """);
+            """,
+            expectedAdapterPackageId: "MSTest.WinUI");
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
         result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
@@ -1447,7 +1457,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
     public async Task MSTestSdk_UnpackagedWinUI_DefaultsToMtpWithoutPackagedAppLauncher()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1456,7 +1466,8 @@ namespace MSTestWebTest
             <UseWinUI>true</UseWinUI>
             <WindowsPackageType>None</WindowsPackageType>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
-            """);
+            """,
+            expectedAdapterPackageId: "MSTest.WinUI");
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false");
         result.AssertOutputContains("OutputType=Exe");
@@ -1466,7 +1477,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
     public async Task MSTestSdk_UnpackagedWinUIWithExplicitPackagedAppExtension_KeepsDirectLaunch()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1476,7 +1487,8 @@ namespace MSTestWebTest
             <WindowsPackageType>None</WindowsPackageType>
             <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
-            """);
+            """,
+            expectedAdapterPackageId: "MSTest.WinUI");
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
         result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
@@ -1498,7 +1510,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
     public async Task MSTestSdk_UnpackagedWinUI_AllowsVSTest()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1509,7 +1521,7 @@ namespace MSTestWebTest
             <UseVSTest>true</UseVSTest>
             """,
             failIfReturnValueIsNotZero: false,
-            target: "PrepareForBuild;PrintWindowsTestContract");
+            expectedAdapterPackageId: "MSTest.WinUI");
 
         result.AssertExitCodeIs(0);
         result.AssertOutputContains("WindowsTestContract:UseVSTest=true;GenerateEntryPoint=false;GenerateHelper=false;PackagedApp=;OutputType=Exe;IsTestProject=true;");
@@ -1540,7 +1552,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
     [DataRow("net10.0-windows10.0.26100.0", "Windows_NT", "mstest-appmodel-controller.exe", "net10.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
     [DataRow("net11.0-windows10.0.26100.0", "Windows_NT", "mstest-appmodel-controller.exe", "net11.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
     [DataRow("net11.0-windows10.0.26100.0", "Unix", "", "", "")]
@@ -1554,7 +1566,8 @@ namespace MSTestWebTest
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             <OS>{{operatingSystem}}</OS>
             """,
-            targetFramework: targetFramework);
+            targetFramework: targetFramework,
+            expectedAdapterPackageId: "MSTest.WinUI");
 
         result.AssertOutputContains(
             "WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true;OutputType=Exe;");
@@ -1564,7 +1577,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "The packed MSTest.WinUI assets are produced only by Windows builds.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
     public async Task MSTestSdk_WinUISeparateHost_KeepsGeneratedEntryPoint()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1572,7 +1585,8 @@ namespace MSTestWebTest
             """
             <UseWinUI>true</UseWinUI>
             <WindowsPackageType>None</WindowsPackageType>
-            """);
+            """,
+            expectedAdapterPackageId: "MSTest.WinUI");
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false");
         result.AssertOutputContains("OutputType=Exe");
@@ -1596,8 +1610,11 @@ namespace MSTestWebTest
         string assetName,
         string applicationModelProperties,
         bool failIfReturnValueIsNotZero = true,
-        string target = "PrintWindowsTestContract",
-        string? targetFramework = null)
+        string target = "PrepareForBuild;PrintWindowsTestContract",
+        string? targetFramework = null,
+        string expectedAdapterPackageId = "MSTest.TestAdapter",
+        bool useCentralPackageManagement = false,
+        string lateApplicationModelProperties = "")
     {
         const string Source = """
             #file $AssetName$.csproj
@@ -1616,29 +1633,59 @@ namespace MSTestWebTest
               </ItemGroup>
 
               <Target Name="PrintWindowsTestContract"
-                      DependsOnTargets="_MSTestSDKValidateWindowsApplicationModel;_CalculateGenerateTestingPlatformEntryPoint">
+                      DependsOnTargets="ResolveReferences;_CalculateGenerateTestingPlatformEntryPoint">
                 <Message Importance="high"
                          Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerTfm=$(_TestingPlatformPackagedAppControllerTfm);ControllerExtensions=$(_TestingPlatformPackagedAppControllerExtensions);EndContract" />
                 <Message Importance="high"
                          Text="PackageReferences=@(PackageReference->'%(Identity)')" />
                 <Message Importance="high"
                          Text="Capabilities=@(ProjectCapability->'%(Identity)')" />
+                <Message Importance="high"
+                         Text="MSTestComposition:TargetFramework=$(TargetFramework);Model=$(_MSTestApplicationModel);AdapterPackage=$(_MSTestAdapterPackageId);EndComposition" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)/resolved-mstest-assets.txt"
+                                  Lines="@(ReferencePath->'%(FullPath)')"
+                                  Overwrite="true" />
               </Target>
             </Project>
             """;
 
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-            assetName,
-            Source
-                .PatchCodeWithReplace("$AssetName$", assetName)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$TargetFramework$", targetFramework ?? $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0")
-                .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
+        targetFramework ??= $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0";
+        string source = Source
+            .PatchCodeWithReplace("$AssetName$", assetName)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", targetFramework)
+            .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties);
+        if (useCentralPackageManagement)
+        {
+            source += CompositionCentralPackageManagementSource;
+        }
+
+        if (lateApplicationModelProperties.Length > 0)
+        {
+            source += $$"""
+
+                #file Directory.Build.targets
+                <Project>
+                  <PropertyGroup>
+                    {{lateApplicationModelProperties}}
+                  </PropertyGroup>
+                </Project>
+                """;
+        }
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, source);
         string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 
-        return await DotnetCli.RunAsync(
-            $"build {testAsset.TargetAssetPath} -restore -t:{target} -bl:\"{binlogPath}\"",
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -restore -t:{target} -bl:\"{binlogPath}\"",
             failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
             cancellationToken: TestContext.CancellationToken);
+        if (result.ExitCode == 0)
+        {
+            await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectedAdapterPackageId);
+            await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, expectedAdapterPackageId);
+        }
+
+        return result;
     }
 }

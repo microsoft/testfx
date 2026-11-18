@@ -90,6 +90,29 @@ public sealed class TrxConsumerBehaviorTests
     }
 
     [TestMethod]
+    public async Task Session_NodeWithOnlyStateAndTimingStreamsAndReportsFallbackClassName()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        using var cancellation = new CancellationTokenSource();
+        var session = new TestSessionContext(cancellation.Token);
+        TrxReportGenerator generator = fixture.CreateGenerator();
+        await generator.OnTestSessionStartingAsync(session);
+        TimingProperty timing = new(new TimingInfo(TrxBehaviorFixture.Start, TrxBehaviorFixture.Start.AddSeconds(2), TimeSpan.FromSeconds(2)));
+        TestNode node = new() { Uid = "bare", DisplayName = "bare display name", Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, timing) };
+
+        await generator.ConsumeAsync(null!, new TestNodeUpdateMessage(new SessionUid("fixture-session"), node), cancellation.Token);
+        await fixture.FinishAsync(generator, session);
+
+        XElement testMethod = fixture.Report.Descendants(Ns + "TestMethod").Single();
+        Assert.AreEqual("UnknownClass", (string?)testMethod.Attribute("className"));
+        Assert.AreEqual("bare display name", (string?)testMethod.Attribute("name"));
+        Assert.AreEqual("00:00:02.0000000", (string?)fixture.Report.Descendants(Ns + "UnitTestResult").Single().Attribute("duration"));
+        Assert.AreEqual("Completed", (string?)fixture.Report.Descendants(Ns + "ResultSummary").Single().Attribute("outcome"));
+        Assert.IsEmpty(fixture.Displays);
+        Assert.HasCount(1, fixture.Publications);
+    }
+
+    [TestMethod]
     public async Task Session_ZeroResultsAvoidsWriterAndProducesEmptyReport()
     {
         using var fixture = new TrxBehaviorFixture();
@@ -421,6 +444,102 @@ public sealed class TrxConsumerBehaviorTests
         fixture.FileSystem.Verify(value => value.DeleteFile(It.IsAny<string>()), Times.Never);
         Assert.IsEmpty(fixture.Displays);
     }
+
+    [TestMethod]
+    public async Task Session_DuplicateSingletonPropertiesOmitResultAndFailSessionWithProducerDetails()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string? failureMessage = null;
+        fixture.ExitCode.Setup(value => value.SetTestAdapterTestSessionFailureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<string, CancellationToken>((message, _) => failureMessage = message)
+            .Returns(Task.CompletedTask);
+        fixture.ExitCode.Setup(value => value.GetProcessExitCode()).Returns(10);
+        TrxReportGenerator generator = fixture.CreateGenerator();
+        await generator.OnTestSessionStartingAsync(new TestSessionContext(CancellationToken.None));
+        IDataProducer producer = Producer("faulty.framework", "Faulty framework");
+
+        await generator.ConsumeAsync(producer, Update("valid", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        await generator.ConsumeAsync(producer, Update("duplicated", new FailedTestNodeStateProperty(), Timing(), Timing(), new TrxExceptionProperty("first", null), new TrxExceptionProperty("second", null)), CancellationToken.None);
+        await generator.ConsumeAsync(null!, Update("unknown-producer", PassedTestNodeStateProperty.CachedInstance, Timing(), Timing()), CancellationToken.None);
+
+        await fixture.FinishAsync(generator, TestContext.CancellationToken);
+
+        string expected = $"""
+            The TRX report is incomplete: 2 test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: 'Faulty framework' (UID 'faulty.framework', version '1.0'), <unknown>.
+            Details for the authors of the reporting component:
+              - Test node 'duplicated' ('case duplicated') reported by 'Faulty framework' (UID 'faulty.framework', version '1.0') contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: '{typeof(TrxExceptionProperty).FullName}' (x2), '{typeof(TimingProperty).FullName}' (x2).
+              - Test node 'unknown-producer' ('case unknown-producer') reported by <unknown> contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: '{typeof(TimingProperty).FullName}' (x2).
+            """;
+        Assert.AreEqual(NormalizeLineEndings(expected), NormalizeLineEndings(failureMessage));
+        fixture.ExitCode.Verify(value => value.SetTestAdapterTestSessionFailureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.AreSequenceEqual(["case valid"], fixture.Report.Descendants(Ns + "UnitTestResult").Select(value => (string?)value.Attribute("testName")));
+        Assert.AreEqual("Failed", (string?)fixture.Report.Descendants(Ns + "ResultSummary").Single().Attribute("outcome"));
+        Assert.AreSequenceEqual(
+            ["Exit code indicates failure: '10'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.", NormalizeLineEndings(failureMessage)],
+            fixture.Report.Descendants(Ns + "RunInfo").Select(value => NormalizeLineEndings(value.Element(Ns + "Text")!.Value)));
+        Assert.HasCount(1, fixture.Publications);
+    }
+
+    [TestMethod]
+    public async Task Session_ConflictingTestDefinitionNamesOmitLaterResultAndFailSession()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string? failureMessage = null;
+        fixture.ExitCode.Setup(value => value.SetTestAdapterTestSessionFailureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<string, CancellationToken>((message, _) => failureMessage = message)
+            .Returns(Task.CompletedTask);
+        TrxReportGenerator generator = fixture.CreateGenerator();
+        await generator.OnTestSessionStartingAsync(new TestSessionContext(CancellationToken.None));
+        IDataProducer first = Producer("first.framework", "First framework");
+        IDataProducer second = Producer("second.framework", "Second framework");
+
+        await generator.ConsumeAsync(first, Update("shared", PassedTestNodeStateProperty.CachedInstance, new TrxTestDefinitionName("Original")), CancellationToken.None);
+        await generator.ConsumeAsync(first, Update("shared", new FailedTestNodeStateProperty(), new TrxTestDefinitionName("Original")), CancellationToken.None);
+        await generator.ConsumeAsync(second, Update("shared", SkippedTestNodeStateProperty.CachedInstance, new TrxTestDefinitionName("Renamed")), CancellationToken.None);
+
+        await fixture.FinishAsync(generator, TestContext.CancellationToken);
+
+        string expected = """
+            The TRX report is incomplete: 1 test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: 'Second framework' (UID 'second.framework', version '1.0').
+            Details for the authors of the reporting component:
+              - Test node 'shared' ('case shared') reported by 'Second framework' (UID 'second.framework', version '1.0') has test definition name 'Renamed', but a previous result for the same test node reported by 'First framework' (UID 'first.framework', version '1.0') has test definition name 'Original'. All results of a test node must use the same TrxTestDefinitionName.
+            """;
+        Assert.AreEqual(NormalizeLineEndings(expected), NormalizeLineEndings(failureMessage));
+        Assert.AreSequenceEqual(["Passed", "Failed"], fixture.Report.Descendants(Ns + "UnitTestResult").Select(value => (string?)value.Attribute("outcome")));
+        Assert.AreEqual("Original", (string?)fixture.Report.Descendants(Ns + "UnitTest").Single().Attribute("name"));
+    }
+
+    [TestMethod]
+    public async Task Session_InvalidResultDetailsAreCapped()
+    {
+        using var fixture = new TrxBehaviorFixture();
+        string? failureMessage = null;
+        fixture.ExitCode.Setup(value => value.SetTestAdapterTestSessionFailureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<string, CancellationToken>((message, _) => failureMessage = message)
+            .Returns(Task.CompletedTask);
+        TrxReportGenerator generator = fixture.CreateGenerator();
+        await generator.OnTestSessionStartingAsync(new TestSessionContext(CancellationToken.None));
+
+        for (int i = 0; i < 13; i++)
+        {
+            await generator.ConsumeAsync(null!, Update($"invalid-{i}", PassedTestNodeStateProperty.CachedInstance, Timing(), Timing()), CancellationToken.None);
+        }
+
+        await fixture.FinishAsync(generator, TestContext.CancellationToken);
+
+        string[] lines = NormalizeLineEndings(failureMessage).Split('\n');
+        Assert.StartsWith("The TRX report is incomplete: 13 test result(s) were omitted", lines[0]);
+        Assert.HasCount(13, lines, "Summary, details header, 10 details and the remaining count.");
+        Assert.StartsWith("  - Test node 'invalid-9' ", lines[11]);
+        Assert.AreEqual("  - ... and 3 more omitted test result(s).", lines[12]);
+        Assert.IsEmpty(fixture.Report.Descendants(Ns + "UnitTestResult"));
+    }
+
+    private static TimingProperty Timing()
+        => new(new TimingInfo(TrxBehaviorFixture.Start, TrxBehaviorFixture.Start, TimeSpan.Zero));
+
+    private static string NormalizeLineEndings(string? value)
+        => value?.Replace("\r\n", "\n") ?? string.Empty;
 
     private static TestNodeUpdateMessage Update(string uid, TestNodeStateProperty? state, params IProperty[] additional)
     {

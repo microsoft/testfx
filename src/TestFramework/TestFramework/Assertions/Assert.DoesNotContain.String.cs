@@ -38,7 +38,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotContain(string substring, string value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotContain([NotNull] string? substring, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => DoesNotContain(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -72,7 +72,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotContain([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => ContainsCore(substring, value, comparisonType, "Assert.DoesNotContain", message, substringExpression, valueExpression, shouldContain: false);
 
     #endregion // DoesNotContain

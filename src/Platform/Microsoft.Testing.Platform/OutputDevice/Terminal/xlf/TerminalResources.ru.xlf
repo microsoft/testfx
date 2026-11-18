@@ -502,9 +502,9 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <target state="translated">Управляйте тем, отображаются ли сведения о ходе выполнения на экране.
+Допустимые значения: "auto" (по умолчанию), 'on' (также принимает "true", "enable", "1") и "off" (также принимает "false", "disable", "0").
+"auto" показывает ход выполнения, кроме случаев, когда терминал не может обновляться на месте (например, с --ansi off или в CI).</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">

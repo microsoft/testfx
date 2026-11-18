@@ -1,0 +1,77 @@
+<Project>
+  <!--
+    Opt-in pack mode (eng\buildxl.ps1 -Pack). BuildXL runs every static-graph node in its own isolated MSBuild
+    process, so each target NuGet's Pack requests from another node must be declared before the build starts.
+  -->
+  <ItemGroup Condition=" '$(IsPackable)' == 'true' ">
+    <!--
+      _GetProjectReferenceVersions asks every project in project.assets.json for _GetProjectVersion with the packing
+      node's global properties. Multi-targeting packing nodes have no graph edges to those projects, and some of the
+      references are conditioned on a target framework, so exempt every product project from isolation.
+    -->
+    <GraphIsolationExemptReference Include="$(RepoRoot)src\**\*.csproj" />
+    <!-- Calls into the project's own inner builds must hit the graph's cached results instead of re-running them here. -->
+    <GraphIsolationExemptReference Remove="$(MSBuildProjectFullPath)" />
+    <ProjectReferenceTargets Include="Pack" Targets="_GetProjectVersion" OuterBuild="true" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(IsPackable)' == 'true' and '$(TargetFramework)' == '' and '$(TargetFrameworks)' != '' ">
+    <!-- A multi-targeting Pack walks each inner build through _WalkEachTargetPerFramework. -->
+    <ProjectReferenceTargets Include="Pack"
+                             Targets="_GetBuildOutputFilesWithTfm;_GetTfmSpecificContentForPackage;_GetDebugSymbolsWithTfm;_GetFrameworkAssemblyReferences;_GetFrameworksWithSuppressedDependencies" />
+    <ProjectReferenceTargets Include="Pack" Targets="SourceFilesProjectOutputGroup" Condition=" '$(IncludeSource)' == 'true' " />
+  </ItemGroup>
+
+  <!--
+    MSBuild.Sdk.Extras replaces _WalkEachTargetPerFramework and adds BuildProjectReferences=false to several inner
+    calls. That is a configuration the graph never built, so the outer node would rerun ResolveReferences and write
+    the inner node's obj files. Drop the property so every call addresses the graph's inner node.
+  -->
+  <Target Name="_TestFxBuildXLAddressGraphInnerBuilds"
+          AfterTargets="_SdkPrepareProjectFlavorMatrix"
+          Condition=" '$(IsPackable)' == 'true' ">
+    <ItemGroup>
+      <_SdkProjectFlavorMatrixItem>
+        <UndefineProperties>%(_SdkProjectFlavorMatrixItem.UndefineProperties);BuildProjectReferences</UndefineProperties>
+      </_SdkProjectFlavorMatrixItem>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Replaces MSTest.Analyzers.Package's no-build `dotnet run`, which re-evaluates the generator without the
+    redirected ArtifactsBinDir and therefore reads the default artifacts\bin layout. Run the generator built by this
+    BuildXL graph instead; TestFx.slnx orders it before MSTest.Analyzers.Package.
+  -->
+  <Target Name="_GenerateGlobalConfigs">
+    <PropertyGroup>
+      <_TestFxGlobalConfigsGenerator>$(ArtifactsBinDir)MSTest.GlobalConfigsGenerator\$(Configuration)\$(NetCurrent)\MSTest.GlobalConfigsGenerator.dll</_TestFxGlobalConfigsGenerator>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(_TestFxGlobalConfigsGenerator)')"
+           Text="MSTest.GlobalConfigsGenerator was not built before packing MSTest.Analyzers: $(_TestFxGlobalConfigsGenerator)" />
+    <Exec Command="&quot;$(DotNetRoot)dotnet.exe&quot; &quot;$(_TestFxGlobalConfigsGenerator)&quot;"
+          EnvironmentVariables="OUTPUT_PATH=$(OutputPath)" />
+  </Target>
+
+  <!--
+    Replaces PackagedApp.MSBuild's nested Build of the controller with different global properties, which an isolated
+    node cannot run. The graph already built the same win-x64 controller outputs through the ProjectReference.
+  -->
+  <Target Name="_AddPackagedAppControllerToPackage" Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <ItemGroup>
+      <_PackagedAppControllerFramework Include="$(SupportedNetFrameworks)" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\mstest-appmodel-controller.exe')"
+           Text="The Windows packaged-app controller was not built for %(_PackagedAppControllerFramework.Identity). The integration package requires both win-x64 apphosts on every pack host." />
+    <ItemGroup>
+      <_PackagedAppControllerPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\*"
+                                         Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\.*">
+        <ControllerTargetFramework>%(_PackagedAppControllerFramework.Identity)</ControllerTargetFramework>
+      </_PackagedAppControllerPackageFile>
+    </ItemGroup>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(_PackagedAppControllerPackageFile)">
+        <PackagePath>tools/AppModelController/%(_PackagedAppControllerPackageFile.ControllerTargetFramework)/$([System.String]::Copy('%(_PackagedAppControllerPackageFile.RecursiveDir)').Replace('\', '/').TrimStart('/'))%(_PackagedAppControllerPackageFile.Filename)%(_PackagedAppControllerPackageFile.Extension)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+</Project>

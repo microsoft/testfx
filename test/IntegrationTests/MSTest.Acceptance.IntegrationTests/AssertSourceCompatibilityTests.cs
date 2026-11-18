@@ -764,6 +764,130 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.DoesNotMatchRegex(new Regex("z"), "abc");
             }
 
+            internal static void NullableStringContainsCalls()
+            {
+                string? substring = GetNullable("b");
+                string? value = GetNullable("abc");
+                Assert.Contains(substring, value);
+                _ = substring.Length;
+                _ = value.Length;
+
+                substring = GetNullable("B");
+                value = GetNullable("abc");
+                Assert.Contains(substring, value, StringComparison.OrdinalIgnoreCase, message: "contains");
+                _ = substring.Length;
+                _ = value.Length;
+
+                substring = GetNullable("z");
+                value = GetNullable("abc");
+                Assert.DoesNotContain(substring, value);
+                _ = substring.Length;
+                _ = value.Length;
+
+                substring = GetNullable("Z");
+                value = GetNullable("abc");
+                Assert.DoesNotContain(substring, value, StringComparison.OrdinalIgnoreCase, message: "does not contain");
+                _ = substring.Length;
+                _ = value.Length;
+            }
+
+            internal static void NullableCollectionContainsCalls()
+            {
+                IEqualityComparer<int> comparer = EqualityComparer<int>.Default;
+                Func<int, bool> predicate = item => item > 0;
+                IEnumerable<int>? values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.Contains(1, values);
+                _ = values.GetEnumerator();
+                values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.Contains(1, values, comparer);
+                _ = values.GetEnumerator();
+                values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.Contains(predicate, values);
+                _ = values.GetEnumerator();
+                values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.DoesNotContain(2, values);
+                _ = values.GetEnumerator();
+                values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.DoesNotContain(2, values, comparer);
+                _ = values.GetEnumerator();
+                values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.DoesNotContain((int item) => item < 0, values);
+                _ = values.GetEnumerator();
+                values = GetNullable<IEnumerable<int>>(new[] { 1 });
+                Assert.ContainsOnly(predicate, values);
+                _ = values.GetEnumerator();
+
+                IEnumerable? objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.Contains((object)1, objects);
+                _ = objects.GetEnumerator();
+                objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.Contains((object)1, objects, StructuralComparisons.StructuralEqualityComparer);
+                _ = objects.GetEnumerator();
+                objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.Contains((object? item) => item is int, objects);
+                _ = objects.GetEnumerator();
+                objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.DoesNotContain((object)2, objects);
+                _ = objects.GetEnumerator();
+                objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.DoesNotContain((object)2, objects, StructuralComparisons.StructuralEqualityComparer);
+                _ = objects.GetEnumerator();
+                objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.DoesNotContain((object? item) => item is string, objects);
+                _ = objects.GetEnumerator();
+                objects = GetNullable<IEnumerable>(new ArrayList { 1 });
+                Assert.ContainsOnly((object? item) => item is int, objects);
+                _ = objects.GetEnumerator();
+
+                int[]? array = GetNullable(new[] { 1 });
+                Assert.Contains<int>(1, array);
+                _ = array.Length;
+                array = GetNullable(new[] { 1 });
+                Assert.Contains<int>(1, array, comparer);
+                _ = array.Length;
+                array = GetNullable(new[] { 1 });
+                Assert.Contains<int>(predicate, array);
+                _ = array.Length;
+                array = GetNullable(new[] { 1 });
+                Assert.DoesNotContain<int>(2, array);
+                _ = array.Length;
+                array = GetNullable(new[] { 1 });
+                Assert.DoesNotContain<int>(2, array, comparer);
+                _ = array.Length;
+                array = GetNullable(new[] { 1 });
+                Assert.DoesNotContain<int>((int item) => item < 0, array);
+                _ = array.Length;
+                array = GetNullable(new[] { 1 });
+                Assert.ContainsOnly<int>(predicate, array);
+                _ = array.Length;
+
+                List<int>? list = GetNullable(new List<int> { 1 });
+                Assert.Contains(1, list);
+                _ = list.Count;
+                list = GetNullable(new List<int> { 1 });
+                Assert.Contains(1, list, comparer);
+                _ = list.Count;
+                list = GetNullable(new List<int> { 1 });
+                Assert.Contains(predicate, list);
+                _ = list.Count;
+                list = GetNullable(new List<int> { 1 });
+                Assert.DoesNotContain(2, list);
+                _ = list.Count;
+                list = GetNullable(new List<int> { 1 });
+                Assert.DoesNotContain(2, list, comparer);
+                _ = list.Count;
+                list = GetNullable(new List<int> { 1 });
+                Assert.DoesNotContain((int item) => item < 0, list);
+                _ = list.Count;
+                list = GetNullable(new List<int> { 1 });
+                Assert.ContainsOnly(predicate, list);
+                _ = list.Count;
+            }
+
+            private static T? GetNullable<T>(T value)
+                where T : class
+                => value;
+
             internal static async Task ExceptionCallsAsync()
             {
                 _ = Assert.Throws<InvalidOperationException>(() => Throw());
