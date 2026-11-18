@@ -349,4 +349,23 @@ public partial class AssertTests
         doesNotMatch.Should().ThrowExactly<AssertFailedException>().Which.Message
             .Should().NotContain("Assert.DoesNotMatchRegex(");
     }
+
+    public void RegexAssertions_EmptyArgumentExpressionsPreserveMissingParameterPlaceholders()
+    {
+        Action missingPattern = () => Assert.MatchesRegex(
+            new Regex("^expected$"),
+            "actual",
+            patternExpression: string.Empty,
+            valueExpression: "value");
+        missingPattern.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.MatchesRegex(<pattern>, value)");
+
+        Action missingValue = () => Assert.DoesNotMatchRegex(
+            new Regex("actual"),
+            "actual",
+            patternExpression: "pattern",
+            valueExpression: string.Empty);
+        missingValue.Should().ThrowExactly<AssertFailedException>().Which.Message
+            .Should().Contain("Assert.DoesNotMatchRegex(pattern, <value>)");
+    }
 }

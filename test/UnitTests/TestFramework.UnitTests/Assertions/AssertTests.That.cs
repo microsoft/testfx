@@ -1888,6 +1888,7 @@ public partial class AssertTests : TestContainer
             (typeof(string), "{", "string", "\"{\""),
             (typeof(string), "}", "string", "\"}\""),
             (typeof(string), "{item}", "string", "\"{item}\""),
+            (typeof(string), "a\\\"{b", "string", "\"a\\\"{b\""),
             (typeof(char), 'q', "char", "q"),
             (typeof(char), '{', "char", "'{'"),
             (typeof(char), '}', "char", "'}'"),
