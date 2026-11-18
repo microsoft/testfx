@@ -42,7 +42,11 @@ only this step at template-expansion time; the native build still runs.
 seconds and exit codes) from its `finally` block, and `toolchain.json` gains an
 additive `DotNetRoot`. The runner writes `logs\unit-tests\unit-test-timings.json`,
 `unit-test-summary.md`, per-suite TRX and stdout/stderr. The existing collector
-already copies `logs` recursively, so no allowlist changes.
+already copies `logs` recursively, so no allowlist changes. Before running a
+suite, the runner also requires the recorded `Project` to be `TestFx.slnx` and
+`TargetFramework` to be the project defaults or the workload's TFM: a narrower
+build into the same output rewrites `toolchain.json` but keeps a wider build's
+older test assemblies, which the revision check alone would mislabel.
 
 Hosting mirrors Bazel's `runtime` policy in the workload. The 11 `sdk` suites run
 on the repository SDK's bundled runtime; `analyzer_tests` and

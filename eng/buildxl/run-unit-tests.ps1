@@ -106,7 +106,7 @@ try {
 
     $toolchain = Get-Content -LiteralPath $toolchainPath -Raw | ConvertFrom-Json
     $toolchainProperties = @($toolchain.PSObject.Properties.Name)
-    foreach ($name in @('SourceRevision', 'Sdk', 'Engine', 'Configuration', 'DotNetRoot')) {
+    foreach ($name in @('SourceRevision', 'Sdk', 'Engine', 'Configuration', 'DotNetRoot', 'Project', 'TargetFramework')) {
         if ($name -notin $toolchainProperties -or [string]::IsNullOrWhiteSpace([string] $toolchain.$name)) {
             throw "toolchain.json does not record '$name'; rebuild with the current eng\buildxl.ps1."
         }
@@ -147,6 +147,13 @@ try {
     }
 
     $frameworkMajor = [int] $Matches.major
+
+    # A narrower build into the same output rewrites toolchain.json but leaves assemblies from an earlier, wider build in
+    # place, so the revision check alone would attribute those stale assemblies to the current revision.
+    if ($toolchain.Project -ne 'TestFx.slnx' -or $toolchain.TargetFramework -notin @('Project defaults', $workloadDefinition.targetFramework)) {
+        throw "The build output covers $($toolchain.Project) ($($toolchain.TargetFramework)), not the workload. Build TestFx.slnx with the project default target frameworks or $($workloadDefinition.targetFramework)."
+    }
+
     $report.Workload = $workloadDefinition.name
     $report.IdentityPolicy = $workloadDefinition.identityPolicy
     $report.WorkloadSha256 = (Get-FileHash -LiteralPath $workloadPath -Algorithm SHA256).Hash

@@ -377,6 +377,8 @@ class BuildXLPipelineTests(unittest.TestCase):
                         "Engine": "BuildXL",
                         "Configuration": "Debug",
                         "DotNetRoot": str(ROOT / ".dotnet"),
+                        "Project": "TestFx.slnx",
+                        "TargetFramework": "Project defaults",
                     }
                 ),
                 encoding="utf-8",
@@ -394,6 +396,52 @@ class BuildXLPipelineTests(unittest.TestCase):
             )
         finally:
             shutil.rmtree(output, ignore_errors=True)
+
+    def test_unit_test_runner_rejects_build_output_narrower_than_the_workload(self) -> None:
+        revision = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        cases = {
+            "project": ("src\\TestFramework\\TestFramework\\TestFramework.csproj", "Project defaults"),
+            "framework": ("TestFx.slnx", "netstandard2.0"),
+        }
+        for case, (project, framework) in cases.items():
+            with self.subTest(case=case):
+                output_id = "runner-scope-" + uuid.uuid4().hex[:12]
+                output = ROOT / "artifacts" / "buildxl-runs" / output_id
+                try:
+                    (output / "logs").mkdir(parents=True)
+                    (output / "toolchain.json").write_text(
+                        json.dumps(
+                            {
+                                "SourceRevision": revision,
+                                "Sdk": "0.0.0",
+                                "Engine": "MSBuild",
+                                "Configuration": "Debug",
+                                "DotNetRoot": str(ROOT / ".dotnet"),
+                                "Project": project,
+                                "TargetFramework": framework,
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    (output / "logs" / "phase-timings.json").write_text(
+                        json.dumps({"RestoreExitCode": 0, "BuildExitCode": 0}),
+                        encoding="utf-8",
+                    )
+                    process = self.run_unit_test_runner("-Configuration", "Debug", "-OutputId", output_id)
+                    self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+                    self.assertIn(
+                        f"The build output covers {project} ({framework}), not the workload.",
+                        process.stdout + process.stderr,
+                    )
+                    self.assertFalse(
+                        (output / "logs" / "unit-tests").exists(),
+                        "No suite may run against assemblies outside the recorded build scope.",
+                    )
+                finally:
+                    shutil.rmtree(output, ignore_errors=True)
 
     def test_unit_test_summary_reports_pack_from_the_recorded_build_targets(self) -> None:
         if sys.platform != "win32":
@@ -453,6 +501,8 @@ class BuildXLPipelineTests(unittest.TestCase):
                                 "Engine": "BuildXL",
                                 "Configuration": "Debug",
                                 "DotNetRoot": str(dotnet_root),
+                                "Project": "TestFx.slnx",
+                                "TargetFramework": "Project defaults",
                             }
                         ),
                         encoding="utf-8",
