@@ -251,6 +251,42 @@ argument-order concern: MSTest `IsLessThan` takes the upper bound first, and
 the `.4` wire case passed. The review did not execute tests and identified the
 real shipping SDK handshake as requiring paired composed validation.
 
+After the summary parity fix, `.\build.cmd -pack -c Release
+/p:VersionSuffix=preview.26599.5 -bl` succeeded from clean source revision
+`8bbb93c41344ce34ab0516f9996cc96570fe2a0c` with zero warnings and errors.
+The aligned Platform and Azure DevOps packages are `3.0.0-preview.26599.5`;
+MSTest packages are `5.0.0-preview.26599.5`. SHA-256 values:
+
+| Package | SHA-256 |
+| --- | --- |
+| Microsoft.Testing.Platform | `62B2A73B2C9EA5180442344BE14D1DD9CB7C7299A06A014573BD49873ABB18C1` |
+| Microsoft.Testing.Extensions.AzureDevOpsReport | `B653376612478B1DCA141626F4BBF08A0B6E183F1F72104A6F78349CE436E109` |
+| MSTest | `C8A0C7EA92AF22F838C8023CDC95DB3A7B52D3D9485E14A7914B06C7CBE84DF4` |
+| MSTest.Sdk | `953B44C40A1A1124EA289CFACF8ED307ED35A4AB4C7F579CE5DC5DCD5E2F3823` |
+| MSTest.TestFramework | `3358BD86596F32F350164EF28BB2716F91F449F6EE59F515B18BDE8379E66771` |
+| MSTest.TestAdapter | `0A68A5D13A55200CD67E1A6CCC77811588C2E72EBBE2820CF7B2A64F27E5EA36` |
+
+The package manifests require matching `.5` dependencies, and the previous
+`.1` and `.4` packages remain intact. A `.5`-only feed and fresh acceptance
+cache were used for eight independently discovered wire/forwarding cases:
+four progress-capability cases and the four Azure DevOps forwarding cases.
+All eight executed and passed (exit 0, no skips); the execution verifier
+matched the independent plan against the TRX. The four progress cases checked
+that the restored and deployed Platform DLLs matched the package payload
+`6CABD097FEC2A47B4A1E033A9B0CA2E40CD46FF5CFFE83063291FAEDC877286B`.
+The isolated checkout was at `8bbb93c41344ce34ab0516f9996cc96570fe2a0c`.
+Its harness build and test commands were:
+
+```
+X:\progress-acceptance\.dotnet\dotnet.exe build X:\progress-acceptance\test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-restore '-bl:X:\progress-acceptance\artifacts\log\Release\preview5-acceptance.binlog' -v:q
+X:\progress-acceptance\.dotnet\dotnet.exe X:\progress-acceptance\artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~DotnetTestPipe_ProgressHonorsPeerCapability|FullyQualifiedName~DotnetTestPipeAzureDevOpsForwardingTests' --report-trx --trx-mode in-process --results-directory X:\progress-preview5-evidence --report-trx-filename preview5.trx --show-test-results all
+```
+
+These are packed-host tests with a fake SDK peer, not proof of the paired SDK's
+shipping execution. A failure annotation currently retains the full module
+path: the individual host cannot disambiguate equal module basenames across
+other hosts, and the SDK must preserve the command bytes.
+
 On the earlier `.1` source revision `ea45e5221eccb3cfb738b27c264f680b773cfbc6`,
 Release/net10.0 reporter and heartbeat tests passed 272/272,
 and the Azure-selected extension run passed 637/637, with no skips:
