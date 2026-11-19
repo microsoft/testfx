@@ -1896,6 +1896,11 @@ public partial class AssertTests : TestContainer
             (typeof(char), '}', "char", "'}'"),
             (typeof(char), '\'', "char", "'"),
             (typeof(char), '"', "char", "\""),
+            (typeof(object), "a\"b", "object", "\"a\"b\""),
+            (typeof(object), "{item}", "object", "\"{item}\""),
+            (typeof(object), "a\\", "object", "\"a\\\""),
+            (typeof(object), '"', "object", "\""),
+            (typeof(object), '{', "object", "'{'"),
             (typeof(string), "new <>f__AnonymousType", "string", "\"new <>f__AnonymousType\""),
             (typeof(string), "value((", "string", "\"value((\""),
         ];
@@ -1920,6 +1925,20 @@ public partial class AssertTests : TestContainer
             failure.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
                 .Should().Be(message.Replace("\r\n", "\n"));
         }
+    }
+
+    public void That_ObjectListInitializerWithQuotedString_RendersCleanedInitializer()
+    {
+        Action accepted = () => Assert.That(() => new List<object> { "a\"b", "{" }.Count == 2);
+        accepted.Should().NotThrow();
+
+        Action rejected = () => Assert.That(() => new List<object> { "a\"b", "{" }.Count == 1, conditionExpression: "object initializer");
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assert.That(object initializer) failed.
+            Details:
+              new List<object> { "a"b", "{" }.Count = 2
+            """.Replace("\r\n", "\n"));
     }
 
     public void That_EmptyConstructionAndGroupedIndex_PreserveReadableDiagnostics()

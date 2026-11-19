@@ -8,11 +8,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public static partial class AssertExtensions
 {
+    private const string AddCallPrefix = "Void Add(";
+    private const string StringOperandSuffix = "\")";
+
     // Hoisted to a static field so TryMatchListInitPattern is allocation-free on the
     // diagnostic text cleanup hot path (CleanListInitializers can call it repeatedly).
-    private const string CharAddArgumentPrefix = "Void Add(Char)(";
-    private const string StringAddArgumentPrefix = "Void Add(System.String)(";
-    private const string StringAddArgumentSuffix = "\")";
     private static readonly string[] ListInitCollectionTypes = ["List", "IList", "ICollection", "IEnumerable"];
 
     /// <summary>
@@ -45,12 +45,23 @@ public static partial class AssertExtensions
                 {
                     char current = input[braceEnd];
 
-                    // Expression diagnostics render char operands unquoted (e.g. `Void Add(Char)({)`
-                    // or `Void Add(Char)(')`). Such an operand is a value, never a brace or quote delimiter.
-                    if (HasSubstringAt(input, braceEnd - CharAddArgumentPrefix.Length, CharAddArgumentPrefix))
+                    // Expression diagnostics render char constants unquoted and string constants unescaped,
+                    // whatever the element type (e.g. `Void Add(System.Object)(")` or `Void Add(System.Object)("a"b")`).
+                    // A single-character operand is a value, never a brace or quote delimiter, and a quoted
+                    // operand ends at the `")` that closes its Add call.
+                    if (IsAddOperandStart(input, braceEnd))
                     {
-                        braceEnd++;
-                        continue;
+                        if (IsSingleCharacterOperand(input, braceEnd))
+                        {
+                            braceEnd++;
+                            continue;
+                        }
+
+                        if (current == '"' && TryFindStringOperandEnd(input, braceEnd, out int operandEnd))
+                        {
+                            braceEnd = operandEnd;
+                            continue;
+                        }
                     }
 
                     if (current == '"')
@@ -97,7 +108,9 @@ public static partial class AssertExtensions
                         foreach (Match addMatch in addMatches)
                         {
                             string argument = addMatch.Groups[1].Value;
-                            if (genericType == "char" && argument is "{" or "}")
+
+                            // Only a char constant renders as a lone brace, including when boxed as object.
+                            if (argument is "{" or "}")
                             {
                                 argument = $"'{argument}'";
                             }
@@ -126,19 +139,56 @@ public static partial class AssertExtensions
     }
 
     /// <summary>
-    /// Returns the index just past a string constant that starts at <paramref name="quoteIndex"/>.
-    /// Expression diagnostics render string constants as raw text between double quotes, without
-    /// escaping, so a whole <c>Add(String)</c> operand ends at the first <c>")</c>; this keeps values that
-    /// contain quotes, braces, or a trailing backslash intact. Other string constants end at the next quote.
+    /// Returns whether <paramref name="index"/> is the first character of an operand rendered as
+    /// <c>Void Add(T)(operand)</c>, for any element type <c>T</c>.
+    /// </summary>
+    private static bool IsAddOperandStart(string input, int index)
+    {
+        if (index < 2 || input[index - 1] != '(' || input[index - 2] != ')')
+        {
+            return false;
+        }
+
+        int addStart = input.LastIndexOf(AddCallPrefix, index - 2, StringComparison.Ordinal);
+        return addStart >= 0 && input.IndexOf(')', addStart + AddCallPrefix.Length) == index - 2;
+    }
+
+    private static bool IsSingleCharacterOperand(string input, int index)
+        => index + 2 < input.Length && input[index + 1] == ')' && (input[index + 2] is ',' or '}');
+
+    /// <summary>
+    /// Finds the end of a quoted Add operand. String constants are rendered as raw text between double
+    /// quotes, without escaping, so the operand ends at the first <c>")</c> that is followed by the next
+    /// initializer element or the closing brace; this keeps values that contain quotes, braces, or a
+    /// trailing backslash intact.
+    /// </summary>
+    private static bool TryFindStringOperandEnd(string input, int quoteIndex, out int operandEnd)
+    {
+        for (int closingQuote = input.IndexOf(StringOperandSuffix, quoteIndex + 1, StringComparison.Ordinal);
+            closingQuote >= 0;
+            closingQuote = input.IndexOf(StringOperandSuffix, closingQuote + 1, StringComparison.Ordinal))
+        {
+            int next = closingQuote + StringOperandSuffix.Length;
+            if (next < input.Length && (input[next] is ',' or '}'))
+            {
+                operandEnd = next;
+                return true;
+            }
+        }
+
+        operandEnd = quoteIndex;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the index just past a string constant nested inside an operand, such as a method argument.
+    /// An unmatched quote is a raw character (for example a boxed char rendered as <c>Convert(", Object)</c>)
+    /// and is skipped on its own.
     /// </summary>
     private static int SkipRenderedStringConstant(string input, int quoteIndex)
     {
-        int contentStart = quoteIndex + 1;
-        int closingQuote = HasSubstringAt(input, quoteIndex - StringAddArgumentPrefix.Length, StringAddArgumentPrefix)
-            ? input.IndexOf(StringAddArgumentSuffix, contentStart, StringComparison.Ordinal)
-            : input.IndexOf('"', contentStart);
-
-        return closingQuote < 0 ? input.Length : closingQuote + 1;
+        int closingQuote = input.IndexOf('"', quoteIndex + 1);
+        return closingQuote < 0 ? quoteIndex + 1 : closingQuote + 1;
     }
 
     private static bool TryMatchListInitPattern(string input, int startIndex, out string collectionType, out int patternEnd)
