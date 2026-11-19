@@ -16,7 +16,8 @@ commands as well as ordinary text. Preserve logging commands verbatim, including
 their syntax; do not assume every forwarded message is safe to prefix. A missing
 declared TFM is unknown, not the runtime TFM. Handshake property 21 is optional
 and carries the declared TFM; `Framework` describes the executing runtime.
-Older peers may omit the property. No protocol change is planned.
+Older peers may omit the property. The later progress-forwarding investigation
+required a separate optional capability, documented below.
 
 The SDK is responsible for serializing any final Azure DevOps groups after
 hosts finish; live per-host groups can overlap. Normal, no-handshake,
@@ -52,6 +53,11 @@ aggregate coverage percentages from incompatible measurements.
 - An interim SDK composed run showed that printing "0 skipped (No affected
   tests selected)" for a normal run implies selection took place. Omit that
   clause when no modules were unselected; keep it when selection did omit any.
+- A rejected handshake can be a retry of an already registered execution, so
+  adding handshake failures to failed-module totals can count the same module
+  twice. Omitting contextual module totals whenever a handshake failure is
+  recorded avoids asserting an unknowable count. Preserve the failure recap,
+  existing error counters, exit policy, and any known unselected-module count.
 - 2026-11-19: The approved design is an illustrative mockup, not product
   evidence. The predecessor PR #12537 was merged; this work starts at
   `3cfabcf45c89a2d35079e589b7318f62a7091f83` on a new branch.
@@ -169,7 +175,84 @@ extension's nuspec requires Platform `[3.0.0-preview.26599.1, 4.0.0)`.
 The feed also contains earlier `-dev` packages, so the acceptance harness
 must use a preview-only copy to avoid its single-version check.
 
-On that revision, Release/net10.0 reporter and heartbeat tests passed 272/272,
+For the progress-forwarding fix, the reviewed product source is
+`817bcecb31d6827b228ce5b103ef340009388d93`. A distinct Release pack,
+`.\build.cmd -pack -c Release /p:VersionSuffix=preview.26599.4 -bl`, succeeded
+with zero warnings and errors. The Platform and Azure DevOps packages are
+`3.0.0-preview.26599.4`; MSTest packages are `5.0.0-preview.26599.4`. Platform
+package SHA-256 is
+`079535B06BC2DBF49471AF51768AAE578AF00E70BF29850439939A11EB4AB3FB`;
+Azure DevOps package SHA-256 is
+`F52B2C05969E2E269F5E73E32F2DD17082D57AE51240FC582FE8587B793B866F`.
+The Azure DevOps package requires Platform
+`[3.0.0-preview.26599.4, 4.0.0)` and the MSTest package requires the matching
+adapter and framework. The previously shared `.1` packages were not changed.
+
+The same four `DotnetTestPipe_ProgressHonorsPeerCapability` cases ran against
+isolated `.1` and `.4` package feeds, each with a fresh generated-consumer
+cache. In the `.1` run, `ProgressCapableSdk` failed because the expected
+progress frame was absent; the legacy, explicit-false, and IDE cases passed
+(3 passed, 1 failed, 0 skipped; exit 2). In the `.4` run all four passed
+(4 passed, 0 failed or skipped; exit 0); the capable case verifies execution,
+instance, and test identities and ordering before the final result. Both runs
+asserted that the cached and deployed Platform DLL matched their packed
+payload. The `.1` and `.4` net10.0 payload SHA-256 values were respectively
+`7CC9B46A8921556C5A60065B2FE3B775C9FCD79ADA120291C2B0C2D75E388AA1` and
+`EF7D980849C2BD064291DFE5616AA1B98C77EF112A2473C609BAFD29CE03DF80`.
+The fixed-host command was:
+
+```
+X:\progress-acceptance\.dotnet\dotnet.exe X:\progress-acceptance\artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~DotnetTestPipe_ProgressHonorsPeerCapability' --report-trx --trx-mode in-process --results-directory X:\progress-acceptance-evidence --report-trx-filename progress-wire.trx --show-test-results all
+```
+
+Independent discovery found four cases and the acceptance execution verifier
+confirmed four selected, executed and passed. On the same `.4` feed,
+`DotnetTestPipeAzureDevOpsForwardingTests` passed four of four (exit 0), also
+verified against its discovery plan and TRX. The Release/net10.0 capability
+unit selection passed 13 of 13 (exit 0), including malformed or incompatible
+capabilities and renegotiation. These fake-SDK wire tests do not replace the
+paired real SDK run.
+
+For the rejected-handshake tally, the same source-linked reporter tests and
+assertions were run before and after the summary fix, in the task-owned
+worktree with Release/net10.0. Test file blob:
+`d922773690c54f088f6db27ef895455bb5adea2b`. The pre-fix product source was
+`817bcecb31d6827b228ce5b103ef340009388d93`; all three cases executed and failed
+at the expected group-header equality (exit 2): `RejectedHost`,
+`RejectedRetry`, and `RejectedRetryWithUnselectedModule`. The corrected
+`TerminalTestReporter.Summary.cs` blob
+`911f21aed12dc878f6c2247ce9dced3fec8f26de` passed those same three cases
+(exit 0, no skips). The tests also check that the handshake recap and failure
+verdict remain visible. Both runs rebuilt the project with
+the following commands, respectively:
+
+```
+.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release -f net10.0 --no-restore '-bl:artifacts\log\Release\ambiguous-summary-red.binlog' -v:q
+.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release -f net10.0 --no-restore '-bl:artifacts\log\Release\ambiguous-summary-green.binlog' -v:q
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\net10.0\Microsoft.Testing.Platform.UnitTests.dll --filter 'FullyQualifiedName~TestExecutionCompleted_ContextualSummaryOmitsAmbiguousModuleTotals' --report-trx --trx-mode in-process --results-directory <session-files>\summary-parity-red --report-trx-filename summary-red.trx --show-test-results all
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\net10.0\Microsoft.Testing.Platform.UnitTests.dll --filter 'FullyQualifiedName~TestExecutionCompleted_ContextualSummaryOmitsAmbiguousModuleTotals' --report-trx --trx-mode in-process --results-directory <session-files>\summary-parity-green --report-trx-filename summary-green.trx --show-test-results all
+```
+
+`<session-files>` replaces the local session's private absolute path. The
+separate red and green TRX files contain three executed results each. This
+is a source-linked unit comparison; the paired SDK must still exercise its
+real orchestration and published reporter output.
+
+On the corrected source, the Release/net10.0 reporter, heartbeat, connection,
+and data-consumer unit selection passed 410/410, exit 0, with method-level
+parallelism. The new cases use per-test reporter and console instances and do
+not mutate process-wide state. The selector was
+`FullyQualifiedName~TerminalTestReporterTests|FullyQualifiedName~SilenceDrivenHeartbeatRendererTests|FullyQualifiedName~DotnetTestConnectionTests|FullyQualifiedName~DotnetTestDataConsumerTests`.
+
+A focused independent review of the progress capability delta
+`d00503457a00fe2b86e6483f0dc1437e59b7e7a0..817bcecb31d6827b228ce5b103ef340009388d93`
+found no remaining concrete compatibility defect after retracting an assertion
+argument-order concern: MSTest `IsLessThan` takes the upper bound first, and
+the `.4` wire case passed. The review did not execute tests and identified the
+real shipping SDK handshake as requiring paired composed validation.
+
+On the earlier `.1` source revision `ea45e5221eccb3cfb738b27c264f680b773cfbc6`,
+Release/net10.0 reporter and heartbeat tests passed 272/272,
 and the Azure-selected extension run passed 637/637, with no skips:
 `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests
 -f net10.0 -c Release --no-build -- --filter

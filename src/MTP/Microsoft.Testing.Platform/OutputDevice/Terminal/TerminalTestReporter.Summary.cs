@@ -73,13 +73,19 @@ internal sealed partial class TerminalTestReporter
             unselected = [.. _unselectedAssemblies];
         }
 
-        int passed = assemblies.Count(static assembly => assembly.Success);
-        int failed = assemblies.Count - passed + HandshakeFailureCount;
+        bool hasModuleTotals = !HasHandshakeFailure;
         terminal.AppendLine();
-        terminal.Append($"##[group]{TerminalResources.TestRunSummary} {passed} {TerminalResources.PassedLowercase}, {failed} {TerminalResources.FailedLowercase}");
+        terminal.Append($"##[group]{TerminalResources.TestRunSummary}");
+        if (hasModuleTotals)
+        {
+            int passed = assemblies.Count(static assembly => assembly.Success);
+            int failed = assemblies.Count - passed;
+            terminal.Append($" {passed} {TerminalResources.PassedLowercase}, {failed} {TerminalResources.FailedLowercase}");
+        }
+
         if (unselected.Length > 0)
         {
-            terminal.Append($", {unselected.Length} {TerminalResources.SkippedLowercase} ({TerminalResources.NoAffectedTestsSelected})");
+            terminal.Append($"{(hasModuleTotals ? "," : string.Empty)} {unselected.Length} {TerminalResources.SkippedLowercase} ({TerminalResources.NoAffectedTestsSelected})");
         }
 
         terminal.AppendLine();

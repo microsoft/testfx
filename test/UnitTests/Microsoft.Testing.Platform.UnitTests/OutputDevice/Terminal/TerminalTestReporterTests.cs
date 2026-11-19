@@ -301,6 +301,48 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    [DataRow(false, false, DisplayName = "RejectedHost")]
+    [DataRow(true, false, DisplayName = "RejectedRetry")]
+    [DataRow(true, true, DisplayName = "RejectedRetryWithUnselectedModule")]
+    public void TestExecutionCompleted_ContextualSummaryOmitsAmbiguousModuleTotals(bool hasRegisteredModule, bool hasUnselectedModule)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+        if (hasRegisteredModule)
+        {
+            reporter.AssemblyRunStarted("module.dll", "net9.0", "x64", "execution", "instance");
+            ReportOrchestratorTest(reporter, "module.dll", "execution", "instance", "test", TestOutcome.Passed);
+            reporter.AssemblyRunCompleted("execution", exitCode: 0, outputData: null, errorData: null);
+        }
+
+        if (hasUnselectedModule)
+        {
+            reporter.AssemblyRunNotSelected("unselected.dll", "net9.0", "x64");
+        }
+
+        reporter.HandshakeFailure("module.dll", "net9.0", 1, string.Empty, "rejected host");
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 1);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        string groupLine = output.Split('\n').Single(static line => line.StartsWith("##[group]Test run summary:", StringComparison.Ordinal));
+        Assert.AreEqual(
+            hasUnselectedModule
+                ? "##[group]Test run summary: 1 skipped (No affected tests selected)"
+                : "##[group]Test run summary:",
+            groupLine);
+        Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
+        Assert.Contains("rejected host", output);
+        Assert.Contains("Test run summary: Failed!", output);
+    }
+
+    [TestMethod]
     public void TestExecutionCompleted_ContextualRetrySuppressesSubsetSummaryButRetainsArtifacts()
     {
         var console = new StringBuilderConsole();
