@@ -102,13 +102,11 @@ internal static class UnitTestElementExtensions
             testCase.SetPropertyValue(AdapterTestProperties.WorkItemIdsProperty, element.WorkItemIds);
         }
 
-#if !WINDOWS_UWP && !WIN_UI
         // The list of items to deploy before running this test.
         if (element.DeploymentItems is { Length: > 0 })
         {
             testCase.SetPropertyValue(AdapterTestProperties.DeploymentItemsProperty, element.DeploymentItems);
         }
-#endif
 
         // Set the Do not parallelize state if present
         if (element.DoNotParallelize)

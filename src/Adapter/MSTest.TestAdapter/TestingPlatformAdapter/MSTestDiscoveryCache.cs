@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-#if NETCOREAPP && !WIN_UI && !WINDOWS_UWP
+#if NETCOREAPP
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #endif
@@ -60,8 +60,9 @@ internal sealed partial class MSTestDiscoveryCache : IDisposable
 
     internal static bool IsSupported(Assembly assembly)
         =>
-#if NETCOREAPP && !WIN_UI && !WINDOWS_UWP
-        !assembly.IsDynamic && !assembly.IsCollectible
+#if NETCOREAPP
+        AppModelCapabilities.SupportsDiscoveryCache
+            && !assembly.IsDynamic && !assembly.IsCollectible
             && RuntimeFeature.IsDynamicCodeSupported
             && !RuntimeContext.IsHotReloadEnabled
             && PlatformServiceProvider.Instance.ReflectionOperations is ReflectionOperations;
@@ -92,7 +93,7 @@ internal sealed partial class MSTestDiscoveryCache : IDisposable
             file.LastWriteTimeUtc,
             MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors,
             MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive,
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
             MSTestTelemetryDataCollector.Current is not null);
 #else
             false);
@@ -125,7 +126,7 @@ internal sealed partial class MSTestDiscoveryCache : IDisposable
             bool safeAssembly = IsMetadataSafe(() => AreAttributesSafe(assembly.GetCustomAttributesData()));
             bool safeType = false;
             int liveEmptyTypeCount = 0;
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
             Dictionary<string, long>? before = null;
 #endif
 
@@ -160,7 +161,7 @@ internal sealed partial class MSTestDiscoveryCache : IDisposable
                 if (tests is null)
                 {
                     safeType = safeAssembly && IsMetadataSafe(() => IsTypeSafe(type));
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
                     before = safeType ? MSTestTelemetryDataCollector.Current?.GetDiscoveryAttributeCounts() : null;
 #endif
                     return;
@@ -174,7 +175,7 @@ internal sealed partial class MSTestDiscoveryCache : IDisposable
                 }
 
                 var counts = new Dictionary<string, long>(StringComparer.Ordinal);
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
                 if (safeType && before is not null && MSTestTelemetryDataCollector.Current is { } telemetry)
                 {
                     foreach (KeyValuePair<string, long> count in telemetry.GetDiscoveryAttributeCounts())
@@ -229,7 +230,7 @@ internal sealed partial class MSTestDiscoveryCache : IDisposable
             return baseline;
         }
 
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         MSTestTelemetryDataCollector.Current?.AddDiscoveryAttributeCounts(catalog.TelemetryCounts);
 #endif
         var candidates = new SortedDictionary<int, (int TypeIndex, UnitTestElement Element)>();

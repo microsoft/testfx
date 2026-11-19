@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP && !WIN_UI
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
@@ -41,5 +39,12 @@ internal interface ITestDeployment
     /// </summary>
     /// <returns> The deployment output directory. </returns>
     string? GetDeploymentDirectory();
+
+    /// <summary>
+    /// Gets the failure message to report when a test requests deployment that the current application model does not support.
+    /// </summary>
+    /// <param name="method"> The test method. </param>
+    /// <param name="type"> The test class. </param>
+    /// <returns> The failure message, or <see langword="null"/> when the test can run. </returns>
+    string? GetUnsupportedDeploymentMessage(MethodInfo method, Type type);
 }
-#endif

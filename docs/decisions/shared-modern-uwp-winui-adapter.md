@@ -299,6 +299,127 @@ VSTest-host activation, standalone sample applications and adapter unit suites.
 No Windows 18362 OS machine or PR CI execution was verified; the 18362-targeted
 consumer and real app activation ran on the preflight-approved Windows 11 host.
 
+## App-model capability consolidation (2026-11-19)
+
+### Question
+
+Can the adapter and platform services stop scattering `WINDOWS_UWP`/`WIN_UI`
+`#if` blocks for features (deployment, telemetry, diagnostics, discovery cache)
+that are merely *disabled* on UI application models, and special-case them in
+one place instead? This is a behavior-preserving refactor: every UI app model
+keeps exactly the same observable behavior, including the
+`DeploymentItemAttribute` rejection.
+
+### Findings at `d634b2fe38b8572045c7c648789f4fb1fe14f84e`
+
+The baseline had 135 `#if`/`#elif` lines mentioning `WINDOWS_UWP`, `WIN_UI` or
+`CLASSIC_UWP` across 61 files under `src\Adapter`, 88 of them naming `WIN_UI`.
+Most `!WINDOWS_UWP && !WIN_UI` guards fall into two different categories:
+
+- **Real API gaps (classic UWP only).** `uap10.0` consumes the `netstandard2.0`
+  `MSTest.TestFramework`, which does not define `DeploymentItemAttribute`,
+  telemetry or configuration APIs. These guards must stay, but only as
+  `!WINDOWS_UWP`.
+- **Policy (modern UWP / WinUI).** The shared `WIN_UI` build is a full .NET
+  build: every API compiles. Deployment, telemetry, assertion-failure
+  diagnostics and the discovery cache were turned off by `#if` purely as
+  product policy.
+
+### Decision
+
+1. `AppModelCapabilities` (internal, PlatformServices) is the single policy
+   point: `IsUIAppModel`, `SupportsDeployment`, `SupportsTelemetry`,
+   `SupportsAssertionFailureDiagnostics` and `SupportsDiscoveryCache`. Values
+   are compile-time constants, so the JIT folds the disabled branches.
+2. Deployment uses a null object. `ITestDeployment` and
+   `IPlatformServiceProvider.TestDeployment` are always available.
+   `PlatformServiceProvider` selects `TestDeployment` when deployment is
+   supported and `UnsupportedTestDeployment` otherwise (always on classic
+   UWP). `ITestDeployment.GetUnsupportedDeploymentMessage` replaces the inline
+   WinUI rejection in `TestMethodRunner`. Its checks keep the original
+   method-then-class order and `DeploymentItemNotSupportedForUi` message, and
+   it returns `null` on classic UWP and for normal deployments.
+   `UnitTestElement.DeploymentItems`, its TestCase round-trip, the discovery
+   cache clone and the `TestExecutionManager` deploy/cleanup flow are no
+   longer conditionally compiled.
+3. Telemetry, configuration-source tracking, the diagnostics warning and
+   discovery-cache eligibility query the capability instead of `WIN_UI`.
+4. Runtime detection (for example "is this process packaged?") was rejected:
+   it is not equivalent. Unpackaged WinUI apps would start deploying and
+   sending telemetry, and packaged non-UI desktop processes would lose
+   deployment. The WinUI build only ever runs inside an application, so a
+   compile-time policy is the accurate signal.
+
+### Equivalence argument per application model
+
+| Model | Deployment | Rejection | Telemetry / cache / diagnostics |
+| --- | --- | --- | --- |
+| Ordinary (.NET / .NET Framework) | `TestDeployment`, unchanged | `null` (one extra interface call) | Unchanged |
+| Modern UWP / WinUI (`WIN_UI`) | `UnsupportedTestDeployment`: `Deploy` returns `false`, so sources are not rewritten; `Cleanup` is a no-op; items are `null` | Same message, same method-then-class order | Collector never created; cache unsupported; same warning |
+| Classic UWP (`WINDOWS_UWP`) | `UnsupportedTestDeployment` | `null` (attribute does not exist) | Code still excluded at compile time |
+
+On `WIN_UI` the previously excluded `_hasAnyTestFailed` bookkeeping now runs.
+Its only consumer gates `Cleanup()`, which is a no-op there.
+`MSTestTelemetryDataCollector.Current` is only assigned by `EnsureInitialized`,
+which `MSTestEngine` skips when `SupportsTelemetry` is false. As a result, the
+now-compiled `Current?.Track*` call sites remain inert.
+
+### Remaining guards and why
+
+After the change there are 117 conditionals across 51 files, 40 of them naming
+`WIN_UI`. Combined `!WINDOWS_UWP && !WIN_UI` guards went from 63 to 20, and
+`!WINDOWS_UWP`-only guards (real classic-UWP API gaps) went from 23 to 50.
+
+- **Genuine Windows app-model APIs:** these stay. They are `AppModel.cs`
+  (package P/Invoke), `FileOperations.cs` (package path), `TestSourceHandler.cs`,
+  `TestSourceHost.cs`, `Properties\AssemblyInfo.cs`, `MethodInfoExtensions.cs`
+  (#3071 argument unwrapping) and `ClassicUwpPackagedAppExtensions.cs`.
+- **Policy guards deferred as follow-ups:** the
+  `TestContextImplementation.AssertionFailureDiagnostics*` and
+  `TestContextImplementation.TempDirectory*` partials, plus related guards in
+  `TestContextImplementation.cs`, `TestContextImplementation.Properties.cs`,
+  `TestMethodRunner.cs` and `TestMethodRunner.DataRow.cs`. They share fields,
+  a POSIX `mkdir`/`chmod` `DllImport`, the per-test context clone budget and
+  cross-partial state. Ungating them safely needs its own focused change and
+  WinUI acceptance coverage. `AppModelCapabilities.SupportsAssertionFailureDiagnostics`
+  already exists for that follow-up.
+
+DeploymentItem is still unsupported on UI app models. Supporting it would be a
+behavior change: package contents are read-only, and the current contract tells
+users to ship files in the app package. With the null-object seam, enabling it
+later only means changing `SupportsDeployment`, not editing dozens of `#if`s.
+
+### Validation
+
+Adapter and both unit-test projects were built with the repo toolchain:
+`.\build.cmd -projects <csproj>` for `MSTest.TestAdapter`,
+`MSTestAdapter.UnitTests` and `MSTestAdapter.PlatformServices.UnitTests`.
+All PlatformServices TFMs, including `uap10.0.16299` and
+`net10.0-windows10.0.18362.0`, built with 0 warnings and 0 errors. Each
+unit-test executable under `artifacts\bin\<project>\Debug\<tfm>\` was then run
+directly with `--progress off --ansi off`, before and after the change:
+
+| Project | net10.0 | net10.0-windows10.0.18362.0 (`WIN_UI`) | net11.0 | net462 | net48 |
+| --- | --- | --- | --- | --- | --- |
+| MSTestAdapter.UnitTests | 197 → 197 | 170 → 170 | 197 → 197 | 174 → 174 | 174 → 174 |
+| MSTestAdapter.PlatformServices.UnitTests | 1474 → 1480 | 1350 → 1362 | 1474 → 1480 | 1618 → 1624 | 1618 → 1624 |
+
+All runs exited 0 with no failures. The +6 on every TFM is the new
+`UnsupportedTestDeploymentTests`, which pins the null-object contract and the
+rejection order and message. The additional +6 on `WIN_UI` are existing tests
+that are no longer compiled out: three in `TestExecutionManagerTests`, two in
+`TypeEnumeratorTests` and one in `UnitTestElementTests`. They now exercise the
+deployment flow against the shared seam. `MSTestSettingsProviderTests` asserts
+empty deployment properties on UI app models instead of skipping the check.
+
+**Test-value evidence:** this is a behavior-preserving refactor, so the
+evidence is green-before/green-after on the same suites, plus new tests that
+pin the preserved contract. Not run: the packaged
+`MSTest.Acceptance.IntegrationTests` WinUI DeploymentItem rejection scenario
+in `WinUITests` (needs `-pack` and `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS`), and
+classic-UWP runtime execution (no classic-UWP unit-test TFM; compile-only
+coverage).
+
 ## Open questions
 
 - Which servicing branches, if any, need this change after mainline validation?

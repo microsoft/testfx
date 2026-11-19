@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
     private readonly ITestSourceHandler _testSourceHandler;
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
     private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
 #endif
 
@@ -35,7 +35,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     internal MSTestDiscoverer(ITestSourceHandler testSourceHandler, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         _testSourceHandler = testSourceHandler;
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         _telemetrySender = telemetrySender;
 #else
         _ = telemetrySender;
@@ -100,7 +100,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
         IUnitTestElementSink unitTestElementSink = elementSink ?? discoverySink!.ToUnitTestElementSink();
 
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         var engine = new MSTestEngine(CancellationToken.None, _telemetrySender);
 #else
         var engine = new MSTestEngine(CancellationToken.None);

@@ -63,7 +63,7 @@ internal class TypeEnumerator
         // Track class-level attributes for telemetry (read Current per call so a session reset
         // between TypeEnumerator construction and use cannot cause writes to land on an
         // orphaned collector).
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         if (Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current is { } telemetryDataCollector)
         {
             Attribute[] classAttributes = ReflectHelper.GetCustomAttributesCached(_type);
@@ -207,14 +207,12 @@ internal class TypeEnumerator
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
             ResourceLocks = MergeResourceLocks(GetClassResourceLocks(), ReadResourceLocks(method)),
             Dependencies = MergeDependencies(GetClassDependencies(), ReadDependencies(method), _type.FullName!, method.Name),
-#if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
-#endif
             Traits = [.. reflectionOperations.GetTestPropertiesAsTraits(method)],
         };
 
         Attribute[] attributes = reflectionOperations.GetCustomAttributesCached(method);
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current?.TrackDiscoveredMethod(attributes);
 #endif
         TestMethodAttribute? testMethodAttribute = null;

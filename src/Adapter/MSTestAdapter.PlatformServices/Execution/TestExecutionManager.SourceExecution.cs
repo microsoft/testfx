@@ -68,12 +68,10 @@ internal partial class TestExecutionManager
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
-#if !WINDOWS_UWP && !WIN_UI
         if (isDeploymentDone)
         {
             source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory()!, Path.GetFileName(source));
         }
-#endif
 
         IAdapterMessageLogger adapterMessageLogger = messageLogger;
 

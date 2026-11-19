@@ -3,6 +3,9 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+#if !WINDOWS_UWP
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -30,7 +33,7 @@ internal sealed class MSTestEngine
 {
     private readonly CancellationToken _cancellationToken;
     private readonly TestExecutionManager _testExecutionManager;
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
     private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
 #endif
 
@@ -46,7 +49,7 @@ internal sealed class MSTestEngine
     {
         _cancellationToken = cancellationToken;
         _testExecutionManager = testExecutionManager ?? new TestExecutionManager();
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         _telemetrySender = telemetrySender;
 #else
         _ = telemetrySender;
@@ -91,11 +94,14 @@ internal sealed class MSTestEngine
         }
         finally
         {
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
             // Send the discovery telemetry event ('mstest/discovery'). This always runs at the end of discovery —
             // for discover-only sessions it is the only event; for sessions where a run follows, execution will
             // send a separate 'mstest/sessionexit' event carrying assertion usage.
-            await MSTestTelemetryDataCollector.SendDiscoveryTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
+            if (AppModelCapabilities.SupportsTelemetry)
+            {
+                await MSTestTelemetryDataCollector.SendDiscoveryTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
+            }
 #endif
         }
     }
@@ -189,7 +195,12 @@ internal sealed class MSTestEngine
 
     private static void EnsureTelemetryInitialized()
     {
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
+        if (!AppModelCapabilities.SupportsTelemetry)
+        {
+            return;
+        }
+
 #if NETCOREAPP
         // Telemetry anonymizes custom test-attribute type names with SHA256, which is not supported
         // on wasi-wasm (https://github.com/dotnet/runtime/issues/99126). Skip telemetry collection
@@ -209,9 +220,11 @@ internal sealed class MSTestEngine
 #endif
     }
 
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
     private Task SendExecutionTelemetryAsync()
-        => MSTestTelemetryDataCollector.SendExecutionTelemetryAndResetAsync(_telemetrySender);
+        => AppModelCapabilities.SupportsTelemetry
+            ? MSTestTelemetryDataCollector.SendExecutionTelemetryAndResetAsync(_telemetrySender)
+            : Task.CompletedTask;
 #else
     private static Task SendExecutionTelemetryAsync()
         => Task.CompletedTask;

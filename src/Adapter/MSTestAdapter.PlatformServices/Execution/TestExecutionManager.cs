@@ -87,12 +87,10 @@ internal partial class TestExecutionManager
 
     internal TestPartition? Partition { get; set; }
 
-#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets a value indicating whether any test executed has failed.
     /// </summary>
     private bool _hasAnyTestFailed;
-#endif
 
     /// <summary>
     /// Runs the tests.
@@ -114,11 +112,7 @@ internal partial class TestExecutionManager
         _unpartitionedTests = null;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
-#if !WINDOWS_UWP && !WIN_UI
         bool isDeploymentDone = Deploy(tests, deploymentContext, messageLogger);
-#else
-        const bool isDeploymentDone = false;
-#endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
         CacheSessionParameters(deploymentContext.RunSettingsXml, messageLogger);
@@ -126,12 +120,10 @@ internal partial class TestExecutionManager
         // Execute the tests
         await ExecuteTestsAsync(tests, deploymentContext, messageLogger, testResultRecorder, filterProvider, isDeploymentDone).ConfigureAwait(false);
 
-#if !WINDOWS_UWP && !WIN_UI
         if (!_hasAnyTestFailed)
         {
             PlatformServiceProvider.Instance.TestDeployment.Cleanup();
         }
-#endif
     }
 
     internal async Task RunTestsAsync(IEnumerable<string> sources, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, ITestSourceHandler testSourceHandler, bool isMTP, TestRunCancellationToken cancellationToken)
@@ -159,11 +151,7 @@ internal partial class TestExecutionManager
             discoverySink.TestElements.Clear();
         }
 
-#if !WINDOWS_UWP && !WIN_UI
         bool isDeploymentDone = Deploy(tests, deploymentContext, messageLogger);
-#else
-        const bool isDeploymentDone = false;
-#endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
         CacheSessionParameters(deploymentContext.RunSettingsXml, messageLogger);
@@ -171,22 +159,18 @@ internal partial class TestExecutionManager
         // Run tests.
         await ExecuteTestsAsync(tests, deploymentContext, messageLogger, testResultRecorder, filterProvider, isDeploymentDone).ConfigureAwait(false);
 
-#if !WINDOWS_UWP && !WIN_UI
         if (!_hasAnyTestFailed)
         {
             PlatformServiceProvider.Instance.TestDeployment.Cleanup();
         }
-#endif
     }
 
-#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Runs deployment for the given tests via the platform-agnostic deployment service using the neutral
     /// <see cref="DeploymentContext"/> supplied by the adapter boundary.
     /// </summary>
     private static bool Deploy(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger)
         => PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, deploymentContext, messageLogger);
-#endif
 
     internal Func<ITestSourceHandler, UnitTestDiscoverer>? UnitTestDiscovererFactory { get; set; }
 

@@ -56,7 +56,6 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
         set;
     }
 
-#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
@@ -65,10 +64,13 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [AllowNull]
     public ITestDeployment TestDeployment
     {
-        get => field ??= new TestDeployment();
+#if WINDOWS_UWP
+        get => field ??= new UnsupportedTestDeployment();
+#else
+        get => field ??= AppModelCapabilities.SupportsDeployment ? new TestDeployment() : new UnsupportedTestDeployment();
+#endif
         private set;
     }
-#endif
 
     /// <summary>
     /// Gets an instance to the platform service for a Settings Provider.
