@@ -24,7 +24,7 @@
 
 .EXAMPLE
     .\.github\scripts\scan-duplicates.ps1
-    .\.github\scripts\scan-duplicates.ps1 -Path "src/Platform/Microsoft.Testing.Platform" -MinLines 10
+    .\.github\scripts\scan-duplicates.ps1 -Path "src/MTP/Microsoft.Testing.Platform" -MinLines 10
     .\.github\scripts\scan-duplicates.ps1 -TopN 20
 #>
 param(

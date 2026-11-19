@@ -495,7 +495,7 @@ files outside the specialist workflow's scope.
 
 **Severity: MAJOR**
 
-Applies only to changes in `src/Analyzers/`.
+Applies only to changes in `src/MSTest/MSTest.Analyzers*/`, `src/MSTest/MSTest.GlobalConfigsGenerator/`, `src/MSTest/MSTest.SourceGeneration/`, and their shared analyzer sources in `src/MSTest/Shared/`.
 
 **Rules:**
 1. Analyzers must not throw or crash on any syntactically valid input.
@@ -543,7 +543,7 @@ Applies only to changes in `src/Analyzers/`.
 
 **Severity: MAJOR**
 
-Applies to changes in `src/Platform/` involving serialization/deserialization.
+Applies to changes in `src/MTP/` involving serialization/deserialization.
 
 **Rules:**
 1. Changes to serialized types must not break wire compatibility with older clients.
@@ -698,8 +698,8 @@ Applies to changes in `eng/**/*.ps1`, `.github/scripts/**/*.ps1`, and any `*.ps1
 | 2 | **No `init` on Public API** | New public API MUST NOT use `init` accessors. Existing MTP `init` accessors are grandfathered. | `.github/copilot-instructions.md` |
 | 3 | **Localization** | `.resx` for user-facing strings. Never edit `.xlf` — build generates them. `{Locked="…"}` is a substring match: prefer bare invariant tokens and add punctuation only to prevent collisions (`'const'` when the message also contains `constant`). | `src/*/Strings.resx` |
 | 4 | **Test Architecture** | MSTest unit tests use `TestFramework.ForTestingMSTest`. MTP/analyzer tests use MSTest. Follow test project's assertion library policy (check `BannedSymbols.txt`). | `test/Utilities/TestFramework.ForTestingMSTest` |
-| 5 | **IPC Protocol** | Named pipes, JSON-RPC between test platform and runners. Wire format backward-compatible. | `src/Platform/` |
-| 6 | **Analyzer IDs** | `MSTEST0001`+ for MSTest analyzers. Unique across codebase. | `src/Analyzers/` |
+| 5 | **IPC Protocol** | Named pipes, JSON-RPC between test platform and runners. Wire format backward-compatible. | `src/MTP/` |
+| 6 | **Analyzer IDs** | `MSTEST0001`+ for MSTest analyzers. Unique across codebase. | `src/MSTest/MSTest.Analyzers/` |
 | 7 | **Multi-TFM Targeting** | Derive actual targets and language versions from owning projects/imports and linked consumers; verify polyfills per compiled path. | Project files, `Directory.Build.*`, `src/Polyfills/` |
 | 8 | **Arcade Build System** | `build.cmd`/`build.sh`. `eng/build.ps1` with `-build`, `-test`, `-integrationTest`, `-pack`. | `eng/build.ps1` |
 | 9 | **Acceptance Tests** | Must run `./build.sh -pack` before running acceptance tests. | `.github/copilot-instructions.md` |
@@ -745,12 +745,12 @@ Use this to prioritize dimensions based on changed files.
 
 | Folder | Priority Dimensions | Hot Files |
 |--------|---------------------|-----------|
-| `src/Platform/` | Threading, Performance, IPC Wire, Security, API Surface | Message pipeline, server/client, serialization |
-| `src/TestFramework/` | API Compat, Correctness, Performance, Cross-TFM | Assert classes, attributes, test lifecycle |
-| `src/Adapter/` | Correctness, Threading, Resource Mgmt, Defensive Coding | VSTest bridge, discovery, execution |
-| `src/Analyzers/` | Analyzer Quality, Correctness, API Surface | Analyzer/code-fix implementations |
+| `src/MTP/` | Threading, Performance, IPC Wire, Security, API Surface | Message pipeline, server/client, serialization |
+| `src/MSTest/TestFramework*/` | API Compat, Correctness, Performance, Cross-TFM | Assert classes, attributes, test lifecycle |
+| `src/MSTest/MSTest.TestAdapter/`, `src/MSTest/MSTestAdapter.PlatformServices/`, `src/MSTest/MSTest.Extensions.Hosting/` | Correctness, Threading, Resource Mgmt, Defensive Coding | VSTest bridge, discovery, execution |
+| `src/MSTest/MSTest.Analyzers*/` | Analyzer Quality, Correctness, API Surface | Analyzer/code-fix implementations |
 | `src/Polyfills/` | Cross-TFM, Correctness | Polyfill implementations |
-| `src/Package/` | Build Infrastructure, Compatibility, **MSBuild Authoring** | NuGet packaging definitions, `build/`, `buildTransitive/`, `buildMultiTargeting/` |
+| `src/MSTest/MSTest/`, `src/MSTest/MSTest.Sdk/` | Build Infrastructure, Compatibility, **MSBuild Authoring** | NuGet packaging definitions, `build/`, `buildTransitive/`, `buildMultiTargeting/` |
 | `test/UnitTests/` | Test Isolation, Assertions, Flakiness, Data-Driven | All test files |
 | `test/IntegrationTests/` | Flakiness, Resource Mgmt, Test Isolation | Acceptance tests |
 | `eng/` | Build Infrastructure, Dependencies, **MSBuild Authoring**, **PowerShell Scripting Hygiene** | `Versions.props`, build scripts, shared `.props`/`.targets` |
@@ -1067,7 +1067,7 @@ If the PR only changes `.md`, `.txt`, `.resx`, `.xlf`, or other non-code files, 
 ### Large PRs (> 15 files)
 
 - Focus on `src/` changes over `test/` changes.
-- Prioritize files in `Platform/` and `TestFramework/` (runtime code) over `Analyzers/` (design-time).
+- Prioritize files in `src/MTP/` and `src/MSTest/TestFramework/` (runtime code) over `src/MSTest/MSTest.Analyzers*/` (design-time).
 - Flag if the PR is too large to review effectively.
 
 ### PRs with no test files

@@ -193,8 +193,8 @@ def _asset(files, name, source, destination):
 def native_mstest_packages():
     """Declare portable packages using the explicit compatibility task wrappers."""
     package_version(name = "mstest_package_version", property_name = "VersionPrefix")
-    framework_project = "src/TestFramework/TestFramework"
-    adapter_project = "src/Adapter/MSTest.TestAdapter"
+    framework_project = "src/MSTest/TestFramework"
+    adapter_project = "src/MSTest/MSTest.TestAdapter"
     framework_files = {framework_project + "/MSTest.TestFramework.targets": "buildTransitive/MSTest.TestFramework.targets"}
     adapter_files = {}
     for framework in PORTABLE_FRAMEWORKS:
@@ -223,17 +223,17 @@ def native_mstest_packages():
         package_id = "Microsoft.Testing.Extensions.Telemetry",
         version_file = ":platform_package_version",
         description = "Provides telemetry for Microsoft Testing Platform.",
-        readme = "src/Platform/Microsoft.Testing.Extensions.Telemetry/PACKAGE.md",
+        readme = "src/MTP/Microsoft.Testing.Extensions.Telemetry/PACKAGE.md",
         libraries = [":telemetry"],
         directories = ["lib/{tfm}"],
         resource_directories = ["lib/{tfm}"],
-        files = package_build_assets("telemetry_package", "src/Platform/Microsoft.Testing.Extensions.Telemetry"),
+        files = package_build_assets("telemetry_package", "src/MTP/Microsoft.Testing.Extensions.Telemetry"),
         deps = [":platform_package"],
         dependency_excludes = {"Microsoft.Testing.Platform": ["Build", "Analyzers"]},
         bound_platform = True,
         nuget_deps = ["@paket.source//microsoft.applicationinsights", "@paket.source//system.diagnostics.diagnosticsource"],
     )
-    msbuild_project = "src/Platform/Microsoft.Testing.Platform.MSBuild"
+    msbuild_project = "src/MTP/Microsoft.Testing.Platform.MSBuild"
     _package(
         name = "platform_msbuild_package",
         package_id = "Microsoft.Testing.Platform.MSBuild",

@@ -90,20 +90,20 @@ class MutationTestingTests(unittest.TestCase):
             for target in target_manifest["modules"]
             if target["enabled"]
             and target["project"].startswith(
-                "src/Platform/Microsoft.Testing.Extensions."
+                "src/MTP/Microsoft.Testing.Extensions."
             )
         }
         extension_projects = {
             project.relative_to(REPOSITORY_ROOT).as_posix()
             for project in REPOSITORY_ROOT.glob(
-                "src/Platform/Microsoft.Testing.Extensions.*/*.csproj"
+                "src/MTP/Microsoft.Testing.Extensions.*/*.csproj"
             )
         }
         excluded_projects = {
             excluded["project"]
             for excluded in target_manifest.get("excludedProjects", [])
             if excluded["project"].startswith(
-                "src/Platform/Microsoft.Testing.Extensions."
+                "src/MTP/Microsoft.Testing.Extensions."
             )
         }
 
@@ -316,7 +316,7 @@ class MutationTestingTests(unittest.TestCase):
     def test_mutation_build_retains_mstest_analyzers_from_source(self) -> None:
         project = ET.parse(REPOSITORY_ROOT / "test" / "Directory.Build.targets").getroot()
         analyzer_project = (
-            "$(RepoRoot)src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj"
+            "$(RepoRoot)src\\MSTest\\MSTest.Analyzers\\MSTest.Analyzers.csproj"
         )
         references = [
             reference.attrib

@@ -6,7 +6,7 @@ using System.IO.Compression;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
-/// Guards the pack-time target in <c>src/Platform/Directory.Build.targets</c> that caps the packed
+/// Guards the pack-time target in <c>src/MTP/Directory.Build.targets</c> that caps the packed
 /// <c>Microsoft.Testing.Platform</c> package dependency of the in-repo extensions at a <c>[self, nextMajor)</c>
 /// range. That target hooks NuGet-internal targets (<c>_GetProjectReferenceVersions</c> /
 /// <c>_ProjectReferencesWithVersions</c>); if a future NuGet SDK renames them, the target would silently stop

@@ -2,8 +2,8 @@
 
 load(":defs.bzl", "STANDARD_FRAMEWORKS", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 
-_PLATFORM = "src/Platform/Microsoft.Testing.Platform"
-_SHARED = "src/Platform/SharedExtensionHelpers"
+_PLATFORM = "src/MTP/Microsoft.Testing.Platform"
+_SHARED = "src/MTP/SharedExtensionHelpers"
 
 def modern_json_sources():
     """The System.Text.Json files removed by both non-.NETCoreApp project variants."""
@@ -105,14 +105,14 @@ def platform_libraries():
     )
     testfx_library(
         name = "trx_abstractions",
-        project = "src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions",
+        project = "src/MTP/Microsoft.Testing.Extensions.TrxReport.Abstractions",
         target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         deps = [":platform"],
     )
     testfx_library(
         name = "trx",
-        project = "src/Platform/Microsoft.Testing.Extensions.TrxReport",
+        project = "src/MTP/Microsoft.Testing.Extensions.TrxReport",
         target_frameworks = STANDARD_FRAMEWORKS,
         allow_unsafe_blocks = True,
         defines = ["USE_TRX_NAMESPACE"],
@@ -139,10 +139,10 @@ def platform_libraries():
             _SHARED + "/TargetFrameworkMonikerHelper.cs",
             _SHARED + "/NamedPipeServerFactory.cs",
             _SHARED + "/PipeNameEnvironmentVariableProviderBase.cs",
-            "src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpCommandLineOptions.cs",
+            "src/MTP/Microsoft.Testing.Extensions.CrashDump/CrashDumpCommandLineOptions.cs",
         ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Platform/Microsoft.Testing.Extensions.TrxReport/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources",
+            "src/MTP/Microsoft.Testing.Extensions.TrxReport/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources",
         },
         build_info = _SHARED + "/BuildInfo.cs.template",
         internals_visible_to = [
@@ -153,11 +153,11 @@ def platform_libraries():
     )
     testfx_library(
         name = "msbuild_extension",
-        project = "src/Platform/Microsoft.Testing.Extensions.MSBuild",
+        project = "src/MTP/Microsoft.Testing.Extensions.MSBuild",
         target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = ipc_sources() + runtime_helpers() + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Platform/Microsoft.Testing.Extensions.MSBuild/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.MSBuild.Resources.ExtensionResources",
+            "src/MTP/Microsoft.Testing.Extensions.MSBuild/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.MSBuild.Resources.ExtensionResources",
         },
         build_info = _SHARED + "/BuildInfo.cs.template",
         internals_visible_to = ["Microsoft.Testing.Platform.MSBuild.UnitTests"],
@@ -165,7 +165,7 @@ def platform_libraries():
     )
     testfx_library(
         name = "platform_msbuild",
-        project = "src/Platform/Microsoft.Testing.Platform.MSBuild",
+        project = "src/MTP/Microsoft.Testing.Platform.MSBuild",
         target_frameworks = STANDARD_FRAMEWORKS,
         defines = ["MTP_MSBUILD_TASKS"],
         usings = ["Polyfills"],
@@ -177,13 +177,13 @@ def platform_libraries():
             _PLATFORM + "/Helpers/System/ITask.cs",
             _PLATFORM + "/Helpers/System/SystemTask.cs",
             _PLATFORM + "/OutputDevice/TargetFrameworkParser.cs",
-            "src/Platform/Microsoft.Testing.Extensions.MSBuild/MSBuildConstants.cs",
-            "src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/FailedTestInfoRequestSerializer.cs",
-            "src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/ModuleInfoRequestSerializer.cs",
-            "src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/RunSummaryRequestSerializer.cs",
+            "src/MTP/Microsoft.Testing.Extensions.MSBuild/MSBuildConstants.cs",
+            "src/MTP/Microsoft.Testing.Extensions.MSBuild/Serializers/FailedTestInfoRequestSerializer.cs",
+            "src/MTP/Microsoft.Testing.Extensions.MSBuild/Serializers/ModuleInfoRequestSerializer.cs",
+            "src/MTP/Microsoft.Testing.Extensions.MSBuild/Serializers/RunSummaryRequestSerializer.cs",
         ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Platform/Microsoft.Testing.Platform.MSBuild/Resources/MSBuildResources.resx": "Microsoft.Testing.Platform.MSBuild.Resources.MSBuildResources",
+            "src/MTP/Microsoft.Testing.Platform.MSBuild/Resources/MSBuildResources.resx": "Microsoft.Testing.Platform.MSBuild.Resources.MSBuildResources",
         },
         internals_visible_to = ["Microsoft.Testing.Platform.MSBuild.UnitTests"],
         deps = [
@@ -196,7 +196,7 @@ def platform_libraries():
     )
     testfx_library(
         name = "retry",
-        project = "src/Platform/Microsoft.Testing.Extensions.Retry",
+        project = "src/MTP/Microsoft.Testing.Extensions.Retry",
         target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = ipc_sources() + runtime_helpers() + [
             _PLATFORM + "/Helpers/ArgumentGuard.cs",
@@ -204,7 +204,7 @@ def platform_libraries():
             _SHARED + "/RetryArtifactManifest.cs",
         ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Platform/Microsoft.Testing.Extensions.Retry/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources",
+            "src/MTP/Microsoft.Testing.Extensions.Retry/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources",
         },
         build_info = _SHARED + "/BuildInfo.cs.template",
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests"],
@@ -212,7 +212,7 @@ def platform_libraries():
     )
     testfx_library(
         name = "telemetry",
-        project = "src/Platform/Microsoft.Testing.Extensions.Telemetry",
+        project = "src/MTP/Microsoft.Testing.Extensions.Telemetry",
         target_frameworks = STANDARD_FRAMEWORKS,
         linked_srcs = [
             _PLATFORM + "/Helpers/CIEnvironmentDetector.cs",
@@ -222,7 +222,7 @@ def platform_libraries():
             _PLATFORM + "/Messages/SingleConsumerUnboundedChannel.cs",
         ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Platform/Microsoft.Testing.Extensions.Telemetry/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources",
+            "src/MTP/Microsoft.Testing.Extensions.Telemetry/Resources/ExtensionResources.resx": "Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources",
         },
         internals_visible_to = [
             "Microsoft.Testing.Platform.UnitTests",

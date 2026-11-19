@@ -5,7 +5,7 @@ load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_analyzer", "testfx_binary", "te
 load(":test-assets.bzl", "testfx_published_test")
 load(":platform.bzl", "ipc_sources")
 
-_PLATFORM = "src/Platform/Microsoft.Testing.Platform"
+_PLATFORM = "src/MTP/Microsoft.Testing.Platform"
 
 def native_unit_test_deps():
     return [
@@ -277,7 +277,7 @@ def unit_tests():
         name = "test_infrastructure",
         project = "test/Utilities/Microsoft.Testing.TestInfrastructure",
         version_property = "TestingPlatformVersionPrefix",
-        build_info = "src/Platform/SharedExtensionHelpers/BuildInfo.cs.template",
+        build_info = "src/MTP/SharedExtensionHelpers/BuildInfo.cs.template",
         usings = ["Polyfills"],
         deps = [":platform", ":vstest_bridge", "@paket.source//microsoft.extensions.resilience"],
     )

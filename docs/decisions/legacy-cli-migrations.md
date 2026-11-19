@@ -402,7 +402,7 @@ repository build changes.
 
 ```powershell
 # Baseline product, before the production edits: exit 0, no warnings/errors.
-& .\eng\build.ps1 -restore -build -pack -c Release -projects .\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -binaryLog -nodeReuse:$false /m:2 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false '-bl:artifacts\log\Release\no-progress-baseline-pack-{}.binlog'
+& .\eng\build.ps1 -restore -build -pack -c Release -projects .\src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -binaryLog -nodeReuse:$false /m:2 /p:UseSharedCompilation=false /p:EnableCodeCoverage=false '-bl:artifacts\log\Release\no-progress-baseline-pack-{}.binlog'
 
 # $evidence is the task-owned artifact directory containing the generated filters.
 # Correct product: exit 0, no warnings/errors; 32 shipping packages and pack guards passed.

@@ -68,7 +68,7 @@ public sealed class AzureDevOpsTests
         // check would happily accept the framework frame if we did not skip it.
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan[T](T upperBound, T value, String message) in /_/src/TestFramework/TestFramework/Assertions/Assert.IComparable.cs:line 138",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan[T](T upperBound, T value, String message) in /_/src/MSTest/TestFramework/Assertions/Assert.IComparable.cs:line 138",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestAssertImplementationFrameInPartialClassFile() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -89,7 +89,7 @@ public sealed class AzureDevOpsTests
 
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(ICollection expected, ICollection actual, String message) in /_/src/TestFramework/TestFramework/Assertions/CollectionAssert.Equality.cs:line 42",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(ICollection expected, ICollection actual, String message) in /_/src/MSTest/TestFramework/Assertions/CollectionAssert.Equality.cs:line 42",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestCollectionAssertImplementationFrameInPartialClassFile() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -110,7 +110,7 @@ public sealed class AzureDevOpsTests
 
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(String value, String substring, String message) in /_/src/TestFramework/TestFramework/Assertions/StringAssert.cs:line 17",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(String value, String substring, String message) in /_/src/MSTest/TestFramework/Assertions/StringAssert.cs:line 17",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestStringAssertImplementationFrame() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -131,7 +131,7 @@ public sealed class AzureDevOpsTests
 
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.That(Expression`1 condition, String message, String conditionExpression) in /_/src/TestFramework/TestFramework/Assertions/Assert.That.cs:line 27",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.That(Expression`1 condition, String message, String conditionExpression) in /_/src/MSTest/TestFramework/Assertions/Assert.That.cs:line 27",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestAssertThatImplementationFrame() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
@@ -268,7 +268,7 @@ public sealed class AzureDevOpsTests
             text,
             $"AzDO annotation must point at the test method's source file. Got: {text}\nLogs:\n{safeLogs}");
         Assert.DoesNotContain(
-            "/src/TestFramework/TestFramework/Assertions/",
+            "/src/MSTest/TestFramework/Assertions/",
             text,
             $"AzDO annotation must not point at a framework Assert partial-class file. Got: {text}\nLogs:\n{safeLogs}");
     }

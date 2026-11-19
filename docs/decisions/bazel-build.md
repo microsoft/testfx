@@ -38,7 +38,7 @@ This lane starts at `6bc33c48b9dae0e89486862f46af3c876fd7cf5d` and owns
 `//:packages` aggregate and validator remain unchanged. The coordinator owns
 the combined guide, CI, dependency integration, and eventual rollout.
 
-**Contract and sources.** `src/Package/MSTest.Sdk/MSTest.Sdk.csproj` explicitly
+**Contract and sources.** `src/MSTest/MSTest.Sdk/MSTest.Sdk.csproj` explicitly
 packs ten SDK props/targets, generates `Sdk.props` and `Runner.targets` from
 their real templates, and suppresses both build output and package dependencies.
 Its packaged-app project reference orders the shipping build; it does not embed
@@ -47,7 +47,7 @@ the actual conditional targets for classic execution, NativeAOT, VSTest, central
 package management, test libraries, optional features, and Windows application
 models without claiming that all those consumers have been validated.
 
-`src/Package/MSTest/MSTest.csproj` packs empty `_._` files and dependencies, not
+`src/MSTest/MSTest/MSTest.csproj` packs empty `_._` files and dependencies, not
 an assembly. For each portable framework its dependencies are the framework,
 adapter, TRX reporter, Microsoft.NET.Test.Sdk, and CodeCoverage. The test SDK's
 build assets must flow transitively (`PrivateAssets="none"`); other dependencies

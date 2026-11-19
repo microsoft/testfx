@@ -319,13 +319,13 @@ From the TestFx worktree, Debug:
 ```powershell
 .\build.cmd -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -bl
 .\build.cmd -msbuildEngine dotnet -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -bl
-.\.dotnet\dotnet.exe msbuild src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /t:UpdateXlf /v:minimal '-bl:artifacts\log\Debug\framework-metadata-localization.binlog'
+.\.dotnet\dotnet.exe msbuild src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /t:UpdateXlf /v:minimal '-bl:artifacts\log\Debug\framework-metadata-localization.binlog'
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Debug --no-restore '-bl:artifacts\log\Debug\framework-unit-head.binlog' -v:quiet
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.TerminalReporterContract.UnitTests\Microsoft.Testing.Platform.TerminalReporterContract.UnitTests.csproj -c Debug '-bl:artifacts\log\Debug\framework-terminal-contract.binlog' -v:quiet
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests\Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj -c Debug '-bl:artifacts\log\Debug\framework-protocol-contract.binlog' -v:quiet
-.\build.cmd -msbuildEngine dotnet -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066 -bl
+.\build.cmd -msbuildEngine dotnet -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066 -bl
 .\build.cmd -pack /p:VersionSuffix=dev.framework7066 -bl
-.\build.cmd -msbuildEngine dotnet -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066.final1 -bl
+.\build.cmd -msbuildEngine dotnet -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066.final1 -bl
 python .github\scripts\test_check_localization.py
 python .github\scripts\check_localization.py
 ```
@@ -413,7 +413,7 @@ The counterfactual source build used the repository script and the same
 ```powershell
 .\build.cmd -msbuildEngine dotnet -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj /p:VersionSuffix=dev.framework7066.final1 -bl
 .\.dotnet\dotnet.exe build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug -p:VersionSuffix=dev.framework7066.final1 '-bl:artifacts\log\Debug\counterfactual-short-acceptance-build.binlog' -v:quiet
-.\build.cmd -msbuildEngine dotnet -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066.final1 -bl
+.\build.cmd -msbuildEngine dotnet -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -pack /p:VersionSuffix=dev.framework7066.final1 -bl
 .\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug --no-build --no-launch-profile --no-progress --filter 'FullyQualifiedName~DotnetTestPipeTargetFrameworkTests' -p:UsingDotNetTest=true -p:VersionSuffix=dev.framework7066.final1 '-p:ArtifactsTestResultsDir=<comparison>\artifacts\TestResults\Debug\<variant>' '-bl:artifacts\log\Debug\<variant>.binlog'
 ```
 

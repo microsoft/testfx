@@ -168,7 +168,7 @@ source-built Debug layout. The compiler owns analyzer loading; there is no
 runtime assertion execution, cross-process protocol, or handshake to validate.
 
 Built `MSTest.GlobalConfigsGenerator`, then packed
-`src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj` using
+`src\MSTest\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj` using
 the pinned SDK (exit 0). The produced package was
 `MSTest.Analyzers.4.6.0-dev.nupkg`, SHA-256
 `9E1E18F7C8B701856CA7E7293A9AC7AC1AE08D7F7439432B06A2BB8262C8EF97`.
@@ -273,7 +273,7 @@ $red = Join-Path (Get-Location) 'artifacts\queryable-review-red'
 .\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green.trx --results-directory "$evidence\queryable-review-green-results"
 .\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net472 --no-restore -v:quiet "-bl:$evidence\queryable-review-net472-build-{}.binlog"
 .\artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net472\MSTest.Analyzers.UnitTests.exe --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green-net472.trx --results-directory "$evidence\queryable-review-green-results"
-.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Debug --no-restore -v:quiet "-bl:$evidence\queryable-review-pack-{}.binlog"
+.\.dotnet\dotnet.exe pack src\MSTest\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Debug --no-restore -v:quiet "-bl:$evidence\queryable-review-pack-{}.binlog"
 ```
 
 Repacked the analyzer and restored a separate net8.0/C# 12 consumer into another
@@ -337,7 +337,7 @@ $red = Join-Path (Get-Location) 'artifacts\queryable-composite-review-red'
 .\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green.trx --results-directory "$evidence\queryable-composite-review-green-results"
 .\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net472 --no-restore -v:quiet "-bl:$evidence\queryable-composite-review-net472-build-{}.binlog"
 .\artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net472\MSTest.Analyzers.UnitTests.exe --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green-net472.trx --results-directory "$evidence\queryable-composite-review-green-results"
-.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Debug --no-restore -v:quiet "-bl:$evidence\queryable-composite-review-pack-{}.binlog"
+.\.dotnet\dotnet.exe pack src\MSTest\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Debug --no-restore -v:quiet "-bl:$evidence\queryable-composite-review-pack-{}.binlog"
 ```
 
 All builds and green runs exited 0. The repacked analyzer was consumed with a

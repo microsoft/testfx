@@ -87,12 +87,12 @@ Analyze the pull request diff to identify source files that were added or modifi
 ### Step 2: Identify Test Gaps
 
 1. For each changed source file, find the corresponding existing test project. Test projects are organized under `test/`:
-   - `src/TestFramework/` → `test/UnitTests/TestFramework.UnitTests/`
-   - `src/Adapter/MSTest.TestAdapter/` → `test/UnitTests/MSTestAdapter.UnitTests/`
-   - `src/Adapter/MSTestAdapter.PlatformServices/` → `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/`
-   - `src/Analyzers/MSTest.Analyzers/` → `test/UnitTests/MSTest.Analyzers.Tests/` (if exists)
-   - `src/Analyzers/MSTest.SourceGeneration/` → `test/UnitTests/MSTest.SourceGeneration.UnitTests/`
-   - `src/Platform/` → `test/UnitTests/` (find matching test project by name)
+   - `src/MSTest/TestFramework/` → `test/UnitTests/TestFramework.UnitTests/`
+   - `src/MSTest/MSTest.TestAdapter/` → `test/UnitTests/MSTestAdapter.UnitTests/`
+   - `src/MSTest/MSTestAdapter.PlatformServices/` → `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/`
+   - `src/MSTest/MSTest.Analyzers/` → `test/UnitTests/MSTest.Analyzers.Tests/` (if exists)
+   - `src/MSTest/MSTest.SourceGeneration/` → `test/UnitTests/MSTest.SourceGeneration.UnitTests/`
+   - `src/MTP/` → `test/UnitTests/` (find matching test project by name)
 2. Check if the changed code already has test coverage
 3. Focus on code that is **not yet covered** by existing tests
 

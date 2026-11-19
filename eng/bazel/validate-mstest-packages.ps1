@@ -147,11 +147,11 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
     }
     $catalogs = switch ($Id) {
         'MSTest.TestFramework' {
-            @{ Directory = 'src\TestFramework\TestFramework\Resources\xlf'; Stem = 'FrameworkMessages'; Assembly = 'MSTest.TestFramework'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
+            @{ Directory = 'src\MSTest\TestFramework\Resources\xlf'; Stem = 'FrameworkMessages'; Assembly = 'MSTest.TestFramework'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
         }
         'MSTest.TestAdapter' {
-            @{ Directory = 'src\Adapter\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
-            @{ Directory = 'src\Adapter\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
+            @{ Directory = 'src\MSTest\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
+            @{ Directory = 'src\MSTest\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
         }
     }
     foreach ($catalog in $catalogs) {
@@ -207,9 +207,9 @@ function New-Expectations([string] $Framework, [string] $Path) {
         finally { $archive.Dispose() }
     }
     $resources = @(
-        @{ Assembly = 'MSTest.TestFramework'; Package = 'MSTest.TestFramework'; Folder = "lib/$Framework"; Source = 'src\TestFramework\TestFramework\Resources'; Stem = 'FrameworkMessages'; BaseName = 'Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages'; Key = 'AccessStringInvalidSyntax' },
-        @{ Assembly = 'MSTestAdapter.PlatformServices'; Package = 'MSTest.TestAdapter'; Folder = "lib/$Framework"; Source = 'src\Adapter\MSTestAdapter.PlatformServices\Resources'; Stem = 'Resource'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource'; Key = 'CannotFindFile' },
-        @{ Assembly = 'MSTest.TestAdapter'; Package = 'MSTest.TestAdapter'; Folder = "lib/$Framework"; Source = 'src\Adapter\MSTest.TestAdapter\Resources'; Stem = 'PlatformAdapterResources'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources'; Key = 'MSTestExtensionDescription' }
+        @{ Assembly = 'MSTest.TestFramework'; Package = 'MSTest.TestFramework'; Folder = "lib/$Framework"; Source = 'src\MSTest\TestFramework\Resources'; Stem = 'FrameworkMessages'; BaseName = 'Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages'; Key = 'AccessStringInvalidSyntax' },
+        @{ Assembly = 'MSTestAdapter.PlatformServices'; Package = 'MSTest.TestAdapter'; Folder = "lib/$Framework"; Source = 'src\MSTest\MSTestAdapter.PlatformServices\Resources'; Stem = 'Resource'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource'; Key = 'CannotFindFile' },
+        @{ Assembly = 'MSTest.TestAdapter'; Package = 'MSTest.TestAdapter'; Folder = "lib/$Framework"; Source = 'src\MSTest\MSTest.TestAdapter\Resources'; Stem = 'PlatformAdapterResources'; BaseName = 'Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources'; Key = 'MSTestExtensionDescription' }
     )
     foreach ($resource in $resources) {
         [xml]$catalog = Get-Content -LiteralPath (Join-Path $root "$($resource.Source)\xlf\$($resource.Stem).ko.xlf") -Raw

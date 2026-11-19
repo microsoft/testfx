@@ -243,12 +243,12 @@ def testfx_library(
     """
     testfx_metadata(
         name = name + "_metadata",
-        version_property = version_property or ("TestingPlatformVersionPrefix" if project.startswith("src/Platform/") else "VersionPrefix"),
+        version_property = version_property or ("TestingPlatformVersionPrefix" if project.startswith("src/MTP/") else "VersionPrefix"),
         version_override = version_override,
         assembly_version = assembly_version,
         template = build_info,
         usings = usings,
-        build_time = project == "src/Platform/Microsoft.Testing.Platform",
+        build_time = project == "src/MTP/Microsoft.Testing.Platform",
         sdk_version = sdk_version_metadata,
     )
     sources = native.glob(
@@ -289,7 +289,7 @@ def testfx_library(
         satellite_name = name + "_satellite_" + culture
         testfx_metadata(
             name = satellite_name + "_metadata",
-            version_property = version_property or ("TestingPlatformVersionPrefix" if project.startswith("src/Platform/") else "VersionPrefix"),
+            version_property = version_property or ("TestingPlatformVersionPrefix" if project.startswith("src/MTP/") else "VersionPrefix"),
             version_override = version_override,
             assembly_version = assembly_version,
             culture = culture,
@@ -313,7 +313,7 @@ def testfx_library(
         _embedded(name = embedded_name, src = path, logical_name = logical_name)
         embedded.append(":" + embedded_name)
 
-    if project == "src/Platform/Microsoft.Testing.Platform" and deps:
+    if project == "src/MTP/Microsoft.Testing.Platform" and deps:
         fail("Microsoft.Testing.Platform must remain dependency-free.")
 
     assembly_rule = csharp_binary if binary else csharp_library

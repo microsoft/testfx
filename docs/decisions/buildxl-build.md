@@ -844,7 +844,7 @@ Executed commands:
 | `pwsh -NoLogo -NoProfile -File .\eng\buildxl\validate.ps1` | Exit 0; all 11 named cases executed/passed. The parsed `results.json` reconciles 19 child invocations; the two deliberately failing children retain exit 1 and every other child exits 0. |
 | `pwsh -NoLogo -NoProfile -File .\eng\buildxl\benchmark.ps1 -SelfTest` | Exit 0; all six existing statistics/output/export self-checks pass. |
 | Full-solution Release command above, repeated unchanged | Both exit 0; cold 226 misses, unchanged 226 hits/zero misses. |
-| `pwsh -NoLogo -NoProfile -File .\eng\buildxl.ps1 -Project src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj -TargetFramework net10.0 -Engine MSBuild -OutputId m` | Exit 0; settings, 67 output paths, and three primary assembly identities match the native backend. |
+| `pwsh -NoLogo -NoProfile -File .\eng\buildxl.ps1 -Project src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj -TargetFramework net10.0 -Engine MSBuild -OutputId m` | Exit 0; settings, 67 output paths, and three primary assembly identities match the native backend. |
 
 Native regression results are retained in
 `artifacts/buildxl-validation/16c0d77f5fb2468686bc17bdd79d7676/results.json`.
@@ -989,7 +989,7 @@ explicitly constrained project experiment:
 
 ```powershell
 pwsh -NoProfile -File .\eng\buildxl.ps1 `
-    -Project src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj `
+    -Project src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj `
     -TargetFramework net10.0 -NoJournal
 ```
 
@@ -1910,7 +1910,7 @@ $sdk = InitializeDotNetCli -install:$true -createSdkLocationFile:$false
 $bin = Join-Path $PWD 'artifacts\buildxl-baseline\bin\'
 $obj = Join-Path $PWD 'artifacts\obj\buildxl-baseline\'
 & (Join-Path $sdk 'dotnet.exe') msbuild `
-    .\src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj `
+    .\src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj `
     /restore /t:Build /p:TargetFrameworks=net10.0 /p:Configuration=Debug `
     /p:EnableProjectDataOnBuild=false /p:UseSharedCompilation=false `
     "/p:ArtifactsBinDir=$bin" "/p:ArtifactsObjDir=$obj" /nr:false /nologo /v:minimal `

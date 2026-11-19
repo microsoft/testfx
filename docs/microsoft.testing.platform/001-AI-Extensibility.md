@@ -1,9 +1,9 @@
 # RFC 001 - AI-Powered Extensibility for Testing Platform
 
 > **Current implementation note (2026-10-09):** The optional AI bridge is implemented.
-> The core [ChatClientManager](../../src/Platform/Microsoft.Testing.Platform/AI/ChatClientManager.cs)
+> The core [ChatClientManager](../../src/MTP/Microsoft.Testing.Platform/AI/ChatClientManager.cs)
 > now uses `AddChatClientProvider`/`BuildChatClients`, rather than the historical manager method names
-> in the sketches below. [GetChatClientAsync](../../src/Platform/Microsoft.Testing.Platform.AI/ChatClientProviderExtensions.cs)
+> in the sketches below. [GetChatClientAsync](../../src/MTP/Microsoft.Testing.Platform.AI/ChatClientProviderExtensions.cs)
 > returns null for missing **or unavailable** providers; see [MTP-017](../specifications/mtp.md#mtp-017--optional-ai-provider-availability).
 > Remote provider authentication, tool support and AI-analysis examples were not validated.
 

@@ -3,7 +3,7 @@
 load("@rules_dotnet//dotnet/private:providers.bzl", "NuGetPackInfo")
 load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_binary", "testfx_test")
 
-_SDK = "src/Package/MSTest.Sdk/"
+_SDK = "src/MSTest/MSTest.Sdk/"
 
 def _sdk_package_impl(ctx):
     directory = ctx.label.name + "/"
@@ -125,9 +125,9 @@ def sdk_packages():
     _sdk_package(
         name = "mstest_package",
         package_id = "MSTest",
-        project = "src/Package/MSTest/MSTest.csproj",
-        readme = "src/Package/MSTest/PACKAGE.md",
-        placeholder = "src/Package/MSTest/_._",
+        project = "src/MSTest/MSTest/MSTest.csproj",
+        readme = "src/MSTest/MSTest/PACKAGE.md",
+        placeholder = "src/MSTest/MSTest/_._",
     )
     testfx_binary(
         name = "sdk_package_tests_app",

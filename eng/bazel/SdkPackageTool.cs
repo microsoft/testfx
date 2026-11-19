@@ -193,10 +193,10 @@ static Dependency[] MetaPackageDependencies(XElement project, Dictionary<string,
 {
     var projectDependencies = new Dictionary<string, (string id, string version, string condition)>(StringComparer.Ordinal)
     {
-        ["$(RepoRoot)src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj"] = ("MSTest.TestAdapter", versions["MSTestVersion"], "'$(TargetFramework)'!='$(UwpMinimum)'"),
-        ["$(RepoRoot)src/TestFramework/MSTest.Uwp/MSTest.Uwp.csproj"] = ("MSTest.Uwp", versions["MSTestVersion"], "'$(TargetFramework)'=='$(UwpMinimum)'"),
-        ["$(RepoRoot)src/TestFramework/TestFramework/TestFramework.csproj"] = ("MSTest.TestFramework", versions["MSTestVersion"], ""),
-        ["$(RepoRoot)src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj"] = ("Microsoft.Testing.Extensions.TrxReport", versions["MicrosoftTestingPlatformVersion"], "'$(TargetFramework)'!='$(UwpMinimum)'"),
+        ["$(RepoRoot)src/MSTest/MSTest.TestAdapter/MSTest.TestAdapter.csproj"] = ("MSTest.TestAdapter", versions["MSTestVersion"], "'$(TargetFramework)'!='$(UwpMinimum)'"),
+        ["$(RepoRoot)src/MSTest/MSTest.Uwp/MSTest.Uwp.csproj"] = ("MSTest.Uwp", versions["MSTestVersion"], "'$(TargetFramework)'=='$(UwpMinimum)'"),
+        ["$(RepoRoot)src/MSTest/TestFramework/TestFramework.csproj"] = ("MSTest.TestFramework", versions["MSTestVersion"], ""),
+        ["$(RepoRoot)src/MTP/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj"] = ("Microsoft.Testing.Extensions.TrxReport", versions["MicrosoftTestingPlatformVersion"], "'$(TargetFramework)'!='$(UwpMinimum)'"),
     };
     var dependencies = new List<Dependency>();
     foreach (XElement reference in project.Descendants("ProjectReference"))

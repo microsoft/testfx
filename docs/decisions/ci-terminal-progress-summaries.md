@@ -32,7 +32,7 @@ is needed.
 ### Producer-consumer boundary
 
 TestFx owns `Microsoft.Testing.Platform` and the terminal source under
-`src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal`.
+`src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal`.
 `dotnet/sdk` vendors that source into the outer `dotnet test` process.
 The host and outer CLI are separately built/shipped consumers: an in-repository
 source-linked test cannot establish that the outer SDK console changed.

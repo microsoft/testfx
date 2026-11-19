@@ -124,7 +124,7 @@ All commands below used the repository-local
 ```powershell
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -m:1 -nr:false -bl:artifacts\log\Release\binary-unit-final-1.binlog
 .\.dotnet\dotnet.exe build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -m:1 -nr:false -bl:artifacts\log\Release\binary-acceptance-final-2.binlog
-.\build.cmd -c Release -pack -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -bl /m:1 /nr:false /p:UseSharedCompilation=false
+.\build.cmd -c Release -pack -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -bl /m:1 /nr:false /p:UseSharedCompilation=false
 ```
 
 Each exited 0 with no warnings/errors. The supported focused pack also passed

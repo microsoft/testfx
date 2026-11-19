@@ -366,7 +366,7 @@ Note those conditions are evaluated per project, and a **class library** does no
 
 ## Related
 
-- [`Microsoft.Testing.Extensions.PackagedApp` package readme](../src/Platform/Microsoft.Testing.Extensions.PackagedApp/PACKAGE.md)
+- [`Microsoft.Testing.Extensions.PackagedApp` package readme](../src/MTP/Microsoft.Testing.Extensions.PackagedApp/PACKAGE.md)
 - [`UwpMtpApp` sample](../samples/public/UwpMtpApp)
 - [`ClassicUwpMtpApp` sample](../samples/public/ClassicUwpMtpApp)
 - [`WinUIMtpPackagedApp` sample](../samples/public/WinUIMtpPackagedApp)

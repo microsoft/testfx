@@ -3,12 +3,12 @@
 load(":defs.bzl", "testfx_compatibility_select", "testfx_library")
 load(":platform.bzl", "modern_json_sources")
 
-_PLATFORM = "src/Platform/Microsoft.Testing.Platform"
+_PLATFORM = "src/MTP/Microsoft.Testing.Platform"
 
 def server_client_library():
     testfx_library(
         name = "server_client",
-        project = "src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources",
+        project = "src/MTP/Microsoft.Testing.Platform.ServerMode.Client.Sources",
         target_frameworks = ["netstandard2.0", "net10.0"],
         polyfills = False,
         defines = ["IS_CORE_MTP", "IS_MTP_SERVER_MODE_CLIENT", "IS_MTP_CLIENT_REPO"],

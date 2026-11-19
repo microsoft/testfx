@@ -290,7 +290,7 @@ interleave; when rows are not unfolded, all rows share one acquisition.
 ## Implementation
 
 The scheduler lives in
-`src/Adapter/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.Parallelization.cs`.
+`src/MSTest/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.Parallelization.cs`.
 It is a `ConcurrentQueue<IEnumerable<UnitTestElement>>` drained by *N* worker `Task`s, chunked
 per-method or per-class depending on `ExecutionScope`. Before dispatching a chunk, the worker
 acquires the union of that chunk's declared locks (in sorted key order) from a per-run keyed

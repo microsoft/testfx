@@ -16,11 +16,11 @@ tests to understand the changed behavior before commenting.
 ## Review process
 
 1. Identify the product area from the changed paths:
-   - `src/Platform` and related tests: Microsoft.Testing.Platform and extensions.
-   - `src/TestFramework`: the public MSTest framework API.
-   - `src/Adapter`: MSTest adapters and platform services.
-   - `src/Analyzers`: Roslyn analyzers and code fixes.
-   - `src/Package/MSTest.Sdk`, `eng`, and MSBuild files: build and packaging.
+   - `src/MTP` and related tests: Microsoft.Testing.Platform and extensions.
+   - `src/MSTest/TestFramework`: the public MSTest framework API.
+   - `src/MSTest/MSTest.TestAdapter` and `src/MSTest/MSTestAdapter.PlatformServices`: MSTest adapters and platform services.
+   - `src/MSTest/MSTest.Analyzers*`: Roslyn analyzers and code fixes.
+   - `src/MSTest/MSTest.Sdk`, `eng`, and MSBuild files: build and packaging.
 2. Trace each behavior change through its callers, tests, target frameworks,
    shipped packages, and linked source files. Apply the context checks below
    before treating a checklist match as a finding.

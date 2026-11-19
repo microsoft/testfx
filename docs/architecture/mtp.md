@@ -5,7 +5,7 @@
 - Status: **current implementation baseline (scoped)**, not a release specification.
 - Inspected revision: `c5e1f5c613fa02ffa507db333e4702da6c97e488`.
 - Inspected date: **2026-10-09**.
-- Scope: `src/Platform`, corresponding unit/acceptance tests, and the MTP design documents.
+- Scope: `src/MTP`, corresponding unit/acceptance tests, and the MTP design documents.
 - Assurance: source inspection and existing test mapping only; **no tests were executed** for this documentation change.
 
 Read the [documentation guide](../specifications/README.md) and [observable contracts](../specifications/mtp.md) for maintenance rules, stable IDs and test evidence.
@@ -18,23 +18,23 @@ MTP embeds a host in a test application rather than requiring a central runner t
 The application registers one framework and selected extensions, builds, and runs. Frameworks own
 discovery/execution; MTP owns dispatch, extension composition, messages, output and application policies.
 
-The [core package](../../src/Platform/Microsoft.Testing.Platform/PACKAGE.md) describes the BCL-only dependency boundary.
-Optional bridges, AI, reports, retry and diagnostics are separately packaged under `src/Platform`, not implicit capabilities of every host.
-The [MSBuild package](../../src/Platform/Microsoft.Testing.Platform.MSBuild/PACKAGE.md) supplies entry-point/configuration generation and legacy test-target integration.
+The [core package](../../src/MTP/Microsoft.Testing.Platform/PACKAGE.md) describes the BCL-only dependency boundary.
+Optional bridges, AI, reports, retry and diagnostics are separately packaged under `src/MTP`, not implicit capabilities of every host.
+The [MSBuild package](../../src/MTP/Microsoft.Testing.Platform.MSBuild/PACKAGE.md) supplies entry-point/configuration generation and legacy test-target integration.
 
 ## Construction and ownership
 
-[`TestApplication.CreateBuilderAsync`](../../src/Platform/Microsoft.Testing.Platform/Builder/TestApplication.cs) parses arguments
+[`TestApplication.CreateBuilderAsync`](../../src/MTP/Microsoft.Testing.Platform/Builder/TestApplication.cs) parses arguments
 (including response files), sets up early diagnostics, and optionally invokes dynamic hooks before returning.
-[`TestApplicationBuilder`](../../src/Platform/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs) holds factories
+[`TestApplicationBuilder`](../../src/MTP/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs) holds factories
 and delegates construction to `TestHostBuilder`; framework registration is singular, not a Microsoft.Extensions DI container.
 
-[`SetupCommonServicesAsync`](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostBuilder.CommonServices.cs) assembles configuration,
+[`SetupCommonServicesAsync`](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostBuilder.CommonServices.cs) assembles configuration,
 logging/output proxies, cancellation, capabilities and policies, then validates options.
-[`BuildHostAsync`](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostBuilder.Modes.cs) selects an informational/tool host,
+[`BuildHostAsync`](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostBuilder.Modes.cs) selects an informational/tool host,
 orchestrator, controller, or console/JSON-RPC test host. Discovery skips controller restart.
 
-[`ServiceProvider`](../../src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs) is an ordered instance registry with
+[`ServiceProvider`](../../src/MTP/Microsoft.Testing.Platform/Services/ServiceProvider.cs) is an ordered instance registry with
 assignable-type lookup. Clones normally share references, with exceptions such as coverage capabilities:
 not process serialization or a Microsoft.Extensions scope. Server requests add/replace owned services
 and avoid disposing borrowed application services. See MTP-001, MTP-002 and MTP-009.
@@ -57,14 +57,14 @@ Application entry point
 ```
 
 This is the normal console path, **not an unconditional callback guarantee after exceptions**.
-[`ExtensionBuilderHelper`](../../src/Platform/Microsoft.Testing.Platform/Helpers/ExtensionBuilderHelper.cs) implements enabled/initializable
+[`ExtensionBuilderHelper`](../../src/MTP/Microsoft.Testing.Platform/Helpers/ExtensionBuilderHelper.cs) implements enabled/initializable
 construction; composite factories share one instance across roles. Managers validate UID/type uniqueness.
-[`TestHostTestFrameworkInvoker`](../../src/Platform/Microsoft.Testing.Platform/Requests/TestHostTestFrameworkInvoker.cs) waits for explicit
+[`TestHostTestFrameworkInvoker`](../../src/MTP/Microsoft.Testing.Platform/Requests/TestHostTestFrameworkInvoker.cs) waits for explicit
 request completion, not just the return of the framework's task.
 
-[`AsynchronousMessageBus`](../../src/Platform/Microsoft.Testing.Platform/Messages/AsynchronousMessageBus.cs) routes declared concrete types;
+[`AsynchronousMessageBus`](../../src/MTP/Microsoft.Testing.Platform/Messages/AsynchronousMessageBus.cs) routes declared concrete types;
 ordinary publication queues work, while blocking consumers and single-threaded runtimes consume inline.
-[`CommonHost`](../../src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.SessionNotifications.cs) drains before finishing,
+[`CommonHost`](../../src/MTP/Microsoft.Testing.Platform/Hosts/CommonTestHost.SessionNotifications.cs) drains before finishing,
 runs producer-only handlers before consumers, then drains between consumer finishers so final artifacts reach reports.
 Cancellation bounds shutdown; a still-running consumer is not disposed underneath its callback. See MTP-003 and MTP-004.
 

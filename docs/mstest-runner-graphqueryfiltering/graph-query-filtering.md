@@ -1,6 +1,6 @@
 # Graph Query Filtering
 
-> **Current implementation note (2026-10-09):** [Property matching](../../src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.Matching.cs)
+> **Current implementation note (2026-10-09):** [Property matching](../../src/MTP/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.Matching.cs)
 > and `TreeNodeFilterTests.Parameters_NegatedPropertyCheck` show that `Key!=Value` also matches a
 > node with no matching metadata key. The examples below now reflect that behavior, use unescaped
 > wildcard `*`, and treat `true`/`false` as literal metadata values rather than existence operators.

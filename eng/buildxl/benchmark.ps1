@@ -196,7 +196,7 @@ $source = Get-SourceIdentity
 $report = [ordered]@{
     SchemaVersion = 1; Complete = $false; CreatedUtc = [DateTimeOffset]::UtcNow.ToString('o')
     Source = $source; Samples = $Samples; Jobs = $Jobs; Configuration = 'Debug'; TargetFramework = 'net10.0'
-    Project = 'src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
+    Project = 'src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
     TrendSeries = "TestFx.BuildPerformance.Trx.Debug.net10.Jobs$Jobs.Auto.SharedCompilation.v2"
     Host = [ordered]@{ OS = [Environment]::OSVersion.Version.ToString(); Architecture = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString(); Processors = [Environment]::ProcessorCount; PowerShell = $PSVersionTable.PSVersion.ToString(); Image = $env:ImageVersion }
     Build = [ordered]@{ Id = $env:BUILD_BUILDID; Branch = $env:BUILD_SOURCEBRANCH; Reason = $env:BUILD_REASON; JobAttempt = $env:SYSTEM_JOBATTEMPT }

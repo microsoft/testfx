@@ -1486,7 +1486,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         string publicApiDirectory = Path.Combine(
             RootFinder.Find(),
             "src",
-            "TestFramework",
+            "MSTest",
             "TestFramework",
             "PublicAPI");
 

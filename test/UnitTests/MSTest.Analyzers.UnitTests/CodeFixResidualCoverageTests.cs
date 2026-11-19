@@ -720,7 +720,7 @@ public sealed class CodeFixResidualCoverageTests
         Exception exception = await Assert.ThrowsAsync<Exception>(() => action.GetOperationsAsync(CancellationToken.None));
         Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
         Assert.StartsWith("This program location is thought to be unreachable. File='", exception.Message);
-        Assert.EndsWith("/src/Analyzers/MSTest.Analyzers.CodeFixes/TestMethodAttributeShouldSetDisplayNameCorrectlyFixer.cs' Line=81", exception.Message.Replace('\\', '/'));
+        Assert.EndsWith("/src/MSTest/MSTest.Analyzers.CodeFixes/TestMethodAttributeShouldSetDisplayNameCorrectlyFixer.cs' Line=81", exception.Message.Replace('\\', '/'));
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
     }
 

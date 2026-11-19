@@ -1,6 +1,6 @@
 # 004 - `dotnet test` Binary Protocol
 
-> **Current implementation note (2026-10-09):** [Host handshake/capability parsing](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+> **Current implementation note (2026-10-09):** [Host handshake/capability parsing](../../src/MTP/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
 > pipe/HTTP transport and local fake-SDK fixtures support the host-side protocol topics.
 > See [MTP-011](../specifications/mtp.md#mtp-011--native-binary-channel-versus-legacy-msbuild) and
 > [MTP-016](../specifications/mtp.md#mtp-016--no-handshake-and-undeclared-capability-fallback).
@@ -25,8 +25,8 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 > [!IMPORTANT]
 > **Source of truth.** The wire contract (serializer IDs, field IDs, handshake/session/state
 > constants, message models, and serializers) lives in
-> `src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/` and
-> `src/Platform/Microsoft.Testing.Platform/IPC/`. Those files are **vendored (hand-copied) into
+> `src/MTP/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/` and
+> `src/MTP/Microsoft.Testing.Platform/IPC/`. Those files are **vendored (hand-copied) into
 > `dotnet/sdk`**. testfx is authoritative; any change to the shared files is a coordinated,
 > potentially breaking, wire-protocol change. The enumeration of shared files is
 > `ServerMode/DotnetTest/DotnetTestProtocolContract.props`.

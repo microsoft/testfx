@@ -22,7 +22,7 @@
     Jsonite formatter path is exercised there.
   -->
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerMode.Client.Sources\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj">
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Platform.ServerMode.Client.Sources\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj">
       <!--
         The validation project re-compiles public platform data-model types (TestNode, LogLevel, SessionUid,
         PropertyBag, ...) that also live in the real Microsoft.Testing.Platform assembly. Import it under both

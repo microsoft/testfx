@@ -13,7 +13,7 @@
   <!-- Both supported TFMs reference the platform and verify duplicate public abstractions are removed
        from the shared-source set. -->
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
   <!--
@@ -32,6 +32,6 @@
     and color abstractions are supplied by the platform reference above. This project does not validate
     consumption without a platform reference.
   -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalReporterContract.props" />
+  <Import Project="$(RepoRoot)src\MTP\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalReporterContract.props" />
 
 </Project>

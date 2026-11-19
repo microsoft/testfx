@@ -6,7 +6,7 @@ if ($IsWindows -and $null -eq ("TestFx.Collection.WindowsCollectionProcess" -as 
     $repositoryRoot = Split-Path $PSScriptRoot -Parent
     Add-Type -Path @(
         (Join-Path $PSScriptRoot "collection-windows-process.cs"),
-        (Join-Path $repositoryRoot "src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs"),
+        (Join-Path $repositoryRoot "src\MTP\Microsoft.Testing.Platform\Helpers\PasteArguments.cs"),
         (Join-Path $repositoryRoot "src\Polyfills\EmbeddedAttribute.cs")
     ) -CompilerOptions "/langversion:12.0"
 }

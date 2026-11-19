@@ -8,8 +8,8 @@
 > properties, parameterless methods, fields and display-name callbacks.
 > `TrimmerRootAssembly` preserves members but does not add omitted classes to a nonempty generated type registry:
 > the fallback recommendation below is not a universal discovery remedy.
-> See [TypeEnumerator](../../src/Adapter/MSTestAdapter.PlatformServices/Discovery/TypeEnumerator.cs),
-> [runtime operations](../../src/Adapter/MSTestAdapter.PlatformServices/SourceGeneration/SourceGeneratedReflectionOperations.cs)
+> See [TypeEnumerator](../../src/MSTest/MSTestAdapter.PlatformServices/Discovery/TypeEnumerator.cs),
+> [runtime operations](../../src/MSTest/MSTestAdapter.PlatformServices/SourceGeneration/SourceGeneratedReflectionOperations.cs)
 > and [generator tests](../../test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTestReflectionMetadataGeneratorTests.cs).
 > This audit maps source/tests, not executed AOT/trim conformance or every provider-field claim.
 
@@ -357,7 +357,7 @@ so this is not a claim that the entire execution pipeline is reflection-free.
 ### Delegate-based reflection-free mode
 
 **The work has already started.** A reflection-free generator that emits exactly this
-shape now ships inside `src/Analyzers/MSTest.SourceGeneration/` and is selected via
+shape now ships inside `src/MSTest/MSTest.SourceGeneration/` and is selected via
 `<MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>` (tracked by
 [issue #1837](https://github.com/microsoft/testfx/issues/1837)). It emits a per-assembly
 `MSTestReflectionMetadata` registry where each test class carries:

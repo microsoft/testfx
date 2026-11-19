@@ -2,14 +2,14 @@
 
 load(":defs.bzl", "DESKTOP_FRAMEWORKS", "STANDARD_FRAMEWORKS", "testfx_analyzer", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 
-_PLATFORM = "src/Platform/Microsoft.Testing.Platform"
-_SHARED = "src/Platform/SharedExtensionHelpers"
-_FRAMEWORK = "src/TestFramework/TestFramework"
+_PLATFORM = "src/MTP/Microsoft.Testing.Platform"
+_SHARED = "src/MTP/SharedExtensionHelpers"
+_FRAMEWORK = "src/MSTest/TestFramework"
 
 def mstest_libraries():
     testfx_library(
         name = "assert_generator",
-        project = "src/TestFramework/TestFramework.SourceGeneration",
+        project = "src/MSTest/TestFramework.SourceGeneration",
         target_frameworks = ["netstandard2.0"],
         polyfills = False,
         analyzer_configs = ["//eng/bazel:analyzers.globalconfig"],
@@ -47,7 +47,7 @@ def mstest_libraries():
     )
     testfx_library(
         name = "framework_compatibility",
-        project = "src/TestFramework/TestFramework.Compatibility",
+        project = "src/MSTest/TestFramework.Compatibility",
         target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
         assembly_name = "MSTest.TestFramework.Extensions",
         polyfills = False,
@@ -55,14 +55,14 @@ def mstest_libraries():
     )
     testfx_library(
         name = "platform_services",
-        project = "src/Adapter/MSTestAdapter.PlatformServices",
+        project = "src/MSTest/MSTestAdapter.PlatformServices",
         target_frameworks = DESKTOP_FRAMEWORKS,
         allow_unsafe_blocks = True,
         defines = ["EXCLUDE_OS_POLYFILL"],
         usings = ["Polyfills", "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources"],
-        linked_srcs = native.glob(["src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/**/*.cs"]) + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
+        linked_srcs = native.glob(["src/MTP/Microsoft.Testing.Extensions.TrxReport/Hashing/**/*.cs"]) + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Adapter/MSTestAdapter.PlatformServices/Resources/Resource.resx": "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource",
+            "src/MSTest/MSTestAdapter.PlatformServices/Resources/Resource.resx": "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource",
         },
         internals_visible_to = [
             "DynamicProxyGenAssembly2",
@@ -82,12 +82,12 @@ def mstest_libraries():
     )
     testfx_library(
         name = "adapter",
-        project = "src/Adapter/MSTest.TestAdapter",
+        project = "src/MSTest/MSTest.TestAdapter",
         target_frameworks = DESKTOP_FRAMEWORKS,
         defines = ["MSTEST_TESTADAPTER"],
         usings = ["Polyfills", "ExecutionScope=Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope"],
         linked_srcs = [
-            "src/Adapter/Shared/BannerMessageHelper.cs",
+            "src/MSTest/Shared/BannerMessageHelper.cs",
             _SHARED + "/RunSettingsProviderHelper.cs",
             _SHARED + "/RunSettingsCommandLineOptionsProviderBase.cs",
             _SHARED + "/RunSettingsConfigurationProviderBase.cs",
@@ -97,9 +97,9 @@ def mstest_libraries():
             "@paket.source//microsoft.testplatform.filter.source:content_files",
         ] + testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Adapter/MSTest.TestAdapter/Resources/PlatformAdapterResources.resx": "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources",
+            "src/MSTest/MSTest.TestAdapter/Resources/PlatformAdapterResources.resx": "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources",
         },
-        build_info = "src/Adapter/MSTest.TestAdapter/BuildInfo.cs.template",
+        build_info = "src/MSTest/MSTest.TestAdapter/BuildInfo.cs.template",
         internals_visible_to = [
             "MSTest.Extensions.Hosting",
             "DynamicProxyGenAssembly2",

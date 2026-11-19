@@ -257,8 +257,8 @@ two are indistinguishable to the graph.
 
 | Concern | Location |
 |---|---|
-| Attribute | `src/TestFramework/TestFramework/Attributes/Lifecycle/DependsOnAttribute.cs` |
-| Carried edge | `src/Adapter/MSTestAdapter.PlatformServices/ObjectModel/TestDependencyInfo.cs` |
+| Attribute | `src/MSTest/TestFramework/Attributes/Lifecycle/DependsOnAttribute.cs` |
+| Carried edge | `src/MSTest/MSTestAdapter.PlatformServices/ObjectModel/TestDependencyInfo.cs` |
 | Read at discovery | `TypeEnumerator.GetTestFromMethod` → `UnitTestElement.Dependencies` |
 | VSTest transport | `AdapterTestProperties.DependenciesProperty`, `UnitTestElementExtensions` / `TestCaseExtensions` |
 | Graph, cycles, chunking | `Execution/TestDependencyGraph.cs` |

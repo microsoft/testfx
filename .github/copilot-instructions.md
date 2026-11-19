@@ -6,11 +6,13 @@ This is a .NET based repository that contains the MSTest testing framework and M
 
 The codebase ships several distinct (but related) products. Knowing which product a change belongs to is essential because they have different conventions, target frameworks, and public API surfaces:
 
-- `src/Platform/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/Platform/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
-- `src/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …) plus `TestFramework.Extensions`.
-- `src/Adapter` — bridges MSTest to test hosts: `MSTest.TestAdapter` (VSTest adapter) and `MSTestAdapter.PlatformServices` (platform-services abstraction shared by both hosts).
-- `src/Analyzers` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
-- `src/Package/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.
+The only source subfolders are `MTP`, `MSTest`, and `Polyfills`. MSTest projects sit directly under `src/MSTest`, without adapter, analyzer, framework, or package grouping folders. `Shared`, `PlatformPackage`, and `APIHistory` hold shared sources, packaging support, and archived API records; `Polyfills` contains compatibility sources shared across both products.
+
+- `src/MTP/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/MTP/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
+- `src/MSTest/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …). The sibling `TestFramework.Compatibility` project provides the `TestFramework.Extensions` compatibility facade.
+- `src/MSTest/MSTest.TestAdapter` and `src/MSTest/MSTestAdapter.PlatformServices` — bridge MSTest to test hosts (the VSTest adapter and platform-services abstraction shared by both hosts).
+- `src/MSTest/MSTest.Analyzers*` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
+- `src/MSTest/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.
 - `test/UnitTests/<Project>.UnitTests` — fast unit tests for each project.
 - `test/IntegrationTests/<Project>.IntegrationTests` or `<Package>.Acceptance.IntegrationTests` — file-system / process-level tests; acceptance tests consume the packed NuGets from `artifacts/packages/<Configuration>/Shipping`.
 - `test/Utilities/TestFramework.ForTestingMSTest` — the internal `TestContainer`-based framework used to unit-test MSTest itself (any public parameterless method on a `TestContainer` subclass is a test; no `[TestMethod]` needed).
@@ -91,7 +93,7 @@ You MUST minimize adding public API surface area but any newly added public API 
 
 Every packable project must carry the metadata that nuget.org renders on the package page. This is enforced at pack time by the `_ValidatePackageMetadata` target in the root [`Directory.Build.targets`](../Directory.Build.targets), which fails the build when a packable project is missing either piece — including packages that are `IsShipping=false`, because those still reach nuget.org.
 
-- Write `<PackageDescription>` so it **leads with what the package does**, and close it with `$(CommonProductDescription)` — the shared product sentence, defaulted per product area in [`src/Directory.Build.props`](../src/Directory.Build.props) (MSTest) and [`src/Platform/Directory.Build.props`](../src/Platform/Directory.Build.props) (Microsoft.Testing.Platform). nuget.org truncates the description in search results, so the package-specific sentence has to come first.
+- Write `<PackageDescription>` so it **leads with what the package does**, and close it with `$(CommonProductDescription)` — the shared product sentence, defaulted per product area in [`src/Directory.Build.props`](../src/Directory.Build.props) (MSTest) and [`src/MTP/Directory.Build.props`](../src/MTP/Directory.Build.props) (Microsoft.Testing.Platform). nuget.org truncates the description in search results, so the package-specific sentence has to come first.
 - Wrap the value in `<![CDATA[ ... ]]>` and keep its continuation lines unindented. MSBuild trims a property value but not the indentation of its inner lines, so an indented multi-line description leaks the .csproj whitespace into the published text. Property references such as `$(CommonProductDescription)` are still expanded inside CDATA.
 - NEVER leave the description unset. NuGet's pack targets substitute the literal placeholder `Package Description` during evaluation, which is why Arcade's own "PackageDescription must be specified" check cannot catch it and why the repo-level guard exists.
 - Add a `PACKAGE.md` next to the project file. It is picked up automatically as `PackageReadmeFile` and packed into the root of the `.nupkg`.
@@ -101,7 +103,7 @@ Every packable project must carry the metadata that nuget.org renders on the pac
 When making change to resource files, you MUST:
 
 - Add a corresponding entry in the resource file (`.resx`).
-- NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/TestFramework/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
+- NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/MTP/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/MSTest/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
 - A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
 - `{Locked="…"}` markers in a resource `<comment>` are matched as **substrings, not whole words**. A short locked token therefore also freezes every longer word that contains it, which blocks a legitimately translatable word. For example, `{Locked="const"}` on a message that also contains the English word *constant* locks `const` inside `constant`, so translators cannot localize it. Make each locked token unambiguous:
   - Every locked token MUST occur verbatim in the corresponding `<value>`. Do not lock an option name or other contextual identifier that the user-facing string does not actually contain.

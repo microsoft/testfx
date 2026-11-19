@@ -2,7 +2,7 @@
 
 > **Current implementation note (2026-10-09):** The built-in provider and child-process behavior
 > are implemented; see [MTP-006](../specifications/mtp.md#mtp-006--configured-child-environment).
-> The precedence explanation below is corrected to follow [controller environment preparation](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.ProcessConfiguration.cs):
+> The precedence explanation below is corrected to follow [controller environment preparation](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.ProcessConfiguration.cs):
 > inherited values do not outrank configured provider values, and overriding a locked value fails.
 > External SDK `launchSettings.json` behavior and every parser/runtime edge case remain unverified.
 

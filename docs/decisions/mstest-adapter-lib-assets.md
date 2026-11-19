@@ -315,8 +315,8 @@ the decisive results without requiring access to those local files.
 
 | Command | Outcome |
 | --- | --- |
-| `.\build.cmd -pack -c Release -bl -projects src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj /p:SkipUapTargetFramework=true` | Exit 1: compilation/pack produced the adapter, but the repository-wide verifier rejects missing unrelated packages and the omitted classic-UWP payload. |
-| `.\.dotnet\dotnet.exe pack src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj -c Release --no-build /p:SkipUapTargetFramework=true -bl:artifacts\log\Release\adapter-baseline-pack-only.binlog --verbosity quiet` | Exit 0; baseline package above. |
+| `.\build.cmd -pack -c Release -bl -projects src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj /p:SkipUapTargetFramework=true` | Exit 1: compilation/pack produced the adapter, but the repository-wide verifier rejects missing unrelated packages and the omitted classic-UWP payload. |
+| `.\.dotnet\dotnet.exe pack src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj -c Release --no-build /p:SkipUapTargetFramework=true -bl:artifacts\log\Release\adapter-baseline-pack-only.binlog --verbosity quiet` | Exit 0; baseline package above. |
 | `.\.dotnet\dotnet.exe pack "$scratch\lib-prototype\Prototype.csproj" -c Release -o "$scratch\lib-prototype\candidate-feed" "-bl:$scratch\lib-prototype\candidate-pack.binlog" --verbosity quiet` | Exit 0; isolated trial package above. |
 | `& "$scratch\Invoke-LibConsumers.ps1" -Repository (Get-Location).Path -Experiment "$scratch\lib-prototype" -RunName french-ui -BuildLanguage fr` | Exit 0; four builds, four discoveries, six executions, 18/18 passed. |
 | `& "$scratch\Invoke-LibConsumers.ps1" -Repository (Get-Location).Path -Experiment "$scratch\lib-prototype" -Variants candidate -Runners vstest -RunName english-ui -BuildLanguage en-US` | Exit 0; 3/3 passed, contrasted with the earlier English-build baseline's 2 passed/1 French-resource assertion failure. |

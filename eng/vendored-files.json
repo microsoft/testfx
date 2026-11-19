@@ -33,7 +33,7 @@
     },
     {
       "id": "analyzers-symbol-visibility",
-      "local_path": "src/Analyzers/MSTest.Analyzers/RoslynAnalyzerHelpers/SymbolVisibility.cs",
+      "local_path": "src/MSTest/MSTest.Analyzers/RoslynAnalyzerHelpers/SymbolVisibility.cs",
       "notes": "Verbatim copy with namespace adjustment. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk. The former MSTest.SourceGeneration copy was removed (#8586) in favor of a locally-authored SymbolAccessibilityHelper; this analyzers copy of the same upstream file remains the tracked vendored source.",
       "sources": [
         {
@@ -48,7 +48,7 @@
     },
     {
       "id": "platform-roslyn-debug",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynDebug.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/RoslynDebug.cs",
       "notes": "Adapted to internal class with [ExcludeFromCodeCoverage]. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk.",
       "sources": [
         {
@@ -63,7 +63,7 @@
     },
     {
       "id": "platform-file-utilities-case-sensitivity",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/FileUtilities.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal/FileUtilities.cs",
       "notes": "Originally copied lines 41-59 (GetIsFileSystemCaseSensitive) from the runtime probe. Upstream has since replaced the probe with an OS-based check (OperatingSystem.IsWindows/IsApplePlatform); we intentionally keep the file-system probe locally because (a) the platform targets netstandard2.0 where those APIs are not first-class, and (b) the probe better reflects mount-level case sensitivity. Upstream's consolidation of Apple-platform checks affects only the OS-based implementation and requires no port. Drift signal fires on the whole upstream file; reviewer should check whether any new change affects the historical copied region.",
       "sources": [
         {
@@ -78,7 +78,7 @@
     },
     {
       "id": "msbuild-dotnet-muxer-locator",
-      "local_path": "src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.cs",
       "notes": "Adapted from vstest's DotnetHostHelper.",
       "sources": [
         {
@@ -93,7 +93,7 @@
     },
     {
       "id": "msbuild-dotnet-muxer-locator-windows",
-      "local_path": "src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.Windows.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.Windows.cs",
       "notes": "Adapted from vstest's DotnetHostHelper. Windows PE header parsing, split out of DotnetMuxerLocator.cs.",
       "sources": [
         {
@@ -108,7 +108,7 @@
     },
     {
       "id": "msbuild-dotnet-muxer-locator-macos",
-      "local_path": "src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.MacOs.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.MacOs.cs",
       "notes": "Adapted from vstest's DotnetHostHelper. Mach-O header parsing, split out of DotnetMuxerLocator.cs.",
       "sources": [
         {
@@ -123,7 +123,7 @@
     },
     {
       "id": "platform-env-config-provider",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Configurations/EnvironmentVariablesConfigurationProvider.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Configurations/EnvironmentVariablesConfigurationProvider.cs",
       "notes": "Adapted from runtime's Microsoft.Extensions.Configuration.EnvironmentVariables.",
       "sources": [
         {
@@ -138,7 +138,7 @@
     },
     {
       "id": "platform-json-config-parser",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Configurations/JsonConfigurationFileParser.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Configurations/JsonConfigurationFileParser.cs",
       "notes": "Adapted from runtime's Microsoft.Extensions.Configuration.Json; additional _propertyToAllChildren dictionary for round-trip serialization.",
       "sources": [
         {
@@ -153,7 +153,7 @@
     },
     {
       "id": "platform-response-file-helper",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
       "notes": "Core logic taken from command-line-api's CommandLineParser (formerly CliParser) and StringExtensions response-file parsing. Local copy intentionally omits recursive @file expansion.",
       "sources": [
         {
@@ -176,7 +176,7 @@
     },
     {
       "id": "platform-paste-arguments",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/PasteArguments.cs",
       "notes": "Verbatim port of runtime's PasteArguments. Used by TestHostControllersTestHost on non-net8 TFMs to escape ProcessStartInfo arguments.",
       "sources": [
         {
@@ -191,7 +191,7 @@
     },
     {
       "id": "platform-task-extensions",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs",
       "notes": "WaitAsync downlevel polyfill, modeled after the runtime's TaskExtensions shared helper.",
       "sources": [
         {
@@ -206,7 +206,7 @@
     },
     {
       "id": "platform-ui-language-override",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/UILanguageOverride.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/UILanguageOverride.cs",
       "notes": "Adapted from the dotnet CLI's UILanguageOverride with small tweaks for testability (IEnvironment abstraction).",
       "sources": [
         {
@@ -221,8 +221,8 @@
     },
     {
       "id": "platform-ci-environment-detector",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/CIEnvironmentDetector.cs",
-      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection. This file is the single source of truth: it is linked into MSTest.TestFramework via src/TestFramework/TestFramework/TestFramework.csproj and toggled via the TESTFRAMEWORK_CI_DETECTOR define.",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/CIEnvironmentDetector.cs",
+      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection. This file is the single source of truth: it is linked into MSTest.TestFramework via src/MSTest/TestFramework/TestFramework.csproj and toggled via the TESTFRAMEWORK_CI_DETECTOR define.",
       "sources": [
         {
           "repo": "dotnet/sdk",
@@ -236,7 +236,7 @@
     },
     {
       "id": "platform-llm-environment-detector",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs",
       "notes": "Adapted from dotnet CLI telemetry LLM/agent environment detection. All environment reads already use the injected IEnvironment, so the upstream environment-provider injection requires no port. OpenCode is detected through OPENCODE.",
       "sources": [
         {
@@ -251,7 +251,7 @@
     },
     {
       "id": "platform-roslyn-hashcode",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
       "notes": "Roslyn-style adaptation of runtime's HashCode (preserves the xxHash32 algorithm published by Yann Collet). Tracks the upstream runtime file for drift on the algorithm itself; see also dotnet/roslyn#50156 commentary.",
       "sources": [
         {
@@ -266,7 +266,7 @@
     },
     {
       "id": "platform-terminal-native-methods",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/NativeMethods.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal/NativeMethods.cs",
       "notes": "Only QueryIsScreenAndTryEnableAnsiColorCodes and its console-mode P/Invokes are copied from msbuild's Framework NativeMethods. Upstream's simplification of IsUnixLike and removal of Unix platform detection and file-system case-sensitivity helpers are outside the copied scope and require no port.",
       "sources": [
         {
@@ -281,7 +281,7 @@
     },
     {
       "id": "platform-terminal-ansi-detector",
-      "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/AnsiDetector.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal/AnsiDetector.cs",
       "notes": "Ported from Spectre.Console's AnsiDetector (with additional regexes from supports-ansi).",
       "sources": [
         {
@@ -296,7 +296,7 @@
     },
     {
       "id": "trx-xxhash128",
-      "local_path": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHash128.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHash128.cs",
       "notes": "Adapted from runtime's System.IO.Hashing XxHash128 (BSD-2-Clause xxHash algorithm by Yann Collet). Internal type in TestFx.Hashing with byte-array APIs; shared by TRX reporting and MSTest adapter identity hashing. Hash algorithm and big-endian output are unchanged. Retain Multiply64To128 calls: the shared helper already uses Math.BigMul on NET and provides the fallback required by netstandard2.0, .NET Framework, and UWP consumers.",
       "sources": [
         {
@@ -311,7 +311,7 @@
     },
     {
       "id": "trx-xxhash-shared",
-      "local_path": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHashShared.cs",
+      "local_path": "src/MTP/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHashShared.cs",
       "notes": "Adapted from runtime's System.IO.Hashing XxHashShared (shared XXH3 implementation used by XxHash128), split locally across XxHashShared*.cs. Uses inline-array state buffers on modern .NET and fixed buffers on legacy targets; byte-array APIs and compatibility fallbacks are retained. Do not port the upstream removal of Multiply64To128: XxHashShared.Core.cs already uses Math.BigMul on NET and retains the fallback for netstandard2.0, .NET Framework, and UWP consumers.",
       "sources": [
         {
@@ -326,7 +326,7 @@
     },
     {
       "id": "shared-equatable-array",
-      "local_path": "src/Analyzers/Shared/EquatableArray.cs",
+      "local_path": "src/MSTest/Shared/EquatableArray.cs",
       "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp. Shared across the MSTest source generators (#9118).",
       "sources": [
         {

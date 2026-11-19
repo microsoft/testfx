@@ -138,7 +138,7 @@ included in this PR.
   demonstrates the discover/partition/run orchestration approach. It remains a
   valid MTP-level candidate, not something ruled out by choosing this first slice.
 - Native MSTest has neutral elements before host filtering in
-  [UnitTestDiscoverer](../../src/Adapter/MSTestAdapter.PlatformServices/Discovery/UnitTestDiscoverer.cs).
+  [UnitTestDiscoverer](../../src/MSTest/MSTestAdapter.PlatformServices/Discovery/UnitTestDiscoverer.cs).
   It can form stable class/dependency selections without a discovery child,
   UID replay or a cross-framework API.
 - [Filter providers](../RFCs/020-Test-Execution-Filter-Providers.md) can distinguish

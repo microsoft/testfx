@@ -93,7 +93,7 @@ Use a fresh results directory for each invocation so stale artifacts cannot be
 mistaken for current results. For an application registering CTRF, use
 `--report-ctrf` instead. CTRF is available as an alpha package in the 2.x release
 period; its graduation and platform-aligned version are staged for 3.0. Consult
-the [CTRF package documentation](../src/Platform/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md)
+the [CTRF package documentation](../src/MTP/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md)
 for the schema and version-specific identity/retry guarantees.
 
 When consuming a CTRF document, select failures before sending data to a model.
@@ -128,7 +128,7 @@ exports completed test spans while a suite continues, subject to exporter
 batching. It can correlate test failures with application HTTP/SQL traces. An
 application-owned exporter or local Collector does not require a hosted service.
 Server-mode JSON-RPC is another option for tools that own interactive execution;
-see the [client documentation](../src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources/PACKAGE.md).
+see the [client documentation](../src/MTP/Microsoft.Testing.Platform.ServerMode.Client.Sources/PACKAGE.md).
 
 Normal span export does not immediately publish test starts or events added to a
 still-running span. Telemetry is not automatically a complete results ledger:

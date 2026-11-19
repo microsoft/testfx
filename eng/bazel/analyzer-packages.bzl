@@ -7,7 +7,7 @@ load(
     "NuGetPackInfo",
 )
 
-_PROJECT = "src/Analyzers/MSTest.Analyzers.Package"
+_PROJECT = "src/MSTest/MSTest.Analyzers.Package"
 _MODES = ["none", "default", "recommended", "all"]
 
 def _assembly(target, expected_name):

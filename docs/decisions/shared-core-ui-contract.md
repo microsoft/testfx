@@ -93,11 +93,11 @@ Commands used from the worktree root (Release, SDK
 `12.0.100-alpha.1.26556.115`, Visual Studio 18 desktop MSBuild):
 
 ```powershell
-.\build.cmd -c Release -msbuildEngine vs -projects src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj -bl
+.\build.cmd -c Release -msbuildEngine vs -projects src\MSTest\TestFramework.Extensions\TestFramework.Extensions.csproj -bl
 .\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer1-pack.slnf -bl
 .\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer1-acceptance-packages.slnf -bl
 .\build.cmd -c Release -msbuildEngine vs -projects artifacts\validation\layer1-tests.slnf -bl
-.\.dotnet\dotnet.exe msbuild src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj /t:UpdateXlf -bl:artifacts\log\Release\layer1-update-xlf.binlog
+.\.dotnet\dotnet.exe msbuild src\MSTest\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj /t:UpdateXlf -bl:artifacts\log\Release\layer1-update-xlf.binlog
 .\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~MSTest.Acceptance.IntegrationTests.CoreFrameworkAssemblyTests.|FullyQualifiedName~MSTest.Acceptance.IntegrationTests.WinUITests.|FullyQualifiedName~WindowsApplicationModelPackageTests.PackedMSTestTestFramework_DeploymentItemAvailability" -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=artifacts\TestResults\Release\layer1-green-2 -bl:artifacts\log\Release\layer1-green-2.binlog --show-test-results all
 ```
 
@@ -157,7 +157,7 @@ resolved asset manifests, child binaries and TRX are retained.
 
 The comparison used the same pack/fixture commands above, rebuilt the unchanged
 acceptance project directly, and repacked the restored adapter with
-`.\build.cmd -pack -c Release -msbuildEngine vs -projects src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj -bl`
+`.\build.cmd -pack -c Release -msbuildEngine vs -projects src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj -bl`
 (exit 0). Its test commands used the same filter with separate `layer1-red-2`
 and `layer1-restored-green` result directories and binary logs. Strict TRX
 checks reconciled the planned identities, actual outcomes and fresh timestamps.

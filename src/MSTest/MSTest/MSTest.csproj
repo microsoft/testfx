@@ -1,0 +1,69 @@
+﻿<Project>
+
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+
+  <!-- SDK top import -->
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+
+  <PropertyGroup>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
+
+    <!--
+      warning NETSDK1023: A PackageReference for 'Microsoft.NET.Test.Sdk' was included in your project. This package
+                          is implicitly referenced by the .NET SDK and you do not typically need to reference it from
+                          your project. For more information, see https://aka.ms/sdkimplicitrefs
+    -->
+    <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
+    
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsTestProject>false</IsTestProject>
+    <IsPackable>true</IsPackable>
+    <PackageId>MSTest</PackageId>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2</PackageTags>
+    <PackageDescription><![CDATA[This package is a meta package to simplify test projects. It includes MSTest.TestFramework and MSTest.TestAdapter.
+
+Supported platforms:
+- .NET 4.6.2+
+- .NET 10.0+
+- UWP 10.0.16299
+
+$(CommonProductDescription)]]></PackageDescription>
+
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddEmptyTfmDirectoryInLib</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddEmptyTfmDirectoryInLib">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="_._" PackagePath="lib/$(TargetFramework)/" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Uwp\MSTest.Uwp.csproj" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Microsoft.NET.Test.Sdk package is referenced by build system, so omitting it. -->
+    <!-- VSTest is packaging props/targets in build directory of the NuGet package instead of buildTransitive -->
+    <!-- To ensure that this flows to consumers of MSTest metapackage, we set PrivateAssets to none (by default, PrivateAssets includes "build") -->
+    <!-- If VSTest moves from build to buildTransitive, the PrivateAssets here can/should be removed. -->
+    <!-- Currently, VSTest isn't able to move from build to buildTransitive -->
+    <!-- See: https://github.com/microsoft/vstest/pull/3879, -->
+    <!--      https://github.com/microsoft/vstest/issues/4098 -->
+    <!--      https://github.com/microsoft/vstest/pull/4104 -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" PrivateAssets="none" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+
+  <!-- SDK bottom import -->
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+
+</Project>

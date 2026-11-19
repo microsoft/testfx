@@ -30,7 +30,7 @@ testApplicationBuilder.AddAppInsightsTelemetryProvider();
 // testApplicationBuilder.CommandLine
 // testApplicationBuilder.TestHost
 // testApplicationBuilder.TestHostControllers
-// but the goal is to also expose all these areas: https://github.com/microsoft/testfx/blob/main/src/Platform/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs#L57-L69
+// but the goal is to also expose all these areas: https://github.com/microsoft/testfx/blob/main/src/MTP/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs#L57-L69
 
 // NOTE that registering an extension is not enough and each extension has some activation criteria,
 // most of the time the presence of a command line option but it could be anything (including nothing).
