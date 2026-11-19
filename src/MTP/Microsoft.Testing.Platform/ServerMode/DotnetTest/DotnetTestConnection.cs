@@ -31,6 +31,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private CancellationTokenSource? _serverControlListenerCts;
     private string? _serverControlPipeName;
     private int _cancelRequested;
+    private bool _isTestInProgressSupported;
 
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
@@ -211,6 +212,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         HandshakeMessage handshakeMessage = new(properties);
 
         IsCoverageSummarySupported = false;
+        _isTestInProgressSupported = false;
         HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
@@ -240,6 +242,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 && advertisedCoverageVersion == ProtocolConstants.CoverageSummaryVersion
                 && response.Properties.TryGetValue(HandshakeMessagePropertyNames.CoverageSummaryVersion, out string? coverageVersion)
                 && coverageVersion == ProtocolConstants.CoverageSummaryVersion;
+            _isTestInProgressSupported = isCompatible
+                && response.Properties.TryGetValue(HandshakeMessagePropertyNames.TestInProgressSupported, out string? progressSupported)
+                && bool.TryParse(progressSupported, out bool supportsProgress)
+                && supportsProgress;
             return isCompatible;
         }
 
@@ -280,6 +286,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
             case TestResultMessages testResultMessages:
                 await transportClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                break;
+
+            case TestInProgressMessages testInProgressMessages when _isTestInProgressSupported:
+                await transportClient.RequestReplyAsync<TestInProgressMessages, VoidResponse>(testInProgressMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case FileArtifactMessages fileArtifactMessages:

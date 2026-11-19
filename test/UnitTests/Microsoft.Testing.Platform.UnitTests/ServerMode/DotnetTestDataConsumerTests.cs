@@ -186,6 +186,47 @@ public sealed class DotnetTestDataConsumerTests
     }
 
     [TestMethod]
+    [DataRow("1.0.0", "true", true, DisplayName = "ProgressSupported")]
+    [DataRow("1.0.0", null, false, DisplayName = "LegacyPeer")]
+    [DataRow("1.0.0", "false", false, DisplayName = "ProgressDisabled")]
+    [DataRow("1.0.0", "invalid", false, DisplayName = "InvalidCapability")]
+    [DataRow("2.0.0", "true", false, DisplayName = "IncompatiblePeer")]
+    public async Task ConsumeAsync_InProgressForNonIdeRequiresCapability(string version, string? capability, bool supported)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        Dictionary<byte, string> reply = new()
+        {
+            [HandshakeMessagePropertyNames.SupportedProtocolVersions] = version,
+            [HandshakeMessagePropertyNames.IsIDE] = "false",
+        };
+        if (capability is not null)
+        {
+            reply[22] = capability;
+        }
+
+        fixture.Client.Respond(new HandshakeMessage(reply), TestContext.CancellationToken);
+        Assert.AreEqual(version == "1.0.0", await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        List<TestInProgressMessages> sent = [];
+        fixture.Client.RespondVoid<TestInProgressMessages>(TestContext.CancellationToken, sent.Add);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), CreateUpdate(InProgressTestNodeStateProperty.CachedInstance), TestContext.CancellationToken);
+
+        if (!supported)
+        {
+            Assert.IsEmpty(sent);
+            return;
+        }
+
+        TestInProgressMessages batch = Assert.ContainsSingle(sent);
+        Assert.AreEqual("execution", batch.ExecutionId);
+        Assert.AreEqual(DotnetTestConnection.InstanceId, batch.InstanceId);
+        TestInProgressMessage runningTest = Assert.ContainsSingle(batch.InProgressMessages);
+        Assert.AreEqual("uid", runningTest.Uid);
+        Assert.AreEqual("DisplayName", runningTest.DisplayName);
+    }
+
+    [TestMethod]
     [DataRow("passed", TestStates.Passed, true)]
     [DataRow("skipped", TestStates.Skipped, false)]
     [DataRow("progress", TestStates.InProgress, false)]

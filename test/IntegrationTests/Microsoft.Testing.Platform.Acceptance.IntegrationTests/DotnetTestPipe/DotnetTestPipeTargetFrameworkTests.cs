@@ -28,6 +28,47 @@ public sealed class DotnetTestPipeTargetFrameworkTests : AcceptanceTestBase<NopA
     public Task DotnetTestPipe_TargetFrameworkIncludesDeclaredPlatform()
         => VerifyTargetFrameworkAsync("net10.0-windows10.0.19041.0", suppressTargetAttribute: false, expectedTarget: "net10.0-windows10.0.19041.0");
 
+    [TestMethod]
+    [DataRow(true, false, DisplayName = "ProgressCapableSdk")]
+    [DataRow(false, false, DisplayName = "ProgressLegacySdk")]
+    [DataRow(true, true, DisplayName = "ProgressIde")]
+    public async Task DotnetTestPipe_ProgressHonorsPeerCapability(bool advertiseProgress, bool isIde)
+    {
+        const string assetName = "AssemblyTargetProbe";
+        string code = AssetCode
+            .PatchCodeWithReplace("$TargetFramework$", "net10.0")
+            .PatchCodeWithReplace("$GenerateTargetFrameworkAttribute$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset asset = await TestAsset.GenerateAssetAsync($"{assetName}-{Guid.NewGuid():N}", code);
+        await DotnetCli.RunAsync($"build {asset.TargetAssetPath} -c Release", cancellationToken: TestContext.CancellationToken);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(asset.TargetAssetPath, assetName, "net10.0");
+        VerifyPackageProvenance(asset, testHost);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            testHost, isIde: isIde, advertiseTestInProgress: advertiseProgress, cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, result.TestHostResult.ExitCode, result.TestHostResult.ToString());
+        RawMessage[] progress = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestInProgressMessages)];
+        RawMessage[] results = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestResultMessages)];
+        Assert.HasCount(isIde ? 2 : 1, results);
+        if (!advertiseProgress || isIde)
+        {
+            Assert.IsEmpty(progress);
+            return;
+        }
+
+        RawMessage frame = Assert.ContainsSingle(progress);
+        var decoded = DotnetTestPipeProtocol.DecodeTestInProgressMessagesBody(frame.Body);
+        Assert.IsNotNull(result.ReceivedHandshake);
+        Assert.AreEqual(result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.ExecutionId], decoded.ExecutionId);
+        Assert.AreEqual(result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.InstanceId], decoded.InstanceId);
+        DiscoveredTest test = Assert.ContainsSingle(decoded.Tests);
+        Assert.AreEqual("target-test", test.Uid);
+        Assert.AreEqual("Target test", test.DisplayName);
+        List<RawMessage> frames = [.. result.ReceivedMessages];
+        Assert.IsTrue(frames.IndexOf(frame) < frames.IndexOf(results[0]));
+    }
+
     private async Task VerifyTargetFrameworkAsync(string framework, bool suppressTargetAttribute, string? expectedTarget, bool verifyStandalone = false)
     {
         const string assetName = "AssemblyTargetProbe";
@@ -134,6 +175,14 @@ public sealed class DotnetTestPipeTargetFrameworkTests : AcceptanceTestBase<NopA
                 => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
             public async Task ExecuteRequestAsync(ExecuteRequestContext context)
             {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                    context.Request.Session.SessionUid,
+                    new TestNode
+                    {
+                        Uid = "target-test",
+                        DisplayName = "Target test",
+                        Properties = new(InProgressTestNodeStateProperty.CachedInstance),
+                    }));
                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
                     context.Request.Session.SessionUid,
                     new TestNode

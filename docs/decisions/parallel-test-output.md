@@ -26,6 +26,16 @@ aggregate coverage percentages from incompatible measurements.
 
 ## Research and experiments
 
+- 2026-11-19: The SDK's composed preview run displayed module heartbeats but
+  no slow-test names. A diagnostic run of the same packaged MSTest host
+  confirmed it publishes an in-progress node before executing the test.
+  `DotnetTestDataConsumer` constructs the corresponding pipe message for a
+  non-IDE consumer, but `DotnetTestConnection.SendMessageAsync` has no dispatch
+  case for that message, so it is dropped. The SDK confirmed that older peers
+  can negotiate protocol 1.0 without recognizing this message. Dispatch it
+  only when the SDK explicitly advertises support in its handshake; missing,
+  false, invalid, or incompatible capabilities retain the previous no-progress
+  fallback. IDE progress continues through test-result messages.
 - 2026-11-19: The coordinator identified three gaps against the approved
   mockup: host-owned error annotations need an assembly identity, module labels
   need optional non-outcome colors, and artifact paths need their own counted
