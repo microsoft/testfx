@@ -95,4 +95,5 @@ internal static class DiagnosticIds
     public const string MSTestHostTestClassInjectionNotSupportedRuleId = "MSTEST0088";
     public const string ConflictingDataRowDisplayNamesRuleId = "MSTEST0089";
     public const string AvoidEnumerableAssertionsOnQueryableRuleId = "MSTEST0090";
+    public const string PublicTestClassSuppressorRuleId = "MSTEST0091";
 }
