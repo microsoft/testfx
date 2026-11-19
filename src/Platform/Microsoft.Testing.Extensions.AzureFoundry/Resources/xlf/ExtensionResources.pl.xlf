@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="pl" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="EnvironmentVariableNotSet">
+        <source>Environment variable '{0}' is not set.</source>
+        <target state="translated">Zmienna środowiskowa „{0}” nie jest ustawiona.</target>
+        <note>{0} is the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NoAuthenticationConfigured">
+        <source>No authentication is configured for the Azure OpenAI chat client provider. Set the 'AZURE_OPENAI_API_KEY' environment variable, or reference the 'Azure.Identity' package and pass a credential (for example 'new DefaultAzureCredential()') to 'AddAzureOpenAIChatClientProvider'.</source>
+        <target state="translated">Nie skonfigurowano uwierzytelniania dla Azure dostawcy klienta czatu OpenAI. Ustaw 'AZURE_OPENAI_API_KEY' zmienną środowiskową lub odwołaj się do pakietu 'Azure.Identity' i przekaż poświadczenie (na przykład 'new DefaultAzureCredential()') do 'AddAzureOpenAIChatClientProvider'.</target>
+        <note>Do not localize the environment variable {Locked="AZURE_OPENAI_API_KEY"}, package name {Locked="Azure.Identity"}, code example {Locked="new DefaultAzureCredential()"}, or API name {Locked="AddAzureOpenAIChatClientProvider"}.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
