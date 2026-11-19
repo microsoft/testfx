@@ -300,8 +300,10 @@ def native_mstest_packages():
     )
 
     platform_packages = []
+
+    # Modern UWP and WinUI ship the same adapter build at Windows 18362, matching MSBuild.
     for flavor, package_id, framework in [
-        ("uwp", "MSTest.Uwp", "net10.0-windows10.0.17763.0"),
+        ("uwp", "MSTest.Uwp", "net10.0-windows10.0.18362.0"),
         ("winui", "MSTest.WinUI", "net10.0-windows10.0.18362.0"),
     ]:
         name = "mstest_" + flavor + "_package"
@@ -318,7 +320,7 @@ def native_mstest_packages():
             version_file = ":mstest_package_version",
             description = "Provides UI-thread test attributes and matching MSTest adapters for " + package_id + ".",
             readme = project + "/PACKAGE.md",
-            libraries = [":mstest_" + flavor, ":adapter_" + flavor, ":platform_services_" + flavor],
+            libraries = [":mstest_" + flavor, ":adapter_winui", ":platform_services_winui"],
             target_frameworks = [framework],
             directories = ["lib/{tfm}", "buildTransitive/{tfm}", "buildTransitive/{tfm}"],
             resource_directories = ["lib/{tfm}", "buildTransitive/{tfm}/_localization", "buildTransitive/{tfm}/_localization"],

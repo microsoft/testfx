@@ -694,3 +694,51 @@ maintained validator functions, not a copied predicate. These are executed
 archive-rejection assertions; the normal package gate separately executes the
 real native tests. The bounded mixed-operator check of the layer's other changed
 PowerShell validators found only explicitly parenthesized conjunctions.
+
+### Main integration: shared modern UI adapter: 2026-11-19
+
+Merging main `d634b2fe38b8572045c7c648789f4fb1fe14f84e` into PR head
+`db7e22ce6241abb7f7922a1792e06390c5535d02` (merge base
+`28a041287150a48ad48134672c472a481fecf492`) brought two package-contract changes.
+The #12515 ordinary adapter layout under `lib/{tfm}` auto-merged into the native
+rule and validator; the only textual conflict was its satellite-directory comment
+in `mstest-packages.bzl`. The #12516 shared modern UI adapter
+([shared-modern-uwp-winui-adapter.md](shared-modern-uwp-winui-adapter.md)) changed
+no Bazel input, so main's native graph still builds a separate 17763 UWP adapter.
+Keeping that would make native `MSTest.Uwp` diverge from the MSBuild package.
+
+Native modern UWP therefore follows MSBuild: `mstest_uwp` and its package target
+`net10.0-windows10.0.18362.0`, and UWP reuses `adapter_winui` and
+`platform_services_winui` instead of building a `WINDOWS_UWP` adapter that links
+the classic-only `CommandLineOptionParser`. The targeting test owns both UI flavors'
+adapter/services through the WinUI targets and rejects a 17763 modern UWP consumer
+against the 18362 payload. The Windows probe and native package validators now also
+require identical UWP and WinUI adapter/services bytes. The `windows_sdk_17763`
+projection and its paket group remain declared but unused by MSTest libraries.
+Removing them would require regenerating the shared lock, so they are left alone.
+The earlier 17763 UWP archive layout and hash in this record are superseded.
+
+| Requirement | Command / executed evidence |
+| --- | --- |
+| Native build | `eng\bazel.ps1 build //:mstest_uwp_package //:mstest_winui_package //:windows_libraries //:windows_probes --jobs=2 --noshow_progress`: exit **0**. |
+| Targeting/assets | `eng\bazel.ps1 test //:windows_targeting_test //:windows_asset_selection_test --jobs=2 --noshow_progress`: exit **0**, 2 of 2 passed. |
+| SDK/meta-package contracts | `eng\bazel.ps1 test //:sdk_package_tests --jobs=2 --noshow_progress --test_output=errors`: exit **0**. |
+| Windows consumers | `eng\bazel\windows\validate.ps1 -ArtifactsDirectory %TEMP%\pr12451-windows-validation`: exit **0**; five probes, including 18362 UWP and the shared-adapter hash check. |
+| Native feed | `eng\bazel\validate-mstest-packages.ps1 -IncludeWindowsPlatformPackages -OutputRoot %TEMP%\pr12451-package-validation`: exit **0**; ten archives, net10/net11 pass/failure/empty consumers (0/2/9) and MSBuild parent (0/1). |
+
+UWP has 43 entries/26 satellites and WinUI 56 entries/39 satellites, all under
+`net10.0-windows10.0.18362`. Archive SHA-256 values are
+`0AA2CEC87DF5F360DB6D4FB83B50DBC0F31A2C32CEE938E2448E0A4E9B969260` (UWP) and
+`74AF5E5A3CD501DC199B97E461C3F893DFC331F482931EBB5FBC62FEAED958D8` (WinUI). Both
+ship `MSTest.TestAdapter.dll`
+`E6E288D1F755D61612B36D1F4F7FD7FC7129299F2E07A7EA2556D435D041E5C2` and
+`MSTestAdapter.PlatformServices.dll`
+`9A6DE6F51D52F0BCA928ACE14CA9BC490EBF992C1BCC8309210CC75FFD4594D3`.
+
+**Test-value evidence:** restoring only the UWP-owned adapter wiring in a temporary
+`windows.bzl` copy made the unchanged `windows_targeting_test` execute and fail,
+exit **3**, on exactly the four UWP probe compile/runtime ownership cases for
+`MSTest.TestAdapter` and `MSTestAdapter.PlatformServices`. Restoring the file
+byte-for-byte returned exit **0**. The shared-hash validator branches were not
+mutation-tested. CI, classic UAP production, real UI activation and
+release-branch validation remain unavailable.

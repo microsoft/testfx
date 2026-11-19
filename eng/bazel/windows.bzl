@@ -84,14 +84,15 @@ def _windows_library(name, target_frameworks, linked_srcs = [], minimum_version 
         **kwargs
     )
 
-def _mstest_flavor(flavor, framework, symbol, projection_deps):
+def _mstest_flavor(flavor, framework, symbol, projection_deps, adapter_flavor = None):
     attributes = "mstest_" + flavor
     assembly_name = "MSTest.Uwp" if flavor == "uwp" else "MSTest.WinUI"
-    services = "platform_services_" + flavor
-    adapter = "adapter_" + flavor
+
+    # Modern UWP reuses the WinUI adapter build instead of compiling its own.
+    adapter_flavor = adapter_flavor or flavor
+    services = "platform_services_" + adapter_flavor
+    adapter = "adapter_" + adapter_flavor
     framework_project = "src/MSTest/" + assembly_name
-    services_project = "src/MSTest/MSTestAdapter.PlatformServices"
-    adapter_project = "src/MSTest/MSTest.TestAdapter"
     _windows_library(
         name = attributes,
         project = framework_project,
@@ -105,6 +106,16 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
         analyzer_configs = ["//eng/bazel/windows:winrt.globalconfig"],
         deps = [":framework"] + projection_deps,
     )
+    if adapter_flavor == flavor:
+        _mstest_adapter(flavor, framework, symbol, projection_deps)
+    native.filegroup(name = "_windows_" + flavor, srcs = [":framework", ":" + attributes, ":" + services, ":" + adapter], tags = ["manual"])
+    testfx_matrix(name = "windows_" + flavor, target = ":_windows_" + flavor, frameworks = [framework])
+
+def _mstest_adapter(flavor, framework, symbol, projection_deps):
+    services = "platform_services_" + flavor
+    adapter = "adapter_" + flavor
+    services_project = "src/MSTest/MSTestAdapter.PlatformServices"
+    adapter_project = "src/MSTest/MSTest.TestAdapter"
     _windows_library(
         name = services,
         project = services_project,
@@ -141,7 +152,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             _SHARED + "/TestRunParametersCommandLineOptionsProviderBase.cs",
             _SHARED + "/TestCaseFilterCommandLineOptionsProviderBase.cs",
             "@paket.source//microsoft.testplatform.filter.source:content_files",
-        ] + ([_PACKAGED_APP + "/CommandLineOptionParser.cs"] if flavor == "uwp" else []),
+        ],
         resources = {adapter_project + "/Resources/PlatformAdapterResources.resx": "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.PlatformAdapterResources"},
         build_info = adapter_project + "/BuildInfo.cs.template",
         internals_visible_to = [
@@ -166,8 +177,6 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
             "@paket.source//microsoft.testplatform.objectmodel",
         ],
     )
-    native.filegroup(name = "_windows_" + flavor, srcs = [":framework", ":" + attributes, ":" + services, ":" + adapter], tags = ["manual"])
-    testfx_matrix(name = "windows_" + flavor, target = ":_windows_" + flavor, frameworks = [framework])
 
 def _library_probe(name, framework, scenario, deps, project_sdk = "default"):
     _windows_metadata(name = name + "_metadata", frameworks = [framework])
@@ -339,8 +348,9 @@ def windows_libraries():
         frameworks = _DESKTOP_FRAMEWORKS,
     )
 
-    _mstest_flavor("uwp", "net10.0-windows10.0.17763.0", "WINDOWS_UWP", [":windows_sdk_17763"])
+    # Modern UWP and WinUI share one adapter build at Windows 18362, matching MSBuild.
     _mstest_flavor("winui", "net10.0-windows10.0.18362.0", "WIN_UI", [":windows_sdk_18362", "@windows.main//microsoft.windowsappsdk"])
+    _mstest_flavor("uwp", "net10.0-windows10.0.18362.0", "WINDOWS_UWP", [":windows_sdk_18362"], adapter_flavor = "winui")
     _controller()
 
     native.filegroup(
@@ -367,9 +377,9 @@ def windows_libraries():
     )
     _library_probe(
         "windows_probe_uwp",
-        "net10.0-windows10.0.17763.0",
+        "net10.0-windows10.0.18362.0",
         "uwp",
-        [":adapter_uwp", ":platform_services_uwp", ":mstest_uwp", ":framework", ":framework_compatibility"],
+        [":adapter_winui", ":platform_services_winui", ":mstest_uwp", ":framework", ":framework_compatibility"],
     )
     _library_probe(
         "windows_probe_winui",

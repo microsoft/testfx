@@ -22,7 +22,7 @@ New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $frameworks = @('net10.0', 'net11.0')
 $coreFrameworks = @('netstandard2.0', 'net462') + $frameworks
 $platformFrameworks = @{
-    'MSTest.Uwp' = 'net10.0-windows10.0.17763'
+    'MSTest.Uwp' = 'net10.0-windows10.0.18362'
     'MSTest.WinUI' = 'net10.0-windows10.0.18362'
 }
 $portableIds = @(
@@ -463,6 +463,23 @@ try {
         finally { $archive.Dispose() }
     }
     Assert-Names $expectedIds @($packages.Keys) 'Native feed'
+    if ($IncludeWindowsPlatformPackages) {
+        # Modern UWP and WinUI must ship the same shared adapter build.
+        $sharedAdapterHashes = @{}
+        foreach ($id in $platformFrameworks.Keys) {
+            $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[$id].Path)
+            try {
+                foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
+                    $hash = Get-ZipHash $archive "buildTransitive/$($platformFrameworks[$id])/$name.dll"
+                    if ($sharedAdapterHashes.ContainsKey($name) -and $sharedAdapterHashes[$name] -cne $hash) {
+                        throw "MSTest.Uwp and MSTest.WinUI must ship the same $name payload."
+                    }
+                    $sharedAdapterHashes[$name] = $hash
+                }
+            }
+            finally { $archive.Dispose() }
+        }
+    }
     $sdkVersion = [regex]::Match((Get-Content -LiteralPath (Join-Path $root 'MODULE.bazel') -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value
     if (-not $sdkVersion) { throw 'Could not identify the native toolchain SDK.' }
     $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }

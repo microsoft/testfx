@@ -23,6 +23,7 @@ New-Item -ItemType Directory -Path $directory | Out-Null
 $steps = [Collections.Generic.List[object]]::new()
 $consumers = [Collections.Generic.List[object]]::new()
 $coreHashes = @{}
+$sharedAdapterHashes = @{}
 $succeeded = $false
 $inputHashes = @(Get-FileHash -Algorithm SHA256 -LiteralPath @(
     (Join-Path $root 'MODULE.bazel'), (Join-Path $root 'BUILD.bazel'),
@@ -101,7 +102,7 @@ $probes = @(
     @{ Name = 'windows_probe_packaged_net10'; Scenario = 'packaged'; Major = 10; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net11'; Scenario = 'packaged'; Major = 11; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 10; Platform = '7.0' },
-    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.17763.0' },
+    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.18362.0' },
     @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 10; Platform = '10.0.18362.0' }
 )
 Push-Location $root
@@ -231,6 +232,13 @@ try {
             if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
                 $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."
+            }
+            if ($assembly.Name -in @('MSTestAdapter.PlatformServices', 'MSTest.TestAdapter')) {
+                # Modern UWP and WinUI consume one shared adapter build.
+                if ($sharedAdapterHashes.ContainsKey($assembly.Name) -and $sharedAdapterHashes[$assembly.Name] -cne $assembly.Sha256) {
+                    throw "UWP and WinUI consumers did not load the same native $($assembly.Name) payload."
+                }
+                $sharedAdapterHashes[$assembly.Name] = $assembly.Sha256
             }
         }
         foreach ($core in @($report.SourceAssemblies | Where-Object { $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions') })) {

@@ -30,7 +30,8 @@ def _configuration(framework):
         "@rules_dotnet//dotnet:rid": "win-x64",
     })
 
-def _flavor_targets(flavor, framework):
+def _flavor_targets(flavor, framework, adapter_flavor = None):
+    adapter_flavor = adapter_flavor or flavor
     return {
         flavor + "_" + name: attr.label(
             default = "//:" + target,
@@ -39,8 +40,8 @@ def _flavor_targets(flavor, framework):
         )
         for name, target in [
             ("attributes", "mstest_" + flavor),
-            ("services", "platform_services_" + flavor),
-            ("adapter", "adapter_" + flavor),
+            ("services", "platform_services_" + adapter_flavor),
+            ("adapter", "adapter_" + adapter_flavor),
             ("probe", "windows_probe_" + flavor + "_app"),
         ]
     }
@@ -92,11 +93,10 @@ def _targeting_tests_impl(ctx):
             {"name": "Microsoft.NETCore.App", "version": "8.0.0"},
             {"name": "Microsoft.WindowsDesktop.App", "version": "8.0.0"},
         ], desktop["runtimeOptions"]["frameworks"]),
-        ("Net11UwpConsumesNet10Attributes", "net10.0-windows10.0.17763.0", get_nearest_compatible_target_framework("net11.0-windows10.0.17763.0", ["net10.0-windows10.0.17763.0"])),
+        ("ModernUwpBelowSharedAdapterMinimumIsRejected", None, get_highest_compatible_target_framework("net10.0-windows10.0.17763.0", ["net10.0-windows10.0.18362.0"])),
         ("Net11WinuiConsumesNet10Attributes", "net10.0-windows10.0.18362.0", get_nearest_compatible_target_framework("net11.0-windows10.0.18362.0", ["net10.0-windows10.0.18362.0"])),
         ("ModernUiSelectsOrdinaryCore", "net11.0", get_nearest_compatible_target_framework("net11.0-windows10.0.18362.0", ["netstandard2.0", "net462", "net10.0", "net11.0"])),
-        ("UwpLibPathUsesNuGetCanonicalWindowsVersion", "net10.0-windows10.0.17763", mstest_package_tfm("net10.0-windows10.0.17763.0")),
-        ("WinuiLibPathUsesNuGetCanonicalWindowsVersion", "net10.0-windows10.0.18362", mstest_package_tfm("net10.0-windows10.0.18362.0")),
+        ("ModernUiLibPathUsesNuGetCanonicalWindowsVersion", "net10.0-windows10.0.18362", mstest_package_tfm("net10.0-windows10.0.18362.0")),
         ("ClassicUwpLibPathPreservesMinimum", "uap10.0.16299", mstest_package_tfm("uap10.0.16299")),
     ]
     for flavor, targets in [
@@ -123,8 +123,9 @@ def _targeting_tests_impl(ctx):
             for name, owner, present in [
                 (assembly_name, "mstest_" + flavor, kind in ["attributes", "probe"]),
                 (other, "", False),
-                ("MSTest.TestAdapter", "adapter_" + flavor, kind in ["adapter", "probe"]),
-                ("MSTestAdapter.PlatformServices", "platform_services_" + flavor, kind in ["services", "adapter", "probe"]),
+                # Modern UWP and WinUI share the WinUI adapter build.
+                ("MSTest.TestAdapter", "adapter_winui", kind in ["adapter", "probe"]),
+                ("MSTestAdapter.PlatformServices", "platform_services_winui", kind in ["services", "adapter", "probe"]),
                 ("MSTest.TestFramework.Extensions", "framework_compatibility", kind == "probe"),
             ]:
                 compile_owners, runtime_owners = _assembly_owners(target, name)
@@ -152,5 +153,5 @@ windows_targeting_test = rule(
             cfg = _configuration("net10.0-windows7.0"),
             providers = [DotnetAssemblyCompileInfo, DotnetAssemblyRuntimeInfo],
         ),
-    } | _flavor_targets("uwp", "net10.0-windows10.0.17763.0") | _flavor_targets("winui", "net10.0-windows10.0.18362.0"),
+    } | _flavor_targets("uwp", "net10.0-windows10.0.18362.0", "winui") | _flavor_targets("winui", "net10.0-windows10.0.18362.0"),
 )

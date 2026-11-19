@@ -151,9 +151,9 @@ the server-client's default validation assembly targets `net10.0`.
 project variants rather than relying on compatible-framework fallback.
 Windows-qualified targets are opt-in; full workload/runtime parity remains a
 separate gate.
-The modern-UWP (`net10.0-windows10.0.17763.0`) and WinUI
-(`net10.0-windows10.0.18362.0`) closures use their matching `framework_uwp` and
-`framework_winui` core variants, not ordinary `framework`. `TestContext` is
+The modern-UWP and WinUI closures both target `net10.0-windows10.0.18362.0`,
+consume the ordinary `framework` core, and share one `adapter_winui` and
+`platform_services_winui` build, matching the MSBuild packages. `TestContext` is
 defined in core for every flavor; the UI variants retain the exclusions of
 `DeploymentItemAttribute` and the desktop `TestContext` directory properties.
 The desktop library probe checks that ordinary core still exposes those APIs.
