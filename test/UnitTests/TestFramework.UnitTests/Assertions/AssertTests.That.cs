@@ -1941,6 +1941,38 @@ public partial class AssertTests : TestContainer
             """.Replace("\r\n", "\n"));
     }
 
+    public void That_ListInitializerWithNestedQuotedLiteral_RendersCleanedInitializer()
+    {
+        Action accepted = () => Assert.That(() => new List<int> { "{\"}".Length }.Count == 1);
+        accepted.Should().NotThrow();
+
+        Action rejected = () => Assert.That(() => new List<int> { "{\"}".Length }.Count == 0, conditionExpression: "nested literal");
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assert.That(nested literal) failed.
+            Details:
+              "{"}".Length = 3
+              new List<int> { "{"}".Length }.Count = 1
+            """.Replace("\r\n", "\n"));
+    }
+
+    public void That_ListInitializerWithNestedConcatLiterals_RendersCleanedInitializer()
+    {
+        Action accepted = () => Assert.That(() => new List<string> { string.Concat("a\"{b\"c", "}") }.Count == 1);
+        accepted.Should().NotThrow();
+
+        // The Add-argument extraction stops at the first ')' inside an operand, as it does on main, so the
+        // call's closing parenthesis is dropped; this case covers locating the initializer's closing brace.
+        Action rejected = () => Assert.That(() => new List<string> { string.Concat("a\"{b\"c", "}") }.Count == 0, conditionExpression: "nested concat");
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assert.That(nested concat) failed.
+            Details:
+              new List<string> { Concat("a"{b"c", "}" }.Count = 1
+              string.Concat("a"{b"c", "}") = "a"{b"c}"
+            """.Replace("\r\n", "\n"));
+    }
+
     public void That_EmptyConstructionAndGroupedIndex_PreserveReadableDiagnostics()
     {
         Action empty = () => Assert.That(() => new List<long>().Count == 0);
