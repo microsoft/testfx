@@ -22,7 +22,7 @@ Supported platforms:
 - .NET 10.0+
 - .NET 10.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 10+
+- UWP 10.0.18362 with .NET 10+
 
 The SDK uses one shared `MSTest.TestFramework` and selects exactly one adapter
 composition: `MSTest.TestAdapter` for ordinary .NET, `MSTest.Uwp` for classic or

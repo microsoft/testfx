@@ -233,7 +233,7 @@ internal static class MethodInfoExtensions
             int methodParametersLengthOrZero = methodParameters.Length;
             int argumentsLengthOrZero = arguments?.Length ?? 0;
 
-#if WINDOWS_UWP
+#if WINDOWS_UWP || WIN_UI
             // There is a bug with UWP in release mode where the arguments are wrapped in an object[], so we need to unwrap it.
             // See https://github.com/microsoft/testfx/issues/3071
             if (argumentsLengthOrZero == 1

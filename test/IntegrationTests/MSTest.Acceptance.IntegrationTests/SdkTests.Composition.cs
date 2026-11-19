@@ -568,7 +568,7 @@ public sealed partial class SdkTests
         string? uiAsset = expectedAdapterPackageId switch
         {
             "MSTest.Uwp" when targetFramework.StartsWith("uap", StringComparison.Ordinal) => "lib/uap10.0.16299/MSTest.Uwp.dll",
-            "MSTest.Uwp" => "lib/net10.0-windows10.0.17763/MSTest.Uwp.dll",
+            "MSTest.Uwp" => "lib/net10.0-windows10.0.18362/MSTest.Uwp.dll",
             "MSTest.WinUI" => "lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
             _ => null,
         };

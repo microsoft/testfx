@@ -9,7 +9,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(WinUiMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
@@ -24,16 +24,12 @@
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
-  <!-- Properties specific to WinUI -->
+  <!-- Modern UWP and WinUI share one adapter build at Windows 18362. -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 

@@ -25,7 +25,6 @@
   <!-- The TFMs to build and test against. -->
   <PropertyGroup>
     <SkipUapTargetFramework Condition="'$(MutationTesting)' == 'true'">true</SkipUapTargetFramework>
-    <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
     <!--
       $(UwpMinimum) (uap10.0.16299) requires desktop msbuild.exe because
       MSBuild.Sdk.Extras Workarounds.targets refuses to build full-MSBuild targets
@@ -36,8 +35,8 @@
       projects multi-target (net462 and the supported .NET frameworks).
     -->
     <UwpMinimum Condition=" '$(SkipUapTargetFramework)' != 'true' ">uap10.0.16299</UwpMinimum>
-    <ModernUwpMinimum>net10.0-windows10.0.17763.0</ModernUwpMinimum>
     <WinUiMinimum>net10.0-windows10.0.18362.0</WinUiMinimum>
+    <ModernUwpMinimum>$(WinUiMinimum)</ModernUwpMinimum>
 
     <SupportedNetFrameworks>net10.0;net11.0</SupportedNetFrameworks>
   </PropertyGroup>
