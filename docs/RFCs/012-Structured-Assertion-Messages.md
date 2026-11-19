@@ -8,7 +8,7 @@
 > `Assert.That` still uses its expression-specific legacy reporting path rather than the proposed
 > universal structured layout. Modern collection assertion families have also grown beyond this catalog.
 > See [MSTEST-019](../specifications/mstest.md#mstest-019--structured-messages-carry-separate-machine-readable-values)
-> and [AssertionValueRenderer](../../src/TestFramework/TestFramework/Assertions/AssertionValueRenderer.cs).
+> and [AssertionValueRenderer](../../src/MSTest/TestFramework/Assertions/AssertionValueRenderer.cs).
 > The audit compared layout/rendering topics and existing tests, not every catalog example or protocol consumer.
 
 - [x] Approved in principle

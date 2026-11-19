@@ -23,10 +23,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.WinUI\MSTest.WinUI.csproj" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.WinUI\MSTest.WinUI.csproj" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 
   <ItemGroup>

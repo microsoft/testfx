@@ -1,8 +1,8 @@
 # RFC 019 - Code coverage messages & consumer model for Microsoft.Testing.Platform
 
 > **Current implementation note (2026-10-09):** The message consumer/read model is implemented in
-> [TestCoverageResult](../../src/Platform/Microsoft.Testing.Platform/Services/TestCoverageResult.cs);
-> [CoverageThresholdPolicy](../../src/Platform/Microsoft.Testing.Platform/Services/CoverageThresholdPolicy.cs)
+> [TestCoverageResult](../../src/MTP/Microsoft.Testing.Platform/Services/TestCoverageResult.cs);
+> [CoverageThresholdPolicy](../../src/MTP/Microsoft.Testing.Platform/Services/CoverageThresholdPolicy.cs)
 > also implements overall line/branch gates beyond this RFC's message-only scope.
 > See [MTP-013](../specifications/mtp.md#mtp-013--coverage-gates-consume-measurements-not-report-files).
 > Collector producer/version interoperability and the ecosystem survey are not verified by this audit.
@@ -1020,7 +1020,7 @@ The effective pack invocation, from the worktree root, was:
 ```powershell
 $root = (Get-Location).Path
 & .\eng\build.ps1 -restore -build -pack -c Release `
-    -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj `
+    -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj `
     -msbuildEngine dotnet -nodeReuse:$false `
     -properties @(
         "/p:ArtifactsDir=$root\artifacts\coverage-package-bootstrap\",
@@ -1176,7 +1176,7 @@ Round-two reports are retained as `review-round2-units.trx` and
 `review-round2-acceptance.trx` with their execution logs. They replay the exact host/class
 selectors in the validation section above against the unchanged source/package, using
 fresh result directories. The round-three build used `eng\build.ps1 -restore -build -c Release`
-for `src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj`, the dotnet
+for `src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj`, the dotnet
 MSBuild engine, disabled node reuse, an isolated `artifacts\coverage-review-final` output
 directory, `SkipRuntimesInstall=true`, and `coverage-review-round3-build.binlog`.
 It did not repack or modify the already-consumed `.1` package identity.

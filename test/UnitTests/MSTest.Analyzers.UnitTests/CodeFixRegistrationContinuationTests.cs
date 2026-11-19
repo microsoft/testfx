@@ -614,7 +614,7 @@ public sealed class CodeFixRegistrationContinuationTests
             new CodeFixContext(document, invalid, (action, _) => unsafeActions.Add(action), CancellationToken.None)));
         Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
         Assert.StartsWith("This program location is thought to be unreachable. File='", exception.Message);
-        Assert.EndsWith("/src/Analyzers/MSTest.Analyzers.CodeFixes/AvoidAssertAreSameWithValueTypesFixer.cs' Line=43", exception.Message.Replace('\\', '/'));
+        Assert.EndsWith("/src/MSTest/MSTest.Analyzers.CodeFixes/AvoidAssertAreSameWithValueTypesFixer.cs' Line=43", exception.Message.Replace('\\', '/'));
         Assert.IsEmpty(unsafeActions);
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source);
     }

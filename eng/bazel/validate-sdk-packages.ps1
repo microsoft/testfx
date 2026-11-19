@@ -239,7 +239,7 @@ try {
             }
             Copy-Item -LiteralPath $path -Destination (Join-Path $feed "$id.$version.nupkg")
             if ($id -notin @('MSTest', 'MSTest.Sdk')) { continue }
-            $projectDirectory = Join-Path $root "src\Package\$id"
+            $projectDirectory = Join-Path $root "src\MSTest\$id"
             [xml]$project = Get-Content -LiteralPath (Join-Path $projectDirectory "$id.csproj") -Raw
             $expectedDescription = (Read-Property $project 'PackageDescription').Replace('$(CommonProductDescription)', (Read-Property $sourceProperties 'CommonProductDescription'))
             Assert-Equal ($expectedDescription -replace '\r\n', "`n") ($metadata.description -replace '\r\n', "`n") "$id authored description"

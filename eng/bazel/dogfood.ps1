@@ -497,7 +497,7 @@ try {
         $report.BuildSeconds = [math]::Round($restore.Seconds + $build.Seconds, 3)
         if ($build.ExitCode -ne 0) { throw 'MSBuild failed; no successful timing sample.' }
         if ('//:msbuild_tests' -in $selection.label) {
-            $legacyProject = Join-Path $repo 'src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj'
+            $legacyProject = Join-Path $repo 'src\MTP\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj'
             $legacy = Invoke-RecordedScript -Name 'legacy-fixture' -PowerShell $pwsh -Script (Join-Path $repo 'eng\build.ps1') `
                 -Parameters @{
                     restore = $false; build = $true; configuration = $workload.configuration; projects = $legacyProject

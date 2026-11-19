@@ -176,7 +176,7 @@ The first implementation compiles on `netstandard2.0`, its oldest supported
 target, using the repository-bootstrapped SDK `12.0.100-alpha.1.26509.101`:
 
 ```powershell
-.\.dotnet\dotnet.exe build src\Platform\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj -f netstandard2.0 -p:TreatWarningsAsErrors=true -p:UseSharedCompilation=false -nodeReuse:false -bl:artifacts\log\Debug\attachments-netstandard.binlog -v:quiet
+.\.dotnet\dotnet.exe build src\MTP\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj -f netstandard2.0 -p:TreatWarningsAsErrors=true -p:UseSharedCompilation=false -nodeReuse:false -bl:artifacts\log\Debug\attachments-netstandard.binlog -v:quiet
 ```
 
 Result: exit 0, zero warnings and errors. Resources were regenerated using the
@@ -434,8 +434,8 @@ Both changed shipping products were repacked across all five local target
 frameworks, including netstandard2.0, with the pinned SDK and warnings enforced:
 
 ```powershell
-.\.dotnet\dotnet.exe pack src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj --configuration Release -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-core-project-pack-{}.binlog --verbosity quiet
-.\.dotnet\dotnet.exe pack src\Platform\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj --configuration Release -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-report-project-pack-{}.binlog --verbosity quiet
+.\.dotnet\dotnet.exe pack src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj --configuration Release -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-core-project-pack-{}.binlog --verbosity quiet
+.\.dotnet\dotnet.exe pack src\MTP\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj --configuration Release -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true -bl:artifacts\log\Release\attachment-open-report-project-pack-{}.binlog --verbosity quiet
 ```
 
 Both commands exited 0. Core `3.0.0-dev` nupkg SHA-256:

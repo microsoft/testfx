@@ -30,7 +30,7 @@ Both runs write a CTRF JSON file. Open them side by side (e.g.
 > [!NOTE]
 > The stable CTRF producer shares MTP's package version and is pinned to CTRF 0.2.0. Framework UID stability and
 > producer-specific diagnostic metadata retain the limitations in the
-> [package compatibility policy](../../src/Platform/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md#compatibility).
+> [package compatibility policy](../../src/MTP/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md#compatibility).
 
 <!-- markdownlint-disable-next-line MD028 -->
 > [!TIP]

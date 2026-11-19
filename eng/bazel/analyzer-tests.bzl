@@ -23,7 +23,7 @@ _recommended_config = rule(
 
 def analyzer_unit_tests():
     _recommended_config(name = "analyzer_test_policy", package = ":analyzers_package")
-    analyzer_directory = "src/Analyzers/MSTest.Analyzers"
+    analyzer_directory = "src/MSTest/MSTest.Analyzers"
     directory = "test/UnitTests/MSTest.Analyzers.UnitTests"
     testfx_binary(
         name = "analyzer_tests_binary",

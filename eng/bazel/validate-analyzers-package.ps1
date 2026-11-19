@@ -193,7 +193,7 @@ try {
                 foreach ($assembly in $assemblies) {
                     $null = $expected.Add("analyzers/dotnet/$language/$assembly.dll")
                     $stem = if ($assembly -eq 'MSTest.Analyzers') { 'Resources' } else { 'CodeFixResources' }
-                    foreach ($catalog in Get-ChildItem -LiteralPath (Join-Path $root "src\Analyzers\$assembly\xlf") -Filter "$stem.*.xlf") {
+                    foreach ($catalog in Get-ChildItem -LiteralPath (Join-Path $root "src\MSTest\$assembly\xlf") -Filter "$stem.*.xlf") {
                         $culture = $catalog.BaseName.Substring($stem.Length + 1)
                         $null = $expected.Add("analyzers/dotnet/$language/$culture/$assembly.resources.dll")
                     }
@@ -340,9 +340,9 @@ End Class
         $packageDirectory = Join-Path $cache "mstest.analyzers\$expectedVersion"
         $output = Invoke-Step 'legacy-host-run' $dotnet @((Join-Path $projectDirectory "bin\Release\$framework\LegacyHost.dll"), $packageDirectory, $csharpInput, "$roslynVersion.0")
         $script:legacyRecord = $output | ConvertFrom-Json
-        [xml]$catalog = Get-Content -LiteralPath (Join-Path $root 'src\Analyzers\MSTest.Analyzers\xlf\Resources.fr.xlf') -Raw
+        [xml]$catalog = Get-Content -LiteralPath (Join-Path $root 'src\MSTest\MSTest.Analyzers\xlf\Resources.fr.xlf') -Raw
         $expectedTitle = $catalog.SelectSingleNode('//*[local-name()="trans-unit" and @id="TypeContainingTestMethodShouldBeATestClassTitle"]/*[local-name()="target"]').InnerText
-        [xml]$fixCatalog = Get-Content -LiteralPath (Join-Path $root 'src\Analyzers\MSTest.Analyzers.CodeFixes\xlf\CodeFixResources.fr.xlf') -Raw
+        [xml]$fixCatalog = Get-Content -LiteralPath (Join-Path $root 'src\MSTest\MSTest.Analyzers.CodeFixes\xlf\CodeFixResources.fr.xlf') -Raw
         $expectedFix = $fixCatalog.SelectSingleNode('//*[local-name()="trans-unit" and @id="AddTestClassFix"]/*[local-name()="target"]').InnerText
         if ($legacyRecord.AnalyzerVersion -cne $expectedVersion -or $legacyRecord.CodeFixVersion -cne $expectedVersion -or
             $legacyRecord.RoslynVersion -cne "$roslynVersion.0" -or $legacyRecord.DiagnosticId -cne 'MSTEST0030' -or

@@ -101,7 +101,7 @@ repository SDK initialized by the build scripts. For example, on Windows:
 
 ```powershell
 .\build.cmd
-.\.dotnet\dotnet.exe msbuild src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /t:UpdateXlf -bl:artifacts\log\localization-update.binlog
+.\.dotnet\dotnet.exe msbuild src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /t:UpdateXlf -bl:artifacts\log\localization-update.binlog
 python .github\scripts\check_localization.py
 ```
 

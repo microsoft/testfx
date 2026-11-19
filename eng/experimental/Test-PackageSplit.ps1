@@ -84,18 +84,18 @@ if ($Stage -eq 'Pack') {
     if (Test-Path $RunRoot) { throw "Pack requires a fresh RunRoot: $RunRoot" }
     [IO.Directory]::CreateDirectory($RunRoot) | Out-Null
     $seeds = @(
-        'src/TestFramework/MSTest.WinUI/MSTest.WinUI.csproj',
-        'src/TestFramework/MSTest.Uwp/MSTest.Uwp.csproj',
-        'src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj',
-        'src/Package/MSTest.Sdk/MSTest.Sdk.csproj',
-        'src/Package/MSTest/MSTest.csproj',
-        'src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj',
+        'src/MSTest/MSTest.WinUI/MSTest.WinUI.csproj',
+        'src/MSTest/MSTest.Uwp/MSTest.Uwp.csproj',
+        'src/MSTest/MSTest.TestAdapter/MSTest.TestAdapter.csproj',
+        'src/MSTest/MSTest.Sdk/MSTest.Sdk.csproj',
+        'src/MSTest/MSTest/MSTest.csproj',
+        'src/MSTest/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj',
         # These are solution-level/build-order dependencies rather than ProjectReferences.
-        'src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj',
-        'src/TestFramework/TestFramework.Compatibility/TestFramework.Compatibility.csproj',
+        'src/MSTest/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj',
+        'src/MSTest/TestFramework.Compatibility/TestFramework.Compatibility.csproj',
         # The repository package-shape gate requires every MSTest package family.
-        'src/Adapter/MSTest.Extensions.Hosting/MSTest.Extensions.Hosting.csproj',
-        'src/TestFramework/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj'
+        'src/MSTest/MSTest.Extensions.Hosting/MSTest.Extensions.Hosting.csproj',
+        'src/MSTest/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj'
     )
     $projects = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     function Add-Project([string] $Path) {
@@ -121,7 +121,7 @@ if ($Stage -eq 'Pack') {
     }
     foreach ($seed in $seeds) { Add-Project (Join-Path $repository $seed) }
     # Dependencies imported by PlatformPackage.props and adapter PackageDependencies.props.
-    foreach ($file in Get-ChildItem "$repository/src/Platform" -Directory) {
+    foreach ($file in Get-ChildItem "$repository/src/MTP" -Directory) {
         if ($file.Name -in @('Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.Telemetry',
                 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.MSBuild', 'Microsoft.Testing.Extensions.TrxReport',
                 'Microsoft.Testing.Extensions.Retry')) {
@@ -132,7 +132,7 @@ if ($Stage -eq 'Pack') {
         $path = [Security.SecurityElement]::Escape($_)
         if ($_ -like '*MSTest.Analyzers.Package.csproj') {
             '  <Project Path="' + $path + '"><BuildDependency Project="' +
-                [Security.SecurityElement]::Escape((Join-Path $repository 'src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj')) + '" /></Project>'
+                [Security.SecurityElement]::Escape((Join-Path $repository 'src/MSTest/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj')) + '" /></Project>'
         }
         else { '  <Project Path="' + $path + '" />' }
     })

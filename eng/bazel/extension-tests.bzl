@@ -9,7 +9,7 @@ def extension_unit_tests():
         path: path
         for path in native.glob([
             "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/**/*.cs",
-            "src/TestFramework/TestFramework/Assertions/*.cs",
+            "src/MSTest/TestFramework/Assertions/*.cs",
         ])
     }
     extension_files["test/Shared/WindowsAppModel/appx-manifest-conformance-vectors.json"] = "AppxManifestConformanceVectors.json"

@@ -123,7 +123,7 @@ The four existing startup-guard tests were independently discovered and all four
 executed and passed, with no skips. These commands exited zero:
 
 ```powershell
-.\build.cmd -c Release -msbuildEngine vs -projects src\TestFramework\TestFramework.Compatibility\TestFramework.Compatibility.csproj -bl
+.\build.cmd -c Release -msbuildEngine vs -projects src\MSTest\TestFramework.Compatibility\TestFramework.Compatibility.csproj -bl
 .\build.cmd -c Release -msbuildEngine vs -projects test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\MSTestAdapter.PlatformServices.UnitTests.csproj -bl
 .\eng\verify-nupkgs.ps1 -configuration Release -updateBaselines
 .\build.cmd -pack -c Release -msbuildEngine vs -projects artifacts\validation\layer2-maintenance-pack.slnf -bl

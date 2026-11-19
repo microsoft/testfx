@@ -13,7 +13,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class AnalyzerReleaseTrackingTests
 {
-    private static string AnalyzerDirectory => Path.Combine(RootFinder.Find(), "src", "Analyzers", "MSTest.Analyzers");
+    private static string AnalyzerDirectory => Path.Combine(RootFinder.Find(), "src", "MSTest", "MSTest.Analyzers");
 
     [TestMethod]
     public void EveryDiagnosticAndSuppressionIdIsTracked()

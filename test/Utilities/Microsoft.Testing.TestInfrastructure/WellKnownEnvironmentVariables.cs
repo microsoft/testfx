@@ -122,7 +122,7 @@ public static class WellKnownEnvironmentVariables
         "NO_COLOR",
 
         // LLM / AI agent CLI environment variables - keep in sync with
-        // src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs.
+        // src/MTP/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs.
         // We filter these out so acceptance tests are not affected by the ambient
         // shell the developer (or CI) happens to be running them from. Tests that
         // need to exercise LLM-aware behavior must set the relevant variable explicitly.

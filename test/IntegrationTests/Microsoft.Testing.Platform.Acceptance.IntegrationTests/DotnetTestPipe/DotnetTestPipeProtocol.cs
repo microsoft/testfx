@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
 /// <summary>
 /// Black-box reader/writer for the <c>--server dotnettestcli --dotnet-test-pipe</c> wire
 /// protocol. Implements the framing and the serializer IDs / field IDs documented in
-/// <c>src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/ObjectFieldIds.cs</c>
+/// <c>src/MTP/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/ObjectFieldIds.cs</c>
 /// without referencing any of the testfx internal types (which are <c>[Embedded]</c> and
 /// therefore invisible to this assembly).
 /// <para>

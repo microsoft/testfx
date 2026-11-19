@@ -143,13 +143,13 @@ There are two layers of versioning to keep in mind:
 The schema must track the keys actually read by the configuration parsers. The source of truth is:
 
 - `MSTestSettings.SetSettingsFromConfig` and the `Parse*Setting` helpers in
-  [`src/Adapter/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs`](../src/Adapter/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs);
+  [`src/MSTest/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs`](../src/MSTest/MSTestAdapter.PlatformServices/MSTestSettings.Configuration.cs);
 - `MSTestAdapterSettings.ToSettings(IConfiguration)` and `ReadAssemblyResolutionPath` in
-  [`src/Adapter/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs`](../src/Adapter/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs);
+  [`src/MSTest/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs`](../src/MSTest/MSTestAdapter.PlatformServices/Services/MSTestAdapterSettings.cs);
 - `RunConfigurationSettings.SetRunConfigurationSettingsFromConfig` in
-  [`src/Adapter/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs`](../src/Adapter/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs);
+  [`src/MSTest/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs`](../src/MSTest/MSTestAdapter.PlatformServices/RunConfigurationSettings.cs);
 - `PlatformConfigurationConstants` in
-  [`src/Platform/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs`](../src/Platform/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs).
+  [`src/MTP/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs`](../src/MTP/Microsoft.Testing.Platform/Configurations/PlatformConfigurationConstants.cs).
 
 When you add, rename, or remove a configuration key in any of those, update
 `testconfig.schema.json` in the same change.

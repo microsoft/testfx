@@ -289,7 +289,7 @@ repository was repacked.
 Both core variants were packed with:
 
 ```powershell
-.\build.cmd -pack -c Release /m:2 /nr:false /p:UseSharedCompilation=false /p:Projects=Q:\dev\copilot-telemetry-counterfactual-c13fcd30\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /bl:artifacts\log\Release\<variant>-core-pack-1.binlog
+.\build.cmd -pack -c Release /m:2 /nr:false /p:UseSharedCompilation=false /p:Projects=Q:\dev\copilot-telemetry-counterfactual-c13fcd30\src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj /bl:artifacts\log\Release\<variant>-core-pack-1.binlog
 ```
 
 The actual variant binlogs are `telemetry-baseline-core-pack-1.binlog` and

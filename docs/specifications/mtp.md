@@ -21,8 +21,8 @@ The builder rejects a second framework registration, a missing framework at buil
 another successful build on the same builder. Application code owns registration; extensions
 must not use service registration to substitute the framework.
 
-- Implementation: [`TestApplicationBuilder`](../../src/Platform/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs),
-  [`ServiceProvider`](../../src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs).
+- Implementation: [`TestApplicationBuilder`](../../src/MTP/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs),
+  [`ServiceProvider`](../../src/MTP/Microsoft.Testing.Platform/Services/ServiceProvider.cs).
 - Existing tests: [`AddService_TestFramework_ShouldFail`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Services/ServiceProviderTests.cs#L134).
 - Limit: service-level framework ownership is tested; no dedicated test was identified for every
   public-builder rejection path.
@@ -34,8 +34,8 @@ check enablement and initialize enabled initializable extensions. A composite fa
 the same instance to multiple extension roles instead of creating independent consumers/lifetimes.
 The platform registry is instance-based, not an `IServiceCollection` conversion.
 
-- Implementation: [`ExtensionBuilderHelper`](../../src/Platform/Microsoft.Testing.Platform/Helpers/ExtensionBuilderHelper.cs),
-  [`TestHostManager`](../../src/Platform/Microsoft.Testing.Platform/TestHost/TestHostManager.cs).
+- Implementation: [`ExtensionBuilderHelper`](../../src/MTP/Microsoft.Testing.Platform/Helpers/ExtensionBuilderHelper.cs),
+  [`TestHostManager`](../../src/MTP/Microsoft.Testing.Platform/TestHost/TestHostManager.cs).
 - Existing tests: [`DataConsumer_DuplicatedId_ShouldFail`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/TestApplicationBuilderTests.cs#L51),
   [`TestHost_ComposeFactory_ShouldSucceed`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/TestApplicationBuilderTests.cs#L95).
 
@@ -47,8 +47,8 @@ executes it, and closes the framework session on the normal path. The framework 
 Unsuccessful framework session results are recorded as session failures. Exception paths do
 not imply that `CloseTestSessionAsync` always runs.
 
-- Implementation: [`TestHostTestFrameworkInvoker`](../../src/Platform/Microsoft.Testing.Platform/Requests/TestHostTestFrameworkInvoker.cs),
-  [`ConsoleTestExecutionRequestFactory`](../../src/Platform/Microsoft.Testing.Platform/Requests/ConsoleTestExecutionRequestFactory.cs).
+- Implementation: [`TestHostTestFrameworkInvoker`](../../src/MTP/Microsoft.Testing.Platform/Requests/TestHostTestFrameworkInvoker.cs),
+  [`ConsoleTestExecutionRequestFactory`](../../src/MTP/Microsoft.Testing.Platform/Requests/ConsoleTestExecutionRequestFactory.cs).
 - Existing tests: [`Exec_Honor_Request_Complete`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/ExecutionRequestCompleteTests.cs#L13),
   [`TestExecutionTests`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/TestFramework/TestExecutionTests.cs).
 
@@ -61,9 +61,9 @@ notifies non-consumers before consumers and drains between consumer finishers.
 Teardown disables the bus before disposing consumers; a consumer still running after bounded
 canceled shutdown is deliberately not disposed concurrently.
 
-- Implementation: [`AsynchronousMessageBus`](../../src/Platform/Microsoft.Testing.Platform/Messages/AsynchronousMessageBus.cs),
-  [`session notifications`](../../src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.SessionNotifications.cs),
-  [`disposal`](../../src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.Disposal.cs).
+- Implementation: [`AsynchronousMessageBus`](../../src/MTP/Microsoft.Testing.Platform/Messages/AsynchronousMessageBus.cs),
+  [`session notifications`](../../src/MTP/Microsoft.Testing.Platform/Hosts/CommonTestHost.SessionNotifications.cs),
+  [`disposal`](../../src/MTP/Microsoft.Testing.Platform/Hosts/CommonTestHost.Disposal.cs).
 - Existing tests: [`UnexpectedTypePublished_ShouldFail`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Messages/AsynchronousMessageBusTests.cs#L21),
   [`BlockingDataConsumer_PublishAsync_DoesNotReturnUntilConsumeCompletes`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Messages/AsynchronousMessageBusTests.cs#L319),
   [`DisposeServiceProviderAsync_WhenConsumerIsStillRunning_DoesNotDisposeIt`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Hosts/CommonHostTests.cs#L351).
@@ -77,10 +77,10 @@ Passive `commandLineOptionDefaults` supply arguments without activating the feat
 Validation rejects duplicate/reserved/unknown options, wrong arity/values, invalid combinations
 and bootstrap-only options placed in JSON. VSTest migration diagnostics do not rewrite options.
 
-- Implementation: [`ConfigurationManager`](../../src/Platform/Microsoft.Testing.Platform/Configurations/ConfigurationManager.cs),
-  [`AggregatedConfiguration`](../../src/Platform/Microsoft.Testing.Platform/Configurations/AggregatedConfiguration.cs),
-  [`CommandLineOptionsValidator`](../../src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs),
-  [`migration diagnostics`](../../src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.UnknownAndBootstrapValidation.cs).
+- Implementation: [`ConfigurationManager`](../../src/MTP/Microsoft.Testing.Platform/Configurations/ConfigurationManager.cs),
+  [`AggregatedConfiguration`](../../src/MTP/Microsoft.Testing.Platform/Configurations/AggregatedConfiguration.cs),
+  [`CommandLineOptionsValidator`](../../src/MTP/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs),
+  [`migration diagnostics`](../../src/MTP/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.UnknownAndBootstrapValidation.cs).
 - Existing tests: [`BuiltInSources_UseExpectedCommonDefaults`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Configuration/ConfigurationSourceDefaultsTests.cs#L14),
   [`ProviderAwareResolution_CliZeroArityShadowsJsonIndexedArgs`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Configuration/CommandLineConfigurationProviderTests.cs#L140),
   [`JsonCommandLineOptionsTests`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Configuration/JsonCommandLineOptionsTests.cs),
@@ -94,9 +94,9 @@ Writing over a locked provider value fails, rather than silently applying “las
 Declarations override inherited values in the child, not in the controller's environment.
 Absent/empty declarations do not themselves force a child; `--list-tests` skips this controller path.
 
-- Implementation: [`TestConfigurationEnvironmentVariableProvider`](../../src/Platform/Microsoft.Testing.Platform/TestHostControllers/TestConfigurationEnvironmentVariableProvider.cs),
-  [`EnvironmentVariables`](../../src/Platform/Microsoft.Testing.Platform/TestHostControllers/EnvironmentVariables.cs),
-  [`host mode selection`](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostBuilder.Modes.cs).
+- Implementation: [`TestConfigurationEnvironmentVariableProvider`](../../src/MTP/Microsoft.Testing.Platform/TestHostControllers/TestConfigurationEnvironmentVariableProvider.cs),
+  [`EnvironmentVariables`](../../src/MTP/Microsoft.Testing.Platform/TestHostControllers/EnvironmentVariables.cs),
+  [`host mode selection`](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostBuilder.Modes.cs).
 - Existing tests: [`UpdateAsync_AppliesAllEntries`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/TestHostControllers/TestConfigurationEnvironmentVariableProviderTests.cs#L53),
   [`EnvironmentVariablesSection_Absent_TestHostRunsInProcess`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/TestConfigEnvironmentVariablesTests.cs#L46).
 
@@ -110,10 +110,10 @@ means no-op. Server providers are called but non-no-op contributions fail.
 Frameworks own evaluation and must not silently discard unsupported representations.
 Tree property matching uses `TestMetadataProperty`; `**` cannot occur in the middle of a path.
 
-- Implementation: [`composer`](../../src/Platform/Microsoft.Testing.Platform/Requests/TestExecutionFilterComposer.cs),
-  [`server selection`](../../src/Platform/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs),
-  [`tree matching`](../../src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.Matching.cs),
-  [`VSTestBridge translation`](../../src/Platform/Microsoft.Testing.Extensions.VSTestBridge/ObjectModel/ContextAdapterBase.cs).
+- Implementation: [`composer`](../../src/MTP/Microsoft.Testing.Platform/Requests/TestExecutionFilterComposer.cs),
+  [`server selection`](../../src/MTP/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs),
+  [`tree matching`](../../src/MTP/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.Matching.cs),
+  [`VSTestBridge translation`](../../src/MTP/Microsoft.Testing.Extensions.VSTestBridge/ObjectModel/ContextAdapterBase.cs).
 - Existing tests: [`ComposeAsync_WithTwoUidProviders_IntersectsIndependentlyOfRegistrationOrder`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Requests/TestExecutionFilterComposerTests.cs#L127),
   [`ComposeAsync_ForServerWithProviderConstraint_ThrowsActionableError`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Requests/TestExecutionFilterComposerTests.cs#L269),
   [`RunRequestWithEmptyTests_PreservesEmptyUidSelection`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/ServerMode/ServerTests.cs#L907),
@@ -131,9 +131,9 @@ abort, deadline truncation, count policy, then coverage failure. Explicit minimu
 zero-tests policy. Default `allow-skipped` permits all-skipped success; `strict` yields `8`.
 Ignoring a configured exit code is an explicit opt-out, not proof that tests executed.
 
-- Implementation: [`CommonHost`](../../src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.cs),
-  [`TestApplicationResult`](../../src/Platform/Microsoft.Testing.Platform/Services/TestApplicationResult.cs),
-  [`ExitCodeIgnorePolicy`](../../src/Platform/Microsoft.Testing.Platform/Services/ExitCodeIgnorePolicy.cs).
+- Implementation: [`CommonHost`](../../src/MTP/Microsoft.Testing.Platform/Hosts/CommonTestHost.cs),
+  [`TestApplicationResult`](../../src/MTP/Microsoft.Testing.Platform/Services/TestApplicationResult.cs),
+  [`ExitCodeIgnorePolicy`](../../src/MTP/Microsoft.Testing.Platform/Services/ExitCodeIgnorePolicy.cs).
 - Existing tests: [`RequestGracefulSessionStopAsync_UsesActiveRequestCapabilitiesBeforeApplicationCapability`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Hosts/CommonHostTests.cs#L27),
   [`GetProcessExitCodeAsync_If_All_Skipped_With_StrictPolicy_Returns_ZeroTestsRan`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Services/TestApplicationResultTests.cs#L468),
   [`GetProcessExitCodeAsync_If_MinimumExpectedTests_Set_And_No_Tests_Ran_Returns_MinimumExpectedTestsPolicyViolation`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Services/TestApplicationResultTests.cs#L645).
@@ -147,9 +147,9 @@ handle. The launcher substitutes creation/start, not the entire run loop.
 Controller cancellation requests cooperative child shutdown with a bounded termination fallback.
 An application service-provider clone does not transfer live objects into the child.
 
-- Implementation: [`TestHostControllersManager`](../../src/Platform/Microsoft.Testing.Platform/TestHostControllers/TestHostControllersManager.cs),
-  [`custom launch`](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.CustomLauncher.cs),
-  [`cancellation teardown`](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.CancellationTeardown.cs).
+- Implementation: [`TestHostControllersManager`](../../src/MTP/Microsoft.Testing.Platform/TestHostControllers/TestHostControllersManager.cs),
+  [`custom launch`](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.CustomLauncher.cs),
+  [`cancellation teardown`](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.CancellationTeardown.cs).
 - Existing tests: [`CustomLauncher_IsUsedToStartTestHost_AndRunSucceeds`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/TestHostLauncherTests.cs#L13),
   [`TestHostControllerCancellationTests`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Hosts/TestHostControllerCancellationTests.cs).
 - Limit: local launch fixtures do not establish RFC remote/container/deployment examples.
@@ -162,9 +162,9 @@ the protocol's illustrative parallel-request possibilities are not current adver
 Each discovery/run invocation receives request-owned session/cancellation/result services.
 Request cancellation is distinct from terminating the application; empty selections stay empty.
 
-- Implementation: [`request handling`](../../src/Platform/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestHandling.cs),
-  [`request execution`](../../src/Platform/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs),
-  [`completion`](../../src/Platform/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestCompletion.cs).
+- Implementation: [`request handling`](../../src/MTP/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestHandling.cs),
+  [`request execution`](../../src/MTP/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs),
+  [`completion`](../../src/MTP/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestCompletion.cs).
 - Existing tests: [`ServerEnforcesLifecycleAndNegotiatesProtocolVersion`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/ServerMode/ServerTests.cs#L217),
   [`NumericAndStringRequestIdsHaveIndependentCancellation`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/ServerMode/ServerTests.cs#L779).
 
@@ -177,9 +177,9 @@ it is not a solution-wide identifier. Control-pipe support requires an advertise
 Legacy `TestingPlatformDotnetTestSupport` instead routes the VSTest target to `InvokeTestingPlatform`
 and its MSBuild consumer/task IPC; the two paths must not be conflated.
 
-- Implementation: [`DotnetTestConnection`](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
-  [`wire constants`](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/Constants.cs),
-  [`legacy target`](../../src/Platform/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.VSTest.targets).
+- Implementation: [`DotnetTestConnection`](../../src/MTP/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+  [`wire constants`](../../src/MTP/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/Constants.cs),
+  [`legacy target`](../../src/MTP/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.VSTest.targets).
 - Existing tests: [`DotnetTestPipe_TestAppAdvertisesAllSupportedVersions_NegotiatesDownToV100WithOldSdk`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/DotnetTestPipeBaselineTests.cs#L35),
   [`MSBuildTests.Test`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs).
 - Limit: fake-SDK fixtures test local wire behavior, not an installed SDK's negotiation/election.
@@ -194,9 +194,9 @@ Processor failure warns and gives the dispatcher a nonzero result; external orch
 whether that failure affects the parent run. Local dispatcher behavior does not prove SDK election
 or merged-summary replacement. JUnit uses bounded parent-chain keys, not the RFC's uncapped keys.
 
-- Implementation: [`dispatcher`](../../src/Platform/Microsoft.Testing.Platform/Extensions/ArtifactPostProcessing/ArtifactPostProcessingDispatcherTool.cs),
-  [`capability advertisement`](../../src/Platform/Microsoft.Testing.Platform/Extensions/ArtifactPostProcessing/ArtifactPostProcessingHandshakeProperties.cs),
-  [`JUnit generator`](../../src/Platform/Microsoft.Testing.Extensions.JUnitReport/JUnitReportGenerator.cs).
+- Implementation: [`dispatcher`](../../src/MTP/Microsoft.Testing.Platform/Extensions/ArtifactPostProcessing/ArtifactPostProcessingDispatcherTool.cs),
+  [`capability advertisement`](../../src/MTP/Microsoft.Testing.Platform/Extensions/ArtifactPostProcessing/ArtifactPostProcessingHandshakeProperties.cs),
+  [`JUnit generator`](../../src/MTP/Microsoft.Testing.Extensions.JUnitReport/JUnitReportGenerator.cs).
 - Existing tests: [`ValidateProcessedArtifact_RejectsInvalidPaths`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Extensions/ArtifactPostProcessing/ArtifactPostProcessingTests.cs#L195),
   [`Dispatcher_AdvertisesCapabilityAndReturnsMergedArtifact`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/DotnetTestPipeArtifactPostProcessingTests.cs#L16).
 
@@ -208,9 +208,9 @@ fails a requested gate, even at zero threshold. A file artifact alone is insuffi
 Coverage failure returns `14` only when the run otherwise succeeds, including controller-finalized
 coverage. Each application is gated separately; this is not solution-wide measurement aggregation.
 
-- Implementation: [`TestCoverageResult`](../../src/Platform/Microsoft.Testing.Platform/Services/TestCoverageResult.cs),
-  [`CoverageThresholdPolicy`](../../src/Platform/Microsoft.Testing.Platform/Services/CoverageThresholdPolicy.cs),
-  [`controller exit policy`](../../src/Platform/Microsoft.Testing.Platform/Services/CoverageThresholdExitCodePolicy.cs).
+- Implementation: [`TestCoverageResult`](../../src/MTP/Microsoft.Testing.Platform/Services/TestCoverageResult.cs),
+  [`CoverageThresholdPolicy`](../../src/MTP/Microsoft.Testing.Platform/Services/CoverageThresholdPolicy.cs),
+  [`controller exit policy`](../../src/MTP/Microsoft.Testing.Platform/Services/CoverageThresholdExitCodePolicy.cs).
 - Existing tests: [`CoverageThresholdPolicyTests`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/Services/CoverageThresholdPolicyTests.cs),
   [`CoverageThresholdControllerExitCodeTests`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/CoverageThresholdControllerExitCodeTests.cs).
 - Limit: no external collector/version interoperability was executed or verified.
@@ -224,9 +224,9 @@ Hosting starts the outer host before MTP build, stops it after the run, and leav
 caller. Caller cancellation/`ApplicationStopping` request MTP cancellation; MTP does not call
 `StopApplication`. These objects are process-local, not forwarded to child processes.
 
-- Implementation: [`logging bridge`](../../src/Platform/Microsoft.Testing.Extensions.Logging/MicrosoftExtensionsLoggingBuilderExtensions.cs),
-  [`snapshot source`](../../src/Platform/Microsoft.Testing.Extensions.Configuration/MicrosoftExtensionsConfigurationSnapshotSource.cs),
-  [`hosting bridge`](../../src/Platform/Microsoft.Testing.Extensions.Hosting/MicrosoftExtensionsHostingExtensions.cs).
+- Implementation: [`logging bridge`](../../src/MTP/Microsoft.Testing.Extensions.Logging/MicrosoftExtensionsLoggingBuilderExtensions.cs),
+  [`snapshot source`](../../src/MTP/Microsoft.Testing.Extensions.Configuration/MicrosoftExtensionsConfigurationSnapshotSource.cs),
+  [`hosting bridge`](../../src/MTP/Microsoft.Testing.Extensions.Hosting/MicrosoftExtensionsHostingExtensions.cs).
 - Existing tests: [`MicrosoftExtensionsLoggingBuilderExtensionsTests`](../../test/UnitTests/Microsoft.Testing.Extensions.UnitTests/MicrosoftExtensionsLoggingBuilderExtensionsTests.cs),
   [`RunTestingPlatformAsync_StartsHostBeforeBuildingMtpAndStopsAfterRun`](../../test/UnitTests/Microsoft.Testing.Extensions.UnitTests/MicrosoftExtensionsHostingExtensionsTests.cs#L147),
   [`RunTestingPlatformAsync_WhenMtpStops_DoesNotRequestHostStopBeforeCleanup`](../../test/UnitTests/Microsoft.Testing.Extensions.UnitTests/MicrosoftExtensionsHostingExtensionsTests.cs#L487).
@@ -239,9 +239,9 @@ They must be synchronous public static `void AddExtensions(ITestApplicationBuild
 and cannot register a test framework. Errors fail loading; .NET load-context isolation is not a
 security sandbox, and the netstandard/.NET Framework path does not provide that isolation.
 
-- Implementation: [`loader`](../../src/Platform/Microsoft.Testing.Platform/DynamicExtensions/DynamicExtensionLoader.cs),
-  [`assembly loader`](../../src/Platform/Microsoft.Testing.Platform/DynamicExtensions/DynamicExtensionAssemblyLoader.cs),
-  [`builder guard`](../../src/Platform/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs).
+- Implementation: [`loader`](../../src/MTP/Microsoft.Testing.Platform/DynamicExtensions/DynamicExtensionLoader.cs),
+  [`assembly loader`](../../src/MTP/Microsoft.Testing.Platform/DynamicExtensions/DynamicExtensionAssemblyLoader.cs),
+  [`builder guard`](../../src/MTP/Microsoft.Testing.Platform/Builder/TestApplicationBuilder.cs).
 - Existing tests: [`DiscoverManifests_LooksInTheApplicationDirectoryNotTheWorkingDirectory`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/DynamicExtensions/DynamicExtensionLoaderTests.cs#L94),
   [`LoadAsync_HookCannotRegisterATestFramework`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/DynamicExtensions/DynamicExtensionLoaderTests.cs#L447),
   [`DynamicExtensionAssemblyLoaderTests`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/DynamicExtensions/DynamicExtensionAssemblyLoaderTests.cs).
@@ -255,9 +255,9 @@ as unconditional for native `dotnet test`. Without downstream ownership, the con
 finalizer processes matching fragments locally. This is not a claim that an absent handshake on a
 requested binary connection succeeds: incompatible/missing version replies fail negotiation.
 
-- Implementation: [`handshake capability parsing`](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
-  [`GitHub summary ownership`](../../src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/GitHubActionsExtensions.cs),
-  [`controller finalizer`](../../src/Platform/SharedExtensionHelpers/CiCoverageSummaryControllerHandler.cs).
+- Implementation: [`handshake capability parsing`](../../src/MTP/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+  [`GitHub summary ownership`](../../src/MTP/Microsoft.Testing.Extensions.GitHubActionsReport/GitHubActionsExtensions.cs),
+  [`controller finalizer`](../../src/MTP/SharedExtensionHelpers/CiCoverageSummaryControllerHandler.cs).
 - Existing tests: [`AddProvider_FinalizesMatchingFragmentAndPreservesProviderDeferral`](../../test/UnitTests/Microsoft.Testing.Extensions.UnitTests/CiCoverageSummaryControllerHandlerRegistrationTests.cs#L118),
   [`DotnetTestPipeArtifactPostProcessingTests`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/DotnetTestPipeArtifactPostProcessingTests.cs).
 - Limit: direct parsing/no-connection reasoning is source evidence; this mapping is not a complete
@@ -270,8 +270,8 @@ is missing or unavailable. The Microsoft.Extensions.AI-facing contract belongs t
 `Microsoft.Testing.Platform.AI`; the core stores the provider without taking that external dependency.
 Availability does not establish remote credentials, model capability or analysis correctness.
 
-- Implementation: [`ChatClientProviderExtensions`](../../src/Platform/Microsoft.Testing.Platform.AI/ChatClientProviderExtensions.cs),
-  [`ChatClientManager`](../../src/Platform/Microsoft.Testing.Platform/AI/ChatClientManager.cs).
+- Implementation: [`ChatClientProviderExtensions`](../../src/MTP/Microsoft.Testing.Platform.AI/ChatClientProviderExtensions.cs),
+  [`ChatClientManager`](../../src/MTP/Microsoft.Testing.Platform/AI/ChatClientManager.cs).
 - Existing tests: [`AddChatClientProvider_WhenProviderAlreadyRegistered_Throws`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/AI/ChatClientProviderExtensionsTests.cs#L69),
   [`GetChatClientAsync_WhenProviderIsUnavailable_ReturnsNull`](../../test/UnitTests/Microsoft.Testing.Platform.UnitTests/AI/ChatClientProviderExtensionsTests.cs#L92).
 

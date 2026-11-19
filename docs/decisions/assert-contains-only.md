@@ -553,7 +553,7 @@ $redOutputs = @("/p:ArtifactsBinDir=$ROOT\artifacts\bin\any-expression-red\", "/
 # Exit 2; eight execute, six intended failures, two controls pass.
 .\.dotnet\dotnet.exe build $project -f net10.0 -c Release --no-restore --no-incremental --verbosity quiet -warnaserror /bl:$RESULTS\build-green-net10-style-corrected.binlog
 .\.dotnet\dotnet.exe build $project -f net472 -c Release --no-restore --no-incremental --verbosity quiet -warnaserror /bl:$RESULTS\build-green-net472.binlog
-.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Release --no-restore --verbosity quiet -warnaserror /bl:$RESULTS\analyzer-pack.binlog
+.\.dotnet\dotnet.exe pack src\MSTest\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Release --no-restore --verbosity quiet -warnaserror /bl:$RESULTS\analyzer-pack.binlog
 # All exit 0; zero warnings/errors.
 .\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Release\net10.0\MSTest.Analyzers.UnitTests.dll --filter $focus --report-trx --report-trx-filename focused.trx --results-directory "$RESULTS\green-focused" --progress off --no-ansi
 # Exit 0; identical eight cases pass, zero skips.

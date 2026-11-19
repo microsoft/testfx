@@ -177,7 +177,7 @@ public sealed class MtpServerClientSourcePackageTests
         // Every client source file on disk must be packed for every target framework. This is the direct
         // guard against adding a Client/*.cs to the project and forgetting to ship it (or vice versa).
         string clientDir = Path.Combine(
-            Constants.Root, "src", "Platform", "Microsoft.Testing.Platform.ServerMode.Client.Sources", "Client");
+            Constants.Root, "src", "MTP", "Microsoft.Testing.Platform.ServerMode.Client.Sources", "Client");
         Assert.IsTrue(Directory.Exists(clientDir), $"Expected the client source folder to exist at '{clientDir}'.");
 
         List<string> ownedButNotPacked = [];

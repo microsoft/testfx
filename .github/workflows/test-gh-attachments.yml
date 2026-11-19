@@ -3,13 +3,20 @@ name: Test GitHub Actions attachments
 on:
   pull_request:
     paths:
-      - 'src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/**'
-      - 'src/Platform/SharedExtensionHelpers/**'
-      - 'src/Platform/Microsoft.Testing.Platform/**'
-      - 'src/Platform/Microsoft.Testing.Platform.MSBuild/**'
-      - 'src/Platform/Microsoft.Testing.Extensions.TrxReport*/**'
-      - 'src/Adapter/**'
-      - 'src/TestFramework/**'
+      - 'src/MTP/Microsoft.Testing.Extensions.GitHubActionsReport/**'
+      - 'src/MTP/SharedExtensionHelpers/**'
+      - 'src/MTP/Microsoft.Testing.Platform/**'
+      - 'src/MTP/Microsoft.Testing.Platform.MSBuild/**'
+      - 'src/MTP/Microsoft.Testing.Extensions.TrxReport*/**'
+      - 'src/MSTest/MSTest.Extensions.Hosting/**'
+      - 'src/MSTest/MSTest.TestAdapter/**'
+      - 'src/MSTest/MSTestAdapter.PlatformServices/**'
+      - 'src/MSTest/Shared/BannerMessageHelper.cs'
+      - 'src/MSTest/APIHistory/**'
+      - 'src/MSTest/MSTest.Uwp/**'
+      - 'src/MSTest/MSTest.WinUI/**'
+      - 'src/MSTest/PlatformPackage/**'
+      - 'src/MSTest/TestFramework*/**'
       - 'Directory.Build.*'
       - 'Directory.Packages.props'
       - 'global.json'
@@ -20,13 +27,20 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/**'
-      - 'src/Platform/SharedExtensionHelpers/**'
-      - 'src/Platform/Microsoft.Testing.Platform/**'
-      - 'src/Platform/Microsoft.Testing.Platform.MSBuild/**'
-      - 'src/Platform/Microsoft.Testing.Extensions.TrxReport*/**'
-      - 'src/Adapter/**'
-      - 'src/TestFramework/**'
+      - 'src/MTP/Microsoft.Testing.Extensions.GitHubActionsReport/**'
+      - 'src/MTP/SharedExtensionHelpers/**'
+      - 'src/MTP/Microsoft.Testing.Platform/**'
+      - 'src/MTP/Microsoft.Testing.Platform.MSBuild/**'
+      - 'src/MTP/Microsoft.Testing.Extensions.TrxReport*/**'
+      - 'src/MSTest/MSTest.Extensions.Hosting/**'
+      - 'src/MSTest/MSTest.TestAdapter/**'
+      - 'src/MSTest/MSTestAdapter.PlatformServices/**'
+      - 'src/MSTest/Shared/BannerMessageHelper.cs'
+      - 'src/MSTest/APIHistory/**'
+      - 'src/MSTest/MSTest.Uwp/**'
+      - 'src/MSTest/MSTest.WinUI/**'
+      - 'src/MSTest/PlatformPackage/**'
+      - 'src/MSTest/TestFramework*/**'
       - 'Directory.Build.*'
       - 'Directory.Packages.props'
       - 'global.json'
@@ -84,7 +98,7 @@ jobs:
           ATTACHMENT_ROOT: ${{ runner.temp }}/mtp-attachment-smoke/attachments
         run: |
           # Execute the user-facing sample verbatim so documentation and hosted behavior cannot drift.
-          $readme = [IO.File]::ReadAllText((Join-Path $env:GITHUB_WORKSPACE 'src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/PACKAGE.md'))
+          $readme = [IO.File]::ReadAllText((Join-Path $env:GITHUB_WORKSPACE 'src/MTP/Microsoft.Testing.Extensions.GitHubActionsReport/PACKAGE.md'))
           $sample = [regex]::Match($readme, '(?ms)^  - name: Link failed-test attachments\r?\n.*?^    run: \|\r?\n(?<script>.*?)^```')
           if (-not $sample.Success) { throw 'The documented attachment summary sample was not found.' }
           $script = ($sample.Groups['script'].Value -split '\r?\n' | ForEach-Object {

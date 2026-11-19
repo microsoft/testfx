@@ -1,21 +1,21 @@
 # Artifact Naming Helper
 
-> **Current implementation note (2026-10-09):** [ArtifactNamingHelper](../../src/Platform/Microsoft.Testing.Platform/Services/ArtifactNamingHelper.cs)
+> **Current implementation note (2026-10-09):** [ArtifactNamingHelper](../../src/MTP/Microsoft.Testing.Platform/Services/ArtifactNamingHelper.cs)
 > now derives `{tfm}` from entry-assembly display/platform metadata via `TargetFrameworkParser`,
 > falling back to runtime description when display metadata is unavailable. The service wrapper
-> [ArtifactNamingService](../../src/Platform/Microsoft.Testing.Platform/Services/ArtifactNamingService.cs)
+> [ArtifactNamingService](../../src/MTP/Microsoft.Testing.Platform/Services/ArtifactNamingService.cs)
 > also supplies module identity and sanitizes the leaf name.
 > See the [MTP architecture](../architecture/mtp.md#reports-and-optional-integrations) for artifact ownership.
 
 `ArtifactNamingHelper` is an internal static helper with two current consumption paths:
 
 - Extensions can compile a private copy through source linking. For example, the
-  [HangDump project](../../src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj)
-  links the helper, and [dump writing](../../src/Platform/Microsoft.Testing.Extensions.HangDump/HangDumpProcessLifetimeHandler.DumpWriting.cs)
+  [HangDump project](../../src/MTP/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj)
+  links the helper, and [dump writing](../../src/MTP/Microsoft.Testing.Extensions.HangDump/HangDumpProcessLifetimeHandler.DumpWriting.cs)
   calls it directly. This embedded path needs neither naming-service registration nor IVT.
-- The core host [registers `ArtifactNamingService`](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostBuilder.CommonServices.cs),
+- The core host [registers `ArtifactNamingService`](../../src/MTP/Microsoft.Testing.Platform/Hosts/TestHostBuilder.CommonServices.cs),
   which wraps the same helper. Extensions can access this registered public contract through
-  [`GetArtifactNamingService()`](../../src/Platform/Microsoft.Testing.Platform/Services/ServiceProviderExtensions.cs)
+  [`GetArtifactNamingService()`](../../src/MTP/Microsoft.Testing.Platform/Services/ServiceProviderExtensions.cs)
   and `IArtifactNamingService.ResolveFileName`; source linking is not required for this path.
 
 The static-helper examples below describe internal/source-linked usage, not a public helper API.

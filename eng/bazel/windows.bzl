@@ -3,11 +3,11 @@
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "import_library", "publish_binary")
 load(":defs.bzl", "PORTABLE_FRAMEWORKS", "testfx_library", "testfx_matrix", "testfx_package_files")
 
-_PLATFORM = "src/Platform/Microsoft.Testing.Platform"
-_SHARED = "src/Platform/SharedExtensionHelpers"
-_PACKAGED_APP = "src/Platform/Microsoft.Testing.Extensions.PackagedApp"
-_FRAMEWORK = "src/TestFramework/TestFramework"
-_UI_AUTOMATION = "src/TestFramework/TestFramework.Windows.UIAutomation"
+_PLATFORM = "src/MTP/Microsoft.Testing.Platform"
+_SHARED = "src/MTP/SharedExtensionHelpers"
+_PACKAGED_APP = "src/MTP/Microsoft.Testing.Extensions.PackagedApp"
+_FRAMEWORK = "src/MSTest/TestFramework"
+_UI_AUTOMATION = "src/MSTest/TestFramework.Windows.UIAutomation"
 _PACKAGED_FRAMEWORKS = [tfm + "-windows10.0.19041.0" for tfm in PORTABLE_FRAMEWORKS]
 _DESKTOP_FRAMEWORKS = [tfm + "-windows7.0" for tfm in PORTABLE_FRAMEWORKS]
 _CODE_COVERAGE_VERSION = "18.13.0-preview.26527.4"
@@ -92,9 +92,9 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
     services = "platform_services_" + flavor
     adapter = "adapter_" + flavor
     ui_assembly = "MSTest.Uwp" if flavor == "uwp" else "MSTest.WinUI"
-    framework_project = "src/TestFramework/" + ui_assembly
-    services_project = "src/Adapter/MSTestAdapter.PlatformServices"
-    adapter_project = "src/Adapter/MSTest.TestAdapter"
+    framework_project = "src/MSTest/" + ui_assembly
+    services_project = "src/MSTest/MSTestAdapter.PlatformServices"
+    adapter_project = "src/MSTest/MSTest.TestAdapter"
     _windows_library(
         name = core,
         project = _FRAMEWORK,
@@ -122,7 +122,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
     )
     _windows_library(
         name = compatibility,
-        project = "src/TestFramework/TestFramework.Compatibility",
+        project = "src/MSTest/TestFramework.Compatibility",
         assembly_name = "MSTest.TestFramework.Extensions",
         target_frameworks = [framework],
         emit_supported_os = False,
@@ -159,7 +159,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
         allow_unsafe_blocks = True,
         defines = ["EXCLUDE_OS_POLYFILL", symbol],
         usings = ["Polyfills", "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources"],
-        linked_srcs = native.glob(["src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/**/*.cs"]),
+        linked_srcs = native.glob(["src/MTP/Microsoft.Testing.Extensions.TrxReport/Hashing/**/*.cs"]),
         resources = {services_project + "/Resources/Resource.resx": "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource"},
         analyzer_configs = ["//eng/bazel/windows:winrt.globalconfig"],
         internals_visible_to = [
@@ -179,7 +179,7 @@ def _mstest_flavor(flavor, framework, symbol, projection_deps):
         defines = ["MSTEST_TESTADAPTER", symbol],
         usings = ["Polyfills", "ExecutionScope=Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope"],
         linked_srcs = [
-            "src/Adapter/Shared/BannerMessageHelper.cs",
+            "src/MSTest/Shared/BannerMessageHelper.cs",
             _SHARED + "/RunSettingsProviderHelper.cs",
             _SHARED + "/RunSettingsCommandLineOptionsProviderBase.cs",
             _SHARED + "/RunSettingsConfigurationProviderBase.cs",
@@ -317,7 +317,7 @@ def _controller():
     )
     _windows_library(
         name = "windows_controller_app",
-        project = "src/Platform/Microsoft.Testing.Extensions.PackagedApp.Controller",
+        project = "src/MTP/Microsoft.Testing.Extensions.PackagedApp.Controller",
         assembly_name = "mstest-appmodel-controller",
         target_frameworks = _PACKAGED_FRAMEWORKS[:2],
         binary = True,

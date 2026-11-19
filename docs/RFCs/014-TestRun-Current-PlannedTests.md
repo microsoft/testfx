@@ -2,11 +2,11 @@
 
 > **Current implementation note (2026-10-09):** The experimental planned-test slice exists;
 > running/completed snapshots and events remain future work.
-> [TestRun](../../src/TestFramework/TestFramework/TestRun.cs) starts with a non-null empty value, and
-> [UnitTestRunner](../../src/Adapter/MSTestAdapter.PlatformServices/Execution/UnitTestRunner.cs) publishes a per-source
+> [TestRun](../../src/MSTest/TestFramework/TestRun.cs) starts with a non-null empty value, and
+> [UnitTestRunner](../../src/MSTest/MSTestAdapter.PlatformServices/Execution/UnitTestRunner.cs) publishes a per-source
 > snapshot before assembly initialization. It is retained until replaced in that process/AppDomain.
 > The snapshot is **host-filter-selected**, not a guarantee that every entry executes:
-> [source execution](../../src/Adapter/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.SourceExecution.cs)
+> [source execution](../../src/MSTest/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.SourceExecution.cs)
 > constructs it before later programmatic filter decisions, dependency failures or cancellation.
 > Thus `PlannedTests` cannot answer the motivation's “actually executed” cleanup question.
 > [TestRunInfoTests](../../test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestRunInfoTests.cs)
@@ -123,11 +123,11 @@ Every property name on `PlannedTest` either mirrors an existing public MSTest AP
 
 ### Implementation outline
 
-1. New types in `src/TestFramework/TestFramework/`:
+1. New types in `src/MSTest/TestFramework/`:
    - `TestRun.cs` — static class with `Current` (get) and `internal SetCurrent(ITestRunInfo?)`. Default value is an internal `EmptyTestRunInfo` that returns empty collections.
    - `ITestRunInfo.cs` — the interface.
    - `PlannedTest.cs` — the DTO.
-2. Internal adapter type `TestRunInfo` in `src/Adapter/MSTestAdapter.PlatformServices/Execution/TestRunInfo.cs`:
+2. Internal adapter type `TestRunInfo` in `src/MSTest/MSTestAdapter.PlatformServices/Execution/TestRunInfo.cs`:
    - Implements `ITestRunInfo`.
    - Provides `static TestRunInfo CreateFrom(IReadOnlyList<UnitTestElement>)` that materializes one `PlannedTest` per filtered `UnitTestElement`, reading `TestMethod.{FullClassName,Name,DisplayName,AssemblyName,ManagedTypeName,ManagedMethodName}`, `UnitTestElement.{DeclaringFilePath,DeclaringLineNumber,TestCategory,Traits}`.
 3. Wire-up in `UnitTestRunner` constructor (post `_classCleanupManager = …`):

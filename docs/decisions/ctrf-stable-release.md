@@ -77,7 +77,7 @@ an unnecessary independent version line.
 
 On 2026-10-15 the user directed: "No let's keep versions numbers aligned, it's
 easier for maintenance". Align CTRF with MTP, not with MSTest's distinct version
-family. The existing `src/Platform/Directory.Build.props` already supplies the
+family. The existing `src/MTP/Directory.Build.props` already supplies the
 platform prefix, and stable SDK extensions default their version to
 `MicrosoftTestingExtensionsCommonVersion`, itself defaulted to the platform
 version. Reuse those mechanisms instead of calculating the same number twice.

@@ -356,7 +356,7 @@ Using `$project` for the terminal-contract unit-test project and `$evidence` for
 | Command | Result |
 | --- | --- |
 | `.\.dotnet\dotnet.exe build $project -c Release --disable-build-servers -p:ContinuousIntegrationBuild=true -p:OfficialBuildId=20261110.99 "-bl:$evidence\source-project-build.binlog" --verbosity minimal` | Exit 0; actual updated dependency graph, zero warnings/errors. |
-| `.\.dotnet\dotnet.exe pack src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -c Release --no-restore -p:OfficialBuildId=20261110.99 -p:ContinuousIntegrationBuild=true "-bl:$evidence\source-platform-pack-complete.binlog" --verbosity minimal` | Exit 0; source shipping package produced. |
+| `.\.dotnet\dotnet.exe pack src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -c Release --no-restore -p:OfficialBuildId=20261110.99 -p:ContinuousIntegrationBuild=true "-bl:$evidence\source-platform-pack-complete.binlog" --verbosity minimal` | Exit 0; source shipping package produced. |
 | `.\.dotnet\dotnet.exe test --project $project -c Release --no-build -p:OfficialBuildId=20261110.99 -p:UsingDotNetTest=true -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --filter "FullyQualifiedName~TerminalReporterContractTests" --report-trx --results-directory "$evidence\source-pinned-runtime-results" --no-ansi "-bl:$evidence\source-pinned-runtime-tests.binlog"` | Exit 0; four expected cases passed on the pinned runtimes, with both per-TFM TRX execution gates passing. |
 
 The CMD wrapper/runtime bootstrap could not resolve Windows PowerShell on this host. After the repository

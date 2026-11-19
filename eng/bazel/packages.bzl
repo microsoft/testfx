@@ -50,7 +50,7 @@ def native_packages():
         ("trx_abstractions", "Microsoft.Testing.Extensions.TrxReport.Abstractions", ["platform"], "Provides the test-result abstractions used by Microsoft Testing Platform TRX reporters."),
         ("trx", "Microsoft.Testing.Extensions.TrxReport", ["platform", "trx_abstractions"], "Generates TRX test reports from Microsoft Testing Platform test runs."),
     ]:
-        project = "src/Platform/" + product
+        project = "src/MTP/" + product
         package = name + "_package"
         nuget_pack(
             name = package,

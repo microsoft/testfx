@@ -214,7 +214,7 @@ Representative executed commands, from the worktree root:
 
 ```powershell
 .\.dotnet\dotnet.exe build test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\MSTestAdapter.PlatformServices.UnitTests.csproj -c Release -f net8.0 -p:SupportedNetFrameworks=net8.0 -p:SkipUapTargetFramework=true -p:ModernUwpMinimum= -p:WinUiMinimum= -p:ErrorOnOutOfDateXlf=false -bl:artifacts\tmp\cancellation-toolchain\build-MSTestAdapter.PlatformServices.UnitTests-r5.binlog
-.\.dotnet\dotnet.exe pack src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj -c Release -p:SkipUapTargetFramework=true -p:ModernUwpMinimum= -p:WinUiMinimum= -p:ErrorOnOutOfDateXlf=false -bl:artifacts\tmp\cancellation-toolchain\provider-fix-adapter-pack.binlog
+.\.dotnet\dotnet.exe pack src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj -c Release -p:SkipUapTargetFramework=true -p:ModernUwpMinimum= -p:WinUiMinimum= -p:ErrorOnOutOfDateXlf=false -bl:artifacts\tmp\cancellation-toolchain\provider-fix-adapter-pack.binlog
 .\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net11.0 --no-build --no-launch-profile --filter "ClassName=MSTest.Acceptance.IntegrationTests.TestMethodCancellationTokenTests" -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$PWD\artifacts\TestResults\Release\cancellation-acceptance-final" -p:SkipUapTargetFramework=true -p:ModernUwpMinimum= -p:WinUiMinimum= -bl:artifacts\tmp\cancellation-toolchain\acceptance-test-final.binlog --show-test-results all
 ```
 
@@ -347,8 +347,8 @@ include `TestDataSourceHelpersTests` in both adapter runs:
 ```powershell
 .\.dotnet\dotnet.exe artifacts\bin\MSTestAdapter.PlatformServices.UnitTests\Release\net8.0\MSTestAdapter.PlatformServices.UnitTests.dll --treenode-filter "/*/*/(TestMethodInfoTests)|(MethodInfoExtensionsTests)|(TestDataSourceHelpersTests)/*"
 .\artifacts\bin\MSTestAdapter.PlatformServices.UnitTests\Release\net462\MSTestAdapter.PlatformServices.UnitTests.exe --treenode-filter "/*/*/(TestMethodInfoTests)|(MethodInfoExtensionsTests)|(TestDataSourceHelpersTests)/*"
-.\.dotnet\dotnet.exe build src\Analyzers\MSTest.GlobalConfigsGenerator\MSTest.GlobalConfigsGenerator.csproj -c Release -bl:generator.binlog
-.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Release -bl:analyzer-pack.binlog
+.\.dotnet\dotnet.exe build src\MSTest\MSTest.GlobalConfigsGenerator\MSTest.GlobalConfigsGenerator.csproj -c Release -bl:generator.binlog
+.\.dotnet\dotnet.exe pack src\MSTest\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Release -bl:analyzer-pack.binlog
 .\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net11.0 --no-build --no-launch-profile --filter "ClassName=MSTest.Acceptance.IntegrationTests.TestMethodCancellationTokenTests|FullyQualifiedName~LegacyDataRowBehaviorTests.OptionalParamsAndInvalidArgumentsProduceExactResults" --minimum-expected-tests 15 -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=artifacts\TestResults\Release\review-batch-acceptance-green-final -p:SkipUapTargetFramework=true -p:ModernUwpMinimum= -p:WinUiMinimum= -bl:review-acceptance.binlog --show-test-results all
 ```
 

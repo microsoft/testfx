@@ -410,7 +410,7 @@ function Invoke-SelfTest {
         "eng/test-samples-output.ps1"
     ) $false $true $false
     Assert-Classification "XML documentation path remains product-affecting" @(
-        "src/TestFramework/Assert.cs"
+        "src/MSTest/Assert.cs"
     ) $true $false $false
     Assert-Classification "Unknown path" @(
         "unknown/new-location.txt"

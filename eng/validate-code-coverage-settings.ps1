@@ -152,8 +152,8 @@ foreach ($settingsFile in $SettingsFiles) {
     }
 
     foreach ($path in @(
-        "/_/src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs",
-        "\_\src\Platform\Microsoft.Testing.Platform\Helpers\TaskExtensions.cs",
+        "/_/src/MTP/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs",
+        "\_\src\MTP\Microsoft.Testing.Platform\Helpers\TaskExtensions.cs",
         "/_/src/Polyfills/Index.cs",
         "\_\src\Polyfills\Index.cs"
     )) {
@@ -176,7 +176,7 @@ foreach ($settingsFile in $SettingsFiles) {
         Assert-PatternMatch $sourceExcludes $path $false "Validation and process-lifetime logic must remain measurable in '$settingsFile'."
     }
 
-    $productionPath = $sourceRoot + "src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs".Replace("/", $separator)
+    $productionPath = $sourceRoot + "src/MTP/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs".Replace("/", $separator)
     Assert-PatternMatch $sourceExcludes $productionPath $false "Production sources must remain measurable in '$settingsFile'."
 
     $includeTestAssembly = $settings.SelectSingleNode("/Configuration/IncludeTestAssembly")
@@ -190,7 +190,7 @@ foreach ($settingsFile in $SettingsFiles) {
         }
 
         Assert-PatternMatch $sourceIncludes $productionPath $true "Linked production sources must remain measurable in '$settingsFile'."
-        Assert-PatternMatch $sourceIncludes "/_/src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs" $true "Remapped production sources must remain measurable in '$settingsFile'."
+        Assert-PatternMatch $sourceIncludes "/_/src/MTP/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs" $true "Remapped production sources must remain measurable in '$settingsFile'."
         $testPath = $sourceRoot + "test/UnitTests/Microsoft.Testing.Platform.UnitTests/TestApplicationBuilderTests.cs".Replace("/", $separator)
         Assert-PatternMatch $sourceIncludes $testPath $false "Test implementation must not contribute to source-linked coverage in '$settingsFile'."
         Assert-PatternMatch $sourceIncludes "/_/test/UnitTests/Microsoft.Testing.Platform.UnitTests/TestApplicationBuilderTests.cs" $false "Remapped tests must not contribute to source-linked coverage in '$settingsFile'."

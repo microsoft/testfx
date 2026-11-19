@@ -29,7 +29,7 @@ $results = [Collections.Generic.List[object]]::new()
 $commands = [Collections.Generic.List[object]]::new()
 [string[]] $commonArguments = if ($NoJournal) { @('-NoJournal') } else { @() }
 $statsPath = Join-Path $repo 'artifacts\buildxl\logs\BuildXL.stats'
-$trxProject = 'src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
+$trxProject = 'src\MTP\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj'
 
 function Assert-Equal($Expected, $Actual) {
     if ($Expected -cne $Actual) {

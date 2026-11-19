@@ -5,19 +5,19 @@ load(":defs.bzl", "testfx_binary", "testfx_library")
 def analyzer_libraries():
     testfx_library(
         name = "analyzers",
-        project = "src/Analyzers/MSTest.Analyzers",
+        project = "src/MSTest/MSTest.Analyzers",
         target_frameworks = ["netstandard2.0"],
         analyzer_configs = ["//eng/bazel:analyzers.globalconfig"],
         additionalfiles = [
-            "src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Shipped.md",
-            "src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md",
+            "src/MSTest/MSTest.Analyzers/AnalyzerReleases.Shipped.md",
+            "src/MSTest/MSTest.Analyzers/AnalyzerReleases.Unshipped.md",
         ],
         linked_srcs = [
             "//eng/bazel:CompatibilityFrameworkMetadata.cs",
-            "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
-            "src/Platform/Microsoft.Testing.Platform/Helpers/ObjectPool.cs",
+            "src/MTP/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
+            "src/MTP/Microsoft.Testing.Platform/Helpers/ObjectPool.cs",
         ],
-        resources = {"src/Analyzers/MSTest.Analyzers/Resources.resx": "MSTest.Analyzers.Resources"},
+        resources = {"src/MSTest/MSTest.Analyzers/Resources.resx": "MSTest.Analyzers.Resources"},
         internals_visible_to = ["MSTest.Analyzers.CodeFixes"],
         deps = [
             "@paket.analyzers//microsoft.codeanalysis.common",
@@ -26,10 +26,10 @@ def analyzer_libraries():
     )
     testfx_library(
         name = "codefixes",
-        project = "src/Analyzers/MSTest.Analyzers.CodeFixes",
+        project = "src/MSTest/MSTest.Analyzers.CodeFixes",
         target_frameworks = ["netstandard2.0"],
         linked_srcs = ["//eng/bazel:CompatibilityFrameworkMetadata.cs"],
-        resources = {"src/Analyzers/MSTest.Analyzers.CodeFixes/CodeFixResources.resx": "MSTest.Analyzers.CodeFixResources"},
+        resources = {"src/MSTest/MSTest.Analyzers.CodeFixes/CodeFixResources.resx": "MSTest.Analyzers.CodeFixResources"},
         deps = [
             ":analyzers",
             "@paket.analyzers//microsoft.codeanalysis.csharp.workspaces",
@@ -38,21 +38,21 @@ def analyzer_libraries():
     )
     testfx_library(
         name = "mstest_generator",
-        project = "src/Analyzers/MSTest.SourceGeneration",
+        project = "src/MSTest/MSTest.SourceGeneration",
         target_frameworks = ["netstandard2.0"],
         assembly_version = "14.0.0.0",
         allow_unsafe_blocks = True,
         defines = ["EXCLUDE_RANGE_INDEX_POLYFILL"],
         linked_srcs = [
-            "src/Analyzers/Shared/EquatableArray.cs",
-            "src/Analyzers/Shared/SymbolAccessibilityHelper.cs",
-            "src/Analyzers/Shared/SourceGenModeHelper.cs",
+            "src/MSTest/Shared/EquatableArray.cs",
+            "src/MSTest/Shared/SymbolAccessibilityHelper.cs",
+            "src/MSTest/Shared/SourceGenModeHelper.cs",
         ],
         analyzer_configs = ["//eng/bazel:analyzers.globalconfig"],
         additionalfiles = [
-            "src/Analyzers/MSTest.SourceGeneration/BannedSymbols.txt",
-            "src/Analyzers/MSTest.SourceGeneration/AnalyzerReleases.Shipped.md",
-            "src/Analyzers/MSTest.SourceGeneration/AnalyzerReleases.Unshipped.md",
+            "src/MSTest/MSTest.SourceGeneration/BannedSymbols.txt",
+            "src/MSTest/MSTest.SourceGeneration/AnalyzerReleases.Shipped.md",
+            "src/MSTest/MSTest.SourceGeneration/AnalyzerReleases.Unshipped.md",
         ],
         internals_visible_to = ["MSTest.SourceGeneration.UnitTests"],
         deps = [
@@ -62,11 +62,11 @@ def analyzer_libraries():
     )
     testfx_binary(
         name = "globalconfigs_generator",
-        project = "src/Analyzers/MSTest.GlobalConfigsGenerator",
+        project = "src/MSTest/MSTest.GlobalConfigsGenerator",
         polyfills = False,
         linked_srcs = [
             "//eng/bazel:GlobalConfigsEnvironment.cs",
-            "src/Analyzers/MSTest.Analyzers/Helpers/WellKnownCustomTags.cs",
+            "src/MSTest/MSTest.Analyzers/Helpers/WellKnownCustomTags.cs",
         ],
         deps = ["@paket.analyzers//microsoft.codeanalysis.common"],
     )

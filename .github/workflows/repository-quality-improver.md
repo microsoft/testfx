@@ -107,9 +107,9 @@ The history file should contain:
           "issue": 10577,
           "slug": "obsolete-api-missing-diagnosticid",
           "files": [
-            "src/Platform/Microsoft.Testing.Platform/TestHost/ITestHostManager.cs",
-            "src/Platform/Microsoft.Testing.Platform/Messages/TestNodeStateProperties.cs",
-            "src/Adapter/MSTest.TestAdapter/VSTestAdapter/MSTestExecutor.cs"
+            "src/MTP/Microsoft.Testing.Platform/TestHost/ITestHostManager.cs",
+            "src/MTP/Microsoft.Testing.Platform/Messages/TestNodeStateProperties.cs",
+            "src/MSTest/MSTest.TestAdapter/VSTestAdapter/MSTestExecutor.cs"
           ],
           "symbols": [
             "ITestHostManager.AddTestSessionLifetimeHandle",
@@ -541,7 +541,7 @@ The JSON should include:
 - The new run's `findings` — one entry per finding analyzed, each with:
   - `issue`: optional; include only when the issue number is already known from the tracker. A queued `create_issue` safe output runs after cache memory is saved, so never invent or predict its issue number.
   - `slug`: a short, stable identifier for the finding itself
-  - `files`: the repo-relative paths the finding rests on, e.g. `src/Adapter/MSTest.TestAdapter/VSTestAdapter/MSTestExecutor.cs`
+  - `files`: the repo-relative paths the finding rests on, e.g. `src/MSTest/MSTest.TestAdapter/VSTestAdapter/MSTestExecutor.cs`
   - `symbols`: the fully-qualified types and members it names, e.g. `ITestHostManager.AddTestSessionLifetimeHandle`
 - Updated `recent_areas` (last 5)
 - Updated statistics (total_runs, custom_rate, unique_areas_explored)

@@ -1,7 +1,7 @@
 # 001 - Microsoft.Testing.Platform JSON-RPC Protocol (formerly MSTest Runner Protocol)
 
 > **Current implementation note (2026-10-09):** This protocol remains the JSON-RPC reference.
-> [ServerTestHost](../../src/Platform/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs)
+> [ServerTestHost](../../src/MTP/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs)
 > currently advertises `multiRequestSupport: false` and `multiConnectionProvider: false`; the
 > parallel-request/passive-connection possibilities below are not general advertised support.
 > See [MTP-010](../specifications/mtp.md#mtp-010--json-rpc-initialization-and-request-scope).

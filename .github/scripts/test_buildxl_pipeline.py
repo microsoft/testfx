@@ -473,7 +473,7 @@ class BuildXLPipelineTests(unittest.TestCase):
             capture_output=True, text=True, check=True,
         ).stdout.strip()
         cases = {
-            "project": ("src\\TestFramework\\TestFramework\\TestFramework.csproj", "Project defaults"),
+            "project": ("src\\MSTest\\TestFramework\\TestFramework.csproj", "Project defaults"),
             "framework": ("TestFx.slnx", "netstandard2.0"),
         }
         for case, (project, framework) in cases.items():
@@ -1125,7 +1125,7 @@ Write-Output ('BUILDXL_DRIVER_SETTINGS=' + ($result | ConvertTo-Json -Compress))
 
         overrides = ET.parse(ROOT / "eng" / "buildxl" / "pack.targets").getroot()
         analyzers = ET.parse(
-            ROOT / "src" / "Analyzers" / "MSTest.Analyzers.Package" / "MSTest.Analyzers.Package.csproj"
+            ROOT / "src" / "MSTest" / "MSTest.Analyzers.Package" / "MSTest.Analyzers.Package.csproj"
         ).getroot()
         product = analyzers.find("Target[@Name='_GenerateGlobalConfigs']/Exec")
         override = overrides.find("Target[@Name='_GenerateGlobalConfigs']")
@@ -1142,23 +1142,23 @@ Write-Output ('BUILDXL_DRIVER_SETTINGS=' + ($result | ConvertTo-Json -Compress))
             generator.text,
         )
         generator_project = ET.parse(
-            ROOT / "src" / "Analyzers" / "MSTest.GlobalConfigsGenerator" / "MSTest.GlobalConfigsGenerator.csproj"
+            ROOT / "src" / "MSTest" / "MSTest.GlobalConfigsGenerator" / "MSTest.GlobalConfigsGenerator.csproj"
         ).getroot()
         self.assertEqual("$(NetCurrent)", generator_project.findtext("PropertyGroup/TargetFramework"))
         solution = ET.parse(ROOT / "TestFx.slnx").getroot()
         self.assertEqual(
-            ["src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj"],
+            ["src/MSTest/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj"],
             [
                 dependency.get("Project")
                 for dependency in solution.findall(
-                    ".//Project[@Path='src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj']"
+                    ".//Project[@Path='src/MSTest/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj']"
                     "/BuildDependency"
                 )
             ],
         )
 
         packaged_app = ET.parse(
-            ROOT / "src" / "Platform" / "Microsoft.Testing.Extensions.PackagedApp.MSBuild"
+            ROOT / "src" / "MTP" / "Microsoft.Testing.Extensions.PackagedApp.MSBuild"
             / "Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj"
         ).getroot()
         product = packaged_app.find("Target[@Name='_AddPackagedAppControllerToPackage']")

@@ -115,7 +115,7 @@ runtime configurations are retained in task-owned session artifact storage.
 The baseline command was:
 
 ```powershell
-.\eng\build.ps1 -restore -build -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -msbuildEngine dotnet -binaryLog /bl:<artifacts>\baseline-platform.binlog
+.\eng\build.ps1 -restore -build -projects src\MTP\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -msbuildEngine dotnet -binaryLog /bl:<artifacts>\baseline-platform.binlog
 ```
 
 Exit: `0`. This establishes existing build behavior, not regression sensitivity.

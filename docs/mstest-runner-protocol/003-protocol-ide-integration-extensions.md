@@ -1,6 +1,6 @@
 # 003 - Test Platform V3 integration with the editor
 
-> **Current implementation note (2026-10-09):** [Current serialization](../../src/Platform/Microsoft.Testing.Platform/ServerMode/JsonRpc/Json/Json.TestNodeSerializer.cs)
+> **Current implementation note (2026-10-09):** [Current serialization](../../src/MTP/Microsoft.Testing.Platform/ServerMode/JsonRpc/Json/Json.TestNodeSerializer.cs)
 > emits `location.file`, `location.line-start`, `location.line-end`, `location.type`,
 > `location.method` and `location.method-arity`; the `location.line` shorthand below is historical.
 > VSTest key/value properties are passed through when supplied, not synthesized universally by MTP.

@@ -3,11 +3,11 @@
 load(":defs.bzl", "DESKTOP_FRAMEWORKS", "PORTABLE_FRAMEWORKS", "STANDARD_FRAMEWORKS", "testfx_compatibility_select", "testfx_library", "testfx_nuget")
 load(":platform.bzl", "ipc_sources", "runtime_helpers")
 
-_PLATFORM = "src/Platform/Microsoft.Testing.Platform"
-_SHARED = "src/Platform/SharedExtensionHelpers"
+_PLATFORM = "src/MTP/Microsoft.Testing.Platform"
+_SHARED = "src/MTP/SharedExtensionHelpers"
 
 def _extension(name, product, root_namespace = None, build_info = True, target_frameworks = STANDARD_FRAMEWORKS, linked_srcs = [], **kwargs):
-    project = "src/Platform/" + product
+    project = "src/MTP/" + product
     resources = {
         path: (root_namespace or product) + ".Resources." + path.rsplit("/", 1)[-1][:-5]
         for path in native.glob([project + "/Resources/*.resx"], allow_empty = True)
@@ -180,7 +180,7 @@ def extension_libraries():
             version_override = "1.0.0" if name == "junit" else "",
             linked_srcs = _report_sources() + ([_PLATFORM + "/Helpers/EnvironmentVariableConstants.cs"] if name == "ctrf" else []),
             embedded_resources = {
-                "src/Platform/Microsoft.Testing.Extensions.HtmlReport/Templates/report-template.html": "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html",
+                "src/MTP/Microsoft.Testing.Extensions.HtmlReport/Templates/report-template.html": "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html",
             } if name == "html" else {},
             internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "DynamicProxyGenAssembly2"],
             deps = [":platform"] + testfx_nuget(["system.text.json"], compatibility_group = "compatibility_extensions"),
@@ -218,7 +218,7 @@ def extension_libraries():
         product = "Microsoft.Testing.Extensions.PackagedApp.MSBuild",
         build_info = False,
         target_frameworks = ["netstandard2.0", "net10.0"],
-        exclude = ["src/Platform/Microsoft.Testing.Extensions.PackagedApp.MSBuild/buildTransitive/**"],
+        exclude = ["src/MTP/Microsoft.Testing.Extensions.PackagedApp.MSBuild/buildTransitive/**"],
         allow_empty_sources = True,
         deps = [":platform_msbuild"] + testfx_compatibility_select([], [":packaged_app"]),
     )
@@ -244,11 +244,11 @@ def extension_libraries():
     )
     testfx_library(
         name = "mstest_hosting",
-        project = "src/Adapter/MSTest.Extensions.Hosting",
+        project = "src/MSTest/MSTest.Extensions.Hosting",
         target_frameworks = DESKTOP_FRAMEWORKS,
         linked_srcs = testfx_compatibility_select(["//eng/bazel:CompatibilityFrameworkMetadata.cs"]),
         resources = {
-            "src/Adapter/MSTest.Extensions.Hosting/Resources/HostingResources.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Hosting.Resources.HostingResources",
+            "src/MSTest/MSTest.Extensions.Hosting/Resources/HostingResources.resx": "Microsoft.VisualStudio.TestTools.UnitTesting.Hosting.Resources.HostingResources",
         },
         internals_visible_to = ["Microsoft.Testing.Extensions.UnitTests", "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests"],
         deps = [":adapter", ":hosting", ":framework"] + testfx_nuget(["microsoft.extensions.dependencyinjection.abstractions"], compatibility_group = "compatibility_hosting") + select({
