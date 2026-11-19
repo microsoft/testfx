@@ -1349,7 +1349,11 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.Contains("locked.coverage", exception.Message);
     }
 
+    // Each row near the 75 MiB limit transiently buffers the attachment several times (raw bytes, base64,
+    // JSON payload, request content, and the decoded copy below). Running the rows concurrently with
+    // method-level parallelization peaks at several GB and can get the test host OOM-killed on CI agents.
     [TestMethod]
+    [DoNotParallelize]
     [DataRow(0L, true)]
     [DataRow(0L, false)]
     [DataRow(34_360_600L, true)]

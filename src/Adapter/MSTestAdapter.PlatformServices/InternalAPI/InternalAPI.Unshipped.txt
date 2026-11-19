@@ -35,3 +35,18 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.I
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestClassInfo(System.Type! type, System.Reflection.ConstructorInfo? constructor, bool isParameterlessConstructor, Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute! classAttribute, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo! parent) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TypeExtensions
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TypeExtensions.IsFSharpModule(this System.Type! type) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.IsUIAppModel.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsAssertionFailureDiagnostics.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsDeployment.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsDiscoveryCache.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppModelCapabilities.SupportsTelemetry.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.Cleanup() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.Deploy(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! testElements, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.DeploymentContext! deploymentContext, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.GetDeploymentDirectory() -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.GetDeploymentItems(System.Reflection.MethodInfo! method, System.Type! type, System.Collections.Generic.ICollection<string!>! warnings) -> System.Collections.Generic.KeyValuePair<string!, string!>[]?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.GetUnsupportedDeploymentMessage(System.Reflection.MethodInfo! method, System.Type! type) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnsupportedTestDeployment.UnsupportedTestDeployment() -> void

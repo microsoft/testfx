@@ -299,6 +299,198 @@ VSTest-host activation, standalone sample applications and adapter unit suites.
 No Windows 18362 OS machine or PR CI execution was verified; the 18362-targeted
 consumer and real app activation ran on the preflight-approved Windows 11 host.
 
+## App-model capability consolidation (2026-11-19)
+
+### Question
+
+Can the adapter and platform services stop scattering `WINDOWS_UWP`/`WIN_UI`
+`#if` blocks for features (deployment, telemetry, diagnostics, discovery cache)
+that are merely *disabled* on UI application models, and special-case them in
+one place instead? This is a behavior-preserving refactor: every UI app model
+keeps exactly the same observable behavior, including the
+`DeploymentItemAttribute` rejection.
+
+### Findings at `d634b2fe38b8572045c7c648789f4fb1fe14f84e`
+
+The baseline had 135 `#if`/`#elif` lines mentioning `WINDOWS_UWP`, `WIN_UI` or
+`CLASSIC_UWP` across 61 files under `src\Adapter`, 88 of them naming `WIN_UI`.
+Most `!WINDOWS_UWP && !WIN_UI` guards fall into two different categories:
+
+- **Real API gaps (classic UWP only).** `uap10.0` consumes the `netstandard2.0`
+  `MSTest.TestFramework`, which does not define `DeploymentItemAttribute`,
+  telemetry or configuration APIs. These guards must stay, but only as
+  `!WINDOWS_UWP`.
+- **Policy (modern UWP / WinUI).** The shared `WIN_UI` build is a full .NET
+  build: every API compiles. Deployment, telemetry, assertion-failure
+  diagnostics and the discovery cache were turned off by `#if` purely as
+  product policy.
+
+### Decision
+
+1. `AppModelCapabilities` (internal, PlatformServices) is the single policy
+   point: `IsUIAppModel`, `SupportsDeployment`, `SupportsTelemetry`,
+   `SupportsAssertionFailureDiagnostics` and `SupportsDiscoveryCache`. Values
+   are compile-time constants, so the JIT folds the disabled branches.
+2. Deployment uses a null object. `ITestDeployment` and
+   `IPlatformServiceProvider.TestDeployment` are always available.
+   `PlatformServiceProvider` selects `TestDeployment` when deployment is
+   supported and `UnsupportedTestDeployment` otherwise (always on classic
+   UWP). `ITestDeployment.GetUnsupportedDeploymentMessage` replaces the inline
+   WinUI rejection in `TestMethodRunner`. Its checks keep the original
+   method-then-class order and `DeploymentItemNotSupportedForUi` message, and
+   it returns `null` on classic UWP and for normal deployments.
+   `UnitTestElement.DeploymentItems`, its TestCase round-trip, the discovery
+   cache clone and the `TestExecutionManager` deploy/cleanup flow are no
+   longer conditionally compiled.
+3. Telemetry, configuration-source tracking, the diagnostics warning and
+   discovery-cache eligibility query the capability instead of `WIN_UI`.
+4. Runtime detection (for example "is this process packaged?") was rejected:
+   it is not equivalent. Unpackaged WinUI apps would start deploying and
+   sending telemetry, and packaged non-UI desktop processes would lose
+   deployment. The WinUI build only ever runs inside an application, so a
+   compile-time policy is the accurate signal.
+
+### Equivalence argument per application model
+
+| Model | Deployment | Rejection | Telemetry / cache / diagnostics |
+| --- | --- | --- | --- |
+| Ordinary (.NET / .NET Framework) | `TestDeployment`, unchanged | `null` (one extra interface call) | Unchanged |
+| Modern UWP / WinUI (`WIN_UI`) | `UnsupportedTestDeployment`: `Deploy` returns `false`, so sources are not rewritten; `Cleanup` is a no-op; items are `null` | Same message, same method-then-class order | Collector never created; cache unsupported; same warning |
+| Classic UWP (`WINDOWS_UWP`) | `UnsupportedTestDeployment` | `null` (attribute does not exist) | Code still excluded at compile time |
+
+On `WIN_UI` the previously excluded `_hasAnyTestFailed` bookkeeping now runs.
+Its only consumer gates `Cleanup()`, which is a no-op there.
+`MSTestTelemetryDataCollector.Current` is only assigned by `EnsureInitialized`,
+which `MSTestEngine` skips when `SupportsTelemetry` is false. As a result, the
+now-compiled `Current?.Track*` call sites remain inert.
+
+### Remaining guards and why
+
+After the change there are 117 conditionals across 51 files, 40 of them naming
+`WIN_UI`. Combined `!WINDOWS_UWP && !WIN_UI` guards went from 63 to 20, and
+`!WINDOWS_UWP`-only guards (real classic-UWP API gaps) went from 23 to 50.
+
+- **Genuine Windows app-model APIs:** these stay. They are `AppModel.cs`
+  (package P/Invoke), `FileOperations.cs` (package path), `TestSourceHandler.cs`,
+  `TestSourceHost.cs`, `Properties\AssemblyInfo.cs`, `MethodInfoExtensions.cs`
+  (#3071 argument unwrapping) and `ClassicUwpPackagedAppExtensions.cs`.
+- **Policy guards deferred as follow-ups:** the
+  `TestContextImplementation.AssertionFailureDiagnostics*` and
+  `TestContextImplementation.TempDirectory*` partials, plus related guards in
+  `TestContextImplementation.cs`, `TestContextImplementation.Properties.cs`,
+  `TestMethodRunner.cs` and `TestMethodRunner.DataRow.cs`. They share fields,
+  a POSIX `mkdir`/`chmod` `DllImport`, the per-test context clone budget and
+  cross-partial state. Ungating them safely needs its own focused change and
+  WinUI acceptance coverage. `AppModelCapabilities.SupportsAssertionFailureDiagnostics`
+  already exists for that follow-up.
+
+DeploymentItem is still unsupported on UI app models. Supporting it would be a
+behavior change: package contents are read-only, and the current contract tells
+users to ship files in the app package. With the null-object seam, enabling it
+later only means changing `SupportsDeployment`, not editing dozens of `#if`s.
+
+### Validation
+
+Adapter and both unit-test projects were built with the repo toolchain:
+`.\build.cmd -projects <csproj>` for `MSTest.TestAdapter`,
+`MSTestAdapter.UnitTests` and `MSTestAdapter.PlatformServices.UnitTests`.
+All PlatformServices TFMs, including `uap10.0.16299` and
+`net10.0-windows10.0.18362.0`, built with 0 warnings and 0 errors. Each
+unit-test executable under `artifacts\bin\<project>\Debug\<tfm>\` was then run
+directly with `--progress off --ansi off`, before and after the change:
+
+| Project | net10.0 | net10.0-windows10.0.18362.0 (`WIN_UI`) | net11.0 | net462 | net48 |
+| --- | --- | --- | --- | --- | --- |
+| MSTestAdapter.UnitTests | 197 → 197 | 170 → 170 | 197 → 197 | 174 → 174 | 174 → 174 |
+| MSTestAdapter.PlatformServices.UnitTests | 1474 → 1480 | 1350 → 1362 | 1474 → 1480 | 1618 → 1624 | 1618 → 1624 |
+
+All runs exited 0 with no failures. The +6 on every TFM is the new
+`UnsupportedTestDeploymentTests`, which pins the null-object contract and the
+rejection order and message. The additional +6 on `WIN_UI` are existing tests
+that are no longer compiled out: three in `TestExecutionManagerTests`, two in
+`TypeEnumeratorTests` and one in `UnitTestElementTests`. They now exercise the
+deployment flow against the shared seam. `MSTestSettingsProviderTests` asserts
+empty deployment properties on UI app models instead of skipping the check.
+
+**Test-value evidence:** this is a behavior-preserving refactor, so the
+evidence is green-before/green-after on the same suites, plus new tests that
+pin the preserved contract. The initial validation did not run the WinUI
+acceptance scenarios; the follow-up below closes that gap. Classic-UWP runtime
+execution remains outside this focused validation (no classic-UWP unit-test
+TFM; compile-only coverage).
+
+### Packed WinUI acceptance follow-up (2026-11-19)
+
+Validated the clean implementation revision
+`2994e1d8928696580b904eecbb5ab7079e3f4ccc`, using SDK
+`12.0.100-alpha.1.26562.108`, Release `MSTest.*` `5.0.0-dev` and MTP
+`3.0.0-dev`. The full Release pack succeeded with 0 warnings and 0 errors.
+Windows app-model preflight passed with Developer Mode already enabled;
+no machine settings or pre-existing registrations were changed.
+
+The two acceptance boundaries are distinct: `WinUITests` consumes the shipping
+WinUI NuGet payload without package identity and is Windows-only, but does
+**not** require `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS`. The actual registered
+WinUI application is covered by `PackagedWinUITests`, which requires that gate.
+
+| Selection | Executed result and observed contract |
+| --- | --- |
+| `SimpleWinUITestCase` | Passed; the generated `net11.0-windows10.0.19041.0` host exited 0 with 1 passed test and preserved null UI deployment-directory properties. |
+| `Deployment_Reflection`, `Deployment_Rooting`, `Deployment_ReflectionFree` | All 3 passed. Each generated host exited 2 with exactly 6 expected failures, 1 pass and 2 skips. The assertions checked individual TRX names/outcomes, inherited attributes, folded/unfolded rows, the rejection message, absence of the test-body failure marker, and the selected metadata provider. |
+| `PackagedFullTrustWinUI_RegistersActivatesConnectsBackRunsUiTestsAndCleansUp` | Passed. The real `net10.0-windows10.0.19041.0` / `win-x64` app registered and activated, connected back, exited 0, and recorded all 5 expected plain/identity/isolation/execution-ID/UI-dispatcher tests. Its exact AUMID and install/launch directory matched the generated layout; registration cleanup succeeded. |
+
+Independent discovery selected 4 and 1 cases respectively. The execution
+verifier confirmed planned/selected/executed/passed counts of 4 and 1, with
+zero outer failures or skips and both outer exits 0. The initial discovery
+attempt without an explicit `--list-tests text` format failed CLI parsing;
+it executed no tests and is not counted as evidence.
+
+Package and consumer provenance was checked after execution, not inferred
+from version strings. Six restore graphs used the run-owned primary caches
+(also listing the Visual Studio fallback folder); 19 cached shipping packages
+matched the freshly packed archives. All 12 copied adapter DLLs, across the
+five consumers and the additional compiled source-generation smoke variant,
+matched the WinUI package payload. That extra smoke variant was built, not
+counted as an additional executed test.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `MSTest.WinUI.5.0.0-dev.nupkg` | `3259F879A68036CFA17DA8472B9469BB101E12FF941E904F625A39CFD91E8E08` |
+| `buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll` | `61B9C1E0147032D5500125E70507DE3C51B4FDD2BF679305FF798D2A9EFA276F` |
+| `buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll` | `5F7C3928987CAF8AEE2EB3EF59AC56CDE05C050D2C44B0215B3D87B9F0A53662` |
+
+Successful pack, preflight and execution commands from the worktree root:
+
+```powershell
+.\build.cmd -pack -c Release -bl
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -File .\eng\pipelines\test-windows-app-model-preflight.ps1 -Mode Preflight
+$results = Join-Path $PWD 'artifacts\TestResults\Release\app-model-capabilities-2994e1d-20261119'
+$env:TESTFX_AZDO_LIVE_PUBLISHING = 'false'
+$env:Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup = '0'
+$env:MSTEST_ACCEPTANCE_SKIP_SOURCEGEN = 'false'
+# These fresh parent-owned caches carry the CollectionPackageCache marker.
+$env:TESTFX_COLLECTION_NUGET_CACHE = Join-Path $PWD 'artifacts\tmp\ui-cap-2994\contract-cache'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.WinUITests.' -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results\contract" "-bl:$results\contract\execution.binlog" --show-test-results all
+$env:TESTFX_COLLECTION_NUGET_CACHE = Join-Path $PWD 'artifacts\tmp\ui-cap-2994\packaged-cache'
+$env:TESTFX_RUN_WINDOWS_APP_MODEL_TESTS = '1'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release --no-build --filter 'FullyQualifiedName~PackagedWinUITests.PackagedFullTrustWinUI_RegistersActivatesConnectsBackRunsUiTestsAndCleansUp' -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results\packaged" "-bl:$results\packaged\execution.binlog" --show-test-results all
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -File .\eng\pipelines\test-windows-app-model-preflight.ps1 -Mode LeakCheck
+```
+
+Environment overrides were confined to the individual command processes.
+Logs, outer/child TRX, binlogs, generated restore/import records, identity and
+execution markers, and package/payload hash evidence are retained under the
+results directory above. Run-owned generated layouts and caches were removed
+after preserving the evidence; the leak check found no reserved test package
+registrations.
+
+These are post-change composed-product checks, supplementing the unit-level
+green-before/green-after evidence, not a new red-phase comparison. The existing
+`WindowsAppModel` CI job selects the real activation case via
+`WindowsApplicationModel`; no CI run or publication was performed here.
+Classic UWP and the full Windows app-model matrix were not rerun, and this
+follow-up does not establish release-branch/backport validation.
+
 ## Open questions
 
 - Which servicing branches, if any, need this change after mainline validation?

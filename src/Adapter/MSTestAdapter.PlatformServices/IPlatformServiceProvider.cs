@@ -28,12 +28,10 @@ internal interface IPlatformServiceProvider
     /// </summary>
     ITraceLogger AdapterTraceLogger { get; set; }
 
-#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
     ITestDeployment TestDeployment { get; }
-#endif
 
     /// <summary>
     /// Gets an instance to the platform service for a Settings Provider.

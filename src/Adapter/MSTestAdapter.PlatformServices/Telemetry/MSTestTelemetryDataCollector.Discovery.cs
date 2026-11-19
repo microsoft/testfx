@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
 using System.Security.Cryptography;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -61,9 +61,7 @@ internal sealed partial class MSTestTelemetryDataCollector
                 RetryBaseAttribute => nameof(RetryBaseAttribute),
                 ConditionBaseAttribute => nameof(ConditionBaseAttribute),
                 TestCategoryAttribute => nameof(TestCategoryAttribute),
-#if !WIN_UI
                 DeploymentItemAttribute => nameof(DeploymentItemAttribute),
-#endif
                 _ => null,
             };
 

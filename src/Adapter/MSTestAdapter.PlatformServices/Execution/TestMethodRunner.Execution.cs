@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-#if (WINDOWS_UWP || WIN_UI) && NET
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,10 +16,7 @@ internal sealed partial class TestMethodRunner
 {
     private async Task<TestResult[]> ExecuteTestAsync(ITestContext executionContext, TestMethodInfo testMethodInfo)
     {
-#if (WINDOWS_UWP || WIN_UI) && NET
-        IReflectionOperations reflection = PlatformServiceProvider.Instance.ReflectionOperations;
-        if (reflection.IsAttributeDefined<DeploymentItemAttribute>(testMethodInfo.MethodInfo)
-            || reflection.IsAttributeDefined<DeploymentItemAttribute>(testMethodInfo.Parent.ClassType))
+        if (PlatformServiceProvider.Instance.TestDeployment.GetUnsupportedDeploymentMessage(testMethodInfo.MethodInfo, testMethodInfo.Parent.ClassType) is { } unsupportedDeploymentMessage)
         {
             executionContext.SetOutcome(UnitTestOutcome.Failed);
             return
@@ -30,11 +25,10 @@ internal sealed partial class TestMethodRunner
                 {
                     Outcome = UnitTestOutcome.Failed,
                     DisplayName = _test.DisplayName,
-                    TestFailureException = new TestFailedException(UnitTestOutcome.Failed, Resource.DeploymentItemNotSupportedForUi),
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Failed, unsupportedDeploymentMessage),
                 },
             ];
         }
-#endif
 
         TestResult[] results;
         try

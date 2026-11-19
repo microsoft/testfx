@@ -83,7 +83,7 @@ internal sealed partial class MSTestSettings
         }
 
         // Track configuration source for telemetry.
-#if !WINDOWS_UWP && !WIN_UI
+#if !WINDOWS_UWP
         if (MSTestTelemetryDataCollector.Current is { } telemetry)
         {
             telemetry.ConfigurationSource = configuration?["mstest"] is not null

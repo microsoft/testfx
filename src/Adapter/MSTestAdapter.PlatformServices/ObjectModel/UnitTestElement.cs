@@ -73,12 +73,10 @@ internal sealed class UnitTestElement
     /// </summary>
     public TestDependencyInfo[]? Dependencies { get; set; }
 
-#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets the deployment items for the test method.
     /// </summary>
     public KeyValuePair<string, string>[]? DeploymentItems { get; set; }
-#endif
 
     internal string? DeclaringFilePath { get; set; }
 

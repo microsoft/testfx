@@ -146,9 +146,7 @@ public class TestCaseExtensionsTests : TestContainer
         testCase.SetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, true);
         testCase.SetPropertyValue(AdapterTestProperties.ResourceLocksProperty, new[] { "Rshared", "Wexclusive" });
         testCase.SetPropertyValue(AdapterTestProperties.DependenciesProperty, new[] { "PNamespace.Other\nBefore", "S\nLocal" });
-#if !WIN_UI && !WINDOWS_UWP
         testCase.SetPropertyValue(AdapterTestProperties.DeploymentItemsProperty, new[] { new KeyValuePair<string, string>("input.txt", "data") });
-#endif
         testCase.Traits.Add(new Trait("Topic", "api"));
         testCase.Traits.Add(new Trait("Topic", "boundary"));
 
@@ -168,8 +166,6 @@ public class TestCaseExtensionsTests : TestContainer
             ("exclusive", Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode.ReadWrite));
         result.Dependencies!.Select(info => (info.TargetClassFullName, info.TargetMethodName, info.ProceedOnFailure))
             .Should().Equal(("Namespace.Other", "Before", true), (null, "Local", false));
-#if !WIN_UI && !WINDOWS_UWP
         result.DeploymentItems.Should().Equal(new[] { new KeyValuePair<string, string>("input.txt", "data") });
-#endif
     }
 }

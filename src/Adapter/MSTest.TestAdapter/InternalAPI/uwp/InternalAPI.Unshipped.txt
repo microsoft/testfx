@@ -14,3 +14,4 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MS
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.DiscoveryCache.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache?
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.DiscoveryCache.set -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.IsSupported(System.Reflection.Assembly! assembly) -> bool
+static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.DeploymentItemsProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!

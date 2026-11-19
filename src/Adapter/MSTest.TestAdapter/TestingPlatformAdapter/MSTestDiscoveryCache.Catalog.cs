@@ -17,9 +17,7 @@ internal sealed partial class MSTestDiscoveryCache
         clone.ResourceLocks = element.ResourceLocks?.ToArray();
         clone.Dependencies = element.Dependencies?.ToArray();
         clone.WorkItemIds = element.WorkItemIds?.ToArray();
-#if !WINDOWS_UWP && !WIN_UI
         clone.DeploymentItems = element.DeploymentItems?.ToArray();
-#endif
         clone.ExecutionContextProperties = null;
         clone.ExecutionActivityLease = null;
         clone.HostRecordingHandle = null;
