@@ -3086,13 +3086,14 @@ public sealed class TerminalTestReporterTests
             AnsiMode = AnsiMode.NoAnsi,
             ShowAssembly = showAssembly,
             ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
         });
         reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
 
         string identity = showAssembly ? "unaffected.dll (net8.0|x64) " : string.Empty;
-        Assert.AreEqual($"{identity}No affected tests selected{Environment.NewLine}", console.Output);
+        Assert.AreEqual($"{identity}skipped (No affected tests selected){Environment.NewLine}", console.Output);
         Assert.AreEqual(0, reporter.TotalTests);
         Assert.IsFalse(reporter.HasHandshakeFailure);
     }
@@ -3100,7 +3101,7 @@ public sealed class TerminalTestReporterTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public void AssemblyRunNotSelected_UsesNeutralColor(bool simpleAnsi)
+    public void AssemblyRunNotSelected_UsesSkipColorWithDistinctReason(bool simpleAnsi)
     {
         var console = new StringBuilderConsole();
         using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
@@ -3112,7 +3113,7 @@ public sealed class TerminalTestReporterTests
 
         reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
 
-        Assert.AreEqual($"\u001B[39mNo affected tests selected{Environment.NewLine}\u001B[m", console.Output);
+        Assert.AreEqual($"\u001B[39m\u001B[33mskipped\u001B[90m (No affected tests selected){Environment.NewLine}\u001B[m", console.Output);
     }
 
     [TestMethod]
@@ -3137,9 +3138,11 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict(bool failed)
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public void AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict(bool failed, bool frameworkSkip)
     {
         var console = new StringBuilderConsole();
         using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
@@ -3153,8 +3156,14 @@ public sealed class TerminalTestReporterTests
         reporter.AssemblyRunStarted("selected.dll", "net8.0", "x64", "selected", "selected");
         reporter.TestCompleted("selected", "test", "selected test", failed ? TestOutcome.Fail : TestOutcome.Passed, TimeSpan.Zero,
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        if (frameworkSkip)
+        {
+            reporter.TestCompleted("selected", "ignored", "ignored test", TestOutcome.Skipped, TimeSpan.Zero,
+                informativeMessage: "Ignored by the framework", errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        }
+
         reporter.AssemblyRunCompleted("selected", failed ? 2 : 0, outputData: null, errorData: null);
-        Assert.AreEqual(1, reporter.TotalTests);
+        Assert.AreEqual(frameworkSkip ? 2 : 1, reporter.TotalTests);
 
         reporter.TestExecutionCompleted(DateTimeOffset.MinValue, failed ? 2 : 0);
 
@@ -3162,13 +3171,18 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(failed ? "\u001B[31mTest run summary: Failed!" : "\u001B[32mTest run summary: Passed!", output);
         string plainOutput = Regex.Replace(output, @"\x1B\[[0-9;]*m", string.Empty).Replace("\r\n", "\n");
         string counts = $"""
-              total: 1
+              total: {(frameworkSkip ? 2 : 1)}
               failed: {(failed ? 1 : 0)}
               succeeded: {(failed ? 0 : 1)}
-              skipped: 0
+              skipped: {(frameworkSkip ? 1 : 0)}
               duration: 0ms
             """;
         Assert.Contains(counts.Replace("\r\n", "\n"), plainOutput);
+        const string notSelected = """
+            unaffected.dll (net8.0|x64) skipped (No affected tests selected)
+
+            """;
+        Assert.StartsWith(NormalizeTerminalOutput(notSelected), plainOutput);
         Assert.AreEqual(1, plainOutput.Split(["No affected tests selected"], StringSplitOptions.None).Length - 1);
     }
 

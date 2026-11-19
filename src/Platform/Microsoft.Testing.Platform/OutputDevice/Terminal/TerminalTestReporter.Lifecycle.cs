@@ -36,7 +36,12 @@ internal sealed partial class TerminalTestReporter
                 terminal.Append(' ');
             }
 
-            terminal.AppendLine(TerminalResources.NoAffectedTestsSelected);
+            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.Append(TerminalResources.SkippedLowercase);
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append(" (");
+            terminal.Append(TerminalResources.NoAffectedTestsSelected);
+            terminal.AppendLine(")");
             terminal.ResetColor();
         });
     }

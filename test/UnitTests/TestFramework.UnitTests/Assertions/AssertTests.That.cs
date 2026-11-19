@@ -959,6 +959,27 @@ public partial class AssertTests : TestContainer
             """);
     }
 
+    public void That_WithConstantIndexWhoseFormattingThrows_FallsBackToExpressionText()
+    {
+        var key = new ThrowingFormattableKey();
+        var lookup = new Dictionary<ThrowingFormattableKey, int> { [key] = 1 };
+        Expression<Func<Dictionary<ThrowingFormattableKey, int>>> lookupAccess = () => lookup;
+        MethodCallExpression indexer = Expression.Call(
+            lookupAccess.Body,
+            typeof(Dictionary<ThrowingFormattableKey, int>).GetMethod("get_Item")!,
+            Expression.Constant(key));
+        var condition = Expression.Lambda<Func<bool>>(Expression.Equal(indexer, Expression.Constant(2)));
+
+        Action act = () => Assert.That(condition, conditionExpression: "lookup[key] == 2");
+
+        act.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(lookup[key] == 2) failed.
+            Details:
+              lookup[throwing-key] = 1
+            """);
+    }
+
     public void That_WithMultipleStringLiterals_OnlyIncludesVariables()
     {
         // Test multiple string literals in complex expression
@@ -1239,6 +1260,14 @@ public partial class AssertTests : TestContainer
         Action act = () => Assert.That(() => items.AsQueryable().Any(i => i > 99));
 
         act.Should().Throw<AssertFailedException>();
+    }
+
+    private sealed class ThrowingFormattableKey : IFormattable
+    {
+        public string ToString(string? format, IFormatProvider? formatProvider)
+            => throw new ArgumentException("Formatting is not supported.", nameof(format));
+
+        public override string ToString() => "throwing-key";
     }
 
     private sealed class SideEffectCounter

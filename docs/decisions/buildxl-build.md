@@ -1,5 +1,53 @@
 # BuildXL build: research and decisions
 
+## 2026-11-19: run the BuildXL unit suites on all agent cores
+
+The CI step (renamed from "Run Bazel-matched unit tests with BuildXL outputs"
+to "Run unit tests") previously ran 2 suites at a time to match Bazel's dogfood
+`-TestJobs 2`. `eng\buildxl\run-unit-tests.ps1 -TestJobs` now defaults to `0`,
+which runs one suite per logical processor, capped at the 13 workload suites.
+The report and summary still record the effective `TestJobs`. Consequence: the
+CI test phase is no longer equal-concurrency with Bazel; pass `-TestJobs 2` for
+the parity measurements below.
+
+PowerShell also applies the explicit `0..64` parameter validation on later
+assignments. Automatic concurrency therefore uses a separate effective value:
+custom workloads can use more than 64 processors without changing the existing
+explicit `-TestJobs` limit. The focused regression case
+`test_unit_test_runner_auto_concurrency_can_exceed_explicit_limit` sets
+`DOTNET_PROCESSOR_COUNT=65` for the runner and supplies 65 workload entries.
+On parent `064e3b535c2aa1d9854a186deba89fca2a275849` with the test retained,
+`python .github\scripts\test_buildxl_pipeline.py BuildXLPipelineTests.test_unit_test_runner_auto_concurrency_can_exceed_explicit_limit -v`
+failed because the automatic assignment could not validate 65. With the fix,
+the same test passes after reaching the expected missing-assemblies precondition.
+`test_unit_test_runner_rejects_explicit_concurrency_above_limit` separately
+checks that explicit `-TestJobs 65` remains invalid. No 65 suites were actually
+executed by these cases.
+
+The boundary test now also asserts the reported effective value is 65. In an
+isolated worktree at `5a87a3183450b2da637050c780c74a68ed2c700b`, the same
+test passed, failed with `65 != 64` after a deliberate 64-job cap was added,
+and passed again after restoring the runner. Each run selected one test; the
+test patch SHA-256 was
+`CF4C721554D845010A1BB3796FC57B5CCD3C23B1B570CCB75A32A5A4AA85D08E`.
+The command was the focused Python invocation above; this probes the reported
+limit before any suite starts, not actual process overlap.
+
+The same change fixes runtime discovery: under `Set-StrictMode`, reading the
+unmatched prerelease group of a stable runtime (for example the `10.0.15` that
+`global.json` installs into `.dotnet`) threw before any suite started.
+
+Validation: a synthetic output (13 placeholder assemblies, 32-core machine)
+reported `TestJobs=13` and `13 at a time` by default and `2 at a time` with
+`-TestJobs 2`; both exited 1 with per-suite failures. A real BuildXL build was not
+possible locally (no change journal on the volume, SharedOpaque cleanup errors).
+
+`dotnet test` (MTP mode, `--test-modules`) was considered and rejected: it hosts
+every module with the SDK muxer and one environment, so it cannot run
+`analyzer_tests` and `server_client_tests` on the workload-pinned private
+runtime, set per-suite roll-forward or the generator hook, or keep per-suite
+stdout/stderr. It would also bypass the build-output preconditions.
+
 ## 2026-11-17: run the Bazel-matched unit suites on BuildXL outputs
 
 ### Problem and contract

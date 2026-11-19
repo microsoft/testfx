@@ -187,9 +187,12 @@ internal partial class TestExecutionManager
         if (parallelizationEnabled)
         {
             // Parallelization is enabled. Let's do further classification for sets.
-            adapterMessageLogger.SendMessage(
-                MessageLevel.Informational,
-                string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
+            if (ShowParallelizationBanner)
+            {
+                adapterMessageLogger.SendMessage(
+                    MessageLevel.Informational,
+                    string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
+            }
 
             if (dependencyGraph is not null)
             {

@@ -88,6 +88,11 @@ internal partial class TestExecutionManager
     internal TestPartition? Partition { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the informational test parallelization banner is reported.
+    /// </summary>
+    internal bool ShowParallelizationBanner { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets a value indicating whether any test executed has failed.
     /// </summary>
     private bool _hasAnyTestFailed;

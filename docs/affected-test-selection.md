@@ -1198,7 +1198,7 @@ definitions must not set it.
 
 ## Selection reporting
 
-An unaffected module is **not selected**, not skipped: skipped is already a test-result state, and the selector
+An unaffected module is **not selected**, not a skipped test result: skipped is already a test-result state, and the selector
 does not necessarily know how many tests an unlaunched module contains. Successful empty affected-test selections
 need a module-level entry explaining that no affected tests were selected, without inventing passed or skipped
 test results. The SDK owns this entry because the selection orchestrator can finish without launching a test host.
@@ -1211,11 +1211,86 @@ zero counters, but render that verdict neutrally rather than in red or as a gree
 exit-code policy, including environment-variable precedence, defines this opt-out. It must not hide failed tests,
 minimum-expected-test violations, cancellation, process failures or handshake failures.
 
-Treating every zero-test run as successful, reclassifying unselected tests as skipped, and parsing captured child
+Treating every zero-test run as successful, counting unselected tests as skipped test results, and parsing captured child
 output were rejected: they respectively conceal broken discovery/filtering, corrupt test counts, and make the
 contract dependent on localized presentation. Regression and composed-product validation are recorded with the
 implementation; SDK source-vendoring and the independently shipped affected-test extension remain separate
 delivery boundaries.
+
+### Normal-run presentation (2026-11-18)
+
+The requested presentation reuses the normal module-completion layout and the existing yellow `skipped`
+label, followed by the reason: `unaffected.dll (net10.0|x64) skipped (No affected tests selected)`.
+This is a skipped **module execution**, not a synthetic test outcome. Keep actual test counts, durations,
+exit policies, progress workers and report artifacts unchanged; the notification supplies no test inventory
+or execution duration. No new outcome, protocol field, option or public API is needed.
+
+The prior neutral standalone sentence was accurate but visually unlike ordinary module completions.
+Inventing skipped test counts or enumerating every unaffected test was rejected: the former is misleading,
+and the latter requires a separate producer contract and can flood logs. Reusing the existing localized
+skip label and reason is the smallest change. The reason remains explicit so selection is not confused
+with framework ignores. Informational and cancelled runs must stay silent.
+
+The module-level `skipped` label does not change the not-selected contract above: no test result is added,
+and the summary's `skipped` counter only counts real framework skips.
+
+TestFx owns the shared reporter; the SDK owns the call on a confirmed successful empty selection.
+The source-only change must be consumed by `dotnet/sdk` before native `dotnet test` output changes.
+No CI run has shown a not-selected row yet. The sampled builds 1686286, 1686891, 1686901, 1687284, 1687462,
+1687952 and 1688406 all fell back to all tests, so their affected-test logs match the normal unit-test step,
+apart from the extension's `[affected-tests]` diagnostics, which this repository does not own.
+The affected-test extension and its map/selection/fallback contract are unchanged. This work targets
+`main`; it does not activate a release branch, change rollout gates or update SDK/package pins.
+
+| Requirement / risk | Automated evidence | Rendered check |
+| --- | --- | --- |
+| Normal completion layout with an explicit selection reason | `AssemblyRunNotSelected_ReportsStatusWithoutInventingResults` and `AssemblyRunNotSelected_UsesSkipColorWithDistinctReason` pass exact text/color assertions, including hidden per-test results. | Built SDK in an 80-column Windows terminal: `Beta\...\Beta.Tests.dll (net10.0\|x64) skipped (No affected tests selected)`, `Zero tests ran`, parent exit 0. |
+| No fabricated results or hidden failures | `AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict` passes all four pass/fail and real-framework-skip combinations. Informational/cancelled notification and handshake/process-failure cases remain green. | Built SDK, mixed run: Alpha passes 1 test plus 1 real framework skip, Beta shows the module row, summary `total: 2`/`skipped: 1`, exit 0. Failing variant: `Failed!`, exit 2. |
+| Shipping consumer uses the updated source | Equivalent `dotnet/sdk` vendored-reporter port with updated `TerminalTestReporterTests` and `GivenDotnetTestBuildsAndRunsTests` expectations: 102 focused SDK tests pass. | Native (AOT) and forced-managed (`DOTNET_CLI_ENABLEAOT=false`) muxer runs against real collected maps produce identical rows. The SDK port is committed locally and not yet published. |
+
+**Test-value evidence:** base `ba85050ce3075f6f8a5777e75fcede110baa1fa3`, with source/test-only
+`git diff --binary` SHA-256 `A4F3BF09618EBDE2260A8DF44D3772126FEC52F365648F64B249F99189A9D630`.
+The reporting selection executes 316 cases on each of `net10.0`, `net11.0` and `net462`: 948 passed,
+zero failed/skipped. The MSTest schedule remains method-parallel with 32 workers. Each case owns its fake
+console and disposed reporter; no shared state, scheduling declaration or process-global setting was added.
+
+The paired selection is
+`FullyQualifiedName~TerminalTestReporterTests.AssemblyRunNotSelected_|FullyQualifiedName~TerminalTestReporterTests.ExpectedZeroTests_`.
+For the counterfactual, only `TerminalTestReporter.Lifecycle.cs` was restored to the base revision and the
+final tests were kept unchanged. Both states compile. The base rendering (`No affected tests selected`)
+fails eight text/color assertions while five preservation cases pass (13 executed, exit 2). The final
+rendering passes the same 13 cases (exit 0).
+
+Commands from the worktree root, using SDK `12.0.100-alpha.1.26562.108`, Debug, Windows x64:
+
+```powershell
+.\build.cmd -msbuildEngine dotnet -projects test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -v quiet
+$filter = 'FullyQualifiedName~TerminalTestReporterTests|FullyQualifiedName~TerminalOutputDeviceTests|FullyQualifiedName~TestRunSummaryHelperTests'
+.\.dotnet\dotnet.exe .\artifacts\bin\Microsoft.Testing.Platform.UnitTests\Debug\net10.0\Microsoft.Testing.Platform.UnitTests.dll --filter $filter --ansi off --progress off
+```
+
+The build exits 0 with no warnings or errors. The same test command exits 0 on `net11.0` and when the
+`net462` EXE runs directly. Using the paired filter instead runs the 13-case comparison.
+
+The equivalent `dotnet/sdk` port changes the vendored `TerminalTestReporter.cs`, its two existing
+expectations, and the stale `src/Cli/AGENTS.md` sentence. It is local commit
+`9c221d307805caf7aaf365bd3885f24935e05c0f` (parent `dc3fb46669d0251e3e55a34daa39c5e198d85a19`, patch
+SHA-256 `43D66DC5A4A129FF778281CB190EE7A8799D1EB4E8D92CE597339999E00FF893`). It has not been pushed.
+`.\build.cmd -bl` passes with no warnings. The focused
+`TerminalTestReporterTests|RunAffectedTestsWithoutTestHost` selection passes 102 tests. The built
+`12.0.100-dev` redist ran a two-module fixture using published MTP `3.0.0-preview.26563.12`,
+MSTest `5.0.0-preview.26563.12` and the affected-test extension `18.13.0-preview.26563.2`. It ran in both
+native AOT mode and forced managed mode. Native map collection produced two real maps. Cases and exit codes:
+
+| Case | Result |
+| --- | --- |
+| Normal run | Exit 0; 3 tests, including 1 framework skip; no selection rows. |
+| Unchanged affected run | Exit 0; 2 module rows; `total: 0` and `skipped: 0`. |
+| Mixed run | Exit 0; Alpha falls back and runs 1 pass plus 1 framework skip; Beta is empty. |
+| Failing run | Exit 2; Alpha fails; Beta is empty; aggregate `Failed!`. |
+
+A 45-column `Console.WindowWidth` run also kept the output intact with exit 0. The hosting viewport stayed
+80 columns, so physical narrow wrapping is not verified. The SDK port still needs its own pull request.
 
 ### Reporting validation (2026-10-15)
 
@@ -1233,7 +1308,7 @@ and platform-linked net9.0 reporter contract hosts each pass both tests.
 | --- | --- | --- | --- |
 | Explicit zero-test opt-out / `ActualSummary_ZeroTests_HonorsIgnorePolicy`, `ActualSummary_StrictAllSkipped_HonorsZeroTestsOptOut` | Restore the base summary and initialization behavior, retaining the final assertions. | Expected neutral ANSI 39, observed red ANSI 31. | Same assertions pass; ordinary unexpected zero-test runs stay red. |
 | Failure preservation / `ActualSummary_IgnoredZeroTests_DoesNotHideOtherFailures`, `ActualSummary_IgnoredZeroTests_DoesNotHideMinimumAfterSkipping` | Base minimum-count behavior, which incorrectly includes skipped outcomes. | The skipped/minimum cases report a green pass or the wrong zero-test verdict instead of the red explicit-minimum violation. | Failed tests, cancellation and unmet minima remain red; skipped tests do not satisfy an explicit minimum, matching `TestApplicationResult`'s existing exit policy. |
-| Module status / `AssemblyRunNotSelected_ReportsStatusWithoutInventingResults`, `AssemblyRunNotSelected_UsesNeutralColor`, `AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict` | Retain the new API but replace its body with a no-op. | Six assertion failures among nine executed notification cases; the three informational/cancellation suppression cases still pass. | All nine pass, including unchanged real-test counts and the passing/failing mixed-run verdicts. |
+| Module status / `AssemblyRunNotSelected_ReportsStatusWithoutInventingResults`, `AssemblyRunNotSelected_UsesNeutralColor` (renamed `AssemblyRunNotSelected_UsesSkipColorWithDistinctReason` on 2026-11-18), `AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict` | Retain the new API but replace its body with a no-op. | Six assertion failures among nine executed notification cases; the three informational/cancellation suppression cases still pass. | All nine pass, including unchanged real-test counts and the passing/failing mixed-run verdicts. |
 | Supplied-log noise / `RunTestingPlatformAsync_ForwardsMtpLogsToHostLoggerFactory`, `RunTestingPlatformAsync_AfterRunCompletes_DisconnectsHostLifetimeBridge` | Omit their existing per-application `SuppressOutput` helper. | The 24-case hosting suite passes but emits two unrelated nested `Zero tests ran` summaries; the captured-output guard rejects it with exit 1. | The same 24 cases pass without either nested summary on net8.0 and net472; the guard exits 0. |
 
 The summary comparison executes exactly the same 15 cases in both states: eight intended assertion failures
