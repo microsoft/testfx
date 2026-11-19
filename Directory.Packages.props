@@ -52,6 +52,9 @@
          the two drift apart. -->
     <MicrosoftPlaywrightVersion>1.65.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
+    <!-- OpenTelemetry and OpenTelemetry.Exporter.OpenTelemetryProtocol ship in lockstep: the exporter
+         requires the matching OpenTelemetry version, so bumping only one fails restore with NU1605. -->
+    <OpenTelemetryVersion>1.21.0</OpenTelemetryVersion>
     <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
          opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
          stable release on nuget.org. Promote when the internal feed ships a non-preview version.
@@ -92,7 +95,6 @@
     <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.607501" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="$(DotNetExtensionsPackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="$(DotNetExtensionsPackagesVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetRuntimePackagesVersion)" />
@@ -108,8 +110,8 @@
     <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftTestPlatformFilterSourceVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="1.8.250906003" />
-    <PackageVersion Include="OpenTelemetry" Version="1.20.1" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
     <PackageVersion Include="System.Reflection.Metadata" Version="$(DotNetRuntimePackagesVersion)" />
     <PackageVersion Include="System.Text.Json" Version="$(DotNetRuntimePackagesVersion)" />

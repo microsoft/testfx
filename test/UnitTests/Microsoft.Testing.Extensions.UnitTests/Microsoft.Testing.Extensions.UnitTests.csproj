@@ -85,7 +85,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <!-- Microsoft.Extensions.Configuration flows transitively from Microsoft.Extensions.Hosting. Do not reference it
+         directly: OpenTelemetry pulls newer Microsoft.Extensions.* packages on some TFMs, and a direct reference at
+         $(DotNetRuntimePackagesVersion) would then be a package downgrade (NU1605). -->
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Moq" />
   </ItemGroup>
