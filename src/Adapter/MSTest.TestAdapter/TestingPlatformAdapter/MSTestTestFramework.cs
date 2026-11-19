@@ -263,6 +263,15 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
             executionManager.Partition = partition;
         }
 
+        // '--output minimal' asks the terminal reporter to keep the console quiet, so drop the informational
+        // parallelization banner (#12526). The option is owned by the MTP terminal reporter.
+        if (_serviceProvider.GetCommandLineOptions().TryGetOptionArgumentList("output", out string[]? outputArguments)
+            && outputArguments is [string outputArgument]
+            && outputArgument.Equals("minimal", StringComparison.OrdinalIgnoreCase))
+        {
+            executionManager.ShowParallelizationBanner = false;
+        }
+
         return executionManager;
     }
 

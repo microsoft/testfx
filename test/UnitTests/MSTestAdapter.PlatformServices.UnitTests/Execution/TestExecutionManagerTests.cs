@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -629,6 +630,25 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    public async Task RunTestsForTestShouldReportParallelizationBannerByDefault()
+    {
+        await RunParallelizedTestsForBannerAsync();
+
+        _frameworkHandle.MessageList.Should().Contain(GetExpectedParallelizationBannerMessage());
+        _frameworkHandle.ResultsList.Should().HaveCount(2);
+    }
+
+    public async Task RunTestsForTestShouldNotReportParallelizationBannerWhenHidden()
+    {
+        _testExecutionManager.ShowParallelizationBanner = false;
+
+        await RunParallelizedTestsForBannerAsync();
+
+        _frameworkHandle.MessageList.Should().NotContain(GetExpectedParallelizationBannerMessage());
+        _frameworkHandle.ResultsList.Should().HaveCount(2);
+        _enqueuedParallelTestsCount.Should().Be(2);
+    }
+
     public async Task RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
     {
         TestCase testCase11 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -1240,6 +1260,42 @@ public class TestExecutionManagerTests : TestContainer
     #endregion
 
     #region private methods
+
+    private async Task RunParallelizedTestsForBannerAsync()
+    {
+        TestCase[] tests =
+        [
+            GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1"),
+            GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2"),
+        ];
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>ClassLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(ToUnitTestElements(tests), CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+        }
+        finally
+        {
+            DummyTestClassForParallelize.Cleanup();
+        }
+    }
+
+    private static string GetExpectedParallelizationBannerMessage()
+        => $"{TestMessageLevel.Informational}:{string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, Assembly.GetExecutingAssembly().Location, 2, ExecutionScope.ClassLevel)}";
 
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
