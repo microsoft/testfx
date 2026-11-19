@@ -44,6 +44,36 @@ public sealed class CoverageThresholdExitCodeTests : AcceptanceTestBase<Coverage
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task CoverageSummary_RendersMetricsOnOneLine(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_MEASUREMENTS"] = "module",
+                ["COVERAGE_THRESHOLD_STATUS"] = null,
+                ["FAIL_TEST"] = null,
+                ["SKIP_TEST"] = null,
+                ["DELAY_TEST"] = null,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        string coverageSummary = string.Join(
+            "\n",
+            result.StandardOutputLines
+                .SkipWhile(line => line != "  Code Coverage Summary:")
+                .TakeWhile(line => !string.IsNullOrWhiteSpace(line)));
+        Assert.AreEqual(
+            """
+              Code Coverage Summary:
+                app.dll - Line: 80.0%, Branch: 70.0%
+            """.Replace("\r\n", "\n"),
+            coverageSummary.Replace("\r\n", "\n"));
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task ConfiguredThreshold_WithFailingTest_PreservesTestFailure(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);

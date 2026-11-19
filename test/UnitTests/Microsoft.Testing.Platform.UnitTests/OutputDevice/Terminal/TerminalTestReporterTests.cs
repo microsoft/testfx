@@ -1636,6 +1636,64 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    [DataRow((int)AnsiMode.NoAnsi)]
+    [DataRow((int)AnsiMode.ForceAnsi)]
+    public void AppendCoverageSummary_WhenScopeHasMultipleMetrics_RendersOneLinePerScope(int ansiMode)
+    {
+        var console = new StringBuilderConsole();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console, (AnsiMode)ansiMode);
+        var overall = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 508, coverableCount: 1000, producerId: "producer"),
+                new CoverageMetricResult(CoverageMetric.Block, coveredCount: 516, coverableCount: 1000, producerId: "producer"),
+            ]);
+        var module = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 3, coverableCount: 4, producerId: "producer"),
+                new CoverageMetricResult(CoverageMetric.Block, coveredCount: 0, coverableCount: 0, producerId: "producer"),
+            ]);
+
+        reporter.AppendCoverageSummary([overall, module], []);
+
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line: 50.8%, Block: 51.6%
+                MyModule.dll - Line: 75.0%, Block: N/A
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenScopeHasNoMetrics_DoesNotRenderAnEmptyEntry()
+    {
+        var console = new StringBuilderConsole();
+        using TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var empty = new CoverageScopeSummary(new SessionUid("session"), CoverageScope.Overall, []);
+        var module = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 3, coverableCount: 4, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([empty, module], []);
+
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                MyModule.dll - Line: 75.0%
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
     public void AppendCoverageSummary_WhenOnlyDetailedScopes_WritesNothing()
     {
         var console = new StringBuilderConsole();
@@ -1724,9 +1782,7 @@ public sealed class TerminalTestReporterTests
             """
 
               Code Coverage Summary:
-                Total - Line [producer-a]: 80.0%
-                Total - Line [producer␊b]: 70.0%
-                Total - Branch: 60.0%
+                Total - Line [producer-a]: 80.0%, Line [producer␊b]: 70.0%, Branch: 60.0%
 
             """.Replace("\r\n", "\n"),
             console.Output.Replace("\r\n", "\n"));

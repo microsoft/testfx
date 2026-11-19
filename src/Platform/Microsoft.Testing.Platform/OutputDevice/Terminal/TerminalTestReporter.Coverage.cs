@@ -29,6 +29,11 @@ internal sealed partial class TerminalTestReporter
 
             foreach (CoverageScopeSummary scope in summaryScopes)
             {
+                if (scope.Metrics.Count == 0)
+                {
+                    continue;
+                }
+
                 string scopeLabel = GetCoverageScopeLabel(scope.Scope);
                 Dictionary<(CoverageMetric Metric, string? CustomMetricName), int> metricCounts = [];
                 foreach (CoverageMetricResult metric in scope.Metrics)
@@ -38,9 +43,15 @@ internal sealed partial class TerminalTestReporter
                     metricCounts[metricKey] = count + 1;
                 }
 
-                foreach (CoverageMetricResult metric in scope.Metrics)
+                terminal.Append($"{DoubleIndentation}{scopeLabel} - ");
+                for (int i = 0; i < scope.Metrics.Count; i++)
                 {
-                    terminal.Append(DoubleIndentation);
+                    if (i > 0)
+                    {
+                        terminal.Append(", ");
+                    }
+
+                    CoverageMetricResult metric = scope.Metrics[i];
                     string coverageValue = metric.HasCoverableData
                         ? $"{metric.Percentage.ToString("F1", CultureInfo.InvariantCulture)}%"
                         : TerminalResources.CoverageNoData;
@@ -54,8 +65,10 @@ internal sealed partial class TerminalTestReporter
                             MakeControlCharactersVisible(metric.ProducerId, true));
                     }
 
-                    terminal.AppendLine($"{scopeLabel} - {metricLabel}: {coverageValue}");
+                    terminal.Append($"{metricLabel}: {coverageValue}");
                 }
+
+                terminal.AppendLine();
             }
         }
 
