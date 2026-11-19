@@ -334,7 +334,9 @@ public sealed partial class Assert
             actualExpression,
             "<notExpected>",
             "<actual>",
+            // Stryker disable once all: Comparison-failure mismatches carry null expected and actual text.
             "not expected:",
+            // Stryker disable once all: Comparison-failure mismatches carry null expected and actual text.
             "actual:");
     }
 

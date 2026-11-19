@@ -42,6 +42,8 @@ public sealed partial class Assert
                 thrown = ex.InnerException ?? ex;
                 return IEquatableOutcome.Threw;
             }
+
+            // Stryker disable once all: The assignability guard prevents invalid invocation; target exceptions are wrapped and handled above.
             catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 thrown = ex;
@@ -196,7 +198,7 @@ public sealed partial class Assert
         private static string AppendDictionaryKey(string parent, object key)
         {
             string keyPart = $"[{AssertionValueRenderer.RenderValue(key)}]";
-            return parent.Length == 0 ? keyPart : parent + keyPart;
+            return parent + keyPart;
         }
     }
 }

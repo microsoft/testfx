@@ -387,5 +387,55 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("Assert.IsInRange(<minValue>, maxValue, value)");
     }
 
+    public void IsInRange_FailurePreservesStructuredExpectedAndActualValues()
+    {
+        Action action = () => Assert.IsInRange(1, 5, 6);
+
+        AssertFailedException exception = action.Should().ThrowExactly<AssertFailedException>().Which;
+        exception.ExpectedText.Should().Be("[1, 5]");
+        exception.ActualText.Should().Be("6");
+    }
+
+    public void IsInRange_CallSiteExpressionFormatsPartialAndMultilineArguments()
+    {
+        (string Min, string Max, string Value, string ExpectedCallSite)[] cases =
+        [
+            (string.Empty, string.Empty, "value", "Assert.IsInRange(<minValue>, <maxValue>, value)"),
+            (string.Empty, "maxValue", string.Empty, "Assert.IsInRange(<minValue>, maxValue, <value>)"),
+            ("minValue", string.Empty, "value", "Assert.IsInRange(minValue, <maxValue>, value)"),
+            ("minValue", "maxValue", string.Empty, "Assert.IsInRange(minValue, maxValue, <value>)"),
+            ("minValue", "maxValue\r\ncontinued", "value", "Assert.IsInRange(minValue, <maxValue>, value)"),
+            ("minValue", "maxValue", "value\r\ncontinued", "Assert.IsInRange(minValue, maxValue, <value>)"),
+        ];
+
+        foreach ((string minExpression, string maxExpression, string valueExpression, string expectedCallSite) in cases)
+        {
+            Action action = () => Assert.IsInRange(
+                1,
+                2,
+                3,
+                minValueExpression: minExpression,
+                maxValueExpression: maxExpression,
+                valueExpression: valueExpression);
+
+            action.Should().ThrowExactly<AssertFailedException>()
+                .Which.Message.Should().Contain(expectedCallSite);
+        }
+    }
+
+    public void IsInRange_AllEmptyExpressionsOmitCallSite()
+    {
+        Action action = () => Assert.IsInRange(
+            1,
+            2,
+            3,
+            minValueExpression: string.Empty,
+            maxValueExpression: string.Empty,
+            valueExpression: string.Empty);
+
+        action.Should().ThrowExactly<AssertFailedException>()
+            .Which.Message.Should().NotContain("Assert.IsInRange(");
+    }
+
     #endregion // IsInRange Tests
 }

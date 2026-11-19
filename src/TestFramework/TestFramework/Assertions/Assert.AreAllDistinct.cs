@@ -216,6 +216,7 @@ public sealed partial class Assert
 
         // FormatCallSiteExpression has no overload accepting a third argument expression; insert
         // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
+        // Stryker disable once all: This Debug.Assert only checks an invariant of the shared call-site formatter and does not change assertion behavior.
         Debug.Assert(callSite.Length > 0 && callSite[callSite.Length - 1] == ')', "FormatCallSiteExpression contract: rendered call-site must end with ')'.");
         return string.Concat(callSite.Remove(callSite.Length - 1), ", <comparer>)");
     }
@@ -398,6 +399,7 @@ public sealed partial class Assert
 
         bool IEqualityComparer<object?>.Equals(object? x, object? y) => _comparer.Equals(x, y);
 
+        // Stryker disable once all: AreAllDistinctImpl skips null elements before adding values to a HashSet, so this adapter never hashes null.
         int IEqualityComparer<object?>.GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);
     }
 }

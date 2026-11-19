@@ -519,4 +519,153 @@ public partial class AssertTests : TestContainer
             Assert.DoesNotContainAll(notExpected, collection)
             """);
     }
+
+    public void ContainsAll_Generic_NullElements_RespectMultiplicity()
+    {
+        string?[] expected = [null, null];
+        string?[] collection = [null];
+
+        Action action = () => Assert.ContainsAll(expected, collection);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*missing:    [null]*expected:   [null, null]*collection: [null]*");
+
+        string?[] sufficientNulls = [null, null];
+        Assert.ContainsAll<string?>([null], sufficientNulls);
+    }
+
+    public void ContainsAll_GenericEnumerable_MultipleMissingNulls_PreservesMultiplicity()
+    {
+        IEnumerable<string?> expected = new string?[] { null, null };
+        IEnumerable<string?> collection = Array.Empty<string?>();
+
+        Action action = () => Assert.ContainsAll(expected, collection);
+        action.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Expected collection to contain all specified items.
+
+            missing:    [null, null]
+            expected:   [null, null]
+            collection: []
+
+            Assert.ContainsAll(expected, collection)
+            """);
+    }
+
+    public void ContainsAll_ArrayOverloads_NullArgumentsFailAsAssertion()
+    {
+        int[]? expected = null;
+        Action nullExpected = () => Assert.ContainsAll(expected!, [1]);
+        nullExpected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*parameter 'expected'*");
+
+        int[]? collection = null;
+        Action nullCollection = () => Assert.ContainsAll([1], collection!);
+        nullCollection.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*parameter 'collection'*");
+    }
+
+    public void DoesNotContainAll_ArrayOverloads_NullArgumentsFailAsAssertion()
+    {
+        int[]? notExpected = null;
+        Action nullNotExpected = () => Assert.DoesNotContainAll(notExpected!, [1]);
+        nullNotExpected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*parameter 'notExpected'*");
+
+        int[]? collection = null;
+        Action nullCollection = () => Assert.DoesNotContainAll([1], collection!);
+        nullCollection.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*parameter 'collection'*");
+    }
+
+    public void ContainsAll_GenericEnumerableComparerOverload_ValidatesEachArgument()
+    {
+        IEnumerable<int> expected = [1];
+        IEnumerable<int> collection = [1];
+        IEqualityComparer<int> comparer = EqualityComparer<int>.Default;
+        IEnumerable<int>? missingExpected = null;
+        IEnumerable<int>? missingCollection = null;
+        IEqualityComparer<int>? missingComparer = null;
+
+        Action nullExpected = () => Assert.ContainsAll(missingExpected, collection, comparer);
+        nullExpected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.ContainsAll*parameter 'expected'*value cannot be null*");
+
+        Action nullCollection = () => Assert.ContainsAll(expected, missingCollection, comparer);
+        nullCollection.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.ContainsAll*parameter 'collection'*value cannot be null*");
+
+        Action nullComparer = () => Assert.ContainsAll(expected, collection, missingComparer);
+        nullComparer.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.ContainsAll*parameter 'comparer'*value cannot be null*");
+    }
+
+    public void ContainsAll_NonGenericEnumerableComparerOverload_ValidatesEachArgument()
+    {
+        IEnumerable expected = new ArrayList { 1 };
+        IEnumerable collection = new ArrayList { 1 };
+        IEqualityComparer comparer = StructuralComparisons.StructuralEqualityComparer;
+        IEnumerable? missingExpected = null;
+        IEnumerable? missingCollection = null;
+        IEqualityComparer? missingComparer = null;
+
+        Action nullExpected = () => Assert.ContainsAll(missingExpected, collection, comparer);
+        nullExpected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.ContainsAll*parameter 'expected'*value cannot be null*");
+
+        Action nullCollection = () => Assert.ContainsAll(expected, missingCollection, comparer);
+        nullCollection.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.ContainsAll*parameter 'collection'*value cannot be null*");
+
+        Action nullComparer = () => Assert.ContainsAll(expected, collection, missingComparer);
+        nullComparer.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.ContainsAll*parameter 'comparer'*value cannot be null*");
+    }
+
+    public void DoesNotContainAll_GenericEnumerableComparerOverload_ValidatesEachArgument()
+    {
+        IEnumerable<int> notExpected = [1];
+        IEnumerable<int> collection = [1];
+        IEqualityComparer<int> comparer = EqualityComparer<int>.Default;
+        IEnumerable<int>? missingNotExpected = null;
+        IEnumerable<int>? missingCollection = null;
+        IEqualityComparer<int>? missingComparer = null;
+
+        Action nullNotExpected = () => Assert.DoesNotContainAll(missingNotExpected, collection, comparer);
+        nullNotExpected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.DoesNotContainAll*parameter 'notExpected'*value cannot be null*");
+
+        Action nullCollection = () => Assert.DoesNotContainAll(notExpected, missingCollection, comparer);
+        nullCollection.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.DoesNotContainAll*parameter 'collection'*value cannot be null*");
+
+        Action nullComparer = () => Assert.DoesNotContainAll(notExpected, collection, missingComparer);
+        nullComparer.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.DoesNotContainAll*parameter 'comparer'*value cannot be null*");
+
+        Action allPresent = () => Assert.DoesNotContainAll(notExpected, collection, comparer);
+        allPresent.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Expected collection to not contain all specified items*");
+    }
+
+    public void DoesNotContainAll_NonGenericEnumerableComparerOverload_ValidatesEachArgument()
+    {
+        IEnumerable notExpected = new ArrayList { 1 };
+        IEnumerable collection = new ArrayList { 1 };
+        IEqualityComparer comparer = StructuralComparisons.StructuralEqualityComparer;
+        IEnumerable? missingNotExpected = null;
+        IEnumerable? missingCollection = null;
+        IEqualityComparer? missingComparer = null;
+
+        Action nullNotExpected = () => Assert.DoesNotContainAll(missingNotExpected, collection, comparer);
+        nullNotExpected.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.DoesNotContainAll*parameter 'notExpected'*value cannot be null*");
+
+        Action nullCollection = () => Assert.DoesNotContainAll(notExpected, missingCollection, comparer);
+        nullCollection.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.DoesNotContainAll*parameter 'collection'*value cannot be null*");
+
+        Action nullComparer = () => Assert.DoesNotContainAll(notExpected, collection, missingComparer);
+        nullComparer.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("*Assert.DoesNotContainAll*parameter 'comparer'*value cannot be null*");
+    }
 }

@@ -50,8 +50,16 @@ public sealed partial class Assert
         internal static EquivalenceMismatch TypeMismatch(string path, Type expectedType, Type actualType)
             => new(
                 path,
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchType, expectedType.FullName ?? expectedType.Name, actualType.FullName ?? actualType.Name),
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEquivalentMismatchType,
+                    // Stryker disable once all: This factory receives concrete runtime types from object.GetType(), whose FullName is never null.
+                    expectedType.FullName ?? expectedType.Name,
+                    // Stryker disable once all: This factory receives concrete runtime types from object.GetType(), whose FullName is never null.
+                    actualType.FullName ?? actualType.Name),
+                // Stryker disable once all: This factory receives concrete runtime types from object.GetType(), whose FullName is never null.
                 expectedType.FullName ?? expectedType.Name,
+                // Stryker disable once all: This factory receives concrete runtime types from object.GetType(), whose FullName is never null.
                 actualType.FullName ?? actualType.Name,
                 isComparisonFailure: false);
 
