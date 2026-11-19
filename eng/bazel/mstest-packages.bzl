@@ -78,7 +78,7 @@ def _package_impl(ctx):
         for index, target in enumerate(targets):
             directory = ctx.attr.directories[index].replace("{tfm}", framework)
             resource_directory = ctx.attr.resource_directories[index]
-            # Adapter satellites are shared once, using the lowest portable TFM.
+            # TFM-independent satellite directories are emitted once, using the lowest portable TFM.
             if "{tfm}" not in resource_directory and framework != ctx.attr.target_frameworks[0]:
                 resource_directory = ""
             name = _add_assembly(entries, target, framework, directory, resource_directory.replace("{tfm}", framework))
@@ -256,8 +256,8 @@ def native_mstest_packages():
         description = "Discovers and runs MSTest tests using VSTest or Microsoft Testing Platform. MSTest is Microsoft supported Test Framework.",
         readme = adapter_project + "/PACKAGE.md",
         libraries = [":adapter", ":platform_services"],
-        directories = ["buildTransitive/{tfm}", "buildTransitive/{tfm}"],
-        resource_directories = ["buildTransitive/_localization", "buildTransitive/_localization"],
+        directories = ["lib/{tfm}", "lib/{tfm}"],
+        resource_directories = ["lib/{tfm}", "lib/{tfm}"],
         files = adapter_files,
         deps = [":trx_abstractions_package", ":telemetry_package", ":platform_msbuild_package"] + select({
             "@platforms//os:windows": [":framework_package"],

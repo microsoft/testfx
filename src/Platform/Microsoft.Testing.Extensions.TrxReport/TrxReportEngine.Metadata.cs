@@ -57,6 +57,11 @@ internal sealed partial class TrxReportEngine
             AddRunInfo(resultSummary, ref runInfos, "Error", $"Exit code indicates failure: '{exitCode}'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.");
         }
 
+        foreach (string runError in RunErrors)
+        {
+            AddRunInfo(resultSummary, ref runInfos, "Error", runError);
+        }
+
         if (_artifactsByExtension.Count != 0)
         {
             // VSTest seems to also add a ResultFiles element, and not only CollectorDataEntries.

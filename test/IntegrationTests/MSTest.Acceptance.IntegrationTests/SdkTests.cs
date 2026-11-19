@@ -407,6 +407,82 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    [DataRow("VSTestDefault", "", true, "fr")]
+    [DataRow("VSTestWithoutCopyResources", "<EnableMSTestV2CopyResources>false</EnableMSTestV2CopyResources>", true, "")]
+    [DataRow("MTPDefault", "<EnableMSTestRunner>true</EnableMSTestRunner><OutputType>Exe</OutputType>", true, "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("NotTestApplication", "<IsTestApplication>false</IsTestApplication>", false, "")]
+    public async Task RuntimeStorePublish_AppliesAdapterAssetPolicy(string scenario, string properties, bool expectAdapterAssemblies, string expectedCultures)
+    {
+        // 'dotnet publish --manifest' makes the SDK re-resolve copy-local package assets for publish,
+        // bypassing the build-time copy-local list, so the adapter policy must also apply there.
+        const string Source = """
+            #file $AssetName$.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <NoWarn>$(NoWarn);NU1507</NoWarn>
+                $ExtraProperties$
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+                <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+              </ItemGroup>
+            </Project>
+
+            #file UnitTest1.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class UnitTest1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+
+            #file store.xml
+            <StoreArtifacts>
+              <Package Id="Unrelated.Store.Package" Version="1.0.0" />
+            </StoreArtifacts>
+            """;
+
+        string assetName = $"RuntimeStorePublish{scenario}";
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            assetName,
+            Source
+                .PatchCodeWithReplace("$AssetName$", assetName)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ExtraProperties$", properties));
+
+        string manifestPath = Path.Combine(testAsset.TargetAssetPath, "store.xml");
+        DotnetMuxerResult publishResult = await DotnetCli.RunAsync(
+            $"publish -c {BuildConfiguration.Release} --manifest \"{manifestPath}\" {testAsset.TargetAssetPath}",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
+            cancellationToken: TestContext.CancellationToken);
+        publishResult.AssertExitCodeIs(0);
+
+        string publishDirectory = Path.Combine(testAsset.TargetAssetPath, "bin", BuildConfiguration.Release.ToString(), TargetFrameworks.NetCurrent, "publish");
+        string[] adapterAssemblies = Directory.GetFiles(publishDirectory, "*.dll", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(publishDirectory, path))
+            .Where(path => Path.GetFileName(path) is "MSTest.TestAdapter.dll" or "MSTestAdapter.PlatformServices.dll")
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        string[] expectedAdapterAssemblies = expectAdapterAssemblies
+            ? ["MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll"]
+            : [];
+        Assert.AreSequenceEqual(
+            expectedAdapterAssemblies,
+            adapterAssemblies,
+            $"Unexpected published adapter assemblies. Actual: '{string.Join(";", adapterAssemblies)}'.");
+
+        string[] expected = expectedCultures.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        AssertSatelliteCultures(publishDirectory, "MSTest.TestAdapter.resources.dll", expected);
+        AssertSatelliteCultures(publishDirectory, "MSTestAdapter.PlatformServices.resources.dll", expected);
+    }
+
+    [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only on Windows.")]
     [DataRow("Unset", "", "fr;fr")]
     [DataRow("Empty", "<SatelliteResourceLanguages />", "fr;fr")]

@@ -29,7 +29,7 @@ public sealed partial class Assert
                     }
                 }
 
-                if (extras is { Count: > 0 })
+                if (extras is not null)
                 {
                     return EquivalenceMismatch.ExtraMembers(path, extras);
                 }
@@ -56,6 +56,8 @@ public sealed partial class Assert
                     ThrowIfAssertException(ex.InnerException);
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: true, ex.InnerException ?? ex);
                 }
+
+                // Stryker disable once all: Public property getter exceptions are wrapped in TargetInvocationException; matching the runtime object and filtering indexers prevents reflection argument/access failures here.
                 catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
                 {
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: true, ex);
@@ -70,6 +72,8 @@ public sealed partial class Assert
                     ThrowIfAssertException(ex.InnerException);
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: false, ex.InnerException ?? ex);
                 }
+
+                // Stryker disable once all: Public property getter exceptions are wrapped in TargetInvocationException; matching the runtime object and filtering indexers prevents reflection argument/access failures here.
                 catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
                 {
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: false, ex);
@@ -115,11 +119,6 @@ public sealed partial class Assert
 
                 foreach (FieldInfo f in t.GetFields(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    if (f.IsStatic)
-                    {
-                        continue;
-                    }
-
                     TryRegisterMostDerived(byName, declaringTypes, f, new MemberAccessor(f.Name, f.FieldType, f));
                 }
 
@@ -147,6 +146,7 @@ public sealed partial class Assert
             declaringTypes[member.Name] = member.DeclaringType ?? typeof(object);
         }
 
+        // Stryker disable once all: This helper only receives DeclaringType values from public instance properties and fields discovered on a concrete Type; those reflection members always have a non-null DeclaringType.
         private static bool IsMoreDerivedThan(Type? candidate, Type? incumbent)
             => candidate is not null
                 && incumbent is not null

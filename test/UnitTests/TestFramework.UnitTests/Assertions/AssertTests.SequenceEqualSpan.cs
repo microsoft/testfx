@@ -28,16 +28,19 @@ public partial class AssertTests : TestContainer
         ReadOnlySpan<int> expected = [1, 2, 3];
         ReadOnlySpan<int> actual = [3, 2, 1];
         bool threw = false;
+        string? failureMessage = null;
         try
         {
             Assert.AreSequenceEqual(expected, actual);
         }
-        catch (AssertFailedException)
+        catch (AssertFailedException exception)
         {
             threw = true;
+            failureMessage = exception.Message;
         }
 
         threw.Should().BeTrue();
+        failureMessage.Should().EndWith("Assert.AreSequenceEqual(expected, actual)");
     }
 
     public void AreSequenceEqual_Span_Equal_DoesNotThrow()
@@ -115,16 +118,19 @@ public partial class AssertTests : TestContainer
         ReadOnlySpan<int> notExpected = [1, 2, 3];
         ReadOnlySpan<int> actual = [1, 2, 3];
         bool threw = false;
+        string? failureMessage = null;
         try
         {
             Assert.AreNotSequenceEqual(notExpected, actual);
         }
-        catch (AssertFailedException)
+        catch (AssertFailedException exception)
         {
             threw = true;
+            failureMessage = exception.Message;
         }
 
         threw.Should().BeTrue();
+        failureMessage.Should().Contain("Assert.AreNotSequenceEqual(notExpected, actual)");
     }
 
     public void AreNotSequenceEqual_Memory_Different_DoesNotThrow()

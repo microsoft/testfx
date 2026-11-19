@@ -28,6 +28,8 @@ internal sealed class TrxReportGenerator :
     IOutputDeviceDataProducer,
     IDisposable
 {
+    private const int MaxReportedInvalidTestResults = 10;
+
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptionsService;
     private readonly IFileSystem _fileSystem;
@@ -43,7 +45,14 @@ internal sealed class TrxReportGenerator :
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
+
+    // Mirrors TrxReportEngine's TestDefinition deduplication so conflicting results are detected (and omitted) while
+    // they stream in, together with the producer that reported them, instead of failing report generation at the end.
+    private readonly Dictionary<string, (string TestDefinitionName, bool IsExplicitlyProvided, string Producer)> _testDefinitionsById = [with(StringComparer.Ordinal)];
+    private readonly List<string> _invalidTestResultDetails = [];
+    private readonly List<string> _invalidTestResultProducers = [];
     private readonly bool _isEnabled;
+    private int _invalidTestResultCount;
     private TrxResultStreamingStore? _streamingStore;
     private bool _crashRecoveryUnavailable;
     private int _truncatedFieldCount;
@@ -132,7 +141,25 @@ internal sealed class TrxReportGenerator :
                 }
 
                 await EnsureStreamingStoreCreatedAsync(cancellationToken).ConfigureAwait(false);
-                (TrxTestResult extracted, bool wasTruncated) = TrxTestResultExtractor.Extract(nodeChangedMessage);
+                (TrxTestResult extracted, bool wasTruncated, IReadOnlyList<(string PropertyType, int Count)>? duplicateProperties) = TrxTestResultExtractor.ExtractAndValidate(nodeChangedMessage);
+                string producer = FormatProducer(dataProducer);
+                string? invalidTestResultDetail = duplicateProperties is not null
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        ExtensionResources.TrxInvalidTestResultDuplicateProperties,
+                        extracted.Uid,
+                        extracted.DisplayName,
+                        producer,
+                        string.Join(", ", duplicateProperties.Select(duplicate => $"'{duplicate.PropertyType}' (x{duplicate.Count})")))
+                    : ValidateTestDefinitionName(extracted, producer);
+                if (invalidTestResultDetail is not null)
+                {
+                    // The result is omitted rather than rendered with an arbitrarily chosen value; the session is
+                    // failed with this detail when it finishes (see OnTestSessionFinishingAsync).
+                    RecordInvalidTestResult(producer, invalidTestResultDetail);
+                    return;
+                }
+
                 if (wasTruncated)
                 {
                     Interlocked.Increment(ref _truncatedFieldCount);
@@ -211,6 +238,17 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 
         ApplicationStateGuard.Ensure(_testStartTime is not null);
 
+        string? invalidTestResultsErrorMessage = null;
+        if (_invalidTestResultCount > 0)
+        {
+            invalidTestResultsErrorMessage = BuildInvalidTestResultsErrorMessage();
+            await _logger.LogErrorAsync(invalidTestResultsErrorMessage).ConfigureAwait(false);
+
+            // Must happen before the exit code is read below so the TRX outcome reflects the failure. This also
+            // displays the message and makes the process exit with a non-zero exit code so the problem is not missed.
+            await _testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(invalidTestResultsErrorMessage, cancellationToken).ConfigureAwait(false);
+        }
+
         int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
         var trxReportGeneratorEngine = new TrxReportEngine(
             _fileSystem,
@@ -228,6 +266,11 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 #else
             exitCode);
 #endif
+
+        if (invalidTestResultsErrorMessage is not null)
+        {
+            trxReportGeneratorEngine.RunErrors = [invalidTestResultsErrorMessage];
+        }
 
         (string reportFileName, string? warning) = await GenerateReportAndCleanupAsync(trxReportGeneratorEngine, cancellationToken).ConfigureAwait(false);
         if (warning is not null)
@@ -277,6 +320,77 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
             await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private static string FormatProducer(IDataProducer? dataProducer)
+        => dataProducer is null
+            ? "<unknown>"
+            : $"'{dataProducer.DisplayName}' (UID '{dataProducer.Uid}', version '{dataProducer.Version}')";
+
+    private string? ValidateTestDefinitionName(TrxTestResult testResult, string producer)
+    {
+        (string id, string testDefinitionName, bool isExplicitlyProvided) = TrxReportEngine.GetTestDefinitionIdentity(testResult.Uid, testResult.DisplayName, testResult.TrxTestDefinitionName);
+        if (!_testDefinitionsById.TryGetValue(id, out (string TestDefinitionName, bool IsExplicitlyProvided, string Producer) existing))
+        {
+            _testDefinitionsById.Add(id, (testDefinitionName, isExplicitlyProvided, producer));
+            return null;
+        }
+
+        if ((isExplicitlyProvided || existing.IsExplicitlyProvided) && existing.TestDefinitionName != testDefinitionName)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                ExtensionResources.TrxInvalidTestResultConflictingTestDefinitionName,
+                testResult.Uid,
+                testResult.DisplayName,
+                producer,
+                testDefinitionName,
+                existing.Producer,
+                existing.TestDefinitionName);
+        }
+
+        if (!existing.IsExplicitlyProvided && isExplicitlyProvided)
+        {
+            _testDefinitionsById[id] = (testDefinitionName, true, producer);
+        }
+
+        return null;
+    }
+
+    private void RecordInvalidTestResult(string producer, string detail)
+    {
+        _invalidTestResultCount++;
+        if (_invalidTestResultDetails.Count < MaxReportedInvalidTestResults)
+        {
+            _invalidTestResultDetails.Add(detail);
+        }
+
+        if (!_invalidTestResultProducers.Contains(producer))
+        {
+            _invalidTestResultProducers.Add(producer);
+        }
+    }
+
+    private string BuildInvalidTestResultsErrorMessage()
+    {
+        var message = new StringBuilder();
+        message.Append(string.Format(
+            CultureInfo.InvariantCulture,
+            ExtensionResources.TrxInvalidTestResultsErrorMessage,
+            _invalidTestResultCount,
+            string.Join(", ", _invalidTestResultProducers)));
+        message.Append(Environment.NewLine).Append(ExtensionResources.TrxInvalidTestResultsDetailsHeader);
+        foreach (string detail in _invalidTestResultDetails)
+        {
+            message.Append(Environment.NewLine).Append("  - ").Append(detail);
+        }
+
+        if (_invalidTestResultCount > _invalidTestResultDetails.Count)
+        {
+            message.Append(Environment.NewLine).Append("  - ").Append(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxInvalidTestResultsMoreDetails, _invalidTestResultCount - _invalidTestResultDetails.Count));
+        }
+
+        return message.ToString();
     }
 
     private async Task EnsureStreamingStoreCreatedAsync(CancellationToken cancellationToken)

@@ -244,6 +244,44 @@ public class TrxTestResultExtractorTests
         Assert.Contains(nameof(TimingProperty), ex.Message);
     }
 
+    [TestMethod]
+    public void ExtractAndValidate_DuplicateSingletonProperties_KeepsOneValueAndReportsSortedCounts()
+    {
+        var bag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TrxExceptionProperty("first", null),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TrxExceptionProperty("second", null),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TrxExceptionProperty("third", null),
+            new TestMetadataProperty("key", "a"),
+            new TestMetadataProperty("key", "b"));
+
+        (TrxTestResult result, _, IReadOnlyList<(string PropertyType, int Count)>? duplicates) = TrxTestResultExtractor.ExtractAndValidate(
+            new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = "u", DisplayName = "d", Properties = bag }));
+
+        Assert.Contains(result.ExceptionMessage, new[] { "first", "second", "third" });
+        Assert.IsNotNull(duplicates);
+        Assert.AreSequenceEqual(
+            [(typeof(TrxExceptionProperty).FullName!, 3), (typeof(TimingProperty).FullName!, 2)],
+            duplicates);
+    }
+
+    [TestMethod]
+    public void ExtractAndValidate_RepeatableProperties_ReportsNoDuplicates()
+    {
+        (_, _, IReadOnlyList<(string PropertyType, int Count)>? duplicates) = TrxTestResultExtractor.ExtractAndValidate(new TestNodeUpdateMessage(
+            new SessionUid("1"),
+            new TestNode
+            {
+                Uid = "u",
+                DisplayName = "d",
+                Properties = new PropertyBag(new PassedTestNodeStateProperty(), new TestMetadataProperty("key", "a"), new TestMetadataProperty("key", "b")),
+            }));
+
+        Assert.IsNull(duplicates);
+    }
+
     private static TrxTestResult ExtractResult(params IProperty[] properties)
         => TrxTestResultExtractor.Extract(new TestNodeUpdateMessage(
             new SessionUid("1"),

@@ -23,6 +23,7 @@ _PROJECTS = {
         "logging",
         "msbuild_extension",
         "opentelemetry",
+        "packaged_app_msbuild",
         "platform",
         "platform_msbuild",
         "retry",

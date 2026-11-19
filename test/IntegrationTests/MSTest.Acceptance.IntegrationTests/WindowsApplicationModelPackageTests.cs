@@ -103,7 +103,7 @@ public sealed class WindowsApplicationModelPackageTests
 
     [TestMethod]
     [DataRow("MSTest.TestFramework", "lib", "MSTest.TestFramework.dll", false)]
-    [DataRow("MSTest.TestAdapter", "buildTransitive", "MSTest.TestAdapter.dll", false)]
+    [DataRow("MSTest.TestAdapter", "lib", "MSTest.TestAdapter.dll", false)]
     [DataRow("Microsoft.Testing.Platform", "lib", "Microsoft.Testing.Platform.dll", true)]
     [DataRow("Microsoft.Testing.Extensions.PackagedApp", "lib", "Microsoft.Testing.Extensions.PackagedApp.dll", true)]
     [DataRow("Microsoft.Testing.Extensions.PackagedApp.MSBuild", "tools/AppModelController", "win-x64/mstest-appmodel-controller.exe", true)]
@@ -190,18 +190,24 @@ public sealed class WindowsApplicationModelPackageTests
 
     private static readonly string[] RequiredTestAdapterEntries =
     [
-        "buildTransitive/net462/MSTest.TestFramework.dll",
-        "buildTransitive/net462/MSTest.TestAdapter.dll",
-        "buildTransitive/net462/MSTestAdapter.PlatformServices.dll",
+        "lib/net462/MSTest.TestFramework.dll",
+        "lib/net462/MSTest.TestAdapter.dll",
+        "lib/net462/MSTestAdapter.PlatformServices.dll",
+        "lib/net462/fr/MSTest.TestAdapter.resources.dll",
+        "lib/net462/fr/MSTestAdapter.PlatformServices.resources.dll",
         "build/net10.0/MSTest.TestAdapter.props",
         "build/net10.0/MSTest.TestAdapter.targets",
         "buildTransitive/net10.0/MSTest.TestAdapter.props",
         "buildTransitive/net10.0/MSTest.TestAdapter.targets",
         "buildTransitive/net10.0/Parallelize.targets",
-        "buildTransitive/net10.0/MSTest.TestAdapter.dll",
-        "buildTransitive/net10.0/MSTestAdapter.PlatformServices.dll",
-        "buildTransitive/net11.0/MSTest.TestAdapter.dll",
-        "buildTransitive/net11.0/MSTestAdapter.PlatformServices.dll",
+        "lib/net10.0/MSTest.TestAdapter.dll",
+        "lib/net10.0/MSTestAdapter.PlatformServices.dll",
+        "lib/net10.0/fr/MSTest.TestAdapter.resources.dll",
+        "lib/net10.0/fr/MSTestAdapter.PlatformServices.resources.dll",
+        "lib/net11.0/MSTest.TestAdapter.dll",
+        "lib/net11.0/MSTestAdapter.PlatformServices.dll",
+        "lib/net11.0/fr/MSTest.TestAdapter.resources.dll",
+        "lib/net11.0/fr/MSTestAdapter.PlatformServices.resources.dll",
     ];
 
     private static readonly string[] RequiredTestFrameworkEntries =
@@ -230,12 +236,34 @@ public sealed class WindowsApplicationModelPackageTests
                 || entry.FullName.Contains("/uwp/", StringComparison.OrdinalIgnoreCase)
                 || entry.FullName.Contains("TestFramework.Extensions", StringComparison.Ordinal),
             archive.Entries);
+        Assert.DoesNotContain(
+            entry => (entry.FullName.StartsWith("build", StringComparison.Ordinal) && entry.FullName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                || entry.FullName.Contains("/_localization/", StringComparison.Ordinal),
+            archive.Entries);
         using var reader = new StreamReader(archive.GetEntry("MSTest.TestAdapter.nuspec")!.Open());
         var nuspec = XDocument.Parse(reader.ReadToEnd());
         Assert.DoesNotContain(
             group => ((string?)group.Attribute("targetFramework"))?.Contains("UAP", StringComparison.OrdinalIgnoreCase) == true
                 || ((string?)group.Attribute("targetFramework"))?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true,
             nuspec.Descendants().Where(element => element.Name.LocalName == "group"));
+
+        // The net462 MSTest.TestFramework.dll sidecar must stay out of compile and runtime references.
+        string[] references = nuspec.Descendants()
+            .Where(element => element.Name.LocalName == "references")
+            .Elements()
+            .SelectMany(group => group.Elements().Select(reference => $"{(string?)group.Attribute("targetFramework")}/{(string?)reference.Attribute("file")}"))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        Assert.AreSequenceEqual(
+            [
+                "net10.0/MSTest.TestAdapter.dll",
+                "net10.0/MSTestAdapter.PlatformServices.dll",
+                "net11.0/MSTest.TestAdapter.dll",
+                "net11.0/MSTestAdapter.PlatformServices.dll",
+                "net462/MSTest.TestAdapter.dll",
+                "net462/MSTestAdapter.PlatformServices.dll",
+            ],
+            references);
     }
 
     [TestMethod]

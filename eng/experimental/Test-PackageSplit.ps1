@@ -304,6 +304,8 @@ foreach ($flavor in @('Ordinary', 'WinUI', 'Uwp')) {
     $adapterFiles = @{}
     foreach ($key in $source.Files.Keys) {
         if ($key -notmatch '^(lib|build|buildTransitive|tools)/') { $adapterFiles[$key] = $source.Files[$key]; continue }
+        # Since #12515 the ordinary adapter already ships lib/<tfm> assets; UI lib folders hold framework assemblies.
+        if ($flavor -eq 'Ordinary' -and $key -match '^lib/') { $adapterFiles[$key] = $source.Files[$key]; continue }
         if ($key -match '^buildTransitive/([^/]+)/(MSTest\.TestAdapter|MSTestAdapter\.PlatformServices)\.dll$') {
             $adapterFiles["lib/$($Matches[1])/$($Matches[2]).dll"] = $source.Files[$key]
         }
@@ -506,8 +508,10 @@ function Assert-AdapterAssets([string] $Directory, [hashtable] $Assets, [string]
     $cachedRoot = "$RunRoot/candidate/packages/$($Id.ToLowerInvariant())/$version"
     $sourceId = switch ($Id) { 'MSTest.TestAdapter.WinUI' { 'MSTest.WinUI' }; 'MSTest.TestAdapter.Uwp' { 'MSTest.Uwp' }; default { 'MSTest.TestAdapter' } }
     $sourceTfm = switch ($Id) { 'MSTest.TestAdapter.WinUI' { 'net10.0-windows10.0.18362' }; 'MSTest.TestAdapter.Uwp' { 'net10.0-windows10.0.17763' }; default { 'net10.0' } }
+    # Producers from #12515 onward ship the ordinary adapter (and its satellites) under lib/<tfm>.
+    $sourceFolder = if ($packages[$sourceId].Files.ContainsKey("lib/$sourceTfm/$($dllNames[0])")) { "lib/$sourceTfm" } else { "buildTransitive/$sourceTfm" }
     foreach ($dll in $dllNames) {
-        $original = $packages[$sourceId].Files["buildTransitive/$sourceTfm/$dll"]
+        $original = $packages[$sourceId].Files["$sourceFolder/$dll"]
         Assert-Contract ($null -ne $original) "Producer oracle missing $sourceId/$sourceTfm/$dll"
         $originalHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([byte[]]$original))
         $selected = @($compilePaths + $runtimePaths | Where-Object { $_.EndsWith("/$dll") } | Select-Object -Unique)
@@ -538,9 +542,12 @@ function Assert-AdapterAssets([string] $Directory, [hashtable] $Assets, [string]
         Assert-Contract ((($depsRuntime | Sort-Object) -join '|') -eq (($runtimePaths | Sort-Object) -join '|')) "Deps runtime paths differ at $output"
         $satellites = @(Get-ChildItem $output -Recurse -Filter '*.resources.dll' | Where-Object { $_.Name -match '^MSTest(TestAdapter|Adapter.PlatformServices)|^MSTest\.TestAdapter' })
         if (-not $Runtime) { Assert-Contract ($satellites.Count -eq 0) 'Excluded adapter resources leaked' }
+        # The shipped ordinary lib layout (#12515) copies only the build UI culture hierarchy when the MSTest
+        # runner is disabled; Invoke-Consumer pins that culture to fr.
+        $frenchOnly = $French -or ($sourceId -eq 'MSTest.TestAdapter' -and $sourceFolder.StartsWith('lib/'))
         if ($Runtime) {
-            $sourcePrefix = if ($sourceId -eq 'MSTest.TestAdapter') { 'buildTransitive/_localization/' } else { "buildTransitive/$sourceTfm/_localization/" }
-            $sourceResources = @($packages[$sourceId].Files.Keys | Where-Object { $_.StartsWith($sourcePrefix) -and $_.EndsWith('.dll') -and (-not $French -or $_.StartsWith($sourcePrefix + 'fr/')) })
+            $sourcePrefix = if ($sourceFolder.StartsWith('lib/')) { "$sourceFolder/" } elseif ($sourceId -eq 'MSTest.TestAdapter') { 'buildTransitive/_localization/' } else { "buildTransitive/$sourceTfm/_localization/" }
+            $sourceResources = @($packages[$sourceId].Files.Keys | Where-Object { $_.StartsWith($sourcePrefix) -and $_.EndsWith('.resources.dll') -and (-not $frenchOnly -or $_.StartsWith($sourcePrefix + 'fr/')) })
             Assert-Contract ($satellites.Count -eq $sourceResources.Count) "Adapter satellite count differs from producer at $output"
             foreach ($originalPath in $sourceResources) {
                 $relative = $originalPath.Substring($sourcePrefix.Length)
@@ -550,7 +557,7 @@ function Assert-AdapterAssets([string] $Directory, [hashtable] $Assets, [string]
             $depsResources = @(if ($depsEntry -and $depsEntry.ContainsKey('resources')) { $depsEntry.resources.Keys })
             Assert-Contract ($depsResources.Count -eq $sourceResources.Count) "Deps satellite count differs from deployed resources at $output"
         }
-        if ($French) {
+        if ($frenchOnly) {
             Assert-Contract ($satellites.Count -eq 2) "French-only expected two satellites, got $($satellites.Count)"
             foreach ($satellite in $satellites) {
                 Assert-Contract ($satellite.Directory.Name -eq 'fr') "Unrequested culture $($satellite.Directory.Name)"

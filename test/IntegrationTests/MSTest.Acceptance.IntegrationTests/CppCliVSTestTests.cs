@@ -53,7 +53,7 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         // framework + adapter against a managed C++/CLI test assembly.
         using var packagesDir = new TempDirectory();
         string frameworkNet462Dir = Path.Combine(ExtractShippingPackage(packagesDir, "MSTest.TestFramework", MSTestVersion), "lib", "net462");
-        string adapterNet462Dir = Path.Combine(ExtractShippingPackage(packagesDir, "MSTest.TestAdapter", MSTestVersion), "buildTransitive", "net462");
+        string adapterNet462Dir = Path.Combine(ExtractShippingPackage(packagesDir, "MSTest.TestAdapter", MSTestVersion), "lib", "net462");
         Assert.IsTrue(
             File.Exists(Path.Combine(frameworkNet462Dir, "MSTest.TestFramework.dll")),
             $"Expected MSTest.TestFramework.dll under '{frameworkNet462Dir}'.");

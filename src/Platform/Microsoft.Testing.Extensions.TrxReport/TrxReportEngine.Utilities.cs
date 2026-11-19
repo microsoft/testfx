@@ -17,6 +17,25 @@ internal sealed partial class TrxReportEngine
         return new Guid(hash);
     }
 
+    /// <summary>
+    /// Computes the TRX test id and test definition name used for a test result. Results that share the same id
+    /// share a single <c>TestDefinition</c>, so their explicitly provided definition names must agree.
+    /// </summary>
+    internal static (string Id, string TestDefinitionName, bool IsExplicitlyProvided) GetTestDefinitionIdentity(string uid, string displayName, string? explicitTestDefinitionName)
+    {
+        // If already a guid (it's the case for at least MSTest), use that guid directly.
+        // Otherwise, convert the string to a guid.
+        if (!Guid.TryParse(uid, out Guid guid))
+        {
+            guid = GuidFromString(uid);
+        }
+
+        // NOTE: In VSTest, MSTestDiscoverer.TmiTestId property is preferred if present.
+        return explicitTestDefinitionName is { } explicitName
+            ? (guid.ToString(), RemoveInvalidXmlChar(explicitName), true)
+            : (guid.ToString(), RemoveInvalidXmlChar(displayName), false);
+    }
+
     internal static Guid CreateMergeRunId(IReadOnlyList<string> inputPaths)
         => GuidFromString(string.Join("\0", inputPaths.Select(Path.GetFullPath).OrderBy(path => path, StringComparer.Ordinal)));
 

@@ -435,6 +435,7 @@ public sealed partial class Assert
         structured.WithAdditionalSummaryLine(locationLine);
         structured.WithUserMessage(userMessage);
 
+        // Stryker disable once Logical: Every EquivalenceMismatch factory sets both snippets or neither.
         if (mismatch.ExpectedText is not null && mismatch.ActualText is not null)
         {
             EvidenceBlock evidence = EvidenceBlock.Create()

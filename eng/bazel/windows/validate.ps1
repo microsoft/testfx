@@ -150,7 +150,7 @@ try {
         if ($inventoryPaths.Count -ne 1) { throw "Expected one $framework compatibility inventory." }
         $inventoryPath = Join-Path $executionRoot $inventoryPaths[0].Replace('/', '\')
         $inventory = @(Get-Content -LiteralPath $inventoryPath -Raw | ConvertFrom-Json)
-        $expectedCount = if ($framework -eq 'netstandard2_0') { 26 } else { 5 }
+        $expectedCount = if ($framework -eq 'netstandard2_0') { 27 } else { 5 }
         $expectedFramework = if ($framework -eq 'netstandard2_0') { 'netstandard2.0' } else { 'net462' }
         if ($inventory.Count -ne $expectedCount -or
             @($inventory | Where-Object target_framework -NE $expectedFramework).Count -ne 0) {

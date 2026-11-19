@@ -1557,6 +1557,23 @@ public partial class AssertTests : TestContainer
         ex.Message.Should().Contain(nameof(AssertTests));
     }
 
+    private static class NestedDiagnosticMethods
+    {
+        public static int Combine(int left, int right) => left + right;
+    }
+
+    public void That_NestedStaticMethodKeepsItsDeclaringTypeAndArgumentList()
+    {
+        int left = 5;
+        int right = 7;
+        int expected = 0;
+
+        Action act = () => Assert.That(() => NestedDiagnosticMethods.Combine(left, right) == expected, conditionExpression: "nested method");
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("AssertTests.NestedDiagnosticMethods.Combine(left, right) = 12");
+    }
+
     public void That_InstanceMethodOnThis_RendersAsThisMethod()
     {
         int expected = 0;
@@ -1576,6 +1593,35 @@ public partial class AssertTests : TestContainer
 
         AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
         ex.Message.Should().Contain($"this.{nameof(AssertTestsExtensions.GetGreeting)}");
+    }
+
+    public void That_ExtensionMethodOnCapturedLocal_RendersTheLocalReceiver()
+    {
+        string receiver = "hello";
+        string separator = " ";
+        string suffix = "!";
+        string expected = "different";
+
+        Action act = () => Assert.That(() => receiver.AddSuffix(separator, suffix) == expected, conditionExpression: "extension receiver");
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("receiver.AddSuffix(separator, suffix) = \"hello !\"");
+        ex.Message.Should().NotContain("this.AddSuffix");
+    }
+
+    public void That_RepeatedMethodCallsWithDifferentValuesKeepDistinctDetailEntries()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(
+            () => counter.Increment() + counter.Increment() + counter.Increment() == -1,
+            conditionExpression: "repeated calls");
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("counter.Increment() = 1");
+        ex.Message.Should().Contain("counter.Increment() (2) = 2");
+        ex.Message.Should().Contain("counter.Increment() (3) = 3");
+        counter.Count.Should().Be(3);
     }
 
     private sealed class GetterBox
@@ -1839,7 +1885,22 @@ public partial class AssertTests : TestContainer
             (typeof(decimal), 1.5m, "decimal", "1.5"),
             (typeof(bool), true, "bool", "True"),
             (typeof(string), "data", "string", "\"data\""),
+            (typeof(string), "{", "string", "\"{\""),
+            (typeof(string), "}", "string", "\"}\""),
+            (typeof(string), "{item}", "string", "\"{item}\""),
+            (typeof(string), "a\\\"{b", "string", "\"a\\\"{b\""),
+            (typeof(string), "a\\", "string", "\"a\\\""),
+            (typeof(string), "a\"b", "string", "\"a\"b\""),
             (typeof(char), 'q', "char", "q"),
+            (typeof(char), '{', "char", "'{'"),
+            (typeof(char), '}', "char", "'}'"),
+            (typeof(char), '\'', "char", "'"),
+            (typeof(char), '"', "char", "\""),
+            (typeof(object), "a\"b", "object", "\"a\"b\""),
+            (typeof(object), "{item}", "object", "\"{item}\""),
+            (typeof(object), "a\\", "object", "\"a\\\""),
+            (typeof(object), '"', "object", "\""),
+            (typeof(object), '{', "object", "'{'"),
             (typeof(string), "new <>f__AnonymousType", "string", "\"new <>f__AnonymousType\""),
             (typeof(string), "value((", "string", "\"value((\""),
         ];
@@ -1864,6 +1925,52 @@ public partial class AssertTests : TestContainer
             failure.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
                 .Should().Be(message.Replace("\r\n", "\n"));
         }
+    }
+
+    public void That_ObjectListInitializerWithQuotedString_RendersCleanedInitializer()
+    {
+        Action accepted = () => Assert.That(() => new List<object> { "a\"b", "{" }.Count == 2);
+        accepted.Should().NotThrow();
+
+        Action rejected = () => Assert.That(() => new List<object> { "a\"b", "{" }.Count == 1, conditionExpression: "object initializer");
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assert.That(object initializer) failed.
+            Details:
+              new List<object> { "a"b", "{" }.Count = 2
+            """.Replace("\r\n", "\n"));
+    }
+
+    public void That_ListInitializerWithNestedQuotedLiteral_RendersCleanedInitializer()
+    {
+        Action accepted = () => Assert.That(() => new List<int> { "{\"}".Length }.Count == 1);
+        accepted.Should().NotThrow();
+
+        Action rejected = () => Assert.That(() => new List<int> { "{\"}".Length }.Count == 0, conditionExpression: "nested literal");
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assert.That(nested literal) failed.
+            Details:
+              "{"}".Length = 3
+              new List<int> { "{"}".Length }.Count = 1
+            """.Replace("\r\n", "\n"));
+    }
+
+    public void That_ListInitializerWithNestedConcatLiterals_RendersCleanedInitializer()
+    {
+        Action accepted = () => Assert.That(() => new List<string> { string.Concat("a\"{b\"c", "}") }.Count == 1);
+        accepted.Should().NotThrow();
+
+        // The Add-argument extraction stops at the first ')' inside an operand, as it does on main, so the
+        // call's closing parenthesis is dropped; this case covers locating the initializer's closing brace.
+        Action rejected = () => Assert.That(() => new List<string> { string.Concat("a\"{b\"c", "}") }.Count == 0, conditionExpression: "nested concat");
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assert.That(nested concat) failed.
+            Details:
+              new List<string> { Concat("a"{b"c", "}" }.Count = 1
+              string.Concat("a"{b"c", "}") = "a"{b"c}"
+            """.Replace("\r\n", "\n"));
     }
 
     public void That_EmptyConstructionAndGroupedIndex_PreserveReadableDiagnostics()
@@ -1971,6 +2078,8 @@ public partial class AssertTests : TestContainer
 internal static class AssertTestsExtensions
 {
     public static string GetGreeting(this AssertTests _) => "hello";
+
+    public static string AddSuffix(this string value, string separator, string suffix) => value + separator + suffix;
 }
 
 internal static class MutableBoxHelper

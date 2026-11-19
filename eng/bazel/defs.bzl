@@ -188,6 +188,25 @@ testfx_metadata = rule(
     toolchains = [config_common.toolchain_type("@rules_dotnet//dotnet:toolchain_type", mandatory = False)],
 )
 
+def _package_files_impl(ctx):
+    selected = []
+    files = ctx.files.package
+    for suffix in ctx.attr.suffixes:
+        matches = [file for file in files if file.path.endswith("/" + suffix)]
+        if len(matches) != 1:
+            fail("Expected exactly one '{}' in {}, found {}".format(suffix, ctx.attr.package.label, matches))
+        selected.extend(matches)
+    return [DefaultInfo(files = depset(selected))]
+
+testfx_package_files = rule(
+    implementation = _package_files_impl,
+    doc = "Selects exactly one file per suffix from a NuGet package's files.",
+    attrs = {
+        "package": attr.label(mandatory = True),
+        "suffixes": attr.string_list(mandatory = True),
+    },
+)
+
 def testfx_library(
         name,
         project,
@@ -210,9 +229,12 @@ def testfx_library(
         compiler_options = [],
         binary = False,
         sdk_version_metadata = False,
+        allow_empty_sources = False,
         tags = [],
         **kwargs):
     """Compile one source assembly without invoking or consuming MSBuild outputs.
+
+    `allow_empty_sources` is only for projects whose assembly has no source of its own.
 
     Tags also reach the satellite assemblies, which share the main assembly's
     target frameworks and so must share its `manual` reachability.
@@ -232,6 +254,7 @@ def testfx_library(
     sources = native.glob(
         [project + "/**/*.cs"],
         exclude = [project + "/bin/**", project + "/obj/**"] + exclude,
+        allow_empty = allow_empty_sources,
     )
     generated_sources = ["//eng/bazel:GlobalUsings.cs", ":" + name + "_metadata"]
     if polyfills:

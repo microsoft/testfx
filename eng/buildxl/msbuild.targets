@@ -3,4 +3,6 @@
     <!-- The WinUI resource targets query this target on project references during Build. -->
     <ProjectReferenceTargets Include="Build" Targets="GetPackagingOutputs" />
   </ItemGroup>
+
+  <Import Project="pack.targets" Condition=" '$(TestFxBuildXLPack)' == 'true' " />
 </Project>

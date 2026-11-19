@@ -117,11 +117,13 @@ public sealed partial class Assert
             catch (TargetInvocationException tie)
             {
                 ThrowIfAssertException(tie.InnerException);
+                // Stryker disable once Boolean: hasNext is ignored whenever this method returns a failure.
                 hasNext = false;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
+                // Stryker disable once Boolean: hasNext is ignored whenever this method returns a failure.
                 hasNext = false;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
             }

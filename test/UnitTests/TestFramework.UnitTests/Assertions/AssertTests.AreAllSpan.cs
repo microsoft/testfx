@@ -156,6 +156,16 @@ public partial class AssertTests : TestContainer
         threw.Should().BeTrue();
     }
 
+    public void AreAllOfType_Type_ReadOnlySpan_NullExpectedType_ThrowsAssertionFailure()
+    {
+        static void Invoke(ReadOnlySpan<object> collection, Type? expectedType)
+            => Assert.AreAllOfType(expectedType, collection);
+
+        Action action = () => Invoke(new object[] { "a" }, expectedType: null);
+        action.Should().ThrowExactly<AssertFailedException>()
+            .WithMessage("Assert.AreAllOfType failed. The parameter 'expectedType' is invalid. The value cannot be null.");
+    }
+
     public void AreAllOfType_Generic_Span_AllMatch_DoesNotThrow()
     {
         Span<object> span = ["a", "b"];

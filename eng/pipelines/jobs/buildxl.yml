@@ -1,3 +1,9 @@
+parameters:
+# Removes only the unit-test step; the native BuildXL build still runs.
+- name: SkipTests
+  type: boolean
+  default: false
+
 jobs:
 - job: BuildXL
   displayName: Windows BuildXL repository build
@@ -74,6 +80,16 @@ jobs:
     # The wrapper pre-caches the VS telemetry MAC hash so MSIX tasks skip getmac;
     # the single retry remains a backstop for other teardown races.
     retryCountOnTaskFailure: 1
+
+  # Runs the Bazel dogfood workload's unit suites from the BuildXL outputs, uncached, so restore, build and
+  # tests can be compared with Bazel. Results are retained as files under logs\unit-tests; they are not published
+  # as Azure DevOps test results.
+  - ${{ if eq(parameters.SkipTests, false) }}:
+    - pwsh: |
+        .\eng\buildxl\run-unit-tests.ps1 -Configuration '$(BuildXLConfiguration)'
+        exit $LASTEXITCODE
+      displayName: Run Bazel-matched unit tests with BuildXL outputs
+      timeoutInMinutes: 30
 
   - pwsh: |
       $root = '$(Build.SourcesDirectory)\artifacts\buildxl'

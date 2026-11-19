@@ -112,6 +112,7 @@ public sealed partial class Assert
 
                 if (_actualToExpected.TryGetValue(actual, out object? mappedExpected))
                 {
+                    // Stryker disable once Conditional: The expected-to-actual map is checked first and both maps are updated together, so this branch always means the counterpart differs.
                     return ReferenceEquals(mappedExpected, expected)
                         ? null
                         : EquivalenceMismatch.TopologyMismatch(path);

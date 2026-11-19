@@ -1,4 +1,12 @@
-# MSTest adapter library assets: experiments and rewrite design
+# MSTest adapter library assets
+
+> **Status (2026-11-18):** the ordinary `MSTest.TestAdapter` package (`net462`,
+> `net10.0`, `net11.0`) now ships standard `lib/<tfm>` assets. See
+> [Shipping implementation: ordinary adapter lib assets](#shipping-implementation-ordinary-adapter-lib-assets).
+> UWP and WinUI payloads moved to the separate `MSTest.Uwp` and `MSTest.WinUI`
+> packages ([#12450](https://github.com/microsoft/testfx/pull/12450)) and keep
+> their explicit references. The sections before it record the original
+> experiment and are kept as history.
 
 The November 12-13 sections preserve the earlier single-package experiments.
 Their package-split exclusion and toolchain limitations describe those runs,
@@ -11,7 +19,7 @@ changing shipping defaults.
 Investigate replacing `MSTest.TestAdapter`'s manually injected assemblies with
 standard NuGet `lib/<tfm>` assets. The consumer must retain the correct adapter,
 platform services, dependency resolution, localized resources, and test results.
-This is a local prototype, not an approved release or package compatibility break.
+This started as a local prototype, not an approved release or package compatibility break.
 
 The affected consumers are ordinary VSTest and Microsoft.Testing.Platform tests,
 classic UWP (`uap10.0`), modern UWP (`UseUwpTools=true`), and WinUI. Modern UWP
@@ -74,7 +82,9 @@ selection-only prototype below corrects model selection through build, publish
 and dependency manifests while retaining NuGet asset filtering. Standard
 resource assets also avoid the project-level `Content` classification that
 caused the original PRI issue. The delivered source changes prepare samples and
-regression guards; no shipping package migration has been applied.
+regression guards; no shipping package migration had been applied at that point
+(superseded by the shipping implementation below, once the UI payloads moved to
+their own packages).
 
 ### 2026-11-12: isolated package-only prototype
 
@@ -281,8 +291,10 @@ comes from placing satellites beside each framework instead of sharing one
 nonstandard localization directory. No build-time/performance benefit is claimed.
 
 The next decisive evidence is a real native resource/activation comparison,
-followed by legacy VSTest/netfx and any supported special publish paths. These
-follow-up findings revise the recommendation, not the shipping source.
+followed by legacy VSTest/netfx and any supported special publish paths. At the
+time, these follow-up findings revised the recommendation, not the shipping
+source; the legacy VSTest/netfx and publish comparisons were later run for the
+ordinary package in the shipping implementation section.
 
 ## Validation and demonstration
 
@@ -362,7 +374,7 @@ It is SHA-256 over UTF-8 `base=<full HEAD>\n` followed by ordinal-sorted
 `repo-relative-path<TAB>lowercase-file-SHA256\n` entries. The baseline HEAD is
 the full revision at the start of this record; this is not a commit identity.
 
-There is no shipping-product layout change. The samples' localized manifest
+At the time of this experiment there was no shipping-product layout change. The samples' localized manifest
 surface and real activation remain uninspected because native tooling is absent;
 build/discovery cannot demonstrate a localized user-visible result.
 
@@ -379,9 +391,18 @@ build/discovery cannot demonstrate a localized user-visible result.
   netfx/packages.config and supported Native AOT/single-file/runtime-store
   publish contracts? Those paths remain untested; separate model packages avoid
   much of that SDK-internal selection coupling.
+  *Update (2026-11-18):* the separate-package route was taken (#12450), so the
+  ordinary package needs no model selector. The netfx PackageReference,
+  packages.config (fresh install and in-place upgrade), SDK build/publish and
+  transitive `ProjectReference` paths for the ordinary package are answered in
+  the shipping implementation section. Runtime-store publish is covered by the
+  review follow-up below. Native AOT and single-file publish remain untested.
 - Legacy consumers and downstream VSTest tests hard-code the existing package
   directories. No rollout, release-branch servicing, or downstream migration has
   been authorized.
+  *Update (2026-11-18):* the in-repository consumers of the old ordinary
+  `buildTransitive/<tfm>` DLL paths were moved to `lib/<tfm>`. Downstream
+  consumers outside this repository have not been audited.
 
 ## PR review and CI follow-up: 2026-11-13
 
@@ -450,11 +471,267 @@ They are not attributed to the UWP resource changes or changed in this PR.
 Full modern UWP activation still requires the capable CI agent; a new pending
 run must not be presented as passing evidence.
 
+## Shipping implementation: ordinary adapter lib assets
+
+*2026-11-18. Source base: `ba85050ce3075f6f8a5777e75fcede110baa1fa3`.*
+
+### Decision
+
+The ordinary `MSTest.TestAdapter` package (`net462`, `net10.0`, `net11.0`) ships
+`MSTest.TestAdapter.dll` and `MSTestAdapter.PlatformServices.dll` as standard
+NuGet `lib/<tfm>` assets, with their satellites in `lib/<tfm>/<culture>/`.
+`buildTransitive` no longer contains any assembly. Explicit `<Reference>`
+injection remains only for the UI payloads shipped by `MSTest.Uwp` and
+`MSTest.WinUI` ([#12450](https://github.com/microsoft/testfx/pull/12450)).
+
+With NuGet owning the assets, compile references, copy-local, `deps.json`,
+publish, `ProjectReference` flow, and `IncludeAssets`/`ExcludeAssets` follow
+standard NuGet semantics. They no longer rely on synthetic
+`MSTest.TestAdapter.Reference/42.42.42.42`-style entries. #7389 already named
+this layout as the follow-up.
+
+The alternatives were:
+
+- **Keep explicit references.** Rejected, because this is the mechanism the
+  request asks to remove.
+- **One package with a model selector.** This was the original experiment, made
+  unnecessary once the UI payloads moved to separate packages.
+- **`lib` assets without policy targets.** Rejected, because the consumer
+  matrix showed three regressions:
+  - copy-local behavior changed for `IsTestApplication=false`;
+  - `EnableMSTestV2CopyResources` and VSTest culture filtering stopped applying;
+  - packages.config projects upgraded in place lost the adapter (see the RED
+    result below).
+
+### Implementation
+
+| Piece | Location | Purpose |
+| --- | --- | --- |
+| Pack layout | `_AddTestAdapterPackageFiles` in `MSTest.TestAdapter.csproj` | Packs DLLs and satellites into `lib/<tfm>`. |
+| Sidecar exclusion | `_AddMSTestAdapterNuspecReferences`, after `Pack` | NuGet's MSBuild pack cannot emit `<references>`, so the packed nuspec is rewritten. Each group lists only the two adapter assemblies. The `net462` `MSTest.TestFramework.dll` sidecar needed by VSTest's resolver (#4537, #4426, #6625) stays in the package, but it is neither a compile nor a runtime reference. |
+| SDK policy | `_MSTestApplyAdapterPackageAssetPolicy`, after `ResolvePackageAssets` | Removes adapter runtime items for `IsTestApplication=false`. Removes satellites for non-test applications, for `EnableMSTestV2CopyResources=false`, and under VSTest for cultures outside the build-machine UI hierarchy. Under MTP, all cultures permitted by `SatelliteResourceLanguages` are kept, as before. |
+| SDK runtime-store publish policy | `_MSTestApplyAdapterPublishAssetPolicy`, after `_ResolveCopyLocalAssetsForPublish` | Runtime-store publish (`--manifest`, `PreserveStoreLayout`) re-resolves the publish assets from the assets file instead of reusing the filtered copy-local items. This target applies the same removals to `_ResolvedCopyLocalPublishAssets`. Otherwise it is a no-op. |
+| Non-SDK policy | `_MSTestApplyAdapterNonSdkAssetPolicy`, after `ResolveAssemblyReferences` | Applies the same policy to non-SDK PackageReference and packages.config projects, and also applies `SatelliteResourceLanguages`, which their resolvers ignore. |
+| packages.config fallback | `_MSTestAddPackagesConfigAdapterReferences` | Adds any missing `lib\net462` HintPath reference when a non-SDK project has no `PackageReference` items. This covers projects upgraded in place, which never received NuGet's install-time references. |
+| Layout consumers | `eng/package-shapes`, `eng/bazel/*`, acceptance tests, `PACKAGE.md` | Move to the `lib/<tfm>` paths. The previous `NU5127`/`NU5128`/`NU5100` suppressions are removed; the pack has no warnings without them. |
+
+### Package evidence
+
+| Package | SHA-256 | Size | `lib/*` entries | `buildTransitive` DLLs | nuspec `<references>` |
+| --- | --- | --- | --- | --- | --- |
+| Baseline | `E8686D40F04BFA3DC77C23DBDD1AB84F92F99051F27753C06B94C9D6279BD228` | 1,871,000 | 0 | 33, including `_localization/<culture>` satellites | None |
+| Candidate | `7DD4C5AD27D5A191BE47B2C0B1AD6C32DBB348D895F8355DBDF4AAC9ADACED2B` | 2,243,049 | 85 | 0 | 3 groups × 2 adapter assemblies |
+
+### Consumer comparison
+
+Session-owned harness scripts, which are not repository tools, built every
+consumer against both packages. Each side's `NuGet.config` used that side's
+`artifacts\packages\Debug\Shipping` folder as its local feed, with an isolated
+global-packages folder. `bin`/`obj` were deleted before each build.
+Output file sets were compared by relative path.
+
+**Non-SDK consumers.** These were built with Visual Studio 18 `MSBuild.exe` and
+run with `vstest.console`. All target .NET Framework 4.8:
+
+- `legacy`: a non-SDK project using PackageReference.
+- `pc`: packages.config with the references NuGet adds at install time.
+  The candidate project includes the `lib\net462` adapter references.
+- `pc-upgrade`: the candidate package with no adapter `<Reference>` in the
+  project, which is the in-place upgrade case.
+
+The variants were:
+
+- `nontest`: `/p:IsTestApplication=false`.
+- `fr`: `DOTNET_CLI_UI_LANGUAGE=fr`.
+- `fr-nocopy`: `fr` plus `/p:EnableMSTestV2CopyResources=false`.
+
+Output files (baseline = candidate):
+
+| Consumer | default | nontest | fr | fr-nocopy |
+| --- | --- | --- | --- | --- |
+| `legacy` | 104 | 102 | 106 | 104 |
+| `pc` | 120 | 118 | 122 | 120 |
+| `pc-upgrade` (candidate only) | 120 | 118 | 122 | 120 |
+
+All 12 candidate rows have the same file set as the baseline. The default,
+`fr`, and `fr-nocopy` rows passed 2/2 tests, with French console output under
+`fr`. The `nontest` rows report "No test is available" with exit 0 on both
+sides. `legacy` reports the same single build warning on both sides.
+
+**packages.config upgrade, RED→GREEN.** Run on the final candidate package with
+`pc-upgrade`, default variant:
+
+| Package targets | Build | Output files | `vstest.console` |
+| --- | --- | --- | --- |
+| `_MSTestAddPackagesConfigAdapterReferences` removed from the installed targets file | 0 | 118, with no adapter DLLs | exit 0, "No test is available" |
+| Unmodified (file hash restored and verified) | 0 | 120 | exit 0, 2/2 passed |
+
+The RED exit code is 0, so a CI run would not catch this regression. The
+fallback is required.
+
+**SDK consumers.** These used the repository-pinned `dotnet`:
+
+- `sdk-vstest`: `net10.0;net48` with `Microsoft.NET.Test.Sdk`.
+- `sdk-mtp`: `net10.0;net48` with `EnableMSTestRunner=true`.
+- `mstest-sdk`: `MSTest.Sdk`, `net10.0`.
+
+Besides the four variants above, they ran:
+
+- `srl-de`: `SatelliteResourceLanguages=de`.
+- `publish`.
+
+Output files (baseline → candidate):
+
+| Variant | `sdk-vstest` | `sdk-mtp` | `mstest-sdk` |
+| --- | --- | --- | --- |
+| default | 244 | 250 | 207 |
+| nontest | 240 | **246 → 194** | 3 |
+| fr | 248 | 250 | 207 |
+| fr-nocopy | 244 | 198 | 181 |
+| srl-de | 64 | 58 | 83 |
+| publish | 211 | 121 | 206 |
+
+- **The only file-set difference is intended.** In `sdk-mtp` nontest, the
+  baseline copied 52 orphan satellites: 13 cultures ×
+  `MSTest.TestAdapter.resources.dll`/`MSTestAdapter.PlatformServices.resources.dll`
+  × `net10.0`/`net48`. Their assemblies were not copied, so the satellites were
+  never usable.
+- **Test runs.** Every test run in the default, `fr`, `fr-nocopy`, and `srl-de`
+  rows passed 2/2 per target framework on both sides.
+- **nontest outputs.** These are not runnable test applications on either side:
+  - `sdk-vstest` reports "No test is available";
+  - the `sdk-mtp` executable exits `-532462766` on both sides;
+  - `mstest-sdk` produces three files.
+- **`deps.json`.** It differs in every row, as intended: it lists the package's
+  runtime and resource assets instead of synthetic reference entries.
+- **Earlier `sdk-mtp` checks.** These ran against the candidate:
+  - `deps.json` listed 2 adapter runtime assets and 26 adapter resource assets;
+  - the published executable passed 2/2;
+  - `dotnet clean` left no files.
+
+**Asset flow.**
+
+- **`ProjectReference`.** Adapter assets flow through `ProjectReference` as they
+  did from `buildTransitive`.
+- **`ExcludeAssets="runtime"` is a behavior change.** It now removes the
+  adapter, following standard NuGet semantics. VSTest then reports "No test is
+  available" with exit 0; no diagnostic was added. The baseline's
+  `buildTransitive` injection did not honor this setting.
+- **`ExcludeAssets` on the adapter is unchanged.** It also applies to the
+  adapter's own dependencies, as in the baseline. Under MTP, `compile` produces
+  `CS0234` and `runtime` crashes at startup.
+
+### Repository validation
+
+| Command | Result |
+| --- | --- |
+| `.\build.cmd -pack` | Exit 0, 0 warnings, 0 errors |
+| `MSTest.Acceptance.IntegrationTests.exe --progress off --ansi off`, filtered to `AssemblyFixtureProviderDiscoveryTests`, `CleanupCancellationIsolationTests`, `CoreFrameworkAssemblyTests`, `CppCliVSTestTests`, `FrameworkTargetingTests`, `SourceGenerationNonAotTests`, and `WindowsApplicationModelPackageTests` | 133/133 passed |
+| The same executable, filtered to `SdkTests` | 147 passed, 1 skipped (`MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition` requires the gated Windows application-model environment) |
+| `.\eng\bazel\validate-mstest-packages.ps1 -VerifySatelliteSensitivity` | Exit 0 |
+
+The Bazel validation steps:
+
+- **Native consumers** (`net10.0`/`net11.0`): publish, discovery, and pass exit
+  0. The intentional failure exits 2 and empty exits 9.
+- **MSBuild:** pass exits 0 and failure exits 1.
+- **Satellite counterfactual:** removing `lib/net11.0/ko/MSTest.TestAdapter.resources.dll`
+  makes `KoreanSatellitesAreCopiedAndLoadable` fail with exit 2.
+- **Restored package** (`net11.0` consumer): the same results as the native
+  consumers.
+
+The acceptance filters were reconstructed from the produced TRX class
+composition; the literal filter arguments were not retained.
+
+### Test-value evidence
+
+`WindowsApplicationModelPackageTests.PackedMSTestTestAdapter_ContainsOnlyOrdinaryAssets`
+asserts the `lib/<tfm>` entries and the exact nuspec `<references>`. It was run
+with each package placed in `artifacts\packages\Debug\Shipping` in turn:
+
+| Package | Exit | Failure |
+| --- | --- | --- |
+| Baseline (`E8686D40…D228`) | 2 | `Assert.IsEmpty(missing)`: required `lib` entries are missing |
+| Candidate with `<references>` removed (`A8319FD27D0A83CB513BFEC2C412B9E8BE06DA42B1C0746B030CDC9F29080C78`) | 2 | `Assert.AreSequenceEqual`: expected 6 references, actual 0 |
+| Candidate (`7DD4C5AD…ED2B`) | 0 | 1/1 passed |
+
+The packages.config RED→GREEN result and the Bazel satellite counterfactual
+above are consumer-level counterparts.
+
+### Review follow-up: runtime-store publish and packages.config upgrade tests
+
+The PR review raised two issues:
+
+- **Runtime-store publish bypassed the policy.** `dotnet publish --manifest`
+  reruns NuGet asset resolution for publish and ignores the copy-local items
+  that `_MSTestApplyAdapterPackageAssetPolicy` filtered. Under VSTest, all 13
+  adapter cultures were published instead of the build-machine UI culture.
+  With `EnableMSTestV2CopyResources=false`, all 13 were still published. With
+  `IsTestApplication=false`, both adapter DLLs were published. The baseline
+  `buildTransitive` injection did not have this gap. The fix is
+  `_MSTestApplyAdapterPublishAssetPolicy`.
+- **The packages.config upgrade had no automated test.** It is now covered.
+
+Acceptance tests:
+
+- `SdkTests.RuntimeStorePublish_AppliesAdapterAssetPolicy` publishes against a
+  store manifest with `DOTNET_CLI_UI_LANGUAGE=fr`. It asserts the published
+  adapter assemblies and satellite cultures:
+  - `VSTestDefault`: `fr`.
+  - `VSTestWithoutCopyResources`: no cultures.
+  - `MTPDefault`: all 13 cultures.
+  - `NotTestApplication`: no adapter assemblies.
+- `PackagesConfigUpgradeTests.UpgradedProjectWithoutAdapterReferences_CopiesAdapterAndRunsTests`
+  is Windows-only. It needs Visual Studio `MSBuild.exe` and `vstest.console`,
+  and is reported inconclusive without them. The test:
+  - restores the package;
+  - generates a packages.config project with no adapter `<Reference>` items;
+  - builds it;
+  - asserts both adapter DLLs are copied;
+  - runs `vstest.console` without `/TestAdapterPath` and expects 2/2 passed.
+
+Each test was run with both new targets removed from the packed
+`MSTest.TestAdapter.targets`, then with the restored targets. The commands:
+
+- `.\build.cmd -pack -projects <MSTest.TestAdapter.csproj>`.
+- `MSTest.Acceptance.IntegrationTests.exe --progress off --ansi off --filter "FullyQualifiedName~RuntimeStorePublish|FullyQualifiedName~PackagesConfigUpgrade"`.
+
+| Targets | Result |
+| --- | --- |
+| `_MSTestApplyAdapterPublishAssetPolicy` and `_MSTestAddPackagesConfigAdapterReferences` removed | 4 failed, 1 passed (exit code not retained). `MTPDefault`, the control row, passed. The other three runtime-store rows reported the unwanted cultures or adapter DLLs listed above. The packages.config test reported "MSTest.TestAdapter.dll was not copied". |
+| Restored (packed file verified to contain both targets) | 5/5 passed, exit 0 |
+
+The same executable, filtered with
+`"FullyQualifiedName~SdkTests|FullyQualifiedName~SatelliteResourceLanguages|FullyQualifiedName~FrameworkTargeting|FullyQualifiedName~WindowsApplicationModelPackage|FullyQualifiedName~CppCliVSTest|FullyQualifiedName~CoreFrameworkAssembly|FullyQualifiedName~PackagesConfigUpgrade"`,
+exited 0: 239 passed and 1 skipped (`MSTestSdk_ClassicUwpTargetFramework_InfersUwpComposition`, which needs
+the gated Windows application-model environment).
+
+### Remaining gaps
+
+- No CI run has validated this revision.
+- `MSTest.Uwp` and `MSTest.WinUI` are unchanged and were not re-run natively.
+- Native AOT and single-file publishing are untested. Runtime-store publishing
+  is covered only by the four scenarios listed in the review follow-up.
+- Visual Studio design-time builds and Test Explorer were not exercised.
+- Consumers outside this repository that hard-code the former
+  `buildTransitive/<tfm>` DLL paths have not been audited.
+- No servicing or backport decision has been made.
+
 ## Three package families design: 2026-11-18
 
 ### Problem, scope and decision
 
 Design baseline: `28a041287150a48ad48134672c472a481fecf492`.
+
+Relationship to the shipped ordinary-adapter change: the
+[shipping implementation](#shipping-implementation-ordinary-adapter-lib-assets)
+([#12515](https://github.com/microsoft/testfx/pull/12515)) landed after this
+design baseline, so the ordinary `MSTest.TestAdapter` is already `lib`-based on
+`main`. The results recorded below remain bound to the stated baseline. The
+experiment harness accepts both the baseline `buildTransitive` layout and the
+shipped ordinary `lib/<tfm>` layout; UI adapter payloads are unchanged by
+#12515 and still originate from `MSTest.Uwp` and `MSTest.WinUI`.
+
 The current [explicit package design](explicit-mstest-packages.md) combines UI
 framework APIs with an application-model-specific adapter, platform services
 and runner integration. A UI test library cannot choose just the UI framework
