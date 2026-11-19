@@ -98,7 +98,13 @@ extends:
         # and nothing in it ships. Scanning it surfaces alerts for components we cannot service, such as
         # the npm packages vendored inside Microsoft.NET.Runtime.Emscripten.*.Sdk/tools/emscripten/node_modules,
         # which are owned by dotnet/runtime and pinned by the SDK pack.
-        ignoreDirectories: $(Build.SourcesDirectory)/.dotnet
+        #
+        # eng/bazel/ holds the Paket-locked inputs of the separate, non-shipping Bazel dogfood pipeline
+        # (azure-pipelines-bazel.yml), which this pipeline never runs or restores. Component Detection's
+        # paket.lock parser also matches every `- restriction:` clause such as `(>= net8.0)` as a package
+        # with an empty name, logging ~1,700 spurious "Failed to parse paket.lock component" warnings in
+        # each Component Governance run.
+        ignoreDirectories: $(Build.SourcesDirectory)/.dotnet,$(Build.SourcesDirectory)/eng/bazel
     featureFlags:
       autoBaseline: true
     pool:
