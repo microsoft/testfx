@@ -136,8 +136,9 @@ public static partial class AssertExtensions
                 ? FormatValue(constExpr.Value)
                 : CleanExpressionText(indexArg.ToString());
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
         {
+            // FormatValue runs user-defined formatting code, so any exception type is possible.
             return CleanExpressionText(indexArg.ToString());
         }
     }
