@@ -140,6 +140,44 @@ message uses LF; the expectations now normalize both operands. The initial
 normalization used `ReplaceLineEndings`, which does not compile for the test
 project's net462 and net472 targets; it was replaced with `Replace`.
 
+The aligned preview pack from source revision
+`ea45e5221eccb3cfb738b27c264f680b773cfbc6` succeeded with zero warnings and
+errors using `.\build.cmd -pack -c Release /p:VersionSuffix=preview.26599.1`.
+The flat feed is `artifacts\packages\Release\Shipping`. Its
+`Microsoft.Testing.Platform.3.0.0-preview.26599.1.nupkg` SHA-256 is
+`823D53907949B43E6F358258558175136C66DE2032BAFA2D801D018DC5DF703B`,
+and `Microsoft.Testing.Extensions.AzureDevOpsReport.3.0.0-preview.26599.1.nupkg`
+SHA-256 is `D63CBEE1FA9F4394CFF82C00EEB4F9A6DC5318B8EB59B53C6BD3F45C475B05A3`.
+The MSTest family is version `5.0.0-preview.26599.1`. The Azure DevOps
+extension's nuspec requires Platform `[3.0.0-preview.26599.1, 4.0.0)`.
+The feed also contains earlier `-dev` packages, so the acceptance harness
+must use a preview-only copy to avoid its single-version check.
+
+On that revision, Release/net10.0 reporter and heartbeat tests passed 272/272,
+and the Azure-selected extension run passed 637/637, with no skips:
+`.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests
+-f net10.0 -c Release --no-build -- --filter
+'FullyQualifiedName~TerminalTestReporterTests|FullyQualifiedName~SilenceDrivenHeartbeatRendererTests'`
+and `.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests
+-f net10.0 -c Release --no-build -- --filter 'FullyQualifiedName~AzureDevOps'`
+(both exit 0).
+
+The final packed-host pipe selection passed 4/4 with no skips (exit 0) in an
+isolated `ea45e5221eccb3cfb738b27c264f680b773cfbc6` worktree. Its
+preview-only shipping and nonshipping feeds were copied from the pack above;
+Platform, Azure DevOps extension and MSTest framework package SHA-256 values
+matched the originals. `AcceptanceFixture` selects a fresh per-run NuGet cache.
+A temporary `X:` drive mapped the session `files`
+directory to avoid Windows long paths and ancestor analyzer configuration:
+
+```
+X:\parallel-output-preview-acceptance\.dotnet\dotnet.exe X:\parallel-output-preview-acceptance\artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~DotnetTestPipeAzureDevOpsForwardingTests'
+```
+
+Initial attempts with the mixed-version feed, a long executable path, and a
+nested alias failed during fixture setup; none are behavioral failures.
+This fake-SDK pipe test does not replace the real SDK shipping-layout run.
+
 The corrected Release pack (`.\build.cmd -pack -c Release -bl`) succeeded.
 After repacking, the reporter and heartbeat selection passed 271 tests on
 net10.0, with none skipped. A packed-host run of
@@ -166,15 +204,35 @@ its module identity and severity color. The later retry-summary guard does
 not alter the tested method or these assertions. This is a targeted mutation,
 not a pristine-baseline run or proof of the other changed behaviors.
 
+Additional isolated, buildable mutations retained the final tests but changed
+module label colors, removed the separate counted artifact group while keeping
+its contents, and removed contextual percent escaping. The mutant was based on
+`7af3b1fe530272d3b3f2ea0da02ed165745e85ac` with the source/test patch
+SHA-256 `D3C46D43B873610A3D3F84CF29CFDA35B2CD4E7A1BE7854147662108ED7CF0FB`.
+The corrected revision's Release runs above passed the same three targeted
+tests. In the mutant's Debug/net10.0 build, the following commands executed
+with no skips and exited 2:
+
+```
+.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~TestCompleted_ContextualOutput_UsesSelectorToDisambiguateDuplicateModuleNames|FullyQualifiedName~TestExecutionCompleted_ContextualSummary_OrdersExitDescriptionAndSeparatesSelectionSkips'
+.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~EmitsMessageOnlyAnnotation_EscapesLiteralPercentSequenceInAssemblyIdentity'
+```
+
+The two reporter tests failed their color and missing-group assertions (2/2);
+the annotation test failed its expected `%AZP25` command assertion (1/1).
+These mutations establish sensitivity to those specific behaviors, not to
+the entire feature.
+
 | Risk | Planned evidence | Rendered check / gap |
 | --- | --- | --- |
 | Parallel module identity and test outcome | SDK and packed-host mixed-module execution, plus focused reporter cases | Inspect actual terminal; hosted Azure DevOps is separate |
 | Missing TFM, runtime difference, legacy peers | Handshake/identity and compatibility cases | Verify labels do not invent a TFM |
 | Command fidelity, failure and cancellation | SDK composed tests, including nonzero and no-handshake paths | Preserve original command bytes; inspect final verdict ordering |
 
-## Open questions
+## Rollout
 
-The coordinating parent owns SDK dependency flow, shipping-layout validation,
-rollout, release-branch and servicing decisions. Package versions and exact
-shipping branches have not yet been established. Publication is held until the
-parent confirms paired validation.
+This presentation feature targets main alongside the paired SDK main change;
+no servicing backport or downstream release enablement is part of this work.
+Aligned hosts are required to suppress host-owned groups; legacy hosts can still
+emit overlapping groups. The coordinating parent owns paired shipping-layout
+validation and the publication gate.
