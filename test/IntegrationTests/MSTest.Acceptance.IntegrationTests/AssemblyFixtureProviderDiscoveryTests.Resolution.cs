@@ -117,7 +117,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
             extraSource: ActualProviderSource.PatchCodeWithReplace("$ActualVersion$", "2.0.0.0"),
             signing: signing, useVSTest: runner == "VSTest");
 
-        using (var key = new RSACryptoServiceProvider(1024) { PersistKeyInCsp = false })
+        using (var key = new RSACryptoServiceProvider(2048) { PersistKeyInCsp = false })
         {
             File.WriteAllBytes(Path.Combine(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
         }
