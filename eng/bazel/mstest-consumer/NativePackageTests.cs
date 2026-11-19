@@ -48,13 +48,19 @@ public sealed class NativePackageTests
 
         string evidence = Environment.GetEnvironmentVariable("TESTFX_BAZEL_CONSUMER_EVIDENCE")
             ?? throw new InvalidOperationException("The consumer evidence path was not supplied.");
-        File.WriteAllText(evidence, JsonSerializer.Serialize(new
+        string reportPath = Path.Join(Path.GetDirectoryName(Path.GetFullPath(evidence))!, "loaded-assemblies-" + Guid.NewGuid().ToString("N") + ".json");
+        using (FileStream report = File.Open(reportPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
         {
-            Runtime = RuntimeInformation.FrameworkDescription,
-            CoreLib = typeof(object).Assembly.Location,
-            Framework = expectations.RootElement.GetProperty("Framework").GetString(),
-            Assemblies = loaded,
-        }));
+            JsonSerializer.Serialize(report, new
+            {
+                Runtime = RuntimeInformation.FrameworkDescription,
+                CoreLib = typeof(object).Assembly.Location,
+                Framework = expectations.RootElement.GetProperty("Framework").GetString(),
+                Assemblies = loaded,
+            });
+        }
+
+        File.AppendAllLines(evidence, [reportPath]);
     }
 
     [TestMethod]
@@ -80,9 +86,31 @@ public sealed class NativePackageTests
     }
 
     [TestMethod]
-    public void PackagedTargetsProvideExtensionsAndParallelization()
+    public void PackagedTargetsProvideCoreAndParallelization()
     {
         Assert.AreEqual("MSTest.TestFramework", typeof(TestContext).Assembly.GetName().Name);
+        Assert.AreSame(typeof(Assert).Assembly, typeof(TestContext).Assembly);
+        Assert.AreSame(typeof(Assert).Assembly, typeof(DeploymentItemAttribute).Assembly);
+        Assert.IsTrue(File.Exists(Path.Join(AppContext.BaseDirectory, "MSTest.TestFramework.Extensions.dll")), "The core package must provide the native compatibility facade.");
+        Assembly compatibility = Assembly.Load("MSTest.TestFramework.Extensions");
+        Assert.AreSame(typeof(TestContext), compatibility.GetType(typeof(TestContext).FullName!));
+        Assert.AreSame(typeof(DeploymentItemAttribute), compatibility.GetType(typeof(DeploymentItemAttribute).FullName!));
+        Assert.IsFalse(compatibility.DefinedTypes.Any(type => type.IsPublic || type.IsNestedPublic));
+        Assert.IsTrue(compatibility.GetForwardedTypes().All(type => type.Assembly == typeof(Assert).Assembly));
+        string[] directories =
+        [
+            nameof(TestContext.TestRunDirectory),
+            nameof(TestContext.DeploymentDirectory),
+            nameof(TestContext.ResultsDirectory),
+            nameof(TestContext.TestRunResultsDirectory),
+            nameof(TestContext.TestResultsDirectory),
+            nameof(TestContext.TestTempDirectory),
+        ];
+        foreach (string directory in directories)
+        {
+            Assert.IsNotNull(typeof(TestContext).GetProperty(directory), directory);
+        }
+
         ParallelizeAttribute? parallelize = typeof(NativePackageTests).Assembly.GetCustomAttribute<ParallelizeAttribute>();
         Assert.IsNotNull(parallelize);
         Assert.AreEqual(ExecutionScope.MethodLevel, parallelize.Scope);

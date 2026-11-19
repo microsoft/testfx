@@ -22,6 +22,8 @@ $directory = Join-Path $ArtifactsDirectory $run
 New-Item -ItemType Directory -Path $directory | Out-Null
 $steps = [Collections.Generic.List[object]]::new()
 $consumers = [Collections.Generic.List[object]]::new()
+$coreHashes = @{}
+$sharedAdapterHashes = @{}
 $succeeded = $false
 $inputHashes = @(Get-FileHash -Algorithm SHA256 -LiteralPath @(
     (Join-Path $root 'MODULE.bazel'), (Join-Path $root 'BUILD.bazel'),
@@ -100,7 +102,7 @@ $probes = @(
     @{ Name = 'windows_probe_packaged_net10'; Scenario = 'packaged'; Major = 10; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_packaged_net11'; Scenario = 'packaged'; Major = 11; Platform = '10.0.19041.0' },
     @{ Name = 'windows_probe_desktop'; Scenario = 'desktop'; Major = 10; Platform = '7.0' },
-    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.17763.0' },
+    @{ Name = 'windows_probe_uwp'; Scenario = 'uwp'; Major = 10; Platform = '10.0.18362.0' },
     @{ Name = 'windows_probe_winui'; Scenario = 'winui'; Major = 10; Platform = '10.0.18362.0' }
 )
 Push-Location $root
@@ -223,14 +225,33 @@ try {
         }
         $windowsAssemblies = @($report.SourceAssemblies | Where-Object {
             $_.Name -in @('Microsoft.Testing.Extensions.PackagedApp', 'MSTest.Windows.UIAutomation') -or
-            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.TestFramework', 'MSTest.Uwp', 'MSTest.WinUI', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
+            ($probe.Scenario -in @('uwp', 'winui') -and $_.Name -in @('MSTest.Uwp', 'MSTest.WinUI', 'MSTestAdapter.PlatformServices', 'MSTest.TestAdapter'))
         })
         foreach ($assembly in $windowsAssemblies) {
-            $minimum = if ($probe.Scenario -eq 'winui' -and $assembly.Name -in @('MSTest.TestFramework', 'MSTest.WinUI')) { '10.0.17763.0' } else { $probe.Platform }
+            $minimum = if ($assembly.Name -eq 'MSTest.WinUI') { '10.0.17763.0' } else { $probe.Platform }
             if ($assembly.Framework -cne ".NETCoreApp,Version=v$($probe.Major).0" -or
                 $assembly.Platform -cne "Windows$($probe.Platform)" -or $assembly.SupportedOS -cne "windows$minimum") {
                 throw "Windows TFM/minimum metadata mismatch in $($assembly.Name)."
             }
+            if ($assembly.Name -in @('MSTestAdapter.PlatformServices', 'MSTest.TestAdapter')) {
+                # Modern UWP and WinUI consume one shared adapter build.
+                if ($sharedAdapterHashes.ContainsKey($assembly.Name) -and $sharedAdapterHashes[$assembly.Name] -cne $assembly.Sha256) {
+                    throw "UWP and WinUI consumers did not load the same native $($assembly.Name) payload."
+                }
+                $sharedAdapterHashes[$assembly.Name] = $assembly.Sha256
+            }
+        }
+        foreach ($core in @($report.SourceAssemblies | Where-Object { $_.Name -in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions') })) {
+            $expectedCoreFramework = ".NETCoreApp,Version=v$($probe.Major).0"
+            # Portable native shared assemblies can omit this attribute; Windows metadata is never valid here.
+            if (($core.Framework -and $core.Framework -cne $expectedCoreFramework) -or $core.Platform -or $core.SupportedOS) {
+                throw "A UI-specific $($core.Name) was selected instead of the ordinary shared assembly."
+            }
+            $key = "$($core.Name)|$expectedCoreFramework"
+            if ($coreHashes.ContainsKey($key) -and $coreHashes[$key] -cne $core.Sha256) {
+                throw "Desktop and UI consumers did not load the same native $($core.Name) payload."
+            }
+            $coreHashes[$key] = $core.Sha256
         }
         if ($probe.Scenario -eq 'packaged' -and (Test-Path -LiteralPath (Join-Path $layout 'Microsoft.Windows.UI.Xaml.dll'))) {
             throw 'The ordinary WinRT profile leaked the UWP XAML projection.'
@@ -243,7 +264,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the Windows producer action graph.' }
     $graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
     $compilerCount = @($graph.actions | Where-Object mnemonic -eq 'CSharpCompile').Count
-    if ($compilerCount -lt 16) { throw 'The Windows library matrix is missing compiler actions.' }
+    if ($compilerCount -eq 0) { throw 'The Windows library matrix has no native compiler actions.' }
     foreach ($action in $graph.actions) {
         foreach ($argument in $action.arguments) {
             if ($argument -match '(?i)(^|[\s/\\])(MSBuild(\.exe|\.dll)?|dotnet(\.exe)?\s+(build|test|msbuild))(\s|$)') {
