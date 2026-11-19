@@ -502,9 +502,9 @@ Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: 'Normal
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <target state="translated">İlerlemenin ekrana bildirilip bildirilmediğini denetler.
+Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).
+Terminal yerinde güncelleştirilemiyorsa (örneğin --ansi off veya CI ortamında olduğu gibi) 'auto' ilerleme durumunu gösterir.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">

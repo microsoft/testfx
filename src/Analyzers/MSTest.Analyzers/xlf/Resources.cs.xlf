@@ -867,7 +867,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="translated">Upřednostňovat asynchronní metody kontrolních výrazů</target>
+        <target state="translated">Upřednostňovat async metody kontrolních výrazů</target>
         <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">

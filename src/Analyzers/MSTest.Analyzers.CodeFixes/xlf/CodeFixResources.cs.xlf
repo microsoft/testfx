@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
-        <target state="translated">Použít asynchronní kontrolní výraz</target>
+        <target state="translated">Použít async kontrolní výraz</target>
         <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
