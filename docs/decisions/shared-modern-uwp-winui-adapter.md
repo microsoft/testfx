@@ -414,11 +414,82 @@ empty deployment properties on UI app models instead of skipping the check.
 
 **Test-value evidence:** this is a behavior-preserving refactor, so the
 evidence is green-before/green-after on the same suites, plus new tests that
-pin the preserved contract. Not run: the packaged
-`MSTest.Acceptance.IntegrationTests` WinUI DeploymentItem rejection scenario
-in `WinUITests` (needs `-pack` and `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS`), and
-classic-UWP runtime execution (no classic-UWP unit-test TFM; compile-only
-coverage).
+pin the preserved contract. The initial validation did not run the WinUI
+acceptance scenarios; the follow-up below closes that gap. Classic-UWP runtime
+execution remains outside this focused validation (no classic-UWP unit-test
+TFM; compile-only coverage).
+
+### Packed WinUI acceptance follow-up (2026-11-19)
+
+Validated the clean implementation revision
+`2994e1d8928696580b904eecbb5ab7079e3f4ccc`, using SDK
+`12.0.100-alpha.1.26562.108`, Release `MSTest.*` `5.0.0-dev` and MTP
+`3.0.0-dev`. The full Release pack succeeded with 0 warnings and 0 errors.
+Windows app-model preflight passed with Developer Mode already enabled;
+no machine settings or pre-existing registrations were changed.
+
+The two acceptance boundaries are distinct: `WinUITests` consumes the shipping
+WinUI NuGet payload without package identity and is Windows-only, but does
+**not** require `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS`. The actual registered
+WinUI application is covered by `PackagedWinUITests`, which requires that gate.
+
+| Selection | Executed result and observed contract |
+| --- | --- |
+| `SimpleWinUITestCase` | Passed; the generated `net11.0-windows10.0.19041.0` host exited 0 with 1 passed test and preserved null UI deployment-directory properties. |
+| `Deployment_Reflection`, `Deployment_Rooting`, `Deployment_ReflectionFree` | All 3 passed. Each generated host exited 2 with exactly 6 expected failures, 1 pass and 2 skips. The assertions checked individual TRX names/outcomes, inherited attributes, folded/unfolded rows, the rejection message, absence of the test-body failure marker, and the selected metadata provider. |
+| `PackagedFullTrustWinUI_RegistersActivatesConnectsBackRunsUiTestsAndCleansUp` | Passed. The real `net10.0-windows10.0.19041.0` / `win-x64` app registered and activated, connected back, exited 0, and recorded all 5 expected plain/identity/isolation/execution-ID/UI-dispatcher tests. Its exact AUMID and install/launch directory matched the generated layout; registration cleanup succeeded. |
+
+Independent discovery selected 4 and 1 cases respectively. The execution
+verifier confirmed planned/selected/executed/passed counts of 4 and 1, with
+zero outer failures or skips and both outer exits 0. The initial discovery
+attempt without an explicit `--list-tests text` format failed CLI parsing;
+it executed no tests and is not counted as evidence.
+
+Package and consumer provenance was checked after execution, not inferred
+from version strings. Six restore graphs used the run-owned primary caches
+(also listing the Visual Studio fallback folder); 19 cached shipping packages
+matched the freshly packed archives. All 12 copied adapter DLLs, across the
+five consumers and the additional compiled source-generation smoke variant,
+matched the WinUI package payload. That extra smoke variant was built, not
+counted as an additional executed test.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `MSTest.WinUI.5.0.0-dev.nupkg` | `3259F879A68036CFA17DA8472B9469BB101E12FF941E904F625A39CFD91E8E08` |
+| `buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll` | `61B9C1E0147032D5500125E70507DE3C51B4FDD2BF679305FF798D2A9EFA276F` |
+| `buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll` | `5F7C3928987CAF8AEE2EB3EF59AC56CDE05C050D2C44B0215B3D87B9F0A53662` |
+
+Successful pack, preflight and execution commands from the worktree root:
+
+```powershell
+.\build.cmd -pack -c Release -bl
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -File .\eng\pipelines\test-windows-app-model-preflight.ps1 -Mode Preflight
+$results = Join-Path $PWD 'artifacts\TestResults\Release\app-model-capabilities-2994e1d-20261119'
+$env:TESTFX_AZDO_LIVE_PUBLISHING = 'false'
+$env:Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup = '0'
+$env:MSTEST_ACCEPTANCE_SKIP_SOURCEGEN = 'false'
+# These fresh parent-owned caches carry the CollectionPackageCache marker.
+$env:TESTFX_COLLECTION_NUGET_CACHE = Join-Path $PWD 'artifacts\tmp\ui-cap-2994\contract-cache'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release --no-build --filter 'FullyQualifiedName~MSTest.Acceptance.IntegrationTests.WinUITests.' -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results\contract" "-bl:$results\contract\execution.binlog" --show-test-results all
+$env:TESTFX_COLLECTION_NUGET_CACHE = Join-Path $PWD 'artifacts\tmp\ui-cap-2994\packaged-cache'
+$env:TESTFX_RUN_WINDOWS_APP_MODEL_TESTS = '1'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release --no-build --filter 'FullyQualifiedName~PackagedWinUITests.PackagedFullTrustWinUI_RegistersActivatesConnectsBackRunsUiTestsAndCleansUp' -p:UsingDotNetTest=true "-p:ArtifactsTestResultsDir=$results\packaged" "-bl:$results\packaged\execution.binlog" --show-test-results all
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -File .\eng\pipelines\test-windows-app-model-preflight.ps1 -Mode LeakCheck
+```
+
+Environment overrides were confined to the individual command processes.
+Logs, outer/child TRX, binlogs, generated restore/import records, identity and
+execution markers, and package/payload hash evidence are retained under the
+results directory above. Run-owned generated layouts and caches were removed
+after preserving the evidence; the leak check found no reserved test package
+registrations.
+
+These are post-change composed-product checks, supplementing the unit-level
+green-before/green-after evidence, not a new red-phase comparison. The existing
+`WindowsAppModel` CI job selects the real activation case via
+`WindowsApplicationModel`; no CI run or publication was performed here.
+Classic UWP and the full Windows app-model matrix were not rerun, and this
+follow-up does not establish release-branch/backport validation.
 
 ## Open questions
 
