@@ -67,9 +67,9 @@ parameters:
   type: boolean
   default: false
 - name: EnableCTSCollection
-  displayName: "Compare CTS collection on main (requires public CTS package)"
+  displayName: "Compare CTS collection on main"
   type: boolean
-  default: false
+  default: true
 - name: EnableBuildXL
   displayName: "Build the repository with BuildXL in separate Windows legs"
   type: boolean
