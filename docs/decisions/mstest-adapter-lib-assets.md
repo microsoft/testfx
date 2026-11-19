@@ -730,7 +730,7 @@ design baseline, so the ordinary `MSTest.TestAdapter` is already `lib`-based on
 `main`. The results recorded below remain bound to the stated baseline. The
 experiment harness accepts both the baseline `buildTransitive` layout and the
 shipped ordinary `lib/<tfm>` layout; UI adapter payloads are unchanged by
-#12515 and still originate from `MSTest.Uwp` and `MSTest.WinUI`.
+[#12515](https://github.com/microsoft/testfx/pull/12515) and still originate from `MSTest.Uwp` and `MSTest.WinUI`.
 
 The current [explicit package design](explicit-mstest-packages.md) combines UI
 framework APIs with an application-model-specific adapter, platform services
