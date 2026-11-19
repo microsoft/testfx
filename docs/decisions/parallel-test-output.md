@@ -136,7 +136,9 @@ passed 272/272. After the escaping correction, the extension tests built with
 'FullyQualifiedName~AzureDevOpsTests|FullyQualifiedName~CiReporterLifecycleBehaviorTests'`
 passed 40/40 with no skips (both exit 0). A previous run failed two new
 assertions because raw string source line endings were CRLF while the decoded
-message uses LF; the expectations now normalize both operands.
+message uses LF; the expectations now normalize both operands. The initial
+normalization used `ReplaceLineEndings`, which does not compile for the test
+project's net462 and net472 targets; it was replaced with `Replace`.
 
 The corrected Release pack (`.\build.cmd -pack -c Release -bl`) succeeded.
 After repacking, the reporter and heartbeat selection passed 271 tests on

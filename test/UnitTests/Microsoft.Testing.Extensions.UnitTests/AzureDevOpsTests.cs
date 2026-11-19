@@ -352,8 +352,8 @@ public sealed class AzureDevOpsTests
             """
             vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%3BOne.dll)
             failure
-            """.ReplaceLineEndings("\n"),
-            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).ReplaceLineEndings("\n"));
+            """.Replace("\r\n", "\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).Replace("\r\n", "\n"));
 
         // When DECODE_PERCENTS=false, the agent intentionally leaves the percent token
         // unchanged; there is no supported way to preserve a literal percent otherwise.
@@ -361,8 +361,8 @@ public sealed class AzureDevOpsTests
             """
             vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%AZP253BOne.dll)
             failure
-            """.ReplaceLineEndings("\n"),
-            DecodeAzurePipelinesAgentCommand(text, decodePercents: false).ReplaceLineEndings("\n"));
+            """.Replace("\r\n", "\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: false).Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -377,8 +377,8 @@ public sealed class AzureDevOpsTests
             """
             vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module;One.dll)
             failure
-            """.ReplaceLineEndings("\n"),
-            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).ReplaceLineEndings("\n"));
+            """.Replace("\r\n", "\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).Replace("\r\n", "\n"));
     }
 
     [TestMethod]

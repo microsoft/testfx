@@ -235,8 +235,9 @@ public sealed class TerminalTestReporterTests
         Assert.IsGreaterThanOrEqualTo(groupStart, groupEnd);
 
         int artifactGroupStart = output.IndexOf("##[group]Artifacts: 2", groupEnd, StringComparison.Ordinal);
-        int artifactGroupEnd = output.IndexOf("##[endgroup]", artifactGroupStart, StringComparison.Ordinal);
         Assert.IsGreaterThan(groupEnd, artifactGroupStart);
+
+        int artifactGroupEnd = output.IndexOf("##[endgroup]", artifactGroupStart, StringComparison.Ordinal);
         Assert.IsGreaterThan(artifactGroupStart, artifactGroupEnd);
 
         int totalCountIndex = output.IndexOf("  total: 4", artifactGroupEnd, StringComparison.Ordinal);
