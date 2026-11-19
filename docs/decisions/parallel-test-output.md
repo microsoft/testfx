@@ -35,7 +35,13 @@ aggregate coverage percentages from incompatible measurements.
   can negotiate protocol 1.0 without recognizing this message. Dispatch it
   only when the SDK explicitly advertises support in its handshake; missing,
   false, invalid, or incompatible capabilities retain the previous no-progress
-  fallback. IDE progress continues through test-result messages.
+  fallback. IDE progress continues through test-result messages. This
+  optional SDK reply property (`TestInProgressSupported`, byte 22, boolean
+  `true`) changes the original no-wire-change plan because a base-version
+  check cannot distinguish older 1.0 SDKs without the serializer and handler.
+  The paired SDK owns advertising support only on accepted handshakes; the
+  TestFx host owns dispatch. The source-only ServerMode client links JSON-RPC
+  sources, not this dotnet-test pipe handshake. No backport is planned.
 - 2026-11-19: The coordinator identified three gaps against the approved
   mockup: host-owned error annotations need an assembly identity, module labels
   need optional non-outcome colors, and artifact paths need their own counted

@@ -36,7 +36,7 @@ internal static class FakeDotnetTestSdk
         bool advertiseServerControlPipe = false,
         string? toolName = null,
         string? coverageSummaryVersion = null,
-        bool advertiseTestInProgress = false,
+        string? testInProgressSupport = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(testHost);
@@ -110,7 +110,7 @@ internal static class FakeDotnetTestSdk
                 receivedHandshake = DotnetTestPipeProtocol.DecodeHandshakeBody(frame.Body);
                 string selected = SelectHighestMutuallySupportedVersion(receivedHandshake, supportedProtocolVersions);
                 negotiatedVersion = selected;
-                sentHandshakeReply = BuildSdkHandshakeReply(selected, isIde, controlOsPipeName, coverageSummaryVersion, advertiseTestInProgress);
+                sentHandshakeReply = BuildSdkHandshakeReply(selected, isIde, controlOsPipeName, coverageSummaryVersion, testInProgressSupport);
                 byte[] replyBody = DotnetTestPipeProtocol.EncodeHandshakeBody(sentHandshakeReply);
                 await DotnetTestPipeProtocol.WriteFrameAsync(stream, DotnetTestPipeProtocol.SerializerIds.HandshakeMessage, replyBody, cancellationToken).ConfigureAwait(false);
             }
@@ -218,7 +218,7 @@ internal static class FakeDotnetTestSdk
     }
 
     private static Dictionary<byte, string> BuildSdkHandshakeReply(
-        string selectedVersion, bool isIde, string? serverControlPipeName = null, string? coverageSummaryVersion = null, bool advertiseTestInProgress = false)
+        string selectedVersion, bool isIde, string? serverControlPipeName = null, string? coverageSummaryVersion = null, string? testInProgressSupport = null)
     {
         Dictionary<byte, string> properties = new(capacity: 6)
         {
@@ -244,9 +244,9 @@ internal static class FakeDotnetTestSdk
             properties.Add(DotnetTestPipeProtocol.HandshakeProperties.CoverageSummaryVersion, coverageSummaryVersion);
         }
 
-        if (advertiseTestInProgress)
+        if (testInProgressSupport is not null)
         {
-            properties.Add(DotnetTestPipeProtocol.HandshakeProperties.TestInProgressSupported, bool.TrueString);
+            properties.Add(DotnetTestPipeProtocol.HandshakeProperties.TestInProgressSupported, testInProgressSupport);
         }
 
         return properties;

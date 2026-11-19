@@ -29,10 +29,11 @@ public sealed class DotnetTestPipeTargetFrameworkTests : AcceptanceTestBase<NopA
         => VerifyTargetFrameworkAsync("net10.0-windows10.0.19041.0", suppressTargetAttribute: false, expectedTarget: "net10.0-windows10.0.19041.0");
 
     [TestMethod]
-    [DataRow(true, false, DisplayName = "ProgressCapableSdk")]
-    [DataRow(false, false, DisplayName = "ProgressLegacySdk")]
-    [DataRow(true, true, DisplayName = "ProgressIde")]
-    public async Task DotnetTestPipe_ProgressHonorsPeerCapability(bool advertiseProgress, bool isIde)
+    [DataRow("true", false, DisplayName = "ProgressCapableSdk")]
+    [DataRow(null, false, DisplayName = "ProgressLegacySdk")]
+    [DataRow("false", false, DisplayName = "ProgressDisabled")]
+    [DataRow("true", true, DisplayName = "ProgressIde")]
+    public async Task DotnetTestPipe_ProgressHonorsPeerCapability(string? progressSupport, bool isIde)
     {
         const string assetName = "AssemblyTargetProbe";
         string code = AssetCode
@@ -45,20 +46,20 @@ public sealed class DotnetTestPipeTargetFrameworkTests : AcceptanceTestBase<NopA
         VerifyPackageProvenance(asset, testHost);
 
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
-            testHost, isIde: isIde, advertiseTestInProgress: advertiseProgress, cancellationToken: TestContext.CancellationToken);
+            testHost, isIde: isIde, testInProgressSupport: progressSupport, cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.TestHostResult.ExitCode, result.TestHostResult.ToString());
         RawMessage[] progress = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestInProgressMessages)];
         RawMessage[] results = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.TestResultMessages)];
         Assert.HasCount(isIde ? 2 : 1, results);
-        if (!advertiseProgress || isIde)
+        if (progressSupport != "true" || isIde)
         {
             Assert.IsEmpty(progress);
             return;
         }
 
         RawMessage frame = Assert.ContainsSingle(progress);
-        var decoded = DotnetTestPipeProtocol.DecodeTestInProgressMessagesBody(frame.Body);
+        (string? ExecutionId, string? InstanceId, IReadOnlyList<DiscoveredTest> Tests) decoded = DotnetTestPipeProtocol.DecodeTestInProgressMessagesBody(frame.Body);
         Assert.IsNotNull(result.ReceivedHandshake);
         Assert.AreEqual(result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.ExecutionId], decoded.ExecutionId);
         Assert.AreEqual(result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.InstanceId], decoded.InstanceId);
@@ -66,7 +67,7 @@ public sealed class DotnetTestPipeTargetFrameworkTests : AcceptanceTestBase<NopA
         Assert.AreEqual("target-test", test.Uid);
         Assert.AreEqual("Target test", test.DisplayName);
         List<RawMessage> frames = [.. result.ReceivedMessages];
-        Assert.IsTrue(frames.IndexOf(frame) < frames.IndexOf(results[0]));
+        Assert.IsLessThan(frames.IndexOf(results[0]), frames.IndexOf(frame));
     }
 
     private async Task VerifyTargetFrameworkAsync(string framework, bool suppressTargetAttribute, string? expectedTarget, bool verifyStandalone = false)
