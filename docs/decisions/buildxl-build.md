@@ -24,6 +24,15 @@ the same test passes after reaching the expected missing-assemblies precondition
 checks that explicit `-TestJobs 65` remains invalid. No 65 suites were actually
 executed by these cases.
 
+The boundary test now also asserts the reported effective value is 65. In an
+isolated worktree at `5a87a3183450b2da637050c780c74a68ed2c700b`, the same
+test passed, failed with `65 != 64` after a deliberate 64-job cap was added,
+and passed again after restoring the runner. Each run selected one test; the
+test patch SHA-256 was
+`CF4C721554D845010A1BB3796FC57B5CCD3C23B1B570CCB75A32A5A4AA85D08E`.
+The command was the focused Python invocation above; this probes the reported
+limit before any suite starts, not actual process overlap.
+
 The same change fixes runtime discovery: under `Set-StrictMode`, reading the
 unmatched prerelease group of a stable runtime (for example the `10.0.15` that
 `global.json` installs into `.dotnet`) threw before any suite started.

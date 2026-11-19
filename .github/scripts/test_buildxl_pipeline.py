@@ -370,7 +370,8 @@ class BuildXLPipelineTests(unittest.TestCase):
             capture_output=True, text=True, check=True,
         ).stdout.strip()
         try:
-            (output / "logs").mkdir(parents=True)
+            evidence = output / "logs" / "unit-tests"
+            evidence.mkdir(parents=True)
             (output / "toolchain.json").write_text(
                 json.dumps(
                     {
@@ -386,7 +387,9 @@ class BuildXLPipelineTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (output / "logs" / "phase-timings.json").write_text(
-                json.dumps({"RestoreExitCode": 0, "BuildExitCode": 0}),
+                json.dumps(
+                    {"RestoreExitCode": 0, "BuildExitCode": 0, "RestoreSeconds": 0, "BuildSeconds": 0}
+                ),
                 encoding="utf-8",
             )
             workload = output / "workload.json"
@@ -416,6 +419,9 @@ class BuildXLPipelineTests(unittest.TestCase):
             )
             self.assertEqual(1, process.returncode, process.stdout + process.stderr)
             self.assertIn("Missing selected test assemblies", process.stdout + process.stderr)
+            report = json.loads((evidence / "unit-test-timings.json").read_text(encoding="utf-8-sig"))
+            self.assertEqual(65, report["TestJobs"])
+            self.assertEqual([], report["Suites"])
         finally:
             shutil.rmtree(output, ignore_errors=True)
 
