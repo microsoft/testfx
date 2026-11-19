@@ -322,9 +322,8 @@ including the host-group override and legacy 1.1 peer:
 test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests
 -c Release --no-build -- --filter
 'FullyQualifiedName~DotnetTestPipeAzureDevOpsForwardingTests'` (exit 0).
-This fake-SDK pipe test does not replace the real SDK shipping-layout
-validation. Other behavior sensitivity, resolved-package provenance, and
-rendered-surface validation remain pending.
+This earlier fake-SDK pipe test does not replace real SDK shipping-layout
+validation; later evidence is recorded below.
 
 An isolated, buildable mutation tested the command-classification regression:
 the corrected `TrimStart().StartsWith("::", ...)` was replaced with an
@@ -358,11 +357,22 @@ the annotation test failed its expected `%AZP25` command assertion (1/1).
 These mutations establish sensitivity to those specific behaviors, not to
 the entire feature.
 
-| Risk | Planned evidence | Rendered check / gap |
+The coordinating parent checked the paired SDK candidate
+`097abea96562af8dbeef3ecc61886c465fa16f2e` against the `.5` TestFx packages:
+all 16 composed-case exit records, the mixed-module, heartbeat, held-stream,
+and annotation output, and SDK TRX results (375/375 and published NativeAOT
+41/41). The parent also ran the final real demo in a visible Windows terminal
+at 65 columns by 44 rows: exit 0, with correct two-module test attribution and
+the final verdict. This is Windows x64 evidence, not coverage of other
+operating systems or architectures. The hosted Azure DevOps UI was not
+inspected. An inherited Ctrl+C path returns 130 without a recap; that limitation
+is unchanged by this presentation feature.
+
+| Risk | Evidence | Rendered check / gap |
 | --- | --- | --- |
-| Parallel module identity and test outcome | SDK and packed-host mixed-module execution, plus focused reporter cases | Inspect actual terminal; hosted Azure DevOps is separate |
-| Missing TFM, runtime difference, legacy peers | Handshake/identity and compatibility cases | Verify labels do not invent a TFM |
-| Command fidelity, failure and cancellation | SDK composed tests, including nonzero and no-handshake paths | Preserve original command bytes; inspect final verdict ordering |
+| Parallel module identity and test outcome | SDK mixed-module execution and focused reporter cases | Parent inspected the real terminal; hosted Azure DevOps remains unverified |
+| Missing TFM, runtime difference, legacy peers | Handshake/identity and packed-host compatibility cases | Legacy hosts may emit overlapping groups |
+| Command fidelity, failure and cancellation | SDK composed exit/output checks and packed-host forwarding cases | Final demo verdict inspected; inherited Ctrl+C 130 has no recap |
 
 ## Rollout
 
