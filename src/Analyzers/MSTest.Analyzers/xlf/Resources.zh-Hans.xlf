@@ -920,6 +920,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">首选 'TestMethod' 而不是 'DataTestMethod'</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
+      <trans-unit id="PublicTestClassSuppressorJustification">
+        <source>MSTest test classes should remain public for test discovery.</source>
+        <target state="new">MSTest test classes should remain public for test discovery.</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
         <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
         <target state="translated">当所属测试类已建立等效或更严格的行为时，应移除方法级属性。</target>

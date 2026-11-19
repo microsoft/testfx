@@ -10,6 +10,68 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CA1515_OnlyPublicTestClassesAreSuppressed(bool includeHelper)
+    {
+        string code = $$"""
+            #file PublicTestClasses.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFrameworks$</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <RunAnalyzers>true</RunAnalyzers>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="MSTest.Analyzers" Version="$MSTestVersion$" />
+                <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+              </ItemGroup>
+            </Project>
+
+            #file .editorconfig
+            root = true
+            [*.cs]
+            dotnet_diagnostic.CA1515.severity = warning
+
+            #file Program.cs
+            internal static class Program
+            {
+                private static void Main() { }
+            }
+
+            #file TestCases.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+            [TestClass]
+            public sealed class TestCases
+            {
+                [TestMethod]
+                public void Test() { }
+            }
+
+            #file Helper.cs
+            {{(includeHelper ? "public class Helper { }" : string.Empty)}}
+            """
+            .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(CA1515_OnlyPublicTestClassesAreSuppressed), code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\"",
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(includeHelper ? 1 : 0, result.ExitCode, result.StandardOutput);
+        result.AssertOutputDoesNotContain("TestCases.cs(");
+        if (includeHelper)
+        {
+            result.AssertOutputContains("Helper.cs(1,14): error CA1515");
+        }
+    }
+
+    [TestMethod]
     public async Task PackagedAnalyzersAndCodeFixesRunOnMinimumRoslynHost()
     {
         string code = """"

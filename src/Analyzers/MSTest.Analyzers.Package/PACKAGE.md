@@ -14,6 +14,15 @@ Roslyn assemblies are supplied by the host and are not included in this package.
 Older hosts cannot load these analyzers; use MSTest.Analyzers 4.x if you cannot
 upgrade the host.
 
+## Public test classes
+
+MSTEST0091 suppresses CA1515 (Consider making public types internal) on classes
+marked with MSTest's `TestClassAttribute`, including derived test-class attributes.
+This keeps public test classes compatible with default test discovery without
+disabling CA1515 for unrelated public types. Partial test classes are supported,
+and each annotated nested test class is evaluated on its own; unannotated
+helpers, base classes, and enclosing types are not exempted.
+
 ## Pinning constant contracts
 
 MSTEST0032 reports assertions whose conditions are always true, but permits

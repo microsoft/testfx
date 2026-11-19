@@ -526,6 +526,10 @@ The type declaring these methods should also respect the following rules:
     <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
     <comment>{Locked="AssemblyInitialize"}{Locked="ClassInitialize"}{Locked="TestContext"}{Locked="MSTest"}</comment>
   </data>
+  <data name="PublicTestClassSuppressorJustification" xml:space="preserve">
+    <value>MSTest test classes should remain public for test discovery.</value>
+    <comment>{Locked="MSTest"}</comment>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerDescription" xml:space="preserve">
     <value>MSTest ignores these attributes outside a test context.</value>
     <comment>{Locked="MSTest"}</comment>
