@@ -142,8 +142,10 @@ if ($Stage -eq 'Pack') {
     Write-Utf8 "$RunRoot/Directory.Build.targets" '<Project />'
     $head = (& git -C $repository rev-parse HEAD).Trim()
     Write-Utf8 "$RunRoot/source.json" (@{ head = $head; projects = @($projects | Sort-Object); sdk = (Get-Content "$repository/global.json" -Raw | ConvertFrom-Json).sdk.version } | ConvertTo-Json -Depth 5)
+    # The path is embedded in a single-quoted PowerShell literal, so double any apostrophes.
+    $producerSolution = "$RunRoot/producers.slnx".Replace("'", "''")
     $result = Invoke-Recorded 'producer-pack' (Join-Path $PSHOME 'pwsh.exe') @('-NoProfile', '-Command',
-        "& './Build.cmd' -pack -c Release -projects '$RunRoot/producers.slnx' -bl; exit `$LASTEXITCODE") $repository
+        "& './Build.cmd' -pack -c Release -projects '$producerSolution' -bl; exit `$LASTEXITCODE") $repository
     if ($result.Exit -ne 0) { throw "Producer pack failed; see $RunRoot/logs/producer-pack.log" }
     Copy-Item "$repository/artifacts/log/Release/Build.binlog" "$RunRoot/producer.binlog"
     [IO.Directory]::CreateDirectory("$RunRoot/producer-feed") | Out-Null
