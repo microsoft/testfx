@@ -106,6 +106,11 @@ function Assert-CollectionJobIsolation {
     }
 }
 
+# The CTS comparison job runs only on main, so an unpublished pin would first fail after merge. Update this
+# together with .config/cts/dotnet-tools.json after a newer package is published to and verified on the
+# public test-tools feed.
+$script:PublishedCTSVersion = "2.13.0-alpha.26569.1"
+
 function Assert-CTSComparisonWiring {
     param(
         [string]$Pipeline,
@@ -130,8 +135,8 @@ function Assert-CTSComparisonWiring {
         throw "CTSComparisonHonorsRolloutGates: CTS comparison requires main, enabled tests, and its own explicit opt-in."
     }
 
-    if ($Pipeline -notmatch '- name: EnableCTSCollection\s+displayName:[^\r\n]+\s+type: boolean\s+default: false') {
-        throw "CTSComparisonRequiresPublicPackage: CTS must remain disabled by default until its tool is publicly available and verified."
+    if ($Pipeline -notmatch '- name: EnableCTSCollection\s+displayName:[^\r\n]+\s+type: boolean\s+default: true') {
+        throw "CTSComparisonIsEnabledByDefault: main must run the CTS comparison by default; a run can still opt out with EnableCTSCollection=false."
     }
 
     if ($job -notmatch '(?m)^          timeoutInMinutes: 360\r?$' -or
@@ -171,6 +176,10 @@ function Assert-CTSComparisonWiring {
         $manifest.tools.cts.rollForward -ne $false) {
         throw "CTSComparisonPinsActualTool: the isolated manifest must pin only the CTS tool without runtime roll-forward."
     }
+
+    if ($manifest.tools.cts.version -ne $script:PublishedCTSVersion) {
+        throw "CTSComparisonPinsPublishedPackage: the CTS pin must be the version verified on the public test-tools feed ($script:PublishedCTSVersion). Publish and verify a newer package there, then update the manifest and PublishedCTSVersion together."
+    }
 }
 
 function Invoke-CTSComparisonSelfTest {
@@ -206,9 +215,12 @@ function Invoke-CTSComparisonSelfTest {
             ExpectedFailure = "CTSComparisonHonorsRolloutGates"
         },
         @{
-            Name = "CTSComparisonEnabledBeforePublicPackageIsRejected"
-            Pipeline = [regex]::Replace($Pipeline, '(?s)(- name: EnableCTSCollection.*?default:) false', '$1 true')
-            ExpectedFailure = "CTSComparisonRequiresPublicPackage"
+            Name = "CTSComparisonDisabledByDefaultIsRejected"
+            Pipeline = [regex]::Replace(
+                $Pipeline,
+                '(- name: EnableCTSCollection\s+displayName:[^\r\n]+\s+type: boolean\s+default:) true',
+                '$1 false')
+            ExpectedFailure = "CTSComparisonIsEnabledByDefault"
         },
         @{
             Name = "CTSComparisonSharedTimeoutIsRejected"
@@ -253,6 +265,11 @@ function Invoke-CTSComparisonSelfTest {
             Name = "CTSComparisonRuntimeRollForwardIsRejected"
             ManifestText = $ManifestText.Replace('"rollForward": false', '"rollForward": true')
             ExpectedFailure = "CTSComparisonPinsActualTool"
+        },
+        @{
+            Name = "CTSComparisonUnpublishedPinIsRejected"
+            ManifestText = $ManifestText.Replace($script:PublishedCTSVersion, "2.13.0-alpha.26530.1")
+            ExpectedFailure = "CTSComparisonPinsPublishedPackage"
         }
     )
     Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{

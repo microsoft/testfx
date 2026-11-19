@@ -480,6 +480,92 @@ changed template passes all 12 cases.
 No hosted PR cache hit or time saving is claimed yet; the first PR run after this change that does not touch
 force-all paths must confirm the cache hit in CI.
 
+## CTS comparison activation (2026-11-19)
+
+The request was to enable the CTS comparison on CI so CTS and affected-test collection can be compared over time.
+That is a change to the `main` pipeline default and takes effect only after merge: the job's `Build.SourceBranch` gate
+excludes every other branch, so PR builds still run only the validator self-tests. The contract in
+[CTS comparison: research and decisions](#cts-comparison-research-and-decisions-2026-10-31) is unchanged. The job is
+unofficial and main-only, never selects tests, never publishes CTS data into `TestFx_AffectedTestsMaps`, and leaves PR,
+official, and release validation untouched.
+
+CTS is produced by vs-code-coverage and consumed here only through the public `test-tools` source in `NuGet.config` and
+the isolated `.config/cts/dotnet-tools.json` manifest, which pins an exact version with `rollForward: false`. The
+previous pin, `2.13.0-alpha.26530.1`, was never on that feed, and the producer's recurring publishing job uses a fixed
+allowlist that omits CTS and has no one-off parameter. With explicit authorization, exactly one package was therefore
+pushed to `test-tools`; no producer pipeline was queued or modified:
+
+| Published `cts` package | Value |
+| --- | --- |
+| Version | `2.13.0-alpha.26569.1` |
+| Producer build and commit | `20261119.1` at vs-code-coverage `793e02134d40d0fc571ac00f31017a30cb39a74a` |
+| Size and SHA-256 | 128,899,028 bytes; `A0504C46389BF597EF27CB66EC4890C77D92280917900C11E98DE05BB412D509` |
+| Signature | `dotnet nuget verify --all` exit 0: Microsoft Corporation author signature verified |
+| Public feed | The feed index lists this version; its download SHA-256 equals the signed candidate; a fresh isolated install exits 0 |
+| Identity | `cts --version` prints `2.13.0-alpha.26569.1+793e02134d40d0fc571ac00f31017a30cb39a74a` |
+
+The change touches three files. `.config/cts/dotnet-tools.json` pins the published version, and `azure-pipelines.yml`
+makes `EnableCTSCollection` default to true; queueing a run with `EnableCTSCollection=false` still opts out. In
+`eng/validate-affected-tests.ps1`, `CTSComparisonIsEnabledByDefault` replaces the guard that required the comparison to
+stay off until a public package existed, and `CTSComparisonPinsPublishedPackage` requires the manifest to equal a
+repeated `PublishedCTSVersion`. The validator runs offline on every PR and cannot query the feed, so the repeated
+constant makes an unpublished or mistyped pin fail the PR self-test rather than the first `main` run. The mutation cases
+`CTSComparisonDisabledByDefaultIsRejected` (replacing the old enabled-before-public case) and
+`CTSComparisonUnpublishedPinIsRejected` take the CTS wiring suite from 13 to 14 cases; earlier sections keep the counts
+that were true when they were written. A later CTS version needs another authorized publication, and then the manifest
+and `PublishedCTSVersion` must change together.
+
+Alternatives considered, none run:
+
+- Keep the default off and enable the comparison only by queueing with the parameter. Every sample would then need a
+  person, so it cannot build up the repeated `main` comparison that was requested.
+- Make the CTS step `continueOnError`. It would downgrade a nonzero CTS exit to a warning, contradicting
+  `CTSComparisonPreservesNativeCollection`; the exit status is itself comparison data.
+- Query the feed from the validator. Every PR validation would then depend on network access to an external service.
+- Keep the `26530.1` pin. It was never published, so the first `main` restore would fail.
+
+**Test-value evidence:** the validation base is main `4f3e81cf91366a35d5f280e83f5ddc5f9dbc7d57`, and every table row
+applies this whole change, including this record. The red runs are a behavior-removal comparison in a task-owned
+worktree outside the repository: they keep the implementation validator and swap only the base production configuration,
+so they are not a pristine-baseline run. Using `$project` for the terminal-contract unit-test project and `$evidence`
+for the owned evidence directory:
+
+| Command | Result |
+| --- | --- |
+| `pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false`, with the base `azure-pipelines.yml` and CTS manifest | Exit 1 after the existing Git (12), collection-isolation (19), non-Windows (39), and cache-seed (6) cases pass, at `CTSComparisonIsEnabledByDefault`. |
+| The same command, with the new default and the old pin | Exit 1 at `CTSComparisonPinsPublishedPackage`. |
+| The same command on the exact change | Exit 0; the same 12, 19, 39, and 6 cases, 14 CTS wiring cases, and valid rollout wiring. |
+| The same with `-EnableAffectedTests false -EnableNonWindowsAffectedTests true` | Exit 0 with identical totals. |
+| `pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest` | Exit 0; 5 module-selection and 9 artifact cases. |
+| `dotnet tool restore --tool-manifest .config\cts\dotnet-tools.json --configfile NuGet.config --verbosity diagnostic`, with new empty NuGet package, HTTP, and plugin caches and a new empty `DOTNET_CLI_HOME` | Exit 0 from the public feed without credentials. The log records the `cts.2.13.0-alpha.26569.1.nupkg` download from `test-tools`, and the stored package is 128,899,028 bytes with the signed candidate's SHA-256. |
+| `.\.dotnet\dotnet.exe build $project -c Release "-bl:$evidence\smoke-build.binlog"` | Exit 0; zero warnings and errors. |
+| `.\eng\collect-cts-comparison.ps1 -Configuration Release -ResultsDirectory $evidence\smoke-results` on the clean tree, using the freshly restored tool | Exit 0; the pinned CTS collected 2 modules (net10.0 and net11.0), and all 32 tests (16 per module) were discovered, executed, and passed. `comparison.json` records `ExitCode` 0, the expected version, and available per-test timestamps for both modules. |
+| The same collection with `TESTFX_OTEL_TRACE_DIRECTORY` set as in CI, then `pwsh -NoProfile -File .\eng\verify-test-traces.ps1 -TraceDirectory <that directory>` | Collection exit 0 and verifier exit 0: 34 archives, 576 spans in complete files, 0 incomplete files, so for these modules the processes CTS launches complete their OpenTelemetry traces and the job's trace-verification step has nothing to reject. |
+
+Two setup observations predate the final rebase onto the validation base, so they are not table rows. A first smoke
+attempt on a dirty tree exited 1 because CTS refuses a repository with pending changes; that is not red evidence. An
+earlier restore with only the package and HTTP caches isolated finished in about a second and left them empty, because
+the user-profile tool-resolver cache already recorded the version. A copy of that cache with an empty package cache
+reproduces the skip (0.7 seconds, no download), so the restore row above also isolates `DOTNET_CLI_HOME`.
+
+**Limitations:** no hosted run exists yet because the job cannot run from a PR, so hosted restore, the runtime layout
+under `DOTNET_ROOT`, agent core count, full-suite duration, and exit status are unverified until the first `main` run.
+The smoke, including the trace check, ran two modules with 32 workers against this machine's system runtimes, not the
+48 module/TFM paths of the [full-suite investigation](#full-suite-collection-performance-investigation-2026-11-13). In
+that run (`26530.1`, one sequential run per collector), CTS exited 1 with 45 failed results while the affected-test
+wrapper preserved 47 failed-test batches and exited 0, so a nonzero CTS exit on the first hosted run is plausible. It
+fails the independent `WindowsCTSComparison` job, yet `comparison.json` is written in a `finally` block and the results
+folder is published with `always()`, so the sample is kept. If that noise is unacceptable, queue with
+`EnableCTSCollection=false` or revert the default; do not add `continueOnError`. Media is inapplicable to this CI
+configuration change, so the transcript above stands in for it.
+
+**Observation plan:** after merge, compare each `main` run's `WindowsCTSComparison` job with its `WindowsAffectedTests`
+job: job duration and the `NativeExitCode`, `ExitCode`, `DurationSeconds`, `ModuleCount`, and `TestTimestampsAvailable`
+fields of `CTS\<guid>\comparison.json` in the `TestResults_Windows_CTSComparison_Attempt<N>` artifact. A throwaway-branch
+hosted rehearsal that relaxes the branch gate would add early evidence but spends hosted CI, so it needs separate
+authorization. The coordinator retains the observation, later CTS publication and pin updates, and removal of the job or
+default; no end date was given.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
@@ -490,6 +576,10 @@ force-all paths must confirm the cache hit in CI.
   still fails its job; it is not normalized to success or allowed to consume the Release entry's time budget.
   Main-branch Windows validation entries retain a four-hour budget; the dedicated collection entry has six
   hours. PR jobs retain their two-hour budget.
+- On `main`, when `EnableCTSCollection` is true (the default) and tests are not skipped, an independent
+  `WindowsCTSComparison` job builds Release, restores the pinned CTS tool, and runs `eng/collect-cts-comparison.ps1`.
+  It has a six-hour budget, publishes `TestResults_Windows_CTSComparison_Attempt<N>`, and neither selects tests nor
+  writes to `TestFx_AffectedTestsMaps`; see [CTS comparison activation](#cts-comparison-activation-2026-11-19).
 - With the rollout enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
@@ -568,6 +658,8 @@ feed connection. The producer's public-feed publishing allowlist also omits CTS.
 the existing public `test-tools` source, but keep it disabled until CTS is approved and published there and a
 real composed-product smoke run succeeds. Do not substitute the affected-test extension, invent a service
 connection, publish a private package, or commit credentials to make activation appear successful.
+The 2026-11-19 [CTS comparison activation](#cts-comparison-activation-2026-11-19) later met this prerequisite for the
+current pin; this paragraph records the earlier state.
 
 An isolated main-only job is preferable to adding CTS to Release validation or to the affected-test job:
 both alternatives share deadlines and outputs, and could instrument the same applications concurrently.
@@ -622,7 +714,9 @@ first tool launch lacked the pinned .NET 10 runtime. Neither setup failure count
 The final consumer uses supported `net10.0` and `net462` targets. Full-suite performance, internal TestContainer
 and sample/module parity, public-feed restore, and Azure template expansion against published source remain
 unverified. Enabling `EnableCTSCollection` is therefore not part of this local delivery; publishing/authorizing
-CTS access and repairing the timing contract remain prerequisites.
+CTS access and repairing the timing contract remain prerequisites. The 2026-11-19
+[CTS comparison activation](#cts-comparison-activation-2026-11-19) later met those prerequisites for the current
+pin and enabled the comparison; this paragraph records the earlier state.
 
 ### Collection acceleration implementation (2026-10-31)
 
@@ -821,6 +915,8 @@ consistent with the final affected collector's 24.496–32.759-second range at a
 Independent `--list-tests json` plans contain 1,026 unique cases per framework. Both actual CTS TRX files
 pass the unmodified canonical execution verifier against those plans and pre-execution discovery timestamps.
 This closes the earlier legacy-TRX timestamp gate for the **final local CTS**, not the old pipeline pin.
+The 2026-11-19 smoke run for the new pin reports per-test timestamps for both modules; see
+[CTS comparison activation](#cts-comparison-activation-2026-11-19).
 
 The collection/cache composition invokes the actual built `AcceptanceFixture`, `DotnetCli.RunAsync`
 and `TestHost.ExecuteAsync`, not replacement helpers. Eight real generated restores verify current MTP
@@ -949,6 +1045,8 @@ The full rebuilt 74-module local runtime/discovery/map inventory is now verified
 Public dependency pins are unchanged. `EnableCTSCollection` remains off until the corrected CTS tool is
 approved/published and its pipeline pin updated. The coordinator retains dependency-flow and rollout
 ownership; the local performance results do not authorize downstream activation or private publication.
+The 2026-11-19 [CTS comparison activation](#cts-comparison-activation-2026-11-19) supersedes the
+`EnableCTSCollection`-off statement above for the currently pinned package.
 
 #### Current-main merge validation (2026-11-03)
 
