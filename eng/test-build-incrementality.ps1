@@ -262,8 +262,8 @@ function New-CoverageFixture {
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\$(FixtureModule).csproj" />
-    <ProjectReference Include="$(RepoRoot)src\MSTest.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\MSTest.Compatibility.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework.Compatibility.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Infrastructure.csproj" IsTestInfrastructure="true" />
     <ProjectReference Include="$(RepoRoot)test\Other.Tests.csproj" />
   </ItemGroup>
