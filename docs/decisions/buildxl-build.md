@@ -10,6 +10,20 @@ The report and summary still record the effective `TestJobs`. Consequence: the
 CI test phase is no longer equal-concurrency with Bazel; pass `-TestJobs 2` for
 the parity measurements below.
 
+PowerShell also applies the explicit `0..64` parameter validation on later
+assignments. Automatic concurrency therefore uses a separate effective value:
+custom workloads can use more than 64 processors without changing the existing
+explicit `-TestJobs` limit. The focused regression case
+`test_unit_test_runner_auto_concurrency_can_exceed_explicit_limit` sets
+`DOTNET_PROCESSOR_COUNT=65` for the runner and supplies 65 workload entries.
+On parent `064e3b535c2aa1d9854a186deba89fca2a275849` with the test retained,
+`python .github\scripts\test_buildxl_pipeline.py BuildXLPipelineTests.test_unit_test_runner_auto_concurrency_can_exceed_explicit_limit -v`
+failed because the automatic assignment could not validate 65. With the fix,
+the same test passes after reaching the expected missing-assemblies precondition.
+`test_unit_test_runner_rejects_explicit_concurrency_above_limit` separately
+checks that explicit `-TestJobs 65` remains invalid. No 65 suites were actually
+executed by these cases.
+
 The same change fixes runtime discovery: under `Set-StrictMode`, reading the
 unmatched prerelease group of a stable runtime (for example the `10.0.15` that
 `global.json` installs into `.dotnet`) threw before any suite started.

@@ -6,6 +6,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -335,7 +336,7 @@ class BuildXLPipelineTests(unittest.TestCase):
         for test in workload["tests"]:
             self.assertIn(f"{test['project']}.csproj", solution, test["label"])
 
-    def run_unit_test_runner(self, *arguments: str) -> subprocess.CompletedProcess:
+    def run_unit_test_runner(self, *arguments: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
         if sys.platform != "win32":
             self.skipTest("The BuildXL unit-test runner is Windows-only.")
 
@@ -345,6 +346,7 @@ class BuildXLPipelineTests(unittest.TestCase):
                 "-File", str(ROOT / "eng" / "buildxl" / "run-unit-tests.ps1"), *arguments,
             ],
             cwd=ROOT,
+            env=env,
             capture_output=True,
             text=True,
             timeout=120,
@@ -359,6 +361,68 @@ class BuildXLPipelineTests(unittest.TestCase):
         self.assertEqual(1, process.returncode, process.stdout + process.stderr)
         self.assertIn("toolchain.json", process.stdout + process.stderr)
         self.assertFalse(output.exists(), "A failed precondition must not create evidence.")
+
+    def test_unit_test_runner_auto_concurrency_can_exceed_explicit_limit(self) -> None:
+        output_id = "runner-auto-limit-" + uuid.uuid4().hex[:12]
+        output = ROOT / "artifacts" / "buildxl-runs" / output_id
+        revision = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        try:
+            (output / "logs").mkdir(parents=True)
+            (output / "toolchain.json").write_text(
+                json.dumps(
+                    {
+                        "SourceRevision": revision,
+                        "Sdk": "10.0.100",
+                        "Engine": "BuildXL",
+                        "Configuration": "Debug",
+                        "DotNetRoot": str(ROOT / ".dotnet"),
+                        "Project": "TestFx.slnx",
+                        "TargetFramework": "Project defaults",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (output / "logs" / "phase-timings.json").write_text(
+                json.dumps({"RestoreExitCode": 0, "BuildExitCode": 0}),
+                encoding="utf-8",
+            )
+            workload = output / "workload.json"
+            workload.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "name": "auto-limit",
+                        "identityPolicy": "trx",
+                        "targetFramework": "net10.0",
+                        "tests": [
+                            {
+                                "label": f"//:suite_{index}",
+                                "project": f"Suite{index}",
+                                "assembly": f"Suite{index}",
+                                "runtime": "sdk",
+                            }
+                            for index in range(65)
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            process = self.run_unit_test_runner(
+                "-OutputId", output_id, "-Workload", str(workload),
+                env={**os.environ, "DOTNET_PROCESSOR_COUNT": "65"},
+            )
+            self.assertEqual(1, process.returncode, process.stdout + process.stderr)
+            self.assertIn("Missing selected test assemblies", process.stdout + process.stderr)
+        finally:
+            shutil.rmtree(output, ignore_errors=True)
+
+    def test_unit_test_runner_rejects_explicit_concurrency_above_limit(self) -> None:
+        process = self.run_unit_test_runner("-TestJobs", "65")
+        self.assertNotEqual(0, process.returncode, process.stdout + process.stderr)
+        self.assertIn("TestJobs", process.stdout + process.stderr)
 
     def test_unit_test_runner_rejects_build_output_without_a_successful_build(self) -> None:
         output_id = "runner-partial-" + uuid.uuid4().hex[:12]

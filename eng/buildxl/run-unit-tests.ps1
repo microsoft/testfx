@@ -77,6 +77,7 @@ $logs = Join-Path $output 'logs'
 $evidence = Join-Path $logs 'unit-tests'
 $trxDirectory = Join-Path $evidence 'trx'
 $workloadPath = [IO.Path]::GetFullPath($Workload, $repo)
+$effectiveTestJobs = $TestJobs
 
 $report = [ordered]@{
     SchemaVersion = 1
@@ -161,10 +162,10 @@ try {
 
     $selection = @($workloadDefinition.tests)
     if ($TestJobs -eq 0) {
-        $TestJobs = [math]::Max(1, [math]::Min([Environment]::ProcessorCount, $selection.Count))
+        $effectiveTestJobs = [math]::Max(1, [math]::Min([Environment]::ProcessorCount, $selection.Count))
     }
 
-    $report.TestJobs = $TestJobs
+    $report.TestJobs = $effectiveTestJobs
     $labels = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     foreach ($test in $selection) {
         if ($test.label -notmatch '^//:[a-z0-9_]+$' -or $test.project -notmatch '^[A-Za-z0-9._-]+$' -or
@@ -394,7 +395,7 @@ try {
     $running = [Collections.Generic.List[object]]::new()
     $testWatch = [Diagnostics.Stopwatch]::StartNew()
     while ($pending.Count -or $running.Count) {
-        while ($pending.Count -and $running.Count -lt $TestJobs) {
+        while ($pending.Count -and $running.Count -lt $effectiveTestJobs) {
             $running.Add((Start-Suite $pending.Dequeue()))
         }
 
@@ -456,7 +457,7 @@ finally {
         }
 
         $lines.Add("| Runtime bootstrap (outside the test phase) | $($report.RuntimeInstallSeconds) |")
-        $lines.Add("| Unit tests ($($suites.Count) suites, $TestJobs at a time) | $($report.TestSeconds) |")
+        $lines.Add("| Unit tests ($($suites.Count) suites, $effectiveTestJobs at a time) | $($report.TestSeconds) |")
         $lines.Add("| Pack | $(if ($packed) { 'included in Build' } else { 'not run' }) |")
         $lines.Add('')
         $lines.Add('| Suite | Runtime | Seconds | Total | Passed | Failed | Skipped | Selection hash |')
