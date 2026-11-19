@@ -6,6 +6,12 @@ Keep suppressor IDs in this catalog rather than in `AnalyzerReleases.Shipped.md`
 `AnalyzerReleaseTrackingTests` verifies the suppression IDs and their suppressed diagnostic IDs.
 Add new suppressors under an `Unshipped` heading, then move them to their release heading when shipped.
 
+## Unshipped
+
+Suppression ID | Suppressed diagnostic ID | Notes
+--------------|--------------------------|-------
+MSTEST0091 | CA1515 | PublicTestClassSuppressor
+
 ## Release 3.10.0
 
 Suppression ID | Suppressed diagnostic ID | Notes
