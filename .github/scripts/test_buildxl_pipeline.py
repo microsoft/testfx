@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 JOURNAL_STEP = "Initialize BuildXL change journal"
 CACHE_STEP = "Cache BuildXL actions"
 BUILD_STEP = "Build repository with BuildXL"
-TEST_STEP = "Run Bazel-matched unit tests with BuildXL outputs"
+TEST_STEP = "Run unit tests"
 COLLECT_STEP = "Collect BuildXL engine and project logs"
 PUBLISH_STEP = "Publish BuildXL build logs"
 MAC_CACHE_HELPER = "Initialize-VisualStudioTelemetryMacCache"
@@ -520,7 +520,7 @@ class BuildXLPipelineTests(unittest.TestCase):
                         encoding="utf-8-sig"
                     ).replace("\r\n", "\n")
                     phase_table = re.sub(
-                        r"(?m)^(\| Unit tests \(1 suites, 2 at a time\) \| )[\d.]+ \|$",
+                        r"(?m)^(\| Unit tests \(1 suites, 1 at a time\) \| )[\d.]+ \|$",
                         r"\1<seconds> |",
                         summary.split("\n\n")[1],
                     )
@@ -532,7 +532,7 @@ class BuildXLPipelineTests(unittest.TestCase):
                                 "| Restore | 12.5 |",
                                 build_row,
                                 "| Runtime bootstrap (outside the test phase) | 0 |",
-                                "| Unit tests (1 suites, 2 at a time) | <seconds> |",
+                                "| Unit tests (1 suites, 1 at a time) | <seconds> |",
                                 pack_row,
                             ]
                         ),

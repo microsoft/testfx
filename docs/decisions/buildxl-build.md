@@ -1,5 +1,30 @@
 # BuildXL build: research and decisions
 
+## 2026-11-19: run the BuildXL unit suites on all agent cores
+
+The CI step (renamed from "Run Bazel-matched unit tests with BuildXL outputs"
+to "Run unit tests") previously ran 2 suites at a time to match Bazel's dogfood
+`-TestJobs 2`. `eng\buildxl\run-unit-tests.ps1 -TestJobs` now defaults to `0`,
+which runs one suite per logical processor, capped at the 13 workload suites.
+The report and summary still record the effective `TestJobs`. Consequence: the
+CI test phase is no longer equal-concurrency with Bazel; pass `-TestJobs 2` for
+the parity measurements below.
+
+The same change fixes runtime discovery: under `Set-StrictMode`, reading the
+unmatched prerelease group of a stable runtime (for example the `10.0.15` that
+`global.json` installs into `.dotnet`) threw before any suite started.
+
+Validation: a synthetic output (13 placeholder assemblies, 32-core machine)
+reported `TestJobs=13` and `13 at a time` by default and `2 at a time` with
+`-TestJobs 2`; both exited 1 with per-suite failures. A real BuildXL build was not
+possible locally (no change journal on the volume, SharedOpaque cleanup errors).
+
+`dotnet test` (MTP mode, `--test-modules`) was considered and rejected: it hosts
+every module with the SDK muxer and one environment, so it cannot run
+`analyzer_tests` and `server_client_tests` on the workload-pinned private
+runtime, set per-suite roll-forward or the generator hook, or keep per-suite
+stdout/stderr. It would also bypass the build-output preconditions.
+
 ## 2026-11-17: run the Bazel-matched unit suites on BuildXL outputs
 
 ### Problem and contract

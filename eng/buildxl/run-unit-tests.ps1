@@ -23,8 +23,9 @@ param(
     [ValidatePattern('^$|^[a-z0-9][a-z0-9-]{0,80}$')]
     [string] $OutputId = '',
     [string] $Workload = 'eng\bazel\dogfood-workload.json',
-    [ValidateRange(1, 16)]
-    [int] $TestJobs = 2,
+    # 0 runs one suite per logical processor, up to the number of suites. Pass 2 to match Bazel's dogfood concurrency.
+    [ValidateRange(0, 64)]
+    [int] $TestJobs = 0,
     [ValidateRange(1, 86400)]
     [int] $TestTimeoutSeconds = 1800
 )
@@ -48,7 +49,7 @@ function Get-InstalledRuntimes([string] $DotNet) {
             [pscustomobject]@{
                 Version = $Matches.version
                 Core = [version] $Matches.core
-                Stable = -not $Matches.pre
+                Stable = -not $Matches.ContainsKey('pre')
             }
         }
     }
@@ -159,6 +160,11 @@ try {
     $report.WorkloadSha256 = (Get-FileHash -LiteralPath $workloadPath -Algorithm SHA256).Hash
 
     $selection = @($workloadDefinition.tests)
+    if ($TestJobs -eq 0) {
+        $TestJobs = [math]::Max(1, [math]::Min([Environment]::ProcessorCount, $selection.Count))
+    }
+
+    $report.TestJobs = $TestJobs
     $labels = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     foreach ($test in $selection) {
         if ($test.label -notmatch '^//:[a-z0-9_]+$' -or $test.project -notmatch '^[A-Za-z0-9._-]+$' -or
