@@ -153,7 +153,6 @@ public sealed class PublicTestClassSuppressorTests
         var test = new TestWithSuppressor
         {
             TestCode = "public class {|#0:Helper|} { }",
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             ExpectedDiagnostics = { VerifyCS.Diagnostic().WithLocation(0).WithIsSuppressed(false) },
         };
         test.TestState.AdditionalReferences.Clear();
