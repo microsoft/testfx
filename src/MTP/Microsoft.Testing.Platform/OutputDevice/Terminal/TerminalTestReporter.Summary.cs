@@ -11,6 +11,12 @@ internal sealed partial class TerminalTestReporter
     private void AppendTestRunSummary(ITerminal terminal)
     {
         List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
+        if (_options.ContextualModuleOutput && _options.ShowRunSummary)
+        {
+            AppendContextualSummary(terminal, assemblies);
+            return;
+        }
+
         if (!_useCompactSummary)
         {
             AppendTestRunArtifacts(terminal);
@@ -56,6 +62,43 @@ internal sealed partial class TerminalTestReporter
         {
             AppendHandshakeFailureRecap(terminal);
             AppendErroredAssemblyRecap(terminal);
+        }
+    }
+
+    private void AppendContextualSummary(ITerminal terminal, List<TestProgressState> assemblies)
+    {
+        (string Assembly, string? TargetFramework, string? Architecture)[] unselected;
+        lock (_unselectedAssembliesLock)
+        {
+            unselected = [.. _unselectedAssemblies];
+        }
+
+        int passed = assemblies.Count(static assembly => assembly.Success);
+        int failed = assemblies.Count - passed + HandshakeFailureCount;
+        terminal.AppendLine();
+        terminal.AppendLine($"##[group]{TerminalResources.TestRunSummary} {passed} {TerminalResources.PassedLowercase}, {failed} {TerminalResources.FailedLowercase}, {unselected.Length} {TerminalResources.SkippedLowercase} ({TerminalResources.NoAffectedTestsSelected})");
+        AppendAssemblySummaries(terminal, assemblies.Where(static assembly => !assembly.Success));
+        foreach ((string assembly, string? targetFramework, string? architecture) in unselected)
+        {
+            terminal.Append(SingleIndentation);
+            AppendUnselectedAssembly(terminal, assembly, targetFramework, architecture);
+        }
+
+        AppendAssemblySummaries(terminal, assemblies.Where(static assembly => assembly.Success));
+        AppendHandshakeFailureRecap(terminal);
+        AppendErroredAssemblyRecap(terminal);
+        if (_options.ShowRunSummary)
+        {
+            AppendFlakyTests(terminal, assemblies);
+        }
+
+        AppendSlowestTests(terminal, assemblies);
+        AppendTestRunArtifacts(terminal);
+        terminal.AppendLine();
+        terminal.AppendLine("##[endgroup]");
+        if (_options.ShowRunSummary)
+        {
+            AppendTestRunResult(terminal, assemblies);
         }
     }
 
@@ -138,27 +181,13 @@ internal sealed partial class TerminalTestReporter
 
         bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy, _options.AllowZeroTests) || HasHandshakeFailure || hasFailedAssemblies || hasTestSessionFailure;
         bool ranZeroTests = totalTests == 0 || (totalTests == totalSkippedTests && _options.ZeroTestsPolicy == ZeroTestsPolicy.Strict);
-        terminal.SetColor(runFailed ? TerminalColor.DarkRed : ranZeroTests ? TerminalColor.Default : TerminalColor.DarkGreen);
-
-        terminal.Append(TerminalResources.TestRunSummary);
-        terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy, hasTestSessionFailure));
-
-        // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
-        // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
-        // the progress area, so we keep the run-level verdict line link-free.
-        if (assemblies.Count == 1)
+        if (!_options.ContextualModuleOutput)
         {
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append(" - ");
-            terminal.ResetColor();
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
+            AppendVerdict();
         }
 
-        terminal.AppendLine();
-
         // Preserve the interactive module recap above the counts. Non-cursor summaries put failures first below.
-        if (!_useCompactSummary && _options.ShowAssembly && assemblies.Count > 1)
+        if (!_options.ContextualModuleOutput && !_useCompactSummary && _options.ShowAssembly && assemblies.Count > 1)
         {
             AppendAssemblySummaries(terminal, assemblies);
         }
@@ -237,6 +266,36 @@ internal sealed partial class TerminalTestReporter
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
+
+        if (_options.ContextualModuleOutput)
+        {
+            AppendVerdict();
+        }
+
+        void AppendVerdict()
+        {
+            terminal.SetColor(runFailed ? TerminalColor.DarkRed : ranZeroTests ? TerminalColor.Default : TerminalColor.DarkGreen);
+            terminal.Append(TerminalResources.TestRunSummary);
+            terminal.Append(' ');
+            terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy, hasTestSessionFailure));
+
+            if (assemblies.Count == 1)
+            {
+                terminal.SetColor(TerminalColor.DarkGray);
+                terminal.Append(" - ");
+                terminal.ResetColor();
+                if (_options.ContextualModuleOutput)
+                {
+                    AppendModuleIdentity(terminal, assemblies[0].Assembly, assemblies[0].TargetFramework, assemblies[0].Architecture, assemblies[0].RuntimeFramework, trailingSpace: false);
+                }
+                else
+                {
+                    AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
+                }
+            }
+
+            terminal.AppendLine();
+        }
     }
 
     private void AppendAssemblySummaries(ITerminal terminal, IEnumerable<TestProgressState> assemblies)

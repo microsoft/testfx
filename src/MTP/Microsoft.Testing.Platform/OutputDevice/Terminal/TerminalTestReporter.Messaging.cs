@@ -20,6 +20,68 @@ internal sealed partial class TerminalTestReporter
     public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
         => WriteMessage(text, color is not null ? ToTerminalColor(color.ConsoleColor) : null, padding);
 
+    /// <summary>
+    /// Writes complete host output lines with module context. The caller frames partial pipe reads before calling.
+    /// Lines containing pipeline commands are emitted without prefixes or color changes.
+    /// </summary>
+    public void WriteModuleMessage(string assembly, string? targetFramework, string? architecture, string text, SystemConsoleColor? color = null)
+    {
+        if (!_options.ContextualModuleOutput)
+        {
+            WriteMessage(text, color);
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            int start = 0;
+            bool previousLineWasCommand = false;
+            while (start < text.Length)
+            {
+                int newline = text.IndexOf('\n', start);
+                int end = newline < 0 ? text.Length : newline;
+                bool hasCarriageReturn = newline >= 0 && end > start && text[end - 1] == '\r';
+                string line = text.Substring(start, end - start - (hasCarriageReturn ? 1 : 0));
+                bool command = line.IndexOf("##vso[", StringComparison.Ordinal) >= 0
+                    || line.IndexOf("##[", StringComparison.Ordinal) >= 0
+                    || line.TrimStart().StartsWith("::", StringComparison.Ordinal);
+                if (command && !previousLineWasCommand)
+                {
+                    // A previous colored write may have emitted a reset after its newline.
+                    terminal.ResetColor();
+                    terminal.AppendLine();
+                }
+                else if (!command)
+                {
+                    AppendModuleIdentity(terminal, assembly, targetFramework, architecture);
+                    if (color is not null)
+                    {
+                        terminal.SetColor(ToTerminalColor(color.ConsoleColor));
+                    }
+                }
+
+                terminal.Append(line);
+                if (!command && color is not null)
+                {
+                    terminal.ResetColor();
+                }
+
+                if (newline >= 0)
+                {
+                    terminal.Append(hasCarriageReturn ? "\r\n" : "\n");
+                    start = newline + 1;
+                }
+                else
+                {
+                    terminal.AppendLine();
+                    break;
+                }
+
+                previousLineWasCommand = command;
+            }
+        });
+    }
+
     public void UpdateProgressMessage(
         string executionId,
         string instanceId,

@@ -74,8 +74,15 @@ internal sealed partial class TerminalTestReporter
             // nothing; skip the link (and its trailing space) so we don't render a blank, unactionable prefix.
             if (!RoslynString.IsNullOrEmpty(assemblyPath))
             {
-                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyPath, targetFramework, architecture: null);
-                terminal.Append(' ');
+                if (_options.ContextualModuleOutput)
+                {
+                    AppendModuleIdentity(terminal, assemblyPath, targetFramework, architecture: null);
+                }
+                else
+                {
+                    AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyPath, targetFramework, architecture: null);
+                    terminal.Append(' ');
+                }
             }
 
             terminal.SetColor(TerminalColor.DarkRed);
@@ -112,7 +119,15 @@ internal sealed partial class TerminalTestReporter
         foreach (HandshakeFailureRecord failure in failures)
         {
             terminal.Append(SingleIndentation);
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, failure.AssemblyPath, failure.TargetFramework, architecture: null);
+            if (_options.ContextualModuleOutput && !RoslynString.IsNullOrEmpty(failure.AssemblyPath))
+            {
+                AppendModuleIdentity(terminal, failure.AssemblyPath, failure.TargetFramework, architecture: null, trailingSpace: false);
+            }
+            else
+            {
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, failure.AssemblyPath, failure.TargetFramework, architecture: null);
+            }
+
             terminal.AppendLine();
             AppendExecutableSummary(terminal, failure.ExitCode, failure.OutputData, failure.ErrorData);
         }

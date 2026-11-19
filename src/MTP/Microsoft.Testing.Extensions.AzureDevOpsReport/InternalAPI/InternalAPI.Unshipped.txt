@@ -1,4 +1,5 @@
 #nullable enable
+const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLogGroupReporter.DisableHostGroupsEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_DISABLE_AZDO_HOST_GROUPS" -> string!
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetFrameworkFromAssembly(System.Reflection.Assembly? entryAssembly) -> string?
 Microsoft.Testing.Extensions.TestFailureDetails.Attachments.get -> Microsoft.Testing.Extensions.CiRunSummaryAttachment![]?
 Microsoft.Testing.Extensions.TestFailureDetails.Attachments.set -> void

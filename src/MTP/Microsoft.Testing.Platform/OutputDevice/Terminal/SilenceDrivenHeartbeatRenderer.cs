@@ -24,6 +24,8 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
     private readonly TimeSpan _slowTestThreshold;
     private readonly Func<IStopwatch> _createStopwatch;
     private readonly Func<IEnumerable<TestProgressState>>? _getTestRuns;
+    private readonly bool _contextualModuleOutput;
+    private readonly Func<string, string?, string>? _moduleDisplayName;
 
     // Per running-test backoff state: test detail id -> next elapsed threshold at which to emit.
     // Only touched from the single rendering thread inside OnTick.
@@ -47,12 +49,16 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
         TimeSpan silenceThreshold,
         TimeSpan slowTestThreshold,
         Func<IStopwatch> createStopwatch,
-        Func<IEnumerable<TestProgressState>>? getTestRuns = null)
+        Func<IEnumerable<TestProgressState>>? getTestRuns = null,
+        bool contextualModuleOutput = false,
+        Func<string, string?, string>? moduleDisplayName = null)
     {
         _silenceThreshold = silenceThreshold;
         _slowTestThreshold = slowTestThreshold;
         _createStopwatch = createStopwatch;
         _getTestRuns = getTestRuns;
+        _contextualModuleOutput = contextualModuleOutput;
+        _moduleDisplayName = moduleDisplayName;
     }
 
     // The heartbeat rules only need second-level granularity, so we tick once per second instead of the
@@ -140,7 +146,7 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
             }
 
             activeModules++;
-            if (activeTest is null)
+            if (!_contextualModuleOutput && activeTest is null)
             {
                 TestDetailState? active = item.TestNodeResultsState?.GetSingleActiveOrSummaryTask();
                 if (!RoslynString.IsNullOrWhiteSpace(active?.Text))
@@ -164,6 +170,28 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
         }
 
         terminal.AppendLine(line);
+        if (_contextualModuleOutput)
+        {
+            foreach (TestProgressState? item in progressItems)
+            {
+                if (item is null)
+                {
+                    continue;
+                }
+
+                terminal.Append(TerminalTestReporter.SingleIndentation);
+                TerminalTestReporter.AppendModuleIdentity(terminal, item.Assembly, item.TargetFramework, item.Architecture, item.RuntimeFramework, _moduleDisplayName);
+                terminal.Append(HumanReadableDurationFormatter.Render(item.Stopwatch.Elapsed, wrapInParentheses: false));
+                TestDetailState? active = item.TestNodeResultsState?.GetSingleActiveOrSummaryTask();
+                if (!RoslynString.IsNullOrWhiteSpace(active?.Text))
+                {
+                    terminal.Append(" - ");
+                    terminal.Append(active.Text);
+                }
+
+                terminal.AppendLine();
+            }
+        }
     }
 
     private void EmitSlowTests(ITerminal terminal, TestProgressState?[] progressItems)
@@ -210,7 +238,12 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
                 // Report the test's actual elapsed time rather than the scheduled threshold so a delayed
                 // tick (GC pause, debugger break, CPU starvation) does not under-report the runtime.
                 string duration = HumanReadableDurationFormatter.Render(elapsed, wrapInParentheses: false);
-                terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressSlowTest, duration, BuildSlowTestDescription(item, detail)));
+                if (_contextualModuleOutput)
+                {
+                    TerminalTestReporter.AppendModuleIdentity(terminal, item.Assembly, item.TargetFramework, item.Architecture, item.RuntimeFramework, _moduleDisplayName);
+                }
+
+                terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressSlowTest, duration, _contextualModuleOutput ? detail.Text : BuildSlowTestDescription(item, detail)));
                 _lastVisibleOutputTicks = NowTicks;
             }
         }

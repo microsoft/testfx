@@ -126,6 +126,23 @@ internal sealed partial class TerminalTestReporter
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, TestProgressState assemblyRun)
         => AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework);
 
+    private void AppendModuleIdentity(ITerminal terminal, string assembly, string? targetFramework, string? architecture, string? runtimeFramework = null, bool trailingSpace = true)
+        => AppendModuleIdentity(terminal, assembly, targetFramework, architecture, runtimeFramework, _options.ModuleDisplayName, trailingSpace);
+
+    internal static void AppendModuleIdentity(ITerminal terminal, string assembly, string? targetFramework, string? architecture, string? runtimeFramework, Func<string, string?, string>? displayName, bool trailingSpace = true)
+    {
+        terminal.Append('[');
+        terminal.Append(MakeControlCharactersVisible(displayName?.Invoke(assembly, targetFramework) ?? assembly, true));
+        string identity = TestFrameworkDisplay.GetDisplayName(targetFramework, architecture, runtimeFramework);
+        if (identity.Length > 0)
+        {
+            terminal.Append(' ');
+            terminal.Append(MakeControlCharactersVisible(identity, true));
+        }
+
+        terminal.Append(trailingSpace ? "] " : "]");
+    }
+
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture, string? runtimeFramework = null)
     {
         terminal.AppendLink(assembly, lineNumber: null);
@@ -235,18 +252,66 @@ internal sealed partial class TerminalTestReporter
     /// <c>dotnet test</c> orchestrator (<see cref="TerminalTestReporterOptions.ShowAssembly"/>); the in-process
     /// host renders a single run-level summary instead.
     /// </summary>
-    private static void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
+    private void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
     {
         terminal.ResetColor();
 
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun);
-        terminal.Append(' ');
+        if (_options.ContextualModuleOutput)
+        {
+            AppendModuleIdentity(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework);
+        }
+        else
+        {
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun);
+            terminal.Append(' ');
+        }
+
         AppendAssemblyResult(terminal, assemblyRun);
         terminal.Append(' ');
-        AppendAssemblyTestCounts(terminal, assemblyRun);
+        if (_options.ContextualModuleOutput)
+        {
+            AppendContextualTestCounts(terminal, assemblyRun);
+        }
+        else
+        {
+            AppendAssemblyTestCounts(terminal, assemblyRun);
+        }
+
         terminal.Append(' ');
         AppendLongDuration(terminal, assemblyRun.Stopwatch.Elapsed);
         terminal.AppendLine();
+    }
+
+    private static void AppendContextualTestCounts(ITerminal terminal, TestProgressState state)
+    {
+        AppendContextualCount(terminal, state.PassedTests, TerminalResources.PassedLowercase, TerminalColor.DarkGreen);
+        terminal.Append(", ");
+        AppendContextualCount(terminal, state.FailedTests, TerminalResources.FailedLowercase, TerminalColor.DarkRed);
+        terminal.Append(", ");
+        AppendContextualCount(terminal, state.SkippedTests, TerminalResources.SkippedLowercase, TerminalColor.DarkYellow);
+        if (state.RetriedFailedTests > 0)
+        {
+            terminal.Append(", ");
+            terminal.Append(TerminalResources.Retried);
+            terminal.Append(": ");
+            terminal.Append(state.RetriedFailedTests.ToString("N0", CultureInfo.CurrentCulture));
+        }
+    }
+
+    private static void AppendContextualCount(ITerminal terminal, int count, string label, TerminalColor color)
+    {
+        if (count > 0)
+        {
+            terminal.SetColor(color);
+        }
+
+        terminal.Append(count.ToString("N0", CultureInfo.CurrentCulture));
+        terminal.Append(' ');
+        terminal.Append(label);
+        if (count > 0)
+        {
+            terminal.ResetColor();
+        }
     }
 
     private static void AppendAssemblyResult(ITerminal terminal, TestProgressState state)

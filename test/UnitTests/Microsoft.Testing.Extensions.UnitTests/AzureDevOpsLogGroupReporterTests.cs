@@ -73,6 +73,51 @@ public sealed class AzureDevOpsLogGroupReporterTests
     }
 
     [TestMethod]
+    [DataRow("1", false, DisplayName = "DisableValue")]
+    [DataRow(null, true, DisplayName = "VariableUnset")]
+    [DataRow("0", true, DisplayName = "OtherValueZero")]
+    [DataRow("false", true, DisplayName = "OtherValueFalse")]
+    public async Task IsEnabledAsync_RespectsHostGroupOverrideAsync(string? value, bool expected)
+    {
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable(AzureDevOpsLogGroupReporter.DisableHostGroupsEnvironmentVariable))
+            .Returns(value);
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true, groups: ["on"]);
+
+        Assert.AreEqual(expected, await reporter.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task DisabledHostGroups_DoNotSuppressUnrelatedOutputAsync()
+    {
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable(AzureDevOpsLogGroupReporter.DisableHostGroupsEnvironmentVariable))
+            .Returns("1");
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true, groups: ["on"]);
+
+        bool isEnabled = await reporter.IsEnabledAsync();
+        Assert.IsFalse(isEnabled);
+        if (isEnabled)
+        {
+            await reporter.OnTestSessionStartingAsync(new TestSessionContext());
+        }
+
+        const string unrelatedCommand = "##vso[task.logissue type=warning;]output from another reporter";
+        var unrelatedOutput = new AzureDevOpsCommandOutputDeviceData(unrelatedCommand);
+        await _outputDeviceMock.Object.DisplayAsync(
+            Mock.Of<IOutputDeviceDataProducer>(),
+            unrelatedOutput,
+            CancellationToken.None);
+
+        if (isEnabled)
+        {
+            await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
+        }
+
+        Assert.HasCount(1, _outputData);
+        Assert.AreSame(unrelatedOutput, _outputData[0]);
+        Assert.AreEqual(unrelatedCommand, ((AzureDevOpsCommandOutputDeviceData)_outputData[0]).Text);
+    }
+
+    [TestMethod]
     public async Task SessionStarting_EmitsGroupHeaderWithAssemblyAndTfmAsync()
     {
         AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true);
