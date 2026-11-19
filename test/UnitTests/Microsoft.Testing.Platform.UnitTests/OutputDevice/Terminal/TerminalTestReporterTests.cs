@@ -51,7 +51,7 @@ public sealed class TerminalTestReporterTests
         string ansiColor)
     {
         const string assembly = "module.dll";
-        const string identity = "[Module net9.0|x64] ";
+        const string identity = "\u001B[35m[Module net9.0|x64]\u001B[m ";
         const string azureDevOpsCommand = "##vso[task.logissue type=error;]azure failure";
         const string githubCommand = "::error title=workflow::github failure";
         const string indentedGithubCommand = "  ::warning::github warning";
@@ -129,6 +129,8 @@ public sealed class TerminalTestReporterTests
         string[] outputLines = NormalizeTerminalOutput(console.Output).Split('\n');
         Assert.Contains("[Shared net8 net8.0|x64] failed first failure (0ms)", outputLines);
         Assert.Contains("[Shared net9 net9.0|x64] failed second failure (0ms)", outputLines);
+        Assert.IsTrue(Regex.IsMatch(console.Output, @"\x1b\[(35|36|95|96)m\[Shared net8 net8\.0\|x64\]\x1b\[m \x1b\[31mfailed"));
+        Assert.IsTrue(Regex.IsMatch(console.Output, @"\x1b\[(35|36|95|96)m\[Shared net9 net9\.0\|x64\]\x1b\[m \x1b\[31mfailed"));
     }
 
     [TestMethod]
@@ -205,6 +207,14 @@ public sealed class TerminalTestReporterTests
             executionId: "passed",
             testName: null,
             artifactPath);
+        reporter.ArtifactAdded(
+            outOfProcess: true,
+            assembly: failedAssembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId: "failed",
+            testName: "failed-test",
+            "failure-artifact.txt");
         Assert.AreEqual(4, reporter.TotalTests);
 
         reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode);
@@ -224,7 +234,12 @@ public sealed class TerminalTestReporterTests
         int groupEnd = output.IndexOf("##[endgroup]", groupStart, StringComparison.Ordinal);
         Assert.IsGreaterThanOrEqualTo(groupStart, groupEnd);
 
-        int totalCountIndex = output.IndexOf("  total: 4", groupEnd, StringComparison.Ordinal);
+        int artifactGroupStart = output.IndexOf("##[group]Artifacts: 2", groupEnd, StringComparison.Ordinal);
+        int artifactGroupEnd = output.IndexOf("##[endgroup]", artifactGroupStart, StringComparison.Ordinal);
+        Assert.IsGreaterThan(groupEnd, artifactGroupStart);
+        Assert.IsGreaterThan(artifactGroupStart, artifactGroupEnd);
+
+        int totalCountIndex = output.IndexOf("  total: 4", artifactGroupEnd, StringComparison.Ordinal);
         int failedCountIndex = output.IndexOf("  failed: 1", groupEnd, StringComparison.Ordinal);
         int passedCountIndex = output.IndexOf("  succeeded: 1", groupEnd, StringComparison.Ordinal);
         int skippedCountIndex = output.IndexOf("  skipped: 2", groupEnd, StringComparison.Ordinal);
@@ -249,15 +264,39 @@ public sealed class TerminalTestReporterTests
         int failedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [failed.dll net9.0|x64]", StringComparison.Ordinal));
         int unselectedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [unselected.dll net8.0|arm64]", StringComparison.Ordinal));
         int passedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [passed.dll net9.0|x64]", StringComparison.Ordinal));
-        int artifactIndex = Array.FindIndex(groupLines, static line => line.Contains("summary-artifact.txt", StringComparison.Ordinal));
-
         Assert.IsGreaterThanOrEqualTo(0, failedModuleIndex);
         Assert.IsGreaterThan(failedModuleIndex, unselectedModuleIndex);
         Assert.IsGreaterThan(unselectedModuleIndex, passedModuleIndex);
-        Assert.IsGreaterThan(passedModuleIndex, artifactIndex);
         Assert.Contains("0 passed, 1 failed, 1 skipped", groupLines[failedModuleIndex]);
         Assert.Contains("1 passed, 0 failed, 1 skipped", groupLines[passedModuleIndex]);
-        Assert.Contains("##[endgroup]", output);
+        Assert.DoesNotContain("summary-artifact.txt", output.Substring(groupStart, groupEnd - groupStart));
+        string artifacts = output.Substring(artifactGroupStart, artifactGroupEnd - artifactGroupStart);
+        Assert.Contains("summary-artifact.txt", artifacts);
+        Assert.Contains("failure-artifact.txt", artifacts);
+        Assert.IsGreaterThan(artifactGroupEnd, verdictIndex);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualSummaryWithoutArtifacts_OmitsArtifactGroup()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("module.dll", "net9.0", "x64", "execution", "instance");
+        ReportOrchestratorTest(reporter, "module.dll", "execution", "instance", "test", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("execution", exitCode: 0, outputData: null, errorData: null);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 0);
+
+        Assert.DoesNotContain("##[group]Artifacts:", console.Output);
+        Assert.Contains("##[group]Test run summary: 1 passed, 0 failed", console.Output);
+        Assert.DoesNotContain("No affected tests selected", console.Output);
     }
 
     [TestMethod]

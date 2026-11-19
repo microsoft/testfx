@@ -26,6 +26,16 @@ aggregate coverage percentages from incompatible measurements.
 
 ## Research and experiments
 
+- 2026-11-19: The coordinator identified three gaps against the approved
+  mockup: host-owned error annotations need an assembly identity, module labels
+  need optional non-outcome colors, and artifact paths need their own counted
+  end-of-run disclosure. The existing artifact list contains file artifacts
+  rather than necessarily only per-test attachments, so its count must be
+  labeled as artifacts. The SDK owns coverage aggregation and its final output;
+  the shared reporter cannot synthesize a combined percentage.
+- An interim SDK composed run showed that printing "0 skipped (No affected
+  tests selected)" for a normal run implies selection took place. Omit that
+  clause when no modules were unselected; keep it when selection did omit any.
 - 2026-11-19: The approved design is an illustrative mockup, not product
   evidence. The predecessor PR #12537 was merged; this work starts at
   `3cfabcf45c89a2d35079e589b7318f62a7091f83` on a new branch.
@@ -60,6 +70,18 @@ newline for a final unterminated line. A command-bearing line gets a preceding
 newline after a color reset so an earlier ANSI reset cannot displace the command
 from column zero; adjacent command lines in the same payload need no additional
 separator. The command-bearing lines themselves are unchanged.
+
+Use stable, presentation-only colors derived from the module identity rather
+than outcome colors; reset them before writing severity and never color command
+lines. For contextual summaries, close the module group before opening a
+separate counted artifact group. Retain the normal artifact output for
+standalone and suppressed retry summaries, and omit the group when empty.
+For host-owned failure annotations, include the full module identity only in
+contextual mode. Escape percent in that identity as `%AZP25` before applying
+the existing command escapes: the Azure agent decodes `%3B` and other command
+escapes before decoding `%AZP25`. With `DECODE_PERCENTS=false`, the agent
+leaves `%AZP25` visible; that limitation avoids conflating a literal `%3B`
+with a semicolon. Standalone escaping remains unchanged.
 
 ## Validation and demonstration
 
@@ -100,6 +122,21 @@ not a build failure: the pinned analyzer excludes `[Embedded]` types. Shared
 reporter inventory still follows the repository's manual baseline convention.
 Review round 2 found that suppressed retry summaries still emitted subset
 module counts; the contextual group now respects `ShowRunSummary=false`.
+The follow-up review found that a literal `%3B` in a module path collided with
+a semicolon after Azure command decoding. The corrected `%AZP25` ordering was
+reviewed against the agent's implementation; the opt-out decoding limitation
+above remains.
+
+After the summary and color changes, the focused reporter and heartbeat tests
+passed 272/272. After the escaping correction, the extension tests built with
+`.\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Extensions.UnitTests
+-f net10.0 -c Debug --no-restore -v:q`; the selection
+`.\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests
+-f net10.0 -c Debug --no-build -- --filter
+'FullyQualifiedName~AzureDevOpsTests|FullyQualifiedName~CiReporterLifecycleBehaviorTests'`
+passed 40/40 with no skips (both exit 0). A previous run failed two new
+assertions because raw string source line endings were CRLF while the decoded
+message uses LF; the expectations now normalize both operands.
 
 The corrected Release pack (`.\build.cmd -pack -c Release -bl`) succeeded.
 After repacking, the reporter and heartbeat selection passed 271 tests on

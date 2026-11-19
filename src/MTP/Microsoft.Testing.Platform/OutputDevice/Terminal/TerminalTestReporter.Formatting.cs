@@ -131,6 +131,30 @@ internal sealed partial class TerminalTestReporter
 
     internal static void AppendModuleIdentity(ITerminal terminal, string assembly, string? targetFramework, string? architecture, string? runtimeFramework, Func<string, string?, string>? displayName, bool trailingSpace = true)
     {
+        uint hash = 2166136261;
+        unchecked
+        {
+            foreach (char character in assembly)
+            {
+                hash = (hash ^ character) * 16777619;
+            }
+
+            if (targetFramework is not null)
+            {
+                foreach (char character in targetFramework)
+                {
+                    hash = (hash ^ character) * 16777619;
+                }
+            }
+        }
+
+        terminal.SetColor((hash % 4) switch
+        {
+            0 => TerminalColor.Cyan,
+            1 => TerminalColor.DarkCyan,
+            2 => TerminalColor.Magenta,
+            _ => TerminalColor.DarkMagenta,
+        });
         terminal.Append('[');
         terminal.Append(MakeControlCharactersVisible(displayName?.Invoke(assembly, targetFramework) ?? assembly, true));
         string identity = TestFrameworkDisplay.GetDisplayName(targetFramework, architecture, runtimeFramework);
@@ -140,7 +164,12 @@ internal sealed partial class TerminalTestReporter
             terminal.Append(MakeControlCharactersVisible(identity, true));
         }
 
-        terminal.Append(trailingSpace ? "] " : "]");
+        terminal.Append(']');
+        terminal.ResetColor();
+        if (trailingSpace)
+        {
+            terminal.Append(' ');
+        }
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture, string? runtimeFramework = null)

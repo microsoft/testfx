@@ -329,6 +329,107 @@ public sealed class AzureDevOpsTests
     }
 
     [TestMethod]
+    public void FormatErrorMessage_IncludesAssemblyAfterTestAndTfm()
+    {
+        string formatted = AzureDevOpsReporter.FormatErrorMessage(
+            "MyTest (net9.0)",
+            "net9.0",
+            "boom",
+            @"C:\tests\MyTestAssembly.dll");
+
+        Assert.AreEqual(@"MyTest (net9.0) (C:\tests\MyTestAssembly.dll)" + "\nboom", formatted);
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_EscapesLiteralPercentSequenceInAssemblyIdentity()
+    {
+        string text = GetMessageOnlyAnnotationForAssemblyIdentity(@"C:\tests\Module%3BOne.dll");
+
+        Assert.AreEqual(
+            @"vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%AZP253BOne.dll)%0Afailure",
+            text);
+        Assert.AreEqual(
+            """
+            vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%3BOne.dll)
+            failure
+            """.ReplaceLineEndings("\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).ReplaceLineEndings("\n"));
+
+        // When DECODE_PERCENTS=false, the agent intentionally leaves the percent token
+        // unchanged; there is no supported way to preserve a literal percent otherwise.
+        Assert.AreEqual(
+            """
+            vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%AZP253BOne.dll)
+            failure
+            """.ReplaceLineEndings("\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: false).ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_EscapesSemicolonInAssemblyIdentity()
+    {
+        string text = GetMessageOnlyAnnotationForAssemblyIdentity(@"C:\tests\Module;One.dll");
+
+        Assert.AreEqual(
+            @"vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module%3BOne.dll)%0Afailure",
+            text);
+        Assert.AreEqual(
+            """
+            vso[task.logissue type=error]MyTestDisplayName [net9.0] (C:\tests\Module;One.dll)
+            failure
+            """.ReplaceLineEndings("\n"),
+            DecodeAzurePipelinesAgentCommand(text, decodePercents: true).ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_LeavesStandalonePercentEscapingUnchanged()
+    {
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName%3B",
+            "failure",
+            exception: null,
+            severity: "error",
+            fileSystem: new SystemFileSystem(),
+            logger: new TextLogger(),
+            targetFrameworkMoniker: "net9.0",
+            additionalMessageSuffix: null,
+            userStackFrameFilters: null,
+            skipAssertionFrames: true)?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=error]MyTestDisplayName%3B [net9.0]%0Afailure",
+            text);
+    }
+
+    private static string GetMessageOnlyAnnotationForAssemblyIdentity(string assemblyIdentity)
+        => AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            "failure",
+            exception: null,
+            severity: "error",
+            fileSystem: new SystemFileSystem(),
+            logger: new TextLogger(),
+            targetFrameworkMoniker: "net9.0",
+            additionalMessageSuffix: null,
+            userStackFrameFilters: null,
+            skipAssertionFrames: true,
+            assemblyIdentity: assemblyIdentity)?.TrimStart('#')
+            ?? throw new InvalidOperationException("Expected a message-only Azure DevOps annotation.");
+
+    private static string DecodeAzurePipelinesAgentCommand(string value, bool decodePercents)
+    {
+        string unescaped = value
+            .Replace("%3B", ";")
+            .Replace("%0D", "\r")
+            .Replace("%0A", "\n")
+            .Replace("%5D", "]");
+
+        return decodePercents
+            ? unescaped.Replace("%AZP25", "%")
+            : unescaped;
+    }
+
+    [TestMethod]
     public void EmitsMessageOnlyAnnotation_WhenExceptionIsNullButExplanationIsProvided()
     {
         // Regression test for https://github.com/microsoft/testfx/issues/5979.

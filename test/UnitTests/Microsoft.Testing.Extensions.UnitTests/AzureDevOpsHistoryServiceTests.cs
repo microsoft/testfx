@@ -592,7 +592,13 @@ public sealed class AzureDevOpsHistoryServiceTests
         TextLogger logger = new();
         Mock<ILoggerFactory> loggerFactoryMock = CreateLoggerFactory(logger);
 
-        return new AzureDevOpsReporter(commandLineOptions, environmentMock.Object, new SystemFileSystem(), outputDevice, loggerFactoryMock.Object, historyService);
+        return new AzureDevOpsReporter(
+            commandLineOptions,
+            environmentMock.Object,
+            new SystemFileSystem(),
+            outputDevice,
+            loggerFactoryMock.Object,
+            historyService);
     }
 
     private static ICommandLineOptions CreateCommandLineOptions(params (string Name, string[] Arguments)[] options)

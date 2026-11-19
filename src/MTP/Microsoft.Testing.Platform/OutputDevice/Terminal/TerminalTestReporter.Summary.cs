@@ -76,7 +76,13 @@ internal sealed partial class TerminalTestReporter
         int passed = assemblies.Count(static assembly => assembly.Success);
         int failed = assemblies.Count - passed + HandshakeFailureCount;
         terminal.AppendLine();
-        terminal.AppendLine($"##[group]{TerminalResources.TestRunSummary} {passed} {TerminalResources.PassedLowercase}, {failed} {TerminalResources.FailedLowercase}, {unselected.Length} {TerminalResources.SkippedLowercase} ({TerminalResources.NoAffectedTestsSelected})");
+        terminal.Append($"##[group]{TerminalResources.TestRunSummary} {passed} {TerminalResources.PassedLowercase}, {failed} {TerminalResources.FailedLowercase}");
+        if (unselected.Length > 0)
+        {
+            terminal.Append($", {unselected.Length} {TerminalResources.SkippedLowercase} ({TerminalResources.NoAffectedTestsSelected})");
+        }
+
+        terminal.AppendLine();
         AppendAssemblySummaries(terminal, assemblies.Where(static assembly => !assembly.Success));
         foreach ((string assembly, string? targetFramework, string? architecture) in unselected)
         {
@@ -93,9 +99,16 @@ internal sealed partial class TerminalTestReporter
         }
 
         AppendSlowestTests(terminal, assemblies);
-        AppendTestRunArtifacts(terminal);
         terminal.AppendLine();
         terminal.AppendLine("##[endgroup]");
+        if (_artifacts.Count > 0)
+        {
+            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, "##[group]" + TerminalResources.ArtifactCount, _artifacts.Count));
+            AppendTestRunArtifacts(terminal);
+            terminal.AppendLine();
+            terminal.AppendLine("##[endgroup]");
+        }
+
         if (_options.ShowRunSummary)
         {
             AppendTestRunResult(terminal, assemblies);

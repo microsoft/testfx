@@ -123,6 +123,10 @@
   <data name="Actual" xml:space="preserve">
     <value>Actual</value>
   </data>
+  <data name="ArtifactCount" xml:space="preserve">
+    <value>Artifacts: {0}</value>
+    <comment>{0} is the number of file artifacts.</comment>
+  </data>
   <data name="CancelledLowercase" xml:space="preserve">
     <value>canceled</value>
   </data>
