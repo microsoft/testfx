@@ -45,7 +45,7 @@ public sealed class CleanupCancellationIsolationTests : AcceptanceTestBase<Clean
         using TempDirectory results = new();
         string evidenceDirectory = Path.Combine(results.Path, "evidence");
         using ZipArchive package = ZipFile.OpenRead(Path.Combine(Constants.ArtifactsPackagesShipping, $"MSTest.TestAdapter.{MSTestVersion}.nupkg"));
-        ZipArchiveEntry? adapterPayload = package.GetEntry($"buildTransitive/{ConsumerTargetFramework}/MSTestAdapter.PlatformServices.dll");
+        ZipArchiveEntry? adapterPayload = package.GetEntry($"lib/{ConsumerTargetFramework}/MSTestAdapter.PlatformServices.dll");
         Assert.IsNotNull(adapterPayload);
         using Stream adapterStream = adapterPayload.Open();
         string expectedAdapterHash = Convert.ToHexString(SHA256.HashData(adapterStream));
