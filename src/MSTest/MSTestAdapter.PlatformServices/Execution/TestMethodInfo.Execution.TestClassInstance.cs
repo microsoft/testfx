@@ -11,11 +11,13 @@ internal partial class TestMethodInfo
     /// <summary>
     /// Creates an instance of TestClass. The TestMethod is invoked on this instance.
     /// </summary>
+    /// <param name="testSynchronizationContext">The synchronization context that was current when the test started.</param>
+    /// <param name="lease">The lease that owns the cleanup of the created instance, if any.</param>
     /// <returns>
     /// An instance of the TestClass.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private object CreateTestClassInstance(out ITestClassInstanceLease? lease)
+    private object CreateTestClassInstance(SynchronizationContext? testSynchronizationContext, out ITestClassInstanceLease? lease)
     {
         if (TestClassInstanceFactoryProvider.Current is { } factory)
         {
@@ -36,13 +38,15 @@ internal partial class TestMethodInfo
 #if NET6_0_OR_GREATER
         requiresCleanup |= instance is IAsyncDisposable;
 #endif
-        lease = requiresCleanup ? new DefaultTestClassInstanceLease(instance) : null;
+        lease = requiresCleanup ? new DefaultTestClassInstanceLease(instance, testSynchronizationContext) : null;
         return instance;
     }
 
-    private sealed class DefaultTestClassInstanceLease(object instance) : ITestClassInstanceLease
+    private sealed class DefaultTestClassInstanceLease(object instance, SynchronizationContext? testSynchronizationContext) : ITestClassInstanceLease
     {
         public object Instance { get; } = instance;
+
+        public SynchronizationContext? TestSynchronizationContext { get; } = testSynchronizationContext;
 
         public bool RequiresCleanup => true;
 
@@ -51,7 +55,8 @@ internal partial class TestMethodInfo
 #if NET6_0_OR_GREATER
             if (Instance is IAsyncDisposable asyncDisposable)
             {
-                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                // Keep Dispose() on the test's synchronization context even when DisposeAsync completes on another thread (#12561).
+                await asyncDisposable.DisposeAsync().ConfigureAwait(IsRunningOnSynchronizationContext(TestSynchronizationContext));
             }
 #endif
             if (Instance is IDisposable disposable)
