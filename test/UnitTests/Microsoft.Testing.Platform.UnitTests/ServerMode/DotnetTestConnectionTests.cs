@@ -438,6 +438,20 @@ public sealed class DotnetTestConnectionTests
     }
 
     [TestMethod]
+    public async Task ConnectAndListenForServerControlAsync_UnexpectedFailureIsNotSwallowed()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        Task connectionTask = InvokeAuxiliaryAsync(
+            fixture.Connection,
+            "ConnectAndListenForServerControlAsync",
+            null!,
+            (Func<CancellationToken, Task>)(_ => Task.CompletedTask),
+            CancellationToken.None);
+
+        await Assert.ThrowsExactlyAsync<NullReferenceException>(() => connectionTask);
+    }
+
+    [TestMethod]
     public async Task StartServerControlChannelAsync_AlreadyStartedDoesNotReplaceExistingListener()
     {
         using CancellationTokenSource listenerCts = new();
