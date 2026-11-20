@@ -19,7 +19,7 @@ namespace MSTest.Analyzers;
 public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseCooperativeCancellationForTimeoutTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.UseCooperativeCancellationForTimeoutDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.UseCooperativeCancellationForTimeoutBehaviorDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseCooperativeCancellationForTimeoutMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor UseCooperativeCancellationForTimeoutRule = DiagnosticDescriptorHelper.Create(

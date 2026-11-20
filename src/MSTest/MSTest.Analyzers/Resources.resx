@@ -827,9 +827,9 @@ The type declaring these methods should also respect the following rules:
     <value>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</value>
     <comment>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</comment>
   </data>
-  <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
-    <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
-    <comment>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</comment>
+  <data name="UseCooperativeCancellationForTimeoutBehaviorDescription" xml:space="preserve">
+    <value>By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</value>
+    <comment>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}</comment>
   </data>
   <data name="TestContextPropertyUsageTitle" xml:space="preserve">
     <value>TestContext property cannot be accessed in this context</value>

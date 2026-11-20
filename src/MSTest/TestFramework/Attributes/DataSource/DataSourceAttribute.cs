@@ -77,7 +77,7 @@ public sealed class DataSourceAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="DataSourceAttribute"/> class.  This instance will be initialized with a data provider and connection string associated with the setting name.
     /// </summary>
-    /// <param name="dataSourceSettingName">The name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.</param>
+    /// <param name="dataSourceSettingName">The name of a data source found in the &lt;microsoft.visualstudio.testtools&gt; section in the app.config file.</param>
     public DataSourceAttribute(string dataSourceSettingName) => DataSourceSettingName = dataSourceSettingName;
 
     // Different providers use different connection strings and provider itself is a part of connection string.
@@ -110,7 +110,7 @@ public sealed class DataSourceAttribute : Attribute
     public DataAccessMethod DataAccessMethod { get; }
 
     /// <summary>
-    /// Gets the name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.
+    /// Gets the name of a data source found in the &lt;microsoft.visualstudio.testtools&gt; section in the app.config file.
     /// </summary>
     public string? DataSourceSettingName { get; }
 }

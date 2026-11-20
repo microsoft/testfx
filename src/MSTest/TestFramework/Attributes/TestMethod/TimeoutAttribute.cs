@@ -24,13 +24,14 @@ public sealed class TimeoutAttribute : Attribute
 
     /// <summary>
     /// Gets or sets a value indicating whether the test method should be cooperatively canceled on timeout.
-    /// When set to <see langword="true"/>, the cancellation token is canceled on timeout, and the method completion is awaited.
-    /// The test method and all the code it calls, must be designed in a way that it observes the cancellation and cancels
-    /// cooperatively. If the test method does not complete, the timeout does not force it to complete.
-    /// When set to <see langword="false"/>, the cancellation token is canceled on timeout, timeout result is reported and the
-    /// method task will continue running on background. This may lead to conflicts in file access on test cleanup, unobserved
-    /// exceptions, and memory leaks.
     /// </summary>
+    /// <remarks>
+    /// By default, MSTest cancels the test's cancellation token and reports a timeout without waiting for the test method
+    /// to finish. The method may continue running and interfere with test cleanup.
+    /// If cooperative cancellation is enabled here or in the run configuration, MSTest cancels the token on timeout
+    /// and waits for the method to finish. Code that ignores cancellation can keep MSTest waiting indefinitely.
+    /// An explicit value on this attribute overrides the run configuration.
+    /// </remarks>
     public bool CooperativeCancellation
     {
         get;
