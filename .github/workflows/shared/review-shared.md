@@ -23,6 +23,7 @@ network:
 
 tools:
   # Review unapproved PR content as data, without enabling shell execution.
+  cli-proxy: false
   bash: false
   cache-memory:
     - id: repo-history
