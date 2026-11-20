@@ -20,7 +20,7 @@ This package extends Microsoft.Testing.Platform with:
 - **Platform extensions**: OpenTelemetry does not define any `test.*` **metrics** or test-case **span** conventions (as of semantic conventions 1.43.0), and `test.case.result.status` upstream only defines `pass` and `fail`. The instruments listed below, the additional result statuses (`skipped`, `error`, `timeout`, `cancelled`, `unknown`), `cicd.provider.name`, and the `test.case.*` attributes not listed above are therefore Microsoft.Testing.Platform extensions, deliberately placed in the namespace where an upstream definition would land.
 - **Composable resource attributes**: `AddTestingPlatformTestResource()` adds test-specific identity and `AddTestingPlatformCIResource()` adds CI/source-control provenance without changing application-owned service, host, OS or process identity. `AddTestingPlatformResource()` remains the standalone aggregate convenience path for test assembly, service, host, OS, runtime, CI provider, pipeline run, branch and commit.
 - **Turnkey configuration**: `AddOpenTelemetryProviderFromEnvironment()` wires instrumentation, resource and an OTLP exporter purely from the standard `OTEL_*` environment variables, so a run can be exported without writing configuration code.
-- **Trace context propagation**: when the process that started the test run publishes a `TRACEPARENT` environment variable (CI runners, `dotnet test`, IDEs), the whole run nests under that trace instead of starting an orphan one.
+- **Trace context propagation**: when the process that started the test run publishes a `TRACEPARENT` environment variable (CI runners, `dotnet test`, IDEs), the whole run nests under that trace instead of starting an orphan one. An activity that is already current in the test process, such as an application-owned root span started before building the test application, takes precedence over the environment.
 - **Lifecycle management**: ties the lifetime of a `TracerProvider` and `MeterProvider` to the test application, so they are disposed alongside the test host.
 - **Observability**: lets you route test execution data, via your own OpenTelemetry exporter configuration, into observability backends (e.g. Jaeger, Prometheus, Grafana).
 - **Standards-based**: leverages the OpenTelemetry .NET SDK so that data is sent only to the telemetry exporters and endpoints that you configure.
@@ -119,7 +119,7 @@ for the remaining names and aggregation differences.
 
 | Environment variable | Default | Meaning |
 | --- | --- | --- |
-| `TRACEPARENT` / `TRACESTATE` | unset | W3C trace context to nest the run under. |
+| `TRACEPARENT` / `TRACESTATE` | unset | W3C trace context to nest the run under when no activity is already current in the test process. |
 | `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT` | `1` | Attach captured stdout/stderr to test spans. Set to `0` when the output can contain secrets. |
 | `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` | `8192` | Maximum characters kept for a single captured output, explanation, or exception string attribute. |
 | `OTEL_SDK_DISABLED`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER` | unset | Standard OpenTelemetry variables honored by `AddOpenTelemetryProviderFromEnvironment`. |

@@ -1,1 +1,2 @@
 #nullable enable
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.W3CContext.get -> System.Diagnostics.ActivityContext?

@@ -39,7 +39,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// project): they still serialize against every other test in the assembly that mutates environment variables, but
 /// can run in parallel with tests that never touch environment variables at all. SDK-building checks that require
 /// enabled providers arrange <c>OTEL_SDK_DISABLED=false</c> inside that scope so inherited configuration or another
-/// test cannot replace either provider with a no-op provider. The two raw-listener methods carry
+/// test cannot replace either provider with a no-op provider. The raw-listener methods carry
 /// a method-level write <see cref="ResourceLockAttribute"/> on
 /// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> instead:
 /// <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers an unfiltered listener against the
@@ -66,6 +66,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
         "TF_BUILD", "BUILD_DEFINITIONNAME", "BUILD_BUILDID", "SYSTEM_JOBID", "BUILD_SOURCEBRANCHNAME", "BUILD_SOURCEVERSION", "BUILD_REPOSITORY_URI",
         "GITLAB_CI", "CI_PIPELINE_NAME", "CI_PIPELINE_ID", "CI_JOB_ID", "CI_COMMIT_REF_NAME", "CI_COMMIT_SHA", "CI_REPOSITORY_URL",
         "JENKINS_URL", "JOB_NAME", "BUILD_NUMBER", "GIT_BRANCH", "GIT_COMMIT", "GIT_URL",
+        "TRACEPARENT", "TRACESTATE", "TESTINGPLATFORM_TRACEPARENT", "TESTINGPLATFORM_TRACESTATE",
     ];
 
     [TestMethod]
@@ -594,6 +595,80 @@ public sealed class OpenTelemetryProviderExtensionsTests
         {
             Assert.AreEqual(0, await application.RunAsync());
         }
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
+    public async Task BuilderActivity_PrefersAmbientActivityOverEnvironmentTraceContext(bool hasAmbientActivity)
+    {
+        const string EnvironmentTraceId = "0af7651916cd43dd8448eb211c80319c";
+        const string EnvironmentSpanId = "b7ad6b7169203331";
+
+        await WithEnvironmentAsync(
+            new()
+            {
+                ["TRACEPARENT"] = $"00-{EnvironmentTraceId}-{EnvironmentSpanId}-01",
+                ["TRACESTATE"] = "vendor=environment",
+            },
+            async () =>
+            {
+                List<Activity> stoppedActivities = [];
+                using var applicationSource = new ActivitySource($"{nameof(BuilderActivity_PrefersAmbientActivityOverEnvironmentTraceContext)}-{Guid.NewGuid():N}");
+                using var listener = new ActivityListener
+                {
+                    ShouldListenTo = source => source.Name == OpenTelemetryPlatformService.ActivitySourceName || source == applicationSource,
+                    Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+                    ActivityStopped = activity =>
+                    {
+                        lock (stoppedActivities)
+                        {
+                            stoppedActivities.Add(activity);
+                        }
+                    },
+                };
+                ActivitySource.AddActivityListener(listener);
+
+                Activity? previousActivity = Activity.Current;
+                Activity.Current = null;
+                try
+                {
+                    using Activity? applicationActivity = hasAmbientActivity ? applicationSource.StartActivity("application-test-run") : null;
+                    string expectedTraceId = applicationActivity?.TraceId.ToHexString() ?? EnvironmentTraceId;
+                    string expectedParentSpanId = applicationActivity?.SpanId.ToHexString() ?? EnvironmentSpanId;
+                    string? expectedTraceState = hasAmbientActivity ? null : "vendor=environment";
+
+                    ITestApplicationBuilder builder = await CreateBuilderAsync();
+                    builder.AddTestingPlatformDiagnostics();
+                    var application = (TestApplication)await builder.BuildAsync();
+                    var serviceProvider = (ServiceProvider)application.ServiceProvider;
+                    serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+                    try
+                    {
+                        Activity builderActivity;
+                        lock (stoppedActivities)
+                        {
+                            builderActivity = Assert.ContainsSingle(
+                                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder
+                                    && activity.TraceId.ToHexString() == expectedTraceId,
+                                stoppedActivities);
+                        }
+
+                        Assert.AreEqual(expectedParentSpanId, builderActivity.ParentSpanId.ToHexString());
+                        Assert.AreEqual(expectedTraceState, builderActivity.TraceStateString);
+                    }
+                    finally
+                    {
+                        Assert.AreEqual(0, await application.RunAsync());
+                    }
+                }
+                finally
+                {
+                    Activity.Current = previousActivity;
+                }
+            });
     }
 
     [TestMethod]

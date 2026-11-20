@@ -55,13 +55,7 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         }
 
         string assemblyPath = typeof(EqtTraceLoggerContinuationTests).Assembly.Location;
-        string[] commandLine = Environment.GetCommandLineArgs();
-        int resultsIndex = Array.IndexOf(commandLine, "--results-directory");
-        string? resultsDirectory = resultsIndex >= 0
-            ? commandLine[resultsIndex + 1]
-            : Environment.GetEnvironmentVariable("TEST_UNDECLARED_OUTPUTS_DIR");
-        resultsDirectory.Should().NotBeNullOrEmpty("the test host must supply an isolated result directory");
-        string childResults = Path.GetFullPath(Path.Combine(resultsDirectory!, "eqt-child-" + Guid.NewGuid().ToString("N")));
+        string childResults = Path.GetFullPath(Path.Combine(GetParentResultsDirectory(), "eqt-child-" + Guid.NewGuid().ToString("N")));
         Directory.Exists(childResults).Should().BeFalse("each child invocation owns an isolated result directory");
         Directory.CreateDirectory(childResults);
 #if NETCOREAPP
@@ -133,5 +127,22 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
             position.Should().BeGreaterThan(previous, "the trace bridge must persist each message in call order");
             previous = position;
         }
+    }
+
+    private static string GetParentResultsDirectory()
+    {
+        string[] commandLine = Environment.GetCommandLineArgs();
+        int resultsIndex = Array.IndexOf(commandLine, "--results-directory");
+        if (resultsIndex >= 0 && resultsIndex + 1 < commandLine.Length)
+        {
+            return commandLine[resultsIndex + 1];
+        }
+
+        string? undeclaredOutputs = Environment.GetEnvironmentVariable("TEST_UNDECLARED_OUTPUTS_DIR");
+
+        // Hosts such as the CTS collector launch the module without either source; the child still gets its own GUID directory.
+        return string.IsNullOrEmpty(undeclaredOutputs)
+            ? Path.Combine(AppContext.BaseDirectory, "TestResults")
+            : undeclaredOutputs!;
     }
 }

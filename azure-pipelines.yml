@@ -428,7 +428,11 @@ stages:
           timeoutInMinutes: 120
         pool:
           name: Azure Pipelines
-          vmImage: macos-latest
+          # Pinned because macos-latest now resolves to macos-26, whose hosted agents are about 2-2.5x slower
+          # for the same build and tests (main builds 1690333-1691751: Test step 77-105 min versus 37-54 min
+          # on macos-15), which exhausts the job timeout. Revisit once
+          # https://github.com/microsoft/azure-pipelines-agent/issues/5682 is resolved.
+          vmImage: macos-15
           os: macOS
         variables:
           - template: /eng/pipelines/variables/test-env-vars.yml
