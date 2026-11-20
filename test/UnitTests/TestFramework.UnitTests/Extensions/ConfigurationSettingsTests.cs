@@ -97,7 +97,7 @@ public sealed class ConfigurationSettingsTests : TestContainer
         unknown.Should().ThrowExactly<TargetInvocationException>().Which.InnerException.Should().BeOfType<ConfigurationErrorsException>();
     }
 
-    public void ConfigurationSelectionUsesRtmThenBetaThenDefaultInIsolatedDomains()
+    public void ConfigurationSelectionUsesRtmThenDefaultInIsolatedDomains()
     {
         string type = typeof(TestConfigurationSection).AssemblyQualifiedName!;
         string rtm = Section("microsoft.visualstudio.testtools", "rtm");
@@ -112,7 +112,7 @@ public sealed class ConfigurationSettingsTests : TestContainer
         // A declared but absent RTM section is materialized as an empty section by System.Configuration.
         ReadInDomain($"<configuration>{declarations}{beta}</configuration>").Should().Be("empty");
         string betaDeclaration = $"""<configSections><section name="microsoft.visualstudio.qualitytools" type="{type}" /></configSections>""";
-        ReadInDomain($"<configuration>{betaDeclaration}{beta}</configuration>").Should().Be("beta");
+        ReadInDomain($"<configuration>{betaDeclaration}{beta}</configuration>").Should().Be("empty");
         ReadInDomain("<configuration />").Should().Be("empty");
     }
 

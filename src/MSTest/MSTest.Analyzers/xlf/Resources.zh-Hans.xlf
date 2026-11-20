@@ -1472,10 +1472,10 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">对测试类使用 “ConditionBaseAttribute”</target>
         <note>{Locked="ConditionBaseAttribute"}</note>
       </trans-unit>
-      <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
-        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="translated">不建议在不显式设置 'CooperativeCancellation = true' 的情况下使用 '[Timeout]'。在将来的版本中，协作取消将成为默认行为。设置 'CooperativeCancellation = true' 以选择加入建议的行为，并避免中断性变更。</target>
-        <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
+      <trans-unit id="UseCooperativeCancellationForTimeoutBehaviorDescription">
+        <source>By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</source>
+        <target state="new">By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</target>
+        <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
