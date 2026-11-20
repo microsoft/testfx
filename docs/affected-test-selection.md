@@ -566,6 +566,82 @@ hosted rehearsal that relaxes the branch gate would add early evidence but spend
 authorization. The coordinator retains the observation, later CTS publication and pin updates, and removal of the job or
 default; no end date was given.
 
+## CI fixes for build 1691751 (2026-11-20)
+
+The request was to fix the broken tests and the timeout in `main` build `20261120.5` (AzDO `1691751`, commit
+`9e49bf9`). It had three failing jobs: `Windows CTS comparison`, `Windows AffectedTests`, and `MacOS` (Release). The
+published test runs had no failed results, and macOS passed all 26,441 of its tests; the failures came from these jobs'
+own steps.
+
+### Windows CTS comparison
+
+This was the first hosted run of the [CTS comparison](#cts-comparison-activation-2026-11-19). CTS starts each module
+without `--results-directory` or `TEST_UNDECLARED_OUTPUTS_DIR`, under a deep `TestResults\Deploy_<user> <timestamp>\In\`
+deployment folder, and passes a `TRACEPARENT` to the processes it launches. The 15 failures had three causes:
+
+| Failure | Cause | Fix |
+| --- | --- | --- |
+| `MSTestSdk_ApplicationOwnedOpenTelemetry_UsesOneCanonicalTestActivity` (net10.0, net11.0), `HostApplicationBuilderProviders_ConsumeMtpDiagnosticsAndPreserveApplicationResource` and `ExternalFramework_PublicCanonicalExecutionApi_ProducesOneIsolatedSpanPerExecution` (three rows each) | Product bug: an environment `TRACEPARENT` overrode an ambient, application-owned root activity. Every failure reported the same "actual" context (`a00d3bbc498483ba27f8eae2f84bf2fc/f9ba27c7ab6efaf6`), which was the CTS-provided parent. | `TestHostBuilder.CommonServices` uses the environment trace context only when no activity is current. `TRACESTATE` is applied only with the environment parent. The package README documents the precedence. |
+| `TraceBridgePersistsEverySeverityInAnIsolatedHost` (all five MSTestAdapter.UnitTests TFMs) | Test bug: it required `--results-directory` or `TEST_UNDECLARED_OUTPUTS_DIR` and failed on `<null>`. | It falls back to `<AppContext.BaseDirectory>\TestResults`; the child still gets its own GUID directory. |
+| `FileExporters_SharedDirectoryNeverOverwriteAndReleaseFiles` (net462, net472) | Test bug: under the deployment folder, the exporter path was 265 characters. MSTest's `TestTempDirectory` keeps 80 characters of headroom, but `traces\<assembly>-<32 hex>.jsonl` needs about 81-85, so .NET Framework threw `DirectoryNotFoundException`. | The test uses its own short `%TEMP%\tfx-otel-<guid>` directory and deletes it in `finally`. |
+
+The CTS log also contains a non-failing `Collector error: Pipe is broken` for MSTest.Acceptance.IntegrationTests
+net12.0; that module still reports "Test map collection: Completed".
+
+### Windows AffectedTests
+
+Collection exited 1 at 35 of 48 modules after 1:37:46. The net462 MSTestAdapter.PlatformServices.UnitTests module
+discovered 1,626 tests and logged `The test map was not persisted: Affected-test mapping content exceeds 134217728
+bytes.` The net48 module had discovered the same 1,626 tests when that failure stopped the run. The pinned collector,
+`18.13.0-preview.26556.6` (the newest available), refuses maps over 128 MiB and fails the module. Both Framework maps
+were already about 127.243 MiB ([full-suite investigation](#full-suite-collection-performance-investigation-2026-11-13)),
+so the tests added since then crossed the bound.
+
+`eng/collection-module-pool.ps1` now lists those two module/TFM pairs in `$script:CollectionMapSizeExclusions`, and
+`Get-MappableCollectionModule` drops them with a log line before `eng/collect-affected-test-maps.ps1` orders the pool.
+Without a shard, selection conservatively runs all of that module's tests (see the missing-shard row in the
+[SDK refresh](#sdk-refresh-2026-11-09)), so PR coverage is unchanged and only selection savings for those two hosts are
+lost. The module pool validator gains a wiring check and `ModulePoolSkipsOnlyOversizedMaps`. Other TFMs of the same
+project are still collected. TestFramework.UnitTests net48 (about 101.6 MB) is the next-largest map to watch.
+
+Alternatives considered:
+
+- Raise or bypass the bound. The limit is inside the package, and the bound is a deliberate collector contract.
+- Upgrade the collector. No newer version exists.
+- Continue on module failure or normalize the exit. That hides real collection failures, contradicting the
+  fail-the-job contract in [CI layout](#ci-layout).
+- Reduce map size with instrumentation filters. That removes source associations and changes selection for every
+  module, which is a broader design change than this fix.
+
+### MacOS timeout
+
+`macos-latest` moved to macOS 26 (actions/runner-images#14167), and those hosted agents are about 2-2.5 times slower
+(microsoft/azure-pipelines-agent#5682). Across `main` builds 1690333 through 1691751, the macOS Test step took 77-105
+minutes on macOS 26 versus 37-54 minutes on macOS 15, and the build step took 1,209 versus 562 seconds. Build 1691751
+hit the 120-minute job timeout after all its tests had passed. `azure-pipelines.yml` pins `vmImage: macos-15` with a
+comment pointing to the agent issue; timeouts are unchanged. Raising the timeout instead would hide the slowdown and
+double the macOS critical path.
+
+**Test-value evidence:** this change is uncommitted on top of `6c77863`, which contains build commit `9e49bf9` and
+does not change any file touched here. The red runs keep the new tests and remove only
+the production or test-helper fix. Tests are run from `artifacts\bin\<project>\Debug\<tfm>`.
+
+| Command | Result |
+| --- | --- |
+| `Microsoft.Testing.Extensions.UnitTests.exe --filter "FullyQualifiedName~OpenTelemetryProviderExtensionsTests"` without the `TestHostBuilder.CommonServices` change (net10.0, net462) | Exit 2: `BuilderActivity_PrefersAmbientActivityOverEnvironmentTraceContext (True)` fails at `Assert.ContainsSingle`; the `False` row passes. |
+| The same with the change | Exit 0. |
+| `Microsoft.Testing.Extensions.UnitTests.exe --filter "FullyQualifiedName~TestFxOpenTelemetryTests\|FullyQualifiedName~OpenTelemetryProviderExtensionsTests"` with the change | Exit 0; net10.0 69/69, net462 62/62. |
+| `MSTestAdapter.UnitTests` `TraceBridgePersistsEverySeverityInAnIsolatedHost`, filtered by UID, with no `--results-directory` and no `TEST_UNDECLARED_OUTPUTS_DIR`, old test (net10.0, net462) | Failed: "Expected ... not to be `<null>` or empty because the test host must supply an isolated result directory", as in CI. |
+| The same with the fallback | Passed on net10.0 and net462. |
+| net462 `Microsoft.Testing.Extensions.UnitTests.exe --filter "FullyQualifiedName~FileExporters_SharedDirectoryNeverOverwriteAndReleaseFiles" --results-directory <repo>\artifacts\tmp\cf\<d * n>`, old test, results-directory lengths 82 and 92 | Exit 2: `DirectoryNotFoundException` under `Deploy_<user> ...\In\<test>_<guid>\traces\`, as in CI. At length 102, MSTest's naming falls back to `%TEMP%` and the test passes, so the red window depends on path length. |
+| The same with the fix, lengths 82, 92, and 102 on net462 and net472 | Exit 0 for all six runs. |
+| `pwsh -NoProfile -File .\eng\validate-collection-module-pool.ps1` | One full run exits 0 with every case passing. `ModulePoolSkipsOnlyOversizedMaps` passed in all four runs, and it fails when `Get-MappableCollectionModule` returns every module. With the CPU at 100%, three runs failed only the timing-sensitive `ModulePoolRefillsWithoutWaveBarrier` or `ModulePoolDrainsOrphansAfterSdk*` rendezvous cases; unchanged `6c77863` failed the same cases in all three of its runs. |
+| `pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false`, and `pwsh -NoProfile -File .\eng\collect-cts-comparison.ps1 -SelfTest` | Exit 0 for both; the first runs its 14 CTS wiring cases. |
+
+**Limitations:** no hosted run of this change exists yet. The macOS duration gain is inferred from earlier `main` runs on
+each image, and the next `Windows AffectedTests` and `Windows CTS comparison` runs are the first end-to-end proof.
+Media is inapplicable to these CI and test fixes.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
@@ -582,7 +658,9 @@ default; no end date was given.
   writes to `TestFx_AffectedTestsMaps`; see [CTS comparison activation](#cts-comparison-activation-2026-11-19).
 - With the rollout enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
-  package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
+  package's `netstandard2.0` assets. The exception is MSTestAdapter.PlatformServices.UnitTests on net462 and net48:
+  their maps exceed the collector's 128-MiB limit, so they are not collected and selection runs all of their tests
+  ([CI fixes for build 1691751](#ci-fixes-for-build-1691751-2026-11-20)). The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
   outputs, including the WinUI test-framework unit host.
   The native symbol reader (`msdia140.dll`) must accompany the profiler; otherwise collection can succeed with
@@ -2057,7 +2135,8 @@ module, maximum 1.083 seconds). That boundary does not isolate work inside the
 SDK summary, but outer process launch/teardown alone cannot account for seven
 minutes. Two Framework PlatformServices maps are approximately 127.243 MiB,
 near the existing 128-MiB map bound; neither the bound nor map schema is relaxed
-to improve timing.
+to improve timing. They later exceeded the bound and are no longer collected; see
+[CI fixes for build 1691751](#ci-fixes-for-build-1691751-2026-11-20).
 
 There is one full measured run per local variant on one shared Windows machine,
 not repeated medians or an independent rerun. Earlier CTS and hosted-CI durations

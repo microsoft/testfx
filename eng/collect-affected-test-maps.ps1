@@ -22,7 +22,8 @@ $concurrency = Get-CollectionModuleConcurrency -ConfiguredBatches $globalJson.te
 $batchesPerModule = $concurrency.BatchesPerModule
 $effectiveBudget = $concurrency.ChildBudget
 $slots = $concurrency.MaximumParallelModules
-$modules = @(Get-OrderedCollectionModule -Modules @(Get-CTSComparisonModule -Repository $Repository -Configuration $Configuration))
+$modules = @(Get-OrderedCollectionModule -Modules @(Get-MappableCollectionModule -Modules @(
+    Get-CTSComparisonModule -Repository $Repository -Configuration $Configuration)))
 $dotnetPath = (Get-Command dotnet -CommandType Application | Select-Object -First 1).Source
 $resultsRoot = if ([string]::IsNullOrEmpty($ResultsDirectory)) {
     Join-Path -Path $Repository -ChildPath "artifacts" -AdditionalChildPath @("TestResults", $Configuration, "AffectedCollection")
