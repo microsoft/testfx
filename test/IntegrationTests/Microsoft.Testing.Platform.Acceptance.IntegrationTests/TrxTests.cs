@@ -19,8 +19,8 @@ public class TrxTests : AcceptanceTestBase<TrxTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = """
-Out of process file artifacts produced:
-- .+?\.trx
+  Out of process file artifacts produced: \d+
+    - .+?\.trx
 """;
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
     }
@@ -574,7 +574,7 @@ Out of process file artifacts produced:
         // Plain --report-trx is controller-backed by default on this platform: the TRX artifact is
         // reported by the surviving controller process, not the test host, hence "Out of process".
         string outputPattern = $"""
-  Out of process file artifacts produced:
+  Out of process file artifacts produced: 1
     - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);

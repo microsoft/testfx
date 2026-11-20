@@ -22,6 +22,14 @@ already printed at completion should not be repeated; when the caller suppresses
 those completion lines, their final module results remain available. Full test
 diagnostics, process stdout/stderr, and artifact paths remain available.
 
+Artifact headings show the number of entries listed underneath, for example
+`In process file artifacts produced: 2`. A run can have both kinds of
+artifacts, so each heading counts its own list rather than repeating the run
+total. Appending the count preserves the existing localized heading as a
+prefix. Empty lists still have no heading.
+The SDK's `dotnet test` orchestrator picks up the same formatting when it
+updates its vendored copy of the terminal reporter.
+
 Cursor-capable interactive rendering, result visibility selection, cancellation,
 retry accounting, zero-test policy, and the distinction between failed tests and
 host/handshake errors are unchanged. `--progress off` and
