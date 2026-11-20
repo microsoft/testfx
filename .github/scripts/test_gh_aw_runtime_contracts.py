@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline contracts for the unchanged gh-aw-actions v1.0.1 setup/js runtime.
+"""Offline contracts for the pinned gh-aw-actions v1.2.2 setup/js runtime.
 
 Run after security review:
   python .github/scripts/test_gh_aw_runtime_contracts.py --actions-dir PATH -v
@@ -708,7 +708,7 @@ class GhAwRuntimeContractTests(unittest.TestCase):
         shared, prompt = authored("shared/review-shared.md")
         self.assertEqual(PR_EXPRESSION, shared["env"]["REVIEW_PR_NUMBER"])
         self.assertIn("Review pull request #${{ env.REVIEW_PR_NUMBER }}", prompt)
-        self.assertNotIn("fromJSON(", prompt)  # Not allowed in v1.0.1 runtime-imported prompt text.
+        self.assertNotIn("fromJSON(", prompt)  # runtime_import.cjs isSafeExpression rejects it in imported prompt text.
         for index, name in enumerate(CONSUMERS):
             with self.subTest(case=f"consumer_{index}"):
                 document = compiled(name)
@@ -720,15 +720,22 @@ class GhAwRuntimeContractTests(unittest.TestCase):
                 for title in ("Create prompt with built-in context", "Interpolate variables and render templates",
                               "Substitute placeholders"):
                     binding = step(document, "activation", "name", title)
-                    effective = {**activation_env, **binding.get("env", {})}
-                    self.assertEqual(PR_EXPRESSION, effective["REVIEW_PR_NUMBER"])
+                    # Actions evaluates a step's whole env map against the workflow/job env before
+                    # merging it, so this binding reads the workflow value even when gh-aw blanks the
+                    # raw REVIEW_PR_NUMBER name in the same map to isolate prompt rendering.
+                    self.assertEqual(PR_EXPRESSION, activation_env["REVIEW_PR_NUMBER"])
                     self.assertEqual("${{ env.REVIEW_PR_NUMBER }}", binding["env"]["GH_AW_ENV_REVIEW_PR_NUMBER"])
+                    script = binding["with"]["script"]
+                    if "promptEnvironment" in script:
+                        allowlist = re.search(r"const promptEnvironment = new Set\((\[.*?\])\);", script)
+                        self.assertIsNotNone(allowlist, "unrecognized gh-aw prompt environment allowlist")
+                        self.assertIn("GH_AW_ENV_REVIEW_PR_NUMBER", json.loads(allowlist.group(1)))
                     if title == "Substitute placeholders":
                         self.assertIn("GH_AW_ENV_REVIEW_PR_NUMBER: process.env.GH_AW_ENV_REVIEW_PR_NUMBER",
                                       binding["with"]["script"])
                 creator = step(document, "activation", "name", "Create prompt with built-in context")
                 interpolator = step(document, "activation", "name", "Interpolate variables and render templates")
-                self.assertIn("'interpolate_prompt.cjs'", interpolator["with"]["script"])
+                self.assertRegex(interpolator["with"]["script"], r"require\([^)]*['/]interpolate_prompt\.cjs'\)")
                 self.assertEqual(creator["env"]["GH_AW_PROMPT"], interpolator["env"]["GH_AW_PROMPT"])
 
     def test_required_diff_failure_has_terminal_incomplete_prompt_delivery(self) -> None:

@@ -59,7 +59,7 @@ tools:
     - uniq
 
 safe-outputs:
-  # gh-aw v1.0.1 treats TCP_DENIED / 200 as successful.
+  # gh-aw v1.0.1 through v1.2.2 treat TCP_DENIED / 200 as successful.
   # Preserve explicit denials without changing network access or raw evidence.
   steps:
     - name: Preserve explicit firewall denials in footer reporting
@@ -79,7 +79,7 @@ safe-outputs:
             return;
           }
           if (digest !== originalDigest) {
-            throw new Error("The gh-aw firewall footer module changed; revalidate or remove the v1.0.1 correction.");
+            throw new Error("The gh-aw firewall footer module changed; revalidate or remove the TCP_DENIED footer correction.");
           }
           const original = "function isRequestBlocked(decision, status) {\n";
           const corrected = original + '  if (decision.includes("TCP_DENIED")) {\n    return true;\n  }\n\n';

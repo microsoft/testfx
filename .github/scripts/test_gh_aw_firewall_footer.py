@@ -148,7 +148,7 @@ class GhAwFirewallFooterTests(unittest.TestCase):
     def test_changed_upstream_module_fails_without_modifying_it(self) -> None:
         result = self.run_module(source=SOURCE + "\n// changed upstream module\n")
         self.assertEqual(
-            "The gh-aw firewall footer module changed; revalidate or remove the v1.0.1 correction.",
+            "The gh-aw firewall footer module changed; revalidate or remove the TCP_DENIED footer correction.",
             result["error"],
         )
         self.assertTrue(result["unchanged"])

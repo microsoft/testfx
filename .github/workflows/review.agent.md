@@ -1,4 +1,6 @@
 ---
+tools:
+  cli-proxy: false
 name: "Expert Code Review (command)"
 description: "Runs the expert-reviewer agent on /review and submits one consolidated review with bundled inline findings."
 

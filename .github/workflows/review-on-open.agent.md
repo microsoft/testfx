@@ -1,4 +1,6 @@
 ---
+tools:
+  cli-proxy: false
 name: "Expert Code Review (on PR ready)"
 description: "Automatically runs the expert-reviewer agent when a PR becomes ready and submits one consolidated review with bundled inline findings."
 
