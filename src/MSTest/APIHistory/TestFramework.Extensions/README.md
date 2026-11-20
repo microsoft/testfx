@@ -9,7 +9,7 @@ The `.txt.history` suffix deliberately keeps these snapshots out of
 `InternalAPI.Shipped.txt` discovery, so a release cannot promote or rewrite them.
 
 The non-UI APIs moved to core in #12412 and #12428. The dedicated
-`TestFramework.Compatibility` project retains independent live copies of the
+`MSTest.TestFramework.Extensions` project retains independent live copies of the
 ordinary non-UI API baselines and forwards those types to core. The remaining UI
 APIs now belong to the `MSTest.Uwp.dll` and `MSTest.WinUI.dll` assemblies, which
 `MSTest.TestFramework` references for UWP and WinUI projects. UI consumers must

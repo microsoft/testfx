@@ -84,10 +84,10 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <Target Name="_AddMSTestCompatibilityFacade">
     <PropertyGroup>
-      <_MSTestCompatibilityOutput>$(ArtifactsBinDir)TestFramework.Compatibility\$(Configuration)\$(TargetFramework)\MSTest.TestFramework.Extensions</_MSTestCompatibilityOutput>
+      <_MSTestCompatibilityOutput>$(ArtifactsBinDir)MSTest.TestFramework.Extensions\$(Configuration)\$(TargetFramework)\MSTest.TestFramework.Extensions</_MSTestCompatibilityOutput>
     </PropertyGroup>
     <Error Condition=" !Exists('$(_MSTestCompatibilityOutput).dll') or !Exists('$(_MSTestCompatibilityOutput).xml') "
-           Text="Build TestFramework.Compatibility for $(TargetFramework) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
+           Text="Build MSTest.TestFramework.Extensions for $(TargetFramework) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).dll" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.dll" />
       <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).xml" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.xml" />

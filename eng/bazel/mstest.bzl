@@ -47,7 +47,7 @@ def mstest_libraries():
     )
     testfx_library(
         name = "framework_compatibility",
-        project = "src/MSTest/TestFramework.Compatibility",
+        project = "src/MSTest/MSTest.TestFramework.Extensions",
         target_frameworks = STANDARD_FRAMEWORKS + ["net462"],
         assembly_name = "MSTest.TestFramework.Extensions",
         polyfills = False,

@@ -168,9 +168,8 @@
                                        and '%(ProjectReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)'
                                        and $([System.String]::Copy('%(ProjectReference.FullPath)').StartsWith('$(_CodeCoverageSourceRoot)')) ">
         <CoverageAssemblyName>%(ProjectReference.Filename)</CoverageAssemblyName>
-        <!-- These projects use assembly names that differ from their project file names. -->
+        <!-- The core framework's assembly name differs from its project file name. -->
         <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework' ">MSTest.TestFramework</CoverageAssemblyName>
-        <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework.Compatibility' ">MSTest.TestFramework.Extensions</CoverageAssemblyName>
       </_CodeCoverageProjectReference>
       <!-- Some unit suites compile product implementations as linked sources under test-only conditional symbols. -->
       <_CodeCoverageProjectReference Include="$(MSBuildProjectFullPath)"

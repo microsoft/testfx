@@ -39,7 +39,7 @@
       "src\\MTP\\Microsoft.Testing.Platform.MSBuild\\Microsoft.Testing.Platform.MSBuild.csproj",
       "src\\MTP\\Microsoft.Testing.Platform.ServerMode.Client.Sources\\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj",
       "src\\MTP\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj",
-      "src\\MSTest\\TestFramework.Compatibility\\TestFramework.Compatibility.csproj",
+      "src\\MSTest\\MSTest.TestFramework.Extensions\\MSTest.TestFramework.Extensions.csproj",
       "src\\MSTest\\TestFramework.Windows.UIAutomation\\TestFramework.Windows.UIAutomation.csproj",
       "src\\MSTest\\TestFramework.SourceGeneration\\TestFramework.SourceGeneration.csproj",
       "src\\MSTest\\TestFramework\\TestFramework.csproj",

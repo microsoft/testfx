@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
-    <AssemblyName>MSTest.TestFramework.Extensions</AssemblyName>
+    <!-- This assembly forwards legacy non-UI types; it ships in MSTest.TestFramework, not as a separate package. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
