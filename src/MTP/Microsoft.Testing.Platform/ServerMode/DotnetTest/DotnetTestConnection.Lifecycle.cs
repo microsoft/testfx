@@ -57,7 +57,7 @@ internal sealed partial class DotnetTestConnection
                 // Bounded wait: the cancel + dispose above unblock the parked read quickly. Never hang exit.
                 listenerTask.Wait(TimeSpan.FromSeconds(5));
             }
-            catch (Exception ex) when (ex is AggregateException or ObjectDisposedException)
+            catch (Exception)
             {
                 // Best-effort shutdown. Logging providers have already been disposed by this phase; diagnostics
                 // belong in OnExitAsync, which runs while logging is still available.

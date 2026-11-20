@@ -71,7 +71,7 @@ internal sealed partial class DotnetTestConnection
             connectCts.CancelAfter(TimeSpan.FromSeconds(30));
             await controlClient.ConnectAsync(connectCts.Token).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is OperationCanceledException or TimeoutException or IOException or ObjectDisposedException)
+        catch (Exception ex)
         {
             // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
             // rather than affecting the test run.
@@ -119,7 +119,7 @@ internal sealed partial class DotnetTestConnection
             await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
             await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener failed while the session was live; ensuring cooperative cancellation: {ex}").ConfigureAwait(false);
         }
-        catch (Exception ex) when (cancellationToken.IsCancellationRequested && (ex is ObjectDisposedException or IOException))
+        catch (Exception ex)
         {
             // Cancellation raced with a pipe error (e.g. the stream was disposed during teardown); ignore. This is
             // an expected shutdown race, so it stays at Trace.
