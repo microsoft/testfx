@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
-    <OutputType Condition=" '$(_MSTestApplicationModel)' == 'Default' ">Exe</OutputType>
+    <OutputType Condition=" '$(_MSTestWinUIApplicationModel)' != 'true' AND '$(_MSTestUwpApplicationModel)' != 'true' ">Exe</OutputType>
     <OutputType Condition=" '$(_MSTestWinUIApplicationModel)' == 'true' AND '$(OutputType)' == 'Library' ">Exe</OutputType>
     <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
     <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>

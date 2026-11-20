@@ -11,5 +11,7 @@ The `.txt.history` suffix deliberately keeps these snapshots out of
 The non-UI APIs moved to core in #12412 and #12428. The dedicated
 `TestFramework.Compatibility` project retains independent live copies of the
 ordinary non-UI API baselines and forwards those types to core. The remaining UI
-APIs now belong to `MSTest.Uwp` and `MSTest.WinUI`. UI consumers must update their
-package references and recompile for this intentional next-major package boundary.
+APIs now belong to the `MSTest.Uwp.dll` and `MSTest.WinUI.dll` assemblies, which
+`MSTest.TestFramework` references for UWP and WinUI projects. UI consumers must
+update their assembly references and recompile for this intentional next-major
+assembly boundary.

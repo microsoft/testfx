@@ -276,7 +276,8 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -498,7 +499,8 @@ public class UITimeoutTestClass
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>

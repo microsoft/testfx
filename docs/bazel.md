@@ -153,7 +153,11 @@ Windows-qualified targets are opt-in; full workload/runtime parity remains a
 separate gate.
 The modern-UWP and WinUI closures both target `net10.0-windows10.0.18362.0`,
 consume the ordinary `framework` core, and share one `adapter_winui` and
-`platform_services_winui` build, matching the MSBuild packages. `TestContext` is
+`platform_services_winui` build, matching the MSBuild assemblies. The native
+`MSTest.TestFramework` and `MSTest.TestAdapter` packages do not yet carry the
+non-`lib` UWP/WinUI payloads (`MSTest.Uwp`, `MSTest.WinUI`, and the UI adapter
+build) that the MSBuild packages select through `buildTransitive`; that package
+layout parity remains outstanding. `TestContext` is
 defined in core for every flavor; `DeploymentItemAttribute` and the `TestContext`
 directory properties are available to the UI variants through ordinary core.
 The library probes check that ordinary core exposes those APIs for desktop, UWP,

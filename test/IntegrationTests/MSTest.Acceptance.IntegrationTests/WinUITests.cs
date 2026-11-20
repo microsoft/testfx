@@ -129,7 +129,8 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -175,7 +176,8 @@ public class TestClass1
             <MSTestSourceGenMode>$SourceGenMode$</MSTestSourceGenMode>
           </PropertyGroup>
           <ItemGroup>
-            <PackageReference Include="MSTest.WinUI" Version="$MSTestVersion$" />
+            <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+            <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
             <PackageReference Include="Microsoft.Testing.Platform" Version="$PlatformVersion$" />
             <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$PlatformVersion$" />
             $Generator$

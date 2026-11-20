@@ -11,6 +11,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 
 public sealed partial class SdkTests
 {
+    private const string UIPayloadsIgnoreMessage = "UI payloads are produced only by Windows packs.";
+
     private const string CompositionCentralPackageManagementSource = """
 
         #file Directory.Packages.props
@@ -21,104 +23,6 @@ public sealed partial class SdkTests
           </PropertyGroup>
         </Project>
         """;
-
-    public static IEnumerable<TestDataRow<(string ApplicationModel, string AdapterPackageId, bool UseCentralPackageManagement)>> ExplicitApplicationModelData =>
-    [
-        new(("Default", "MSTest.TestAdapter", false)),
-        new(("Default", "MSTest.TestAdapter", true)),
-        WindowsPackageDataRow(("Uwp", "MSTest.Uwp", false)),
-        WindowsPackageDataRow(("Uwp", "MSTest.Uwp", true)),
-        WindowsPackageDataRow(("WinUI", "MSTest.WinUI", false)),
-        WindowsPackageDataRow(("WinUI", "MSTest.WinUI", true)),
-    ];
-
-    [TestMethod]
-    [TestCategory("WindowsApplicationModel")]
-    [DynamicData(nameof(ExplicitApplicationModelData))]
-    public async Task MSTestSdk_ExplicitApplicationModel_SelectsCompositionBeforeLateToolingImports(
-        string applicationModel, string expectedAdapterPackageId, bool useCentralPackageManagement)
-    {
-        string lateProperties = applicationModel switch
-        {
-            "Uwp" => "<UseUwpTools>true</UseUwpTools>",
-            "WinUI" => "<UseWinUI>true</UseWinUI>",
-            _ => "<UseUwpTools>false</UseUwpTools>",
-        };
-        string earlyProperties = applicationModel == "Default" ? "<UseUwp>true</UseUwp>" : string.Empty;
-        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
-            $"Explicit{applicationModel}Sdk",
-            $"""
-            <MSTestApplicationModel>{applicationModel}</MSTestApplicationModel>
-            <WindowsPackageType>None</WindowsPackageType>
-            {earlyProperties}
-            """,
-            expectedAdapterPackageId: expectedAdapterPackageId,
-            useCentralPackageManagement: useCentralPackageManagement,
-            lateApplicationModelProperties: lateProperties);
-
-        result.AssertOutputContains($";Model={applicationModel};AdapterPackage={expectedAdapterPackageId};EndComposition");
-    }
-
-    [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
-    [DataRow("MSTest.TestAdapter", "MSTest.Uwp", "Direct")]
-    [DataRow("MSTest.TestAdapter", "MSTest.WinUI", "Direct")]
-    [DataRow("MSTest.Uwp", "MSTest.WinUI", "Direct")]
-    [DataRow("MSTest.TestAdapter", "MSTest.Uwp", "ExcludedBuildAssets")]
-    [DataRow("MSTest.TestAdapter", "MSTest.WinUI", "ExcludedBuildAssets")]
-    [DataRow("MSTest.Uwp", "MSTest.WinUI", "ExcludedBuildAssets")]
-    [DataRow("MSTest.TestAdapter", "MSTest.Uwp", "ProjectReferenceWithExcludedBuildAssets")]
-    [DataRow("MSTest.TestAdapter", "MSTest.WinUI", "ProjectReferenceWithExcludedBuildAssets")]
-    [DataRow("MSTest.Uwp", "MSTest.WinUI", "ProjectReferenceWithExcludedBuildAssets")]
-    public async Task ExplicitPackages_RejectConflictingAdaptersBeforeCompilation(string firstPackage, string secondPackage, string referenceKind)
-    {
-        string excludedAssets = referenceKind == "Direct" ? string.Empty : " ExcludeAssets=\"build;buildTransitive\"";
-        string secondReference = $"""<PackageReference Include="{secondPackage}" Version="{MSTestVersion}"{excludedAssets} />""";
-        string source = $$"""
-            #file ConflictingMSTestPackages.csproj
-            <Project Sdk="Microsoft.NET.Sdk">
-              <PropertyGroup>
-                <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
-              </PropertyGroup>
-              <ItemGroup>
-                <PackageReference Include="{{firstPackage}}" Version="{{MSTestVersion}}" />
-                {{(referenceKind == "ProjectReferenceWithExcludedBuildAssets" ? """<ProjectReference Include="Dependency/Dependency.csproj" />""" : secondReference)}}
-              </ItemGroup>
-            </Project>
-            """;
-        if (referenceKind == "ProjectReferenceWithExcludedBuildAssets")
-        {
-            source += $$"""
-
-                #file Dependency/Dependency.csproj
-                <Project Sdk="Microsoft.NET.Sdk">
-                  <PropertyGroup>
-                    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
-                  </PropertyGroup>
-                  <ItemGroup>
-                    {{secondReference}}
-                  </ItemGroup>
-                </Project>
-                """;
-        }
-
-        using TestAsset asset = await TestAsset.GenerateAssetAsync(
-            "ConflictingMSTestPackages",
-            source);
-        DotnetMuxerResult result = await DotnetCli.RunAsync(
-            "msbuild ConflictingMSTestPackages.csproj -restore -t:PrepareForBuild -bl:conflicting-adapters.binlog",
-            workingDirectory: asset.TargetAssetPath,
-            failIfReturnValueIsNotZero: false,
-            cancellationToken: TestContext.CancellationToken);
-        using var assets = JsonDocument.Parse(
-            await File.ReadAllTextAsync(Path.Join(asset.TargetAssetPath, "obj", "project.assets.json"), TestContext.CancellationToken));
-        string[] packages = Assert.ContainsSingle(assets.RootElement.GetProperty("targets").EnumerateObject()).Value
-            .EnumerateObject().Select(package => package.Name).ToArray();
-        Assert.Contains($"{firstPackage}/{MSTestVersion}", packages);
-        Assert.Contains($"{secondPackage}/{MSTestVersion}", packages);
-        result.AssertExitCodeIs(1);
-        result.AssertOutputContains("Reference exactly one MSTest adapter composition: MSTest.TestAdapter, MSTest.Uwp, or MSTest.WinUI.");
-    }
 
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
@@ -154,7 +58,7 @@ public sealed partial class SdkTests
               <Import Project="Sdk.targets" Sdk="MSTest.Sdk" Version="$MSTestVersion$" />
               <Target Name="PrintClassicComposition" DependsOnTargets="PrepareForBuild;ResolveReferences">
                 <Message Importance="high"
-                         Text="ClassicComposition:Model=$(_MSTestApplicationModel);AdapterPackage=$(_MSTestAdapterPackageId);EndComposition" />
+                         Text="ClassicComposition:Uwp=$(_MSTestUwpApplicationModel);WinUI=$(_MSTestWinUIApplicationModel);EndComposition" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)/resolved-mstest-assets.txt"
                                   Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" />
               </Target>
@@ -173,50 +77,24 @@ public sealed partial class SdkTests
             testAsset.TargetAssetPath,
             TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, $"{result.StandardOutput}{Environment.NewLine}{result.ErrorOutput}");
-        Assert.Contains("ClassicComposition:Model=Uwp;AdapterPackage=MSTest.Uwp;EndComposition", result.StandardOutput);
-        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, "uap10.0.16299", "MSTest.Uwp");
-        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, "MSTest.Uwp");
+        Assert.Contains("ClassicComposition:Uwp=true;WinUI=false;EndComposition", result.StandardOutput);
+        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, "uap10.0.16299", expectAdapter: true);
+        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, WindowsApplicationModelAssetKind.ClassicUwp);
     }
 
-    public static IEnumerable<TestDataRow<(string ApplicationModel, string AdapterPackageId)>> UwpToolingOptOutData =>
+    public static IEnumerable<TestDataRow<(string ApplicationModel, string Runner)>> AdapterInjectionData =>
     [
-        new(("Default", "MSTest.TestAdapter")),
-        WindowsPackageDataRow(("Uwp", "MSTest.Uwp")),
-        WindowsPackageDataRow(("WinUI", "MSTest.WinUI")),
-    ];
-
-    [TestMethod]
-    [TestCategory("WindowsApplicationModel")]
-    [DynamicData(nameof(UwpToolingOptOutData))]
-    public async Task MSTestSdk_UwpToolingOptOut_RespectsExplicitApplicationModel(string applicationModel, string expectedAdapterPackageId)
-    {
-        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
-            $"UwpToolingOptOut{applicationModel}Sdk",
-            $"""
-            <MSTestApplicationModel>{applicationModel}</MSTestApplicationModel>
-            <UseUwp>true</UseUwp>
-            <UseUwpTools>false</UseUwpTools>
-            <WindowsPackageType>None</WindowsPackageType>
-            """,
-            expectedAdapterPackageId: expectedAdapterPackageId);
-
-        result.AssertOutputContains($";Model={applicationModel};AdapterPackage={expectedAdapterPackageId};EndComposition");
-    }
-
-    public static IEnumerable<TestDataRow<(string ApplicationModel, string Runner, string AdapterPackageId)>> AdapterInjectionData =>
-    [
-        new(("Default", "NativeAOT", "MSTest.TestAdapter")),
-        WindowsPackageDataRow(("Uwp", "NativeAOT", "MSTest.Uwp")),
-        WindowsPackageDataRow(("WinUI", "NativeAOT", "MSTest.WinUI")),
-        WindowsPackageDataRow(("Uwp", "VSTest", "MSTest.Uwp")),
-        WindowsPackageDataRow(("WinUI", "VSTest", "MSTest.WinUI")),
+        new(("Default", "NativeAOT")),
+        WindowsPackageDataRow(("Uwp", "NativeAOT")),
+        WindowsPackageDataRow(("WinUI", "NativeAOT")),
+        WindowsPackageDataRow(("Uwp", "VSTest")),
+        WindowsPackageDataRow(("WinUI", "VSTest")),
     ];
 
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
     [DynamicData(nameof(AdapterInjectionData))]
-    public async Task MSTestSdk_AdapterInjection_UsesSelectedCompositionWithCentralPackageManagement(
-        string applicationModel, string runner, string expectedAdapterPackageId)
+    public async Task MSTestSdk_AdapterInjection_UsesTestAdapterWithCentralPackageManagement(string applicationModel, string runner)
     {
         string runnerProperties = runner == "VSTest"
             ? "<UseVSTest>true</UseVSTest>"
@@ -224,63 +102,39 @@ public sealed partial class SdkTests
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             $"{applicationModel}{runner}CompositionSdk",
             $"""
-            <MSTestApplicationModel>{applicationModel}</MSTestApplicationModel>
+            {GetUIApplicationModelProperties(applicationModel)}
             <WindowsPackageType>None</WindowsPackageType>
             {runnerProperties}
             """,
-            expectedAdapterPackageId: expectedAdapterPackageId,
+            expectedUiAssetKind: GetUIAssetKind(applicationModel),
             useCentralPackageManagement: true);
 
-        result.AssertOutputContains($";Model={applicationModel};AdapterPackage={expectedAdapterPackageId};EndComposition");
+        result.AssertOutputContains(
+            $";Uwp={(applicationModel == "Uwp" ? "true" : "false")};WinUI={(applicationModel == "WinUI" ? "true" : "false")};EndComposition");
+        Assert.MatchesRegex(@"PackageReferences=[^\r\n]*\bMSTest\.TestAdapter\b", result.StandardOutput);
         if (runner == "NativeAOT")
         {
             result.AssertOutputContains("MSTest.SourceGeneration");
         }
     }
 
-    [TestMethod]
-    [TestCategory("WindowsApplicationModel")]
-    [DataRow("Desktop", "", "Invalid value 'Desktop' for MSTestApplicationModel.", DisplayName = "Unknown application model")]
-    [DataRow("Default", "<UseWinUI>true</UseWinUI>", "MSTestApplicationModel 'Default' conflicts", DisplayName = "Ordinary model conflicts with WinUI")]
-    [DataRow("Default", "<UseUwpTools>true</UseUwpTools>", "MSTestApplicationModel 'Default' conflicts", DisplayName = "Ordinary model conflicts with UWP tooling")]
-    [DataRow("Default", "<UseUwp>true</UseUwp>", "MSTestApplicationModel 'Default' conflicts", DisplayName = "Ordinary model conflicts with inferred UWP")]
-    [DataRow("Uwp", "<UseWinUI>true</UseWinUI>", "MSTestApplicationModel 'Uwp' conflicts", DisplayName = "UWP model conflicts with WinUI")]
-    [DataRow("WinUI", "<UseUwpTools>true</UseUwpTools>", "MSTestApplicationModel 'WinUI' conflicts", DisplayName = "WinUI model conflicts with UWP tooling")]
-    [DataRow("WinUI", "<UseUwp>true</UseUwp>", "MSTestApplicationModel 'WinUI' conflicts", DisplayName = "WinUI model conflicts with inferred UWP")]
-    public async Task MSTestSdk_ApplicationModel_RejectsInvalidOrConflictingChoices(
-        string applicationModel, string toolingProperties, string expectedError)
-    {
-        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
-            "InvalidApplicationModelSdk",
-            $"""
-            <MSTestApplicationModel>{applicationModel}</MSTestApplicationModel>
-            <WindowsPackageType>None</WindowsPackageType>
-            {toolingProperties}
-            """,
-            failIfReturnValueIsNotZero: false);
-
-        Assert.AreNotEqual(0, result.ExitCode);
-        result.AssertOutputContains(expectedError);
-    }
-
-    public static IEnumerable<TestDataRow<(string ApplicationModel, bool EnableSourceGeneration, string? AdapterPackageId, bool UseCentralPackageManagement, bool LateOptIn)>> HelperCompositionData =>
+    public static IEnumerable<TestDataRow<(string ApplicationModel, bool EnableSourceGeneration, bool UseCentralPackageManagement, bool LateOptIn)>> HelperCompositionData =>
     [
-        new(("Default", false, null, false, false)),
-        new(("Default", true, "MSTest.TestAdapter", true, false)),
-        WindowsPackageDataRow<(string, bool, string?, bool, bool)>(("Uwp", false, "MSTest.Uwp", false, false)),
-        WindowsPackageDataRow<(string, bool, string?, bool, bool)>(("Uwp", true, "MSTest.Uwp", true, false)),
-        WindowsPackageDataRow<(string, bool, string?, bool, bool)>(("WinUI", false, "MSTest.WinUI", false, false)),
-        WindowsPackageDataRow<(string, bool, string?, bool, bool)>(("WinUI", true, "MSTest.WinUI", true, false)),
-        new(("Default", true, "MSTest.TestAdapter", false, true)),
-        new(("Default", true, "MSTest.TestAdapter", true, true)),
+        new(("Default", false, false, false)),
+        new(("Default", true, true, false)),
+        WindowsPackageDataRow(("Uwp", false, false, false)),
+        WindowsPackageDataRow(("Uwp", true, true, false)),
+        WindowsPackageDataRow(("WinUI", false, false, false)),
+        WindowsPackageDataRow(("WinUI", true, true, false)),
+        new(("Default", true, false, true)),
+        new(("Default", true, true, true)),
     ];
 
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
     [DynamicData(nameof(HelperCompositionData))]
     public async Task MSTestSdk_Helper_KeepsOnlyRequiredCompileTimeComposition(
-        string applicationModel, bool enableSourceGeneration, string? expectedAdapterPackageId,
-        bool useCentralPackageManagement, bool lateSourceGenerationOptIn)
+        string applicationModel, bool enableSourceGeneration, bool useCentralPackageManagement, bool lateSourceGenerationOptIn)
     {
         const string Source = """
             #file Helper.csproj
@@ -289,7 +143,7 @@ public sealed partial class SdkTests
                 <TargetFramework>$TargetFramework$</TargetFramework>
                 <EnableWindowsTargeting>true</EnableWindowsTargeting>
                 <IsTestApplication>false</IsTestApplication>
-                <MSTestApplicationModel>$ApplicationModel$</MSTestApplicationModel>
+                $UIProperties$
                 <EnableMSTestSourceGeneration>$EnableSourceGeneration$</EnableMSTestSourceGeneration>
                 <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
               </PropertyGroup>
@@ -321,7 +175,7 @@ public sealed partial class SdkTests
         string source = Source
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", targetFramework)
-            .PatchCodeWithReplace("$ApplicationModel$", applicationModel)
+            .PatchCodeWithReplace("$UIProperties$", GetUIApplicationModelProperties(applicationModel))
             .PatchCodeWithReplace("$TestMethodAttribute$", applicationModel == "Default" ? "TestMethod" : "Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethod")
             .PatchCodeWithReplace("$EnableSourceGeneration$", lateSourceGenerationOptIn ? string.Empty : enableSourceGeneration.ToString());
         if (useCentralPackageManagement)
@@ -342,6 +196,9 @@ public sealed partial class SdkTests
                 """;
         }
 
+        // Only generated code needs the adapter's runtime hooks; UI helpers otherwise get the UI APIs from MSTest.TestFramework alone.
+        bool expectAdapter = enableSourceGeneration;
+        WindowsApplicationModelAssetKind? uiAssetKind = GetUIAssetKind(applicationModel);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync($"{applicationModel}HelperSdk", source);
         if (lateSourceGenerationOptIn)
         {
@@ -349,7 +206,7 @@ public sealed partial class SdkTests
                 $"msbuild \"{Path.Join(testAsset.TargetAssetPath, "Helper.csproj")}\" -restore -t:ResolveReferences;WriteHelperComposition -p:Configuration=Release -bl:\"{Path.Join(testAsset.TargetAssetPath, "helper-resolution.binlog")}\"",
                 cancellationToken: TestContext.CancellationToken);
             resolution.AssertExitCodeIs(0);
-            await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectedAdapterPackageId);
+            await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectAdapter);
         }
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
@@ -357,8 +214,8 @@ public sealed partial class SdkTests
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
 
-        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectedAdapterPackageId);
-        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, expectedAdapterPackageId);
+        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, targetFramework, expectAdapter);
+        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, uiAssetKind, expectAdapter);
         string[] copyLocal = await File.ReadAllLinesAsync(Path.Join(testAsset.TargetAssetPath, "copy-local-assets.txt"), TestContext.CancellationToken);
         Assert.DoesNotContain(IsMSTestApplicationPayload, copyLocal);
         Assert.DoesNotContain(
@@ -371,7 +228,7 @@ public sealed partial class SdkTests
 
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = UIPayloadsIgnoreMessage)]
     [DataRow("Uwp", false)]
     [DataRow("WinUI", true)]
     public async Task MSTestSdk_UiApplication_WithOrdinarySourceGeneratedHelper_DoesNotResolveOrdinaryAdapter(
@@ -384,7 +241,7 @@ public sealed partial class SdkTests
                 <TargetFramework>$UiTargetFramework$</TargetFramework>
                 <EnableWindowsTargeting>true</EnableWindowsTargeting>
                 <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
-                <MSTestApplicationModel>$ApplicationModel$</MSTestApplicationModel>
+                $UIProperties$
                 <WindowsPackageType>None</WindowsPackageType>
                 <EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>
                 <TestingExtensionsProfile>None</TestingExtensionsProfile>
@@ -432,7 +289,7 @@ public sealed partial class SdkTests
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$UiTargetFramework$", uiTargetFramework)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
-            .PatchCodeWithReplace("$ApplicationModel$", applicationModel);
+            .PatchCodeWithReplace("$UIProperties$", GetUIApplicationModelProperties(applicationModel));
         if (useCentralPackageManagement)
         {
             source += CompositionCentralPackageManagementSource;
@@ -444,29 +301,30 @@ public sealed partial class SdkTests
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
 
-        string expectedAdapterPackageId = $"MSTest.{applicationModel}";
-        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, uiTargetFramework, expectedAdapterPackageId);
-        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, expectedAdapterPackageId);
+        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, uiTargetFramework, expectAdapter: true);
+        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, GetUIAssetKind(applicationModel));
         string helperDirectory = Path.Join(testAsset.TargetAssetPath, "Helper");
-        await AssertResolvedMSTestCompositionAsync(helperDirectory, TargetFrameworks.NetCurrent, "MSTest.TestAdapter");
+        await AssertResolvedMSTestCompositionAsync(helperDirectory, TargetFrameworks.NetCurrent, expectAdapter: true);
         await AssertGeneratedHelperSourcesAsync(helperDirectory, TargetFrameworks.NetCurrent, enableSourceGeneration: true);
 
+        string uiAdapterDirectory = $"/mstest.testadapter/{MSTestVersion.ToLowerInvariant()}/buildtransitive/net10.0/ui/";
         string[] references = await File.ReadAllLinesAsync(Path.Join(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"), TestContext.CancellationToken);
         foreach (string assembly in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll" })
         {
             string packagePath = Assert.ContainsSingle(references.Where(path => path.EndsWith(assembly, StringComparison.OrdinalIgnoreCase)));
+            Assert.EndsWith($"{uiAdapterDirectory}{assembly.ToLowerInvariant()}", NormalizePackagePath(packagePath), assembly);
             string applicationPath = Path.Join(testAsset.TargetAssetPath, "bin", "Release", uiTargetFramework, assembly);
             Assert.AreSequenceEqual(
                 SHA256.HashData(await File.ReadAllBytesAsync(packagePath, TestContext.CancellationToken)),
                 SHA256.HashData(await File.ReadAllBytesAsync(applicationPath, TestContext.CancellationToken)),
-                $"The application must copy {assembly} from {expectedAdapterPackageId}, not its ordinary helper.");
+                $"The application must copy {assembly} from the UI adapter build in MSTest.TestAdapter, not its ordinary helper.");
             Assert.IsFalse(File.Exists(Path.Join(helperDirectory, "bin", "Release", TargetFrameworks.NetCurrent, assembly)));
         }
     }
 
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UI composition packages are produced only by Windows packs.")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = UIPayloadsIgnoreMessage)]
     [DataRow("Uwp", false)]
     [DataRow("Uwp", true)]
     [DataRow("WinUI", false)]
@@ -477,13 +335,14 @@ public sealed partial class SdkTests
         const string ReportTarget = """
               <Target Name="WriteInnerComposition" AfterTargets="ResolveReferences">
                 <Message Importance="high"
-                         Text="InnerComposition:TargetFramework=$(TargetFramework);Model=$(_MSTestApplicationModel);AdapterPackage=$(_MSTestAdapterPackageId);EndComposition" />
+                         Text="InnerComposition:TargetFramework=$(TargetFramework);Uwp=$(_MSTestUwpApplicationModel);WinUI=$(_MSTestWinUIApplicationModel);EndComposition" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)/resolved-mstest-assets-$(TargetFramework).txt"
                                   Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" />
               </Target>
             </Project>
             """;
         string uiTargetFramework = $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0";
+        string uiProperty = applicationModel == "WinUI" ? "UseWinUI" : "UseUwp";
         string source = SingleTestSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", $"{TargetFrameworks.NetCurrent};{uiTargetFramework}")
@@ -492,7 +351,7 @@ public sealed partial class SdkTests
                 <WindowsPackageType>None</WindowsPackageType>
                 <EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>
                 <TestingExtensionsProfile>None</TestingExtensionsProfile>
-                <MSTestApplicationModel Condition=" '$(TargetFramework)' == '{uiTargetFramework}' ">{applicationModel}</MSTestApplicationModel>
+                <{uiProperty} Condition=" '$(TargetFramework)' == '{uiTargetFramework}' ">true</{uiProperty}>
                 """)
             .PatchCodeWithReplace("</Project>", ReportTarget);
         if (useCentralPackageManagement)
@@ -506,20 +365,41 @@ public sealed partial class SdkTests
             cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
 
-        result.AssertOutputContains($"InnerComposition:TargetFramework={TargetFrameworks.NetCurrent};Model=Default;AdapterPackage=MSTest.TestAdapter;EndComposition");
-        result.AssertOutputContains($"InnerComposition:TargetFramework={uiTargetFramework};Model={applicationModel};AdapterPackage=MSTest.{applicationModel};EndComposition");
-        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, TargetFrameworks.NetCurrent, "MSTest.TestAdapter");
-        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, uiTargetFramework, $"MSTest.{applicationModel}");
-        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, "MSTest.TestAdapter", $"resolved-mstest-assets-{TargetFrameworks.NetCurrent}.txt");
-        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, $"MSTest.{applicationModel}", $"resolved-mstest-assets-{uiTargetFramework}.txt");
+        result.AssertOutputContains($"InnerComposition:TargetFramework={TargetFrameworks.NetCurrent};Uwp=false;WinUI=false;EndComposition");
+        result.AssertOutputContains(
+            $"InnerComposition:TargetFramework={uiTargetFramework};Uwp={(applicationModel == "Uwp" ? "true" : "false")};WinUI={(applicationModel == "WinUI" ? "true" : "false")};EndComposition");
+        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, TargetFrameworks.NetCurrent, expectAdapter: true);
+        await AssertResolvedMSTestCompositionAsync(testAsset.TargetAssetPath, uiTargetFramework, expectAdapter: true);
+        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, uiAssetKind: null, reportName: $"resolved-mstest-assets-{TargetFrameworks.NetCurrent}.txt");
+        await AssertResolvedMSTestReferencesAsync(testAsset.TargetAssetPath, GetUIAssetKind(applicationModel), reportName: $"resolved-mstest-assets-{uiTargetFramework}.txt");
     }
 
     private static TestDataRow<T> WindowsPackageDataRow<T>(T value)
-        => new(value) { IgnoreMessage = OperatingSystem.IsWindows() ? null : "UI composition packages are produced only by Windows packs." };
+        => new(value) { IgnoreMessage = OperatingSystem.IsWindows() ? null : UIPayloadsIgnoreMessage };
 
+    private static WindowsApplicationModelAssetKind? GetUIAssetKind(string applicationModel)
+        => applicationModel switch
+        {
+            "Uwp" => WindowsApplicationModelAssetKind.ModernUwp,
+            "WinUI" => WindowsApplicationModelAssetKind.WinUI,
+            _ => null,
+        };
+
+    private static string GetUIApplicationModelProperties(string applicationModel)
+        => applicationModel switch
+        {
+            "Uwp" => "<UseUwp>true</UseUwp>",
+            "WinUI" => "<UseWinUI>true</UseWinUI>",
+            _ => string.Empty,
+        };
+
+    // The UI framework assemblies are compile-time APIs that helpers may copy; only the adapter makes an output a test application.
     private static bool IsMSTestApplicationPayload(string path)
-        => Path.GetFileName(path) is "MSTest.TestAdapter.dll" or "MSTestAdapter.PlatformServices.dll" or "MSTest.Uwp.dll" or "MSTest.WinUI.dll"
-            or "MSTest.TestAdapter.resources.dll" or "MSTestAdapter.PlatformServices.resources.dll" or "MSTest.Uwp.resources.dll" or "MSTest.WinUI.resources.dll";
+        => Path.GetFileName(path) is "MSTest.TestAdapter.dll" or "MSTestAdapter.PlatformServices.dll"
+            or "MSTest.TestAdapter.resources.dll" or "MSTestAdapter.PlatformServices.resources.dll";
+
+    private static string NormalizePackagePath(string path)
+        => path.Replace('\\', '/').ToLowerInvariant();
 
     private async Task AssertGeneratedHelperSourcesAsync(string projectDirectory, string targetFramework, bool enableSourceGeneration)
     {
@@ -535,7 +415,7 @@ public sealed partial class SdkTests
         }
     }
 
-    private async Task AssertResolvedMSTestCompositionAsync(string projectDirectory, string targetFramework, string? expectedAdapterPackageId)
+    private async Task AssertResolvedMSTestCompositionAsync(string projectDirectory, string targetFramework, bool expectAdapter)
     {
         using var assets = JsonDocument.Parse(
             await File.ReadAllTextAsync(Path.Join(projectDirectory, "obj", "project.assets.json"), TestContext.CancellationToken));
@@ -551,6 +431,7 @@ public sealed partial class SdkTests
         }
 
         JsonElement target = targets.GetProperty(targetName);
+        // The removed UI package ids stay listed so that a stale reference to them fails the comparison.
         string[] compositionPackages =
         [
             "MSTest.TestFramework", "MSTest.TestFramework.Extensions", "MSTest.TestAdapter", "MSTest.Uwp", "MSTest.WinUI",
@@ -560,44 +441,65 @@ public sealed partial class SdkTests
             .Select(package => package.Name)
             .Order(StringComparer.Ordinal)
             .ToArray();
-        string[] expected = expectedAdapterPackageId is null
-            ? [$"MSTest.TestFramework/{MSTestVersion}"]
-            : [$"MSTest.TestFramework/{MSTestVersion}", $"{expectedAdapterPackageId}/{MSTestVersion}"];
+        string[] expected = expectAdapter
+            ? [$"MSTest.TestAdapter/{MSTestVersion}", $"MSTest.TestFramework/{MSTestVersion}"]
+            : [$"MSTest.TestFramework/{MSTestVersion}"];
         Assert.AreSequenceEqual(expected.Order(StringComparer.Ordinal).ToArray(), actual, targetFramework);
-
-        string? uiAsset = expectedAdapterPackageId switch
-        {
-            "MSTest.Uwp" when targetFramework.StartsWith("uap", StringComparison.Ordinal) => "lib/uap10.0.16299/MSTest.Uwp.dll",
-            "MSTest.Uwp" => "lib/net10.0-windows10.0.18362/MSTest.Uwp.dll",
-            "MSTest.WinUI" => "lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
-            _ => null,
-        };
-        if (uiAsset is not null)
-        {
-            JsonElement compile = target.GetProperty($"{expectedAdapterPackageId}/{MSTestVersion}").GetProperty("compile");
-            Assert.Contains(uiAsset, compile.EnumerateObject().Select(asset => asset.Name), targetFramework);
-        }
     }
 
-    private async Task AssertResolvedMSTestReferencesAsync(string projectDirectory, string? expectedAdapterPackageId, string reportName = "resolved-mstest-assets.txt")
+    private async Task AssertResolvedMSTestReferencesAsync(
+        string projectDirectory,
+        WindowsApplicationModelAssetKind? uiAssetKind,
+        bool expectAdapter = true,
+        string reportName = "resolved-mstest-assets.txt")
     {
         string[] references = await File.ReadAllLinesAsync(Path.Join(projectDirectory, reportName), TestContext.CancellationToken);
+        string version = MSTestVersion.ToLowerInvariant();
         string frameworkPath = Assert.ContainsSingle(references.Where(path => path.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
         string compatibilityPath = Assert.ContainsSingle(references.Where(path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
         Assert.AreEqual(Path.Join(Path.GetDirectoryName(frameworkPath), "MSTest.TestFramework.Extensions.dll"), compatibilityPath);
-        foreach (string assembly in new[] { "MSTest.TestAdapter.dll", "MSTestAdapter.PlatformServices.dll", "MSTest.Uwp.dll", "MSTest.WinUI.dll" })
+        Assert.Contains($"/mstest.testframework/{version}/lib/", NormalizePackagePath(frameworkPath), frameworkPath);
+
+        string? adapterDirectory = !expectAdapter ? null : uiAssetKind switch
         {
-            string[] matches = references.Where(path => path.EndsWith(assembly, StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (expectedAdapterPackageId is null
-                || (assembly == "MSTest.Uwp.dll" && expectedAdapterPackageId != "MSTest.Uwp")
-                || (assembly == "MSTest.WinUI.dll" && expectedAdapterPackageId != "MSTest.WinUI"))
+            null => $"/mstest.testadapter/{version}/lib/",
+            WindowsApplicationModelAssetKind.ClassicUwp => $"/mstest.testadapter/{version}/buildtransitive/uap10.0/",
+            _ => $"/mstest.testadapter/{version}/buildtransitive/net10.0/ui/",
+        };
+        string? uwpDirectory = uiAssetKind switch
+        {
+            WindowsApplicationModelAssetKind.ClassicUwp => $"/mstest.testframework/{version}/buildtransitive/uap10.0/",
+            WindowsApplicationModelAssetKind.ModernUwp => $"/mstest.testframework/{version}/buildtransitive/net10.0/ui/uwp/",
+            _ => null,
+        };
+        string? winUIDirectory = uiAssetKind == WindowsApplicationModelAssetKind.WinUI
+            ? $"/mstest.testframework/{version}/buildtransitive/net10.0/ui/winui/"
+            : null;
+        (string Assembly, string? ExpectedDirectory)[] expectedAssemblies =
+        [
+            ("MSTest.TestAdapter.dll", adapterDirectory),
+            ("MSTestAdapter.PlatformServices.dll", adapterDirectory),
+            ("MSTest.Uwp.dll", uwpDirectory),
+            ("MSTest.WinUI.dll", winUIDirectory),
+        ];
+        foreach ((string assembly, string? expectedDirectory) in expectedAssemblies)
+        {
+            string[] matches = references.Where(path => string.Equals(Path.GetFileName(path), assembly, StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (expectedDirectory is null)
             {
                 Assert.IsEmpty(matches, assembly);
             }
             else
             {
-                string path = Assert.ContainsSingle(matches).Replace('\\', '/').ToLowerInvariant();
-                Assert.Contains($"/{expectedAdapterPackageId.ToLowerInvariant()}/{MSTestVersion.ToLowerInvariant()}/", path, assembly);
+                string path = NormalizePackagePath(Assert.ContainsSingle(matches));
+                string directory = path[..(path.LastIndexOf('/') + 1)];
+                if (expectedDirectory.EndsWith("/lib/", StringComparison.Ordinal))
+                {
+                    // Ordinary assets come from lib/<tfm>/, whose folder name follows the consumer's target framework.
+                    directory = directory[..(directory.TrimEnd('/').LastIndexOf('/') + 1)];
+                }
+
+                Assert.EndsWith(expectedDirectory, directory, path);
             }
         }
     }

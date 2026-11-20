@@ -1,10 +1,12 @@
 <Project>
+
+  <!-- Classic UWP consumes the adapter from buildTransitive/uap10.0 instead of lib/uap10.0 so the payload
+       is referenced explicitly and deployed through the AppX content pipeline. -->
   <PropertyGroup>
     <_MSTestAdapterPayloadRoot>$(MSBuildThisFileDirectory)</_MSTestAdapterPayloadRoot>
     <_MSTestAdapterLocalizationRoot>$(MSBuildThisFileDirectory)_localization\</_MSTestAdapterLocalizationRoot>
-    <_MSTestUwpAdapterReferenced Condition=" '$(MSBuildThisFileName)' == 'MSTest.Uwp' ">true</_MSTestUwpAdapterReferenced>
-    <_MSTestWinUIAdapterReferenced Condition=" '$(MSBuildThisFileName)' == 'MSTest.WinUI' ">true</_MSTestWinUIAdapterReferenced>
     <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
     <IsMSTestTestAdapterReferenced>true</IsMSTestTestAdapterReferenced>
   </PropertyGroup>
+
 </Project>

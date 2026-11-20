@@ -125,8 +125,6 @@ function Confirm-NugetPackages {
         "MSTest.SourceGeneration"
         "MSTest.TestAdapter"
         "MSTest.TestFramework"
-        "MSTest.Uwp"
-        "MSTest.WinUI"
         "MSTest.Windows.UIAutomation"
     )
     # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
@@ -134,8 +132,6 @@ function Confirm-NugetPackages {
         "MSTest.Extensions.Hosting"
         "MSTest.Sdk"
         "MSTest.TestFramework"
-        "MSTest.Uwp"
-        "MSTest.WinUI"
         "MSTest.Windows.UIAutomation"
     )
     $baselineDirectory = Join-Path $PSScriptRoot "package-shapes"

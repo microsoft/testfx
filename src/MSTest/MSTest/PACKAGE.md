@@ -24,11 +24,10 @@ Supported platforms:
 - .NET 10.0+
 - UWP 10.0.16299
 
-Classic UWP selects `MSTest.Uwp` through its UAP dependency group. Modern UWP
-and WinUI cannot be distinguished by a Windows TFM alone: reference
-`MSTest.Uwp` or `MSTest.WinUI` directly instead of this metapackage, or use
-`MSTest.Sdk` with the appropriate application model. Do not combine them with
-the ordinary adapter dependency supplied by this metapackage.
+UWP and WinUI test applications use the same packages. `MSTest.TestFramework`
+adds the UI-thread APIs (`[UITestMethod]`) and `MSTest.TestAdapter` selects its
+UI-specific build from the project's `UseWinUI`, `UseUwpTools`, or `UseUwp`
+settings, or from a classic UAP target.
 
 ## Documentation
 

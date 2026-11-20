@@ -1,0 +1,35 @@
+<Project>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\MSTest.TestFramework.targets" />
+
+  <!--
+    WinUI and modern (.NET) UWP projects get the UI extension of the framework, which provides [UITestMethod] and the
+    UI-thread dispatching attributes. It only depends on MSTest.TestFramework, so shared test libraries get the UI
+    attributes without becoming test applications; MSTest.TestAdapter selects the matching adapter build for runners.
+    The extension ships outside lib/<tfm> because MSTest.WinUI and MSTest.Uwp both define UITestMethodAttribute and
+    NuGet can only select one set of lib assets per target framework.
+    The selection runs at execution time because UseWinUI, UseUwpTools and UseUwp may be set after package targets are
+    imported (for example in Directory.Build.targets). It runs before package conflict resolution and reference
+    resolution so the reference is handled like any other assembly reference.
+  -->
+  <Target Name="_MSTestAddUIFrameworkReference"
+          BeforeTargets="_HandlePackageFileConflicts;ResolveAssemblyReferences"
+          Condition=" '$(UsingMicrosoftNETSdk)' == 'true'
+                      AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetPlatformIdentifier)' == 'Windows' ">
+    <PropertyGroup>
+      <_MSTestUIFrameworkAssembly />
+      <_MSTestUIFrameworkAssembly Condition=" '$(UseWinUI)' == 'true' ">$(MSBuildThisFileDirectory)ui\winui\MSTest.WinUI.dll</_MSTestUIFrameworkAssembly>
+      <_MSTestUIFrameworkAssembly Condition=" '$(UseWinUI)' != 'true'
+                                              AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '')) ">$(MSBuildThisFileDirectory)ui\uwp\MSTest.Uwp.dll</_MSTestUIFrameworkAssembly>
+    </PropertyGroup>
+
+    <!-- A hint-path reference also copies the related .pri and .xml files and the culture satellites next to the assembly. -->
+    <ItemGroup Condition=" '$(_MSTestUIFrameworkAssembly)' != '' ">
+      <Reference Include="$([System.IO.Path]::GetFileNameWithoutExtension('$(_MSTestUIFrameworkAssembly)'))">
+        <HintPath>$(_MSTestUIFrameworkAssembly)</HintPath>
+        <Visible>False</Visible>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -104,7 +104,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    [DataRow("MSTest.WinUI")]
+    [DataRow("MSTest.TestAdapter")]
     public async Task PackagedAppContainerWinUI_ExplicitIntegrationPublishesTrx(string package)
     {
         GeneratedPackagedWinUIAsset generatedAsset = await GeneratePackagedWinUIAssetAsync(appContainer: true, package: package);
@@ -650,7 +650,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string source = SourceCode;
         if (package is not null)
         {
-            string references = $"<PackageReference Include=\"{package}\" Version=\"{MSTestVersion}\" />";
+            string references = $"<PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"{package}\" Version=\"{MSTestVersion}\" />";
             source = source
                 .Replace("MSTest.Sdk/$MSTestVersion$", "Microsoft.NET.Sdk", StringComparison.Ordinal)
                 .Replace(
@@ -965,18 +965,21 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         Assert.Contains("GenerateTestingPlatformApplicationHelper=true", report, reportPath);
         Assert.Contains("EnableMicrosoftTestingExtensionsPackagedApp=true", report, reportPath);
 
+        string mstestVersion = MSTestVersion.ToLowerInvariant();
         string[] required =
         [
-            "/lib/net10.0/MSTest.TestFramework.dll",
-            "/lib/net10.0/MSTest.TestFramework.Extensions.dll",
-            "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
-            "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
-            "/lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
+            $"/mstest.testframework/{mstestVersion}/lib/net10.0/MSTest.TestFramework.dll",
+            $"/mstest.testframework/{mstestVersion}/lib/net10.0/MSTest.TestFramework.Extensions.dll",
+            $"/mstest.testframework/{mstestVersion}/buildTransitive/net10.0/ui/winui/MSTest.WinUI.dll",
+            $"/mstest.testadapter/{mstestVersion}/buildTransitive/net10.0/ui/MSTest.TestAdapter.dll",
+            $"/mstest.testadapter/{mstestVersion}/buildTransitive/net10.0/ui/MSTestAdapter.PlatformServices.dll",
             "/lib/net10.0-windows10.0.19041/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];
         string[] rejected =
         [
-            "/mstest.testadapter/",
+            $"/mstest.testadapter/{mstestVersion}/lib/",
+            "/ui/uwp/",
+            "/mstest.winui/",
             "/mstest.uwp/",
             "/lib/net10.0/Microsoft.Testing.Extensions.PackagedApp.dll",
         ];

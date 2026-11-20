@@ -11,11 +11,13 @@
 
     <PackageId>MSTest.TestFramework</PackageId>
     <IsPackable>true</IsPackable>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddMSTestCompatibilityFacade</TargetsForTfmSpecificContentInPackage>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddMSTestCompatibilityFacade;_AddMSTestUIFrameworkPackageFiles</TargetsForTfmSpecificContentInPackage>
     <PackageTags>$(CommonPackageTags) MSTest TestFramework Framework</PackageTags>
-    <PackageDescription><![CDATA[Write tests and shared test libraries with the MSTest framework. Add MSTest.TestAdapter to run ordinary tests, MSTest.Uwp for UWP tests, or MSTest.WinUI for WinUI tests.
+    <PackageDescription><![CDATA[Write tests and shared test libraries with the MSTest framework, including UWP and WinUI UI-thread tests. Add MSTest.TestAdapter to run tests.
 
 $(CommonProductDescription)]]></PackageDescription>
+    <!-- The UWP and WinUI framework extensions ship as build-time references outside lib/<tfm> (see buildTransitive). -->
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
     <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>
 
     <!-- Treat "missing XML doc comment for publicly visible type or member" as a build error so
@@ -67,6 +69,11 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\MSTest.TestFramework.targets" />
   </ItemGroup>
 
+  <ItemGroup Label="UWP and WinUI framework extensions" Condition=" '$(OS)' == 'Windows_NT' ">
+    <None Include="buildTransitive\net10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\uap10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\uap10.0\" Condition=" '$(UwpMinimum)' != '' " />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\MTP\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="Internal\RoslynHashCode.cs" />
     <!-- Single source of truth for CI environment detection lives in Microsoft.Testing.Platform. The
@@ -84,6 +91,35 @@ $(CommonProductDescription)]]></PackageDescription>
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).dll" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.dll" />
       <TfmSpecificPackageFile Include="$(_MSTestCompatibilityOutput).xml" PackagePath="lib\$(TargetFramework)\MSTest.TestFramework.Extensions.xml" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    MSTest.WinUI and MSTest.Uwp both define UITestMethodAttribute, so they cannot share lib/<tfm>. They ship as
+    build-time references selected by buildTransitive/<tfm>/MSTest.TestFramework.targets from UseWinUI/UseUwpTools.
+    The projects reference this one, so they are built by the solution rather than through a ProjectReference.
+  -->
+  <Target Name="_AddMSTestUIFrameworkPackageFiles"
+          Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net10.0' ">
+    <PropertyGroup>
+      <_MSTestWinUIOutput>$(ArtifactsBinDir)MSTest.WinUI\$(Configuration)\$(WinUiMinimum)\</_MSTestWinUIOutput>
+      <_MSTestModernUwpOutput>$(ArtifactsBinDir)MSTest.Uwp\$(Configuration)\$(ModernUwpMinimum)\</_MSTestModernUwpOutput>
+      <_MSTestClassicUwpOutput Condition=" '$(UwpMinimum)' != '' ">$(ArtifactsBinDir)MSTest.Uwp\$(Configuration)\$(UwpMinimum)\</_MSTestClassicUwpOutput>
+    </PropertyGroup>
+    <Error Condition=" !Exists('$(_MSTestWinUIOutput)MSTest.WinUI.dll') or !Exists('$(_MSTestWinUIOutput)MSTest.WinUI.pri') or !Exists('$(_MSTestWinUIOutput)MSTest.WinUI.xml') "
+           Text="Build MSTest.WinUI for $(WinUiMinimum) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
+    <Error Condition=" !Exists('$(_MSTestModernUwpOutput)MSTest.Uwp.dll') or !Exists('$(_MSTestModernUwpOutput)MSTest.Uwp.xml') "
+           Text="Build MSTest.Uwp for $(ModernUwpMinimum) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
+    <Error Condition=" '$(_MSTestClassicUwpOutput)' != '' AND (!Exists('$(_MSTestClassicUwpOutput)MSTest.Uwp.dll') or !Exists('$(_MSTestClassicUwpOutput)MSTest.Uwp.xml')) "
+           Text="Build MSTest.Uwp for $(UwpMinimum) before packing MSTest.TestFramework. Use the repository solution build and pack entry point." />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_MSTestWinUIOutput)MSTest.WinUI.dll;$(_MSTestWinUIOutput)MSTest.WinUI.pri;$(_MSTestWinUIOutput)MSTest.WinUI.xml" PackagePath="buildTransitive\net10.0\ui\winui\" />
+      <!-- Localized satellites, packed under ui/winui/<culture>/ (the culture folder comes from RecursiveDir). -->
+      <TfmSpecificPackageFile Include="$(_MSTestWinUIOutput)**\MSTest.WinUI.resources.dll" PackagePath="buildTransitive\net10.0\ui\winui\" />
+      <TfmSpecificPackageFile Include="$(_MSTestModernUwpOutput)MSTest.Uwp.dll;$(_MSTestModernUwpOutput)MSTest.Uwp.xml" PackagePath="buildTransitive\net10.0\ui\uwp\" />
+      <TfmSpecificPackageFile Include="$(_MSTestModernUwpOutput)MSTest.Uwp.pri" PackagePath="buildTransitive\net10.0\ui\uwp\" Condition="Exists('$(_MSTestModernUwpOutput)MSTest.Uwp.pri')" />
+      <TfmSpecificPackageFile Include="$(_MSTestClassicUwpOutput)MSTest.Uwp.dll;$(_MSTestClassicUwpOutput)MSTest.Uwp.xml" PackagePath="buildTransitive\uap10.0\" Condition=" '$(_MSTestClassicUwpOutput)' != '' " />
+      <TfmSpecificPackageFile Include="$(_MSTestClassicUwpOutput)MSTest.Uwp.pri" PackagePath="buildTransitive\uap10.0\" Condition=" '$(_MSTestClassicUwpOutput)' != '' AND Exists('$(_MSTestClassicUwpOutput)MSTest.Uwp.pri') " />
     </ItemGroup>
   </Target>
 

@@ -26,30 +26,13 @@ Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through t
 
 ## Windows application models
 
-MSTest.Sdk uses Microsoft.Testing.Platform by default for unpackaged WinUI, packaged full-trust WinUI, AppContainer-configured WinUI, modern UWP (`UseUwpTools=true`), and classic `uap10.0` projects. All compositions share `MSTest.TestFramework`; UI APIs are supplied by the explicit `MSTest.Uwp` and `MSTest.WinUI` packages, not `MSTest.TestFramework.Extensions`.
+MSTest.Sdk uses Microsoft.Testing.Platform by default for unpackaged WinUI, packaged full-trust WinUI, AppContainer-configured WinUI, modern UWP (`UseUwpTools=true`), and classic `uap10.0` projects. Every composition uses the same two packages: `MSTest.TestFramework`, plus `MSTest.TestAdapter` for test applications. Both packages select their UWP or WinUI assemblies from the project's `UseWinUI`, `UseUwpTools`, or `UseUwp` properties, or from a classic `uap` target framework. No UI-specific MSTest package or `MSTest.TestFramework.Extensions` reference is needed.
 
-| Application model | Adapter/UI package selected by the SDK |
-| --- | --- |
-| Ordinary .NET | `MSTest.TestAdapter` |
-| Classic or modern UWP | `MSTest.Uwp` |
-| WinUI | `MSTest.WinUI` |
+`UseUwp=true` adds UWP XAML references. The desktop Visual Studio UWP targets can enable `UseUwpTools` after MSTest.Sdk evaluates, so `UseUwp=true` with `UseUwpTools` still unset is treated as UWP. Set `UseUwpTools=false` explicitly to use the references without UWP package activation; this selects the ordinary adapter assemblies and direct MTP runner. A project cannot use both the WinUI and UWP application models.
 
-Set `MSTestApplicationModel` to `Default`, `Uwp`, or `WinUI` to select a composition explicitly. An empty value infers the model from `UseWinUI=true`, `UseUwpTools=true`, `UseUwp=true` while `UseUwpTools` is unset, or a classic `uap` target framework; otherwise it selects `Default`. The explicit property controls package ownership before late desktop tooling imports, but does not enable or override that tooling. Unknown values and conflicting models fail with an MSBuild error. Modern UWP never selects WinUI.
+Reusable helpers (`IsTestApplication=false`) reference only `MSTest.TestFramework`, which also supplies the UWP or WinUI UI-thread APIs, unless source generation requires adapter runtime hooks. Helper adapter references are private, do not register an application builder hook, and do not copy adapter payloads or satellites into the consuming application. A UWP or WinUI helper therefore stays a library rather than becoming a test application.
 
-`UseUwp=true` adds UWP XAML references. The desktop Visual Studio UWP targets can enable `UseUwpTools` after MSTest.Sdk declares its package references. MSTest.Sdk preserves the UWP composition during that earlier evaluation when `UseUwp=true` and `UseUwpTools` is still unset. Set `UseUwpTools=false` explicitly to use the references without UWP package activation; this selects the ordinary composition and direct MTP runner unless another application model is explicitly selected.
-
-Selection applies to ClassicEngine, NativeAOT, and VSTest, including their source-generation hooks. Central package management receives a `PackageVersion` for the selected package, without requiring `VersionOverride`. Multi-targeted projects select independently for each inner framework. For example, a project whose UWP tooling imports are late can declare its package composition as follows:
-
-```xml
-<PropertyGroup>
-  <TargetFrameworks>net11.0;net11.0-windows10.0.26100.0</TargetFrameworks>
-  <MSTestApplicationModel Condition="'$(TargetFramework)' == 'net11.0-windows10.0.26100.0'">Uwp</MSTestApplicationModel>
-</PropertyGroup>
-```
-
-Ordinary reusable helpers (`IsTestApplication=false`) reference only `MSTest.TestFramework` unless source generation requires adapter runtime hooks. UI helpers reference their matching UI package. Helper adapter references are private, do not register an application builder hook, and do not copy adapter payloads or satellites into the consuming application; the application supplies its own selected runtime composition. An ordinary source-generated helper can therefore be referenced by a UWP or WinUI test application without introducing `MSTest.TestAdapter` transitively.
-
-For packaged applications the SDK references `Microsoft.Testing.Extensions.PackagedApp.MSBuild`, which supplies the full-trust app-model controller and shared launch targets. That controller registers the package and activates the exact manifest application by AUMID while retaining MTP-owned cancellation, reports, retries, and exit-code handling. The SDK itself does not duplicate the tool payload. The integration package ships in the aligned MTP release and can also be referenced explicitly by consumers of `MSTest.Uwp` or `MSTest.WinUI`.
+For packaged applications the SDK references `Microsoft.Testing.Extensions.PackagedApp.MSBuild`, which supplies the full-trust app-model controller and shared launch targets. That controller registers the package and activates the exact manifest application by AUMID while retaining MTP-owned cancellation, reports, retries, and exit-code handling. The SDK itself does not duplicate the tool payload. The integration package ships in the aligned MTP release and can also be referenced explicitly by `MSTest.TestAdapter` consumers.
 
 Unsigned build-output layouts require Windows Developer Mode or sideloading. UWP builds still require the Visual Studio UWP/MSBuild workload, but they do not require `Microsoft.NET.Test.Sdk`, `vstest.console`, or the Visual Studio UWP test-host runtime provider. See [Testing UWP and WinUI apps with MSTest](../../../docs/winui-testing.md).
 

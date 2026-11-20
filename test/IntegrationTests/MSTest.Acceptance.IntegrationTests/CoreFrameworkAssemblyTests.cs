@@ -65,27 +65,44 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
-    [DataRow("net10.0-windows10.0.18362.0", false, true, true, "MSTest.Uwp", DisplayName = "ModernUwpMinimum")]
-    [DataRow("net10.0-windows10.0.26100.0", false, false, false, "", DisplayName = "OrdinaryWindows")]
-    [DataRow("net10.0-windows10.0.26100.0", true, false, false, "MSTest.WinUI", DisplayName = "WinUI")]
-    [DataRow("net10.0-windows10.0.26100.0", false, true, true, "MSTest.Uwp", DisplayName = "ModernUwp")]
-    [DataRow("net10.0-windows10.0.26100.0", false, false, true, "", DisplayName = "ExplicitUwpToolsOptOut")]
-    [DataRow("net11.0-windows10.0.26100.0", false, false, false, "", DisplayName = "Net11OrdinaryWindows")]
-    [DataRow("net11.0-windows10.0.26100.0", true, false, false, "MSTest.WinUI", DisplayName = "Net11WinUI")]
-    [DataRow("net11.0-windows10.0.26100.0", false, true, true, "MSTest.Uwp", DisplayName = "Net11ModernUwp")]
-    public async Task PackedConsumersUseSharedCoreAndSelectedUiPackage(
-        string targetFramework, bool useWinUI, bool useUwpTools, bool useUwp, string uiPackage)
+    [DataRow("net10.0-windows10.0.18362.0", false, true, true, "uwp", false, DisplayName = "ModernUwpMinimum")]
+    [DataRow("net10.0-windows10.0.26100.0", false, false, false, "", false, DisplayName = "OrdinaryWindows")]
+    [DataRow("net10.0-windows10.0.26100.0", true, false, false, "winui", false, DisplayName = "WinUI")]
+    [DataRow("net10.0-windows10.0.26100.0", false, true, true, "uwp", false, DisplayName = "ModernUwp")]
+    [DataRow("net10.0-windows10.0.26100.0", false, false, true, "", false, DisplayName = "ExplicitUwpToolsOptOut")]
+    [DataRow("net10.0-windows10.0.26100.0", true, false, false, "winui", true, DisplayName = "LateImportWinUI")]
+    [DataRow("net10.0-windows10.0.26100.0", false, true, true, "uwp", true, DisplayName = "LateImportModernUwp")]
+    [DataRow("net11.0-windows10.0.26100.0", false, false, false, "", false, DisplayName = "Net11OrdinaryWindows")]
+    [DataRow("net11.0-windows10.0.26100.0", true, false, false, "winui", false, DisplayName = "Net11WinUI")]
+    [DataRow("net11.0-windows10.0.26100.0", false, true, true, "uwp", false, DisplayName = "Net11ModernUwp")]
+    public async Task PackedConsumersUseSharedCoreAndSelectedUiPayload(
+        string targetFramework, bool useWinUI, bool useUwpTools, bool useUwp, string uiPayload, bool lateImport)
     {
         string coreAsset = $"lib/{targetFramework.Split('-')[0]}";
-        const string uiTfm = "net10.0-windows10.0.18362";
+        string uiAssembly = uiPayload switch
+        {
+            "winui" => "MSTest.WinUI",
+            "uwp" => "MSTest.Uwp",
+            _ => string.Empty,
+        };
+
+        // UI applications reference MSTest.TestAdapter too: the UI framework payload ships in MSTest.TestFramework and the
+        // shared WinUI/UWP adapter build ships in MSTest.TestAdapter, both outside lib/<tfm> and only for net10.0.
+        string modelProperties = $"""
+            <UseWinUI>{useWinUI}</UseWinUI>
+                <UseUwpTools>{useUwpTools}</UseUwpTools>
+                <UseUwp>{useUwp}</UseUwp>
+            """;
+
+        // Directory.Build.targets is imported after the restored package targets, so late rows prove the payload is
+        // selected at execution time. The parent import keeps the shared test-infrastructure targets.
         string source = ConsumerSource
+            .Replace("$ModelProperties$", lateImport ? string.Empty : modelProperties, StringComparison.Ordinal)
+            .Replace("$LateModelProperties$", lateImport ? modelProperties : string.Empty, StringComparison.Ordinal)
             .Replace("$TargetFramework$", targetFramework, StringComparison.Ordinal)
             .Replace("$MSTestVersion$", MSTestVersion, StringComparison.Ordinal)
-            .Replace("$UseWinUI$", useWinUI.ToString(), StringComparison.Ordinal)
-            .Replace("$UseUwpTools$", useUwpTools.ToString(), StringComparison.Ordinal)
-            .Replace("$UseUwp$", useUwp.ToString(), StringComparison.Ordinal)
-            .Replace("$UiPackage$", uiPackage, StringComparison.Ordinal)
-            .Replace("$UiReference$", uiPackage.Length == 0 ? string.Empty : $"<PackageReference Include=\"{uiPackage}\" Version=\"{MSTestVersion}\" />", StringComparison.Ordinal);
+            .Replace("$UiAssembly$", uiAssembly, StringComparison.Ordinal)
+            .Replace("$UiReference$", uiAssembly.Length == 0 ? string.Empty : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" />", StringComparison.Ordinal);
         using TestAsset asset = await TestAsset.GenerateAssetAsync("CoreFrameworkConsumer", source);
         string cache = Path.Join(asset.TargetAssetPath, ".packages");
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = cache };
@@ -108,11 +125,11 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             ("MSTest.TestFramework", "MSTest.TestFramework", coreAsset),
             ("MSTest.TestFramework", "MSTest.TestFramework.Extensions", coreAsset),
         ];
-        if (uiPackage.Length != 0)
+        if (uiAssembly.Length != 0)
         {
-            assemblies.Add((uiPackage, uiPackage, $"lib/{uiTfm}"));
-            assemblies.Add((uiPackage, "MSTest.TestAdapter", $"buildTransitive/{uiTfm}"));
-            assemblies.Add((uiPackage, "MSTestAdapter.PlatformServices", $"buildTransitive/{uiTfm}"));
+            assemblies.Add(("MSTest.TestFramework", uiAssembly, $"buildTransitive/net10.0/ui/{uiPayload}"));
+            assemblies.Add(("MSTest.TestAdapter", "MSTest.TestAdapter", "buildTransitive/net10.0/ui"));
+            assemblies.Add(("MSTest.TestAdapter", "MSTestAdapter.PlatformServices", "buildTransitive/net10.0/ui"));
         }
 
         string output = Path.Join(asset.TargetAssetPath, "bin", "Release", targetFramework);
@@ -132,6 +149,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             string hash = Convert.ToHexString(SHA256.HashData(packedAssembly));
             string cachedAssembly = Path.GetFullPath(Path.Join(restored, relative));
             string copiedAssembly = Path.Join(output, name + ".dll");
+            Assert.IsTrue(File.Exists(copiedAssembly), $"{relative} was not copied to the build output.");
             Assert.AreEqual(hash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(cachedAssembly))), relative);
             Assert.AreEqual(hash, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(copiedAssembly))), relative);
             expectedResolved.Add($"compile={cachedAssembly}");
@@ -152,7 +170,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             workingDirectory: asset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, exit, $"{muxer.StandardOutput}{muxer.StandardError}");
-        string expectedOutput = uiPackage.Length == 0
+        string expectedOutput = uiAssembly.Length == 0
             ? $"""
             {Path.Join(output, "MSTest.TestFramework.dll")}
             {Path.Join(output, "MSTest.TestFramework.Extensions.dll")}
@@ -162,7 +180,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             : $"""
             {Path.Join(output, "MSTest.TestFramework.dll")}
             {Path.Join(output, "MSTest.TestFramework.Extensions.dll")}
-            {Path.Join(output, uiPackage + ".dll")}
+            {Path.Join(output, uiAssembly + ".dll")}
             {copiedResource}
             Packed framework ownership and API shape passed.
             """;
@@ -183,9 +201,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
             <ImplicitUsings>enable</ImplicitUsings>
             <Nullable>enable</Nullable>
             <LangVersion>12.0</LangVersion>
-            <UseWinUI>$UseWinUI$</UseWinUI>
-            <UseUwpTools>$UseUwpTools$</UseUwpTools>
-            <UseUwp>$UseUwp$</UseUwp>
+            $ModelProperties$
             <RestorePackagesPath>$(MSBuildProjectDirectory)\.packages</RestorePackagesPath>
             <MarkPackageReferencesAsExternallyResolved>false</MarkPackageReferencesAsExternallyResolved>
           </PropertyGroup>
@@ -195,11 +211,19 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
           </ItemGroup>
           <Target Name="ReportFrameworkAssets" AfterTargets="Build">
             <ItemGroup>
-              <_FrameworkCompile Include="@(ReferencePath)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
-              <_FrameworkRuntime Include="@(ReferenceCopyLocalPaths)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions' OR '%(Filename)' == '$UiPackage$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
+              <_FrameworkCompile Include="@(ReferencePath)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions' OR '%(Filename)' == '$UiAssembly$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
+              <_FrameworkRuntime Include="@(ReferenceCopyLocalPaths)" Condition=" ('%(Filename)' == 'MSTest.TestFramework' OR '%(Filename)' == 'MSTest.TestFramework.Extensions' OR '%(Filename)' == '$UiAssembly$' OR '%(Filename)' == 'MSTest.TestAdapter' OR '%(Filename)' == 'MSTestAdapter.PlatformServices') AND '%(Extension)' == '.dll' " />
             </ItemGroup>
             <WriteLinesToFile File="$(MSBuildProjectDirectory)\resolved-framework-assets.txt" Lines="@(_FrameworkCompile->'compile=%(FullPath)');@(_FrameworkRuntime->'runtime=%(FullPath)')" Overwrite="true" />
           </Target>
+        </Project>
+
+        #file Directory.Build.targets
+        <Project>
+          <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+          <PropertyGroup>
+            $LateModelProperties$
+          </PropertyGroup>
         </Project>
 
         #file Program.cs
@@ -231,9 +255,9 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         Assert.IsNull(typeof(TestContext).GetProperty("DataConnection"));
         Console.WriteLine(core.Location);
         Console.WriteLine(extensions.Location);
-        if ("$UiPackage$".Length != 0)
+        if ("$UiAssembly$".Length != 0)
         {
-            Assembly ui = Assembly.Load("$UiPackage$");
+            Assembly ui = Assembly.Load("$UiAssembly$");
             Assert.IsNull(ui.GetType(typeof(TestContext).FullName!));
             Assembly services = Assembly.Load("MSTestAdapter.PlatformServices");
             Type implementation = services.GetType("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation", true)!;
