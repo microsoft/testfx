@@ -95,10 +95,6 @@ public sealed class AzureDevOpsLogGroupReporterTests
 
         bool isEnabled = await reporter.IsEnabledAsync();
         Assert.IsFalse(isEnabled);
-        if (isEnabled)
-        {
-            await reporter.OnTestSessionStartingAsync(new TestSessionContext());
-        }
 
         const string unrelatedCommand = "##vso[task.logissue type=warning;]output from another reporter";
         var unrelatedOutput = new AzureDevOpsCommandOutputDeviceData(unrelatedCommand);
@@ -106,11 +102,6 @@ public sealed class AzureDevOpsLogGroupReporterTests
             Mock.Of<IOutputDeviceDataProducer>(),
             unrelatedOutput,
             CancellationToken.None);
-
-        if (isEnabled)
-        {
-            await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
-        }
 
         Assert.HasCount(1, _outputData);
         Assert.AreSame(unrelatedOutput, _outputData[0]);
