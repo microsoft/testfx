@@ -19,6 +19,8 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
             environmentVariables: new()
             {
                 ["MTP_OTEL_EXECUTION_MODE"] = "fallback",
+                ["TRACEPARENT"] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+                ["TRACESTATE"] = "vendor=environment",
                 ["TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"] = legacySetting,
                 ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
                 ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
@@ -51,6 +53,8 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
             environmentVariables: new()
             {
                 ["MTP_OTEL_EXECUTION_MODE"] = "canonical",
+                ["TRACEPARENT"] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+                ["TRACESTATE"] = "vendor=environment",
                 ["TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES"] = legacySetting,
                 ["TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT"] = "1",
                 ["TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = "8192",
@@ -131,6 +135,7 @@ internal static class Program
 {
     private const string ApplicationActivitySourceName = "ApplicationOwnedOpenTelemetry";
     private const string ApplicationServiceName = "application-owned-tests";
+    private const string ApplicationTraceState = "vendor=application";
 
     public static async Task<int> Main(string[] args)
     {
@@ -162,6 +167,7 @@ internal static class Program
             throw new InvalidOperationException("The application-owned provider did not subscribe to its activity source.");
         }
 
+        applicationActivity.TraceStateString = ApplicationTraceState;
         ActivityTraceId applicationTraceId = applicationActivity.TraceId;
         ActivitySpanId applicationSpanId = applicationActivity.SpanId;
 
@@ -452,6 +458,12 @@ internal static class Program
         void VerifyCase(string uid, string name, string suite, string method, string status, double milliseconds)
         {
             Activity activity = activities.Single(activity => activity.GetTagItem("test.case.id")?.ToString() == uid);
+            if (activity.TraceStateString != ApplicationTraceState)
+            {
+                throw new InvalidOperationException(
+                    $"{executionMode} span '{uid}': expected tracestate '{ApplicationTraceState}', got '{activity.TraceStateString ?? "<null>"}'.");
+            }
+
             if (activity.OperationName != name
                 || activity.GetTagItem("test.case.name")?.ToString() != name
                 || activity.GetTagItem("test.suite.name")?.ToString() != suite

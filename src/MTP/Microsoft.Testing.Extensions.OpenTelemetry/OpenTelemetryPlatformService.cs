@@ -105,6 +105,11 @@ internal sealed class OpenTelemetryPlatformService :
                 => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: ambientActivity.Id),
             (null, null)
                 => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: null),
+            // Test-case spans select TestFramework explicitly, even when a different activity is current.
+            // Its W3C context carries the parent's tracestate; the serialized parent ID alone does not.
+            ({ } explicitParentId, _) when TestFrameworkActivity is ActivityWrapper framework
+                && framework.Id == explicitParentId && framework.W3CContext is { } frameworkContext
+                => _activitySource.StartActivity(name, ActivityKind.Internal, frameworkContext, tags, links, startTime),
             ({ } explicitParentId, _)
                 => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: explicitParentId),
         };

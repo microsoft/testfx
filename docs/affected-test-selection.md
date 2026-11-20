@@ -588,6 +588,13 @@ deployment folder, and passes a `TRACEPARENT` to the processes it launches. The 
 The CTS log also contains a non-failing `Collector error: Pipe is broken` for MSTest.Acceptance.IntegrationTests
 net12.0; that module still reports "Test map collection: Completed".
 
+The canonical and fallback test-case spans explicitly select the `TestFramework` span as their parent. Its serialized
+ID omits `tracestate`, so the OpenTelemetry extension uses the matching framework activity's full W3C context instead.
+With `TRACESTATE=vendor=environment` and `vendor=application` on the application activity, all six packaged cases in
+`Microsoft.Testing.Platform.Acceptance.IntegrationTests.exe --filter "FullyQualifiedName~OpenTelemetryTests"` failed on
+`0d2d9e193` with a null test-case tracestate (exit 2). After repacking the extension, all six passed (exit 0), checking
+the application state on both named cases in each execution mode.
+
 ### Windows AffectedTests
 
 Collection exited 1 at 35 of 48 modules after 1:37:46. The net462 MSTestAdapter.PlatformServices.UnitTests module
