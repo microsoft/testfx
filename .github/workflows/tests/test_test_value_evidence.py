@@ -311,7 +311,7 @@ class ReportingContractTests(unittest.TestCase):
 
     def test_result_assessment_retains_clean_review_evidence(self):
         source = SOURCE.read_text(encoding="utf-8")
-        self.assertIn("<th>Result</th><th>Quality</th>", source)
+        self.assertIn("| Result | Quality | Test | Notes | How to improve |", source)
         self.assertIn("Otherwise publish the evidence even when all results are `Pass`", source)
         self.assertIn("Likely killed (inferred)", source)
         self.assertIn("Candidate survivor (unverified)", source)

@@ -740,8 +740,11 @@ class GhAwRuntimeContractTests(unittest.TestCase):
 
     def test_required_diff_failure_has_terminal_incomplete_prompt_delivery(self) -> None:
         prompt = " ".join(authored("shared/review-shared.md")[1].split())
-        self.assertIn("If the required diff cannot be read, call `report_missing_data` with the concrete reason, "
-                      "then `report_incomplete`, and stop without claiming that the review was delegated or completed.", prompt)
+        self.assertIn("If `get_diff` fails only because the response exceeds the MCP size limit", prompt)
+        self.assertIn("call `pull_request_read` with `method: \"get_files\"` and a small `perPage`", prompt)
+        self.assertIn("Only if the changed-file list or the patches of hand-authored files cannot be read, "
+                      "call `report_missing_data` with the concrete reason, then `report_incomplete`, "
+                      "and stop without claiming that the review was delegated or completed.", prompt)
         for index, name in enumerate(CONSUMERS):
             with self.subTest(case=f"consumer_{index}"):
                 document = compiled(name)
