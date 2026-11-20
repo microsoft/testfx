@@ -285,6 +285,14 @@ internal partial class TestMethodInfo
 
         public bool IsCleanupStarted => Volatile.Read(ref _cleanupStarted) != 0;
 
+        public SynchronizationContext? TestSynchronizationContext { get; private set; }
+
+        public void CaptureTestSynchronizationContext()
+            => TestSynchronizationContext = SynchronizationContext.Current;
+
+        public bool IsRunningOnTestSynchronizationContext()
+            => IsRunningOnSynchronizationContext(TestSynchronizationContext);
+
         public void PublishActivation(object classInstance, ITestClassInstanceLease? classInstanceLease)
         {
             _classInstance = classInstance;

@@ -1367,6 +1367,235 @@ public class TestMethodInfoTests : TestContainer
         capturedContextInTestCleanup.Should().BeSameAs(syncContext);
     }
 
+    public async Task TestMethodInfo_YieldingTestCleanup_PreservesSynchronizationContextForLaterCleanupSteps()
+    {
+        // Arrange: the test cleanup returns a task that completes off the test's synchronization context (#12561).
+        CountingTestClassInstanceLease? lease = null;
+        using IDisposable factoryScope = TestClassInstanceFactoryProvider.Push(
+            new CallbackTestClassInstanceFactory(() => lease = new CountingTestClassInstanceLease(new DummyTestClass())));
+        SynchronizationContext? baseCleanupContext = null;
+        SynchronizationContext? globalCleanupContext = null;
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Delay(10);
+        DummyTestClassBase.BaseTestClassMethodBody = _ => baseCleanupContext = SynchronizationContext.Current;
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            globalCleanupContext = SynchronizationContext.Current;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!;
+        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.DummyBaseTestClassMethod))!);
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        baseCleanupContext.Should().BeSameAs(syncContext);
+        lease.Should().NotBeNull();
+        lease!.DisposalContext.Should().BeSameAs(syncContext);
+        globalCleanupContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_YieldingBaseTestCleanup_PreservesSynchronizationContextForDisposalAndGlobalTestCleanup()
+    {
+        // Arrange: the base test cleanup returns a task that completes off the test's synchronization context (#12561).
+        CountingTestClassInstanceLease? lease = null;
+        using IDisposable factoryScope = TestClassInstanceFactoryProvider.Push(
+            new CallbackTestClassInstanceFactory(() => lease = new CountingTestClassInstanceLease(new DummyTestClass())));
+        SynchronizationContext? globalCleanupContext = null;
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Delay(10);
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            globalCleanupContext = SynchronizationContext.Current;
+            return Task.CompletedTask;
+        };
+        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!);
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        lease.Should().NotBeNull();
+        lease!.DisposalContext.Should().BeSameAs(syncContext);
+        globalCleanupContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_YieldingTestClassDisposal_PreservesSynchronizationContextForGlobalTestCleanup()
+    {
+        // Arrange: disposing the test class instance completes off the test's synchronization context (#12561).
+        using IDisposable factoryScope = TestClassInstanceFactoryProvider.Push(
+            new CallbackTestClassInstanceFactory(() => new YieldingTestClassInstanceLease(new DummyTestClass())));
+        SynchronizationContext? globalCleanupContext = null;
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            globalCleanupContext = SynchronizationContext.Current;
+            return Task.CompletedTask;
+        };
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, null));
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        globalCleanupContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_YieldingGlobalTestCleanup_PreservesSynchronizationContextForNextGlobalTestCleanup()
+    {
+        // Arrange: the first global test cleanup returns a task that completes off the test's synchronization context (#12561).
+        int globalCleanupCount = 0;
+        SynchronizationContext? secondGlobalCleanupContext = null;
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ =>
+        {
+            if (++globalCleanupCount == 1)
+            {
+                return Task.Delay(10);
+            }
+
+            secondGlobalCleanupContext = SynchronizationContext.Current;
+            return Task.CompletedTask;
+        };
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyNonAsyncGlobalTestCleanupMethod))!, null));
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummySecondGlobalTestCleanupMethod))!, null));
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        globalCleanupCount.Should().Be(2);
+        secondGlobalCleanupContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_YieldingBaseTestInitialize_PreservesSynchronizationContextForTestInitialize()
+    {
+        // Arrange: the base test initialize returns a task that completes off the test's synchronization context (#12561).
+        SynchronizationContext? testInitializeContext = null;
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Delay(10);
+        DummyTestClass.TestInitializeMethodBody = _ => testInitializeContext = SynchronizationContext.Current;
+        _testClassInfo.BaseTestInitializeMethodsQueue.Add(typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!);
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethod))!;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        testInitializeContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_YieldingGlobalTestInitialize_PreservesSynchronizationContextForTestClassAndTestMethod()
+    {
+        // Arrange: the global test initialize returns a task that completes off the test's synchronization context (#12561).
+        SynchronizationContext? constructorContext = null;
+        SynchronizationContext? testMethodContext = null;
+        DummyTestClass.GlobalTestInitializeMethodBodyAsync = _ => Task.Delay(10);
+        DummyTestClass.TestConstructorMethodBody = () => constructorContext = SynchronizationContext.Current;
+        DummyTestClass.TestMethodBody = _ => testMethodContext = SynchronizationContext.Current;
+        _testAssemblyInfo.GlobalTestInitializations.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyNonAsyncGlobalTestInitializeMethod))!, null));
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        constructorContext.Should().BeSameAs(syncContext);
+        testMethodContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_SynchronizationContextInstalledByTestInitialize_IsNotUsedToResumeTestCleanup()
+    {
+        // Arrange: the test starts without a synchronization context and its test initialize installs one that is never pumped,
+        // so resuming the yielding test cleanup on it would hang the test (#12561).
+        var nonPumpingContext = new NonPumpingSynchronizationContextForTesting();
+        SynchronizationContext? testCleanupContext = null;
+        DummyTestClass.TestInitializeMethodBody = _ => SynchronizationContext.SetSynchronizationContext(nonPumpingContext);
+        DummyTestClass.DummyAsyncTestMethodBody = () =>
+        {
+            testCleanupContext = SynchronizationContext.Current;
+            return Task.Delay(10);
+        };
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethod))!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        Task<TestResult> invocation = Task.Run(() => testMethodInfo.InvokeAsync(null));
+        await WaitForCompletionAsync(invocation);
+        TestResult result = await invocation;
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        testCleanupContext.Should().BeSameAs(nonPumpingContext);
+        nonPumpingContext.PostCount.Should().Be(0);
+    }
+
+    public async Task TestMethodInfo_SynchronizationContextReplacedByTestInitialize_IsNotUsedToResumeTestCleanup()
+    {
+        // Arrange: the test starts on a pumped synchronization context and its test initialize replaces it with one that is never pumped,
+        // so resuming the yielding test cleanup on the replacement would hang the test (#12561).
+        var nonPumpingContext = new NonPumpingSynchronizationContextForTesting();
+        SynchronizationContext? testCleanupContext = null;
+        DummyTestClass.TestInitializeMethodBody = _ => SynchronizationContext.SetSynchronizationContext(nonPumpingContext);
+        DummyTestClass.DummyAsyncTestMethodBody = () =>
+        {
+            testCleanupContext = SynchronizationContext.Current;
+            return Task.Delay(10);
+        };
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethod))!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        testCleanupContext.Should().BeSameAs(nonPumpingContext);
+        nonPumpingContext.PostCount.Should().Be(0);
+    }
+
     public async Task NonCooperativeTimeoutPreservesSynchronizationContextAcrossAsyncLifecycle()
     {
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
@@ -2552,6 +2781,26 @@ public class TestMethodInfoTests : TestContainer
         // Assert
         disposeCalledOrder.Should().Be(2);
         disposeAsyncCalledOrder.Should().Be(1);
+    }
+
+    public async Task TestMethodInfoInvoke_WhenAsyncDisposeYields_ShouldDisposeOnSynchronizationContext()
+    {
+        // Arrange: DisposeAsync completes off the test's synchronization context (#12561).
+        DummyTestClassWithYieldingAsyncDisposableAndDisposable.DisposeContext = null;
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithYieldingAsyncDisposableAndDisposable).GetConstructor([])!;
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithYieldingAsyncDisposableAndDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(typeof(DummyTestClassWithYieldingAsyncDisposableAndDisposable).GetMethod(nameof(DummyTestClassWithYieldingAsyncDisposableAndDisposable.DummyTestMethod))!, testClass)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(method, syncContext);
+
+        // Assert
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        DummyTestClassWithYieldingAsyncDisposableAndDisposable.DisposeContext.Should().BeSameAs(syncContext);
     }
 #endif
 
@@ -3835,6 +4084,16 @@ public class TestMethodInfoTests : TestContainer
         }
     }
 
+    private sealed class YieldingTestClassInstanceLease(object instance) : ITestClassInstanceLease
+    {
+        public object Instance { get; } = instance;
+
+        public bool RequiresCleanup => true;
+
+        // Returns the delay task directly so it completes off the caller's synchronization context.
+        public Task DisposeAsync() => Task.Delay(10);
+    }
+
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {
         private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _queue = [];
@@ -3887,6 +4146,18 @@ public class TestMethodInfoTests : TestContainer
 
             _queue.Dispose();
         }
+    }
+
+    private sealed class NonPumpingSynchronizationContextForTesting : SynchronizationContext
+    {
+        private int _postCount;
+
+        public int PostCount => Volatile.Read(ref _postCount);
+
+        // Drops the callback, like a context whose thread never pumps its queue.
+        public override void Post(SendOrPostCallback d, object? state) => Interlocked.Increment(ref _postCount);
+
+        public override SynchronizationContext CreateCopy() => this;
     }
 
     public class DummyTestClassBase
@@ -3975,6 +4246,13 @@ public class TestMethodInfoTests : TestContainer
         public static async Task DummyGlobalTestCleanupMethod(TestContext testContext) => await GlobalTestCleanupMethodBodyAsync(testContext);
 
         public static async Task DummySecondGlobalTestCleanupMethod(TestContext testContext) => await GlobalTestCleanupMethodBodyAsync(testContext);
+
+        // The non-async global fixtures return the body's task directly so it can complete off the caller's synchronization context.
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static Task DummyNonAsyncGlobalTestInitializeMethod(TestContext testContext) => GlobalTestInitializeMethodBodyAsync(testContext);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static Task DummyNonAsyncGlobalTestCleanupMethod(TestContext testContext) => GlobalTestCleanupMethodBodyAsync(testContext);
     }
 
     public class DummyTestClassWithRetryAttributeMethods
@@ -4146,6 +4424,20 @@ public class TestMethodInfoTests : TestContainer
         }
 
         public void Dispose() => DisposeMethodBody!();
+    }
+
+    public class DummyTestClassWithYieldingAsyncDisposableAndDisposable : IAsyncDisposable, IDisposable
+    {
+        public static SynchronizationContext? DisposeContext { get; set; }
+
+        public void DummyTestMethod()
+        {
+        }
+
+        // Returns the delay task directly so it completes off the caller's synchronization context.
+        public ValueTask DisposeAsync() => new(Task.Delay(10));
+
+        public void Dispose() => DisposeContext = SynchronizationContext.Current;
     }
 #endif
 
