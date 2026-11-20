@@ -801,9 +801,9 @@ public sealed class TerminalTestReporterTests
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
 
-              Out of process file artifacts produced:
+              Out of process file artifacts produced: 1
                 - {folder}artifact1.txt
-              In process file artifacts produced:
+              In process file artifacts produced: 1
                 - {folder}artifact2.txt
 
             """;
@@ -956,9 +956,9 @@ public sealed class TerminalTestReporterTests
             ␛[33m  skipped: 1
             ␛[m  duration: 3652058d 23h 59m 59s 999ms
 
-              Out of process file artifacts produced:
+              Out of process file artifacts produced: 1
                 - {folder}artifact1.txt
-              In process file artifacts produced:
+              In process file artifacts produced: 1
                 - {folder}artifact2.txt
 
             """;
@@ -1049,9 +1049,9 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-              Out of process file artifacts produced:
+              Out of process file artifacts produced: 1
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
-              In process file artifacts produced:
+              In process file artifacts produced: 1
                 - ␛[90m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
 
             ␛[31mTest run summary: Failed!␛[90m - ␛[m␛[90m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
@@ -3351,7 +3351,7 @@ public sealed class TerminalTestReporterTests
               Standard output: crash stdout
               Error output: crash stderr
 
-              In process file artifacts produced:
+              In process file artifacts produced: 3
                 - passing.trx
                 - failing.trx
                 - crashed.trx
@@ -3425,7 +3425,7 @@ public sealed class TerminalTestReporterTests
             Exit code: 1
               Error output: host error
 
-              Out of process file artifacts produced:
+              Out of process file artifacts produced: 1
                 - retry.log
 
             """;
@@ -5120,7 +5120,7 @@ public sealed class TerminalTestReporterTests
 
         Assert.AreEqual(
             """
-              Out of process file artifacts produced:
+              Out of process file artifacts produced: 2
                 - first.log
                 - second.log
 

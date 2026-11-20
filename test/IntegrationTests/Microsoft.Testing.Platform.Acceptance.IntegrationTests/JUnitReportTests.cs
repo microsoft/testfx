@@ -17,7 +17,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
 
         // The JUnit report is published as an in-process artifact; check the correct block.
         string outputPattern = """
-  In process file artifacts produced:
+  In process file artifacts produced: \d+
     - .+?\.xml
 """;
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
@@ -36,7 +36,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 1
     - {xmlPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -101,7 +101,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 1
     - {expectedFilePath}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -130,7 +130,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 1
     - {expectedFilePath}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
