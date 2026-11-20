@@ -21,6 +21,9 @@ public sealed class SystemWrappersTests
 {
     private static readonly TimeSpan ChildLimit = TimeSpan.FromSeconds(30);
 
+    // A whole probe includes CLR startup, JIT, and application execution on a shared CI agent.
+    private static readonly TimeSpan ChildExecutionLimit = TimeSpan.FromMinutes(2);
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -424,10 +427,10 @@ public sealed class SystemWrappersTests
         Assert.IsTrue(process.Start());
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
-        Task exit = process.WaitForExitAsync();
+        var completion = Task.WhenAll(process.WaitForExitAsync(), output, error);
         try
         {
-            await exit.TimeoutAfterAsync(ChildLimit);
+            await completion.TimeoutAfterAsync(ChildExecutionLimit);
             return new(process.ExitCode, await output, await error);
         }
         finally
@@ -438,7 +441,7 @@ public sealed class SystemWrappersTests
             }
 
             // Join the original wait and readers even when the bounded observation timed out.
-            await Task.WhenAll(exit, output, error).TimeoutAfterAsync(ChildLimit);
+            await completion.TimeoutAfterAsync(ChildLimit);
         }
     }
 
