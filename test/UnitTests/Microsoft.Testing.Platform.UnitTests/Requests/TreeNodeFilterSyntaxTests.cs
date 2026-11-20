@@ -24,6 +24,7 @@ public sealed class TreeNodeFilterSyntaxTests
     [DataRow("/X/Y[a|]")]
     [DataRow("!(A&)")]
     [DataRow("A(A|)")]
+    [DataRow("A|B&/")]
 
     // A binary operator, or a property bracket, right after a path separator.
     [DataRow("/X/A|[x=y]")]
@@ -52,6 +53,9 @@ public sealed class TreeNodeFilterSyntaxTests
 
     // A property bracket right after '=': it is rejected even when a trailing separator hides the dangling '=' operators.
     [DataRow("A=[A=/")]
+
+    // An opening parenthesis that is never closed: the path separator after it does not close it.
+    [DataRow("(A|B/C")]
     public void Constructor_WithMalformedFilter_ThrowsInvalidOperationException(string filter)
         => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter(filter));
 
@@ -85,6 +89,21 @@ public sealed class TreeNodeFilterSyntaxTests
     [DataRow("A|B/C", "/A/D", "", false)]
     [DataRow("*A*&*B*/C", "/AB/C", "", true)]
     [DataRow("*A*&*B*/C", "/A/C", "", false)]
+
+    // An '&' and a '|' in the same segment, followed by another segment: the path separator that ends the segment applies
+    // both operators to that segment. It must neither drop the '|' nor turn the operands of the '&' into segments.
+    [DataRow("A|B&C/D", "/A/D", "", true)]
+    [DataRow("/A|B*&*C/D", "/A/D", "", true)]
+    [DataRow("/A|B*&*C/D", "/BXC/D", "", true)]
+    [DataRow("/A|B*&*C/D", "/BX/D", "", false)]
+    [DataRow("/A|B*&*C/D", "/A/BXC/D", "", false)]
+    [DataRow("/A*&*1|B*&*2/C", "/AX1/C", "", true)]
+    [DataRow("/A*&*1|B*&*2/C", "/BX2/C", "", true)]
+    [DataRow("/A*&*1|B*&*2/C", "/AX2/C", "", false)]
+    [DataRow("/A*&*1|B*&*2/C", "/AX1/BX2/C", "", false)]
+    [DataRow("/A/B|C*&*D/E", "/A/B/E", "", true)]
+    [DataRow("/A/B|C*&*D/E", "/A/CXD/E", "", true)]
+    [DataRow("/A/B|C*&*D/E", "/A/B/CXD/E", "", false)]
 
     // Three operands of the same operator are one n-ary expression.
     [DataRow("/(A|B|C)", "/A", "", true)]
