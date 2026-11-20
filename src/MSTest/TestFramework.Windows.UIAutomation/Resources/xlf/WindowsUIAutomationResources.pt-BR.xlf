@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
         <source>Application '{0}' exited with code {1} before a window was discovered.</source>
-        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <target state="translated">O aplicativo '{0}' encerrado com o código {1} antes que uma janela fosse descoberta.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessFailedToStart">
         <source>Failed to start process '{0}'.</source>
-        <target state="new">Failed to start process '{0}'.</target>
+        <target state="translated">Falha ao iniciar o processo '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessNotAvailable">
         <source>The application process is available only after application setup and before disposal.</source>
-        <target state="new">The application process is available only after application setup and before disposal.</target>
+        <target state="translated">O processo de inscrição está disponível somente após a configuração do aplicativo e antes do descarte.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessTerminationTimedOut">
         <source>Application process {0} did not exit within {1} after termination was requested.</source>
-        <target state="new">Application process {0} did not exit within {1} after termination was requested.</target>
+        <target state="translated">O processo de inscrição {0} não foi encerrado em {1} após a solicitação de encerramento.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidApplicationShutdownTimeout">
         <source>The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</source>
-        <target state="new">The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</target>
+        <target state="translated">O tempo limite de desligamento do aplicativo deve ser não negativo, infinito ou não superior a Int32.MaxValue milissegundos.</target>
         <note>{Locked="Int32.MaxValue"}</note>
       </trans-unit>
       <trans-unit id="InvalidWindowDiscoveryTimeout">
         <source>The window discovery timeout must be non-negative or infinite.</source>
-        <target state="new">The window discovery timeout must be non-negative or infinite.</target>
+        <target state="translated">O tempo limite de descoberta da janela deve ser não negativo ou infinito.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">
         <source>Application '{0}' did not expose a window within {1}.</source>
-        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <target state="translated">O aplicativo '{0}' não expôs uma janela dentro de {1}.</target>
         <note />
       </trans-unit>
     </body>

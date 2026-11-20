@@ -24,6 +24,7 @@ $directory = Join-Path $ArtifactsDirectory $run
 $layout = Join-Path $directory 'package layout'
 $identity = "TestFx.Bazel.$run"
 $steps = [Collections.Generic.List[object]]::new()
+$recordedProvenancePaths = @()
 $succeeded = $false
 $inputHashes = @(Get-FileHash -Algorithm SHA256 -LiteralPath @(
     (Join-Path $root 'MODULE.bazel'), (Join-Path $root 'eng\bazel\defs.bzl'),
@@ -63,6 +64,7 @@ function Invoke-Process([string] $Name, [string] $Executable, [string[]] $Argume
         if ($timedOut -or $process.ExitCode -ne $ExpectedExit) {
             throw "$Name returned $($process.ExitCode), expected $ExpectedExit; timeout=$timedOut. See its retained log."
         }
+        if ($text.Contains('BAZEL_APPMODEL_PROVENANCE: ')) { $null = Read-AppModelProvenance -RequireNew }
         if ($StandardOutputOnly) { return $output }
         return $text
     }
@@ -106,6 +108,21 @@ function Assert-Pass([string] $Path) {
         [int]$counters.executed -ne 1 -or [int]$counters.passed -ne 1 -or [int]$counters.failed -ne 0) {
         throw "Expected TestMethod1 to execute and pass in $Path."
     }
+}
+
+function Read-AppModelProvenance([switch] $RequireNew) {
+    $paths = @(Get-Content -LiteralPath (Join-Path $layout 'native-app-model.paths'))
+    if ($paths.Count -eq 0 -or $paths.Count -lt $script:recordedProvenancePaths.Count -or
+        ($RequireNew -and $paths.Count -le $script:recordedProvenancePaths.Count)) {
+        throw 'The app-model host did not append a provenance path.'
+    }
+    for ($index = 0; $index -lt $script:recordedProvenancePaths.Count; $index++) {
+        if ($paths[$index] -cne $script:recordedProvenancePaths[$index]) {
+            throw 'The app-model host overwrote an earlier provenance path.'
+        }
+    }
+    $script:recordedProvenancePaths = $paths
+    return Get-Content -LiteralPath $paths[-1] -Raw | ConvertFrom-Json
 }
 
 Push-Location $root
@@ -174,7 +191,7 @@ try {
     $activated = Join-Path $directory 'activated'
     $null = Invoke-Process 'registered-activation' $hostLayout.Executable ($pass + @('--results-directory', $activated))
     Assert-Pass (Join-Path $activated 'tests.trx')
-    $marker = Get-Content -LiteralPath (Join-Path $layout 'native-app-model.json') -Raw | ConvertFrom-Json
+    $marker = Read-AppModelProvenance
     $packages = Get-OwnedPackage
     if ($packages.Count -ne 1 -or $marker.PackageName -cne $identity -or
         -not [string]::Equals($packages[0].InstallLocation.TrimEnd('\'), $layout.TrimEnd('\'), [StringComparison]::OrdinalIgnoreCase) -or
@@ -207,9 +224,9 @@ try {
 }
 finally {
     try {
-        $markerPath = Join-Path $layout 'native-app-model.json'
+        $markerPath = Join-Path $layout 'native-app-model.paths'
         if (Test-Path -LiteralPath $markerPath) {
-            $marker = Get-Content -LiteralPath $markerPath -Raw | ConvertFrom-Json
+            $marker = Read-AppModelProvenance
             $process = Get-CimInstance Win32_Process -Filter "ProcessId=$($marker.ProcessId)"
             if ($process -and [string]::Equals($process.ExecutablePath, (Join-Path $layout 'TestFx.Bazel.AppModelHost.exe'), [StringComparison]::OrdinalIgnoreCase)) {
                 Stop-Process -Id $marker.ProcessId

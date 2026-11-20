@@ -251,6 +251,37 @@ public sealed class DotnetTestConnectionTests
     }
 
     [TestMethod]
+    [DataRow("1.0.0", null, DisplayName = "ProgressRenegotiateLegacy")]
+    [DataRow("1.0.0", "false", DisplayName = "ProgressRenegotiateOptOut")]
+    [DataRow("2.0.0", "true", DisplayName = "ProgressRenegotiateIncompatible")]
+    [DataRow(null, "true", DisplayName = "ProgressRenegotiateMissingVersion")]
+    public async Task SendMessageAsync_ProgressRenegotiationClearsSupport(string? version, string? capability)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        fixture.Client.Respond(new HandshakeMessage(new() { [4] = "1.0.0", [22] = "true" }), TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        Dictionary<byte, string> reply = [];
+        if (version is not null)
+        {
+            reply[4] = version;
+        }
+
+        if (capability is not null)
+        {
+            reply[22] = capability;
+        }
+
+        fixture.Client.Respond(new HandshakeMessage(reply), TestContext.CancellationToken);
+        Assert.AreEqual(version == "1.0.0", await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        List<TestInProgressMessages> sent = [];
+        fixture.Client.RespondVoid<TestInProgressMessages>(TestContext.CancellationToken, sent.Add);
+
+        await fixture.Connection.SendMessageAsync(new TestInProgressMessages("execution", "instance", [new("uid", "running test")]));
+
+        Assert.IsEmpty(sent);
+    }
+
+    [TestMethod]
     [DataRow("false", DisplayName = "LocalCoverageOptOut")]
     [DataRow("2", DisplayName = "LocalUnknownCoverageVersion")]
     public async Task IsCompatibleProtocolAsync_LocalCoverageOptOutCannotBeEnabledByPeer(string advertisedVersion)
@@ -592,25 +623,36 @@ public sealed class DotnetTestConnectionTests
     public async Task SendMessageAsync_DispatchesEachTypedRequestWithApplicationToken()
     {
         using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.0.0",
+                [22] = "true",
+            }), TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        fixture.Client.Mock.Invocations.Clear();
         fixture.Client.RespondVoid<DiscoveredTestMessages>(TestContext.CancellationToken);
         fixture.Client.RespondVoid<TestResultMessages>(TestContext.CancellationToken);
+        fixture.Client.RespondVoid<TestInProgressMessages>(TestContext.CancellationToken);
         fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken);
         fixture.Client.RespondVoid<TestSessionEvent>(TestContext.CancellationToken);
         fixture.Client.RespondVoid<AzureDevOpsLogMessage>(TestContext.CancellationToken);
         fixture.Client.RespondVoid<DisplayMessage>(TestContext.CancellationToken);
         var discovered = new DiscoveredTestMessages("execution", "instance", []);
         var results = new TestResultMessages("execution", "instance", [], []);
+        var inProgress = new TestInProgressMessages("execution", "instance", [new("uid", "running test")]);
         var artifacts = new FileArtifactMessages("execution", "instance", []);
         var session = new TestSessionEvent(SessionEventTypes.TestSessionEnd, "session", "execution");
         var log = new AzureDevOpsLogMessage("execution", "instance", "##[warning]detail");
         var display = new DisplayMessage("execution", "instance", DisplayMessageLevels.Error, "error detail");
         await fixture.Connection.SendMessageAsync(discovered);
         await fixture.Connection.SendMessageAsync(results);
+        await fixture.Connection.SendMessageAsync(inProgress);
         await fixture.Connection.SendMessageAsync(artifacts);
         await fixture.Connection.SendMessageAsync(session);
         await fixture.Connection.SendMessageAsync(log);
         await fixture.Connection.SendMessageAsync(display);
-        Assert.AreSequenceEqual<object>([discovered, results, artifacts, session, log, display], fixture.Client.Mock.Invocations.Select(invocation => invocation.Arguments[0]));
+        Assert.AreSequenceEqual<object>([discovered, results, inProgress, artifacts, session, log, display], fixture.Client.Mock.Invocations.Select(invocation => invocation.Arguments[0]));
         Assert.IsTrue(fixture.Client.Mock.Invocations.All(invocation => (CancellationToken)invocation.Arguments[1] == TestContext.CancellationToken));
     }
 

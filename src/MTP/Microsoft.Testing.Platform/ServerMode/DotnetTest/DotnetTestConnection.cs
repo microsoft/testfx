@@ -31,6 +31,7 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
     private CancellationTokenSource? _serverControlListenerCts;
     private string? _serverControlPipeName;
     private int _cancelRequested;
+    private bool _isTestInProgressSupported;
 
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
@@ -196,6 +197,7 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
         HandshakeMessage handshakeMessage = new(properties);
 
         IsCoverageSummarySupported = false;
+        _isTestInProgressSupported = false;
         HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
@@ -225,6 +227,10 @@ internal sealed partial class DotnetTestConnection : IPushOnlyProtocol, IDisposa
                 && advertisedCoverageVersion == ProtocolConstants.CoverageSummaryVersion
                 && response.Properties.TryGetValue(HandshakeMessagePropertyNames.CoverageSummaryVersion, out string? coverageVersion)
                 && coverageVersion == ProtocolConstants.CoverageSummaryVersion;
+            _isTestInProgressSupported = isCompatible
+                && response.Properties.TryGetValue(HandshakeMessagePropertyNames.TestInProgressSupported, out string? progressSupported)
+                && bool.TryParse(progressSupported, out bool supportsProgress)
+                && supportsProgress;
             return isCompatible;
         }
 

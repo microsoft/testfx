@@ -7,10 +7,6 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
-#if NETCOREAPP
-Console.Error.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
-#endif
-
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddAffectedTestsProvider();
 
@@ -23,7 +19,6 @@ builder.AddCodeCoverageProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddHangDumpProvider();
 using IDisposable? telemetry = builder.AddTestFxOpenTelemetry();
-Console.Error.WriteLine("NATIVE_AOT disabled");
 #else
 Console.Error.WriteLine("NATIVE_AOT enabled");
 #endif

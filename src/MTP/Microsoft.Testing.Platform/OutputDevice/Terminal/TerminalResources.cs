@@ -35,6 +35,8 @@ internal static partial class TerminalResources
 
     internal static string @Actual => GetResourceString("Actual");
 
+    internal static string @ArtifactCount => GetResourceString("ArtifactCount");
+
     internal static string @CancelledLowercase => GetResourceString("CancelledLowercase");
 
     internal static string @CancellingTestSession => GetResourceString("CancellingTestSession");

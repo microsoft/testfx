@@ -51,6 +51,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private readonly List<TestRunArtifact> _artifacts = [];
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _unselectedAssembliesLock = new();
+#else
+    private readonly object _unselectedAssembliesLock = new();
+#endif
+    private readonly List<(string Assembly, string? TargetFramework, string? Architecture)> _unselectedAssemblies = [];
+
     private readonly TerminalTestReporterOptions _options;
 
     private readonly bool _useCompactSummary;
@@ -155,7 +162,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _useCompactSummary = !useCursorRenderer;
         IProgressRenderer renderer = useCursorRenderer
             ? new CursorProgressRenderer()
-            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch(), () => _assemblies.Values);
+            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch(), () => _assemblies.Values, _options.ContextualModuleOutput, _options.ModuleDisplayName);
 
         _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer, logger);
     }

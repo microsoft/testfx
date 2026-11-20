@@ -105,6 +105,9 @@ public sealed class SdkPackageTests(TestContext context)
     [DataRow("framework-drift", "differs from SupportedNetFrameworks")]
     [DataRow("meta-private-assets", "test SDK build-asset flow changed")]
     [DataRow("meta-reference", "Unsupported meta-package project reference")]
+    [DataRow("meta-retired-framework", "Unsupported meta-package project reference")]
+    [DataRow("meta-ui-reference", "Unsupported meta-package project reference")]
+    [DataRow("meta-ui-condition", "Unsupported meta-package project reference")]
     public async Task Generate_RejectsContractDriftBeforeWritingOutputs(string scenario, string expectedError)
     {
         JsonObject input = CreateInput(sdk: !scenario.StartsWith("meta-", StringComparison.Ordinal));
@@ -139,6 +142,15 @@ public sealed class SdkPackageTests(TestContext context)
                 break;
             case "meta-reference":
                 ReplaceInFile(PathFor("Package.csproj"), "MSTest.TestAdapter.csproj", "Unknown.csproj");
+                break;
+            case "meta-retired-framework":
+                ReplaceInFile(PathFor("Package.csproj"), @"MSTest\TestFramework\TestFramework.csproj", @"MSTest\TestFramework.Extensions\TestFramework.Extensions.csproj");
+                break;
+            case "meta-ui-reference":
+                ReplaceInFile(PathFor("Package.csproj"), @"MSTest.Uwp\MSTest.Uwp.csproj", @"MSTest.WinUI\MSTest.WinUI.csproj");
+                break;
+            case "meta-ui-condition":
+                ReplaceInFile(PathFor("Package.csproj"), "'$(TargetFramework)' == '$(UwpMinimum)'", "'$(TargetFramework)' != '$(UwpMinimum)'");
                 break;
             default:
                 Assert.Fail($"Unknown scenario: {scenario}");

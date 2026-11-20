@@ -6,11 +6,13 @@
 [CmdletBinding()]
 param(
     [string] $OutputRoot,
-    [switch] $VerifySatelliteSensitivity
+    [switch] $VerifySatelliteSensitivity,
+    [switch] $IncludeWindowsPlatformPackages
 )
 
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
+if ($IncludeWindowsPlatformPackages -and -not $IsWindows) { throw 'Native UI package validation requires Windows.' }
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 if (-not $OutputRoot) { $OutputRoot = Join-Path $root 'artifacts\bazel-mstest-validation' }
@@ -18,13 +20,20 @@ $directory = Join-Path ([System.IO.Path]::GetFullPath($OutputRoot)) ([DateTime]:
 $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $frameworks = @('net10.0', 'net11.0')
-$expectedIds = @(
+$coreFrameworks = @('netstandard2.0', 'net462') + $frameworks
+$platformFrameworks = @{
+    'MSTest.Uwp' = 'net10.0-windows10.0.18362'
+    'MSTest.WinUI' = 'net10.0-windows10.0.18362'
+}
+$portableIds = @(
     'MSTest.TestFramework', 'MSTest.TestAdapter', 'MSTest.Analyzers',
     'Microsoft.Testing.Platform', 'Microsoft.Testing.Platform.MSBuild',
     'Microsoft.Testing.Extensions.Telemetry', 'Microsoft.Testing.Extensions.TrxReport',
     'Microsoft.Testing.Extensions.TrxReport.Abstractions'
 )
-$passingTests = @('NativeAssembliesAreLoadedFromConsumer', 'KoreanSatellitesAreCopiedAndLoadable', 'PackagedTargetsProvideExtensionsAndParallelization')
+$expectedIds = $portableIds
+if ($IncludeWindowsPlatformPackages) { $expectedIds += @('MSTest.Uwp', 'MSTest.WinUI') }
+$passingTests = @('NativeAssembliesAreLoadedFromConsumer', 'KoreanSatellitesAreCopiedAndLoadable', 'PackagedTargetsProvideCoreAndParallelization')
 $packages = @{}
 $steps = [System.Collections.Generic.List[object]]::new()
 $runs = [System.Collections.Generic.List[object]]::new()
@@ -89,8 +98,14 @@ function Assert-Trx([string] $Path, [string[]] $Expected, [int] $Failed = 0, [st
 
 function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
     $groups = @($Metadata.SelectNodes('./*[local-name()="dependencies"]/*[local-name()="group"]'))
-    if ($Id -in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.Telemetry')) {
-        Assert-Names $frameworks @($groups | ForEach-Object targetFramework) "$Id framework groups"
+    $packageFrameworks = switch ($Id) {
+        'MSTest.TestFramework' { $coreFrameworks }
+        'MSTest.TestAdapter' { $frameworks }
+        { $platformFrameworks.ContainsKey($_) } { @($platformFrameworks[$Id]) }
+        default { $frameworks }
+    }
+    if ($Id -in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.Telemetry', 'MSTest.Uwp', 'MSTest.WinUI')) {
+        Assert-Names $packageFrameworks @($groups | ForEach-Object targetFramework) "$Id framework groups"
     }
     $allDependencies = @($Metadata.SelectNodes('.//*[local-name()="dependency"]'))
     foreach ($dependency in $allDependencies) {
@@ -98,7 +113,10 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             throw "$Id declares a private bundled assembly as package dependency: $($dependency.id)"
         }
     }
-    foreach ($framework in $frameworks) {
+    if ($Id -ne 'MSTest.TestFramework' -and @($Archive.Entries | Where-Object Name -Like 'MSTest.TestFramework.Extensions.*').Count) {
+        throw "$Id must obtain the compatibility facade from the shared core package."
+    }
+    foreach ($framework in $packageFrameworks) {
         switch ($Id) {
             'MSTest.TestFramework' {
                 foreach ($name in @('MSTest.TestFramework', 'MSTest.TestFramework.Extensions')) {
@@ -119,6 +137,24 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                 $null = Get-ZipHash $Archive "buildTransitive/$framework/Parallelize.targets"
                 if (@($Archive.Entries | Where-Object { $_.FullName -like 'buildTransitive/*.dll' -or $_.FullName -like '*/_localization/*' }).Count) {
                     throw 'The adapter must ship its assemblies and satellites as lib assets, not build payloads.'
+                }
+            }
+            { $platformFrameworks.ContainsKey($_) } {
+                foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
+                    $null = Get-ZipHash $Archive "buildTransitive/$framework/$name.dll"
+                }
+                $null = Get-ZipHash $Archive "lib/$framework/$Id.dll"
+                foreach ($extension in @('props', 'targets')) {
+                    $null = Get-ZipHash $Archive "buildTransitive/$framework/$Id.$extension"
+                }
+                $null = Get-ZipHash $Archive "buildTransitive/$framework/Parallelize.targets"
+                if (@($Archive.Entries | Where-Object FullName -Like 'buildTransitive/common/*').Count) {
+                    throw "$Id must use package-local targets, not a shared wrapper directory."
+                }
+                if (@($Archive.Entries | Where-Object { $_.FullName -like '*/MSTest.TestFramework.dll' -or
+                    ($_.FullName -like 'lib/*/MSTest.Uwp.dll' -and $Id -ne 'MSTest.Uwp') -or
+                    ($_.FullName -like 'lib/*/MSTest.WinUI.dll' -and $Id -ne 'MSTest.WinUI') }).Count) {
+                    throw "$Id must depend on shared core and isolate its own UI assembly."
                 }
             }
             'Microsoft.Testing.Platform.MSBuild' {
@@ -147,11 +183,19 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
     }
     $catalogs = switch ($Id) {
         'MSTest.TestFramework' {
-            @{ Directory = 'src\MSTest\TestFramework\Resources\xlf'; Stem = 'FrameworkMessages'; Assembly = 'MSTest.TestFramework'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
+            @{ Directory = 'src\MSTest\TestFramework\Resources\xlf'; Stem = 'FrameworkMessages'; Assembly = 'MSTest.TestFramework'; Folders = @($coreFrameworks | ForEach-Object { "lib/$_" }) }
         }
         'MSTest.TestAdapter' {
             @{ Directory = 'src\MSTest\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
             @{ Directory = 'src\MSTest\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
+        }
+        { $platformFrameworks.ContainsKey($_) } {
+            $folder = "buildTransitive/$($platformFrameworks[$Id])/_localization"
+            @{ Directory = 'src\MSTest\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($folder) }
+            @{ Directory = 'src\MSTest\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($folder) }
+        }
+        'MSTest.WinUI' {
+            @{ Directory = 'src\MSTest\MSTest.WinUI\Resources\xlf'; Stem = 'FrameworkExtensionsMessages'; Assembly = 'MSTest.WinUI'; Folders = @("lib/$($platformFrameworks[$Id])") }
         }
     }
     foreach ($catalog in $catalogs) {
@@ -160,8 +204,8 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             foreach ($folder in $catalog.Folders) { $null = Get-ZipHash $Archive "$folder/$culture/$($catalog.Assembly).resources.dll" }
         }
     }
-    if ($Id -eq 'MSTest.TestFramework' -and @($Archive.Entries | Where-Object FullName -Like '*MSTest.TestFramework.Extensions.resources.dll').Count) {
-        throw 'The shipping framework layout bundles only the core satellite resources.'
+    if ($Id -eq 'MSTest.TestAdapter' -and @($Archive.Entries | Where-Object FullName -Match '(^|/)(net4\d+|winui|uwp|uap[^/]*|net\d+\.\d+-windows[^/]*)(/|$)').Count) {
+        throw 'The ordinary adapter must not ship legacy or UI flavor payloads or build assets.'
     }
     foreach ($group in $groups) {
         $dependencies = @($group.SelectNodes('./*[local-name()="dependency"]'))
@@ -172,11 +216,17 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                     throw 'The framework must retain native analyzer/build assets and exclude only compile/runtime.'
                 }
             }
-            'MSTest.TestAdapter' {
+            { $_ -in @('MSTest.TestAdapter', 'MSTest.Uwp', 'MSTest.WinUI') } {
                 $ids = @('Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.Telemetry', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.TestPlatform.ObjectModel')
-                if ($IsWindows) { $ids += 'MSTest.TestFramework' }
+                if ($IsWindows -or $Id -ne 'MSTest.TestAdapter') { $ids += 'MSTest.TestFramework' }
                 Assert-Names $ids @($dependencies | ForEach-Object id) "$Id dependencies"
-                foreach ($dependency in $dependencies | Where-Object id -NE 'Microsoft.TestPlatform.ObjectModel') {
+                if ($platformFrameworks.ContainsKey($Id)) {
+                    $core = @($dependencies | Where-Object id -CEQ 'MSTest.TestFramework')
+                    if ($core.Count -ne 1 -or $core[0].version -cne "[$mstestVersion]") {
+                        throw "$Id must pin the matching core package version exactly."
+                    }
+                }
+                foreach ($dependency in $dependencies | Where-Object { $_.id -ne 'Microsoft.TestPlatform.ObjectModel' -and $_.id -notlike 'System.*' }) {
                     if ($dependency.HasAttribute('exclude')) { throw "The adapter must retain build/analyzer assets from $($dependency.id)." }
                 }
             }
@@ -193,7 +243,7 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
 
 function New-Expectations([string] $Framework, [string] $Path) {
     $assemblies = [ordered]@{}
-    foreach ($id in $expectedIds | Where-Object { $_ -ne 'MSTest.Analyzers' }) {
+    foreach ($id in $portableIds | Where-Object { $_ -ne 'MSTest.Analyzers' }) {
         $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[$id].Path)
         try {
             $names = switch ($id) {
@@ -271,8 +321,8 @@ function Build-Consumer([string] $Name, [string] $Framework, [string] $PackageFe
     $assets = Get-Content -LiteralPath $assetsPath -Raw | ConvertFrom-Json -AsHashtable
     Assert-Names @([System.IO.Path]::TrimEndingDirectorySeparator($Cache)) @($assets.packageFolders.Keys | ForEach-Object { [System.IO.Path]::TrimEndingDirectorySeparator($_) }) "$Name restore folders"
     $resolved = @($assets.libraries.Keys | Where-Object { $_ -match '^(MSTest\.|Microsoft\.Testing\.)' })
-    Assert-Names @($packages.Values | ForEach-Object { "$($_.Id)/$($_.Version)" }) $resolved "$Name native package closure"
-    foreach ($id in $expectedIds) {
+    Assert-Names @($portableIds | ForEach-Object { "$_/$($packages[$_].Version)" }) $resolved "$Name native package closure"
+    foreach ($id in $portableIds) {
         $package = $packages[$id]
         $cached = Join-Path $Cache ($id.ToLowerInvariant() + '\' + $package.Version + '\' + $id.ToLowerInvariant() + '.' + $package.Version + '.nupkg')
         $staged = Join-Path $PackageFeed "$id.$($package.Version).nupkg"
@@ -291,7 +341,8 @@ function Run-Consumer($Consumer) {
     $expectations = Join-Path $Consumer.Directory 'expectations.json'
     New-Expectations $Consumer.Framework $expectations
     $env:TESTFX_BAZEL_MSTEST_EXPECTATIONS = $expectations
-    $env:TESTFX_BAZEL_CONSUMER_EVIDENCE = Join-Path $Consumer.Directory 'loaded-assemblies.json'
+    $env:TESTFX_BAZEL_CONSUMER_EVIDENCE = Join-Path $Consumer.Directory 'loaded-assemblies.paths'
+    $previousEvidence = if (Test-Path -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE) { @(Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE).Count } else { 0 }
     $env:DOTNET_ROOT = Join-Path $directory 'missing-runtime'
     $env:DOTNET_ROOT_X64 = $env:DOTNET_ROOT
     $discovery = Invoke-Step "$name-discovery" $Consumer.Executable @('--list-tests')
@@ -306,7 +357,10 @@ function Run-Consumer($Consumer) {
         '--report-trx', '--report-trx-filename', 'pass.trx', '--results-directory', $results
     )
     Assert-Trx (Join-Path $results 'pass.trx') $passingTests
-    $provenance = Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE -Raw | ConvertFrom-Json
+    $evidencePaths = @(Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE)
+    if ($evidencePaths.Count -ne $previousEvidence + 1) { throw "$name did not append exactly one consumer provenance path." }
+    $provenancePath = $evidencePaths[-1]
+    $provenance = Get-Content -LiteralPath $provenancePath -Raw | ConvertFrom-Json
     $major = $Consumer.Framework.Substring(3).Split('.')[0]
     if ($provenance.Runtime -notlike ".NET $major.*" -or [System.IO.Path]::GetRelativePath($Consumer.Published, $provenance.CoreLib) -cne 'System.Private.CoreLib.dll') {
         throw "$name did not execute on its self-contained $($Consumer.Framework) runtime."
@@ -318,7 +372,7 @@ function Run-Consumer($Consumer) {
     Assert-Trx (Join-Path $results 'failure.trx') @('IntentionalFailure') 1 'BAZEL_INTENTIONAL_FAILURE'
     $empty = Invoke-Step "$name-empty" $Consumer.Executable @('--filter', 'FullyQualifiedName~NoSuchPackageCase', '--minimum-expected-tests', '1') 9
     if ($empty -notmatch 'tests ran 0, minimum expected 1') { throw "$name did not execute the zero-result policy." }
-    $runs.Add([pscustomobject]@{ Consumer = $Consumer; Runtime = $provenance.Runtime; Provenance = $env:TESTFX_BAZEL_CONSUMER_EVIDENCE; Results = $results; Passed = $true })
+    $runs.Add([pscustomobject]@{ Consumer = $Consumer; Runtime = $provenance.Runtime; Provenance = $provenancePath; ProvenanceIndex = $env:TESTFX_BAZEL_CONSUMER_EVIDENCE; Results = $results; Passed = $true })
 }
 
 function Run-MSBuildConsumer($Consumer) {
@@ -330,6 +384,7 @@ function Run-MSBuildConsumer($Consumer) {
         @{ Name = 'failure'; Filter = 'FullyQualifiedName~IntentionalFailure'; Exit = 1; Tests = @('IntentionalFailure'); Failed = 1; Message = 'BAZEL_INTENTIONAL_FAILURE' }
     )) {
         $name = "msbuild-$($scenario.Name)"
+        $previousEvidence = if (Test-Path -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE) { @(Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE).Count } else { 0 }
         $arguments = "--filter $($scenario.Filter) --report-trx --report-trx-filename $name.trx --results-directory `"$results`""
         Push-Location $Consumer.Directory
         try {
@@ -342,8 +397,11 @@ function Run-MSBuildConsumer($Consumer) {
         }
         finally { Pop-Location }
         Assert-Trx (Join-Path $results "$name.trx") $scenario.Tests $scenario.Failed $scenario.Message
+        $evidencePaths = @(Get-Content -LiteralPath $env:TESTFX_BAZEL_CONSUMER_EVIDENCE)
+        $expectedEvidence = $previousEvidence + $(if ($scenario.Name -eq 'pass') { 1 } else { 0 })
+        if ($evidencePaths.Count -ne $expectedEvidence) { throw "$name did not preserve append-only consumer provenance." }
     }
-    $runs.Add([pscustomobject]@{ Consumer = $Consumer; Driver = 'Native Platform.MSBuild InvokeTestingPlatform'; ParentExits = @(0, 1); Results = $results; Passed = $true })
+    $runs.Add([pscustomobject]@{ Consumer = $Consumer; Driver = 'Native Platform.MSBuild InvokeTestingPlatform'; ParentExits = @(0, 1); ProvenanceIndex = $env:TESTFX_BAZEL_CONSUMER_EVIDENCE; Provenance = $evidencePaths; Results = $results; Passed = $true })
 }
 
 $environmentNames = @(
@@ -367,11 +425,12 @@ try {
     [xml]$versions = Get-Content -LiteralPath (Join-Path $root 'eng\Versions.props') -Raw
     $mstestVersion = $versions.SelectSingleNode('//*[local-name()="VersionPrefix"]').InnerText + '-preview.bazel'
     $mtpVersion = $versions.SelectSingleNode('//*[local-name()="TestingPlatformVersionPrefix"]').InnerText + '-preview.bazel'
-    $null = Invoke-Step 'native-pack' $bazel @('build', '//:mstest_package_closure', '--jobs=2', '--noshow_progress', '--show_result=0')
+    $packageClosure = if ($IncludeWindowsPlatformPackages) { '//:mstest_platform_package_closure' } else { '//:mstest_package_closure' }
+    $null = Invoke-Step 'native-pack' $bazel @('build', $packageClosure, '--jobs=2', '--noshow_progress', '--show_result=0')
     $executionRoot = & $bazel info execution_root
     if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
-    $paths = @(& $bazel cquery //:mstest_package_closure --output=files --noshow_progress)
-    if ($LASTEXITCODE -ne 0 -or $paths.Count -ne $expectedIds.Count) { throw 'Expected exactly eight native packages in the MSTest validation closure.' }
+    $paths = @(& $bazel cquery $packageClosure --output=files --noshow_progress)
+    if ($LASTEXITCODE -ne 0 -or $paths.Count -ne $expectedIds.Count) { throw "Expected $($expectedIds.Count) native packages in the MSTest validation closure." }
     foreach ($path in $paths) {
         $packagePath = Join-Path $executionRoot $path
         $archive = [System.IO.Compression.ZipFile]::OpenRead($packagePath)
@@ -404,7 +463,23 @@ try {
         finally { $archive.Dispose() }
     }
     Assert-Names $expectedIds @($packages.Keys) 'Native feed'
-
+    if ($IncludeWindowsPlatformPackages) {
+        # Modern UWP and WinUI must ship the same shared adapter build.
+        $sharedAdapterHashes = @{}
+        foreach ($id in $platformFrameworks.Keys) {
+            $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[$id].Path)
+            try {
+                foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
+                    $hash = Get-ZipHash $archive "buildTransitive/$($platformFrameworks[$id])/$name.dll"
+                    if ($sharedAdapterHashes.ContainsKey($name) -and $sharedAdapterHashes[$name] -cne $hash) {
+                        throw "MSTest.Uwp and MSTest.WinUI must ship the same $name payload."
+                    }
+                    $sharedAdapterHashes[$name] = $hash
+                }
+            }
+            finally { $archive.Dispose() }
+        }
+    }
     $sdkVersion = [regex]::Match((Get-Content -LiteralPath (Join-Path $root 'MODULE.bazel') -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value
     if (-not $sdkVersion) { throw 'Could not identify the native toolchain SDK.' }
     $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }
@@ -459,7 +534,7 @@ try {
         $expectations = Join-Path $counterfactual.Directory 'expectations.json'
         New-Expectations 'net11.0' $expectations
         $env:TESTFX_BAZEL_MSTEST_EXPECTATIONS = $expectations
-        $env:TESTFX_BAZEL_CONSUMER_EVIDENCE = Join-Path $counterfactual.Directory 'loaded-assemblies.json'
+        $env:TESTFX_BAZEL_CONSUMER_EVIDENCE = Join-Path $counterfactual.Directory 'loaded-assemblies.paths'
         $results = Join-Path $counterfactual.Directory 'results'
         $null = Invoke-Step 'counterfactual-execution' $counterfactual.Executable @(
             '--filter', 'FullyQualifiedName!~IntentionalFailure', '--minimum-expected-tests', '3',
@@ -473,7 +548,7 @@ try {
         Run-Consumer $restored
     }
     $succeeded = $true
-    Write-Host "Native MSTest package consumers passed. Evidence: $directory"
+    Write-Host "Native MSTest ordinary package consumers passed. Optional UI packages cover modern native layouts, not classic UAP production or UI activation. Evidence: $directory"
 }
 finally {
     foreach ($name in $environmentNames) {
@@ -482,7 +557,7 @@ finally {
         else { Remove-ProcessEnvironmentVariable $name }
     }
     Pop-Location
-    [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Packages = @($packages.Values); Runs = $runs; Steps = $steps } |
+    [pscustomobject]@{ Passed = $succeeded; IncludeWindowsPlatformPackages = [bool]$IncludeWindowsPlatformPackages; ClassicUapProduced = $false; UIActivationValidated = $false; BaseRevision = $revision; WorkingTree = $workingTree; Packages = @($packages.Values); Runs = $runs; Steps = $steps } |
         ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
 }
 

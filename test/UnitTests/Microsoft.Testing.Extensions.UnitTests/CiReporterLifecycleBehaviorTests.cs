@@ -173,6 +173,24 @@ public sealed class CiReporterLifecycleBehaviorTests
     }
 
     [TestMethod]
+    public async Task Annotation_ContextualModuleModeDistinguishesSameNameAndTfmModules()
+    {
+        const string firstModuleDisplayName = @"C:\tests\first\Shared.Tests.dll";
+        const string secondModuleDisplayName = @"C:\tests\second\Shared.Tests.dll";
+        string firstAnnotation = await GetContextualAnnotation(firstModuleDisplayName);
+        string secondAnnotation = await GetContextualAnnotation(secondModuleDisplayName);
+
+        string tfm = ghactions::Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
+        Assert.AreEqual(
+            $@"##vso[task.logissue type=error]Tests.Contextual [{tfm}] ({firstModuleDisplayName})%0Afailure",
+            firstAnnotation);
+        Assert.AreEqual(
+            $@"##vso[task.logissue type=error]Tests.Contextual [{tfm}] ({secondModuleDisplayName})%0Afailure",
+            secondAnnotation);
+        Assert.AreNotEqual(firstAnnotation, secondAnnotation);
+    }
+
+    [TestMethod]
     public async Task Annotation_UserFilterSelectsNextExistingSourceFrame()
     {
         using var fixture = new CiReporterFixture();
@@ -265,7 +283,14 @@ public sealed class CiReporterLifecycleBehaviorTests
     }
 
     private static AzureDevOpsReporter Annotation(CiReporterFixture fixture)
-        => new(new TestCommandLineOptions(fixture.Options), fixture.Environment.Object, fixture.FileSystem.Object, fixture.Output.Object, fixture.LoggerFactory.Object, Mock.Of<IAzureDevOpsHistoryService>());
+        => new(
+            new TestCommandLineOptions(fixture.Options),
+            fixture.Environment.Object,
+            fixture.FileSystem.Object,
+            fixture.Output.Object,
+            fixture.LoggerFactory.Object,
+            Mock.Of<IAzureDevOpsHistoryService>(),
+            fixture.Module.Object);
 
     private static string Command(IOutputDeviceData data)
         => data switch
@@ -274,6 +299,20 @@ public sealed class CiReporterLifecycleBehaviorTests
             GitHubActionsCommandOutputDeviceData github => github.Text,
             _ => throw new AssertFailedException("Expected a workflow command."),
         };
+
+    private static async Task<string> GetContextualAnnotation(string moduleDisplayName)
+    {
+        using var fixture = new CiReporterFixture();
+        fixture.EnableAzureDevOps();
+        fixture.Variables[AzureDevOpsLogGroupReporter.DisableHostGroupsEnvironmentVariable] = "1";
+        fixture.Module.Setup(value => value.TryGetAssemblyName()).Returns("Shared.Tests");
+        fixture.Module.Setup(value => value.GetDisplayName()).Returns(moduleDisplayName);
+        AzureDevOpsReporter reporter = Annotation(fixture);
+
+        await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Contextual", new FailedTestNodeStateProperty("failure")), CancellationToken.None);
+
+        return Command(Assert.ContainsSingle(fixture.Displays));
+    }
 
     private static TestNodeStateProperty[] FailureStates()
         =>

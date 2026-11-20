@@ -40,6 +40,10 @@ internal sealed partial class DotnetTestConnection
                 await transportClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
+            case TestInProgressMessages testInProgressMessages when _isTestInProgressSupported:
+                await transportClient.RequestReplyAsync<TestInProgressMessages, VoidResponse>(testInProgressMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                break;
+
             case FileArtifactMessages fileArtifactMessages:
                 if (!IsCoverageSummarySupported && fileArtifactMessages.FileArtifacts.Any(artifact => artifact.CoverageSummary is not null))
                 {
