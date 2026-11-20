@@ -201,7 +201,7 @@ payload. The `.1` and `.4` net10.0 payload SHA-256 values were respectively
 `EF7D980849C2BD064291DFE5616AA1B98C77EF112A2473C609BAFD29CE03DF80`.
 The fixed-host command was:
 
-```
+```powershell
 X:\progress-acceptance\.dotnet\dotnet.exe X:\progress-acceptance\artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~DotnetTestPipe_ProgressHonorsPeerCapability' --report-trx --trx-mode in-process --results-directory X:\progress-acceptance-evidence --report-trx-filename progress-wire.trx --show-test-results all
 ```
 
@@ -226,7 +226,7 @@ at the expected group-header equality (exit 2): `RejectedHost`,
 verdict remain visible. Both runs rebuilt the project with
 the following commands, respectively:
 
-```
+```powershell
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release -f net10.0 --no-restore '-bl:artifacts\log\Release\ambiguous-summary-red.binlog' -v:q
 .\.dotnet\dotnet.exe build test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj -c Release -f net10.0 --no-restore '-bl:artifacts\log\Release\ambiguous-summary-green.binlog' -v:q
 .\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\net10.0\Microsoft.Testing.Platform.UnitTests.dll --filter 'FullyQualifiedName~TestExecutionCompleted_ContextualSummaryOmitsAmbiguousModuleTotals' --report-trx --trx-mode in-process --results-directory <session-files>\summary-parity-red --report-trx-filename summary-red.trx --show-test-results all
@@ -277,7 +277,7 @@ that the restored and deployed Platform DLLs matched the package payload
 The isolated checkout was at `8bbb93c41344ce34ab0516f9996cc96570fe2a0c`.
 Its harness build and test commands were:
 
-```
+```powershell
 X:\progress-acceptance\.dotnet\dotnet.exe build X:\progress-acceptance\test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Release -f net12.0 --no-restore '-bl:X:\progress-acceptance\artifacts\log\Release\preview5-acceptance.binlog' -v:q
 X:\progress-acceptance\.dotnet\dotnet.exe X:\progress-acceptance\artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~DotnetTestPipe_ProgressHonorsPeerCapability|FullyQualifiedName~DotnetTestPipeAzureDevOpsForwardingTests' --report-trx --trx-mode in-process --results-directory X:\progress-preview5-evidence --report-trx-filename preview5.trx --show-test-results all
 ```
@@ -305,7 +305,7 @@ matched the originals. `AcceptanceFixture` selects a fresh per-run NuGet cache.
 A temporary `X:` drive mapped the session `files`
 directory to avoid Windows long paths and ancestor analyzer configuration:
 
-```
+```powershell
 X:\parallel-output-preview-acceptance\.dotnet\dotnet.exe X:\parallel-output-preview-acceptance\artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter 'FullyQualifiedName~DotnetTestPipeAzureDevOpsForwardingTests'
 ```
 
@@ -347,7 +347,7 @@ The corrected revision's Release runs above passed the same three targeted
 tests. In the mutant's Debug/net10.0 build, the following commands executed
 with no skips and exited 2:
 
-```
+```powershell
 .\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~TestCompleted_ContextualOutput_UsesSelectorToDisambiguateDuplicateModuleNames|FullyQualifiedName~TestExecutionCompleted_ContextualSummary_OrdersExitDescriptionAndSeparatesSelectionSkips'
 .\.dotnet\dotnet.exe run --project test\UnitTests\Microsoft.Testing.Extensions.UnitTests -f net10.0 -c Debug --no-build -- --filter 'FullyQualifiedName~EmitsMessageOnlyAnnotation_EscapesLiteralPercentSequenceInAssemblyIdentity'
 ```
