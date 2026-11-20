@@ -267,6 +267,41 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public void Merge_ConcatenatesRunStreamsSeparatelyAndOmitsEmptyChannels()
+    {
+        var firstOutput = new XElement(Ns + "Output", new XElement(Ns + "StdErr", "first error"), new XElement(Ns + "DebugTrace", "first trace"));
+        var lastOutput = new XElement(Ns + "Output", new XElement(Ns + "StdErr", "last error"), new XElement(Ns + "DebugTrace", "last trace"));
+        XDocument first = BuildReport(resultSummaryChildren: [firstOutput]);
+        XDocument empty = BuildReport(resultSummaryChildren: [new XElement(Ns + "Output", new XElement(Ns + "StdErr"))]);
+        XDocument last = BuildReport(resultSummaryChildren: [lastOutput]);
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([first, empty, last], Guid.NewGuid(), "run"));
+
+        XElement output = Assert.ContainsSingle(summary.Elements(Ns + "Output"));
+        Assert.AreSequenceEqual(new[] { Ns + "StdErr", Ns + "DebugTrace" }, output.Elements().Select(e => e.Name));
+        const string expectedError = """
+            first error
+            last error
+            """;
+        const string expectedTrace = """
+            first trace
+            last trace
+            """;
+        Assert.AreEqual(expectedError.Replace("\r\n", "\n"), output.Element(Ns + "StdErr")!.Value);
+        Assert.AreEqual(expectedTrace.Replace("\r\n", "\n"), output.Element(Ns + "DebugTrace")!.Value);
+    }
+
+    [TestMethod]
+    public void Merge_EmptyRunOutputOmitsOutputElement()
+    {
+        XDocument report = BuildReport(resultSummaryChildren: [new XElement(Ns + "Output", new XElement(Ns + "StdOut"))]);
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([report], Guid.NewGuid(), "run"));
+
+        Assert.IsEmpty(summary.Elements(Ns + "Output"));
+    }
+
+    [TestMethod]
     public void Merge_CarriesRunLevelOutputMessages()
     {
         // VSTest records run-level skipped/informational messages under ResultSummary/Output/TextMessages;

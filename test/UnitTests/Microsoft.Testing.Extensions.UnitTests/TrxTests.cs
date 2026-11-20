@@ -562,6 +562,21 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithMixedXmlBoundaries_PreservesOnlyValidCharacters()
+    {
+        using MemoryFileStream stream = new();
+        const string output = "\u001f \ud7ff\ue000\ufffd\ufffe\U0001f600\ud800";
+        var properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, new TrxMessagesProperty([new StandardOutputTrxMessage(output)]));
+
+        await GenerateTrxReportEngine(stream).GenerateReportAsync([CreateTestNodeUpdate("uid", "case", properties)]);
+
+        XDocument report = stream.TrxContent!;
+        XNamespace ns = report.Root!.Name.Namespace;
+        XElement stdOut = Assert.ContainsSingle(report.Descendants(ns + "StdOut"));
+        Assert.AreEqual("\\u001f \ud7ff\ue000\ufffd\\ufffe\U0001f600\\ud800", stdOut.Value);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithUnpairedSurrogates_TrxEscapesInvalidCharacters()
     {
         // Arrange

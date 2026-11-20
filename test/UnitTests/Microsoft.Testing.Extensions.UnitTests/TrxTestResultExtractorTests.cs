@@ -219,6 +219,7 @@ public class TrxTestResultExtractorTests
         string truncated = result.ExceptionMessage;
         int suffixStart = truncated.IndexOf("\n... [truncated", StringComparison.Ordinal);
         Assert.IsGreaterThan(0, suffixStart);
+        Assert.AreEqual(MaxCapturedFieldChars - 1, suffixStart, "The entire pair must be dropped rather than exceeding the capture limit.");
         char lastPrefixChar = truncated[suffixStart - 1];
         Assert.IsFalse(char.IsHighSurrogate(lastPrefixChar), "Truncation must not leave a dangling high surrogate.");
     }
@@ -265,6 +266,25 @@ public class TrxTestResultExtractorTests
         Assert.AreSequenceEqual(
             [(typeof(TrxExceptionProperty).FullName!, 3), (typeof(TimingProperty).FullName!, 2)],
             duplicates);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Duplicate timing first")]
+    [DataRow(false, DisplayName = "Duplicate exception first")]
+    public void Extract_MultipleDuplicateProperties_ReportsFirstOrdinalTypeRegardlessOfInputOrder(bool timingFirst)
+    {
+        var firstTiming = new TimingProperty(new TimingInfo(default, default, TimeSpan.Zero));
+        var secondTiming = new TimingProperty(new TimingInfo(default, default, TimeSpan.FromSeconds(1)));
+        var firstException = new TrxExceptionProperty("first", null);
+        var secondException = new TrxExceptionProperty("second", null);
+        PropertyBag bag = timingFirst
+            ? new PropertyBag(PassedTestNodeStateProperty.CachedInstance, firstTiming, secondTiming, firstException, secondException)
+            : new PropertyBag(PassedTestNodeStateProperty.CachedInstance, firstException, secondException, firstTiming, secondTiming);
+        var message = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = "u", DisplayName = "d", Properties = bag });
+
+        InvalidOperationException error = Assert.ThrowsExactly<InvalidOperationException>(() => TrxTestResultExtractor.Extract(message));
+
+        Assert.AreEqual($"Found multiple properties of type '{typeof(TrxExceptionProperty).FullName}'.", error.Message);
     }
 
     [TestMethod]

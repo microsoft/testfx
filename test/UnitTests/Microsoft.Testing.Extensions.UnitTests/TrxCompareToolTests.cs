@@ -67,6 +67,27 @@ public sealed class TrxCompareToolTests
     }
 
     [TestMethod]
+    public async Task RunAsync_DisjointReports_NameTheMissingSideInTestNameOrder()
+    {
+        string baseline = WriteReport("baseline.trx", CreateReport(("Zulu", "Passed", "tests.dll")));
+        string compared = WriteReport("compared.trx", CreateReport(("Alpha", "Passed", "tests.dll")));
+        var context = new CompareContext(baseline, compared);
+
+        int exitCode = await context.Tool.RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, exitCode);
+        const string expected = """
+            --- Comparing TRX files ---
+              - Test 'Suite.Alpha' is missing inside the trx 'baseline'
+              - Test 'Suite.Zulu' is missing inside the trx 'other'
+
+            Comparison check failed!
+
+            """;
+        Assert.EndsWith(Normalize(expected), Normalize(context.GetOutput()));
+    }
+
+    [TestMethod]
     [DataRow("missing")]
     [DataRow("duplicate")]
     [DataRow("outcome")]
