@@ -20,6 +20,355 @@ public sealed class TerminalTestReporterTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public void WriteModuleMessage_WhenContextualOutputIsDisabled_PreservesStandaloneOutput()
+    {
+        bool displayNameWasSelected = false;
+        var console = new StringBuilderConsole();
+        TerminalTestReporterOptions options = new()
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+            ModuleDisplayName = (_, _) =>
+            {
+                displayNameWasSelected = true;
+                return "renamed module";
+            },
+        };
+        using var reporter = new TerminalTestReporter(console, options);
+
+        Assert.IsFalse(options.ContextualModuleOutput);
+        reporter.WriteModuleMessage("module.dll", "net9.0", "x64", "standalone output");
+
+        Assert.AreEqual($"standalone output{Environment.NewLine}", console.Output);
+        Assert.IsFalse(displayNameWasSelected);
+    }
+
+    [TestMethod]
+    [DataRow(ConsoleColor.Red, "\u001B[91m", DisplayName = "ErrorSeverity")]
+    [DataRow(ConsoleColor.Yellow, "\u001B[93m", DisplayName = "WarningSeverity")]
+    public void WriteModuleMessage_ContextualOutput_PrefixesOrdinaryLinesAndPreservesCommands(
+        ConsoleColor severityColor,
+        string ansiColor)
+    {
+        const string assembly = "module.dll";
+        const string identity = "\u001B[35m[Module net9.0|x64]\u001B[m ";
+        const string azureDevOpsCommand = "##vso[task.logissue type=error;]azure failure";
+        const string githubCommand = "::error title=workflow::github failure";
+        const string indentedGithubCommand = "  ::warning::github warning";
+        const string legacyGithubCommand = "prefix ##[warning]legacy";
+        const string azureDevOpsGroupCommand = "##[group]build output";
+        string text = $"ordinary before global::Example.Type\r\n{azureDevOpsCommand}\n{githubCommand}\r\n{indentedGithubCommand}\n{legacyGithubCommand}\n{azureDevOpsGroupCommand}\nordinary after";
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowProgress = () => false,
+            ModuleDisplayName = (_, _) => "Module",
+        });
+
+        reporter.WriteModuleMessage(
+            assembly,
+            "net9.0",
+            "x64",
+            text,
+            new Microsoft.Testing.Platform.OutputDevice.SystemConsoleColor { ConsoleColor = severityColor });
+
+        string expected =
+            $"{identity}{ansiColor}ordinary before global::Example.Type\u001B[m\r\n\u001B[m{Environment.NewLine}"
+            + $"{azureDevOpsCommand}\n"
+            + $"{githubCommand}\r\n"
+            + $"{indentedGithubCommand}\n"
+            + $"{legacyGithubCommand}\n"
+            + $"{azureDevOpsGroupCommand}\n"
+            + $"{identity}{ansiColor}ordinary after\u001B[m{Environment.NewLine}";
+        Assert.AreEqual(expected, console.Output);
+        string[] outputLines = Regex.Split(console.Output, "\r\n|\n");
+        Assert.Contains(azureDevOpsCommand, outputLines);
+        Assert.Contains(githubCommand, outputLines);
+        Assert.Contains(indentedGithubCommand, outputLines);
+        Assert.Contains(legacyGithubCommand, outputLines);
+        Assert.Contains(azureDevOpsGroupCommand, outputLines);
+    }
+
+    [TestMethod]
+    public void TestCompleted_ContextualOutput_UsesSelectorToDisambiguateDuplicateModuleNames()
+    {
+        const string firstAssembly = "first/Shared.Tests.dll";
+        const string secondAssembly = "second/Shared.Tests.dll";
+        List<(string Assembly, string? TargetFramework)> selectedModules = [];
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowProgress = () => false,
+            ModuleDisplayName = (assembly, targetFramework) =>
+            {
+                selectedModules.Add((assembly, targetFramework));
+                return targetFramework == "net8.0" ? "Shared net8" : "Shared net9";
+            },
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted(firstAssembly, "net8.0", "x64", "execution-net8", "instance-net8");
+        reporter.AssemblyRunStarted(secondAssembly, "net9.0", "x64", "execution-net9", "instance-net9");
+
+        reporter.TestCompleted(
+            firstAssembly, "net8.0", "x64", "execution-net8", "instance-net8",
+            testNodeUid: "failure-net8", displayName: "first failure", informativeMessage: null, outcome: TestOutcome.Fail,
+            duration: TimeSpan.Zero, exceptions: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.TestCompleted(
+            secondAssembly, "net9.0", "x64", "execution-net9", "instance-net9",
+            testNodeUid: "failure-net9", displayName: "second failure", informativeMessage: null, outcome: TestOutcome.Fail,
+            duration: TimeSpan.Zero, exceptions: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        Assert.AreEqual(2, reporter.TotalTests);
+        Assert.AreSequenceEqual(
+            [(firstAssembly, (string?)"net8.0"), (secondAssembly, (string?)"net9.0")],
+            selectedModules);
+        string[] outputLines = NormalizeTerminalOutput(console.Output).Split('\n');
+        Assert.Contains("[Shared net8 net8.0|x64] failed first failure (0ms)", outputLines);
+        Assert.Contains("[Shared net9 net9.0|x64] failed second failure (0ms)", outputLines);
+        Assert.IsTrue(Regex.IsMatch(console.Output, @"\x1b\[(35|36|95|96)m\[Shared net8 net8\.0\|x64\]\x1b\[m \x1b\[31mfailed"));
+        Assert.IsTrue(Regex.IsMatch(console.Output, @"\x1b\[(35|36|95|96)m\[Shared net9 net9\.0\|x64\]\x1b\[m \x1b\[31mfailed"));
+    }
+
+    [TestMethod]
+    public void AssemblyRunNotSelected_ContextualOutput_PreservesKnownAndUnknownFrameworkIdentity()
+    {
+        const string knownAssembly = "known/Shared.Tests.dll";
+        const string unknownAssembly = "unknown/Shared.Tests.dll";
+        List<(string Assembly, string? TargetFramework)> selectedModules = [];
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            ModuleDisplayName = (assembly, targetFramework) =>
+            {
+                selectedModules.Add((assembly, targetFramework));
+                return assembly == knownAssembly ? "Shared net8" : "Shared unknown";
+            },
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunNotSelected(knownAssembly, "net8.0", "x64");
+        reporter.AssemblyRunNotSelected(unknownAssembly, targetFramework: null, architecture: "arm64");
+
+        Assert.AreEqual(
+            $"[Shared net8 net8.0|x64] skipped (No affected tests selected){Environment.NewLine}"
+                + $"[Shared unknown arm64] skipped (No affected tests selected){Environment.NewLine}",
+            NormalizeTerminalOutput(console.Output).Replace("\n", Environment.NewLine));
+        Assert.AreSequenceEqual(
+            [(knownAssembly, (string?)"net8.0"), (unknownAssembly, null)],
+            selectedModules);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualSummary_OrdersExitDescriptionAndSeparatesSelectionSkips()
+    {
+        const int exitCode = 1;
+        const string failedAssembly = "failed.dll";
+        const string passedAssembly = "passed.dll";
+        const string unselectedAssembly = "unselected.dll";
+        const string artifactPath = "summary-artifact.txt";
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunStarted(failedAssembly, "net9.0", "x64", "failed", "failed");
+        ReportOrchestratorTest(reporter, failedAssembly, "failed", "failed", "failed-test", TestOutcome.Fail);
+        ReportOrchestratorTest(reporter, failedAssembly, "failed", "failed", "failed-module-skip", TestOutcome.Skipped);
+        reporter.AssemblyRunCompleted("failed", exitCode, outputData: null, errorData: null);
+
+        reporter.AssemblyRunStarted(passedAssembly, "net9.0", "x64", "passed", "passed");
+        ReportOrchestratorTest(reporter, passedAssembly, "passed", "passed", "passed-test", TestOutcome.Passed);
+        ReportOrchestratorTest(reporter, passedAssembly, "passed", "passed", "passed-module-skip", TestOutcome.Skipped);
+        reporter.AssemblyRunCompleted("passed", exitCode: 0, outputData: null, errorData: null);
+
+        reporter.AssemblyRunNotSelected(unselectedAssembly, "net8.0", "arm64");
+        reporter.ArtifactAdded(
+            outOfProcess: false,
+            assembly: passedAssembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId: "passed",
+            testName: null,
+            artifactPath);
+        reporter.ArtifactAdded(
+            outOfProcess: true,
+            assembly: failedAssembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId: "failed",
+            testName: "failed-test",
+            "failure-artifact.txt");
+        Assert.AreEqual(4, reporter.TotalTests);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        string exitCodeDescription = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestRunExitCode,
+            exitCode,
+            TerminalTestReporter.GetExitCodeDescription(exitCode));
+        int exitDescriptionIndex = output.IndexOf(exitCodeDescription, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, exitDescriptionIndex);
+
+        int groupStart = output.IndexOf("##[group]Test run summary:", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, groupStart);
+
+        int groupEnd = output.IndexOf("##[endgroup]", groupStart, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(groupStart, groupEnd);
+
+        int artifactGroupStart = output.IndexOf("##[group]Artifacts: 2", groupEnd, StringComparison.Ordinal);
+        Assert.IsGreaterThan(groupEnd, artifactGroupStart);
+
+        int artifactGroupEnd = output.IndexOf("##[endgroup]", artifactGroupStart, StringComparison.Ordinal);
+        Assert.IsGreaterThan(artifactGroupStart, artifactGroupEnd);
+
+        int totalCountIndex = output.IndexOf("  total: 4", artifactGroupEnd, StringComparison.Ordinal);
+        int failedCountIndex = output.IndexOf("  failed: 1", groupEnd, StringComparison.Ordinal);
+        int passedCountIndex = output.IndexOf("  succeeded: 1", groupEnd, StringComparison.Ordinal);
+        int skippedCountIndex = output.IndexOf("  skipped: 2", groupEnd, StringComparison.Ordinal);
+        int durationIndex = output.IndexOf("  duration: 0ms", groupEnd, StringComparison.Ordinal);
+        int verdictIndex = output.IndexOf("Test run summary: Failed!", groupEnd, StringComparison.Ordinal);
+
+        Assert.IsGreaterThan(exitDescriptionIndex, groupStart);
+        Assert.IsGreaterThan(groupStart, groupEnd);
+        Assert.IsGreaterThanOrEqualTo(groupEnd, totalCountIndex);
+        Assert.IsGreaterThan(totalCountIndex, failedCountIndex);
+        Assert.IsGreaterThan(failedCountIndex, passedCountIndex);
+        Assert.IsGreaterThan(passedCountIndex, skippedCountIndex);
+        Assert.IsGreaterThan(skippedCountIndex, durationIndex);
+        Assert.IsGreaterThan(groupEnd, verdictIndex);
+        Assert.IsGreaterThan(durationIndex, verdictIndex);
+        Assert.AreEqual("Test run summary: Failed!", output.TrimEnd().Split('\n')[^1]);
+
+        string[] groupLines = output.Substring(groupStart, groupEnd - groupStart).Split(['\n'], StringSplitOptions.RemoveEmptyEntries);
+        Assert.AreEqual(
+            "##[group]Test run summary: 1 passed, 1 failed, 1 skipped (No affected tests selected)",
+            groupLines[0]);
+        int failedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [failed.dll net9.0|x64]", StringComparison.Ordinal));
+        int unselectedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [unselected.dll net8.0|arm64]", StringComparison.Ordinal));
+        int passedModuleIndex = Array.FindIndex(groupLines, static line => line.StartsWith("  [passed.dll net9.0|x64]", StringComparison.Ordinal));
+        Assert.IsGreaterThanOrEqualTo(0, failedModuleIndex);
+        Assert.IsGreaterThan(failedModuleIndex, unselectedModuleIndex);
+        Assert.IsGreaterThan(unselectedModuleIndex, passedModuleIndex);
+        Assert.Contains("0 passed, 1 failed, 1 skipped", groupLines[failedModuleIndex]);
+        Assert.Contains("1 passed, 0 failed, 1 skipped", groupLines[passedModuleIndex]);
+        Assert.DoesNotContain("summary-artifact.txt", output.Substring(groupStart, groupEnd - groupStart));
+        string artifacts = output.Substring(artifactGroupStart, artifactGroupEnd - artifactGroupStart);
+        Assert.Contains("summary-artifact.txt", artifacts);
+        Assert.Contains("failure-artifact.txt", artifacts);
+        Assert.IsGreaterThan(artifactGroupEnd, verdictIndex);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualSummaryWithoutArtifacts_OmitsArtifactGroup()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("module.dll", "net9.0", "x64", "execution", "instance");
+        ReportOrchestratorTest(reporter, "module.dll", "execution", "instance", "test", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("execution", exitCode: 0, outputData: null, errorData: null);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 0);
+
+        Assert.DoesNotContain("##[group]Artifacts:", console.Output);
+        Assert.Contains("##[group]Test run summary: 1 passed, 0 failed", console.Output);
+        Assert.DoesNotContain("No affected tests selected", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(false, false, DisplayName = "RejectedHost")]
+    [DataRow(true, false, DisplayName = "RejectedRetry")]
+    [DataRow(true, true, DisplayName = "RejectedRetryWithUnselectedModule")]
+    public void TestExecutionCompleted_ContextualSummaryOmitsAmbiguousModuleTotals(bool hasRegisteredModule, bool hasUnselectedModule)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+        if (hasRegisteredModule)
+        {
+            reporter.AssemblyRunStarted("module.dll", "net9.0", "x64", "execution", "instance");
+            ReportOrchestratorTest(reporter, "module.dll", "execution", "instance", "test", TestOutcome.Passed);
+            reporter.AssemblyRunCompleted("execution", exitCode: 0, outputData: null, errorData: null);
+        }
+
+        if (hasUnselectedModule)
+        {
+            reporter.AssemblyRunNotSelected("unselected.dll", "net9.0", "x64");
+        }
+
+        reporter.HandshakeFailure("module.dll", "net9.0", 1, string.Empty, "rejected host");
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 1);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        string groupLine = output.Split('\n').Single(static line => line.StartsWith("##[group]Test run summary:", StringComparison.Ordinal));
+        Assert.AreEqual(
+            hasUnselectedModule
+                ? "##[group]Test run summary: 1 skipped (No affected tests selected)"
+                : "##[group]Test run summary:",
+            groupLine);
+        Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
+        Assert.Contains("rejected host", output);
+        Assert.Contains("Test run summary: Failed!", output);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_ContextualRetrySuppressesSubsetSummaryButRetainsArtifacts()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ContextualModuleOutput = true,
+            ShowAssembly = true,
+            ShowRunSummary = false,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+        reporter.AssemblyRunStarted("retry.dll", "net9.0", "x64", "retry", "retry");
+        ReportOrchestratorTest(reporter, "retry.dll", "retry", "retry", "retried-test", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("retry", exitCode: 0, outputData: null, errorData: null);
+        reporter.ArtifactAdded(false, "retry.dll", "net9.0", "x64", "retry", null, "retry-artifact.txt");
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: 0);
+
+        Assert.DoesNotContain("Test run summary", console.Output);
+        Assert.DoesNotContain("##[group]", console.Output);
+        Assert.Contains("retry-artifact.txt", console.Output);
+    }
+
+    [TestMethod]
     [DataRow(null, null, "")]
     [DataRow("net8.0", null, " (net8.0)")]
     [DataRow(null, "x64", " (x64)")]

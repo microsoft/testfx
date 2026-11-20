@@ -27,23 +27,41 @@ internal sealed partial class TerminalTestReporter
             return;
         }
 
-        _terminalWithProgress.WriteToTerminal(terminal =>
+        if (_options.ContextualModuleOutput)
         {
-            terminal.SetColor(TerminalColor.Default);
-            if (_options.ShowAssembly)
+            lock (_unselectedAssembliesLock)
+            {
+                _unselectedAssemblies.Add((assembly, targetFramework, architecture));
+            }
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+            AppendUnselectedAssembly(terminal, assembly, targetFramework, architecture));
+    }
+
+    private void AppendUnselectedAssembly(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
+    {
+        terminal.SetColor(TerminalColor.Default);
+        if (_options.ShowAssembly)
+        {
+            if (_options.ContextualModuleOutput)
+            {
+                AppendModuleIdentity(terminal, assembly, targetFramework, architecture);
+            }
+            else
             {
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
                 terminal.Append(' ');
             }
+        }
 
-            terminal.SetColor(TerminalColor.DarkYellow);
-            terminal.Append(TerminalResources.SkippedLowercase);
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append(" (");
-            terminal.Append(TerminalResources.NoAffectedTestsSelected);
-            terminal.AppendLine(")");
-            terminal.ResetColor();
-        });
+        terminal.SetColor(TerminalColor.DarkYellow);
+        terminal.Append(TerminalResources.SkippedLowercase);
+        terminal.SetColor(TerminalColor.DarkGray);
+        terminal.Append(" (");
+        terminal.Append(TerminalResources.NoAffectedTestsSelected);
+        terminal.AppendLine(")");
+        terminal.ResetColor();
     }
 
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
@@ -86,7 +104,15 @@ internal sealed partial class TerminalTestReporter
 
                 terminal.Append(_isDiscovery ? TerminalResources.DiscoveringTestsFrom : TerminalResources.RunningTestsFrom);
                 terminal.Append(' ');
-                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun);
+                if (_options.ContextualModuleOutput)
+                {
+                    AppendModuleIdentity(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework, trailingSpace: false);
+                }
+                else
+                {
+                    AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun);
+                }
+
                 terminal.AppendLine();
             });
         }
@@ -159,7 +185,15 @@ internal sealed partial class TerminalTestReporter
             return;
         }
 
-        _terminalWithProgress.WriteToTerminal(terminal => AppendExecutableSummary(terminal, exitCode, outputData, errorData));
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            if (_options.ContextualModuleOutput)
+            {
+                AppendModuleIdentity(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework);
+            }
+
+            AppendExecutableSummary(terminal, exitCode, outputData, errorData);
+        });
 
         // A non-zero exit with no failed test is a process-level error (crash, FailFast, hang-dump kill, an option
         // rejected after the handshake, ...) whose inline output above is easily lost in a large run. Record it so
@@ -187,10 +221,18 @@ internal sealed partial class TerminalTestReporter
                 }
                 else
                 {
+                    if (_options.ContextualModuleOutput)
+                    {
+                        AppendExitCodeDescription(terminal, exitCode, isDiscovery: false);
+                    }
+
                     AppendTestRunSummary(terminal);
                 }
 
-                AppendExitCodeDescription(terminal, exitCode, _isDiscovery);
+                if (!_options.ContextualModuleOutput || _isDiscovery)
+                {
+                    AppendExitCodeDescription(terminal, exitCode, _isDiscovery);
+                }
             });
         }
 
@@ -200,6 +242,11 @@ internal sealed partial class TerminalTestReporter
         // session would re-print the previous session's artifacts/failures or stay stuck in the aborted state.
         _assemblies.Clear();
         _artifacts.Clear();
+        lock (_unselectedAssembliesLock)
+        {
+            _unselectedAssemblies.Clear();
+        }
+
         WasCancelled = false;
         lock (_handshakeFailuresLock)
         {

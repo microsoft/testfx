@@ -99,7 +99,8 @@ public static class AzureDevOpsExtensions
                 serviceProvider.GetFileSystem(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetLoggerFactory(),
-                historyService);
+                historyService,
+                serviceProvider.GetTestApplicationModuleInfo());
         });
         builder.TestHost.AddDataConsumer(compositeArtifactUploader);
         builder.TestHost.AddDataConsumer(compositeSummaryReporter);

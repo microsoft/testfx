@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -10,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -29,6 +31,7 @@ internal sealed class AzureDevOpsReporter :
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IAzureDevOpsHistoryService _historyService;
+    private readonly string? _contextualAssemblyIdentity;
     private readonly string _targetFrameworkMoniker;
     private string? _severity;
     private bool _demoteKnownFlaky;
@@ -44,12 +47,30 @@ internal sealed class AzureDevOpsReporter :
         IOutputDevice outputDisplay,
         ILoggerFactory loggerFactory,
         IAzureDevOpsHistoryService historyService)
+        : this(commandLine, environment, fileSystem, outputDisplay, loggerFactory, historyService, testApplicationModuleInfo: null)
+    {
+    }
+
+    public AzureDevOpsReporter(
+        ICommandLineOptions commandLine,
+        IEnvironment environment,
+        IFileSystem fileSystem,
+        IOutputDevice outputDisplay,
+        ILoggerFactory loggerFactory,
+        IAzureDevOpsHistoryService historyService,
+        ITestApplicationModuleInfo? testApplicationModuleInfo)
     {
         _commandLine = commandLine;
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _historyService = historyService;
+        _contextualAssemblyIdentity = string.Equals(
+            environment.GetEnvironmentVariable(AzureDevOpsLogGroupReporter.DisableHostGroupsEnvironmentVariable),
+            "1",
+            StringComparison.Ordinal)
+                ? testApplicationModuleInfo?.GetDisplayName()
+                : null;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
         _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
     }
@@ -156,7 +177,18 @@ internal sealed class AzureDevOpsReporter :
 
         string severity = GetSeverity(testName, isQuarantined);
         string annotationSuffix = BuildAnnotationSuffix(testName, isQuarantined);
-        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix, _userStackFrameFilters, StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime);
+        string? line = GetErrorText(
+            testDisplayName,
+            explanation,
+            exception,
+            severity,
+            _fileSystem,
+            _logger,
+            _targetFrameworkMoniker,
+            annotationSuffix,
+            _userStackFrameFilters,
+            StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime,
+            _contextualAssemblyIdentity);
         if (line is null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -181,10 +213,50 @@ internal sealed class AzureDevOpsReporter :
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix)
         => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix, userStackFrameFilters: null, skipAssertionFrames: true);
 
-    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix, Regex[]? userStackFrameFilters, bool skipAssertionFrames)
+    internal static /* for testing */ string? GetErrorText(
+        string testDisplayName,
+        string? explanation,
+        Exception? exception,
+        string severity,
+        IFileSystem fileSystem,
+        ILogger logger,
+        string targetFrameworkMoniker,
+        string? additionalMessageSuffix,
+        Regex[]? userStackFrameFilters,
+        bool skipAssertionFrames)
+        => GetErrorText(
+            testDisplayName,
+            explanation,
+            exception,
+            severity,
+            fileSystem,
+            logger,
+            targetFrameworkMoniker,
+            additionalMessageSuffix,
+            userStackFrameFilters,
+            skipAssertionFrames,
+            assemblyIdentity: null);
+
+    internal static /* for testing */ string? GetErrorText(
+        string testDisplayName,
+        string? explanation,
+        Exception? exception,
+        string severity,
+        IFileSystem fileSystem,
+        ILogger logger,
+        string targetFrameworkMoniker,
+        string? additionalMessageSuffix,
+        Regex[]? userStackFrameFilters,
+        bool skipAssertionFrames,
+        string? assemblyIdentity)
     {
         string message = explanation ?? exception?.Message ?? AzureDevOpsResources.NoFailureMessageFallback;
-        string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
+        // Agent.Sdk.CommandStringConvertor.Unescape decodes command escapes such as %3B
+        // before decoding %AZP25. Encode percent only in this contextual identity so literal
+        // sequences like "%3B" survive that order. With DECODE_PERCENTS=false, the agent
+        // leaves %AZP25 literal.
+        string? commandSafeAssemblyIdentity = assemblyIdentity?.Replace("%", "%AZP25");
+        string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message, commandSafeAssemblyIdentity)}{additionalMessageSuffix}";
 
         if (exception?.StackTrace is { } stackTrace)
         {
@@ -396,11 +468,26 @@ internal sealed class AzureDevOpsReporter :
     /// To avoid noise like "MyTest (net8.0) [net8.0]" we skip the bracketed TFM
     /// suffix when the display name already ends with "({tfm})" or "(\"{tfm}\")".
     /// </remarks>
-    internal static /* for testing */ string FormatErrorMessage(string testDisplayName, string targetFrameworkMoniker, string message)
+    internal static /* for testing */ string FormatErrorMessage(
+        string testDisplayName,
+        string targetFrameworkMoniker,
+        string message)
+        => FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message, assemblyIdentity: null);
+
+    internal static /* for testing */ string FormatErrorMessage(
+        string testDisplayName,
+        string targetFrameworkMoniker,
+        string message,
+        string? assemblyIdentity)
     {
         string titleLine = DisplayNameContainsTfm(testDisplayName, targetFrameworkMoniker)
             ? testDisplayName
             : $"{testDisplayName} [{targetFrameworkMoniker}]";
+
+        if (!RoslynString.IsNullOrEmpty(assemblyIdentity))
+        {
+            titleLine = $"{titleLine} ({assemblyIdentity})";
+        }
 
         return $"{titleLine}\n{message}";
     }

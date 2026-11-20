@@ -12,6 +12,11 @@
         <target state="translated">Effettivi</target>
         <note />
       </trans-unit>
+      <trans-unit id="ArtifactCount">
+        <source>Artifacts: {0}</source>
+        <target state="new">Artifacts: {0}</target>
+        <note>{0} is the number of file artifacts.</note>
+      </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
         <target state="translated">operazione annullata</target>

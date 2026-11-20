@@ -58,6 +58,7 @@ internal static class DotnetTestPipeProtocol
         public const byte ModulePath = 6;
         public const byte ExecutionId = 7;
         public const byte InstanceId = 8;
+        public const byte TestInProgressSupported = 22;
         public const byte IsIDE = 9;
         public const byte ExecutionMode = 10;
         public const byte OrchestratorFeature = 11;
@@ -317,6 +318,34 @@ internal static class DotnetTestPipeProtocol
         }
 
         return (executionId, instanceId, logText);
+    }
+
+    public static (string? ExecutionId, string? InstanceId, IReadOnlyList<DiscoveredTest> Tests) DecodeTestInProgressMessagesBody(byte[] body)
+    {
+        string? executionId = null;
+        string? instanceId = null;
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            switch (fieldId)
+            {
+                case 1:
+                    executionId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case 2:
+                    instanceId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                default:
+                    stream.Seek(fieldSize, SeekOrigin.Current);
+                    break;
+            }
+        }
+
+        // Progress and discovery share the field-tagged list, UID and display-name layout.
+        return (executionId, instanceId, DecodeDiscoveredTests(body));
     }
 
     /// <summary>
