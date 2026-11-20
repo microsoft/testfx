@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="MSBuildCommandLineProviderDisplayName">
         <source>MSBuild integration</source>
-        <target state="translated">Integration von MSBuild</target>
+        <target state="new">MSBuild integration</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts.</source>
-        <target state="translated">Erweiterung, die zum Übergeben von Parametern vom MSBuild-Knoten und den Hosts verwendet wird.</target>
+        <target state="new">Extension used to pass parameters from MSBuild node and the hosts.</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="MSBuildNodeOptionDescription">
         <source>Used to pass the MSBuild node handle.</source>
-        <target state="translated">Dient zum Übergeben des MSBuild-Knotenhandles.</target>
+        <target state="new">Used to pass the MSBuild node handle.</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>
