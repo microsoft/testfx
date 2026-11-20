@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -498,5 +499,40 @@ public sealed class TestExecutionFilterComposerTests
 
         Assert.IsInstanceOfType<NopFilter>(result);
         Assert.AreSame(result, Assert.ContainsSingle(TestExecutionFilterComposer.GetLeafFilters(result)));
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_WithUnsupportedRequestFilter_ReportsTheRequestFilterTypeWithoutNamingAProvider()
+    {
+        StubFilterProvider provider = new("provider-a", new TestNodeUidListFilter([new("A")]));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestExecutionFilterComposer.ComposeAsync(
+                new CustomFilter(),
+                [provider],
+                RunConsoleContext,
+                allowProviderContributions: true,
+                CancellationToken.None));
+
+        // Unlike the error about a filter returned by a provider, the one about the request filter names no provider.
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("UnsupportedRequestTestExecutionFilter"), typeof(CustomFilter).FullName),
+            exception.Message);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_CancellationRequestedByTheOnlyProvider_DoesNotUseItsResult()
+    {
+        using CancellationTokenSource cancellation = new();
+        StubFilterProvider provider = new("only", (_, _) =>
+        {
+            cancellation.Cancel();
+            return Task.FromResult<ITestExecutionFilter?>(new TestNodeUidListFilter([new("would constrain")]));
+        });
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+            TestExecutionFilterComposer.ComposeAsync(new NopFilter(), [provider], RunConsoleContext, true, cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
     }
 }
