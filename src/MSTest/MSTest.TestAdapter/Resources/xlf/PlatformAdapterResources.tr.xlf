@@ -4,97 +4,97 @@
     <body>
       <trans-unit id="InvalidPartitionOptionArgument">
         <source>The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</source>
-        <target state="new">The '--partition' option requires 'index/count', where both values are positive integers and index is less than or equal to count.</target>
+        <target state="translated">'--partition' seçeneği, 'index/count' biçimini gerektirir. Her iki değer de pozitif tam sayı olmalı ve index değeri count değerinden küçük veya ona eşit olmalıdır.</target>
         <note>{Locked="--partition"}{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="MSTestExtensionDescription">
         <source>MSTest Framework for Microsoft Testing Platform.</source>
-        <target state="new">MSTest Framework for Microsoft Testing Platform.</target>
+        <target state="translated">Microsoft Testing Platform için MSTest Çerçevesi.</target>
         <note>Do not localize {Locked="MSTest"} or {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="MissingRunSettingsAttribute">
         <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
-        <target state="new">Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</target>
+        <target state="translated">Geçersiz .runsettings dosyası, '&lt;RunSettings&gt;' özniteliği eksik</target>
         <note>Do not localize file extension {Locked=".runsettings"} or element {Locked="&lt;RunSettings&gt;"}.</note>
       </trans-unit>
       <trans-unit id="PartitionNotSupportedInServerMode">
         <source>The '--partition' option is not supported in JSON-RPC server mode.</source>
-        <target state="new">The '--partition' option is not supported in JSON-RPC server mode.</target>
+        <target state="translated">'--partition' seçeneği JSON-RPC sunucu modunda desteklenmez.</target>
         <note>{Locked="--partition"}{Locked="JSON-RPC"}</note>
       </trans-unit>
       <trans-unit id="PartitionNotSupportedOnWebAssembly">
         <source>The '--partition' option is not supported on WebAssembly.</source>
-        <target state="new">The '--partition' option is not supported on WebAssembly.</target>
+        <target state="translated">'--partition' seçeneği WebAssembly'de desteklenmez.</target>
         <note>{Locked="--partition"}{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="PartitionOptionDescription">
         <source>Run partition 'index/count' of the tests, keeping test classes and dependencies together.</source>
-        <target state="new">Run partition 'index/count' of the tests, keeping test classes and dependencies together.</target>
+        <target state="translated">Testlerin 'index/count' bölümünü, test sınıflarını ve bağımlılıklarını bir arada tutarak çalıştırın.</target>
         <note>{Locked="index/count"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
         <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
-        <target state="new">The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</target>
+        <target state="translated">runsettings içindeki 'EnvironmentVariables' bölümü, uygulanması test konağı işleminin yeniden başlatılmasını gerektirdiği için tarayıcı/WebAssembly platformlarında desteklenmez. browser-wasm üzerinde çalıştırmak için bölümü kaldırın.</target>
         <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</source>
-        <target state="new">The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</target>
+        <target state="translated">.runsettings dosyasının göreli veya mutlak yolu. Test çalıştırmasını yapılandırma hakkında daha fazla bilgi ve örnek için şu sayfaya bakın: https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</target>
         <note>Do not localize file extension {Locked=".runsettings"} or link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file"}.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
         <source>runsettings file '{0}' cannot be read</source>
-        <target state="new">runsettings file '{0}' cannot be read</target>
+        <target state="translated">'{0}' runsettings dosyası okunamıyor</target>
         <note>0 is the {Locked="runsettings"} file path.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileDoesNotExist">
         <source>runsettings file '{0}' does not exist</source>
-        <target state="new">runsettings file '{0}' does not exist</target>
+        <target state="translated">'{0}' runsettings dosyası mevcut değil</target>
         <note>0 is the {Locked="runsettings"} file path.</note>
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <target state="translated">Belirtilen ifadeyi kullanarak testleri filtreler. Daha fazla bilgi için Filtre seçeneği ayrıntıları bölümüne bakın. Seçici birim testi filtreleme hakkında daha fazla bilgi ve örnek için şu sayfaya bakın: https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
       </trans-unit>
       <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
         <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
-        <target state="new">argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</target>
+        <target state="translated">'{0}' bağımsız değişkeni bir parametre değil. Parametre bağımsız değişkenleri aşağıdaki 'key=value' deseniyle eşleşiyor.</target>
         <note>0 is the invalid argument. Do not localize pattern {Locked="key=value"}.</note>
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</source>
-        <target state="new">Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</target>
+        <target state="translated">Anahtar-değer çifti parametresini belirtin veya geçersiz kılın. Daha fazla bilgi ve örnek için şu sayfaya bakın: https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunconfigurationSetting">
         <source>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">'{0}' Runsettings özniteliği Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>0 is the unsupported {Locked="Runsettings"} attribute name. Do not localize {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsDatacollectors">
         <source>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Runsettings veri toplayıcıları Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsLoggers">
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Runsettings günlükçüleri Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsSection">
         <source>Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</source>
-        <target state="new">Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</target>
+        <target state="translated">Runsettings bölüm '{0}' Microsoft.Testing.Platform üzerindeki MSTest tarafından desteklenmiyor ve yoksayılacak. VSTest ISettingsProvider uzantılar çağrılmaz.</target>
         <note>{0} is the unsupported section name. Do not localize {Locked="Runsettings"}, {Locked="MSTest"}, {Locked="Microsoft.Testing.Platform"}, {Locked="VSTest"}, or {Locked="ISettingsProvider"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilter">
         <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
-        <target state="new">Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</target>
+        <target state="translated">‘{0}’ test yürütme filtresi türü, ‘{1}’ tarafından desteklenmemektedir. Desteklenen filtre türleri şunlardır: NopFilter, TestNodeUidListFilter ve bir And CompositeTestExecutionFilter.</target>
         <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
-        <target state="new">The bridged framework supports only one session at a time. A session with UID {0} is already open.</target>
+        <target state="translated">Köprülü çerçeve aynı anda yalnızca bir oturumu destekler. UID'si {0} olan bir oturum zaten açık.</target>
         <note>{0} is the session {Locked="UID"}.</note>
       </trans-unit>
     </body>
