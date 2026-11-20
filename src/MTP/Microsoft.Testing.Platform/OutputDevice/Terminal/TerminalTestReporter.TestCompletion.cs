@@ -202,6 +202,7 @@ internal sealed partial class TerminalTestReporter
             int attempt = isRetryAttempt ? retryAttemptNumber : hostAttempt;
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
+                asm,
                 showAttempt,
                 attempt,
                 displayName,
@@ -234,6 +235,7 @@ internal sealed partial class TerminalTestReporter
 
     private void RenderTestCompleted(
         ITerminal terminal,
+        TestProgressState assemblyRun,
         bool showAttempt,
         int attempt,
         string displayName,
@@ -263,6 +265,11 @@ internal sealed partial class TerminalTestReporter
             TestOutcome.Passed => TerminalResources.PassedLowercase,
             _ => throw new NotSupportedException(),
         };
+
+        if (_options.ContextualModuleOutput)
+        {
+            AppendModuleIdentity(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture, assemblyRun.RuntimeFramework);
+        }
 
         terminal.SetColor(color);
         terminal.Append(outcomeText);

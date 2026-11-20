@@ -32,6 +32,8 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 /// </remarks>
 internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
+    internal const string DisableHostGroupsEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_DISABLE_AZDO_HOST_GROUPS";
+
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IOutputDevice _outputDevice;
@@ -70,6 +72,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
         => Task.FromResult(
             _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
             && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment)
+            && !string.Equals(_environment.GetEnvironmentVariable(DisableHostGroupsEnvironmentVariable), "1", StringComparison.Ordinal)
             && _commandLineOptions.TryGetOptionArgumentList(
                 AzureDevOpsCommandLineOptions.AzureDevOpsGroups,
                 out string[]? groupsArguments)

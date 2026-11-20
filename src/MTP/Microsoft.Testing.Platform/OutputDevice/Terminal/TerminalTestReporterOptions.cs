@@ -56,6 +56,16 @@ internal sealed class TerminalTestReporterOptions
     public bool ShowAssembly { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether the orchestrator identifies output by module in a shared log.
+    /// </summary>
+    public bool ContextualModuleOutput { get; init; }
+
+    /// <summary>
+    /// Gets an optional presentation-only module name selector. The original assembly path remains the run identity.
+    /// </summary>
+    public Func<string, string?, string>? ModuleDisplayName { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether, when <see cref="ShowAssembly"/> is set, the per-assembly summary line is
     /// printed mid-stream as each assembly completes.
     /// </summary>

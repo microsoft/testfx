@@ -118,6 +118,10 @@ internal static class HandshakeMessagePropertyNames
     // The test application's declared target TFM, including a platform suffix when available. Omitted when
     // assembly metadata is unknown. Framework remains the executing runtime; older peers ignore this property.
     internal const byte TargetFramework = 21;
+
+    // Sent by the SDK in its handshake reply when it can receive TestInProgressMessages.
+    // Some protocol 1.0 peers do not recognize that message, so absence is not support.
+    internal const byte TestInProgressSupported = 22;
 }
 
 [Embedded]

@@ -14,6 +14,34 @@ public sealed class SilenceDrivenHeartbeatRendererTests
     private static readonly TimeSpan Slow60s = TimeSpan.FromSeconds(60);
 
     [TestMethod]
+    public void ContextualHeartbeat_IdentifiesEachActiveModuleAndItsTest()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        var renderer = new SilenceDrivenHeartbeatRenderer(
+            Silence30s, TimeSpan.Zero, clock.CreateStopwatch, contextualModuleOutput: true,
+            moduleDisplayName: (path, _) => Path.GetFileName(path));
+        var first = new TestProgressState(1, Path.Combine("a", "first.dll"), "net472", "x64", clock.CreateStopwatch(), false, "net481");
+        var second = new TestProgressState(2, Path.Combine("b", "second.dll"), "net10.0", "x64", clock.CreateStopwatch(), false);
+        first.GetOrCreateTestNodeResultsState(() => new(1))
+            .AddRunningTestNode(1, "one", "First test", clock.CreateStopwatch());
+        second.GetOrCreateTestNodeResultsState(() => new(2))
+            .AddRunningTestNode(2, "two", "Second test", clock.CreateStopwatch());
+        renderer.OnStart();
+        clock.Advance(Silence30s);
+
+        renderer.OnTick(terminal, [first, second]);
+
+        const string expected = """
+            running... 0 completed, 0 failed, active modules: 2 | no tests completed yet
+              [first.dll net472|x64, runtime: net481] 30s - First test
+              [second.dll net10.0|x64] 30s - Second test
+
+            """;
+        Assert.AreEqual(Normalize(expected), Normalize(terminal.Output));
+    }
+
+    [TestMethod]
     public void SlowTest_PreservesSeparateTargetAndRuntimeIdentity()
     {
         var clock = new FakeClock();

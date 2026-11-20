@@ -72,6 +72,30 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
     }
 
     [TestMethod]
+    public async Task DotnetTestPipe_WhenHostGroupsAreDisabled_DoesNotForwardGroupCommands()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            testHost,
+            extraArguments: "--report-azdo --report-azdo-groups on",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["TF_BUILD"] = "true",
+                ["TESTINGPLATFORM_DOTNETTEST_DISABLE_AZDO_HOST_GROUPS"] = "1",
+            },
+            supportedProtocolVersions: HostAdvertisedProtocolVersions,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual("1.2.0", result.NegotiatedProtocolVersion);
+        Assert.IsNotNull(result.ReceivedHandshake);
+        Assert.DoesNotContain(
+            line => line.StartsWith("##[group]", StringComparison.Ordinal) || line == "##[endgroup]",
+            GetForwardedAzureDevOpsLines(result));
+    }
+
+    [TestMethod]
     public async Task DotnetTestPipe_WhenSdkOnlySupports110_DoesNotForwardLogMessages()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
