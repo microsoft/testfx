@@ -223,6 +223,89 @@ public sealed class TestHostTestFrameworkInvokerTests
         activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Once);
     }
 
+    [TestMethod]
+    public async Task ExecuteAsync_WithOpenTelemetry_StartsTheSessionRequestAndFrameworkActivitiesInOrder()
+    {
+        // The activity names are what telemetry dashboards and the acceptance tests look for.
+        List<string> activityNames = [];
+        (ServiceProvider services, Mock<ITestFramework> framework) = CreateSuccessfulSession();
+        Mock<IPlatformOpenTelemetryService> otel = new();
+        otel.Setup(o => o.StartActivity(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((name, _, _, _) => activityNames.Add(name))
+            .Returns((IPlatformActivity?)null);
+        services.AddService(otel.Object);
+        TestHostTestFrameworkInvoker invoker = new(services);
+
+        await invoker.ExecuteAsync(framework.Object, new ClientInfo("client", "1.0"), CancellationToken.None);
+
+        Assert.AreSequenceEqual(
+            [
+                "CreateTestFrameworkSession",
+                "CreateTestRequest",
+                "ExecuteTestRequest",
+                TestingPlatformSemanticConventions.Activities.TestFramework,
+                "CloseTestFrameworkSession",
+            ],
+            activityNames);
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_WhenTheFrameworkThrows_PropagatesTheSameException()
+    {
+        InvalidOperationException failure = new("framework failure");
+        Mock<ITestFramework> framework = new();
+        framework.Setup(f => f.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>())).ThrowsAsync(failure);
+        TestHostTestFrameworkInvoker invoker = new(new ServiceProvider());
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => invoker.ExecuteRequestAsync(framework.Object, CreateRunRequest(), new Mock<IMessageBus>().Object, CancellationToken.None));
+
+        Assert.AreSame(failure, exception);
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_WhenCanceledBeforeTheFrameworkCompletesTheRequest_PropagatesTheCancellation()
+    {
+        // The framework returns without completing the request, so the invoker keeps waiting for the completion that never comes.
+        Mock<ITestFramework> framework = new();
+        framework.Setup(f => f.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>())).Returns(Task.CompletedTask);
+        TestHostTestFrameworkInvoker invoker = new(new ServiceProvider());
+
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => invoker.ExecuteRequestAsync(framework.Object, CreateRunRequest(), new Mock<IMessageBus>().Object, new CancellationToken(canceled: true)));
+    }
+
+    private static RunTestExecutionRequest CreateRunRequest()
+        => new(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("session-17")));
+
+    private static (ServiceProvider Services, Mock<ITestFramework> Framework) CreateSuccessfulSession()
+    {
+        ServiceProvider services = new();
+        services.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        services.AddService(loggerFactory.Object);
+        services.AddService(new TestFrameworkCapabilities());
+        Mock<ITestSessionContext> session = new();
+        session.SetupGet(s => s.SessionUid).Returns(new SessionUid("session-17"));
+        services.AddService(session.Object);
+        Mock<ITestExecutionRequestFactory> requests = new();
+        requests.Setup(r => r.CreateRequestAsync(It.IsAny<Microsoft.Testing.Platform.TestHost.TestSessionContext>(), It.IsAny<CancellationToken>()))
+            .Returns<Microsoft.Testing.Platform.TestHost.TestSessionContext, CancellationToken>((context, _) => Task.FromResult<TestExecutionRequest>(new RunTestExecutionRequest(context)));
+        services.AddService(requests.Object);
+        services.AddService(new Mock<IMessageBus>().Object);
+
+        Mock<ITestFramework> framework = new();
+        framework.Setup(f => f.CreateTestSessionAsync(It.IsAny<CreateTestSessionContext>()))
+            .ReturnsAsync(new CreateTestSessionResult { IsSuccess = true });
+        framework.Setup(f => f.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
+            .Callback<ExecuteRequestContext>(context => context.Complete())
+            .Returns(Task.CompletedTask);
+        framework.Setup(f => f.CloseTestSessionAsync(It.IsAny<CloseTestSessionContext>()))
+            .ReturnsAsync(new CloseTestSessionResult { IsSuccess = true });
+        return (services, framework);
+    }
+
     private sealed class ScopeInvoker(IServiceProvider services) : TestHostTestFrameworkInvoker(services)
     {
         public Task CompleteAsync(TestExecutionActivityBroker broker, Exception? primary, CancellationToken token)
