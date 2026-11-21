@@ -196,6 +196,14 @@ public sealed class TestClassInfoCleanupMutationTests : TestContainer
             + $"{MSTestInstrumentation.Attributes.TestAssembly}={typeof(CleanupFixture).Assembly.GetName().Name}");
     }
 
+    public async Task ClassCleanup_DoesNotInspectTheDeclaringTypeForTheActivity_WhenTracingIsDisabled()
+    {
+        int readsWithoutTracing = await CountDeclaringTypeReadsAsync(tracing: false);
+        int readsWithTracing = await CountDeclaringTypeReadsAsync(tracing: true);
+
+        readsWithoutTracing.Should().BeLessThan(readsWithTracing);
+    }
+
     public async Task ClassCleanup_RunsOnTheExecutionContextOfTheClass_WhenTheAssemblyHasItsOwn()
     {
         using var harness = new CleanupHarness();
@@ -238,6 +246,24 @@ public sealed class TestClassInfoCleanupMutationTests : TestContainer
 
     private static TimeoutInfo ZeroCooperativeTimeout()
         => TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(0) { CooperativeCancellation = true });
+
+    private static async Task<int> CountDeclaringTypeReadsAsync(bool tracing)
+    {
+        using var harness = new CleanupHarness();
+        var cleanup = new DeclaringTypeCountingMethod(Method(nameof(CleanupFixture.CleanupClass)));
+        harness.Class.ClassCleanupMethod = cleanup;
+        harness.Class.IsClassInitializeExecuted = true;
+        if (tracing)
+        {
+            MSTestInstrumentation.SetActivityFactory((_, _) => new ActivityProbe());
+        }
+
+        TestFailedException? failure = await harness.Class.ExecuteClassCleanupAsync(harness.CreateContext());
+
+        failure.Should().BeNull();
+        harness.Events.Should().Equal("class");
+        return cleanup.DeclaringTypeReads;
+    }
 
     private static ExecutionContext CaptureWith(string value)
     {
@@ -283,6 +309,51 @@ public sealed class TestClassInfoCleanupMutationTests : TestContainer
             MSTestSettings.Reset();
             PlatformServiceProvider.Instance = _previous;
         }
+    }
+
+    private sealed class DeclaringTypeCountingMethod : MethodInfo
+    {
+        private readonly MethodInfo _inner;
+
+        internal DeclaringTypeCountingMethod(MethodInfo inner) => _inner = inner;
+
+        internal int DeclaringTypeReads { get; private set; }
+
+        public override Type? DeclaringType
+        {
+            get
+            {
+                DeclaringTypeReads++;
+                return _inner.DeclaringType;
+            }
+        }
+
+        public override ICustomAttributeProvider ReturnTypeCustomAttributes => _inner.ReturnTypeCustomAttributes;
+
+        public override MethodAttributes Attributes => _inner.Attributes;
+
+        public override RuntimeMethodHandle MethodHandle => _inner.MethodHandle;
+
+        public override string Name => _inner.Name;
+
+        public override Type? ReflectedType => _inner.ReflectedType;
+
+        public override Type ReturnType => _inner.ReturnType;
+
+        public override MethodInfo GetBaseDefinition() => _inner.GetBaseDefinition();
+
+        public override MethodImplAttributes GetMethodImplementationFlags() => _inner.GetMethodImplementationFlags();
+
+        public override ParameterInfo[] GetParameters() => _inner.GetParameters();
+
+        public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture)
+            => _inner.Invoke(obj, invokeAttr, binder, parameters, culture);
+
+        public override object[] GetCustomAttributes(bool inherit) => _inner.GetCustomAttributes(inherit);
+
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _inner.GetCustomAttributes(attributeType, inherit);
+
+        public override bool IsDefined(Type attributeType, bool inherit) => _inner.IsDefined(attributeType, inherit);
     }
 
     private sealed class ActivityProbe : IMSTestActivity
