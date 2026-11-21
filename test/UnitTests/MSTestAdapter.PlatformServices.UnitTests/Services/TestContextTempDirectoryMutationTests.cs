@@ -64,26 +64,12 @@ public sealed class TestContextTempDirectoryMutationTests : TestContainer
         File.WriteAllText(resultsFile, "results path is a file");
         using TestContextImplementation context = CreateContext(resultsFile);
         context.SetDisplayName(new string('n', 60));
-        string[] variables = ["TEMP", "TMP", "TMPDIR"];
-        string?[] originals = variables.Select(Environment.GetEnvironmentVariable).ToArray();
         string created;
-        try
+        using (new TemporaryDirectoryRedirection(longRoot))
         {
-            foreach (string variable in variables)
-            {
-                Environment.SetEnvironmentVariable(variable, longRoot);
-            }
-
             TemporaryRoot().Should().Be(longRoot);
 
             created = context.TestTempDirectory!;
-        }
-        finally
-        {
-            for (int index = 0; index < variables.Length; index++)
-            {
-                Environment.SetEnvironmentVariable(variables[index], originals[index]);
-            }
         }
 
         // On Windows: 260 (MAX_PATH) - 80 (headroom) - 126 (root and separator) - 2 (separators) - 32 (unique suffix).
@@ -119,6 +105,14 @@ public sealed class TestContextTempDirectoryMutationTests : TestContainer
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             AssertFallsBackWhenNewSubdirectoriesAreDenied();
+        }
+    }
+
+    public void LastResortDirectoryIsNamedWithAnUnhyphenatedGuid()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            AssertLastResortDirectoryIsNamedWithAnUnhyphenatedGuid();
         }
     }
 
@@ -201,6 +195,28 @@ public sealed class TestContextTempDirectoryMutationTests : TestContainer
         Directory.Exists(fallback).Should().BeTrue();
     }
 
+    [SupportedOSPlatform("windows")]
+    private static void AssertLastResortDirectoryIsNamedWithAnUnhyphenatedGuid()
+    {
+        using ContextDirectory directory = new();
+        using TestContextImplementation context = CreateContext(directory.Path);
+
+        UnauthorizedAccessException failure;
+        using (new TemporaryDirectoryRedirection(directory.Path))
+        using (new DirectoryCreationDenial(directory.Path))
+        {
+            Action createChild = () => Directory.CreateDirectory(Path.Combine(directory.Path, "denied-child"));
+            createChild.Should().ThrowExactly<UnauthorizedAccessException>();
+
+            // Both the results directory and the system temporary directory are this denied directory,
+            // so the last attempt, which has no readable name, fails and reports the path it tried.
+            Func<string?> readTempDirectory = () => context.TestTempDirectory;
+            failure = readTempDirectory.Should().ThrowExactly<UnauthorizedAccessException>().Which;
+        }
+
+        failure.Message.Should().MatchRegex(@"\\[0-9a-f]{32}(?![0-9a-f-])");
+    }
+
     private static string TemporaryRoot()
         => Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
@@ -249,6 +265,28 @@ public sealed class TestContextTempDirectoryMutationTests : TestContainer
             DirectorySecurity original = new();
             original.SetSecurityDescriptorBinaryForm(_original, AccessControlSections.Access);
             _directory.SetAccessControl(original);
+        }
+    }
+
+    private sealed class TemporaryDirectoryRedirection : IDisposable
+    {
+        private static readonly string[] Variables = ["TEMP", "TMP", "TMPDIR"];
+        private readonly string?[] _originals = Variables.Select(Environment.GetEnvironmentVariable).ToArray();
+
+        public TemporaryDirectoryRedirection(string path)
+        {
+            foreach (string variable in Variables)
+            {
+                Environment.SetEnvironmentVariable(variable, path);
+            }
+        }
+
+        public void Dispose()
+        {
+            for (int index = 0; index < Variables.Length; index++)
+            {
+                Environment.SetEnvironmentVariable(Variables[index], _originals[index]);
+            }
         }
     }
 
