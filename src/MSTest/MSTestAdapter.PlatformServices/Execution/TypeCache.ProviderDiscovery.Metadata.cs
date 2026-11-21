@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed partial class TypeCache
 {
-    private static bool TryReadProviderMetadata(string path, out bool hasMarker, out AssemblyName[] references)
+    private static ProviderMetadataReadResult TryReadProviderMetadata(string path, AssemblyName expectedIdentity, out bool hasMarker, out AssemblyName[] references)
     {
         hasMarker = false;
         references = [];
@@ -24,6 +24,14 @@ internal sealed partial class TypeCache
             using var peReader = new PEReader(stream, PEStreamOptions.PrefetchMetadata);
             MetadataReader reader = peReader.GetMetadataReader();
             AssemblyDefinition definition = reader.GetAssemblyDefinition();
+
+            // The runtime binds the exact requested identity; any other image at the probed path
+            // means the runtime would select something else (or raise AssemblyResolve).
+            if (!string.Equals(expectedIdentity.FullName, definition.GetAssemblyName().FullName, StringComparison.Ordinal))
+            {
+                return ProviderMetadataReadResult.NoMatchingImage;
+            }
+
             foreach (CustomAttributeHandle handle in definition.GetCustomAttributes())
             {
                 EntityHandle constructor = reader.GetCustomAttribute(handle).Constructor;
@@ -53,9 +61,9 @@ internal sealed partial class TypeCache
             }
 
             references = reader.AssemblyReferences.Select(handle => reader.GetAssemblyReference(handle).GetAssemblyName()).ToArray();
-            return true;
+            return ProviderMetadataReadResult.Read;
         }
-        catch (Exception ex) when (ex is IOException or BadImageFormatException or UnauthorizedAccessException or SecurityException)
+        catch (Exception ex) when (ex is IOException or BadImageFormatException or UnauthorizedAccessException or SecurityException or InvalidOperationException or ArgumentException)
         {
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
@@ -65,8 +73,15 @@ internal sealed partial class TypeCache
                     ex);
             }
 
-            return false;
+            return ProviderMetadataReadResult.Unreadable;
         }
+    }
+
+    private enum ProviderMetadataReadResult
+    {
+        Read,
+        NoMatchingImage,
+        Unreadable,
     }
 
     private sealed class ProviderDiscoveryMetadataResolver
@@ -75,7 +90,9 @@ internal sealed partial class TypeCache
         private Dictionary<string, string?>? _trustedAssemblyPaths;
 #endif
 #if NETFRAMEWORK
-        private bool? _hasCodeBaseOverrides;
+        private readonly Dictionary<Assembly, string?> _loadedAssemblyNames = [];
+        private bool? _hasDomainBindingOverrides;
+        private HashSet<string>? _globalAssemblyCacheNames;
 #endif
 
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "The resolver caches runtime-specific metadata paths on other target frameworks.")]
@@ -94,37 +111,26 @@ internal sealed partial class TypeCache
                 }
 
                 _trustedAssemblyPaths ??= ReadTrustedAssemblyPaths();
-                return _trustedAssemblyPaths.TryGetValue(referenceName.Name!, out string? path)
-                    && path is not null
-                    && HasMatchingProviderDiscoveryIdentity(referenceName, path) ? path : null;
+                return _trustedAssemblyPaths.TryGetValue(referenceName.Name!, out string? path) ? path : null;
 #elif NETFRAMEWORK
                 _ = referrer;
                 AppDomain domain = AppDomain.CurrentDomain;
-                AppDomainSetup setup = domain.SetupInformation;
                 // Fusion can select a loaded image or the GAC before probing the application base.
                 // Keep those bindings, culture probing, redirects and host overrides authoritative.
-                if (domain.GetAssemblies().Any(assembly =>
-                    string.Equals(assembly.GetName().Name, referenceName.Name, StringComparison.OrdinalIgnoreCase))
-                    || referenceName.GetPublicKeyToken() is { Length: > 0 }
-                    || !string.IsNullOrEmpty(referenceName.CultureName)
-                    || setup.DisallowApplicationBaseProbing
-                    || setup.PrivateBinPathProbe is not null
-                    || setup.GetConfigurationBytes() is { Length: > 0 }
-                    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEVPATH"))
-                    || !string.Equals(domain.ApplyPolicy(referenceName.FullName), referenceName.FullName, StringComparison.Ordinal)
-                    || (_hasCodeBaseOverrides ??= HasCodeBaseOverrides()))
+                // The identity read with the metadata rejects any other appbase image.
+                if (!string.IsNullOrEmpty(referenceName.CultureName)
+                    || (_hasDomainBindingOverrides ??= HasDomainBindingOverrides(domain))
+                    || (referenceName.GetPublicKeyToken() is { Length: > 0 } && IsInGlobalAssemblyCache(referenceName.Name!))
+                    || IsLoaded(domain, referenceName.Name!)
+                    || !string.Equals(domain.ApplyPolicy(referenceName.FullName), referenceName.FullName, StringComparison.Ordinal))
                 {
                     return null;
                 }
 
-                foreach (string extension in new[] { ".dll", ".exe" })
-                {
-                    string path = Path.Combine(domain.BaseDirectory, referenceName.Name + extension);
-                    if (File.Exists(path))
-                    {
-                        return HasMatchingProviderDiscoveryIdentity(referenceName, path) ? path : null;
-                    }
-                }
+                // Fusion probes [appbase]/name.dll first; any other hit (name/name.dll, private paths,
+                // then .exe) depends on probing order we don't replicate, so leave it to the runtime.
+                string path = Path.Combine(domain.BaseDirectory, referenceName.Name + ".dll");
+                return File.Exists(path) ? path : null;
 #else
                 _ = referrer;
                 _ = referenceName;
@@ -169,12 +175,89 @@ internal sealed partial class TypeCache
         }
 #endif
 
-#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
-        private static bool HasMatchingProviderDiscoveryIdentity(AssemblyName referenceName, string path)
-            => string.Equals(referenceName.FullName, AssemblyName.GetAssemblyName(path).FullName, StringComparison.Ordinal);
-#endif
-
 #if NETFRAMEWORK
+        private static bool HasDomainBindingOverrides(AppDomain domain)
+        {
+            AppDomainSetup setup = domain.SetupInformation;
+            return setup.DisallowApplicationBaseProbing
+                || setup.PrivateBinPathProbe is not null
+                || setup.GetConfigurationBytes() is { Length: > 0 }
+                || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEVPATH"))
+                || HasCodeBaseOverrides();
+        }
+
+        private bool IsLoaded(AppDomain domain, string name)
+        {
+            // Query the live list for every reference: discovery itself and user code can load
+            // assemblies between checks. Only the per-assembly name lookup is cached.
+            foreach (Assembly assembly in domain.GetAssemblies())
+            {
+                if (!_loadedAssemblyNames.TryGetValue(assembly, out string? loadedName))
+                {
+                    loadedName = assembly.GetName().Name;
+                    _loadedAssemblyNames[assembly] = loadedName;
+                }
+
+                if (string.Equals(loadedName, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsInGlobalAssemblyCache(string name)
+        {
+            // Fusion consults the GAC before the application base for strong-named references.
+            // Any GAC entry with this simple name (any version, culture or architecture) keeps
+            // runtime resolution authoritative; an unreadable GAC is treated as containing it.
+            _globalAssemblyCacheNames ??= ReadGlobalAssemblyCacheNames();
+            return _globalAssemblyCacheNames.Count == 0 || _globalAssemblyCacheNames.Contains(name);
+        }
+
+        private static HashSet<string> ReadGlobalAssemblyCacheNames()
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            if (string.IsNullOrEmpty(windows))
+            {
+                return names;
+            }
+
+            string[] roots =
+            [
+                Path.Combine(windows, "Microsoft.NET", "assembly", "GAC_MSIL"),
+                Path.Combine(windows, "Microsoft.NET", "assembly", "GAC_32"),
+                Path.Combine(windows, "Microsoft.NET", "assembly", "GAC_64"),
+                Path.Combine(windows, "assembly", "GAC"),
+                Path.Combine(windows, "assembly", "GAC_MSIL"),
+                Path.Combine(windows, "assembly", "GAC_32"),
+                Path.Combine(windows, "assembly", "GAC_64"),
+            ];
+            try
+            {
+                foreach (string root in roots)
+                {
+                    if (!Directory.Exists(root))
+                    {
+                        continue;
+                    }
+
+                    foreach (string directory in Directory.EnumerateDirectories(root))
+                    {
+                        names.Add(Path.GetFileName(directory));
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+            {
+                names.Clear();
+            }
+
+            return names;
+        }
+
         private static bool HasCodeBaseOverrides()
         {
             string configurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
