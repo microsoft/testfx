@@ -114,6 +114,15 @@ public sealed class ManagedNameHelperMutationTests : TestContainer
         managedMethod.Should().Be("Method(System.+String)", because: "a missing declaring type ends the nesting chain instead of failing");
     }
 
+    public void GetManagedNameAndHierarchy_GivesNoArityToATypeThatIsNotGeneric()
+    {
+        var method = new FakeMethod(typeof(ManagedNameHelperMutationTests), new FakeParameter(new NonGenericTypeNamedLikeAGenericOne(typeof(string))));
+
+        ManagedNameHelper.GetManagedNameAndHierarchy(method, out _, out string managedMethod, out _);
+
+        managedMethod.Should().Be("Method(System.'List`1')", because: "the backtick of a type that is not generic belongs to its name instead of being an arity suffix");
+    }
+
     private static ModuleBuilder DefineModule()
     {
         var name = new AssemblyName("ManagedNameMutationFixture" + Guid.NewGuid().ToString("N"));
@@ -172,6 +181,15 @@ public sealed class ManagedNameHelperMutationTests : TestContainer
         private int _declaringTypeReads;
 
         public override Type? DeclaringType => _declaringTypeReads++ == 0 ? typeof(object) : null;
+
+        public override Type[] GetGenericArguments() => Type.EmptyTypes;
+    }
+
+    private sealed class NonGenericTypeNamedLikeAGenericOne(Type type) : TypeDelegator(type)
+    {
+        public override string Name => "List`1";
+
+        public override Type[] GenericTypeArguments => [typeof(int)];
 
         public override Type[] GetGenericArguments() => Type.EmptyTypes;
     }

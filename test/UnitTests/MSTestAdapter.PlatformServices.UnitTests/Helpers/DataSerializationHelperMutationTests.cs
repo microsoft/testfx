@@ -109,6 +109,58 @@ public sealed class DataSerializationHelperMutationTests : TestContainer
         actual[1].Should().Be(new TimeOnly(13, 45, 30), because: "the manual surrogate conversion turns the ticks back into a TimeOnly");
     }
 
+#if NET7_0_OR_GREATER
+    // DateOnly and TimeOnly are built-in data contracts from .NET 10 on, so the configuration of the cached
+    // serializer is the only effect of registering the surrogate provider that is observable on every target.
+    public void Serialize_RegistersTheSurrogateProviderOnTheSerializerItCaches()
+    {
+        string assemblyQualifiedName = typeof(UncachedPayload).AssemblyQualifiedName!;
+        ConcurrentDictionary<string, DataContractJsonSerializer> cache = GetSerializerCache();
+        cache.TryRemove(assemblyQualifiedName, out _);
+
+        try
+        {
+            DataSerializationHelper.Serialize([new UncachedPayload { Count = 3, Name = "probe" }]);
+
+            cache.TryGetValue(assemblyQualifiedName, out DataContractJsonSerializer? serializer).Should().BeTrue(because: "the serializer used for a type is cached by its assembly-qualified name");
+            ReadSurrogateProvider(serializer!).Should().BeSameAs(GetSurrogateProvider(), because: "DateOnly and TimeOnly members can only be written through the surrogate provider");
+        }
+        finally
+        {
+            cache.TryRemove(assemblyQualifiedName, out _);
+        }
+    }
+
+    public void Deserialize_RegistersTheSurrogateProviderOnTheSerializerItCaches()
+    {
+        string assemblyQualifiedName = typeof(UncachedPayload).AssemblyQualifiedName!;
+        ConcurrentDictionary<string, DataContractJsonSerializer> cache = GetSerializerCache();
+
+        try
+        {
+            string?[]? serialized = DataSerializationHelper.Serialize([new UncachedPayload { Count = 3, Name = "probe" }]);
+            cache.TryRemove(assemblyQualifiedName, out _);
+
+            DataSerializationHelper.Deserialize(serialized);
+
+            cache.TryGetValue(assemblyQualifiedName, out DataContractJsonSerializer? serializer).Should().BeTrue(because: "the serializer used for a payload is cached by its assembly-qualified name");
+            ReadSurrogateProvider(serializer!).Should().BeSameAs(GetSurrogateProvider(), because: "DateOnly and TimeOnly members can only be read through the surrogate provider");
+        }
+        finally
+        {
+            cache.TryRemove(assemblyQualifiedName, out _);
+        }
+    }
+
+    private static ISerializationSurrogateProvider? ReadSurrogateProvider(DataContractJsonSerializer serializer)
+    {
+        PropertyInfo? property = typeof(DataContractJsonSerializer).GetProperty("SerializationSurrogateProvider", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        property.Should().NotBeNull(because: "the serializer exposes the provider it was configured with through an internal property");
+
+        return (ISerializationSurrogateProvider?)property!.GetValue(serializer);
+    }
+#endif
+
     private static ISerializationSurrogateProvider GetSurrogateProvider()
         => (ISerializationSurrogateProvider)GetNestedType("SerializationSurrogateProvider").GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
 
