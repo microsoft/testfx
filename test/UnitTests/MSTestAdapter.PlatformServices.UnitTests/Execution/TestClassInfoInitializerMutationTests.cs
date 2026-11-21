@@ -128,6 +128,25 @@ public sealed class TestClassInfoInitializerMutationTests : TestContainer
         harness.Events.Should().Equal("throwing-base");
     }
 
+    public async Task ThrowingBaseClassInitializeMethodWithoutAName_ReportsTheNameOfTheClassInitializeMethod()
+    {
+        using var harness = new InitializerHarness();
+        harness.Class.BaseClassInitMethods.Add(new NamelessMethod(Method(nameof(InitializerFixture.ThrowingBase))));
+        harness.Class.ClassInitializeMethod = Method(nameof(InitializerFixture.InitializeClass));
+
+        Func<Task> run = () => harness.Class.RunClassInitializeAsync(harness.CreateContext());
+        TestFailedException exception = (await run.Should().ThrowExactlyAsync<TestFailedException>()).Which;
+
+        exception.Message.Should().Be(string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_ClassInitMethodThrows,
+            typeof(InitializerFixture).FullName,
+            nameof(InitializerFixture.InitializeClass),
+            typeof(InvalidOperationException).ToString(),
+            "base failure"));
+        harness.Events.Should().Equal("throwing-base");
+    }
+
     public async Task BaseClassInitializeMethodsWithoutAClassInitializeMethod_CompleteWithoutFailure()
     {
         using var harness = new InitializerHarness();
@@ -386,11 +405,12 @@ public sealed class TestClassInfoInitializerMutationTests : TestContainer
         }
     }
 
-    private sealed class DeclaringTypeCountingMethod : MethodInfo
+    private sealed class DeclaringTypeCountingMethod : DelegatingMethod
     {
-        private readonly MethodInfo _inner;
-
-        internal DeclaringTypeCountingMethod(MethodInfo inner) => _inner = inner;
+        internal DeclaringTypeCountingMethod(MethodInfo inner)
+            : base(inner)
+        {
+        }
 
         internal int DeclaringTypeReads { get; private set; }
 
@@ -399,9 +419,29 @@ public sealed class TestClassInfoInitializerMutationTests : TestContainer
             get
             {
                 DeclaringTypeReads++;
-                return _inner.DeclaringType;
+                return base.DeclaringType;
             }
         }
+    }
+
+    // MemberInfo.Name is never null for runtime reflection objects, so only a custom MethodInfo can exercise the null-name fallback.
+    private sealed class NamelessMethod : DelegatingMethod
+    {
+        internal NamelessMethod(MethodInfo inner)
+            : base(inner)
+        {
+        }
+
+        public override string Name => null!;
+    }
+
+    private abstract class DelegatingMethod : MethodInfo
+    {
+        private readonly MethodInfo _inner;
+
+        protected DelegatingMethod(MethodInfo inner) => _inner = inner;
+
+        public override Type? DeclaringType => _inner.DeclaringType;
 
         public override ICustomAttributeProvider ReturnTypeCustomAttributes => _inner.ReturnTypeCustomAttributes;
 
