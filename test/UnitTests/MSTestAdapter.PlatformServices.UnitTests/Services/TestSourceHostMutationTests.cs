@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP && !NETFRAMEWORK
+using System.Runtime.Loader;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -24,6 +25,7 @@ public sealed class TestSourceHostMutationTests : TestContainer
     private const string DisableAppDomain = "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>";
     private const string ResolveRequestFormat = "MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'";
     private const string MissingDirectoryFormat = "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist";
+    private static readonly ConcurrentQueue<string> FinalizedHosts = new();
     private readonly IPlatformServiceProvider _previousProvider = PlatformServiceProvider.Instance;
     private readonly TestablePlatformServiceProvider _provider = new();
     private readonly ConcurrentQueue<string> _resolveRequests = new();
@@ -231,6 +233,52 @@ public sealed class TestSourceHostMutationTests : TestContainer
         }
     }
 
+    public void DisposingTheHostSuppressesItsFinalization()
+    {
+        string disposed = "disposed-" + Guid.NewGuid().ToString("N");
+        string abandoned = "abandoned-" + Guid.NewGuid().ToString("N");
+        CreateFinalizableHost(disposed, dispose: true);
+        CreateFinalizableHost(abandoned, dispose: false);
+
+        // The abandoned host proves that finalizers have run, which makes the absence of the disposed one meaningful.
+        for (int attempt = 0; attempt < 20 && !FinalizedHosts.Contains(abandoned); attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        FinalizedHosts.Should().Contain(abandoned);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        FinalizedHosts.Should().NotContain(disposed);
+    }
+
+    public void ResolutionPathsListTheAdapterAndTheTestPlatformDirectoriesIndependently()
+    {
+        string adapterDirectory = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!;
+        string testPlatformDirectory = Path.GetDirectoryName(typeof(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase).Assembly.Location)!;
+        string root = Path.Combine(Path.GetTempPath(), "mutation-adapter-" + Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "source");
+        string source = Path.Combine(sourceDirectory, "tests.dll");
+        Directory.CreateDirectory(root);
+        try
+        {
+            using TestSourceHost host = new(null!, null);
+
+            host.GetResolutionPaths(source, isPortableMode: true).Should().Contain(adapterDirectory).And.Contain(testPlatformDirectory);
+
+            // The adapter and the test platform share a directory in the test output, so each of them hides that the other one
+            // is added. A copy of the adapter loaded from a different directory tells the two additions apart.
+            List<string> isolatedPaths = GetResolutionPathsFromAdapterCopy(root, source, out string copiedAdapterDirectory);
+
+            isolatedPaths.Should().Equal(sourceDirectory, copiedAdapterDirectory, testPlatformDirectory);
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
     private static void Configure(string search)
     {
         MSTestSettingsProvider.Reset();
@@ -258,6 +306,63 @@ public sealed class TestSourceHostMutationTests : TestContainer
 
     private static bool IsLoaded(string simpleName)
         => AppDomain.CurrentDomain.GetAssemblies().Any(assembly => string.Equals(assembly.GetName().Name, simpleName, StringComparison.Ordinal));
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void CreateFinalizableHost(string name, bool dispose)
+    {
+        FinalizableTestSourceHost host = new(name);
+        if (dispose)
+        {
+            host.Dispose();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static List<string> GetResolutionPathsFromAdapterCopy(string root, string source, out string adapterDirectory)
+    {
+        string location = typeof(TestSourceHost).Assembly.Location;
+        string copyDirectory = Directory.CreateDirectory(Path.Combine(root, "adapter")).FullName;
+        string copyLocation = Path.Combine(copyDirectory, Path.GetFileName(location));
+        File.Copy(location, copyLocation);
+        CollectibleLoadContext context = new();
+        try
+        {
+            Assembly adapter = context.LoadFromAssemblyPath(copyLocation);
+            adapterDirectory = Path.GetDirectoryName(adapter.Location)!;
+            Type hostType = adapter.GetType(typeof(TestSourceHost).FullName!, throwOnError: true)!;
+            object host = Activator.CreateInstance(hostType, new object?[] { null, null })!;
+            try
+            {
+                MethodInfo getResolutionPaths = hostType.GetMethod(nameof(TestSourceHost.GetResolutionPaths), BindingFlags.Instance | BindingFlags.NonPublic)!;
+                return (List<string>)getResolutionPaths.Invoke(host, [source, true])!;
+            }
+            finally
+            {
+                ((IDisposable)host).Dispose();
+            }
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        for (int attempt = 0; attempt < 10 && Directory.Exists(path); attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            try
+            {
+                Directory.Delete(path, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // The copy of the adapter stays locked until its load context has been collected.
+            }
+        }
+    }
 
     private int CountResolveRequestsForAMissingAssembly()
     {
@@ -297,6 +402,30 @@ public sealed class TestSourceHostMutationTests : TestContainer
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "mutation-host-" + Guid.NewGuid().ToString("N"));
 
         public void Dispose() => Directory.Delete(Root, recursive: true);
+    }
+
+    private sealed class FinalizableTestSourceHost : TestSourceHost
+    {
+        private readonly string _name;
+
+        public FinalizableTestSourceHost(string name)
+            : base(string.Empty, null)
+        {
+            _name = name;
+        }
+
+        ~FinalizableTestSourceHost()
+        {
+            FinalizedHosts.Enqueue(_name);
+        }
+    }
+
+    private sealed class CollectibleLoadContext : AssemblyLoadContext
+    {
+        public CollectibleLoadContext()
+            : base(isCollectible: true)
+        {
+        }
     }
 }
 #endif
