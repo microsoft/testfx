@@ -4,172 +4,172 @@
     <body>
       <trans-unit id="ArtifactPerTestDescription">
         <source>Video captured for test '{0}'.</source>
-        <target state="new">Video captured for test '{0}'.</target>
+        <target state="translated">테스트 '{0}'에 대해 캡처한 비디오입니다.</target>
         <note>Description for a per-test video artifact. {0} is the test display name.</note>
       </trans-unit>
       <trans-unit id="ArtifactPerTestDisplayName">
         <source>Screen recording — {0}</source>
-        <target state="new">Screen recording — {0}</target>
+        <target state="translated">화면 녹화 - {0}</target>
         <note>Display name for a per-test video artifact. {0} is the test display name.</note>
       </trans-unit>
       <trans-unit id="ArtifactSessionDescription">
         <source>Video captured during the test run.</source>
-        <target state="new">Video captured during the test run.</target>
+        <target state="translated">테스트 실행 중에 캡처한 비디오입니다.</target>
         <note>Description for the whole-session video artifact.</note>
       </trans-unit>
       <trans-unit id="ArtifactSessionDisplayName">
         <source>Screen recording</source>
-        <target state="new">Screen recording</target>
+        <target state="translated">화면 녹화</target>
         <note>Display name for the whole-session video artifact.</note>
       </trans-unit>
       <trans-unit id="CapDurationDescription">
         <source>duration {0}</source>
-        <target state="new">duration {0}</target>
+        <target state="translated">기간 {0}</target>
         <note>Describes a duration cap. {0} is the duration.</note>
       </trans-unit>
       <trans-unit id="CapSizeDescription">
         <source>size {0} MB</source>
-        <target state="new">size {0} MB</target>
+        <target state="translated">크기 {0}MB</target>
         <note>Describes a size cap. {0} is the size in megabytes.</note>
       </trans-unit>
       <trans-unit id="ChapterTitleFormat">
         <source>{0} [{1}]</source>
-        <target state="new">{0} [{1}]</target>
+        <target state="translated">{0} [{1}]</target>
         <note>Chapter bookmark title. {0} test display name, {1} outcome.</note>
       </trans-unit>
       <trans-unit id="CommandLineProviderDescription">
         <source>Command-line options for the video recorder extension.</source>
-        <target state="new">Command-line options for the video recorder extension.</target>
+        <target state="translated">비디오 레코더 확장에 대한 명령줄 옵션입니다.</target>
         <note>Description of the video recorder command-line options provider.</note>
       </trans-unit>
       <trans-unit id="ExtensionDescription">
         <source>Records the screen during a test run using ffmpeg.</source>
-        <target state="new">Records the screen during a test run using ffmpeg.</target>
+        <target state="translated">ffmpeg를 사용하여 테스트 실행 중에 화면을 녹화합니다.</target>
         <note>Description of the video recorder extension.</note>
       </trans-unit>
       <trans-unit id="ExtensionDisplayName">
         <source>Video recorder</source>
-        <target state="new">Video recorder</target>
+        <target state="translated">비디오 레코더</target>
         <note>Display name of the video recorder extension.</note>
       </trans-unit>
       <trans-unit id="FailedToStartRecording">
         <source>Failed to start recording: {0}. Recording skipped.</source>
-        <target state="new">Failed to start recording: {0}. Recording skipped.</target>
+        <target state="translated">녹음/녹화를 시작하지 못했습니다. {0}. 녹음/녹화를 건너뛰었습니다.</target>
         <note>Warning when the ffmpeg process could not be started. {0} is the error message.</note>
       </trans-unit>
       <trans-unit id="FfmpegNotFound">
         <source>Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</source>
-        <target state="new">Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</target>
+        <target state="translated">비디오 녹음/녹화를 요청했지만 ffmpeg를 찾을 수 없습니다(VideoRecorderOptions.FfmpegPath를 설정하거나 ffmpeg를 PATH에 추가). 녹음/녹화를 건너뛰었습니다.</target>
         <note>Warning shown when ffmpeg cannot be located.</note>
       </trans-unit>
       <trans-unit id="HintPerSession">
         <source>Recording the whole session into one video.</source>
-        <target state="new">Recording the whole session into one video.</target>
+        <target state="translated">전체 세션을 하나의 비디오로 녹화하는 중입니다.</target>
         <note>Hint appended to the ready message in per-session mode.</note>
       </trans-unit>
       <trans-unit id="HintPerTest">
         <source>Recording each test into its own video.</source>
-        <target state="new">Recording each test into its own video.</target>
+        <target state="translated">각 테스트를 자체 비디오로 녹화합니다.</target>
         <note>Hint appended to the ready message in per-test mode.</note>
       </trans-unit>
       <trans-unit id="InvalidOptionPositiveInteger">
         <source>Invalid value '{0}' for --{1}. Expected a positive whole number of seconds.</source>
-        <target state="new">Invalid value '{0}' for --{1}. Expected a positive whole number of seconds.</target>
+        <target state="translated">--{1}에 대한 값 '{0}'이(가) 잘못되었습니다. 양의 정수(초)여야 합니다.</target>
         <note>Validation error for a non-positive-integer option value. {0} value, {1} option name.</note>
       </trans-unit>
       <trans-unit id="InvalidOptionValue">
         <source>Invalid value '{0}' for --{1}. Valid values are {2}.</source>
-        <target state="new">Invalid value '{0}' for --{1}. Valid values are {2}.</target>
+        <target state="translated">--{1}에 대한 값 '{0}'이(가) 잘못되었습니다. 유효한 값은 {2}입니다.</target>
         <note>Validation error for an invalid option value. {0} value, {1} option name, {2} the list of valid values.</note>
       </trans-unit>
       <trans-unit id="NoUsableVideoProduced">
         <source>Screen recording produced no usable video (ffmpeg exit code {0}). {1}</source>
-        <target state="new">Screen recording produced no usable video (ffmpeg exit code {0}). {1}</target>
+        <target state="translated">화면 녹화에서 사용할 수 있는 비디오가 생성되지 않았습니다(ffmpeg 종료 코드 {0}). {1}</target>
         <note>Warning when recording yielded nothing. {0} exit code, {1} last ffmpeg error detail.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionArgs">
         <source>Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</source>
-        <target state="new">Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</target>
+        <target state="translated">기본 레코더(현재 ffmpeg)에 출력/인코딩 옵션으로 전달되는 추가 인수입니다. --capture-video가 필요합니다. 값은 일반적으로 '-'로 시작하므로 별도의 옵션(예: --capture-video-args="-vf scale=1280:-1")으로 구문 분석되지 않도록 '=' 구분 기호를 사용합니다.</target>
         <note>Help text for the --capture-video-args option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionCaptureVideo">
         <source>Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.</source>
-        <target state="new">Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.</target>
+        <target state="translated">테스트 실행 중 화면을 녹화합니다. 필요에 따라 비디오를 유지할 시기 지정: 'on-failure'(기본값, 실패한 테스트의 영상만 보관) 또는 'always'.</target>
         <note>Help text for the --capture-video option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionChapters">
         <source>Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.</source>
-        <target state="new">Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.</target>
+        <target state="translated">세션별 비디오에 테스트마다 챕터 책갈피를 하나씩 포함할지 여부: 'on'(기본값) 또는 'off'. --capture-video-granularity가 session일 때만 적용됩니다. --capture-video가 필요합니다.</target>
         <note>Help text for the --capture-video-chapters option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionGranularity">
         <source>How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.</source>
-        <target state="new">How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.</target>
+        <target state="translated">녹음/녹화 분할 방법: 'test'(기본값, 테스트당 하나의 비디오) 또는 'session'(전체 실행에 대해 하나의 챕터가 있는 비디오). --capture-video가 필요합니다.</target>
         <note>Help text for the --capture-video-granularity option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionMaxDuration">
         <source>Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.</source>
-        <target state="new">Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.</target>
+        <target state="translated">장기 실행 시 디스크 사용량을 제한하려고 보존할 영상을 대략 마지막 N초(롤링 버퍼)로 제한합니다. 실행 중인 테스트에서 필요하지 않은 오래된 영상은 정리됩니다. --capture-video가 필요합니다.</target>
         <note>Help text for the --capture-video-max-duration option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionSource">
         <source>What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.</source>
-        <target state="new">What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.</target>
+        <target state="translated">캡처할 대상: 'screen'(기본값, 전체 화면) 또는 'window'(현재 프로세스 창만, Windows 전용, 그 외 환경에서는 전체 화면으로 대체됨) --capture-video가 필요합니다.</target>
         <note>Help text for the --capture-video-source option.</note>
       </trans-unit>
       <trans-unit id="OutcomeError">
         <source>Error</source>
-        <target state="new">Error</target>
+        <target state="translated">오류</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeFailed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">실패</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomePassed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">통과함</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeSkipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">건너뜀</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeTimeout">
         <source>Timeout</source>
-        <target state="new">Timeout</target>
+        <target state="translated">시간 제한</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="RecorderReady">
         <source>Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</source>
-        <target state="new">Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</target>
+        <target state="translated">비디오 레코더 준비 완료(ffmpeg: {0}, 세분성: {1}, 유지: {2}). {3}</target>
         <note>Informational message at session start. {0} ffmpeg path, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</note>
       </trans-unit>
       <trans-unit id="RecordingCapReached">
         <source>Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</source>
-        <target state="new">Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</target>
+        <target state="translated">비디오 녹음/녹화가 설정된 롤링 버퍼 한도({0})에 도달했습니다. 디스크 사용량을 제한하려고 오래된 영상을 정리하고 있으므로, 이전 테스트의 클립은 사용이 불가능할 수 있습니다.</target>
         <note>Warning when the rolling-buffer size/duration limit is hit and old footage is pruned. {0} describes the limit that was reached.</note>
       </trans-unit>
       <trans-unit id="StopTimeoutKilled">
         <source>ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</source>
-        <target state="new">ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</target>
+        <target state="translated">ffmpeg가 시간 제한 내에 중지되지 않았습니다. 프로세스를 종료합니다. 녹음/녹화가 불완전할 수 있습니다.</target>
         <note>Warning when ffmpeg has to be killed because it did not stop gracefully.</note>
       </trans-unit>
       <trans-unit id="SubOptionsRequireEnable">
         <source>The video recorder sub-options require --{0} to be specified.</source>
-        <target state="new">The video recorder sub-options require --{0} to be specified.</target>
+        <target state="translated">비디오 레코더 하위 옵션을 사용하려면 --{0}을(를) 지정해야 합니다.</target>
         <note>Validation error when a sub-option is used without the enable option. {0} is the enable option name.</note>
       </trans-unit>
       <trans-unit id="WindowCaptureFallback">
         <source>Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</source>
-        <target state="new">Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</target>
+        <target state="translated">프로세스 주 창, 전경 창, 콘솔 창을 차례로 확인했지만 표시되는 현재 프로세스 창을 확인할 수 없습니다. 대신 전체 화면을 캡처합니다. 이 문제는 비입력 시스템 실행에서 발생하며, 기록 시점에 표시되는 창에 포커스가 지정되지 않는 터미널에서도 발생할 수 있습니다.</target>
         <note>Informational message when window capture falls back to full screen.</note>
       </trans-unit>
       <trans-unit id="WindowCaptureUnsupportedOs">
         <source>Current-process window capture is only supported on Windows; capturing the full screen instead.</source>
-        <target state="new">Current-process window capture is only supported on Windows; capturing the full screen instead.</target>
+        <target state="translated">현재 프로세스 창 캡처는 Windows에서만 지원되므로 대신 전체 화면을 캡처합니다.</target>
         <note>Informational message on non-Windows when window capture is requested.</note>
       </trans-unit>
     </body>

@@ -4,167 +4,167 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
-        <target state="new">TRX report generation and merge tools require a test application builder that supports artifact post-processing</target>
+        <target state="translated">TRX レポート生成およびマージ ツールには、成果物の後処理をサポートするテスト アプリケーション ビルダーが必要です</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDescription">
         <source>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</source>
-        <target state="new">Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</target>
+        <target state="translated">Microsoft.Testing.Extensions.TrxReport で生成された TRX レポートをマージします</target>
         <note>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDisplayName">
         <source>TRX report merger</source>
-        <target state="new">TRX report merger</target>
+        <target state="translated">TRX レポート マージャー</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxAttachmentCopyFailed">
         <source>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</source>
-        <target state="new">Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</target>
+        <target state="translated">添付ファイル '{0}' を TRX 結果ディレクトリにコピーできません。添付ファイルはスキップされます。原因: {1}。</target>
         <note>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file.</source>
-        <target state="new">The baseline TRX file.</target>
+        <target state="translated">ベースライン TRX ファイル。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
         <source>'--{0}' and '--{1}' must both be specified</source>
-        <target state="new">'--{0}' and '--{1}' must both be specified</target>
+        <target state="translated">'--{0}' と '--{1}' の両方を指定する必要があります</target>
         <note>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highlights differences between 2 TRX reports.</source>
-        <target state="new">This tool allows to compare and highlights differences between 2 TRX reports.</target>
+        <target state="translated">このツールを使用すると、2 つの TRX レポートの違いを比較し、強調表示できます。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
         <source>TRX comparer tool</source>
-        <target state="new">TRX comparer tool</target>
+        <target state="translated">TRX 比較ツール</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="new">'--{0}' expects a single trx file path as argument</target>
+        <target state="translated">'--{0}' には、引数として 1 つの trx ファイル パスが必要です</target>
         <note>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline.</source>
-        <target state="new">The TRX file to compare with the baseline.</target>
+        <target state="translated">ベースラインと比較する TRX ファイル。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: Trx file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">警告: Trx ファイル '{0}' は既に存在し、上書きされます。</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultConflictingTestDefinitionName">
         <source>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</target>
+        <target state="translated">{2} によって報告されたテスト ノード '{0}' ('{1}') にはテスト定義名 '{3}' がありますが、{4} によって報告された同じテスト ノードの前の結果にはテスト定義名 '{5}' があります。テスト ノードのすべての結果で同じ TrxTestDefinitionName を使用する必要があります。</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultDuplicateProperties">
         <source>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</target>
+        <target state="translated">{2} が報告したテスト ノード '{0}' ('{1}') には、1 つの TestNodeUpdateMessage に同じ型のプロパティが複数含まれていますが、次の各型で許可されるプロパティは 1 つだけです: {3}。</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsDetailsHeader">
         <source>Details for the authors of the reporting component:</source>
-        <target state="new">Details for the authors of the reporting component:</target>
+        <target state="translated">報告コンポーネントの編集者向けの詳細:</target>
         <note>Header of the technical details listed after this line.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsErrorMessage">
         <source>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</source>
-        <target state="new">The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</target>
+        <target state="translated">TRX レポートが不完全です: TRX レポートでは表示できないデータで報告されたため、{0} 件のテスト結果が省略され、テストの実行が失敗としてマークされます。これは、テストではなく、これらの結果を報告したコンポーネントの問題です。新しいバージョンに更新するか、この問題を作成者に報告してください: {1}。</target>
         <note>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsMoreDetails">
         <source>... and {0} more omitted test result(s).</source>
-        <target state="new">... and {0} more omitted test result(s).</target>
+        <target state="translated">...さらに {0} 件のテスト結果が省略されています。</target>
         <note>{0} is the number of omitted test results whose details are not listed.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
         <source>Merges multiple TRX files into one from the command line.</source>
-        <target state="new">Merges multiple TRX files into one from the command line.</target>
+        <target state="translated">コマンド ラインで、複数の TRX ファイルを 1 つにマージします。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
         <source>TRX report merge tool</source>
-        <target state="new">TRX report merge tool</target>
+        <target state="translated">TRX レポートマージ ツール</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths.</source>
-        <target state="new">Two or more input TRX file paths.</target>
+        <target state="translated">2 つ以上の入力 TRX ファイル パス。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
         <source>'--input' expects two or more existing TRX file paths</source>
-        <target state="new">'--input' expects two or more existing TRX file paths</target>
+        <target state="translated">'--input' には、既存の TRX ファイル パスが 2 つ以上必要です</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidOutput">
         <source>'--output-trx' expects one TRX file path</source>
-        <target state="new">'--output-trx' expects one TRX file path</target>
+        <target state="translated">'--output-trx' には TRX ファイル パスが 1 つ必要です</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path.</source>
-        <target state="new">The output TRX file path.</target>
+        <target state="translated">出力 TRX ファイル パス。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
         <source>{0} TRX files merged</source>
-        <target state="new">{0} TRX files merged</target>
+        <target state="translated">{0} 件の TRX ファイルがマージされました</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDisplayName">
         <source>TRX report (merged)</source>
-        <target state="new">TRX report (merged)</target>
+        <target state="translated">TRX レポート (マージ済み)</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedRunName">
         <source>Merged TRX report</source>
-        <target state="new">Merged TRX report</target>
+        <target state="translated">マージされた TRX レポート</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeInvalidValue">
         <source>'--trx-mode' expects 'in-process' or 'out-of-process'</source>
-        <target state="new">'--trx-mode' expects 'in-process' or 'out-of-process'</target>
+        <target state="translated">'--trx-mode' には 'in-process' または 'out-of-process' が必要です</target>
         <note>Do not localize option name {Locked="--trx-mode"} or mode names {Locked="in-process"}{Locked="out-of-process"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOptionDescription">
         <source>TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</source>
-        <target state="new">TRX generation mode: 'in-process' disables controller-backed recovery; 'out-of-process' enables it (the default on supported platforms). Requires '--report-trx'.</target>
+        <target state="translated">TRX 生成モード: 'in-process' はコントローラーによる回復を無効にし、'out-of-process' は回復を有効にします (サポートされているプラットフォームでの既定値)。'--report-trx' が必要です。</target>
         <note>Do not localize format name {Locked="TRX"}, mode names {Locked="in-process"}{Locked="out-of-process"}, or option name {Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeOutOfProcessNotSupported">
         <source>'--trx-mode out-of-process' is not supported on this platform</source>
-        <target state="new">'--trx-mode out-of-process' is not supported on this platform</target>
+        <target state="translated">'--trx-mode out-of-process' は、このプラットフォームではサポートされていません</target>
         <note>Do not localize option and value {Locked="--trx-mode out-of-process"}.</note>
       </trans-unit>
       <trans-unit id="TrxModeRequiresTrxReport">
         <source>'--trx-mode' requires '--report-trx' to be enabled</source>
-        <target state="new">'--trx-mode' requires '--report-trx' to be enabled</target>
+        <target state="translated">'--trx-mode' では'--report-trx' を有効にする必要があります</target>
         <note>Do not localize option names {Locked="--trx-mode"}{Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
-        <target state="new">Test session</target>
+        <target state="translated">テスト セッション</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDisplayName">
         <source>TRX Report</source>
-        <target state="new">TRX Report</target>
+        <target state="translated">TRX レポート</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
         <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="new">'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</target>
+        <target state="translated">'--report-trx-filename' ファイル名引数の末尾は '.trx' にする必要があります (例: --report-trx-filename myreport.trx)</target>
         <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameMustNotBeEmpty">
         <source>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="new">'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</target>
+        <target state="translated">'--report-trx-filename' のファイル名部分は空にできません (例: --report-trx-filename myreport.trx)</target>
         <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
@@ -178,57 +178,57 @@ Example: 'MyReport_{tfm}.trx'.</target>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
-        <target state="new">'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</target>
+        <target state="translated">'--report-trx-filename' の相対パスは、テスト結果ディレクトリ内にある必要があります (例: --report-trx-filename nested/myreport.trx)</target>
         <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example path {Locked="nested/myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
         <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
-        <target state="new">'--report-trx-filename' requires '--report-trx' to be enabled</target>
+        <target state="translated">'--report-trx-filename' では、'--report-trx' を有効にする必要があります</target>
         <note>Do not localize option names {Locked="--report-trx-filename"}{Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameShouldNotContainPath">
         <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="new">file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</target>
+        <target state="translated">ファイル名引数にパスを含めることはできません (例: --report-trx-filename myreport.trx)</target>
         <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
         <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
-        <target state="new">The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</target>
+        <target state="translated">UID '{1}' のテスト フレームワーク '{0}' は 'ITrxReportCapability' をサポートしていないため、TRX レポートが見つからないか不完全です</target>
         <note>0 is the test framework display name. 1 is the test framework {Locked="UID"}. Do not localize {Locked="ITrxReportCapability"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
         <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
-        <target state="new">Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</target>
+        <target state="translated">'OnTestHostProcessStartedAsync' の前にメソッド 'BeforeTestHostProcessStartAsync' を呼び出す必要があります</target>
         <note>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
         <source>Produce a TRX report for the current test session.</source>
-        <target state="new">Produce a TRX report for the current test session.</target>
+        <target state="translated">現在のテスト セッションの TRX レポートを生成します。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">
         <source>TRX report generator</source>
-        <target state="new">TRX report generator</target>
+        <target state="translated">TRX レポート ジェネレーター</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
         <source>Required environment variable '{0}' is missing for TRX report generator</source>
-        <target state="new">Required environment variable '{0}' is missing for TRX report generator</target>
+        <target state="translated">TRX レポート ジェネレーターに必要な環境変数 '{0}' がありません</target>
         <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="TrxReportIsNotValidForDiscovery">
         <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-trx' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">'--list-tests' を使用している場合、'--report-trx' を有効にすることはできません</target>
         <note>Do not localize option names {Locked="--report-trx"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report.</source>
-        <target state="new">Enable generating TRX report.</target>
+        <target state="translated">TRX レポートの生成を有効にする。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="new">Requests of type '{0}' is not supported</target>
+        <target state="translated">型 '{0}' の要求はサポートされていません</target>
         <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
