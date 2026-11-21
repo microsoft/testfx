@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">Operazione interrotta</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">Effettivi</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactCount">
@@ -19,437 +19,437 @@
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="new">canceled</target>
+        <target state="translated">operazione annullata</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="new">Canceling the test session...</target>
+        <target state="translated">Annullamento della sessione di test in corso...</target>
         <note />
       </trans-unit>
       <trans-unit id="CodeCoverageSummary">
         <source>Code Coverage Summary:</source>
-        <target state="new">Code Coverage Summary:</target>
+        <target state="translated">Riepilogo copertura del codice:</target>
         <note>Heading printed before the per-scope code coverage percentages in the run summary.</note>
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="new">Console is already in batching mode.</target>
+        <target state="translated">La console è già in modalità batch.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationAverage">
         <source>Average</source>
-        <target state="new">Average</target>
+        <target state="translated">Media</target>
         <note>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationMaximum">
         <source>Maximum</source>
-        <target state="new">Maximum</target>
+        <target state="translated">Massimo</target>
         <note>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationMinimum">
         <source>Minimum</source>
-        <target state="new">Minimum</target>
+        <target state="translated">Minimo</target>
         <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationOver">
         <source>{0} over {1}</source>
-        <target state="new">{0} over {1}</target>
+        <target state="translated">{0} rispetto a {1}</target>
         <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationTotal">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">Totale</target>
         <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricBlock">
         <source>Block</source>
-        <target state="new">Block</target>
+        <target state="translated">Blocca</target>
         <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricBranch">
         <source>Branch</source>
-        <target state="new">Branch</target>
+        <target state="translated">Ramo</target>
         <note>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricClass">
         <source>Class</source>
-        <target state="new">Class</target>
+        <target state="translated">Classe</target>
         <note>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricComplexity">
         <source>Complexity</source>
-        <target state="new">Complexity</target>
+        <target state="translated">Complessità</target>
         <note>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricCondition">
         <source>Condition</source>
-        <target state="new">Condition</target>
+        <target state="translated">Condizione</target>
         <note>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricFunction">
         <source>Function</source>
-        <target state="new">Function</target>
+        <target state="translated">Funzione</target>
         <note>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricInstruction">
         <source>Instruction</source>
-        <target state="new">Instruction</target>
+        <target state="translated">Istruzione</target>
         <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricLine">
         <source>Line</source>
-        <target state="new">Line</target>
+        <target state="translated">Riga</target>
         <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricMethod">
         <source>Method</source>
-        <target state="new">Method</target>
+        <target state="translated">Metodo</target>
         <note>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricRegion">
         <source>Region</source>
-        <target state="new">Region</target>
+        <target state="translated">Area</target>
         <note>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricStatement">
         <source>Statement</source>
-        <target state="new">Statement</target>
+        <target state="translated">Istruzione</target>
         <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricWithProducer">
         <source>{0} [{1}]</source>
-        <target state="new">{0} [{1}]</target>
+        <target state="translated">{0} [{1}]</target>
         <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
       </trans-unit>
       <trans-unit id="CoverageNoData">
         <source>N/A</source>
-        <target state="new">N/A</target>
+        <target state="translated">N/D</target>
         <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
       </trans-unit>
       <trans-unit id="CoverageScopeAssembly">
         <source>Assembly</source>
-        <target state="new">Assembly</target>
+        <target state="translated">Assembly</target>
         <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
       </trans-unit>
       <trans-unit id="CoverageScopeFile">
         <source>File</source>
-        <target state="new">File</target>
+        <target state="translated">File</target>
         <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
       </trans-unit>
       <trans-unit id="CoverageScopeModule">
         <source>Module</source>
-        <target state="new">Module</target>
+        <target state="translated">Modulo</target>
         <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
       </trans-unit>
       <trans-unit id="CoverageScopeNamespace">
         <source>Namespace</source>
-        <target state="new">Namespace</target>
+        <target state="translated">Spazio dei nomi</target>
         <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
       </trans-unit>
       <trans-unit id="CoverageScopeOverall">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">Totale</target>
         <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageScopeType">
         <source>Type</source>
-        <target state="new">Type</target>
+        <target state="translated">Tipo</target>
         <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdFailed">
         <source>{0}% &lt; {1}% threshold</source>
-        <target state="new">{0}% &lt; {1}% threshold</target>
+        <target state="translated">Soglia {0}% &lt; {1}%</target>
         <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdFailedRoundedValues">
         <source>Coverage is below the required threshold (the percentages round to the same value).</source>
-        <target state="new">Coverage is below the required threshold (the percentages round to the same value).</target>
+        <target state="translated">La copertura è al di dotto della soglia richiesta (le percentuali vengono arrotondate allo stesso valore).</target>
         <note />
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">
         <source>No coverable data (failed by policy)</source>
-        <target state="new">No coverable data (failed by policy)</target>
+        <target state="translated">Nessun dato copribile (considerato non superato dal criterio)</target>
         <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataPassed">
         <source>No coverable data (passed by policy)</source>
-        <target state="new">No coverable data (passed by policy)</target>
+        <target state="translated">Nessun dato copribile (considerato superato dal criterio)</target>
         <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdPassed">
         <source>{0}% &gt;= {1}% threshold</source>
-        <target state="new">{0}% &gt;= {1}% threshold</target>
+        <target state="translated">Soglia {0}% &gt;= {1}%</target>
         <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdResults">
         <source>Coverage Threshold Results:</source>
-        <target state="new">Coverage Threshold Results:</target>
+        <target state="translated">Risultati della soglia di copertura:</target>
         <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
-        <target state="new">Discovered {0} tests in assembly</target>
+        <target state="translated">{0} individuati nell'assembly</target>
         <note>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummary">
         <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="new">Discovered {0} tests in {1} assemblies.</target>
+        <target state="translated">{0} individuati in {1} assembly.</target>
         <note>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummarySingular">
         <source>Discovered {0} tests.</source>
-        <target state="new">Discovered {0} tests.</target>
+        <target state="translated">{0} test individuati.</target>
         <note>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
-        <target state="new">Discovering tests from</target>
+        <target state="translated">Individuazione di test da</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">durata</target>
         <note />
       </trans-unit>
       <trans-unit id="Error">
         <source>error</source>
-        <target state="new">error</target>
+        <target state="translated">errore</target>
         <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
       </trans-unit>
       <trans-unit id="ErroredAssembliesHeader">
         <source>Errored assemblies:</source>
-        <target state="new">Errored assemblies:</target>
+        <target state="translated">Assembly con errori:</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
-        <target state="new">Exit code</target>
+        <target state="translated">Codice di uscita</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
         <source>At least one test failed.</source>
-        <target state="new">At least one test failed.</target>
+        <target state="translated">Almeno un test non è riuscito.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
         <source>One or more code coverage thresholds were not met.</source>
-        <target state="new">One or more code coverage thresholds were not met.</target>
+        <target state="translated">Una o più soglie di copertura del codice non sono state raggiunte.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeDependentProcessExitedDescription">
         <source>A dependent process exited.</source>
-        <target state="new">A dependent process exited.</target>
+        <target state="translated">Un processo dipendente è terminato.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeGenericFailureDescription">
         <source>An unexpected error occurred.</source>
-        <target state="new">An unexpected error occurred.</target>
+        <target state="translated">Si è verificato un errore imprevisto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
         <source>The test platform protocol version is incompatible.</source>
-        <target state="new">The test platform protocol version is incompatible.</target>
+        <target state="translated">La versione del protocollo della piattaforma di test non è compatibile.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeInvalidCommandLineDescription">
         <source>The command-line arguments are invalid.</source>
-        <target state="new">The command-line arguments are invalid.</target>
+        <target state="translated">Gli argomenti della riga di comando non sono validi.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
         <source>The test platform setup or extension configuration is invalid.</source>
-        <target state="new">The test platform setup or extension configuration is invalid.</target>
+        <target state="translated">L'installazione della piattaforma di test o la configurazione dell'estensione non è valida.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
         <source>Fewer tests ran than required by the minimum expected tests policy.</source>
-        <target state="new">Fewer tests ran than required by the minimum expected tests policy.</target>
+        <target state="translated">È stato eseguito un numero di test inferiore a quello richiesto dal criterio minimo previsto per i test.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
         <source>The test adapter reported a test session failure.</source>
-        <target state="new">The test adapter reported a test session failure.</target>
+        <target state="translated">L'adattatore di test ha segnalato un errore della sessione di test.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
         <source>Test execution stopped because the configured deadline was approaching.</source>
-        <target state="new">Test execution stopped because the configured deadline was approaching.</target>
+        <target state="translated">L'esecuzione dei test è stata arrestata perché la scadenza configurata si stava avvicinando.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
         <source>Test execution stopped after reaching the maximum failed tests limit.</source>
-        <target state="new">Test execution stopped after reaching the maximum failed tests limit.</target>
+        <target state="translated">L'esecuzione dei test è stata interrotta dopo aver raggiunto il limite massimo di test non superati.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
         <source>The test host process exited unexpectedly.</source>
-        <target state="new">The test host process exited unexpectedly.</target>
+        <target state="translated">Il processo host di test è terminato in modo imprevisto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestSessionAbortedDescription">
         <source>The test session was aborted.</source>
-        <target state="new">The test session was aborted.</target>
+        <target state="translated">Sessione di test interrotta.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeUnknownDescription">
         <source>The exit code is not recognized.</source>
-        <target state="new">The exit code is not recognized.</target>
+        <target state="translated">Il codice di uscita non è riconosciuto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeZeroTestsDescription">
         <source>No tests ran.</source>
-        <target state="new">No tests ran.</target>
+        <target state="translated">Non sono stati eseguiti test.</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">Previsto</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">Errore</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">operazione non riuscita</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="new">failed with {0} error(s)</target>
+        <target state="translated">non riuscito con {0} errori</target>
         <note>{0} is the number of errors in an assembly summary line</note>
       </trans-unit>
       <trans-unit id="FlakyAttempts">
         <source>{0} attempts</source>
-        <target state="new">{0} attempts</target>
+        <target state="translated">Tentativi: {0}</target>
         <note>{0} is the total number of times the test ran (first run plus retries), shown next to a flaky test's name.</note>
       </trans-unit>
       <trans-unit id="FlakyLowercase">
         <source>flaky: {0} (passed after retry)</source>
-        <target state="new">flaky: {0} (passed after retry)</target>
+        <target state="translated">instabile: {0} (superato dopo un nuovo tentativo)</target>
         <note>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
       </trans-unit>
       <trans-unit id="FlakyTests">
         <source>Flaky tests:</source>
-        <target state="new">Flaky tests:</target>
+        <target state="translated">Test instabili:</target>
         <note>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</note>
       </trans-unit>
       <trans-unit id="FlakyTransition">
         <source>failed -&gt; passed</source>
-        <target state="new">failed -&gt; passed</target>
+        <target state="translated">non riuscito -&gt; superato</target>
         <note>Describes the outcome change of a flaky test, shown next to its name in the 'Flaky tests:' section. The arrow reads left (first outcome) to right (final outcome).</note>
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">Per test</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="HandshakeFailuresHeader">
         <source>Handshake failures:</source>
-        <target state="new">Handshake failures:</target>
+        <target state="translated">Errori di handshake:</target>
         <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">Artefatti file in fase di elaborazione prodotti:</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">Violazione minima dei criteri di test previsti, test eseguiti {0}, minimo previsto {1}</target>
         <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">e altri {0}</target>
         <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="new">{0} tests running</target>
+        <target state="translated">{0} test in esecuzione</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NoAffectedTestsSelected">
         <source>No affected tests selected</source>
-        <target state="new">No affected tests selected</target>
+        <target state="translated">Nessun test interessato selezionato</target>
         <note>Neutral module status when affected-test selection succeeds without starting a test host. This is not the skipped test outcome and no test count is known.</note>
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">Artefatti file non in elaborazione prodotti:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">Superato</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">superato</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="new">Press Ctrl+C again to force exit.</target>
+        <target state="translated">Premere di nuovo Ctrl+C per forzare l'uscita.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">
         <source>retried</source>
-        <target state="new">retried</target>
+        <target state="translated">ripetuto</target>
         <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
       </trans-unit>
       <trans-unit id="RetriedTestsAndRuns">
         <source>{0} test(s), {1} extra run(s)</source>
-        <target state="new">{0} test(s), {1} extra run(s)</target>
+        <target state="translated">{0} test {1} esecuzione/i aggiuntiva/e</target>
         <note>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
-        <target state="new">Running tests from</target>
+        <target state="translated">Esecuzione di test da</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="RuntimeFramework">
         <source>runtime: {0}</source>
-        <target state="new">runtime: {0}</target>
+        <target state="translated">runtime: {0}</target>
         <note>{0} is the executing runtime framework, shown after the target framework and process architecture when the runtime differs or the target is unknown.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">ignorato</target>
         <note />
       </trans-unit>
       <trans-unit id="SlowestTests">
         <source>Slowest tests:</source>
-        <target state="new">Slowest tests:</target>
+        <target state="translated">Test più lenti:</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="new">at</target>
+        <target state="translated">a</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="new">in</target>
+        <target state="translated">in</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Output errori</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Output standard</target>
         <note />
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">riusciti</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiModeOptionDescription">
@@ -463,7 +463,7 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi prevede un singolo parametro con valore ''auto'', ''on'' (o ''true'', ''enable'', ''1'') o ''off'' (o ''false'', ''disable'', ''0'').</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
@@ -475,32 +475,32 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</target>
+        <target state="translated">--output prevede un singolo parametro con un valore 'Minimal', 'Normal' o 'Detailed'.</target>
         <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed, active modules: {2}</source>
-        <target state="new">running... {0} completed, {1} failed, active modules: {2}</target>
+        <target state="translated">in esecuzione... {0} completato, {1} non riuscito, moduli attivi: {2}</target>
         <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
         <source> | active: {0}</source>
-        <target state="new"> | active: {0}</target>
+        <target state="translated"> | attivo: {0}</target>
         <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatLastCompletionSuffix">
         <source> | last completion: {0} ago</source>
-        <target state="new"> | last completion: {0} ago</target>
+        <target state="translated"> | ultimo completamento: {0} fa</target>
         <note>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatNoCompletionSuffix">
         <source> | no tests completed yet</source>
-        <target state="new"> | no tests completed yet</target>
+        <target state="translated"> | non è ancora stato completato alcun test</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--progress prevede un singolo parametro con valore ''auto'', ''on'' (o ''true'', ''enable'', ''1'') o ''off'' (o ''false'', ''disable'', ''0'').</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressReportingOptionDescription">
@@ -514,7 +514,7 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] ancora in esecuzione dopo {0}: {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionDescription">
@@ -528,22 +528,22 @@ Passing the option without a value turns it on.</target>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
         <source>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</source>
-        <target state="new">--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</target>
+        <target state="translated">--show-flaky-tests non prevede alcun parametro, oppure un singolo parametro 'on' o 'off'.</target>
         <note>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <target state="translated">--show-stdout e --show-stderr prevedono un singolo parametro con valore 'All', 'Failed' o 'None'.</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowSlowestTestsOptionDescription">
         <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
-        <target state="new">Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</target>
+        <target state="translated">Mostra il numero specificato di test più lenti (in base alla durata di esecuzione segnalata) nel riepilogo dell'esecuzione. È previsto un numero intero positivo.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
         <source>--show-slowest-tests expects a single positive integer parameter.</source>
-        <target state="new">--show-slowest-tests expects a single positive integer parameter.</target>
+        <target state="translated">--show-slowest-tests prevede un singolo parametro intero positivo.</target>
         <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
@@ -562,7 +562,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="new">--show-test-results value 'all' or 'none' cannot be combined with any other value.</target>
+        <target state="translated">Non è possibile combinare il valore '--show-test-results' 'all' o 'none' con altri valori.</target>
         <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
@@ -576,57 +576,57 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">--show-test-results richiede almeno un valore tra 'passed', 'failed', 'skipped', 'all' o 'none'.</target>
         <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">--show-test-results si aspetta uno o più valori, separati da virgole o spazi, tra 'passed', 'failed', 'skipped', 'all' o 'none'.</target>
         <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">Scrive i risultati del test nel terminale.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">Reporter test terminale</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoveryExitCode">
         <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
-        <target state="new">Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</target>
+        <target state="translated">Individuazione dei test completata con codice di uscita non riuscito: {0}. {1} Vedere: https://aka.ms/testingplatform/exitcodes</target>
         <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="new">Test discovery summary: found {0} test(s)</target>
+        <target state="translated">Riepilogo individuazione test: trovati {0} test</target>
         <note>{0} is the number of discovered tests.</note>
       </trans-unit>
       <trans-unit id="TestRunExitCode">
         <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
-        <target state="new">Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</target>
+        <target state="translated">Esecuzione dei test completata con codice di uscita non riuscito: {0}. {1} Vedere: https://aka.ms/testingplatform/exitcodes</target>
         <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="new">Test run summary:</target>
+        <target state="translated">Riepilogo esecuzione test:</target>
         <note />
       </trans-unit>
       <trans-unit id="Try">
         <source>try {0}</source>
-        <target state="new">try {0}</target>
+        <target state="translated">prova {0}</target>
         <note>number of tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">Nessun test eseguito</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">totali</target>
         <note />
       </trans-unit>
     </body>
