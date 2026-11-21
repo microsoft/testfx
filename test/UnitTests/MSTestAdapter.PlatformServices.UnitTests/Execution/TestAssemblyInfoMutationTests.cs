@@ -136,6 +136,11 @@ public sealed class TestAssemblyInfoMutationTests : TestContainer
 
     public async Task ExecuteAssemblyCleanupAsyncReturnsAndRecordsTheOriginalFailureOfACanceledCleanup()
     {
+#if DEBUG && !NETFRAMEWORK
+        // A regression that rebuilds the failure would trip unrelated debug assertions; observe them so the
+        // host reports the assertion failures below instead of failing fast.
+        using var observer = new DiagnosticAssertionObserver(static _ => { });
+#endif
         List<RecordedActivity> activities = InstallActivityFactory();
         var info = new TestAssemblyInfo(new TestableAssembly()) { AssemblyCleanupMethod = GetFixtureMethod(nameof(Fixtures.AssemblyCleanup)) };
         using TestContextImplementation testContext = CreateTestContext();
