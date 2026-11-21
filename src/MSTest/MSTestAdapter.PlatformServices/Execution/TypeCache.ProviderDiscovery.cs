@@ -244,15 +244,20 @@ internal sealed partial class TypeCache
                 }
 
                 string? path = metadataResolver.Resolve(referrer, referenceName);
-                if (path is not null && TryReadProviderMetadata(path, out bool hasMarker, out AssemblyName[] metadataReferences) && !hasMarker)
+                ProviderMetadataReadResult metadata = ProviderMetadataReadResult.NoMatchingImage;
+                if (path is not null)
                 {
-                    // Keep the nearest runtime referrer for eventual provider loading, but walk
-                    // unmarked intermediaries using only their metadata.
-                    queue.Enqueue(new(referrer, metadataReferences));
-                    continue;
+                    metadata = TryReadProviderMetadata(path, referenceName, out bool hasMarker, out AssemblyName[] metadataReferences);
+                    if (metadata == ProviderMetadataReadResult.Read && !hasMarker)
+                    {
+                        // Keep the nearest runtime referrer for eventual provider loading, but walk
+                        // unmarked intermediaries using only their metadata.
+                        queue.Enqueue(new(referrer, metadataReferences));
+                        continue;
+                    }
                 }
 
-                if (path is null && PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                if (metadata == ProviderMetadataReadResult.NoMatchingImage && PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
                         "TypeCache: No metadata path for referenced assembly {0}; using runtime resolution for AssemblyFixtureProvider discovery.",

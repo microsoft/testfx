@@ -157,6 +157,49 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
             disableAppDomain: runner != "VSTest", assertFallbackTrace: true);
     }
 
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [DataRow("MTP", "unmarked")]
+    [DataRow("VSTest", "unmarked")]
+    [DataRow("MTP", "transitive")]
+    [DataRow("VSTest", "transitive")]
+    public async Task FrameworkStrongNamedDependenciesAreTraversedAsMetadata(string runner, string placement)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Fail("This Windows-only test must not execute on another OS.");
+        }
+
+        const string tfm = "net472";
+        const string signing = """
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../fixture.snk</AssemblyOriginatorKeyFile>
+""";
+        bool unmarked = placement == "unmarked";
+        using TestAsset asset = await CreateAssetAsync(
+            tfm,
+            "none",
+            unmarked ? "UnmarkedDependency" : "Intermediate",
+            unmarked ? "UnmarkedDependency.Marker" : "Intermediate.Marker",
+            unmarked ? UnmarkedAssertions : ProviderAssertions,
+            signing: signing,
+            useVSTest: runner == "VSTest");
+
+        using (var key = new RSACryptoServiceProvider(2048) { PersistKeyInCsp = false })
+        {
+            File.WriteAllBytes(Path.Combine(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
+        }
+
+        await BuildConsumerAsync(asset);
+        string outputDirectory = Path.Combine(asset.TargetAssetPath, "Tests", "bin", "Release", tfm);
+        string dependency = Path.Combine(outputDirectory, (unmarked ? "UnmarkedDependency" : "Intermediate") + ".dll");
+        Assert.IsTrue(
+            AssemblyName.GetAssemblyName(dependency).GetPublicKeyToken() is { Length: > 0 },
+            "The dependency must be strong-named to exercise the strong-name metadata path.");
+
+        await RunConsumerAsync(asset, tfm, runner, unmarked ? "test" : "provider-initialize | test | provider-cleanup");
+    }
+
     private const string ActualProviderSource = """
 
 #file ActualProvider/ActualProvider.csproj
