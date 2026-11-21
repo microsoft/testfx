@@ -146,11 +146,14 @@ public sealed class CoverageThresholdPolicyEvaluationTests
     [TestMethod]
     public void Evaluate_ExplicitSession_IsPreferredOverOverallSession()
     {
+        SessionUid explicitSession = new("explicit-session");
         CoverageScopeSummary summary = new(new SessionUid("overall-session"), CoverageScope.Overall, [new(CoverageMetric.Line, 10, 10, "collector")]);
 
-        (IReadOnlyList<TestCoverageThresholdMessage> thresholds, _) = CoverageThresholdPolicy.Evaluate(Line("80"), [summary], new SessionUid("overall-session"));
+        (IReadOnlyList<TestCoverageThresholdMessage> thresholds, _) = CoverageThresholdPolicy.Evaluate(Line("80"), [summary], explicitSession);
 
-        Assert.AreEqual(new SessionUid("overall-session"), Assert.ContainsSingle(thresholds).SessionUid);
+        TestCoverageThresholdMessage threshold = Assert.ContainsSingle(thresholds);
+        Assert.AreEqual(explicitSession, threshold.SessionUid);
+        Assert.IsFalse(threshold.HasCoverableData);
     }
 
     [TestMethod]

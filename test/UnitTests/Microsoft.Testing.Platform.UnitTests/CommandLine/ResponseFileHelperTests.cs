@@ -519,10 +519,10 @@ public sealed class ResponseFileHelperTests
     [TestMethod]
     public void TryReadResponseFile_FileIncludingItself_ReportsRecursion()
     {
-        string path = Path.GetTempFileName();
+        string path = Path.Combine(Path.GetTempPath(), $"self {Guid.NewGuid():N}.rsp");
         try
         {
-            File.WriteAllText(path, $"@{path}");
+            File.WriteAllText(path, $"\"@{path}\"");
             var errors = new List<string>();
 
             bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
@@ -542,11 +542,12 @@ public sealed class ResponseFileHelperTests
     public void TryReadResponseFile_SameNestedFileIncludedTwice_IsNotRecursionAndIsExpandedTwice()
     {
         string outerPath = Path.GetTempFileName();
-        string nestedPath = Path.GetTempFileName();
+        string nestedPath = Path.Combine(Path.GetTempPath(), $"nested {Guid.NewGuid():N}.rsp");
         try
         {
             File.WriteAllText(nestedPath, "--nested c");
-            File.WriteAllLines(outerPath, [$"@{nestedPath}", "--between", $"@{nestedPath}"]);
+            string include = $"\"@{nestedPath}\"";
+            File.WriteAllLines(outerPath, [include, "--between", include]);
             var errors = new List<string>();
 
             bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);

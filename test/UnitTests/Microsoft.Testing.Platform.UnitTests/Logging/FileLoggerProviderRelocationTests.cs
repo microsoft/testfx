@@ -52,7 +52,7 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [TestMethod]
     public void CreateLogger_IsEnabled_UsesTheProviderLevel()
     {
-        using FileLoggerProvider provider = CreateProvider(new ControlledLoopTask(), syncFlush: true, LogLevel.Warning);
+        using FileLoggerProvider provider = CreateProvider(syncFlush: true, LogLevel.Warning);
 
         ILogger logger = provider.CreateLogger(Category);
 
@@ -63,7 +63,7 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [TestMethod]
     public void Log_SyncFlush_WritesTheEntryExactlyOnce()
     {
-        using FileLoggerProvider provider = CreateProvider(new ControlledLoopTask(), syncFlush: true);
+        using FileLoggerProvider provider = CreateProvider(syncFlush: true);
 
         provider.Log(LogLevel.Information, "hello", null, Formatter, Category);
 
@@ -73,7 +73,7 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [TestMethod]
     public void Log_DisabledLevel_DoesNotEvenInvokeTheFormatterAndWritesNothing()
     {
-        using FileLoggerProvider provider = CreateProvider(new ControlledLoopTask(), syncFlush: true, LogLevel.Warning);
+        using FileLoggerProvider provider = CreateProvider(syncFlush: true, LogLevel.Warning);
         int formatterCalls = 0;
 
         provider.Log(LogLevel.Information, "hidden", null, (state, _) =>
@@ -90,7 +90,7 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [UnsupportedOSPlatform("browser")]
     public async Task Dispose_DisposesTheInnerFileLoggerAndCanBeCalledAgainWithoutBlocking()
     {
-        FileLoggerProvider provider = CreateProvider(new ControlledLoopTask(), syncFlush: true);
+        FileLoggerProvider provider = CreateProvider(syncFlush: true);
 
         provider.Dispose();
 
@@ -105,9 +105,11 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [TestMethod]
     public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync_CalledTwice_ReleasesTheRelocationSemaphoreEachTime()
     {
-        ControlledLoopTask task = new(runRealLoops: true);
-        FileLoggerProvider provider = CreateProvider(task, syncFlush: false);
-        task.CompleteFirstLoop();
+#if NETFRAMEWORK
+        using FileLoggerProvider provider = CreateProvider(syncFlush: false);
+#else
+        await using FileLoggerProvider provider = CreateProvider(syncFlush: false);
+#endif
 
         await BoundedTaskWait.CompleteWithinAsync(provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(NewDirectory), 10);
         await BoundedTaskWait.CompleteWithinAsync(provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(NewDirectory), 10);
@@ -118,34 +120,54 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [TestMethod]
     public async Task LogAsync_AsyncFlush_DuringRelocation_DoesNotWaitForTheRelocationAndIsReplayedOnTheReplacementLogger()
     {
-        ControlledLoopTask task = new(runRealLoops: true);
-        FileLoggerProvider provider = CreateProvider(task, syncFlush: false);
-
-        // Relocation takes the semaphore and then waits for the previous consumer loop to end.
-        Task relocation = provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(NewDirectory);
-        Assert.IsFalse(relocation.IsCompleted);
-
-        // In async-flush mode the entry is queued without touching the relocation semaphore, so this must not block.
-        await BoundedTaskWait.CompleteWithinAsync(provider.LogAsync(LogLevel.Information, "queued", null, Formatter, Category), 10);
-
-        task.CompleteFirstLoop();
-        await BoundedTaskWait.CompleteWithinAsync(relocation, 10);
+        var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        // The pending queue is open while the provider disposes the old file, before it installs the replacement.
 #if NETFRAMEWORK
-        provider.Dispose();
+        _fileStream.Setup(x => x.Dispose()).Callback(() =>
+        {
+            disposeStarted.SetResult(true);
+            releaseDispose.Task.Wait(TestContext.CancellationToken);
+        });
 #else
-        await provider.DisposeAsync();
+        _fileStream.Setup(x => x.DisposeAsync()).Returns(() =>
+        {
+            disposeStarted.SetResult(true);
+            return new ValueTask(releaseDispose.Task);
+        });
 #endif
 
-        Assert.AreEqual("0001-01-01T00:00:00.0000000+00:00 Test INFORMATION queued" + Environment.NewLine, ReadStream());
-        _fileSystem.Verify(x => x.MoveFile("ccc", Path.Combine(NewDirectory, "ccc")), Times.Once);
+        FileLoggerProvider provider = CreateProvider(syncFlush: false);
+        try
+        {
+            var relocation = Task.Run(() => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(NewDirectory), TestContext.CancellationToken);
+            Task log = Task.CompletedTask;
+            try
+            {
+                await BoundedTaskWait.CompleteWithinAsync(disposeStarted.Task);
+                log = Task.Run(() => provider.LogAsync(LogLevel.Information, "queued", null, Formatter, Category), TestContext.CancellationToken);
+                await BoundedTaskWait.CompleteWithinAsync(log);
+            }
+            finally
+            {
+                releaseDispose.TrySetResult(true);
+                await BoundedTaskWait.CompleteWithinAsync(Task.WhenAll(relocation, log));
+            }
+        }
+        finally
+        {
+            await DisposeHelper.DisposeAsync(provider);
+        }
+
+        Assert.IsEmpty(_stream.ToArray());
+        MemoryStream replacement = Assert.ContainsSingle(_laterStreams);
+        Assert.AreEqual("0001-01-01T00:00:00.0000000+00:00 Test INFORMATION queued" + Environment.NewLine, Encoding.UTF8.GetString(replacement.ToArray()));
     }
 
     [TestMethod]
     public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync_WhenTheReplacementCannotBeCreated_StopsQueueingLogs()
     {
-        ControlledLoopTask task = new(runRealLoops: true);
-        FileLoggerProvider provider = CreateProvider(task, syncFlush: false);
-        task.CompleteFirstLoop();
+        FileLoggerProvider provider = CreateProvider(syncFlush: false);
         _fileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Throws(new IOException("cannot create"));
@@ -161,9 +183,7 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     [TestMethod]
     public async Task DisposeAsync_DisposesTheInnerFileLoggerAndCanBeCalledAgainWithoutBlocking()
     {
-        ControlledLoopTask task = new(runRealLoops: true);
-        FileLoggerProvider provider = CreateProvider(task, syncFlush: false);
-        task.CompleteFirstLoop();
+        FileLoggerProvider provider = CreateProvider(syncFlush: false);
 
 #if NETFRAMEWORK
         provider.Dispose();
@@ -179,13 +199,13 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
     }
 #endif
 
-    private FileLoggerProvider CreateProvider(ITask task, bool syncFlush, LogLevel level = LogLevel.Trace)
+    private FileLoggerProvider CreateProvider(bool syncFlush, LogLevel level = LogLevel.Trace)
         => new(
             new FileLoggerOptions("aaa", "bbb", fileName: "ccc", syncFlush: syncFlush),
             level,
             customDirectory: false,
             _clock.Object,
-            task,
+            new SystemTask(),
             _console.Object,
             _fileSystem.Object,
             _fileStreamFactory.Object);
@@ -202,36 +222,4 @@ public sealed class FileLoggerProviderRelocationTests : IDisposable
 
     private string ReadStream()
         => Encoding.UTF8.GetString(_stream.ToArray()) + string.Concat(_laterStreams.Select(s => Encoding.UTF8.GetString(s.ToArray())));
-
-    // The first consumer loop (the one of the logger created by the provider constructor) only ends when the test says so,
-    // which freezes a relocation at the point where the previous logger is being disposed. Later loops run for real.
-    private sealed class ControlledLoopTask : ITask
-    {
-        private readonly TaskCompletionSource<bool> _firstLoop = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private readonly SystemTask _inner = new();
-        private readonly bool _runRealLoops;
-        private int _runCount;
-
-        public ControlledLoopTask(bool runRealLoops = false) => _runRealLoops = runRealLoops;
-
-        public void CompleteFirstLoop() => _firstLoop.TrySetResult(true);
-
-        public Task Run(Func<Task> function, CancellationToken cancellationToken)
-            => Interlocked.Increment(ref _runCount) == 1
-                ? _firstLoop.Task
-                : _runRealLoops ? _inner.Run(function, cancellationToken) : new TaskCompletionSource<bool>().Task;
-
-        public Task Run(Action action) => _inner.Run(action);
-
-        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken) => _inner.Run(function, cancellationToken);
-
-        [UnsupportedOSPlatform("browser")]
-        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => _inner.RunLongRunning(action, name, cancellationToken);
-
-        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
-
-        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
-
-        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
-    }
 }
