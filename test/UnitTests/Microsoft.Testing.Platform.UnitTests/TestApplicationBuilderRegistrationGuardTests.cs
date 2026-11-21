@@ -27,7 +27,7 @@ public sealed class TestApplicationBuilderRegistrationGuardTests
             Mock.Of<IUnhandledExceptionsHandler>(),
             ["--list-tests"]);
         _ = builder.RegisterTestFramework(
-            _ => Mock.Of<ITestFrameworkCapabilities>(),
+            _ => new TestFrameworkCapabilities(),
             (_, _) => Mock.Of<ITestFramework>());
         using ITestApplication first = await builder.BuildAsync();
 
