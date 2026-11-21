@@ -101,6 +101,57 @@ public sealed class CommandLineTests
         }
     }
 
+    [TestMethod]
+    [DataRow("-")]
+    [DataRow("--")]
+    public void Parser_DashOnlyArgumentAfterOption_IsAnArgumentNotAnOption(string argument)
+    {
+        CommandLineParseResult result = CommandLineParser.Parse(["--option1", argument], new SystemEnvironment());
+
+        Assert.AreEqual(new CommandLineParseResult(null, [new CommandLineParseOption("option1", [argument])], []), result);
+    }
+
+    [TestMethod]
+    [DataRow("'abc", "'abc")]
+    [DataRow("abc'", "abc'")]
+    [DataRow("'abc'", "abc")]
+    [DataRow("\"abc", "\"abc")]
+    [DataRow("abc\"", "abc\"")]
+    [DataRow("\"abc\"", "abc")]
+    [DataRow("\"a\\`b\"", "a`b")]
+    public void Parser_QuotesAreOnlyStrippedWhenBothEndsAreQuoted(string argument, string expected)
+    {
+        CommandLineParseResult result = CommandLineParser.Parse(["--option1", argument], new SystemEnvironment());
+
+        Assert.AreEqual(new CommandLineParseResult(null, [new CommandLineParseOption("option1", [expected])], []), result);
+    }
+
+    [TestMethod]
+    public void Parser_MissingResponseFileAfterSensitiveOption_DoesNotLeakItsPath()
+    {
+        string missing = $"{Guid.NewGuid():N}-missing.rsp";
+
+        CommandLineParseResult result = CommandLineParser.Parse(
+            [$"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}", $"@{missing}"],
+            new SystemEnvironment());
+
+        Assert.IsTrue(result.HasError);
+        Assert.Contains("***REDACTED***", result.Errors[0]);
+        Assert.DoesNotContain(missing, result.Errors[0]);
+    }
+
+    [TestMethod]
+    public void Parser_MissingResponseFile_ReportsItsPathWithoutAtSign()
+    {
+        string missing = $"{Guid.NewGuid():N}-missing.rsp";
+
+        CommandLineParseResult result = CommandLineParser.Parse(["--option1", $"@{missing}"], new SystemEnvironment());
+
+        Assert.IsTrue(result.HasError);
+        Assert.Contains(missing, result.Errors[0]);
+        Assert.DoesNotContain($"@{missing}", result.Errors[0]);
+    }
+
     // MSTest uses the test application directory as the working directory, which can be read-only
     // (for example, in a Bazel sandbox), so response files live in a unique temporary directory.
     private static string CreateResponseFileDirectory()

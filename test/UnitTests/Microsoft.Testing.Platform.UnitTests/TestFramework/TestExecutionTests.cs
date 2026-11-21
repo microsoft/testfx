@@ -604,6 +604,115 @@ public sealed class TestExecutionTests
         Assert.IsFalse(invoked);
     }
 
+    [TestMethod]
+    public async Task Dispose_OfActiveExecution_StopsTheActivityImmediatelyAfterFirstCall()
+    {
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> messageBus = CreateMessageBus(published);
+        TestExecutionActivityBroker broker = CreateBroker(out _, out Mock<IPlatformTestExecutionActivity> activity);
+        using (broker)
+        {
+            TestExecution execution = await StartExecutionAsync(messageBus.Object, Mock.Of<IDataProducer>(), broker);
+
+            execution.Dispose();
+
+            activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Once);
+        }
+    }
+
+    [TestMethod]
+    public async Task CompleteAsync_PublishFailure_AbandonsTheActivityAtTheProvidedEndTime()
+    {
+        InvalidOperationException expectedFailure = new("result publication failed");
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> bus = CreateMessageBus(published, (_, data) =>
+            ((TestNodeUpdateMessage)data).TestNode.Properties.Any<PassedTestNodeStateProperty>()
+                ? Task.FromException(expectedFailure)
+                : Task.CompletedTask);
+        TestExecutionActivityBroker broker = CreateBroker(out _, out Mock<IPlatformTestExecutionActivity> activity);
+        using (broker)
+        {
+            TestNodeUpdateMessage start = CreateInProgressMessage();
+            using TestExecution execution = await StartExecutionAsync(bus.Object, Mock.Of<IDataProducer>(), broker, start);
+            TestNodeUpdateMessage result = CreateResultMessage(start, PassedTestNodeStateProperty.CachedInstance);
+            DateTimeOffset executionEnd = DateTimeOffset.UtcNow.AddSeconds(5);
+
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => execution.CompleteAsync([result], executionEnd));
+
+            activity.Verify(a => a.Stop(executionEnd), Times.Once);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(typeof(OutOfMemoryException))]
+    [DataRow(typeof(StackOverflowException))]
+    [DataRow(typeof(AccessViolationException))]
+    public async Task Dispose_WhenStoppingTheActivityThrowsAFatalException_Propagates(Type exceptionType)
+    {
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> messageBus = CreateMessageBus(published);
+        TestExecutionActivityBroker broker = CreateBroker(out _, out Mock<IPlatformTestExecutionActivity> activity);
+        var fatal = (Exception)Activator.CreateInstance(exceptionType)!;
+        activity.Setup(a => a.Stop(It.IsAny<DateTimeOffset>())).Throws(fatal);
+        using (broker)
+        {
+            TestExecution execution = await StartExecutionAsync(messageBus.Object, Mock.Of<IDataProducer>(), broker);
+
+            Exception thrown = Assert.Throws<Exception>(() => execution.Dispose());
+
+            Assert.AreSame(fatal, thrown);
+        }
+    }
+
+    [TestMethod]
+    public async Task StartTestExecutionAsync_WithoutInProgressState_ThrowsAndPublishesNothing()
+    {
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> messageBus = CreateMessageBus(published);
+        TestNodeUpdateMessage start = CreateResultMessage(CreateInProgressMessage(), PassedTestNodeStateProperty.CachedInstance);
+        ExecuteRequestContext context = CreateContext(messageBus.Object, broker: null, TestContext.CancellationToken);
+
+        ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
+            () => context.StartTestExecutionAsync(Mock.Of<IDataProducer>(), start));
+
+        Assert.AreEqual("inProgressMessage", exception.ParamName);
+        Assert.IsEmpty(published);
+    }
+
+    [TestMethod]
+    public async Task StartTestExecutionAsync_WhenPublishFails_AbandonsReservationSoLateActivationIsIgnored()
+    {
+        TestNodeUpdateMessage? captured = null;
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> messageBus = CreateMessageBus(
+            published,
+            (_, data) =>
+            {
+                captured = (TestNodeUpdateMessage)data;
+                return Task.FromException(new InvalidOperationException("publish failed"));
+            });
+        TestExecutionActivityBroker broker = CreateBroker(
+            out Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service,
+            out _);
+        using (broker)
+        {
+            ExecuteRequestContext context = CreateContext(messageBus.Object, broker, TestContext.CancellationToken);
+
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => context.StartTestExecutionAsync(Mock.Of<IDataProducer>(), CreateInProgressMessage()));
+
+            Assert.IsNotNull(captured);
+            captured.TestNode.Properties.Single<TestExecutionActivityProperty>().Reservation.Activate();
+            service.Verify(
+                s => s.StartTestExecutionActivity(
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<DateTimeOffset>()),
+                Times.Never);
+        }
+    }
+
     private static ExecuteRequestContext CreateContext(
         IMessageBus messageBus,
         TestExecutionActivityBroker? broker,

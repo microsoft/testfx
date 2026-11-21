@@ -68,4 +68,13 @@ public sealed class MaxFailedTestsCommandLineOptionsProviderTests
         Assert.IsFalse(result.IsValid);
         Assert.AreEqual(PlatformResources.GetResourceString("AbortForMaxFailedTestsCapabilityNotAvailable"), result.ErrorMessage);
     }
+
+    [TestMethod]
+    public void ValidateOptionArgumentsAsync_OptionNotOwnedByProvider_ThrowsUnreachable()
+    {
+        var provider = new MaxFailedTestsCommandLineOptionsProvider(new TestExtension(), new ServiceProvider());
+        var foreignOption = new CommandLineOption("not-the-max-failed-tests-option", "Foreign option.", ArgumentArity.ExactlyOne, false);
+
+        Assert.Throws<Exception>(() => _ = provider.ValidateOptionArgumentsAsync(foreignOption, ["1"]));
+    }
 }
