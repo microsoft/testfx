@@ -4,7 +4,8 @@ param(
     [string[]]$SettingsFiles,
     [string]$RepositoryRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$ProjectFile,
-    [string]$NuGetPackageRoot
+    [string]$NuGetPackageRoot,
+    [string]$SolutionFilter
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,6 +40,20 @@ if ($null -eq $SettingsFiles -or $SettingsFiles.Count -eq 0) {
     $SettingsFiles = @(Get-ChildItem -LiteralPath $objDirectory -Filter coverage.config -Recurse -File |
         Where-Object { $_.FullName -match "[\\/]$([regex]::Escape($Configuration))[\\/]" } |
         Select-Object -ExpandProperty FullName)
+}
+
+if ($SolutionFilter) {
+    $filterPath = if ([IO.Path]::IsPathRooted($SolutionFilter)) { $SolutionFilter } else { Join-Path $RepositoryRoot $SolutionFilter }
+    $filter = Get-Content -LiteralPath $filterPath -Raw | ConvertFrom-Json
+    $selectedProjects = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($project in $filter.solution.projects) {
+        $selectedProjects.Add([IO.Path]::GetFileNameWithoutExtension($project.Replace("\", "/"))) | Out-Null
+    }
+    $SettingsFiles = @($SettingsFiles | Where-Object {
+        $match = [regex]::Match($_, '[\\/]artifacts[\\/]obj[\\/](?<project>[^\\/]+)[\\/]')
+        if (-not $match.Success) { throw "Solution-filter coverage settings must use the repository artifacts layout: '$_'." }
+        $selectedProjects.Contains($match.Groups["project"].Value)
+    })
 }
 
 if ($SettingsFiles.Count -eq 0) {
