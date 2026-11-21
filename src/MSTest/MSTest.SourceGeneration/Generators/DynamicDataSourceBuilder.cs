@@ -31,6 +31,7 @@ internal static class DynamicDataSourceBuilder
 
     internal static EquatableArray<DynamicDataSourceModel> BuildDynamicDataSources(ImmutableArray<AttributeData> attributes, IMethodSymbol testMethod, IAssemblySymbol consumingAssembly)
     {
+        // Stryker disable once Block: an empty attribute list and an uninitialized builder both produce the empty source model.
         if (attributes.IsDefaultOrEmpty)
         {
             return EquatableArray<DynamicDataSourceModel>.Empty;
@@ -77,6 +78,8 @@ internal static class DynamicDataSourceBuilder
             {
                 declaringType = explicitType;
             }
+
+            // Stryker disable once Logical: only the DynamicDataSourceType overload contributes a top-level enum constructor argument; params values are nested in an array constant.
             else if (arg.Kind == TypedConstantKind.Enum
                 && arg.Type?.ToDisplayString(SymbolDisplayFormats.FullyQualified) == "global::" + MSTestAttributeNames.DynamicDataSourceType
                 && arg.Value is int sourceTypeValue)
@@ -253,6 +256,7 @@ internal static class DynamicDataSourceBuilder
     // A value is safe to read into the generated `(object?)` delegate only when it can be boxed / implicitly
     // converted to object. Pointers, function pointers, and ref-like (ref struct) values cannot, so members of
     // those shapes must stay on the reflection fallback rather than break the generated build.
+    // Stryker disable once Logical: a TypeKind cannot be both Pointer and FunctionPointer, so De Morgan's negated disjunction remains true for every non-pointer-like kind.
     private static bool IsObjectConvertible(ITypeSymbol type)
         => type.TypeKind is not (TypeKind.Pointer or TypeKind.FunctionPointer)
             && !type.IsRefLikeType;

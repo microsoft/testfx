@@ -164,10 +164,12 @@ internal static partial class MetadataRegistryEmitter
             float f when float.IsNaN(f) => "global::System.Single.NaN",
             float f when float.IsPositiveInfinity(f) => "global::System.Single.PositiveInfinity",
             float f when float.IsNegativeInfinity(f) => "global::System.Single.NegativeInfinity",
+            // Stryker disable once String: "R" is equivalent to the default on .NET Core but preserves round-trip formatting on .NET Framework.
             float f => f.ToString("R", CultureInfo.InvariantCulture) + "F",
             double d when double.IsNaN(d) => "global::System.Double.NaN",
             double d when double.IsPositiveInfinity(d) => "global::System.Double.PositiveInfinity",
             double d when double.IsNegativeInfinity(d) => "global::System.Double.NegativeInfinity",
+            // Stryker disable once String: "R" is equivalent to the default on .NET Core but preserves round-trip formatting on .NET Framework.
             double d => d.ToString("R", CultureInfo.InvariantCulture) + "D",
             decimal m => m.ToString(CultureInfo.InvariantCulture) + "m",
             long l => l.ToString(CultureInfo.InvariantCulture) + "L",
@@ -182,10 +184,8 @@ internal static partial class MetadataRegistryEmitter
         };
 
     private static string BuildArgumentsFromObjectArray(EquatableArray<TestParameterModel> parameters)
-        => parameters.Length == 0
-            ? string.Empty
-            : string.Join(", ", parameters.AsImmutableArray()
-                .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
+        => string.Join(", ", parameters.AsImmutableArray()
+            .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
 
     private static string Bool(bool value) => value ? "true" : "false";
 

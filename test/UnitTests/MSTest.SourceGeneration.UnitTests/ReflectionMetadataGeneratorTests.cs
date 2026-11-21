@@ -1005,6 +1005,103 @@ public sealed class ReflectionMetadataGeneratorTests
         generated.Should().Contain("ResolveMethod(typeof(global::Sample.Derived), \"InheritedTest\", Type.EmptyTypes)");
     }
 
+    [TestMethod]
+    [DataRow("ReflectionFree", 0)]
+    [DataRow("Rooting", 1)]
+    public void Generator_EmitsRootingMetadata_OnlyOutsideReflectionFreeMode(string mode, int expectedSourceCount)
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGeneratorWithOptions("TestSample", mode, MinimalMSTestStub, userCode);
+
+        // In ReflectionFree mode the reflection-free generator owns the output; emitting the rooting
+        // metadata as well would register the same test classes a second time.
+        result.Diagnostics.Should().BeEmpty();
+        result.GeneratedSources.Should().HaveCount(expectedSourceCount);
+    }
+
+    [TestMethod]
+    public void Generator_DiscoversOnlyMethodsDerivedFromTestMethodAttribute()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() {}
+
+                    [Obsolete]
+                    public void OnlyObsolete() {}
+
+                    [Obsolete]
+                    [TestMethod]
+                    public void ObsoleteAndTest() {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = NormalizeNewlines(result.GeneratedSources[0].SourceText.ToString());
+
+        // A method is only a test when one of its attributes is (or derives from) TestMethodAttribute:
+        // carrying an unrelated attribute, even as its first one, is not enough.
+        const string expectedTypeMethodsBlock = """
+                    var testMethods = new Dictionary<Type, MethodInfo[]>
+                    {
+                        [typeof(global::Sample.MyTests)] = new MethodInfo[]
+                        {
+                            ResolveMethod(typeof(global::Sample.MyTests), "Test1", Type.EmptyTypes),
+                            ResolveMethod(typeof(global::Sample.MyTests), "ObsoleteAndTest", Type.EmptyTypes),
+                        },
+                    };
+        """;
+
+        generated.Should().Contain(NormalizeNewlines(expectedTypeMethodsBlock));
+    }
+
+    [TestMethod]
+    public void Generator_WithoutAssemblyName_UsesFallbackNameForHintName()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGeneratorWithOptions(assemblyName: null, sourceGenMode: null, MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        result.GeneratedSources.Should().HaveCount(1);
+        result.GeneratedSources[0].HintName.Should().Be("UnknownAssembly.MSTestReflectionMetadata.g.cs");
+    }
+
     private static string NormalizeNewlines(string value)
         => value.Replace("\r\n", "\n");
 
@@ -1019,6 +1116,27 @@ public sealed class ReflectionMetadataGeneratorTests
         }
 
         return count;
+    }
+
+    private static GeneratorRunResult RunGeneratorWithOptions(string? assemblyName, string? sourceGenMode, params string[] sources)
+    {
+        var compilation = CSharpCompilation.Create(
+            assemblyName,
+            sources.Select(s => CSharpSyntaxTree.ParseText(s)),
+            [
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(System.Runtime.CompilerServices.ModuleInitializerAttribute).Assembly.Location),
+            ],
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new ReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: null,
+            optionsProvider: new SourceGenModeOptionsProvider(sourceGenMode));
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
+
+        return driver.GetRunResult().Results[0];
     }
 
     private static GeneratorRunResult RunGenerator(params string[] sources)

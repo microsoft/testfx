@@ -99,7 +99,6 @@ internal sealed record AssemblyMetadataModel(
 
 internal sealed record TestClassModel(
     string FullyQualifiedTypeName,
-    string ContainingNamespace,
     string TypeName,
     bool IsAbstract,
     bool IsStatic,

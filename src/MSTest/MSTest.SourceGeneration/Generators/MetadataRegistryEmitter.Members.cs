@@ -147,13 +147,9 @@ internal static partial class MetadataRegistryEmitter
         {
             body = $"{{ var __vt = {call}; if (__vt.IsCompletedSuccessfully) {{ __vt.GetAwaiter().GetResult(); return Task.CompletedTask; }} return __vt.AsTask(); }}";
         }
-        else if (method.ReturnsVoid)
-        {
-            body = $"{{ {call}; return Task.CompletedTask; }}";
-        }
         else
         {
-            // Non-void, non-Task return (e.g. `int Test()`). The test runner discards the value; we still
+            // Synchronous void and non-Task returns (e.g. `int Test()`) both discard the result; we still
             // execute the call for its side effects and report success.
             //
             // Note: using a plain invocation statement (instead of `_ = {call}`) discards the value while
