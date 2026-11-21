@@ -163,7 +163,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
     [DataRow("VSTest", "unmarked")]
     [DataRow("MTP", "transitive")]
     [DataRow("VSTest", "transitive")]
-    public async Task FrameworkStrongNamedDependenciesAreTraversedAsMetadata(string runner, string placement)
+    public async Task FrameworkStrongNamedDependenciesUseRuntimeResolution(string runner, string placement)
     {
         if (!OperatingSystem.IsWindows())
         {
@@ -176,12 +176,27 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
     <AssemblyOriginatorKeyFile>../fixture.snk</AssemblyOriginatorKeyFile>
 """;
         bool unmarked = placement == "unmarked";
+        string assertions = unmarked
+            ? """
+        foreach (string name in new[] { "UnmarkedDependency", "UnmarkedLeaf" })
+        {
+            Assert.IsTrue(AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == name),
+                name + " must be resolved by the runtime.");
+        }
+"""
+            : """
+        Assert.IsTrue(AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == "Intermediate"),
+            "The strong-named intermediary must be resolved by the runtime.");
+        Assembly? provider = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == "ProviderLibrary");
+        Assert.IsNotNull(provider);
+        Assert.IsTrue((bool)provider.GetType("ProviderLibrary.SharedFixtures")!.GetField("Initialized")!.GetValue(null)!);
+""";
         using TestAsset asset = await CreateAssetAsync(
             tfm,
             "none",
             unmarked ? "UnmarkedDependency" : "Intermediate",
             unmarked ? "UnmarkedDependency.Marker" : "Intermediate.Marker",
-            unmarked ? UnmarkedAssertions : ProviderAssertions,
+            assertions,
             signing: signing,
             useVSTest: runner == "VSTest");
 
@@ -195,7 +210,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
         string dependency = Path.Combine(outputDirectory, (unmarked ? "UnmarkedDependency" : "Intermediate") + ".dll");
         Assert.IsTrue(
             AssemblyName.GetAssemblyName(dependency).GetPublicKeyToken() is { Length: > 0 },
-            "The dependency must be strong-named to exercise the strong-name metadata path.");
+            "The dependency must be strong-named to exercise the runtime fallback.");
 
         await RunConsumerAsync(asset, tfm, runner, unmarked ? "test" : "provider-initialize | test | provider-cleanup");
     }

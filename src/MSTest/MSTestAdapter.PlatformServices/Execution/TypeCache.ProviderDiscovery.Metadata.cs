@@ -92,7 +92,6 @@ internal sealed partial class TypeCache
 #if NETFRAMEWORK
         private readonly Dictionary<Assembly, string?> _loadedAssemblyNames = [];
         private bool? _hasDomainBindingOverrides;
-        private HashSet<string>? _globalAssemblyCacheNames;
 #endif
 
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "The resolver caches runtime-specific metadata paths on other target frameworks.")]
@@ -115,12 +114,12 @@ internal sealed partial class TypeCache
 #elif NETFRAMEWORK
                 _ = referrer;
                 AppDomain domain = AppDomain.CurrentDomain;
-                // Fusion can select a loaded image or the GAC before probing the application base.
-                // Keep those bindings, culture probing, redirects and host overrides authoritative.
+                // Strong-named binds depend on signature verification, GAC and publisher/machine
+                // policy. Keep the runtime authoritative even when ApplyPolicy returns the same name.
                 // The identity read with the metadata rejects any other appbase image.
-                if (!string.IsNullOrEmpty(referenceName.CultureName)
+                if (referenceName.GetPublicKeyToken() is { Length: > 0 }
+                    || !string.IsNullOrEmpty(referenceName.CultureName)
                     || (_hasDomainBindingOverrides ??= HasDomainBindingOverrides(domain))
-                    || (referenceName.GetPublicKeyToken() is { Length: > 0 } && IsInGlobalAssemblyCache(referenceName.Name!))
                     || IsLoaded(domain, referenceName.Name!)
                     || !string.Equals(domain.ApplyPolicy(referenceName.FullName), referenceName.FullName, StringComparison.Ordinal))
                 {
@@ -205,57 +204,6 @@ internal sealed partial class TypeCache
             }
 
             return false;
-        }
-
-        private bool IsInGlobalAssemblyCache(string name)
-        {
-            // Fusion consults the GAC before the application base for strong-named references.
-            // Any GAC entry with this simple name (any version, culture or architecture) keeps
-            // runtime resolution authoritative; an unreadable GAC is treated as containing it.
-            _globalAssemblyCacheNames ??= ReadGlobalAssemblyCacheNames();
-            return _globalAssemblyCacheNames.Count == 0 || _globalAssemblyCacheNames.Contains(name);
-        }
-
-        private static HashSet<string> ReadGlobalAssemblyCacheNames()
-        {
-            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            string windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            if (string.IsNullOrEmpty(windows))
-            {
-                return names;
-            }
-
-            string[] roots =
-            [
-                Path.Combine(windows, "Microsoft.NET", "assembly", "GAC_MSIL"),
-                Path.Combine(windows, "Microsoft.NET", "assembly", "GAC_32"),
-                Path.Combine(windows, "Microsoft.NET", "assembly", "GAC_64"),
-                Path.Combine(windows, "assembly", "GAC"),
-                Path.Combine(windows, "assembly", "GAC_MSIL"),
-                Path.Combine(windows, "assembly", "GAC_32"),
-                Path.Combine(windows, "assembly", "GAC_64"),
-            ];
-            try
-            {
-                foreach (string root in roots)
-                {
-                    if (!Directory.Exists(root))
-                    {
-                        continue;
-                    }
-
-                    foreach (string directory in Directory.EnumerateDirectories(root))
-                    {
-                        names.Add(Path.GetFileName(directory));
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
-            {
-                names.Clear();
-            }
-
-            return names;
         }
 
         private static bool HasCodeBaseOverrides()
