@@ -142,6 +142,24 @@ public sealed class UnitTestRunnerRunSingleTestMutationTests : TestContainer
         observed.Should().Be(UnitTestOutcome.Inconclusive, "because the outcome of the class initialize context is handed to the context of the test");
     }
 
+#if DEBUG && !NETFRAMEWORK
+    public async Task RunSingleTestAsyncAssertsThatTheClassInitializeWasExecutedBeforeUsingItsCachedResult()
+    {
+        ProbeRun run = CreateProbeRun(testCount: 2, classInitialize: _ => { });
+        await RunPassingAsync(run, 0);
+        run.ClassInfo().IsClassInitializeExecuted.Should().BeTrue("because the first test ran the class initialize");
+
+        // The cached result is only trusted together with the flag that records that the class initialize ran.
+        run.ClassInfo().IsClassInitializeExecuted = false;
+        List<string?> assertions = [];
+        using var observer = new DiagnosticAssertionObserver(assertions.Add);
+
+        await RunPassingAsync(run, 1);
+
+        assertions.Should().Equal("IsClassInitializeExecuted should be true after attempting to run it.");
+    }
+#endif
+
     public async Task RunSingleTestAsyncFailsEveryTestOfTheAssemblyWhenAssemblyInitializeFailed()
     {
         int testBodyCount = 0;
@@ -342,6 +360,14 @@ public sealed class UnitTestRunnerRunSingleTestMutationTests : TestContainer
 
         public UnitTestElement Element(int index)
             => _elements[index];
+
+#if DEBUG && !NETFRAMEWORK
+        public TestClassInfo ClassInfo()
+        {
+            var typeCache = (TypeCache)typeof(UnitTestRunner).GetField("_typeCache", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(_runner)!;
+            return typeCache.ClassInfoCache.Single()!;
+        }
+#endif
 
         public Task<TestResult[]> RunAsync(int index)
             => RunAsync(_elements[index], new Dictionary<string, object?>(), new Dictionary<string, object?>());

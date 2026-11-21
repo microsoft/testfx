@@ -201,11 +201,19 @@ public sealed class UnitTestRunnerMutationTests : TestContainer
         private static readonly FieldInfo LiveOutputWriterField = typeof(TestContextImplementation).GetField("s_liveOutputWriter", BindingFlags.Static | BindingFlags.NonPublic)!;
 
         private readonly TraceListener[] _originalListeners = Trace.Listeners.Cast<TraceListener>().ToArray();
+        private readonly TextWriter _processOut = Console.Out;
+        private readonly TextWriter _processError = Console.Error;
+        private readonly StringWriter _sentinelOut = new();
+        private readonly StringWriter _sentinelError = new();
         private readonly bool _wasInstalled;
         private readonly IDisposable _liveOutputWriterScope;
 
         public OutputRoutingSandbox()
         {
+            // Plain writers stand in for the console so that output can only be routed by the runner itself: a router
+            // that an earlier test left installed on the process-wide streams would otherwise hide a missing installation.
+            Console.SetOut(_sentinelOut);
+            Console.SetError(_sentinelError);
             OriginalOut = Console.Out;
             OriginalError = Console.Error;
             _wasInstalled = IsInstalled;
@@ -237,8 +245,10 @@ public sealed class UnitTestRunnerMutationTests : TestContainer
                 Trace.Listeners.Remove(listener);
             }
 
-            Console.SetOut(OriginalOut);
-            Console.SetError(OriginalError);
+            Console.SetOut(_processOut);
+            Console.SetError(_processError);
+            _sentinelOut.Dispose();
+            _sentinelError.Dispose();
             _liveOutputWriterScope.Dispose();
             LiveOutputWriterSentinel.Dispose();
             IsInstalled = _wasInstalled;
