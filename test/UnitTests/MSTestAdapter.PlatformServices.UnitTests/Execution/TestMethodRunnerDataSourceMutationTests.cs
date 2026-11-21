@@ -348,8 +348,10 @@ public sealed class TestMethodRunnerDataSourceMutationTests : TestContainer
     private static TestResult[] Passed()
         => [new TestResult { Outcome = UnitTestOutcome.Passed }];
 
+#if !WINDOWS_UWP && !WIN_UI
     private static TestResult[] Failed()
         => [new TestResult { Outcome = UnitTestOutcome.Failed }];
+#endif
 
     private static TestResult[] PassedResults(int count)
     {
