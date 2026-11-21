@@ -133,6 +133,13 @@ message-bus test explicit event ownership, and removes implicit ownership from b
 All three affected project graphs build with CI analysis and warnings as errors (zero warnings/errors);
 19 orchestrator/message-bus cases and the retry cancellation/disposal case execute and pass with fresh TRX verification.
 
+## SDK refresh (2026-11-21)
+
+Both SDK pins advance to `12.0.100-alpha.1.26570.125` (commit `3654b1a3c5e56a83b7160a2d9282cd093322b8c8`), the newest
+public .NET 12 daily build. The AffectedTests pin, minimum supported SDK gate, and rollout switches are unchanged.
+Both rollout-validator self-test configurations pass; the affected-test collection and selection paths were not
+re-exercised end to end. See [the Bazel SDK refresh record](decisions/bazel-build.md#sdk-pin-refresh-2026-11-21).
+
 ## SDK refresh (2026-11-13)
 
 Both SDK pins advance to `12.0.100-alpha.1.26562.108` (commit `8b22ce04ad5fa175ef5cd8f96c38fcba40e173dc`), the newest
