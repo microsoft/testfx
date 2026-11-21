@@ -9,9 +9,10 @@ the tests.
 UWP and WinUI projects also get the UI-thread APIs, such as
 `[UITestMethod]`. The package selects `MSTest.WinUI.dll` when `UseWinUI` is
 `true`, and `MSTest.Uwp.dll` for UWP tooling (`UseUwpTools`, or `UseUwp`
-without an explicit `UseUwpTools=false`) or classic UAP targets. These
-assemblies are build-time references rather than `lib/<tfm>` assets because
-modern UWP and WinUI share a Windows target framework. A helper library that
+without an explicit `UseUwpTools=false`). Those assemblies are build-time
+references because modern UWP and WinUI share a Windows target framework.
+For classic UWP, NuGet selects the framework and `MSTest.Uwp.dll` directly
+from `lib/uap10.0.16299`. A helper library that
 references only this package gets the UI APIs without becoming a test
 application.
 

@@ -7,9 +7,8 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <!--
-    MSTest.Uwp.dll is not a NuGet package of its own: MSTest.TestFramework packs it as a build-time payload
-    (buildTransitive/uap10.0 for classic UWP and buildTransitive/net10.0/ui/uwp for modern UWP) that is
-    referenced only by UWP projects.
+    MSTest.TestFramework packs MSTest.Uwp.dll in lib/$(UwpMinimum) for classic UWP and
+    buildTransitive/net10.0/uwp for modern UWP.
   -->
   <PropertyGroup>
     <TargetFrameworks>$(ModernUwpMinimum)</TargetFrameworks>

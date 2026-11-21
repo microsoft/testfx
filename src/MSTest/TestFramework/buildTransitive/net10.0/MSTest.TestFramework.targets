@@ -18,9 +18,9 @@
                       AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetPlatformIdentifier)' == 'Windows' ">
     <PropertyGroup>
       <_MSTestUIFrameworkAssembly />
-      <_MSTestUIFrameworkAssembly Condition=" '$(UseWinUI)' == 'true' ">$(MSBuildThisFileDirectory)ui\winui\MSTest.WinUI.dll</_MSTestUIFrameworkAssembly>
+      <_MSTestUIFrameworkAssembly Condition=" '$(UseWinUI)' == 'true' ">$(MSBuildThisFileDirectory)winui\MSTest.WinUI.dll</_MSTestUIFrameworkAssembly>
       <_MSTestUIFrameworkAssembly Condition=" '$(UseWinUI)' != 'true'
-                                              AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '')) ">$(MSBuildThisFileDirectory)ui\uwp\MSTest.Uwp.dll</_MSTestUIFrameworkAssembly>
+                                              AND ('$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '')) ">$(MSBuildThisFileDirectory)uwp\MSTest.Uwp.dll</_MSTestUIFrameworkAssembly>
     </PropertyGroup>
 
     <!-- A hint-path reference also copies the related .pri and .xml files and the culture satellites next to the assembly. -->

@@ -970,7 +970,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         [
             $"/mstest.testframework/{mstestVersion}/lib/net10.0/MSTest.TestFramework.dll",
             $"/mstest.testframework/{mstestVersion}/lib/net10.0/MSTest.TestFramework.Extensions.dll",
-            $"/mstest.testframework/{mstestVersion}/buildTransitive/net10.0/ui/winui/MSTest.WinUI.dll",
+            $"/mstest.testframework/{mstestVersion}/buildTransitive/net10.0/winui/MSTest.WinUI.dll",
             $"/mstest.testadapter/{mstestVersion}/buildTransitive/net10.0/ui/MSTest.TestAdapter.dll",
             $"/mstest.testadapter/{mstestVersion}/buildTransitive/net10.0/ui/MSTestAdapter.PlatformServices.dll",
             "/lib/net10.0-windows10.0.19041/Microsoft.Testing.Extensions.PackagedApp.dll",
@@ -978,7 +978,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string[] rejected =
         [
             $"/mstest.testadapter/{mstestVersion}/lib/",
-            "/ui/uwp/",
+            "/buildTransitive/net10.0/uwp/",
             "/mstest.winui/",
             "/mstest.uwp/",
             "/lib/net10.0/Microsoft.Testing.Extensions.PackagedApp.dll",

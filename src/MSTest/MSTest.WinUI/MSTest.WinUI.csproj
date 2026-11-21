@@ -2,7 +2,7 @@
 
   <!--
     MSTest.WinUI.dll is not a NuGet package of its own: MSTest.TestFramework packs it as a build-time
-    payload (buildTransitive/net10.0/ui/winui) that is referenced only by WinUI projects.
+    payload (buildTransitive/net10.0/winui) that is referenced only by WinUI projects.
   -->
   <PropertyGroup>
     <TargetFrameworks>$(WinUiMinimum)</TargetFrameworks>

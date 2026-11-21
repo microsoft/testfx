@@ -127,7 +127,7 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         ];
         if (uiAssembly.Length != 0)
         {
-            assemblies.Add(("MSTest.TestFramework", uiAssembly, $"buildTransitive/net10.0/ui/{uiPayload}"));
+            assemblies.Add(("MSTest.TestFramework", uiAssembly, $"buildTransitive/net10.0/{uiPayload}"));
             assemblies.Add(("MSTest.TestAdapter", "MSTest.TestAdapter", "buildTransitive/net10.0/ui"));
             assemblies.Add(("MSTest.TestAdapter", "MSTestAdapter.PlatformServices", "buildTransitive/net10.0/ui"));
         }

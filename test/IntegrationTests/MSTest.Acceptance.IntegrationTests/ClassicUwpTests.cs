@@ -188,6 +188,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             "MSTestAdapter.PlatformServices.dll",
             "MSTest.TestFramework.dll",
             "MSTest.TestFramework.Extensions.dll",
+            "MSTest.Uwp.dll",
             "Microsoft.ApplicationInsights.dll",
             "Microsoft.Testing.Extensions.MSBuild.dll",
             "Microsoft.Testing.Extensions.Retry.dll",
@@ -307,10 +308,10 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\netstandard2.0\MSTest.TestFramework.dll"
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0.16299\MSTest.TestFramework.dll"
              Link="MSTest.TestFramework.dll"
              CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\buildTransitive\uap10.0\MSTest.Uwp.dll"
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0.16299\MSTest.Uwp.dll"
              Link="MSTest.Uwp.dll"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

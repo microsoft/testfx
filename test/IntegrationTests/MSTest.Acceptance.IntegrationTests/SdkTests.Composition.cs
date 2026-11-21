@@ -468,12 +468,12 @@ public sealed partial class SdkTests
         };
         string? uwpDirectory = uiAssetKind switch
         {
-            WindowsApplicationModelAssetKind.ClassicUwp => $"/mstest.testframework/{version}/buildtransitive/uap10.0/",
-            WindowsApplicationModelAssetKind.ModernUwp => $"/mstest.testframework/{version}/buildtransitive/net10.0/ui/uwp/",
+            WindowsApplicationModelAssetKind.ClassicUwp => $"/mstest.testframework/{version}/lib/uap10.0.16299/",
+            WindowsApplicationModelAssetKind.ModernUwp => $"/mstest.testframework/{version}/buildtransitive/net10.0/uwp/",
             _ => null,
         };
         string? winUIDirectory = uiAssetKind == WindowsApplicationModelAssetKind.WinUI
-            ? $"/mstest.testframework/{version}/buildtransitive/net10.0/ui/winui/"
+            ? $"/mstest.testframework/{version}/buildtransitive/net10.0/winui/"
             : null;
         (string Assembly, string? ExpectedDirectory)[] expectedAssemblies =
         [

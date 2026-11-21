@@ -1326,10 +1326,23 @@ Assumptions, not confirmed by the maintainer:
 
 | Package | Ordinary assets | UI payload (not in `lib`) | Selected by |
 | --- | --- | --- | --- |
-| `MSTest.TestFramework` | `lib/{net462,netstandard2.0,net10.0,net11.0}` | `buildTransitive/net10.0/ui/{uwp,winui}/` (`MSTest.Uwp.dll`, `MSTest.WinUI.dll` with xml, pri and WinUI satellites); `buildTransitive/uap10.0/MSTest.Uwp.{dll,pri,xml}` | `_MSTestAddUIFrameworkReference` runs before `_HandlePackageFileConflicts` and `ResolveAssemblyReferences` and adds a hidden hint-path `<Reference>`, which also copies the related pri, xml and satellites; classic UWP references the `uap10.0` payload directly |
+| `MSTest.TestFramework` | `lib/{net462,netstandard2.0,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/{uwp,winui}/` (`MSTest.Uwp.dll`, `MSTest.WinUI.dll` with xml, pri and WinUI satellites) | Modern UI projects get a hint-path reference from `_MSTestAddUIFrameworkReference`. For classic UWP, NuGet selects `lib/uap10.0.16299` directly. |
 | `MSTest.TestAdapter` | `lib/{net462,net10.0,net11.0}` | `buildTransitive/net10.0/ui/` (UI adapter and platform services); `buildTransitive/uap10.0/` (classic UWP adapter, platform services and `_localization` satellites) | `_MSTestComputeUIAdapterSelection` decides; `_MSTestSelectUIAdapterAssets` then swaps the resolved `lib/net10.0` adapter DLLs for the `ui/` build in place after `ResolvePackageAssets` (and the publish equivalent); classic UWP references the `uap10.0` payload directly |
 
-Why not `lib`: `MSTest.Uwp` and `MSTest.WinUI` both define
+Classic UWP has a distinct TFM. Its `lib` group includes `MSTest.Uwp` alongside
+the same core framework, type forwarders and satellites as `lib/netstandard2.0`:
+NuGet selects one group rather than merging both. The minimum matches the
+extension's build (`uap10.0.16299`); there is no classic framework reference target.
+
+On Windows, `PackedMSTestTestFramework_ShipsUIFrameworksWithoutAdapter` failed
+on the previous Debug pack (six required UAP entries missing) and passed after
+`build.cmd -pack -bl`. All 17 files shared by the UAP and .NET Standard
+groups were byte-identical. The SDK composition case resolved the UAP assemblies,
+and `ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp` launched
+all three classic AppX consumers (SDK, metapackage, and explicit packages).
+Each reported its plain test, UI-dispatcher test and four localization cases as passed.
+
+Why not `lib` for modern UI: `MSTest.Uwp` and `MSTest.WinUI` both define
 `UITestMethodAttribute` (CS0433 if both are referenced), and modern UWP and
 WinUI share `net10.0-windows10.0.xxxxx` TFMs, so NuGet cannot pick one by
 application model. The framework UI DLLs depend only on `MSTest.TestFramework`,
