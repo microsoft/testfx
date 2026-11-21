@@ -64,6 +64,30 @@ public sealed class TestMethodRunnerDataRowMutationTests : TestContainer
         results.Select(r => r.Duration).Distinct().Should().ContainSingle().Which.Should().BeGreaterThan(TimeSpan.Zero);
     }
 
+    public async Task ExecuteTestWithDataRow_PublishesTheRowToTheContextOnlyWhileTheRowRuns()
+    {
+        // Only .NET Framework exposes the row through TestContext.DataRow, so the publication is verified on the context itself.
+        // The method is private and its context is always a TestContextImplementation when reached through RunTestMethodAsync.
+        object row = new();
+        var events = new List<string>();
+        var context = new Mock<ITestContext>();
+        context.Setup(c => c.SetDataRow(It.IsAny<object?>()))
+            .Callback<object?>(published => events.Add(published is null ? "clear row" : "set row"));
+        TestMethodRunner runner = CreateLegacyRunner(_ =>
+        {
+            events.Add("run method");
+
+            return Passed();
+        });
+        MethodInfo executeTestWithDataRow = typeof(TestMethodRunner).GetMethod("ExecuteTestWithDataRowAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        TestResult[] results = await (Task<TestResult[]>)executeTestWithDataRow.Invoke(runner, [context.Object, row, 3])!;
+
+        events.Should().Equal("set row", "run method", "clear row");
+        context.Verify(c => c.SetDataRow(row), Times.Once());
+        results.Should().ContainSingle().Which.DisplayName.Should().Be("NoArgs (Data Row 3)");
+    }
+
 #if !WINDOWS_UWP && !WIN_UI
     public async Task LegacyDataSource_AttachesTheDiagnosticsCapturedByARowWithoutResultToTheResultOfTheRun()
     {
