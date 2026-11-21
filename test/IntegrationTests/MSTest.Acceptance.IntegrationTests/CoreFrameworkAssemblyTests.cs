@@ -190,6 +190,72 @@ public sealed class CoreFrameworkAssemblyTests : AcceptanceTestBase<NopAssetFixt
         TestContext.WriteLine(muxer.StandardOutput);
     }
 
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [DataRow("MSTest.WinUI", "compile", false, false, DisplayName = "DirectWinUiRuntimeOnly")]
+    [DataRow("MSTest.Uwp", "runtime", false, false, DisplayName = "DirectUwpCompileOnly")]
+    [DataRow("MSTest.Uwp", "compile", true, false, DisplayName = "TransitiveUwpRuntimeOnly")]
+    [DataRow("MSTest.WinUI", "runtime", true, false, DisplayName = "TransitiveWinUiCompileOnly")]
+    [DataRow("MSTest.WinUI", "compile", false, true, DisplayName = "StoreLayoutWinUiRuntimeOnly")]
+    public async Task PackedUiFrameworkHonorsAssetExclusions(string assembly, string exclude, bool transitive, bool preserveStoreLayout)
+    {
+        const string tfm = "net10.0-windows10.0.26100.0";
+        string packageReference = $"""<PackageReference Include="MSTest.TestFramework" Version="{MSTestVersion}" {(transitive ? "PrivateAssets" : "ExcludeAssets")}="{exclude}" />""";
+        string source = $"""
+            #file app/App.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>{tfm}</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <PreserveStoreLayout>{preserveStoreLayout}</PreserveStoreLayout>
+                <UseWinUI>{assembly == "MSTest.WinUI"}</UseWinUI>
+                <UseUwpTools>{assembly == "MSTest.Uwp"}</UseUwpTools>
+              </PropertyGroup>
+              <ItemGroup>
+                {(transitive ? """<ProjectReference Include="..\helper\Helper.csproj" />""" : packageReference)}
+              </ItemGroup>
+              <Target Name="ReportUiCompileReference" AfterTargets="ResolveReferences">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\compile.txt" Overwrite="true"
+                                  Lines="@(ReferencePath->WithMetadataValue('Filename', '{assembly}')->'%(Filename)')" />
+              </Target>
+            </Project>
+            #file app/Program.cs
+            System.Console.WriteLine("UI asset policy probe");
+            #file helper/Helper.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>{tfm}</TargetFramework></PropertyGroup>
+              <ItemGroup>{packageReference}</ItemGroup>
+            </Project>
+            """;
+        using TestAsset asset = await TestAsset.GenerateAssetAsync("UiFrameworkAssetPolicy", source);
+        string app = Path.Join(asset.TargetAssetPath, "app");
+        DotnetMuxerResult publish = await DotnetCli.RunAsync(
+            "publish App.csproj -c Release -bl:publish.binlog",
+            workingDirectory: app,
+            cancellationToken: TestContext.CancellationToken);
+        publish.AssertExitCodeIs(0);
+
+        Assert.AreSequenceEqual<string>(exclude == "compile" ? [] : [assembly], File.ReadAllLines(Path.Join(app, "compile.txt")));
+        string build = Path.Join(app, "bin", "Release", tfm);
+        string published = Path.Join(build, "publish");
+        if (preserveStoreLayout)
+        {
+            Assert.IsFalse(File.Exists(Path.Join(published, assembly + ".dll")));
+            published = Path.Join(published, "mstest.testframework", MSTestVersion, "buildTransitive", "net10.0", "winui");
+        }
+
+        foreach (string output in new[] { build, published })
+        {
+            bool runtime = exclude != "runtime";
+            Assert.AreEqual(runtime, File.Exists(Path.Join(output, assembly + ".dll")), output);
+            if (assembly == "MSTest.WinUI")
+            {
+                Assert.AreEqual(runtime, File.Exists(Path.Join(output, assembly + ".pri")), output);
+                Assert.AreEqual(runtime, File.Exists(Path.Join(output, "fr", assembly + ".resources.dll")), output);
+            }
+        }
+    }
+
     public TestContext TestContext { get; set; }
 
     private const string ConsumerSource = """

@@ -1326,7 +1326,7 @@ Assumptions, not confirmed by the maintainer:
 
 | Package | Ordinary assets | UI payload (not in `lib`) | Selected by |
 | --- | --- | --- | --- |
-| `MSTest.TestFramework` | `lib/{net462,netstandard2.0,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/{uwp,winui}/` (`MSTest.Uwp.dll`, `MSTest.WinUI.dll` with xml, pri and WinUI satellites) | Modern UI projects get a hint-path reference from `_MSTestAddUIFrameworkReference`. For classic UWP, NuGet selects `lib/uap10.0.16299` directly. |
+| `MSTest.TestFramework` | `lib/{net462,netstandard2.0,net10.0,net11.0,uap10.0.16299}` | `buildTransitive/net10.0/{uwp,winui}/` (`MSTest.Uwp.dll`, `MSTest.WinUI.dll` with xml, pri and WinUI satellites) | Modern UI projects get compile and runtime assets according to the resolved core framework assets. For classic UWP, NuGet selects `lib/uap10.0.16299` directly. |
 | `MSTest.TestAdapter` | `lib/{net462,net10.0,net11.0}` | `buildTransitive/net10.0/ui/` (UI adapter and platform services); `buildTransitive/uap10.0/` (classic UWP adapter, platform services and `_localization` satellites) | `_MSTestComputeUIAdapterSelection` decides; `_MSTestSelectUIAdapterAssets` then swaps the resolved `lib/net10.0` adapter DLLs for the `ui/` build in place after `ResolvePackageAssets` (and the publish equivalent); classic UWP references the `uap10.0` payload directly |
 
 Classic UWP has a distinct TFM. Its `lib` group includes `MSTest.Uwp` alongside
@@ -1398,6 +1398,16 @@ Reconsider if NuGet gains asset selection by MSBuild property, or if a consumer
 needs a UI payload outside an SDK-style or classic UWP project.
 
 ### Validation
+
+`PackedUiFrameworkHonorsAssetExclusions` publishes framework-only WinUI and modern UWP consumers.
+With the unconditional hint-path reference (`8fc37d971`), all four direct and transitive
+exclusion cases failed: compilation still saw the runtime-only UI DLL, or the compile-only
+DLL appeared in the output. `_MSTestSelectUIFrameworkAssets` follows the core framework's
+resolved compile and runtime items separately, including exclusions inherited via a project reference.
+After `.\build.cmd -pack -bl` (exit 0), the Debug `net12.0` MSTest acceptance host ran
+`--filter 'FullyQualifiedName~CoreFrameworkAssemblyTests' --report-trx`: 19 executed and
+passed, including the four exclusion cases and `StoreLayoutWinUiRuntimeOnly`, which checks
+the published DLL, PRI and culture satellite under the preserved package layout.
 
 All runs are local on Windows with the repository SDK. They use the Debug
 `5.0.0-dev` packs in `artifacts/packages/Debug/Shipping` and the acceptance host
