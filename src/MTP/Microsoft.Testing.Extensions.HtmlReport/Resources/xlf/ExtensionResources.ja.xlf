@@ -4,52 +4,52 @@
     <body>
       <trans-unit id="HtmlArtifactPostProcessorDescription">
         <source>Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</source>
-        <target state="new">Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</target>
+        <target state="translated">Microsoft.Testing.Extensions.HtmlReport によって生成された HTML レポートをマージします</target>
         <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
       </trans-unit>
       <trans-unit id="HtmlArtifactPostProcessorDisplayName">
         <source>HTML report merger</source>
-        <target state="new">HTML report merger</target>
+        <target state="translated">HTML レポート マージャー</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedArtifactDescription">
         <source>{0} HTML report files merged</source>
-        <target state="new">{0} HTML report files merged</target>
+        <target state="translated">{0} 個の HTML レポート ファイルがマージされました</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedArtifactDisplayName">
         <source>HTML report (merged)</source>
-        <target state="new">HTML report (merged)</target>
+        <target state="translated">HTML レポート (マージ済み)</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedReportName">
         <source>Merged HTML report</source>
-        <target state="new">Merged HTML report</target>
+        <target state="translated">マージされた HTML レポート</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="new">Self-contained HTML test report</target>
+        <target state="translated">自己完結型の HTML テスト レポート</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="new">HTML Report</target>
+        <target state="translated">HTML レポート</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: HTML report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">警告: HTML レポート ファイル '{0}' は既に存在するため、上書きされます。</target>
         <note>{0} is the {Locked="HTML"} report file path.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' のファイル名引数の末尾は '.html' にする必要があります (例: --report-html-filename myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' のファイル名部分は空にできません (例: --report-html-filename myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
@@ -63,47 +63,47 @@ Example: 'MyReport_{tfm}.html'.</target>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="new">'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</target>
+        <target state="translated">'--report-html-filename' の相対パスは、テスト結果ディレクトリ内にある必要があります (例: --report-html-filename nested/myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example path {Locked="nested/myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="new">'--report-html-filename' requires '--report-html' to be enabled</target>
+        <target state="translated">'--report-html-filename' を使用するには、'--report-html' を有効にする必要があります</target>
         <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session.</source>
-        <target state="new">Produce a self-contained HTML report for the current test session.</target>
+        <target state="translated">現在のテスト セッションの自己完結型 HTML レポートを生成します。</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="new">HTML report generator</target>
+        <target state="translated">HTML レポート生成プログラム</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportInputIsNotValid">
         <source>The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</source>
-        <target state="new">The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</target>
+        <target state="translated">入力が、Microsoft.Testing.Extensions.HtmlReport によって生成された有効な HTML レポートではありません。</target>
         <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-html' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">'--list-tests' を使用している場合、'--report-html' を有効にすることはできません</target>
         <note>Do not localize option names {Locked="--report-html"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report.</source>
-        <target state="new">Enable generating an HTML report.</target>
+        <target state="translated">HTML レポートの生成を有効にします。</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">
         <source>At least one HTML report is required to merge.</source>
-        <target state="new">At least one HTML report is required to merge.</target>
+        <target state="translated">マージするには、少なくとも 1 つの HTML レポートが必要です。</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">HTML レポート生成プログラムは、'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 型のビルダーでのみ機能します</target>
         <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>
