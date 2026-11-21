@@ -54,32 +54,32 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">警告： Trx 檔案 '{0}' 已經存在，而且將會被覆寫。</target>
+        <target state="new">Warning: Trx file '{0}' already exists and will be overwritten.</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultConflictingTestDefinitionName">
         <source>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</target>
+        <target state="translated">測試節點 '{0}' ('{1}') 由 {2} 回報，其測試定義名稱為 '{3}'；但由 {4} 回報的相同測試節點，其先前結果的測試定義名稱為 '{5}'。測試節點的所有結果都必須使用相同的 TrxTestDefinitionName。</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultDuplicateProperties">
         <source>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</target>
+        <target state="translated">測試節點 '{0}' ('{1}') 由 {2} 回報，其中包含多個相同類型的屬性，但單一 TestNodeUpdateMessage 中每種類型只允許一個屬性: {3}。</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsDetailsHeader">
         <source>Details for the authors of the reporting component:</source>
-        <target state="new">Details for the authors of the reporting component:</target>
+        <target state="translated">報告元件作者的詳細資料：</target>
         <note>Header of the technical details listed after this line.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsErrorMessage">
         <source>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</source>
-        <target state="new">The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</target>
+        <target state="translated">TRX 報告不完整: {0} 個測試結果遭到省略，且測試執行被標記為失敗，因為這些結果包含無法在 TRX 報告中表示的資料。問題出在回報這些結果的元件，而不是您的測試。請將該元件更新至較新版本，或向其作者回報此問題: {1}。</target>
         <note>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsMoreDetails">
         <source>... and {0} more omitted test result(s).</source>
-        <target state="new">... and {0} more omitted test result(s).</target>
+        <target state="translated">... 以及另外 {0} 個省略的測試結果。</target>
         <note>{0} is the number of omitted test results whose details are not listed.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">

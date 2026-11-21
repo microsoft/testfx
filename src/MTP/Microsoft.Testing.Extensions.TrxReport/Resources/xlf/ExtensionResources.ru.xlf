@@ -59,27 +59,27 @@
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultConflictingTestDefinitionName">
         <source>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</target>
+        <target state="translated">У тестового узла '{0}' ('{1}'), о котором сообщил {2}, имя определения теста '{3}', но предыдущий результат для того же тестового узла, о котором сообщил {4}, имеет имя определения теста '{5}'. Все результаты тестового узла должны использовать один и тот же TrxTestDefinitionName.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultDuplicateProperties">
         <source>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</target>
+        <target state="translated">Тестовый узел '{0}' ('{1}'), о котором сообщил {2}, содержит несколько свойств одного типа в одном TestNodeUpdateMessage, но допускается только одно свойство каждого из этих типов: {3}.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsDetailsHeader">
         <source>Details for the authors of the reporting component:</source>
-        <target state="new">Details for the authors of the reporting component:</target>
+        <target state="translated">Сведения об авторах компонента, о котором отправляется отчет:</target>
         <note>Header of the technical details listed after this line.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsErrorMessage">
         <source>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</source>
-        <target state="new">The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</target>
+        <target state="translated">Отчет TRX неполный: несколько ({0}) результатов тестов пропущено, а запуск тестов помечен как завершившийся сбоем, так как они сообщили о данных, которые невозможно представить в отчете TRX. Это проблема с компонентом, сообщившим эти результаты, а не с вашими тестами. Обновите этот компонент до более новой версии или отправьте отчет об этой проблеме его авторам: {1}.</target>
         <note>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsMoreDetails">
         <source>... and {0} more omitted test result(s).</source>
-        <target state="new">... and {0} more omitted test result(s).</target>
+        <target state="translated">... И еще несколько ({0}) пропущенных результатов тестов.</target>
         <note>{0} is the number of omitted test results whose details are not listed.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
@@ -171,8 +171,8 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: 'MyReport_{tfm}.trx'.</source>
-        <target state="translated">Имя созданного отчета TRX. Может включать относительный или абсолютный путь; относительные пути разрешаются относительно каталога результатов тестов, а отсутствующие каталоги создаются.
-Поддерживает следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя входной сборки), {tfm} (моникер целевой платформы), {arch} (архитектура процесса), {time} (метка времени).
+        <target state="translated">Имя созданного отчета TRX. Может включать относительный или абсолютный путь; Относительные пути разрешаются относительно каталога результатов теста, и создаются отсутствующие каталоги.
+Поддерживаются следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя сборки записи), {tfm} (моникер целевой платформы), {arch} (архитектура процесса) {time} (метка времени).
 Пример: "MyReport_{tfm}.trx".</target>
         <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>

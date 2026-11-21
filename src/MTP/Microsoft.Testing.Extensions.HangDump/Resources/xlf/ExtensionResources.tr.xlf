@@ -143,15 +143,15 @@ Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
 Valid values are {0}.
 Default type is 'Full'.</source>
         <target state="translated">Dökümün türünü belirtin.
-Geçerli değerler: {0}.
-Varsayılan tür: 'Full'.</target>
+Geçerli değerler {0}.
+Varsayılan tür 'Full'.</target>
         <note>{0} is the list of valid dump type values. Do not localize default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
         <target state="translated">'{0}' geçerli bir döküm türü değil.
-Geçerli seçenekler: {1}</target>
+Geçerli seçenekler {1}</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

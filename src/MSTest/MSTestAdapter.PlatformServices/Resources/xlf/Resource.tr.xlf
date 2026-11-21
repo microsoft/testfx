@@ -51,9 +51,9 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="translated">'{0}.{1}' test yöntemi çalıştırılamıyor: Test verileri yöntem parametreleriyle eşleşmiyor. Ya sayıları ya da türleri birbirinden farklı.
-Test '{3}' türünde {2} parametre bekledi,
-ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
+        <target state="translated">'{0}.{1}' test yöntemi çalıştırılamıyor: Test verileri yöntem parametreleriyle eşleşmiyor. Sayı veya türler farklı.
+Test beklenen {2} parametreleri ('{3}' türleri ile,
+ancak '{5}' türünde {4} bağımsız değişken alındı.</target>
         <note>{0} is the declaring type full name. {1} is the method name. {2} is the expected parameter count. {3} is the expected parameter type list. {4} is the received argument count. {5} is the received argument type list.</note>
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
@@ -198,7 +198,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="DeploymentItemNotSupportedForUi">
         <source>DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</source>
-        <target state="new">DeploymentItemAttribute is not supported by UWP or WinUI test hosts. Remove the attribute and include required files in the application package.</target>
+        <target state="translated">DeploymentItemAttribute, UWP veya WinUI test ana bilgisayarları tarafından desteklenmiyor. Özniteliği kaldırın ve gerekli dosyaları uygulama paketine ekleyin.</target>
         <note>Do not localize the API name {Locked="DeploymentItemAttribute"} or the application-model names {Locked="UWP"}{Locked="WinUI"}.</note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
@@ -224,7 +224,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="translated">'{0}' kaynağı için keşif başarısız oldu, {1} hata oluştu:
+        <target state="translated">Kaynak '{0}' için bulma {1} hatayla başarısız oldu:
 {2}</target>
         <note>{0} is the source path. {1} is the error count. {2} is the error details.</note>
       </trans-unit>

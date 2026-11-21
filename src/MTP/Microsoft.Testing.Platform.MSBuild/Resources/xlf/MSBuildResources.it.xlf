@@ -44,11 +44,11 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="translated">Non è stato possibile trovare l'host '{0}' per l'architettura '{1}'.
+        <target state="translated">Impossibile trovare '{0}' host per l'architettura '{1}'.
 
-È possibile risolvere il problema installando '{1}' .NET.
+Per risolvere il problema, installare il '{1}' .NET.
 
-Il framework specificato è disponibile all'indirizzo:
+Il framework specificato è disponibile in:
   - https://aka.ms/dotnet-download</target>
         <note>0 is the host name. 1 is the architecture. Do not localize {Locked=".NET"} or {Locked="https://aka.ms/dotnet-download"}.</note>
       </trans-unit>

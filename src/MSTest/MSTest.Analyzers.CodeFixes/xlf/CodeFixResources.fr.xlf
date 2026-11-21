@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
-        <target state="translated">Ajouter '[TestClass]'</target>
+        <target state="translated">Ajouter « [TestClass] »</target>
         <note>{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="AddTestMethodAttributeFix">
@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
-        <target state="translated">Déplacer l’accès conditionnel dans l’assertion pour séparer les case activée 'Assert.IsNotNull'</target>
+        <target state="translated">Déplacer l’accès conditionnel de l’assertion vers une vérification « Assert.IsNotNull » distincte</target>
         <note>{Locked="Assert.IsNotNull"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">

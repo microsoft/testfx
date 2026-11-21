@@ -67,7 +67,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="translated">{0}{1}
+        <target state="new">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -594,7 +594,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">URL de tíquete do GitHub inválida</target>
+        <target state="new">Invalid GitHub ticket URL</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
@@ -748,10 +748,10 @@ Real: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      O membro especificado ({0}) não pôde ser encontrado. Talvez você precise gerar novamente seu acessador particular
-      ou o membro pode ser particular e definido em uma classe base. Se o último caso for true, você deverá passar o tipo
-      que define o membro no construtor do PrivateObject.
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -761,10 +761,10 @@ Real: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      O construtor com a assinatura especificada não pôde ser encontrado. Talvez você precise gerar novamente seu acessador particular
-      ou o membro pode ser particular e definido em uma classe base. Se o último caso for true, você deverá passar o tipo
-      que define o membro no construtor do PrivateObject.
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>

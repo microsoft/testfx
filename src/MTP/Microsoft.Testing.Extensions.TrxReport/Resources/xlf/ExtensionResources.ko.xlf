@@ -54,32 +54,32 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">경고: Trx 파일 '{0}' 이미 있으므로 덮어씁니다.</target>
+        <target state="new">Warning: Trx file '{0}' already exists and will be overwritten.</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultConflictingTestDefinitionName">
         <source>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</target>
+        <target state="translated">{2}에서 보고한 테스트 노드 '{0}'('{1}')에는 테스트 정의 이름이 '{3}' 있지만 {4}에서 보고한 동일한 테스트 노드의 이전 결과에는 테스트 정의 이름이 '{5}' 있습니다. 테스트 노드의 모든 결과는 동일한 TrxTestDefinitionName 사용해야 합니다.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultDuplicateProperties">
         <source>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</target>
+        <target state="translated">{2}에서 보고한 '{1}'(테스트 노드 노드 '{0}')에 단일 TestNodeUpdateMessage에 동일한 유형의 여러 속성이 포함되어 있지만 이러한 각 유형의 속성은 {3} 하나만 허용됩니다.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsDetailsHeader">
         <source>Details for the authors of the reporting component:</source>
-        <target state="new">Details for the authors of the reporting component:</target>
+        <target state="translated">보고 구성 요소 작성자 세부 정보:</target>
         <note>Header of the technical details listed after this line.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsErrorMessage">
         <source>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</source>
-        <target state="new">The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</target>
+        <target state="translated">TRX 보고서가 불완전합니다. 테스트 결과 {0}개가 생략되었으며, TRX 보고서에 표현할 수 없는 데이터가 포함되어 테스트 실행이 실패한 것으로 표시되었습니다. 이는 사용자의 테스트가 아니라 이러한 결과를 보고한 구성 요소의 문제입니다. 해당 구성 요소({1})를 최신 버전으로 업데이트하거나 이 문제를 해당 구성 요소의 작성자에게 보고하세요.</target>
         <note>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsMoreDetails">
         <source>... and {0} more omitted test result(s).</source>
-        <target state="new">... and {0} more omitted test result(s).</target>
+        <target state="translated">... 및 생략된 테스트 결과가 {0}개 더 있습니다.</target>
         <note>{0} is the number of omitted test results whose details are not listed.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
@@ -171,9 +171,9 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: 'MyReport_{tfm}.trx'.</source>
-        <target state="translated">생성된 TRX 보고서의 이름입니다. 상대 경로 또는 절대 경로를 사용할 수 있습니다. 상대 경로는 테스트 결과 디렉터리를 기준으로 확인되며, 없는 디렉터리는 만들어집니다.
-자리 표시자 {pname}(테스트 애플리케이션 이름), {pid}(프로세스 ID), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {arch}(프로세스 아키텍처), {time}(타임스탬프)을(를) 지원합니다.
-예: 'MyReport_{tfm}.trx'.</target>
+        <target state="new">The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
+Example: 'MyReport_{tfm}.trx'.</target>
         <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">

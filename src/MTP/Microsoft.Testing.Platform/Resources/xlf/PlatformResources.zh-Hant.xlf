@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="translated">目前的測試架構未實作 '--maximum-failed-tests' 功能所需的 'IGracefulStopTestExecutionCapability'。</target>
+        <target state="translated">目前的測試架構未實作 'IGracefulStopTestExecutionCapability'，而 '--maximum-failed-tests' 功能需要此功能。</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">用來支援 『--maximum-failed-tests』 的延伸模組。達到指定的失敗閾值時，測試回合將會中止。</target>
+        <target state="translated">用於支援 '--maximum-failed-tests' 的擴充功能。達到指定的失敗閾值時，系統會中止測試執行。</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -559,7 +559,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="translated">取消要求標識碼 '{0}' 期間發生例外狀況</target>
+        <target state="translated">取消要求識別碼 '{0}' 時發生例外狀況</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -590,7 +590,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="translated">無法將記錄寫入通道。遺失的記錄內容:
+        <target state="translated">無法將記錄寫入通道。遺失的記錄內容：
 {0}</target>
         <note>{0} is the log content that could not be written.</note>
       </trans-unit>
@@ -611,7 +611,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="translated">已完成測試會話。</target>
+        <target state="translated">測試工作階段已完成。</target>
         <note />
       </trans-unit>
       <trans-unit id="FromFile">
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">正在執行 {0} 測試</target>
+        <target state="translated">正在執行 {0} 個測試</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
@@ -1019,7 +1019,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">指定超過此數目時，測試失敗次數上限會中止測試回合。</target>
+        <target state="translated">指定測試失敗次數上限；超過此上限時，系統會中止測試執行。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1139,7 +1139,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">測試會話正在中止，因為達到失敗 ('{0}') 『--maximum-failed-tests』 選項指定。</target>
+        <target state="translated">測試工作階段即將中止，因為失敗次數已達 '--maximum-failed-tests' 選項所指定的數目 ('{0}')。</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,7 +1174,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">執行伺服器模式時使用的 『ITestHost』 實作。</target>
+        <target state="translated">執行伺服器模式時所使用的 'ITestHost' 實作。</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
@@ -1219,12 +1219,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
-        <target state="translated">正在啟動測試會話。</target>
+        <target state="translated">正在啟動測試工作階段。</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="translated">正在啟動測試會話。記錄檔路徑 '{0}'。</target>
+        <target state="translated">正在啟動測試工作階段。記錄檔路徑 '{0}'。</target>
         <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">

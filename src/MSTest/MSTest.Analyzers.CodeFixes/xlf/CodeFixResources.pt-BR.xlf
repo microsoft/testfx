@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
-        <target state="translated">Mover o acesso condicional na asserção para separar o 'Assert.IsNotNull' marcar</target>
+        <target state="new">Move conditional access in assertion to separate 'Assert.IsNotNull' check</target>
         <note>{Locked="Assert.IsNotNull"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">

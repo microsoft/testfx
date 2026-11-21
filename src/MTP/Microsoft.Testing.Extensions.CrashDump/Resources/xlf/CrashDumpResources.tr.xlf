@@ -109,8 +109,8 @@ Supports the following placeholders: {pname} (process executable name, deferred 
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
         <target state="translated">Dökümün türünü belirtin.
-Geçerli değerler: 'Mini', 'Heap', 'Triage' veya 'Full'. Varsayılan tür: 'Full'.
-Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps adresini ziyaret edin.</target>
+Geçerli değerler 'Mini', 'Heap', 'Triage' veya 'Full'. Varsayılan tür 'Full'.
+Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps ziyaret edin.</target>
         <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">

@@ -51,9 +51,9 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="translated">無法執行測試方法 '{0}.{1}': 測試資料不符合方法參數。計數或類型不同。
-測試預期的 {2} 參數，類型為 '{3}'，
-但收到 {4} 引數，類型為 '{5}'。</target>
+        <target state="translated">無法執行測試方法 '{0}.{1}'： 測試資料不符合方法參數。計數或類型不同。
+測試預期 {2} 參數(S)，類型為 '{3}'，
+但收到類型為 {4} '{5}' 的引數)(。</target>
         <note>{0} is the declaring type full name. {1} is the method name. {2} is the expected parameter count. {3} is the expected parameter type list. {4} is the received argument count. {5} is the received argument type list.</note>
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">

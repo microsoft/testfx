@@ -67,7 +67,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="translated">{0}{1}
+        <target state="new">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -594,7 +594,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">Nieprawidłowy adres URL biletu usługi GitHub</target>
+        <target state="new">Invalid GitHub ticket URL</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
@@ -748,10 +748,10 @@ Rzeczywiste: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Nie można odnaleźć określonej składowej ({0}). Może być konieczne ponowne wygenerowanie prywatnej metody dostępu
-      lub składowa może być zdefiniowana jako prywatna w klasie bazowej. Jeśli w drugim przypadku wartością jest true, należy przekazać typ,
-      który definiuje składową w konstruktorze obiektu PrivateObject.
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -761,10 +761,10 @@ Rzeczywiste: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Nie można odnaleźć konstruktora z określoną sygnaturą. Może być konieczne ponowne wygenerowanie prywatnej metody dostępu
-      lub składowa może być zdefiniowana jako prywatna w klasie bazowej. Jeśli w drugim przypadku wartością jest true, należy przekazać typ,
-      który definiuje składową w konstruktorze obiektu PrivateObject.
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>

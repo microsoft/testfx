@@ -44,9 +44,9 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="translated">'{1}' mimarisi için '{0}' ana bilgisayarı bulunamadı.
+        <target state="translated">'{1}' mimarisi için '{0}' konak bulunamadı.
 
-'{1}' .NET’i yükleyerek sorunu çözebilirsiniz.
+ '{1}' .NET yükleyerek sorunu çözebilirsiniz.
 
 Belirtilen çerçeve şu konumda bulunabilir:
   - https://aka.ms/dotnet-download</target>

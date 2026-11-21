@@ -20,21 +20,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">I metodi contrassegnati con ‘[AssemblyCleanup]' devono seguire il layout seguente per essere validi:
--Non può essere dichiarato in una classe generica
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere 'async void'
+- Non può essere dichiarato in una classe generica
+- Deve essere "public"
+- Deve essere "static"
+- Non deve essere "async void"
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
 - Non deve accettare alcun parametro o accettare un singolo parametro di tipo 'TestContext'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
--Il tipo deve essere una classe
+- Il tipo deve essere una classe
 -La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--La classe non deve essere 'static'
--La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
--La classe non deve essere generica.</target>
+- La classe non deve essere 'static'
+- La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
+- La classe non deve essere generica.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -79,22 +79,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">I metodi contrassegnati con ‘[AssemblyInitialize]’ devono seguire il layout seguente per essere validi:
--Non può essere dichiarato in una classe generica
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere 'async void'
+        <target state="translated">I metodi contrassegnati con ‘[AssemblyInitialize]' devono seguire il layout seguente per essere validi:
+- Non può essere dichiarato in una classe generica
+- Deve essere "public"
+- Deve essere "static"
+- Non deve essere "async void"
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
-- Deve accettare un parametro di tipo 'TestContext'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Deve accettare un parametro di tipo "TestContext"
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
--Il tipo deve essere una classe
+- Il tipo deve essere una classe
 -La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--La classe non deve essere 'static'
--La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato).
--La classe non deve essere generica.</target>
+- La classe non deve essere 'static'
+- La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
+- La classe non deve essere generica.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -154,17 +154,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="translated">Usare 'Assert.AreEqual'/'Assert.AreNotEqual' invece di 'Assert.AreSame'/'Assert.AreNotSame' durante il confronto dei tipi valore. Se si passa un tipo valore a 'Assert.AreSame'/'Assert.AreNotSame', verrà eseguito il boxing (creazione di un nuovo oggetto). Poiché 'Assert.AreSame'/'Assert.AreNotSame' esegue il confronto per riferimento, 'Assert.AreSame' non riuscirà quando si esegue la boxing e 'Assert.AreNotSame' passerà sempre.</target>
+        <target state="translated">Usare 'Assert.AreEqual'/'Assert.AreNotEqual' anziché 'Assert.AreSame'/'Assert.AreNotSame' quando si confrontano tipi valore. Il passaggio di un tipo valore a 'Assert.AreSame'/'Assert.AreNotSame' comporta il boxing, che crea un nuovo oggetto. Poiché 'Assert.AreSame'/'Assert.AreNotSame' eseguono il confronto per riferimento, 'Assert.AreSame' avrà esito negativo quando viene eseguito il boxing, mentre 'Assert.AreNotSame' avrà sempre esito positivo.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
-        <target state="translated">Usa '{0}' invece di '{1}' durante il confronto dei tipi di valore</target>
+        <target state="translated">Usare '{0}' anziché '{1}' durante il confronto dei tipi di valore</target>
         <note>{0} is the preferred assertion method name. {1} is the current assertion method name.</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="translated">Non usare 'Assert.AreSame' o 'Assert.AreNotSame' con i tipi di valore</target>
+        <target state="translated">Non usare 'Assert.AreSame' o 'Assert.AreNotSame' con i tipi valore</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
@@ -214,17 +214,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
-        <target state="translated">Non dichiarare all'interno di metodi 'async void', funzioni locali o espressioni lambda. Le eccezioni generate in questo contesto saranno eccezioni non gestite. Quando si usa VSTest in .NET Framework, verranno eliminati automaticamente. Quando si usa Microsoft.Testing.Platform o VSTest nella versione moderna di .NET, è possibile che il processo venga arrestato in modo anomalo.</target>
+        <target state="translated">Non eseguire asserzioni all'interno di metodi 'async void', funzioni locali o espressioni lambda. Le eccezioni generate in questo contesto non verranno gestite. Quando si usa VSTest con .NET Framework, verranno ignorate senza alcun messaggio. Quando si usa Microsoft.Testing.Platform o VSTest con versioni moderne di .NET, potrebbero causare l'arresto anomalo del processo.</target>
         <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
-        <target state="translated">Non dichiarare all'interno di metodi 'async void', funzioni locali o espressioni lambda perché non possono non testare il test</target>
+        <target state="translated">Non eseguire asserzioni all'interno di metodi 'async void', funzioni locali o espressioni lambda, perché potrebbero non causare il fallimento del test</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
         <source>Do not assert inside 'async void' contexts</source>
-        <target state="translated">Non dichiarare all'interno di contesti 'async void'</target>
+        <target state="translated">Non usare asserzioni nei contesti 'async void'</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -248,13 +248,13 @@ The type declaring these methods should also respect the following rules:
 -the class should not be generic.</source>
         <target state="translated">I metodi contrassegnati con ‘[ClassCleanup]' devono seguire il layout seguente per essere validi:
 -Non può essere dichiarato in una classe generica se la modalità 'InheritanceBehavior' non è impostata
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere 'async void'
+- Deve essere "public"
+- Deve essere "static"
+- Non deve essere "async void"
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
 - Non deve accettare alcun parametro o accettare un singolo parametro di tipo 'TestContext'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 - È necessario specificare il parametro dell'attributo 'InheritanceBehavior.BeforeEachDerivedClass' se la classe è 'abstract'
 - Non è necessario specificare il parametro dell'attributo 'InheritanceBehavior.BeforeEachDerivedClass' se la classe è 'sealed'
 
@@ -263,7 +263,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
 -La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
--La classe non deve essere generica.</target>
+- La classe non deve essere generica.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -295,15 +295,15 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">I metodi contrassegnati con ‘[ClassInitialize]’ devono seguire il layout seguente per essere validi:
+        <target state="translated">I metodi contrassegnati con ‘[ClassInitialize]' devono seguire il layout seguente per essere validi:
 -Non può essere dichiarato in una classe generica se la modalità 'InheritanceBehavior' non è impostata
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere 'async void'
+- Deve essere "public"
+- Deve essere "static"
+- Non deve essere "async void"
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
-- Deve accettare un parametro di tipo 'TestContext'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Deve accettare un parametro di tipo "TestContext"
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 - È necessario specificare il parametro dell'attributo 'InheritanceBehavior.BeforeEachDerivedClass' se la classe è 'abstract'
 - Non è necessario specificare il parametro dell'attributo 'InheritanceBehavior.BeforeEachDerivedClass' se la classe è 'sealed'
 
@@ -312,7 +312,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
 -La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
--La classe non deve essere generica.</target>
+- La classe non deve essere generica.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -573,7 +573,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="translated">Impossibile dedurre il tipo del parametro generico '{0}'.</target>
+        <target state="translated">Non è possibile dedurre il tipo del parametro generico '{0}'.</target>
         <note>{0} is the generic type parameter name.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -704,7 +704,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="translated">'[DynamicData]' membro '{0}.{1}' è un metodo, quindi è consigliabile usare 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Method'. Il rilevamento automatico è l'impostazione predefinita quando non è specificata in modo esplicito ed è consigliabile</target>
+        <target state="translated">'[DynamicData]' membro '{0}.{1}' è un metodo, quindi è consigliabile usare 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Method' (il rilevamento automatico è l'impostazione predefinita quando non è specificato in modo esplicito ed è consigliabile)</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Method"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
@@ -719,7 +719,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="translated">'[DynamicData]' membro '{0}.{1}' è una proprietà, quindi è consigliabile usare 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Property'. Il rilevamento automatico è l'impostazione predefinita quando non è specificata in modo esplicito ed è consigliata</target>
+        <target state="translated">'[DynamicData]' membro '{0}.{1}' è una proprietà, quindi è consigliabile usare 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Property' (il rilevamento automatico è l'impostazione predefinita quando non è specificata in modo esplicito ed è consigliata)</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Property"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
@@ -922,7 +922,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="PublicTestClassSuppressorJustification">
         <source>MSTest test classes should remain public for test discovery.</source>
-        <target state="new">MSTest test classes should remain public for test discovery.</target>
+        <target state="translated">Le classi di test MSTest devono rimanere pubbliche per consentire il rilevamento dei test.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
@@ -1251,7 +1251,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
         <target state="translated">Le classi di test, classi contrassegnate con l'attributo '[TestClass]', dovrebbero rispettare il layout seguente per essere considerate valide da MSTest:
-- dovrebbe essere 'public' (o 'internal' se l'attributo '[assembly: DiscoverInternals]' è impostato)
+- devono essere "public" (o "internal" se è impostato l'attributo "[assembly: DiscoverInternals]")
 - non dovrebbe essere 'statica' (a meno che contenga solo i metodi 'AssemblyInitialize' e/o 'AssemblyCleanup')
 - non dovrebbe essere generica.</target>
         <note>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</note>
@@ -1292,7 +1292,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">I metodi contrassegnati con ‘[TestCleanup]’ devono seguire il layout seguente per essere validi:
+        <target state="translated">I metodi contrassegnati con ‘[TestCleanup]' devono seguire il layout seguente per essere validi:
 - Deve essere 'public'
 - Non deve essere 'abstract'
 - Non deve essere 'async void'
@@ -1300,12 +1300,12 @@ The type declaring these methods should also respect the following rules:
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
 - Non deve accettare alcun parametro
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
--Il tipo deve essere una classe
+- Il tipo deve essere una classe
 -La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--La classe non deve essere 'static'
+- La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
@@ -1351,7 +1351,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">I metodi contrassegnati con ‘[TestInitialize]’ devono seguire il layout seguente per essere validi:
+        <target state="translated">I metodi contrassegnati con ‘[TestInitialize]' devono seguire il layout seguente per essere validi:
 - Deve essere 'public'
 - Non deve essere 'abstract'
 - Non deve essere 'async void'
@@ -1359,12 +1359,12 @@ The type declaring these methods should also respect the following rules:
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
 - Non deve accettare alcun parametro
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
--Il tipo deve essere una classe
+- Il tipo deve essere una classe
 -La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--La classe non deve essere 'static'
+- La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
@@ -1387,14 +1387,14 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi di test, metodi contrassegnati con l'attributo '[TestMethod]', devono rispettare il layout seguente per essere considerati validi da MSTest:
-- devono essere “public” (o “internal” se l'attributo “[assembly: DiscoverInternals]” è impostato)
-- non devono essere “static”
+        <target state="translated">I metodi di test, ovvero i metodi contrassegnati con l'attributo "[TestMethod]", devono rispettare il layout seguente per essere considerati validi da MSTest:
+- devono essere "public" (o "internal" se è impostato l'attributo "[assembly: DiscoverInternals]")
+- non deve essere 'static'
 - possono essere generici purché i parametri di tipo possano essere dedotti e i tipi di argomento siano compatibili
-- non devono essere “abstract”
-- il tipo restituito deve essere “void”, “Task” o “ValueTask”
-- non devono essere “async void”
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+- non devono essere "abstract"
+- il tipo restituito deve essere "void", "Task" o "ValueTask"
+- non devono essere "async void"
+- non devono essere metodi speciali (finalizzatore, operatore...).</target>
         <note>{Locked="[TestMethod]"}{Locked="ValueTask"}{Locked="MSTest"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
@@ -1464,7 +1464,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="translated">L'attributo '{0}' che deriva da 'ConditionBaseAttribute' deve essere utilizzato solo in classi contrassegnate con 'TestClassAttribute'</target>
+        <target state="translated">L'attributo '{0}', che deriva da 'ConditionBaseAttribute', deve essere usato solo nelle classi contrassegnate con `TestClassAttribute`</target>
         <note>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
