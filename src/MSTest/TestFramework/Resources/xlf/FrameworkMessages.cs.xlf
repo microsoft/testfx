@@ -4,62 +4,62 @@
     <body>
       <trans-unit id="AccessStringInvalidSyntax">
         <source>Access string has invalid syntax.</source>
-        <target state="new">Access string has invalid syntax.</target>
+        <target state="translated">Přístupový řetězec má neplatnou syntaxi.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="ActualHasMismatchedElements">
         <source>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</source>
-        <target state="new">The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</target>
+        <target state="translated">Očekávaná kolekce obsahuje {1} výskytů &lt;{2}&gt;. Aktuální kolekce obsahuje {3} výskytů. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected occurrence count. {2} is the mismatched element. {3} is the actual occurrence count.</note>
       </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
-        <target state="new">Duplicate item found:&lt;{1}&gt;. {0}</target>
+        <target state="translated">Byla nalezena duplicitní položka:&lt;{1}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the duplicate item.</note>
       </trans-unit>
       <trans-unit id="AreAllDistinctFailedSummary">
         <source>Expected all items in collection to be distinct.</source>
-        <target state="new">Expected all items in collection to be distinct.</target>
+        <target state="translated">Očekávalo se, že všechny položky v kolekci budou odlišné.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreAllNotNullFailedSummary">
         <source>Expected all items in collection to be non-null.</source>
-        <target state="new">Expected all items in collection to be non-null.</target>
+        <target state="translated">Očekávalo se, že žádné položky v kolekci nebudou null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreAllOfTypeFailedSummary">
         <source>Expected all items in collection to be of the specified type.</source>
-        <target state="new">Expected all items in collection to be of the specified type.</target>
+        <target state="translated">Očekávalo se, že všechny položky v kolekci budou zadaného typu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Očekáváno:&lt;{1}&gt;. Případ je rozdílný pro aktuální hodnotu:&lt;{2}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected value. {2} is the actual value with different casing.</note>
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailedSummary">
         <source>Expected values to be equal within tolerance.</source>
-        <target state="new">Expected values to be equal within tolerance.</target>
+        <target state="translated">Očekávalo se, že hodnoty budou stejné v rámci tolerance.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</target>
+        <target state="translated">Očekáváno:&lt;{1} ({2})&gt;. Aktuálně:&lt;{3} ({4})&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected value. {2} is the expected value type. {3} is the actual value. {4} is the actual value type.</note>
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffActualPrefix">
         <source>But was:  </source>
-        <target state="new">But was:  </target>
+        <target state="translated">Ale bylo:  </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
         <source>Expected: </source>
-        <target state="new">Expected: </target>
+        <target state="translated">Očekáváno: </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
@@ -75,521 +75,521 @@
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
         <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
-        <target state="new">Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</target>
+        <target state="translated">Řetězce mají stejnou délku ({0}) a liší se v 1 umístění. První rozdíl je na indexu {1}.</target>
         <note>{0} is the common string length. {1} is the index of the first difference.</note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
         <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
-        <target state="new">Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</target>
+        <target state="translated">Řetězce mají různou délku (očekávaná délka: {0}, skutečná délka: {1}) a liší se v 1 umístění. První rozdíl je na indexu {2}.</target>
         <note>{0} is the expected string length. {1} is the actual string length. {2} is the index of the first difference.</note>
       </trans-unit>
       <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
         <source>Strings differ only in case.</source>
-        <target state="new">Strings differ only in case.</target>
+        <target state="translated">Řetězce se liší pouze v malých a velkých písmenech.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummary">
         <source>Expected values to be structurally equivalent.</source>
-        <target state="new">Expected values to be structurally equivalent.</target>
+        <target state="translated">Očekávalo se, že hodnoty budou strukturálně ekvivalentní.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummaryStrict">
         <source>Expected values to be structurally equivalent (strict mode).</source>
-        <target state="new">Expected values to be structurally equivalent (strict mode).</target>
+        <target state="translated">Očekávalo se, že hodnoty budou strukturálně ekvivalentní (striktní režim).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualDictionaryThrew">
         <source>reading the actual dictionary threw {0}: {1}.</source>
-        <target state="new">reading the actual dictionary threw {0}: {1}.</target>
+        <target state="translated">čtení skutečného slovníku vyvolalo {0}: {1}.</target>
         <note>{0} is the exception type thrown while reading the actual dictionary. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
         <source>enumerating the actual collection threw {0}: {1}.</source>
-        <target state="new">enumerating the actual collection threw {0}: {1}.</target>
+        <target state="translated">Výčet skutečné kolekce vyvolal {0}: {1}.</target>
         <note>{0} is the exception type thrown while enumerating the actual collection. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualMemberThrew">
         <source>reading the actual member threw {0}: {1}.</source>
-        <target state="new">reading the actual member threw {0}: {1}.</target>
+        <target state="translated">Čtení skutečného člena vyvolalo: {0}: {1}.</target>
         <note>{0} is the exception type thrown while reading the actual member. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchAt">
         <source>Mismatch at '{0}': {1}</source>
-        <target state="new">Mismatch at '{0}': {1}</target>
+        <target state="translated">Neshoda v {0}: {1}</target>
         <note>{0} is a member path (e.g., Order.Items[2].Price). {1} is a localized reason describing the kind of mismatch.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
         <source>reading the expected dictionary threw {0}: {1}.</source>
-        <target state="new">reading the expected dictionary threw {0}: {1}.</target>
+        <target state="translated">Čtení očekávaného slovníku vyvolalo {0}: {1}.</target>
         <note>{0} is the exception type thrown while reading the expected dictionary. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
         <source>enumerating the expected collection threw {0}: {1}.</source>
-        <target state="new">enumerating the expected collection threw {0}: {1}.</target>
+        <target state="translated">Výčet očekávané kolekce vyvolal {0}: {1}.</target>
         <note>{0} is the exception type thrown while enumerating the expected collection. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
         <source>reading the expected member threw {0}: {1}.</source>
-        <target state="new">reading the expected member threw {0}: {1}.</target>
+        <target state="translated">Čtení očekávaného člena vyvolalo {0}: {1}.</target>
         <note>{0} is the exception type thrown while reading the expected member. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExtraMembers">
         <source>actual has unexpected members not present on expected: {0}.</source>
-        <target state="new">actual has unexpected members not present on expected: {0}.</target>
+        <target state="translated">Skutečná hodnota má neočekávané členy, které nejsou přítomny v očekávané hodnotě: {0}.</target>
         <note>{0} is a comma-separated list of unexpected actual member names.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchIEquatableThrew">
         <source>IEquatable.Equals threw {0}: {1}.</source>
-        <target state="new">IEquatable.Equals threw {0}: {1}.</target>
+        <target state="translated">IEquatable.Equals vyvolalo: {0}: {1}.</target>
         <note>{0} is the exception type thrown by {Locked="IEquatable.Equals"}. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchLength">
         <source>collections differ in length (expected {0} elements, actual {1}).</source>
-        <target state="new">collections differ in length (expected {0} elements, actual {1}).</target>
+        <target state="translated">Kolekce se liší délkou (očekávaný počet prvků: {0}, skutečný počet prvků: {1}).</target>
         <note>{0} is the expected collection length. {1} is the actual collection length.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMaxDepth">
         <source>comparison exceeded the maximum supported depth of {0}.</source>
-        <target state="new">comparison exceeded the maximum supported depth of {0}.</target>
+        <target state="translated">Porovnání překročilo maximální podporovanou hloubku {0}.</target>
         <note>{0} is the maximum supported comparison depth.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMissingKey">
         <source>key {0} present on expected is missing from actual.</source>
-        <target state="new">key {0} present on expected is missing from actual.</target>
+        <target state="translated">Ve skutečné sekvenci chybí klíč {0}, který je přítomen v očekávané sekvenci.</target>
         <note>{0} is the key present on the expected dictionary but missing from the actual dictionary.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMissingMember">
         <source>member '{0}' present on expected is missing from actual.</source>
-        <target state="new">member '{0}' present on expected is missing from actual.</target>
+        <target state="translated">Ve skutečné sekvenci chybí člen {0}, který je přítomen v očekávané sekvenci.</target>
         <note>{0} is the member name present on the expected object but missing from the actual object.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchNull">
         <source>one side is null, the other is not.</source>
-        <target state="new">one side is null, the other is not.</target>
+        <target state="translated">Jedna strana má hodnotu null, druhá nikoli.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchTopology">
         <source>graph topology differs (the same reference on one side appears paired with different references on the other side).</source>
-        <target state="new">graph topology differs (the same reference on one side appears paired with different references on the other side).</target>
+        <target state="translated">topologie grafu se liší (stejný odkaz na jedné straně se zobrazí spárovaný s jinými odkazy na druhé straně)</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchType">
         <source>incompatible types (expected '{0}', actual '{1}').</source>
-        <target state="new">incompatible types (expected '{0}', actual '{1}').</target>
+        <target state="translated">nekompatibilní typy (očekáváno: {0}, skutečnost: {1})</target>
         <note>{0} is the expected type name. {1} is the actual type name.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchUnexpectedKey">
         <source>key {0} present on actual is not on expected.</source>
-        <target state="new">key {0} present on actual is not on expected.</target>
+        <target state="translated">Klíč {0}, který je přítomný ve skutečné sekvenci, v očekávané sekvenci chybí.</target>
         <note>{0} is the key present on the actual dictionary but missing from the expected dictionary.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchValue">
         <source>values are not equal.</source>
-        <target state="new">values are not equal.</target>
+        <target state="translated">Hodnoty se nerovnají.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentRootPath">
         <source>&lt;root&gt;</source>
-        <target state="new">&lt;root&gt;</target>
+        <target state="translated">&lt;kořen&gt;</target>
         <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailedSummary">
         <source>Expected values to differ beyond tolerance.</source>
-        <target state="new">Expected values to differ beyond tolerance.</target>
+        <target state="translated">Očekávalo se, že se hodnoty budou lišit nad rámec tolerance.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Nebyla očekávána žádná hodnota kromě:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the unexpected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
         <source>Expected strings to differ (case-insensitive).</source>
-        <target state="new">Expected strings to differ (case-insensitive).</target>
+        <target state="translated">Očekávalo se, že se řetězce budou lišit (bez rozlišení velikosti písmen).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualStringsFailedSummary">
         <source>Expected strings to differ.</source>
-        <target state="new">Expected strings to differ.</target>
+        <target state="translated">Očekávalo se, že se řetězce budou lišit.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">
         <source>Could not complete structural comparison.</source>
-        <target state="new">Could not complete structural comparison.</target>
+        <target state="translated">Nelze dokončit strukturální porovnání.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummaryStrict">
         <source>Could not complete structural comparison (strict mode).</source>
-        <target state="new">Could not complete structural comparison (strict mode).</target>
+        <target state="translated">Nelze dokončit strukturální porovnání (striktní režim).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentFailedSummary">
         <source>Expected values to be structurally different.</source>
-        <target state="new">Expected values to be structurally different.</target>
+        <target state="translated">Očekávané hodnoty se budou strukturálně lišit.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentFailedSummaryStrict">
         <source>Expected values to be structurally different (strict mode).</source>
-        <target state="new">Expected values to be structurally different (strict mode).</target>
+        <target state="translated">Očekávalo se, že hodnoty budou strukturálně odlišné (striktní režim).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotSameBothNull">
         <source>Both values are &lt;null&gt;. {0}</source>
-        <target state="new">Both values are &lt;null&gt;. {0}</target>
+        <target state="translated">Obě hodnoty jsou &lt;null&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
         <source>Expected sequences to differ (in any order).</source>
-        <target state="new">Expected sequences to differ (in any order).</target>
+        <target state="translated">Očekávalo se, že sekvence se budou lišit (v libovolném pořadí).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotSequenceEqualInOrderFailedSummary">
         <source>Expected sequences to differ.</source>
-        <target state="new">Expected sequences to differ.</target>
+        <target state="translated">Očekávalo se, že se sekvence budou lišit.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
-        <target state="new">Actual is &lt;null&gt;. {0}</target>
+        <target state="translated">Skutečná hodnota je &lt;null&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreSameExpectedIsNull">
         <source>Expected is &lt;null&gt;. {0}</source>
-        <target state="new">Expected is &lt;null&gt;. {0}</target>
+        <target state="translated">Očekávala se hodnota &lt;null&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
-        <target state="new">Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</target>
+        <target state="translated">Nevkládejte hodnotu typů do AreSame(). Hodnoty převedené do typu Object už nebudou nikdy stejné. Zvažte použití AreEqual(). {0}</target>
         <note>{0} is the user-provided assertion message. Do not localize assertion method names {Locked="AreSame"}{Locked="AreEqual"} or the type name {Locked="Object"}.</note>
       </trans-unit>
       <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
         <source>Expected sequences to be equal (in any order).</source>
-        <target state="new">Expected sequences to be equal (in any order).</target>
+        <target state="translated">Očekávalo se, že sekvence budou stejné (v libovolném pořadí).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreSequenceEqualInOrderFailedSummary">
         <source>Expected sequences to be equal.</source>
-        <target state="new">Expected sequences to be equal.</target>
+        <target state="translated">Očekávalo se, že sekvence budou stejné.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreSequenceEqualLengthDiffMsg">
         <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
-        <target state="new">Sequences have different lengths (expected: {0}, actual: {1}).</target>
+        <target state="translated">Sekvence mají různé délky (očekáváno: {0}, skutečnost: {1}).</target>
         <note>{0} is the expected sequence length. {1} is the actual sequence length.</note>
       </trans-unit>
       <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
         <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
-        <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
+        <target state="translated">Ve skutečné sekvenci chybí tento počet prvků: {0}. Byly nalezen tento počet neočekávaných prvků: {1}.</target>
         <note>{0} is the number of missing elements in the actual sequence. {1} is the number of unexpected elements in the actual sequence.</note>
       </trans-unit>
       <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
         <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
-        <target state="new">Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</target>
+        <target state="translated">Sekvence mají tento počet prvků: {0}. Tento počet prvků se liší: {1}. První rozdíl je na indexu {2}.</target>
         <note>{0} is the sequence length. {1} is the number of differing elements. {2} is the index of the first difference.</note>
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
-        <target state="new">{0} assertion(s) failed within the assert scope.</target>
+        <target state="translated">Počet kontrolních výrazů, které selhaly v rámci oboru: {0}</target>
         <note>{0} is the number of assertion failures collected in the scope.</note>
       </trans-unit>
       <trans-unit id="AssertScopeNestedNotAllowed">
         <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
-        <target state="new">Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</target>
+        <target state="translated">Vnořené obory kontrolních výrazů nejsou povoleny. Před vytvořením nového oboru zrušte aktuální obor.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
-        <target state="new">Details:</target>
+        <target state="translated">Podrobnosti:</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatFailedToEvaluate">
         <source>&lt;Failed to evaluate&gt;</source>
-        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <target state="translated">&lt;Nepovedlo se vyhodnotit&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
-        <target state="new">Message: {0}</target>
+        <target state="translated">Zpráva: {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
-        <target state="new">Both collections are empty. {0}</target>
+        <target state="translated">Obě kolekce jsou prázdné. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
         <source>Both collection contain same elements.</source>
-        <target state="new">Both collection contain same elements.</target>
+        <target state="translated">Obě kolekce obsahují stejné elementy.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
         <source>Both collection references point to the same collection object. {0}</source>
-        <target state="new">Both collection references point to the same collection object. {0}</target>
+        <target state="translated">Obě reference na kolekci odkazují na stejný objekt kolekce. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="BothSameElements">
         <source>Both collections contain the same elements. {0}</source>
-        <target state="new">Both collections contain the same elements. {0}</target>
+        <target state="translated">Obě kolekce obsahují stejné elementy. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
         <source>'{0}' expression: '{1}'.</source>
-        <target state="new">'{0}' expression: '{1}'.</target>
+        <target state="translated">Výraz „{0}“: {1}.</target>
         <note>{0} is the assertion parameter name. {1} is the expression the user passed for that parameter.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
         <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
-        <target state="new">'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</target>
+        <target state="translated">Výraz „{0}“: {1}, výraz „{2}“: {3}, výraz „{4}“: {5}.</target>
         <note>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter. {4} is the third assertion parameter name. {5} is the expression the user passed for the third parameter.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
         <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
-        <target state="new">'{0}' expression: '{1}', '{2}' expression: '{3}'.</target>
+        <target state="translated">Výraz „{0}“: {1}, výraz „{2}“: {3}.</target>
         <note>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter.</note>
       </trans-unit>
       <trans-unit id="CollectionContentsNotEnumerated">
         <source>&lt;{0}&gt; (contents not enumerated)</source>
-        <target state="new">&lt;{0}&gt; (contents not enumerated)</target>
+        <target state="translated">&lt;{0}&gt; (obsah není ve výčtu)</target>
         <note />
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
-        <target state="new">{0}. {1}</target>
+        <target state="translated">{0}. {1}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</note>
       </trans-unit>
       <trans-unit id="CombinatorialMultipleValueProviders">
         <source>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</source>
-        <target state="new">Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</target>
+        <target state="translated">Parametr '{0}' na '{1}' má více zprostředkovatelů kombinatorických hodnot: {2}. Použijte přesně jeden atribut, který implementuje {3}.</target>
         <note>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountExceedsRange">
         <source>{0} requests more unique random values than the range between {1} and {2} contains.</source>
-        <target state="new">{0} requests more unique random values than the range between {1} and {2} contains.</target>
+        <target state="translated">{0} vyžaduje více jedinečných náhodných hodnot, než obsahuje rozsah mezi {1} a {2}.</target>
         <note>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountMustBePositive">
         <source>{0} must be positive.</source>
-        <target state="new">{0} must be positive.</target>
+        <target state="translated">{0} musí být kladné číslo.</target>
         <note>{0} is the random data count property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomMinimumExceedsMaximum">
         <source>{0} must not be greater than {1}.</source>
-        <target state="new">{0} must not be greater than {1}.</target>
+        <target state="translated">{0} nesmí být větší než {1}.</target>
         <note>{0} is the minimum property name. {1} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsInt32">
         <source>The range exceeds the maximum integer value.</source>
-        <target state="new">The range exceeds the maximum integer value.</target>
+        <target state="translated">Rozsah překračuje maximální hodnotu celého čísla.</target>
         <note>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsUInt32">
         <source>The range exceeds the maximum unsigned integer value.</source>
-        <target state="new">The range exceeds the maximum unsigned integer value.</target>
+        <target state="translated">Rozsah překračuje maximální hodnotu celého čísla bez znaménka.</target>
         <note>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeTooManyValues">
         <source>The range contains too many values.</source>
-        <target state="new">The range contains too many values.</target>
+        <target state="translated">Rozsah obsahuje příliš mnoho hodnot.</target>
         <note>Error message shown when a combinatorial range cannot be represented in an array.</note>
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
         <source>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</source>
-        <target state="new">Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</target>
+        <target state="translated">Nelze automaticky generovat hodnoty pro parametr typu {0}. K určení hodnot použijte atribut, který implementuje {1}.</target>
         <note>{0} is the parameter type. {1} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">
         <source>Expected collection to contain all specified items.</source>
-        <target state="new">Expected collection to contain all specified items.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat všechny zadané položky.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
-        <target state="new">String '{0}' does not contain string '{1}'. {2}.</target>
+        <target state="translated">Řetězec '{0}' neobsahuje řetězec '{1}'. {2}.</target>
         <note>{0} is the string being searched. {1} is the expected substring. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
         <source>Expected collection to contain the specified item. {0}</source>
-        <target state="new">Expected collection to contain the specified item. {0}</target>
+        <target state="translated">Očekávala se kolekce, která bude obsahovat zadanou položku. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="ContainsItemFailedSummary">
         <source>Expected collection to contain the specified element.</source>
-        <target state="new">Expected collection to contain the specified element.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat zadaný prvek.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsOnlyPredicateFailedSummary">
         <source>Expected collection to contain only elements matching the predicate.</source>
-        <target state="new">Expected collection to contain only elements matching the predicate.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat pouze prvky odpovídající predikátu.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
-        <target state="new">Expected at least one item to match the predicate. {0}</target>
+        <target state="translated">Očekávala se alespoň jedna položka odpovídající predikátu. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="ContainsPredicateFailedSummary">
         <source>Expected collection to contain an element matching the predicate.</source>
-        <target state="new">Expected collection to contain an element matching the predicate.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat prvek odpovídající predikátu.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
         <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
-        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat přesně jeden prvek, ale našlo se tolik elementů: {1}. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection element count.</note>
       </trans-unit>
       <trans-unit id="ContainsSingleFailedSummary">
         <source>Expected collection to contain exactly one element.</source>
-        <target state="new">Expected collection to contain exactly one element.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat přesně jeden prvek.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
-        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
+        <target state="translated">Očekávala se přesně jedna položka odpovídající predikátu, ale našlo se tolik položek: {1}. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the number of items matching the predicate.</note>
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailedSummary">
         <source>Expected collection to contain exactly one element matching the predicate.</source>
-        <target state="new">Expected collection to contain exactly one element matching the predicate.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat právě jeden prvek odpovídající predikátu.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSubstringFailedSummary">
         <source>Expected string to contain the specified substring.</source>
-        <target state="new">Expected string to contain the specified substring.</target>
+        <target state="translated">Očekávalo se, že řetězec bude obsahovat zadaný podřetězec.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainAllFailedSummary">
         <source>Expected collection to not contain all specified items.</source>
-        <target state="new">Expected collection to not contain all specified items.</target>
+        <target state="translated">Očekávalo se, že kolekce nebude obsahovat všechny zadané položky.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="new">String '{0}' does contain string '{1}'. {2}.</target>
+        <target state="translated">Řetězec {0} obsahuje řetězec {1}. {2}.</target>
         <note>{0} is the string being checked. {1} is the substring that should not be present. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
         <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="new">Expected collection to not contain the specified item. {0}</target>
+        <target state="translated">Očekávalo se, že kolekce nebude obsahovat zadanou položku. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailedSummary">
         <source>Expected collection to not contain the specified element.</source>
-        <target state="new">Expected collection to not contain the specified element.</target>
+        <target state="translated">Očekávalo se, že kolekce nebude obsahovat zadaný prvek.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
-        <target state="new">Expected no items to match the predicate. {0}</target>
+        <target state="translated">Očekávaly se žádné položky, které by odpovídaly predikátu. {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailedSummary">
         <source>Expected collection to not contain an element matching the predicate.</source>
-        <target state="new">Expected collection to not contain an element matching the predicate.</target>
+        <target state="translated">Očekávalo se, že kolekce nebude obsahovat prvek odpovídající predikátu.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainSubstringFailedSummary">
         <source>Expected string to not contain the specified substring.</source>
-        <target state="new">Expected string to not contain the specified substring.</target>
+        <target state="translated">Očekávalo se, že řetězec nebude obsahovat zadaný podřetězec.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
         <source>String '{0}' ends with string '{1}'. {2}</source>
-        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ končí řetězcem „{1}“. {2}</target>
         <note>{0} is the string being checked. {1} is the suffix that should not be present. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotEndWithFailedSummary">
         <source>Expected string to not end with the specified suffix.</source>
-        <target state="new">Expected string to not end with the specified suffix.</target>
+        <target state="translated">Očekávalo se, že řetězec nebude končit zadanou příponou.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
         <source>Expected string to not match the specified pattern.</source>
-        <target state="new">Expected string to not match the specified pattern.</target>
+        <target state="translated">Očekával se řetězec, který neodpovídá zadanému vzoru.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
-        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ začíná řetězcem „{1}“. {2}</target>
         <note>{0} is the string being checked. {1} is the prefix that should not be present. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailedSummary">
         <source>Expected string to not start with the specified prefix.</source>
-        <target state="new">Expected string to not start with the specified prefix.</target>
+        <target state="translated">Očekával se řetězec, který nezačíná zadanou předponou.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
         <source>Dynamic data field '{0}' should be static.</source>
-        <target state="new">Dynamic data field '{0}' should be static.</target>
+        <target state="translated">Dynamické datové pole {0} by mělo být statické.</target>
         <note>{0} is the dynamic data field name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</source>
-        <target state="new">Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</target>
+        <target state="translated">Dynamická datová metoda {0} by měla být statická a neobecná a nemůže mít parametr params.</target>
         <note>{0} is the dynamic data method name. Do not localize C# keywords {Locked="static"}{Locked="params"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
-        <target state="new">Dynamic data property '{0}' should be static and have a getter.</target>
+        <target state="translated">Vlastnost dynamických dat {0} by měla být statická a měla by mít metodu getter.</target>
         <note>{0} is the dynamic data property name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
         <source>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</source>
-        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</target>
+        <target state="translated">Dynamický zdroj dat {0} v typu {1} by měl existovat a měla by to být vlastnost, metoda nebo pole.</target>
         <note>{0} is the dynamic data source member name. {1} is the declaring type name.</note>
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
-        <target state="new">The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</target>
+        <target state="translated">Počet elementů v kolekcích nesouhlasí. Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;.{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected element count. {2} is the actual element count.</note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="new">Element at index {0} do not match.
-Expected: {1}
-Actual: {2}</target>
+        <target state="translated">Element v indexu {0} se neshoduje.
+Očekáváno: {1}
+Skutečnost: {2}</target>
         <note>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
-        <target state="new">Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</target>
+        <target state="translated">Element na indexu {1} není očekávaného typu. Očekávaný typ:&lt;{2}&gt;. Aktuální typ:&lt;{3}&gt;.{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the element index. {2} is the expected type. {3} is the actual type.</note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ nekončí řetězcem „{1}“. {2}</target>
         <note>{0} is the string being checked. {1} is the expected suffix. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed.</source>
-        <target state="new">{0} failed.</target>
+        <target state="translated">Selhalo: {0}.</target>
         <note>{0} is the assertion name.</note>
       </trans-unit>
       <trans-unit id="EndsWithFailedSummary">
         <source>Expected string to end with the specified suffix.</source>
-        <target state="new">Expected string to end with the specified suffix.</target>
+        <target state="translated">Očekávalo se, že řetězec bude končit zadanou příponou.</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailedSummary">
         <source>Expected collection to contain a specific number of elements.</source>
-        <target state="new">Expected collection to contain a specific number of elements.</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat určitý počet prvků.</target>
         <note />
       </trans-unit>
       <trans-unit id="InconclusivePrefix">
         <source>Assert.Inconclusive.</source>
-        <target state="new">Assert.Inconclusive.</target>
+        <target state="translated">Assert.Inconclusive.</target>
         <note>Do not localize the assertion API name {Locked="Assert.Inconclusive"}.</note>
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
-        <target state="new">The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</target>
+        <target state="translated">Vlastnost TestContext.{0} souvisí s aktuálním testem a není k dispozici během sestavení nebo používání testovacích přípravků tříd.</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
       <trans-unit id="InvalidDependsOnTestMethodName">
         <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
-        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
+        <target state="translated">Název testovací metody atributu [DependsOn] musí být neprázdný řetězec, který neobsahuje pouze prázdné znaky.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
@@ -599,147 +599,147 @@ Actual: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
         <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
-        <target state="new">The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</target>
+        <target state="translated">Klíč prostředku atributu [ResourceLock] musí být neprázdný řetězec, který neobsahuje jen prázdné znaky. Prázdný klíč by bez upozornění způsobil postupné spouštění nesouvisejících testů, které také používají prázdný klíč.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">
         <source>Expected collection to be empty.</source>
-        <target state="new">Expected collection to be empty.</target>
+        <target state="translated">Očekávalo se, že kolekce bude prázdná.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">Očekávala se podmínka false.</target>
         <note>Do not localize the C# keyword {Locked="false"}.</note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
         <source>Expected value to be greater than the lower bound.</source>
-        <target state="new">Expected value to be greater than the lower bound.</target>
+        <target state="translated">Očekávalo se, že hodnota bude větší než dolní mez.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
         <source>Expected value to be greater than or equal to the lower bound.</source>
-        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <target state="translated">Očekávalo se, že hodnota bude větší nebo rovna dolní mezi.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="new">Value '{0}' is not within the expected range [{1}..{2}]. {3}</target>
+        <target state="translated">Hodnota {0} není v očekávaném rozsahu [{1}..{2}]. {3}</target>
         <note>{0} is the actual value. {1} is the minimum expected value. {2} is the maximum expected value. {3} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="IsInRangeFailedSummary">
         <source>Expected value to be within the inclusive range.</source>
-        <target state="new">Expected value to be within the inclusive range.</target>
+        <target state="translated">Očekávala se hodnota v zadaném rozsahu včetně mezních hodnot.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
         <source>The maximum value must be greater than or equal to the minimum value.</source>
-        <target state="new">The maximum value must be greater than or equal to the minimum value.</target>
+        <target state="translated">Maximální hodnota musí být větší nebo rovna minimální hodnotě.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="new">{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <target state="translated">{0} Očekávaný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;.</target>
         <note>{0} is the user-provided assertion message. {1} is the expected type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsLessThanFailedSummary">
         <source>Expected value to be less than the upper bound.</source>
-        <target state="new">Expected value to be less than the upper bound.</target>
+        <target state="translated">Očekávaná hodnota je menší než horní mez.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailedSummary">
         <source>Expected value to be less than or equal to the upper bound.</source>
-        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <target state="translated">Očekávalo se, že hodnota bude menší nebo rovna horní mezi.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ neodpovídá vzoru „{1}“. {2}</target>
         <note>{0} is the string being checked. {1} is the regular expression pattern. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="IsNegativeFailedSummary">
         <source>Expected value to be negative.</source>
-        <target state="new">Expected value to be negative.</target>
+        <target state="translated">Očekávaná hodnota má být záporná.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailedSummary">
         <source>Expected collection to not be empty.</source>
-        <target state="new">Expected collection to not be empty.</target>
+        <target state="translated">Očekávalo se, že kolekce nebude prázdná.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Špatný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the unexpected type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsExactInstanceOfFailMsg">
         <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <target state="translated">{0} Očekávaný přesný typ:&lt;{1}&gt;. Skutečný typ:&lt;{2}&gt;.</target>
         <note>{0} is the user-provided assertion message. {1} is the expected exact type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsNotExactInstanceOfFailMsg">
         <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Nesprávný přesný typ:&lt;{1}&gt;. Skutečný typ:&lt;{2}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the unexpected exact type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ odpovídá vzoru „{1}“. {2}</target>
         <note>{0} is the string being checked. {1} is the regular expression pattern. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">Očekávaná hodnota nesmí být null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
         <source>Expected values to differ.</source>
-        <target state="new">Expected values to differ.</target>
+        <target state="translated">Očekávaly se lišící se hodnoty.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
         <source>Expected strings to be equal.</source>
-        <target state="new">Expected strings to be equal.</target>
+        <target state="translated">Očekávalo se, že řetězce budou stejné.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailedSummary">
         <source>Expected values to be equal, but they are of different types.</source>
-        <target state="new">Expected values to be equal, but they are of different types.</target>
+        <target state="translated">Očekávalo se, že hodnoty budou stejné, ale jsou různých typů.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailedSummary">
         <source>Expected values to be equal.</source>
-        <target state="new">Expected values to be equal.</target>
+        <target state="translated">Očekávalo se, že hodnoty budou stejné.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">Očekávaná hodnota bude null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
-        <target state="new">Expected value to be positive.</target>
+        <target state="translated">Očekávaná hodnota má být kladná.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">Očekávala se podmínka true.</target>
         <note>Do not localize the C# keyword {Locked="true"}.</note>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
         <source>Expected string to match the specified pattern.</source>
-        <target state="new">Expected string to match the specified pattern.</target>
+        <target state="translated">Očekával se řetězec odpovídající zadanému vzoru.</target>
         <note />
       </trans-unit>
       <trans-unit id="PredicateMismatchIndexLabel">
         <source>index:</source>
-        <target state="new">index:</target>
+        <target state="translated">index:</target>
         <note />
       </trans-unit>
       <trans-unit id="PredicateMismatchItemLabel">
         <source>item:</source>
-        <target state="new">item:</target>
+        <target state="translated">položka:</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -770,117 +770,117 @@ Actual: {2}</target>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
+        <target state="translated">Parametr {0} je neplatný. Hodnota nemůže být null.</target>
         <note>{0} is the parameter name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
         <source>Different number of elements.</source>
-        <target state="new">Different number of elements.</target>
+        <target state="translated">Rozdílný počet elementů.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
-        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection.</target>
+        <target state="translated">Elementy &lt;{0}&gt; se v kolekci nenachází.</target>
         <note>{0} is a comma-separated list of missing elements.</note>
       </trans-unit>
       <trans-unit id="STATestMethodNonWindowsNotSupported">
         <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
-        <target state="new">[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</target>
+        <target state="translated">[STATestMethod] se nepodporuje na jiných platformách než Windows. STA (Single Threaded Apartment) je koncept vláken COM určený pouze pro Windows. Použijte [OSCondition(OperatingSystems.Windows)] k přeskočení tohoto testu na platformách jiných než Windows.</target>
         <note>Do not localize MSTest attribute names {Locked="[STATestMethod]"}{Locked="[OSCondition(OperatingSystems.Windows)]"} or COM threading acronym {Locked="STA"}.</note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ nezačíná řetězcem „{1}“. {2}</target>
         <note>{0} is the string being checked. {1} is the expected prefix. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
-        <target state="new">The property {0} has type {1}; expected type {2}.</target>
+        <target state="translated">Vlastnost {0} je typu {1}; očekávaný typ {2}.</target>
         <note>{0} is the property name. {1} is the actual property type. {2} is the expected property type.</note>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="new">(null)</target>
+        <target state="translated">(null)</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
-        <target state="new">(object)</target>
+        <target state="translated">(objekt)</target>
         <note></note>
       </trans-unit>
       <trans-unit id="StartsWithFailedSummary">
         <source>Expected string to start with the specified prefix.</source>
-        <target state="new">Expected string to start with the specified prefix.</target>
+        <target state="translated">Očekávalo se, že řetězec bude začínat zadanou předponou.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="new">(Failed to get the message for an exception of type {0} due to an exception.)</target>
+        <target state="translated">(Z důvodu výjimky se nepodařilo získat zprávu o výjimce typu {0}.)</target>
         <note>{0} is the exception type.</note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</target>
+        <target state="translated">Byl očekáván typ výjimky: &lt;{1}&gt;, ale nebyla vyvolána žádná výjimka. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected exception type.</note>
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Očekávaný typ výjimky: &lt;{1}&gt; Skutečný typ výjimky: &lt;{2}&gt;. {0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected exception type. {2} is the actual exception type.</note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>
-        <target state="new">{0} ({1})</target>
+        <target state="translated">{0} ({1})</target>
         <note>{0} is the test method display name. {1} is the comma-separated list of test data arguments.</note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
-        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</target>
+        <target state="translated">Vlastnost nebo metoda {0} na návratovém typu {1} se nedá přiřadit k „IEnumerable“.</target>
         <note>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
+        <target state="translated">Hodnota vrácená vlastností nebo metodou {0} by neměla být null.</target>
         <note>{0} is the dynamic data property or method name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
         <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
-        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
+        <target state="translated">Metoda {0} musí odpovídat očekávanému podpisu: public static {1} {0}({2}).</target>
         <note>{0} is the dynamic display-name method name. {1} is the expected return type. {2} is the expected parameter list. Do not localize the C# signature tokens {Locked="public static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
-        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
+        <target state="translated">Vlastnost nebo metoda {0} ve třídě {1} vrací prázdné IEnumerable&lt;object[]&gt;.</target>
         <note>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;object[]&gt;"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="new">Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">Assert.Equals by neměla být pro kontrolní výrazy používána. Použijte prosím místo toho Assert.AreEqual a její přetížení.</target>
         <note>Do not localize assertion API names {Locked="Assert.Equals"}{Locked="Assert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Assert.ReferenceEquals se nemá používat pro kontrolní výrazy. Použijte prosím místo toho Assert.AreSame &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="Assert.ReferenceEquals"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
         <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
-        <target state="new">StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">StringAssert.Equals se nemá používat pro kontrolní výrazy. Místo toho použijte metody StringAssert nebo Assert.AreEqual &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="StringAssert.Equals"}{Locked="StringAssert"}{Locked="Assert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertReferenceEquals">
         <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">StringAssert.ReferenceEquals se nemá používat pro kontrolní výrazy. Místo toho použijte metody StringAssert nebo Assert.AreSame &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="StringAssert.ReferenceEquals"}{Locked="StringAssert"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertEquals">
         <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.Equals se nemá používat pro kontrolní výrazy. Místo toho použijte CollectionAssert.AreEqual &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="CollectionAssert.Equals"}{Locked="CollectionAssert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
         <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.ReferenceEquals se nemá používat pro kontrolní výrazy. Místo toho použijte metody CollectionAssert nebo Assert.AreSame &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="CollectionAssert.ReferenceEquals"}{Locked="CollectionAssert"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
     </body>
