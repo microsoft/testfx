@@ -122,7 +122,13 @@ public sealed class TestContextAssertionFailureDiagnosticsResourceSnapshotMutati
         => (long?)ResourceSnapshotType.GetMethod("ParseCounter", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [line]);
 
     private static (long? ReadBytes, long? WriteBytes) TryCaptureProcessIo(Process process)
-        => ((long? ReadBytes, long? WriteBytes))ResourceSnapshotType.GetMethod("TryCaptureProcessIo", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [process])!;
+    {
+        object result = ResourceSnapshotType.GetMethod("TryCaptureProcessIo", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [process])!;
+        Type resultType = result.GetType();
+
+        // On .NET Framework the adapter declares its own internal ValueTuple, which is not the type the tests were compiled against, so the fields are read by name instead of casting.
+        return ((long?)resultType.GetField("Item1")!.GetValue(result), (long?)resultType.GetField("Item2")!.GetValue(result));
+    }
 
     private static bool TryReadProcSelfIo(out (long ReadBytes, long WriteBytes) counters)
     {
