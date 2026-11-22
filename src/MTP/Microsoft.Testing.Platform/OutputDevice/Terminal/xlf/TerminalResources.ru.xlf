@@ -469,8 +469,8 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="new">Preset the per-test result blocks shown in the terminal.
-Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
+        <target state="translated">Предварительно задает блоки результатов каждого теста, отображаемые в терминале.
+Допустимые значения:"Minimal", "Normal" или "Detailed". Значение по умолчанию: "Normal". Используйте "--show-test-results" для точного выбора результатов.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
@@ -549,15 +549,15 @@ Passing the option without a value turns it on.</target>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
+        <target state="translated">Определяет, когда показывать зафиксированный вывод ошибок теста.
+Допустимые значения: "All", "Failed", "None". По умолчанию — "Failed".</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
+        <target state="translated">Определяет, когда показывать зафиксированный стандартный вывод теста.
+Допустимые значения: "All", "Failed", "None". По умолчанию — "Failed".</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">

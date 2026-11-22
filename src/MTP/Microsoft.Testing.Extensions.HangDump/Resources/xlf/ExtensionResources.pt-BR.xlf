@@ -73,10 +73,10 @@
 
 Disk info:
 {1}</source>
-        <target state="new">The following exception occurred while taking hang dump:
+        <target state="translated">A seguinte exceção ocorreu ao capturar o despejo de travamento:
 {0}
 
-Disk info:
+Informações do disco:
 {1}</target>
         <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>

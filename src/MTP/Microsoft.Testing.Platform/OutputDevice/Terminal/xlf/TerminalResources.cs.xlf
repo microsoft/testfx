@@ -456,9 +456,9 @@
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</target>
+        <target state="translated">Určuje, jestli se vygenerují řídicí znaky ANSI.
+Platné hodnoty jsou auto (výchozí), 'on' (lze také zadat true, enable nebo 1) a 'off' (lze také zadat false, disable nebo 0).
+Hodnota 'on' vynutí řídicí kódy ANSI (včetně pohybu kurzoru) i při přesměrování standardního výstupu (stdout). Pokud chcete jen barvy, přidejte parametr --progress off.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -469,8 +469,8 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="new">Preset the per-test result blocks shown in the terminal.
-Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
+        <target state="translated">Přednastaví podobu bloků, ve kterých se v terminálu zobrazují výsledky jednotlivých testů.
+Platné hodnoty jsou Minimal, Normal a Detailed. Výchozí hodnota je Normal. Pokud chcete přesně vybrat, které výsledky se mají zobrazit, použijte parametr --show-test-results.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
@@ -507,9 +507,9 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
+        <target state="translated">Určuje, jestli se má průběh zobrazovat na obrazovce.
+Platné hodnoty jsou auto (výchozí), 'on' (lze také zadat true, enable nebo 1) a 'off' (lze také zadat false, disable nebo 0).
+Při hodnotě 'auto' se průběh zobrazí, pokud terminál dokáže aktualizovat výstup na místě. To není možné například při zadání parametru --ansi off nebo v prostředí CI.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
@@ -521,9 +521,9 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
-Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-Passing the option without a value turns it on.</target>
+        <target state="translated">Určuje, jestli se v souhrnu běhu vypíšou testy, které minimálně jednou selhaly, ale při opakování nakonec uspěly.
+Platné hodnoty jsou 'on' (výchozí, lze také zadat 'true', 'enable' nebo '1') a 'off' (lze také zadat 'false', 'disable' nebo '0').
+Zadáním parametru bez hodnoty se tato funkce zapne.</target>
         <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
@@ -549,15 +549,15 @@ Passing the option without a value turns it on.</target>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
+        <target state="translated">Určuje, kdy se má zobrazit zachycený chybový výstup testu.
+Platné hodnoty jsou All, Failed, None. Výchozí hodnota je Failed.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
+        <target state="translated">Určuje, kdy se má zobrazit zachycený standardní výstup testu.
+Platné hodnoty jsou All, Failed, None. Výchozí hodnota je Failed.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
@@ -569,9 +569,9 @@ Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
-Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</target>
+        <target state="translated">Umožňuje vybrat, při kterých výsledcích testů se v terminálu pro každý test vykreslí samostatný blok s podrobnostmi, trasováním zásobníku a zachyceným výstupem.
+Platné hodnoty jsou 'passed', 'failed' (zahrnuje také testy, které skončily chybou, překročily časový limit nebo byly zrušeny), 'skipped', 'all' a 'none'. Více hodnot můžete oddělit čárkami nebo mezerami. Parametr můžete také zadat opakovaně. Hodnoty 'all' a 'none' nejde kombinovat s žádnou jinou hodnotou.
+Pokud má parametr --output hodnotu 'Minimal', výchozí hodnotou je 'failed'. Při hodnotě Normal nebo při vynechání parametru jsou výchozí hodnoty 'failed' a 'skipped'. Při hodnotě 'Detailed' je výchozí hodnota 'all'. Explicitně zadaný parametr --show-test-results má vždy přednost před parametrem --output bez ohledu na pořadí, ve kterém je zadáte.</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
