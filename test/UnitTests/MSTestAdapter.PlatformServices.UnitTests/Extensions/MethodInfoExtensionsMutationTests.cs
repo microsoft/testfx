@@ -107,7 +107,11 @@ public class MethodInfoExtensionsMutationTests : TestContainer
     public void GetMapIndexForParameterTypeShouldThrowAnUnreachableExceptionWhenTheTypeIsNotInTheMap()
     {
         MethodInfo getMapIndex = GetPrivateExtensionMethod("GetMapIndexForParameterType");
-        var map = new (Type GenericDefinition, Type? Substitution)[] { (typeof(string), null) };
+
+        // On .NET Framework the test and adapter assemblies can bind ValueTuple to different assemblies, so the map is built from the parameter's own type.
+        Type entryType = getMapIndex.GetParameters()[1].ParameterType.GetElementType()!;
+        var map = Array.CreateInstance(entryType, 1);
+        map.SetValue(Activator.CreateInstance(entryType, typeof(string), null), 0);
 
         Action act = () => getMapIndex.Invoke(null, [typeof(int), map]);
 
