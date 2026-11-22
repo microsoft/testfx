@@ -20,6 +20,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 using FrameworkTestResult = Microsoft.VisualStudio.TestTools.UnitTesting.TestResult;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
