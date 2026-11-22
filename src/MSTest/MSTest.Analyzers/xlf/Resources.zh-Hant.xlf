@@ -1474,7 +1474,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutBehaviorDescription">
         <source>By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</source>
-        <target state="new">By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</target>
+        <target state="translated">根據預設，'[Timeout]' 會在不等候測試方法完成的情況下回報逾時。測試程式碼可能會繼續執行並干擾清理。將 'CooperativeCancellation = true' 設定為取消 MSTest 訊號，並等候方法完成。</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">

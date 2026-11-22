@@ -67,7 +67,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="new">{0}{1}
+        <target state="translated">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -594,7 +594,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="new">Invalid GitHub ticket URL</target>
+        <target state="translated">Neplatná adresa URL lístku na GitHubu</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">

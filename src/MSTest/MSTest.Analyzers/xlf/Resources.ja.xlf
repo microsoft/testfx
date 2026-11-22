@@ -154,17 +154,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
+        <target state="translated">値型を比較する場合は、'Assert.AreSame'/'Assert.AreNotSame' ではなく、'Assert.AreEqual'/'Assert.AreNotEqual' を使用してください。値型を 'Assert.AreSame'/'Assert.AreNotSame' に渡すとボックス化されます (新しいオブジェクトが作成されます)。'Assert.AreSame'/'Assert.AreNotSame' は参照によって比較を行うため、ボックス化が発生すると 'Assert.AreSame' は失敗し、'Assert.AreNotSame' は常に成功します。</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
-        <target state="new">Use '{0}' instead of '{1}' when comparing value types</target>
+        <target state="translated">値型を比較するときは、'{1}' の代わりに '{0}' を使用します</target>
         <note>{0} is the preferred assertion method name. {1} is the current assertion method name.</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="new">Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</target>
+        <target state="translated">値型で 'Assert.AreSame' または 'Assert.AreNotSame' を使用しないでください</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
@@ -214,17 +214,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</target>
+        <target state="translated">'async void' メソッド、ローカル関数、またはラムダの内部でアサートしないでください。このコンテキストでスローされた例外は、ハンドルされない例外になります。.NET Framework で VSTest を使用すると、例外は暗黙的に無条件で受け入れられます。最新の .NET で Microsoft.Testing.Platform または VSTest を使用すると、プロセスがクラッシュする可能性があります。</target>
         <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</target>
+        <target state="translated">'async void' メソッド、ローカル関数、またはラムダの内部でアサートしないでください。テストが失敗しない可能性があります</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
         <source>Do not assert inside 'async void' contexts</source>
-        <target state="new">Do not assert inside 'async void' contexts</target>
+        <target state="translated">'async void' コンテキスト内ではアサートしない</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -545,10 +545,10 @@ The type declaring these methods should also respect the following rules:
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="new">DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</target>
+        <target state="translated">DataRow エントリを有効にするには、次のレイアウトが必要です: 
+- テスト メソッドにのみ設定する必要があります。
+- 引数の数はメソッドの引数の数と一致させる必要があります。
+- 引数の型は、メソッドの引数の型と一致させる必要があります。</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
@@ -704,7 +704,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' はメソッドであるため、'DynamicDataSourceType.AutoDetect' または 'DynamicDataSourceType.Method' を使用する必要があります (明示的に指定しない場合は既定で自動検出され、これが推奨されます)</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Method"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
@@ -714,12 +714,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' は、プロパティでもメソッドでもありません。サポートされているのは、プロパティとメソッドのみです。</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' はプロパティであるため、'DynamicDataSourceType.AutoDetect' または 'DynamicDataSourceType.Property' を使用する必要があります (明示的に指定しない場合は既定で自動検出され、これが推奨されます)</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Property"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
@@ -922,7 +922,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PublicTestClassSuppressorJustification">
         <source>MSTest test classes should remain public for test discovery.</source>
-        <target state="new">MSTest test classes should remain public for test discovery.</target>
+        <target state="translated">MSTest テスト クラスは、テスト検出のためにパブリックのままにしておく必要があります。</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
@@ -1250,10 +1250,10 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
-- it should not be generic.</target>
+        <target state="translated">テスト クラス ('[TestClass]' 属性でマークされたクラス) は、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
+- 'public' である必要があります ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
+- 'static' にすることはできません ('AssemblyInitialize' メソッドおよび/または 'AssemblyCleanup' メソッドのみが含まれる場合は除きます)
+- ジェネリックにすることはできません。</target>
         <note>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
@@ -1387,14 +1387,14 @@ The type declaring these methods should also respect the following rules:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
-- it should may be generic as long as type parameters can be inferred and argument types are compatible
-- it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">'[TestMethod]' 属性でマークされたテスト メソッドは、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
+- 'public' である必要があります ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
+- 'static' にすることはできません
+- 型パラメーターを推論でき、引数の型が互換性がある限り、ジェネリックである必要があります
+- 'abstract' にすることはできません
+- 戻り値の型は 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。</target>
         <note>{Locked="[TestMethod]"}{Locked="ValueTask"}{Locked="MSTest"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
@@ -1464,17 +1464,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="new">The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
+        <target state="translated">'ConditionBaseAttribute' から派生した属性 '{0}' は、`TestClassAttribute` でマークされたクラスでのみ使用してください</target>
         <note>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
-        <target state="new">Use 'ConditionBaseAttribute' on test classes</target>
+        <target state="translated">テスト クラスに 'ConditionBaseAttribute' を使用する</target>
         <note>{Locked="ConditionBaseAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutBehaviorDescription">
         <source>By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</source>
-        <target state="new">By default, '[Timeout]' reports a timeout without waiting for the test method to finish. Test code may continue running and interfere with cleanup. Set 'CooperativeCancellation = true' to have MSTest signal cancellation and wait for the method to finish.</target>
+        <target state="translated">既定では、'[Timeout]' はテスト メソッドの終了を待たずにタイムアウトを報告します。テスト コードは実行を続行し、クリーンアップを妨げる可能性があります。MSTest シグナルをキャンセルし、メソッドが完了するまで待機するように 'CooperativeCancellation = true' を設定します。</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">

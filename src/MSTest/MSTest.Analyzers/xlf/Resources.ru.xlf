@@ -154,17 +154,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
+        <target state="translated">При сравнении типов значений используйте "Assert.AreEqual"/"Assert.AreNotEqual", а не "Assert.AreSame"/"Assert.AreNotSame". При передаче типа значения в "Assert.AreSame"/"Assert.AreNotSame" выполняется упаковка (создание нового объекта). Так как "Assert.AreSame"/"Assert.AreNotSame" сравнивает по ссылке, "Assert.AreSame" завершится сбоем при упаковке, а "Assert.AreNotSame" всегда будет выполняться успешно.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
-        <target state="new">Use '{0}' instead of '{1}' when comparing value types</target>
+        <target state="translated">Используйте "{0}" вместо "{1}" при сравнении типов значений</target>
         <note>{0} is the preferred assertion method name. {1} is the current assertion method name.</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="new">Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</target>
+        <target state="translated">Не используйте "Assert.AreSame" или "Assert.AreNotSame" с типами значений</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
@@ -214,17 +214,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</target>
+        <target state="translated">Не используйте утверждения внутри методов "async void", локальных функций или лямбда-функций. Исключения, возникающие в этом контексте, не обрабатываются. При использовании VSTest в .NET Framework они будут поглощены автоматически. При использовании Microsoft.Testing.Platform или VSTest в современных версиях .NET они могут привести к аварийному завершению процесса.</target>
         <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</target>
+        <target state="translated">Не используйте утверждения внутри методов "async void", локальных функций или лямбда-функций, так как они могут не привести к сбою теста</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
         <source>Do not assert inside 'async void' contexts</source>
-        <target state="new">Do not assert inside 'async void' contexts</target>
+        <target state="translated">Не используйте утверждения в контексте "async void"</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -545,10 +545,10 @@ The type declaring these methods should also respect the following rules:
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="new">DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</target>
+        <target state="translated">Действительная запись DataRow должна соответствовать следующему макету:
+– должна быть задана только для метода теста;
+– количество аргументов должно совпадать с количеством аргументов метода;
+– тип аргумента должен совпадать с типом аргумента метода.</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
@@ -661,10 +661,10 @@ The type declaring these methods should also respect the following rules:
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="new">'DynamicData' entry should have the following layout to be valid:
-- should only be set on a test method;
-- member should be defined on the type specified;
-- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <target state="translated">Запись "DynamicData" должна соответствовать следующему макету, чтобы быть допустимой:
+– должна быть задана только для метода теста;
+– элемент должен быть определен в указанном типе;
+– элемент должен быть методом, если указан DynamicDataSourceType.Method, в противном случае он должен быть свойством.</target>
         <note>{Locked="DynamicDataSourceType.Method"}{Locked="DynamicData"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
@@ -714,7 +714,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" не является свойством или методом. Поддерживаются только свойства и методы.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
@@ -922,7 +922,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PublicTestClassSuppressorJustification">
         <source>MSTest test classes should remain public for test discovery.</source>
-        <target state="new">MSTest test classes should remain public for test discovery.</target>
+        <target state="translated">Классы тестов MSTest должны оставаться общедоступными для обнаружения тестов.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
@@ -1250,10 +1250,10 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
-- it should not be generic.</target>
+        <target state="translated">В тестовых классах (с атрибутом "[TestClass]") должна быть следующая структура, чтобы эти классы считались допустимыми для MSTest:
+– должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]")
+– не должен быть статическим ("static") кроме случаев, когда содержит только методы "AssemblyInitialize" и "AssemblyCleanup"
+– не должен быть универсальным.</target>
         <note>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
@@ -1292,21 +1292,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Чтобы метод, помеченный "[TestCleanup]", был допустимым, он должен соответствовать следующей структуре:
+– должен быть общедоступным ("public")
+– не должен быть абстрактным ("abstract")
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть статическим ("static")
+– не должен быть специальным (метод завершения, оператор...).
+– не должен быть универсальным ("generic")
+– не должен принимать никаких параметров
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
+– должен быть классом (class)
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть статическим ("static")
+– если class является "sealed", его следует пометить как "[TestClass]" (или производный атрибут).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -1351,21 +1351,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Чтобы метод, помеченный "[TestInitialize]", был допустимым, он должен соответствовать следующей структуре:
+– должен быть общедоступным ("public")
+– не должен быть абстрактным ("abstract")
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть статическим ("static")
+– не должен быть специальным (метод завершения, оператор...).
+– не должен быть универсальным ("generic")
+– не должен принимать никаких параметров
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
+– должен быть классом (class)
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть статическим ("static")
+– если class является "sealed", его следует пометить как "[TestClass]" (или производный атрибут).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -1387,14 +1387,14 @@ The type declaring these methods should also respect the following rules:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
-- it should may be generic as long as type parameters can be inferred and argument types are compatible
-- it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Метод теста (метод, помеченный атрибутом "[TestMethod]") должен соответствовать следующей структуре, чтобы считаться допустимым в MSTest:
+– должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]")
+– не должен быть статическим ("static");
+– может быть универсальным, если можно вывести параметры типа, а типы аргументов являются совместимыми
+– не должен быть абстрактным ("abstract")
+– возвращаемый тип должен быть "void", "Task" или "ValueTask"
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть специальным (метод завершения, оператор…).</target>
         <note>{Locked="[TestMethod]"}{Locked="ValueTask"}{Locked="MSTest"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
@@ -1464,12 +1464,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="new">The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
+        <target state="translated">Атрибут "{0}", производный от "ConditionBaseAttribute", следует использовать только для классов, помеченных при помощи `TestClassAttribute`</target>
         <note>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
-        <target state="new">Use 'ConditionBaseAttribute' on test classes</target>
+        <target state="translated">Используйте "ConditionBaseAttribute" для тестовых классов</target>
         <note>{Locked="ConditionBaseAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutBehaviorDescription">

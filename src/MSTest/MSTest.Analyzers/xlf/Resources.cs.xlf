@@ -164,7 +164,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="new">Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</target>
+        <target state="translated">U hodnotových typů nepoužívejte metody Assert.AreSame ani Assert.AreNotSame</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
@@ -214,17 +214,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</target>
+        <target state="translated">Nepoužívejte kontrolní výrazy v metodách, místních funkcích ani výrazech lambda typu async void. Výjimky vyvolané v tomto kontextu zůstanou neošetřené. Při použití VSTest v prostředí .NET Framework se tyto výjimky bez upozornění ignorují. Při použití Microsoft.Testing.Platform nebo VSTest v moderních verzích .NET můžou tyto výjimky způsobit chybové ukončení procesu.</target>
         <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</target>
+        <target state="translated">Nepoužívejte kontrolní výrazy v metodách, místních funkcích ani výrazech lambda typu async void, protože tyto kontrolní výrazy nemusí způsobit selhání testu.</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
         <source>Do not assert inside 'async void' contexts</source>
-        <target state="new">Do not assert inside 'async void' contexts</target>
+        <target state="translated">V kontextech async void nepoužívejte kontrolní výrazy</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -327,7 +327,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="new">'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <target state="translated">Ke každé metodě třídy 'CollectionAssert' existuje rovnocenná metoda ve třídě 'Assert'. Používání jediného rozhraní API pro kontrolní výrazy zvyšuje konzistenci a usnadňuje hledání příslušných metod.</target>
         <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
@@ -545,10 +545,10 @@ The type declaring these methods should also respect the following rules:
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="new">DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</target>
+        <target state="translated">Aby byla položka DataRow platná, měla by splňovat následující podmínky:
+– měla by se nastavovat jen u testovacích metod;
+– počet argumentů by měl odpovídat počtu argumentů metody;
+– typ argumentu by měl odpovídat typu argumentu metody.</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
@@ -661,10 +661,10 @@ The type declaring these methods should also respect the following rules:
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="new">'DynamicData' entry should have the following layout to be valid:
-- should only be set on a test method;
-- member should be defined on the type specified;
-- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <target state="translated">Aby byla položka DynamicData platná, měla by splňovat následující podmínky:
+– měla by se nastavovat jen u testovacích metod;
+– člen by měl být definovaný v zadaném typu;
+– pokud je zadaná hodnota DynamicDataSourceType.Method, mělo by jít o metodu, jinak o vlastnost.</target>
         <note>{Locked="DynamicDataSourceType.Method"}{Locked="DynamicData"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
@@ -704,7 +704,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">Člen {0}.{1} uvedený v atributu [DynamicData] je metoda. Použijte proto hodnotu DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Method. Doporučenou výchozí možností je automatické rozpoznání, které se použije, pokud typ zdroje nezadáte explicitně.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Method"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
@@ -714,12 +714,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <target state="translated">Člen {0}.{1} uvedený v atributu [DynamicData] není vlastnost ani metoda. Podporují se jen vlastnosti a metody.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">Člen {0}.{1} uvedený v atributu [DynamicData] je vlastnost. Použijte proto hodnotu DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Property. Doporučenou výchozí možností je automatické rozpoznání, které se použije, pokud typ zdroje nezadáte explicitně.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Property"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
@@ -877,7 +877,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
+        <target state="translated">Klíč prostředku {0} v atributu '[ResourceLock]' je zadaný přímo jako řetězcový literál. Odkazujte na sdílenou konstantu (například člen 'WellKnownResources' nebo vlastní konstantu deklarovanou pomocí 'const'), aby kvůli překlepu nepozorovaně nevznikl jiný, nesdílený klíč.</target>
         <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
@@ -892,7 +892,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="new">'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</target>
+        <target state="translated">Metody 'Dispose' a 'DisposeAsync' odpovídají standardním vzorům správy životnosti v .NET. Při úklidu po testech se tak postupuje stejně jako v produkčním kódu. Toto pravidlo stylu vyžaduje výslovný souhlas s jeho použitím a vzájemně se vylučuje s pravidlem MSTEST0022.</target>
         <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
@@ -922,7 +922,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PublicTestClassSuppressorJustification">
         <source>MSTest test classes should remain public for test discovery.</source>
-        <target state="new">MSTest test classes should remain public for test discovery.</target>
+        <target state="translated">Aby fungovalo zjišťování testů, měly by testovací třídy MSTest zůstat veřejné.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
@@ -1057,7 +1057,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="new">'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <target state="translated">Ke každé metodě třídy 'StringAssert' existuje rovnocenná metoda ve třídě 'Assert'. Používání jediného rozhraní API pro kontrolní výrazy zvyšuje konzistenci a usnadňuje hledání příslušných metod.</target>
         <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -1324,10 +1324,10 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">'TestContext' by měla být nestatická vlastnost, jejíž hodnota se nastaví v konstruktoru nebo ji nastaví MSTest. Aby mohl MSTest hodnotu vlastnosti nastavit, měla by vlastnost splňovat následující podmínky:
+– Měla by být public bez ohledu na to, jestli je nastavený atribut '[assembly: DiscoverInternals]'.
+– Neměla by být static.
+– Musí mít metodu setter.</target>
         <note>{Locked="TestContext"}{Locked="MSTest"}{Locked="public"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
@@ -1387,14 +1387,14 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
-- it should may be generic as long as type parameters can be inferred and argument types are compatible
-- it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby MSTest považoval testovací metody (metody označené atributem '[TestMethod]') za platné, měla by každá z nich splňovat následující podmínky:
+– Měla by být public (nebo internal, pokud je nastavený atribut '[assembly: DiscoverInternals]').
+– Neměla by být static.
+– Může být obecná, pokud lze odvodit parametry typu a typy argumentů jsou kompatibilní.
+– Neměla by být abstract.
+– Návratový typ by měl být void, Task nebo ValueTask.
+– Neměla by být async void.
+– Nemělo by jít o speciální metodu (například finalizátor nebo operátor).</target>
         <note>{Locked="[TestMethod]"}{Locked="ValueTask"}{Locked="MSTest"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
@@ -1464,12 +1464,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="new">The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
+        <target state="translated">Atribut {0} odvozený od ConditionBaseAttribute by se měl používat jen u tříd označených atributem `TestClassAttribute`.</target>
         <note>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
-        <target state="new">Use 'ConditionBaseAttribute' on test classes</target>
+        <target state="translated">U testovacích tříd používejte atribut ConditionBaseAttribute</target>
         <note>{Locked="ConditionBaseAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutBehaviorDescription">
