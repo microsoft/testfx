@@ -293,6 +293,21 @@ public sealed class TestSourceHostMutationTests : TestContainer
         }
     }
 
+    public void ResolutionPathsDoNotRepeatADirectoryThatTheSourceAlreadyProvides()
+    {
+        string adapterDirectory = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!;
+        string testPlatformDirectory = Path.GetDirectoryName(typeof(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase).Assembly.Location)!;
+        using TestSourceHost host = new(null!, null);
+
+        // Placing the source next to the adapter, then next to the test platform, makes each of them already part of the
+        // list when it is considered, whether or not the two directories coincide in the test output.
+        foreach (string sourceDirectory in new[] { adapterDirectory, testPlatformDirectory })
+        {
+            host.GetResolutionPaths(Path.Combine(sourceDirectory, "tests.dll"), isPortableMode: true)
+                .Should().Equal(new[] { sourceDirectory, adapterDirectory, testPlatformDirectory }.Distinct());
+        }
+    }
+
     private static void Configure(string search)
     {
         MSTestSettingsProvider.Reset();

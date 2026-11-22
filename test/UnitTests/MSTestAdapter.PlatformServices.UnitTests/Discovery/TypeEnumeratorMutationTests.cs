@@ -72,6 +72,23 @@ public sealed class TypeEnumeratorMutationTests : TestContainer
                 ["DoNotParallelizeAttribute"] = 1,
             });
     }
+
+    public void GetTestFromMethodTracksTheMethodAttributesForTelemetry()
+    {
+        MethodInfo method = typeof(SampleTestClass).GetMethod(nameof(SampleTestClass.NoParameters))!;
+        SetAttributes(method, new TestMethodAttribute(), new TestCategoryAttribute("first"), new TestCategoryAttribute("second"));
+        var collector = new MSTestTelemetryDataCollector();
+        MSTestTelemetryDataCollector.Current = collector;
+
+        CreateTypeEnumerator(typeof(SampleTestClass)).GetTestFromMethod(method, classDisablesParallelization: false, _warnings);
+
+        collector.GetDiscoveryAttributeCounts().Should().BeEquivalentTo(
+            new Dictionary<string, long>
+            {
+                ["TestMethodAttribute"] = 1,
+                ["TestCategoryAttribute"] = 2,
+            });
+    }
 #endif
 
     public void GetTestsKeepsTheMethodDeclaredClosestToTheTestClassWhenTheBaseMethodIsEnumeratedFirst()

@@ -114,6 +114,80 @@ public sealed class SourceGenerationPass2MutationTests : TestContainer
         merged[typeof(SecondPropertyHolder)].Should().BeSameAs(replacement, "the provider registered last wins for a type that several providers publish");
     }
 
+    public void CompositeMergesTheTypeAttributesOfEveryProvider()
+    {
+        Attribute[] first = [new MarkerAttribute()];
+        Attribute[] second = [new MarkerAttribute()];
+        Attribute[] replacement = [new MarkerAttribute()];
+        Attribute[] third = [new MarkerAttribute()];
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "first",
+            TypeAttributes = new Dictionary<Type, Attribute[]> { [typeof(FirstPropertyHolder)] = first },
+        });
+        composite.GetSnapshot().TypeAttributes.Should().HaveCount(1, "the first provider is the only contributor so far");
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "second",
+            TypeAttributes = new Dictionary<Type, Attribute[]> { [typeof(SecondPropertyHolder)] = second },
+        });
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "third",
+            TypeAttributes = new Dictionary<Type, Attribute[]>
+            {
+                [typeof(ThirdPropertyHolder)] = third,
+                [typeof(SecondPropertyHolder)] = replacement,
+            },
+        });
+
+        IReadOnlyDictionary<Type, Attribute[]> merged = composite.GetSnapshot().TypeAttributes;
+        merged.Should().HaveCount(3);
+        merged[typeof(FirstPropertyHolder)].Should().BeSameAs(first);
+        merged[typeof(ThirdPropertyHolder)].Should().BeSameAs(third);
+        merged[typeof(SecondPropertyHolder)].Should().BeSameAs(replacement, "the provider registered last wins for a type that several providers publish");
+    }
+
+    public void CompositeMergesTheTypeMethodLocationsOfEveryProvider()
+    {
+        var first = new SourceGeneratedReflectionDataProvider.TypeLocation { FileName = "first.cs" };
+        var second = new SourceGeneratedReflectionDataProvider.TypeLocation { FileName = "second.cs" };
+        var replacement = new SourceGeneratedReflectionDataProvider.TypeLocation { FileName = "replacement.cs" };
+        var third = new SourceGeneratedReflectionDataProvider.TypeLocation { FileName = "third.cs" };
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "first",
+            TypeMethodLocations = new Dictionary<string, SourceGeneratedReflectionDataProvider.TypeLocation> { ["First.Type"] = first },
+        });
+        composite.GetSnapshot().TypeMethodLocations.Should().HaveCount(1, "the first provider is the only contributor so far");
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "second",
+            TypeMethodLocations = new Dictionary<string, SourceGeneratedReflectionDataProvider.TypeLocation> { ["Second.Type"] = second },
+        });
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "third",
+            TypeMethodLocations = new Dictionary<string, SourceGeneratedReflectionDataProvider.TypeLocation>
+            {
+                ["Third.Type"] = third,
+                ["Second.Type"] = replacement,
+            },
+        });
+
+        IReadOnlyDictionary<string, SourceGeneratedReflectionDataProvider.TypeLocation> merged = composite.GetSnapshot().TypeMethodLocations;
+        merged.Should().HaveCount(3);
+        merged["First.Type"].Should().BeSameAs(first);
+        merged["Third.Type"].Should().BeSameAs(third);
+        merged["Second.Type"].Should().BeSameAs(replacement, "the provider registered last wins for a type that several providers publish");
+    }
+
     public void CompositeSnapshotIsNotTiedToAnySingleAssembly()
     {
         var composite = new CompositeSourceGeneratedReflectionDataProvider();

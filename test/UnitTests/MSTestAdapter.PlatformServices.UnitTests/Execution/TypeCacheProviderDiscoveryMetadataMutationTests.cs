@@ -222,6 +222,34 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         }
     }
 
+    // Plugin-style hosts load the test assembly in a custom load context: its references are only visible there, not through the default context.
+    public void ReferencedAssemblyIsLoadedThroughTheLoadContextOfItsReferrer()
+    {
+        List<(string Format, object?[] Arguments)> warnings = CaptureWarnings();
+        using var directory = new TemporaryDirectory();
+        string suffix = Guid.NewGuid().ToString("N");
+        string referencedName = "Coverage.PluginReferenced." + suffix;
+        string referrerName = "Coverage.PluginReferrer." + suffix;
+        directory.WriteAssembly(referencedName, [], [(false, MarkerNamespace, MarkerName)]);
+        directory.WriteAssembly(referrerName, [referencedName], []);
+        var context = new DirectoryLoadContext(directory.DirectoryPath);
+        try
+        {
+            Assembly referrer = context.LoadAssembly(referrerName);
+
+            List<Assembly> discovered = EnumerateCandidateAssemblies(referrer);
+
+            discovered.Select(assembly => assembly.GetName().Name).Should().Equal(referrerName, referencedName);
+            discovered[0].Should().BeSameAs(referrer);
+            AssemblyLoadContext.GetLoadContext(discovered[1]).Should().BeSameAs(context);
+            warnings.Should().BeEmpty();
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
     public void UnmarkedIntermediateAssemblyIsWalkedThroughItsMetadataAndOnlyTheMarkedOneIsLoaded()
     {
         List<(string Format, object?[] Arguments)> infos = CaptureInfos();
@@ -392,6 +420,25 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         public CollectibleLoadContext()
             : base(isCollectible: true)
         {
+        }
+    }
+
+    // Loads assemblies from memory so that the temporary directory can be deleted while the context is still unloading.
+    private sealed class DirectoryLoadContext(string rootDirectory) : AssemblyLoadContext(isCollectible: true)
+    {
+        public Assembly LoadAssembly(string name) => Load(new AssemblyName(name))!;
+
+        protected override Assembly? Load(AssemblyName assemblyName)
+        {
+            string path = Path.Combine(rootDirectory, assemblyName.Name + ".dll");
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            using var stream = new MemoryStream(File.ReadAllBytes(path));
+
+            return LoadFromStream(stream);
         }
     }
 

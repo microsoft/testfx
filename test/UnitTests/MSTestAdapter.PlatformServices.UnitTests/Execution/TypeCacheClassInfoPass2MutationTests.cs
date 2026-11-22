@@ -136,6 +136,24 @@ public sealed class TypeCacheClassInfoPass2MutationTests : TestContainer
 #endif
     }
 
+    public void GetTestMethodInfoShouldThrowUnreachableWhenTheTestMethodHasNoManagedMethodName()
+    {
+        Type type = typeof(ClassWithAParameterlessConstructor);
+
+        foreach (string? managedMethodName in new string?[] { null, "  " })
+        {
+            // The resolved method is provided, so only the managed name gate can reject the test method.
+            var testMethod = new TestMethod(managedMethodName, null, TestMethodName, type.FullName!, "A", null, null) { MethodInfo = type.GetMethod(TestMethodName) };
+
+            Action action = () => _typeCache.GetTestMethodInfo(testMethod);
+
+            Exception exception = action.Should().Throw<Exception>().Which;
+            // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so a generic type
+            // assertion would compare the adapter's copy with this test assembly's copy and fail on type identity.
+            exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException", $"the managed method name is '{managedMethodName}'");
+        }
+    }
+
     private static TestMethod CreateTestMethod(Type type)
         => new(TestMethodName, null, TestMethodName, type.FullName!, "A", null, null) { MethodInfo = type.GetMethod(TestMethodName) };
 
