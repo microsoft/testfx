@@ -113,6 +113,11 @@ public sealed class TypeCacheClassInfoPass2MutationTests : TestContainer
 
     public void GetTestMethodInfoShouldReportTheFSharpSignatureMessageForAnInvalidFSharpTestInitializeFunction()
     {
+#if DEBUG && !NETFRAMEWORK
+        // The module has no [TestClass]: a regression of the default attribute would otherwise fail the debug assert and crash the test host.
+        var assertions = new List<string?>();
+        using var observer = new DiagnosticAssertionObserver(assertions.Add);
+#endif
         Type moduleType = new FSharpMetadataAssembly().CreateModuleClass(builder =>
         {
             MethodBuilder method = builder.DefineMethod(WrongSignatureMethodName, MethodAttributes.Public | MethodAttributes.HideBySig, typeof(void), Type.EmptyTypes);
@@ -126,6 +131,9 @@ public sealed class TypeCacheClassInfoPass2MutationTests : TestContainer
 
         TypeInspectionException exception = action.Should().Throw<TypeInspectionException>().Which;
         exception.Message.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature, moduleType.FullName, WrongSignatureMethodName));
+#if DEBUG && !NETFRAMEWORK
+        assertions.Should().BeEmpty();
+#endif
     }
 
     private static TestMethod CreateTestMethod(Type type)
