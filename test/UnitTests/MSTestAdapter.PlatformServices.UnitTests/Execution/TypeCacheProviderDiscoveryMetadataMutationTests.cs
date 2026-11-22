@@ -4,6 +4,9 @@
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+#if NET
+using System.Runtime.Loader;
+#endif
 
 using AwesomeAssertions;
 
@@ -197,6 +200,28 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         paths.Should().ContainKey("Coverage.Second").WhoseValue.Should().Be(second);
     }
 
+    // An assembly loaded in a custom load context binds through that context, which the default context's trusted platform assemblies do not describe.
+    public void ReferrerLoadedInACustomLoadContextIsNotResolvedThroughTheTrustedPlatformAssemblies()
+    {
+        using var directory = new TemporaryDirectory();
+        string path = directory.WriteAssembly("Coverage.CustomContext." + Guid.NewGuid().ToString("N"), [], []);
+        using var trustedAssemblies = new TrustedPlatformAssembliesOverride(path);
+        AssemblyName referenceName = AssemblyName.GetAssemblyName(path);
+        object resolver = CreateResolver();
+        var context = new CollectibleLoadContext();
+        try
+        {
+            Assembly customContextReferrer = context.LoadFromAssemblyPath(typeof(TypeCacheProviderDiscoveryMetadataMutationTests).Assembly.Location);
+
+            Resolve(resolver, new RootAssembly(), referenceName).Should().Be(path, "a referrer outside any load context binds through the default context");
+            Resolve(resolver, customContextReferrer, referenceName).Should().BeNull();
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
     public void UnmarkedIntermediateAssemblyIsWalkedThroughItsMetadataAndOnlyTheMarkedOneIsLoaded()
     {
         List<(string Format, object?[] Arguments)> infos = CaptureInfos();
@@ -360,6 +385,14 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         public TrustedPlatformAssembliesOverride(string value) => AppContext.SetData(Key, value);
 
         public void Dispose() => AppContext.SetData(Key, _original);
+    }
+
+    private sealed class CollectibleLoadContext : AssemblyLoadContext
+    {
+        public CollectibleLoadContext()
+            : base(isCollectible: true)
+        {
+        }
     }
 
     private sealed class RootAssembly(params AssemblyName[] references) : Assembly

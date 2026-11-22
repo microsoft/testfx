@@ -99,6 +99,18 @@ public class TypeCacheProviderDiscoveryMutationTests : TestContainer
         warnings[0].Arguments[1].Should().BeOfType<FileNotFoundException>();
     }
 
+    // The assembly being walked is already visited under its own full name, so a reference back to it is neither resolved nor loaded again.
+    public void ReferenceBackToTheAssemblyBeingWalkedIsNotLoadedAgain()
+    {
+        List<(string Format, object?[] Arguments)> warnings = CaptureWarnings();
+        var root = new RootAssembly(RootAssemblyFullName, new AssemblyName(RootAssemblyFullName));
+
+        List<Assembly> discovered = EnumerateCandidateAssemblies(root);
+
+        discovered.Should().ContainSingle().Which.Should().BeSameAs(root);
+        warnings.Should().BeEmpty();
+    }
+
     public void ReferencedAssemblyThatCannotBeLoadedIsNotReportedWhenWarningsAreDisabled()
     {
         _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(false);
