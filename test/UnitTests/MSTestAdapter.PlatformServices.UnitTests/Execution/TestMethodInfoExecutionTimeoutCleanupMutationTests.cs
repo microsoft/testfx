@@ -174,6 +174,26 @@ public sealed class TestMethodInfoExecutionTimeoutCleanupMutationTests : TestCon
         await invoke.Should().ThrowAsync<ObjectDisposedException>();
     }
 
+    public async Task InvokeAsyncDoesNotRunTheTestQueuedOnTheSynchronizationContextOnceTheInvocationWasLeftByAnException()
+    {
+        using var probe = new FixtureProbe();
+        QueuedWorkerFixture.Probe = probe;
+
+        // Task.Delay rejects a negative timeout once the test is queued on the dispatcher: the invocation is left before the queued test started.
+        using var harness = new CleanupHarness(typeof(QueuedWorkerFixture), timeout: -5);
+        using var dispatcher = new DispatcherContext();
+#if DEBUG && !NETFRAMEWORK
+        using var observer = new DiagnosticAssertionObserver(_ => { });
+#endif
+
+        Func<Task> invoke = () => dispatcher.InvokeAsync(() => harness.Subject.InvokeAsync(null));
+
+        await invoke.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await dispatcher.DrainAsync();
+
+        probe.InstanceCount.Should().Be(0, because: "the queued test must find the invocation closed instead of running after it was left");
+    }
+
     private static async Task<TResult> WaitAsync<TResult>(Task<TResult> task, int guardSeconds = 30)
     {
         using var guard = new CancellationTokenSource(TimeSpan.FromSeconds(guardSeconds));
@@ -187,7 +207,7 @@ public sealed class TestMethodInfoExecutionTimeoutCleanupMutationTests : TestCon
     {
         private readonly IPlatformServiceProvider _previousProvider;
 
-        public CleanupHarness(Type fixtureType)
+        public CleanupHarness(Type fixtureType, int timeout = 60_000)
         {
             _previousProvider = PlatformServiceProvider.Instance;
             Services = new TestablePlatformServiceProvider();
@@ -203,7 +223,7 @@ public sealed class TestMethodInfoExecutionTimeoutCleanupMutationTests : TestCon
             Subject = new TestMethodInfo(fixtureType.GetMethod(TestMethodName)!, classInfo)
             {
                 TestContext = Context,
-                TimeoutInfo = TimeoutInfo.FromTimeout(60_000),
+                TimeoutInfo = TimeoutInfo.FromTimeout(timeout),
             };
         }
 
@@ -278,6 +298,14 @@ public sealed class TestMethodInfoExecutionTimeoutCleanupMutationTests : TestCon
             return completion.Task;
         }
 
+        public Task DrainAsync()
+        {
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Post(_ => completion.SetResult(true), null);
+
+            return completion.Task;
+        }
+
         public void Dispose()
         {
             _queue.CompleteAdding();
@@ -322,6 +350,20 @@ public sealed class TestMethodInfoExecutionTimeoutCleanupMutationTests : TestCon
     private sealed class LateWorkerFixture
     {
         public LateWorkerFixture()
+            => Probe!.InstanceCreated();
+
+        public static FixtureProbe? Probe { get; set; }
+
+        public TestContext? TestContext { get; set; }
+
+        public void TestMethod()
+        {
+        }
+    }
+
+    private sealed class QueuedWorkerFixture
+    {
+        public QueuedWorkerFixture()
             => Probe!.InstanceCreated();
 
         public static FixtureProbe? Probe { get; set; }
