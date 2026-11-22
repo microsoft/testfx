@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable SA1121 // Keep IntPtr for older target frameworks sharing this file.
+
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -240,7 +242,7 @@ public sealed class TestExecutionManagerRunnerLoopMutationTests : TestContainer
         UnitTestElement test = Managed<YieldingFixture>(nameof(YieldingFixture.Yielding));
         UnitTestRunner runner = harness.CreateRunner(test);
 
-        RunOnDedicatedThread(() => harness.ExecuteAsync([test], usesAppDomains, runner), gate: null, apartmentState);
+        RunOnDedicatedThread(() => harness.ExecuteAsync([test], usesAppDomains, runner), probe, apartmentState);
 
         return (harness.Recorder.Events.Single(recorded => recorded.Kind == "RecordResult:Passed"), probe.PoolThreadObservations);
     }
@@ -262,24 +264,31 @@ public sealed class TestExecutionManagerRunnerLoopMutationTests : TestContainer
                 harness.RunSynchronously(runner, prerequisite);
                 await harness.ExecuteAsync([dependent], usesAppDomains, runner, coordinator);
             },
-            gate,
+            probe,
             apartmentState);
 
         return (harness.Recorder.Events.Single(recorded => recorded.Kind == "RecordResult:Ignored"), probe.PoolThreadObservations);
     }
 
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "The STA apartment is only requested by the tests that first check they run on Windows.")]
-    private static void RunOnDedicatedThread(Func<Task> work, TaskCompletionSource<bool>? gate, ApartmentState apartmentState)
+    private static void RunOnDedicatedThread(Func<Task> work, Probe probe, ApartmentState apartmentState)
     {
         ExceptionDispatchInfo? failure = null;
         var thread = new Thread(() =>
         {
             try
             {
+                if (probe.Gate is not null)
+                {
+                    // A thread that blocks on the work while it is parked on the gate would deadlock: the context lets it
+                    // through so that a regression is reported as a failed assertion instead of a hang.
+                    SynchronizationContext.SetSynchronizationContext(new GateReleasingContext(probe, Environment.CurrentManagedThreadId));
+                }
+
                 Task pending = work();
 
                 // Released only once the work returned an incomplete task: every await of the chain is registered by then.
-                gate?.TrySetResult(true);
+                probe.Gate?.TrySetResult(true);
                 pending.GetAwaiter().GetResult();
             }
             catch (Exception exception)
@@ -471,10 +480,13 @@ public sealed class TestExecutionManagerRunnerLoopMutationTests : TestContainer
 
         internal List<bool> PoolThreadObservations { get; } = [];
 
+        internal bool IsParkedOnGate { get; private set; }
+
         internal async Task PauseAsync()
         {
             if (Gate is not null)
             {
+                IsParkedOnGate = true;
                 await Gate.Task.ConfigureAwait(false);
             }
             else
@@ -485,6 +497,30 @@ public sealed class TestExecutionManagerRunnerLoopMutationTests : TestContainer
             }
 
             PoolThreadObservations.Add(Thread.CurrentThread.IsThreadPoolThread);
+        }
+    }
+
+    private sealed class GateReleasingContext : SynchronizationContext
+    {
+        private readonly Probe _probe;
+        private readonly int _threadId;
+
+        internal GateReleasingContext(Probe probe, int threadId)
+        {
+            _probe = probe;
+            _threadId = threadId;
+            SetWaitNotificationRequired();
+        }
+
+        public override int Wait(IntPtr[] waitHandles, bool waitAll, int millisecondsTimeout)
+        {
+            // Only the thread that owns the context, and only once the cleanup is parked: earlier blocking waits must not open the gate.
+            if (_probe.IsParkedOnGate && Environment.CurrentManagedThreadId == _threadId)
+            {
+                _probe.Gate!.TrySetResult(true);
+            }
+
+            return base.Wait(waitHandles, waitAll, millisecondsTimeout);
         }
     }
 
