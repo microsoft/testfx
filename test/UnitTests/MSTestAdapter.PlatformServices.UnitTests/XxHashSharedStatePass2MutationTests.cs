@@ -31,6 +31,15 @@ public sealed class XxHashSharedStatePass2MutationTests : TestContainer
         hash.Should().Equal(CreateExpectedHash(0x51DEA3729D7E076FUL, 0x846CB58C7D532562UL));
     }
 
+    // Completing the internal buffer with the second chunk leaves exactly one buffer's worth of input: that remainder
+    // has to stay buffered for GetCurrentHash instead of being consumed by Append, which would leave nothing behind.
+    public void Append_OfOneByteThenExactlyOneBufferAfterCompletingTheBuffer_MatchesTheKnownAnswer()
+    {
+        byte[] hash = AppendWithoutViolatingAssertions(CreateData(512), 0, 1, 511);
+
+        hash.Should().Equal(CreateExpectedHash(0x90C55E1047BF0012UL, 0x1D539050EF013BD8UL));
+    }
+
 #if DEBUG
     public void Append_WithAFullBlockAwaitingItsScramble_DoesNotAssertOnTheProcessedStripes()
     {

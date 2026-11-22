@@ -189,6 +189,36 @@ public sealed class SourceGeneratedReflectionMutationTests : TestContainer
         }
     }
 
+    public void RegisterIndexesTheTypesOfTheAssemblyByTheirFullName()
+    {
+        IPlatformServiceProvider previous = PlatformServiceProvider.Instance;
+        try
+        {
+            PlatformServiceProvider.Instance = null!;
+            var assembly = new NamedAssembly("RegisteredAssemblyWithTypes");
+
+            ReflectionMetadataHook.Register(
+                assembly,
+                [typeof(Sample)],
+                new Dictionary<Type, MethodInfo[]>(),
+                new Dictionary<Type, Attribute[]>(),
+                [],
+                new Dictionary<MethodInfo, Attribute[]>(),
+                new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(),
+                new Dictionary<Type, ConstructorInvokerInfo[]>(),
+                new Dictionary<PropertyInfo, Action<object?, object?>>());
+
+            var fileOperations = (SourceGeneratedFileOperations)PlatformServiceProvider.Instance.FileOperations;
+
+            fileOperations.DataProvider.TryGetTypeByName(assembly, typeof(Sample).FullName!, out Type? resolved).Should().BeTrue();
+            resolved.Should().BeSameAs(typeof(Sample));
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = previous;
+        }
+    }
+
     private static SourceGeneratedReflectionOperations CreateOperationsWithTwoConstructors(InstanceCheckCountingType spy)
         => new(new SourceGeneratedReflectionDataProvider
         {
@@ -227,6 +257,15 @@ public sealed class SourceGeneratedReflectionMutationTests : TestContainer
     private sealed class NamelessAssembly : Assembly
     {
         public override AssemblyName GetName() => new AssemblyName();
+    }
+
+    private sealed class NamedAssembly : Assembly
+    {
+        private readonly string _name;
+
+        public NamedAssembly(string name) => _name = name;
+
+        public override AssemblyName GetName() => new AssemblyName(_name);
     }
 
     private sealed class InstanceCheckCountingType : TypeDelegator

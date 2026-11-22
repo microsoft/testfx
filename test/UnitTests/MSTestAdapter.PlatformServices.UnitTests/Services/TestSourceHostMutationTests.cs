@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP && !NETFRAMEWORK
+using System.Reflection.Emit;
 using System.Runtime.Loader;
 using System.Security;
 using System.Security.AccessControl;
@@ -164,6 +165,19 @@ public sealed class TestSourceHostMutationTests : TestContainer
         var loaded = (Assembly)getLoadedAssembly.Invoke(null, [notYetLoaded])!;
 
         loaded.GetName().Name.Should().Be(notYetLoaded);
+    }
+
+    // A dynamic assembly cannot be loaded by name, so only the scan of the assemblies already loaded in the app domain can return it.
+    public void LoadedAssemblyLookupReturnsTheAssemblyAlreadyLoadedInTheAppDomain()
+    {
+        string name = "TestSourceHostLoadedLookup_" + Guid.NewGuid().ToString("N");
+        _ = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(name), AssemblyBuilderAccess.Run);
+        MethodInfo getLoadedAssembly = typeof(TestSourceHost).GetMethod("GetLoadedAssembly", BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        var loaded = (Assembly)getLoadedAssembly.Invoke(null, [name])!;
+
+        loaded.GetName().Name.Should().Be(name);
+        loaded.IsDynamic.Should().BeTrue();
     }
 
     public void DeniedWorkingDirectoryReportsUnauthorizedAccessWithoutChangingContext()

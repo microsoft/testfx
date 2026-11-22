@@ -206,7 +206,7 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         using var directory = new TemporaryDirectory();
         string path = directory.WriteAssembly("Coverage.CustomContext." + Guid.NewGuid().ToString("N"), [], []);
         using var trustedAssemblies = new TrustedPlatformAssembliesOverride(path);
-        AssemblyName referenceName = AssemblyName.GetAssemblyName(path);
+        var referenceName = AssemblyName.GetAssemblyName(path);
         object resolver = CreateResolver();
         var context = new CollectibleLoadContext();
         try

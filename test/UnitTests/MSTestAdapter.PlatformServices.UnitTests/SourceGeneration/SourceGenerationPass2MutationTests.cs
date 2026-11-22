@@ -40,6 +40,95 @@ public sealed class SourceGenerationPass2MutationTests : TestContainer
         }
     }
 
+    public void CompositeMergesTheDeclaredPropertiesOfEveryProvider()
+    {
+        PropertyInfo[] first = [typeof(FirstPropertyHolder).GetProperty(nameof(FirstPropertyHolder.Name))!];
+        PropertyInfo[] second = [typeof(SecondPropertyHolder).GetProperty(nameof(SecondPropertyHolder.Count))!];
+        PropertyInfo[] replacement = [typeof(SecondPropertyHolder).GetProperty(nameof(SecondPropertyHolder.Count))!];
+        PropertyInfo[] third = [typeof(ThirdPropertyHolder).GetProperty(nameof(ThirdPropertyHolder.Enabled))!];
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "first",
+            TypeProperties = new Dictionary<Type, PropertyInfo[]> { [typeof(FirstPropertyHolder)] = first },
+        });
+        composite.GetSnapshot().TypeProperties.Should().HaveCount(1, "the first provider is the only contributor so far");
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "second",
+            TypeProperties = new Dictionary<Type, PropertyInfo[]> { [typeof(SecondPropertyHolder)] = second },
+        });
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "third",
+            TypeProperties = new Dictionary<Type, PropertyInfo[]>
+            {
+                [typeof(ThirdPropertyHolder)] = third,
+                [typeof(SecondPropertyHolder)] = replacement,
+            },
+        });
+
+        IReadOnlyDictionary<Type, PropertyInfo[]> merged = composite.GetSnapshot().TypeProperties;
+        merged.Should().HaveCount(3);
+        merged[typeof(FirstPropertyHolder)].Should().BeSameAs(first);
+        merged[typeof(ThirdPropertyHolder)].Should().BeSameAs(third);
+        merged[typeof(SecondPropertyHolder)].Should().BeSameAs(replacement, "the provider registered last wins for a type that several providers publish");
+    }
+
+    public void CompositeMergesTheTestMethodsOfEveryProvider()
+    {
+        MethodInfo[] first = [typeof(FirstPropertyHolder).GetProperty(nameof(FirstPropertyHolder.Name))!.GetMethod!];
+        MethodInfo[] second = [typeof(SecondPropertyHolder).GetProperty(nameof(SecondPropertyHolder.Count))!.GetMethod!];
+        MethodInfo[] replacement = [typeof(SecondPropertyHolder).GetProperty(nameof(SecondPropertyHolder.Count))!.SetMethod!];
+        MethodInfo[] third = [typeof(ThirdPropertyHolder).GetProperty(nameof(ThirdPropertyHolder.Enabled))!.GetMethod!];
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "first",
+            TypeMethods = new Dictionary<Type, MethodInfo[]> { [typeof(FirstPropertyHolder)] = first },
+        });
+        composite.GetSnapshot().TypeMethods.Should().HaveCount(1, "the first provider is the only contributor so far");
+
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "second",
+            TypeMethods = new Dictionary<Type, MethodInfo[]> { [typeof(SecondPropertyHolder)] = second },
+        });
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            AssemblyName = "third",
+            TypeMethods = new Dictionary<Type, MethodInfo[]>
+            {
+                [typeof(ThirdPropertyHolder)] = third,
+                [typeof(SecondPropertyHolder)] = replacement,
+            },
+        });
+
+        IReadOnlyDictionary<Type, MethodInfo[]> merged = composite.GetSnapshot().TypeMethods;
+        merged.Should().HaveCount(3);
+        merged[typeof(FirstPropertyHolder)].Should().BeSameAs(first);
+        merged[typeof(ThirdPropertyHolder)].Should().BeSameAs(third);
+        merged[typeof(SecondPropertyHolder)].Should().BeSameAs(replacement, "the provider registered last wins for a type that several providers publish");
+    }
+
+    public void CompositeSnapshotIsNotTiedToAnySingleAssembly()
+    {
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+
+        SourceGeneratedReflectionDataProvider empty = composite.GetSnapshot();
+        empty.AssemblyName.Should().BeEmpty();
+        empty.Assembly.Should().BeNull();
+
+        composite.Add(new SourceGeneratedReflectionDataProvider { AssemblyName = "first", Assembly = typeof(string).Assembly });
+
+        SourceGeneratedReflectionDataProvider merged = composite.GetSnapshot();
+        merged.AssemblyName.Should().BeEmpty("the merged snapshot describes every registered assembly, not the one named by a provider");
+        merged.Assembly.Should().BeNull();
+    }
+
     public void GetCustomAttributesCachedFallsBackToReflectionWhenNoGeneratedAssemblyAttributesMatch()
     {
         Assembly assembly = typeof(SourceGenerationPass2MutationTests).Assembly;

@@ -130,12 +130,14 @@ public sealed class ThreadOperationsMutationTests : TestContainer
         }
     }
 
+#if !NETFRAMEWORK
     private static bool RunOnMultiThreadedApartment(Func<bool> execute)
     {
         Task<bool> caller = Task.Run(execute);
         caller.Wait(CompletionTimeoutMilliseconds).Should().BeTrue("Execute must return");
         return caller.GetAwaiter().GetResult();
     }
+#endif
 
     [SupportedOSPlatform("windows")]
     private static bool RunOnSingleThreadedApartment(Func<bool> execute, Action<Thread>? whileRunning = null)

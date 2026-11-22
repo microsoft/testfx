@@ -35,12 +35,6 @@ public sealed class TestDeploymentMutationTests : TestContainer
     private readonly Mock<IReflectionOperations> _mockReflectionOperations = new();
     private readonly Mock<FileUtility> _mockFileUtility = new();
 
-#if NETFRAMEWORK
-#pragma warning disable IDE0044 // Add readonly modifier
-    private IList<string> _warnings = [];
-#pragma warning restore IDE0044 // Add readonly modifier
-#endif
-
     public TestDeploymentMutationTests()
     {
         PlatformServiceProvider.Instance = _provider;
@@ -230,7 +224,8 @@ public sealed class TestDeploymentMutationTests : TestContainer
 
         var mockAssemblyUtility = new Mock<AssemblyUtility>();
 #if NETFRAMEWORK
-        mockAssemblyUtility.Setup(utility => utility.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings)).Returns(Array.Empty<string>());
+        IList<string> warnings = [];
+        mockAssemblyUtility.Setup(utility => utility.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings)).Returns(Array.Empty<string>());
         mockAssemblyUtility.Setup(utility => utility.GetSatelliteAssemblies(It.IsAny<string>())).Returns([]);
 #endif
 

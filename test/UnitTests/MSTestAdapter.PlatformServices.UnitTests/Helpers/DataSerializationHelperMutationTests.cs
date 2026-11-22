@@ -53,6 +53,18 @@ public sealed class DataSerializationHelperMutationTests : TestContainer
         }
     }
 
+    // The simple dictionary format writes a dictionary as a plain JSON object; the data contract default is an array of Key/Value pairs.
+    public void Serialize_WritesADictionaryAsAPlainJsonObject()
+    {
+        var dictionary = new Dictionary<string, int> { ["answer"] = 42 };
+
+        string?[]? serialized = DataSerializationHelper.Serialize([dictionary]);
+
+        serialized.Should().Equal(typeof(Dictionary<string, int>).AssemblyQualifiedName, "{\"answer\":42}");
+        object?[]? deserialized = DataSerializationHelper.Deserialize(serialized);
+        deserialized.Should().ContainSingle().Which.Should().BeOfType<Dictionary<string, int>>().Which.Should().Equal(dictionary);
+    }
+
 #if NET6_0_OR_GREATER
     public void SurrogateProvider_MapsOnlyDateOnlyAndTimeOnlyToTheirSurrogateDataContracts()
     {

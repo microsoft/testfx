@@ -94,12 +94,30 @@ public sealed class TestMethodInfoArgumentResolutionMutationTests : TestContaine
         resolved.Should().NotBeSameAs(arguments, because: "a full argument list including the token is not a pass-through when optional data is declared");
     }
 
+    public void ParameterMetadataDetectsTheParamsParameterFromItsOwnDeclarationOnly()
+    {
+        ParameterInfo[] parameters = [new ParameterDouble(isParams: false), new ParameterDouble(isParams: true)];
+
+        Type metadataType = typeof(TestMethodInfo).GetNestedType("ParameterMetadata", BindingFlags.NonPublic)!;
+        object metadata = metadataType.GetMethod("Compute", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [parameters])!;
+
+        metadataType.GetProperty("ParamsParameterIndex")!.GetValue(metadata).Should().Be(1, because: "the params attribute is looked up without inheritance");
+        metadataType.GetProperty("RequiredParameterCount")!.GetValue(metadata).Should().Be(1, because: "the params parameter is not counted as required");
+    }
+
     private static TestMethodInfo CreateTestMethodInfo(string methodName)
     {
         MethodInfo method = typeof(ArgumentFixture).GetMethod(methodName)!;
         var assemblyInfo = new TestAssemblyInfo(typeof(ArgumentFixture).Assembly);
         var classInfo = new TestClassInfo(typeof(ArgumentFixture), typeof(ArgumentFixture).GetConstructor([])!, true, new TestClassAttribute(), assemblyInfo);
         return new TestMethodInfo(method, classInfo);
+    }
+
+    // Real reflected parameters ignore the inherit flag, so a double is needed to observe how the attribute is queried.
+    private sealed class ParameterDouble(bool isParams) : ParameterInfo
+    {
+        public override bool IsDefined(Type attributeType, bool inherit)
+            => isParams && attributeType == typeof(ParamArrayAttribute) && !inherit;
     }
 
     private sealed class ArgumentFixture
