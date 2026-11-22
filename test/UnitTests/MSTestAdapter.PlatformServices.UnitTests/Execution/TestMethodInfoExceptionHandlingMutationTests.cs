@@ -66,7 +66,10 @@ public sealed class TestMethodInfoExceptionHandlingMutationTests : TestContainer
     public void HandleMethodExceptionReportsAnErrorWhenATargetInvocationExceptionHasNoInnerException()
     {
         using var harness = new ExceptionHarness();
-        var exception = new TargetInvocationException(null);
+
+        // The exception is thrown so that it has a stack trace: without the dedicated handling, the generic path would
+        // report a regular failure instead of failing fast on the missing stack trace.
+        TargetInvocationException exception = ThrowAndCatch(new TargetInvocationException(null));
 
         TestFailedException result = harness.HandleMethodException(exception, exception, classInstanceCreated: true);
 
