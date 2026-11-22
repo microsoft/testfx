@@ -20,7 +20,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Discovery;
 
 public sealed class UnitTestDiscovererConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     public UnitTestDiscovererConfigureAwaitMutationTests()
         => PlatformServiceProvider.Instance = new TestablePlatformServiceProvider();

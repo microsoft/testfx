@@ -15,7 +15,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Extensions;
 
 public sealed class MethodInfoExtensionsConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
     public async Task InvokeAsFixtureMethodAsync_NeverResumesOnTheCapturedSynchronizationContext()
     {

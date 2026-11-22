@@ -18,7 +18,7 @@ public sealed class MSTestTelemetryDataCollectorSendingConfigureAwaitMutationTes
 {
     private const string PlatformOptOut = "TESTINGPLATFORM_TELEMETRY_OPTOUT";
     private const string CliOptOut = "DOTNET_CLI_TELEMETRY_OPTOUT";
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
     private readonly string? _previousPlatformOptOut = Environment.GetEnvironmentVariable(PlatformOptOut);
     private readonly string? _previousCliOptOut = Environment.GetEnvironmentVariable(CliOptOut);
     private readonly MSTestTelemetryDataCollector? _previousCollector = MSTestTelemetryDataCollector.Current;

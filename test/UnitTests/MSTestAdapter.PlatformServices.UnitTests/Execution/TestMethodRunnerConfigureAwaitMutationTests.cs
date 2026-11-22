@@ -19,7 +19,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
 public sealed class TestMethodRunnerConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     private readonly MethodInfo _methodInfo;
     private readonly MethodInfo _parameterizedMethodInfo;

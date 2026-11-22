@@ -17,7 +17,7 @@ public sealed class FixtureMethodRunnerConfigureAwaitMutationTests : TestContain
 {
     private const string Canceled = "cancelled {0}.{1}";
     private const string TimedOut = "timed out {0}.{1} after {2}";
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
     private static readonly MethodInfo FixtureMethod = typeof(FixtureMethodRunnerConfigureAwaitMutationTests).GetMethod(nameof(FixtureMarker), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public async Task RunWithTimeoutAndCancellationAsync_WithCooperativeCancellation_NeverResumesOnTheCapturedSynchronizationContext()

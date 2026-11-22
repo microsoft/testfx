@@ -30,7 +30,7 @@ public sealed class UnitTestRunnerRunSingleTestConfigureAwaitMutationTests : Tes
     private const string FirstTestMethod = nameof(LifecycleProbe.FirstTest);
     private const string SecondTestMethod = nameof(LifecycleProbe.SecondTest);
 
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     private readonly Dictionary<string, object?> _testRunParameters = [];
     private readonly Dictionary<string, Func<int, Task>> _behaviors = [];

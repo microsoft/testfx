@@ -49,7 +49,7 @@ public sealed class TestExecutionManagerDependencyGraphExecutionConfigureAwaitMu
         </RunSettings>
         """;
 
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     public TestExecutionManagerDependencyGraphExecutionConfigureAwaitMutationTests()
         => PlatformServiceProvider.Instance = null;

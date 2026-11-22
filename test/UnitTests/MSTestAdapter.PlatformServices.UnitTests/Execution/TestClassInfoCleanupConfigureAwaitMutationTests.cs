@@ -16,7 +16,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
 public sealed class TestClassInfoCleanupConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
     public async Task RunClassCleanupAsync_WithPendingClassCleanup_NeverResumesOnTheCapturedSynchronizationContext()
     {

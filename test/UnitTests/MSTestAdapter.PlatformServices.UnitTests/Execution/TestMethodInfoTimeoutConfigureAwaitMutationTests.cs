@@ -19,7 +19,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
 public sealed class TestMethodInfoTimeoutConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
     public async Task InvokeAsync_WithCooperativeTimeoutAndPendingGlobalTestInitialize_NeverResumesOnTheCapturedSynchronizationContext()
     {

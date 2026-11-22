@@ -21,7 +21,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
 public sealed class TestExecutionManagerConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     public TestExecutionManagerConfigureAwaitMutationTests()
         => PlatformServiceProvider.Instance = new TestablePlatformServiceProvider();

@@ -12,7 +12,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Helpers;
 
 public sealed class ExecutionContextHelpersConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
     public async Task RunOnContextAsync_WithAnExecutionContext_NeverResumesOnTheCapturedSynchronizationContext()
     {

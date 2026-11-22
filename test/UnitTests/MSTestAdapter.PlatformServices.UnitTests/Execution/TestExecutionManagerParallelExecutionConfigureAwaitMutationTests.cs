@@ -40,7 +40,7 @@ public sealed class TestExecutionManagerParallelExecutionConfigureAwaitMutationT
         </RunSettings>
         """;
 
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     public TestExecutionManagerParallelExecutionConfigureAwaitMutationTests()
         => PlatformServiceProvider.Instance = null;

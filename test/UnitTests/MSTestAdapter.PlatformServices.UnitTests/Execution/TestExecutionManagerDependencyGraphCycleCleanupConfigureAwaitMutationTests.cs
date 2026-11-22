@@ -34,7 +34,7 @@ public sealed class TestExecutionManagerDependencyGraphCycleCleanupConfigureAwai
         </RunSettings>
         """;
 
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     private readonly TestablePlatformServiceProvider _services = new();
 

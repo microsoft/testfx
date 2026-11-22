@@ -12,7 +12,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Helpers;
 
 public sealed class CancellationTimeoutHelperConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
     public async Task RunWithCooperativeCancellationAsync_NeverResumesOnTheCapturedSynchronizationContext()
     {

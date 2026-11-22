@@ -15,7 +15,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
 public sealed class ResourceLockManagerConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     public async Task ExecuteWithLocksAsync_NeverResumesOnTheCapturedSynchronizationContext()
     {

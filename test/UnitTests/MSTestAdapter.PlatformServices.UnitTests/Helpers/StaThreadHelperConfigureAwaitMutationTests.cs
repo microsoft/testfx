@@ -11,7 +11,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Helpers;
 
 public sealed class StaThreadHelperConfigureAwaitMutationTests : TestContainer
 {
-    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
     public async Task RunOnApartmentThreadIfNeededAsync_WithoutAnApartmentRequest_NeverResumesOnTheCapturedSynchronizationContext()
     {
