@@ -274,20 +274,23 @@ public sealed class TestContextAssertionFailureDiagnosticsWriterMutationTests : 
 #if NET
     public void StackFramesOfMethodsWithoutADeclaringTypeAreReportedAsGlobalMethods()
     {
+        // The call is followed by a value load so it is not in tail position: an optimizing JIT (Release) would otherwise
+        // turn the call into a tail call and drop this dynamic method's frame from the captured stack.
         var method = new DynamicMethod(
             "InvokeAction",
-            typeof(void),
+            typeof(int),
             [typeof(Action)],
             typeof(TestContextAssertionFailureDiagnosticsWriterMutationTests).Module,
             skipVisibility: true);
         ILGenerator il = method.GetILGenerator();
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Callvirt, typeof(Action).GetMethod(nameof(Action.Invoke))!);
+        il.Emit(OpCodes.Ldc_I4_0);
         il.Emit(OpCodes.Ret);
-        var invoke = (Action<Action>)method.CreateDelegate(typeof(Action<Action>));
+        var invoke = (Func<Action, int>)method.CreateDelegate(typeof(Func<Action, int>));
 
         FrameInfo[] frames = [];
-        invoke(() => frames = CaptureFrames());
+        _ = invoke(() => frames = CaptureFrames());
 
         frames.Select(frame => frame.Method).Should().Contain("<global>.InvokeAction");
     }
