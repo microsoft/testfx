@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="new">The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</target>
+        <target state="translated">当前测试框架未实现 "--maximum-failed-tests" 功能所需的 "IGracefulStopTestExecutionCapability"。</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">用于支持 "--maximum-failed-tests" 的扩展。达到指定的失败阈值后，测试运行将中止。</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -559,7 +559,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="new">Exception during the cancellation of request id '{0}'</target>
+        <target state="translated">取消请求 ID“{0}”时发生异常</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -611,7 +611,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="new">Finished test session.</target>
+        <target state="translated">测试会话已完成。</target>
         <note />
       </trans-unit>
       <trans-unit id="FromFile">
@@ -736,7 +736,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">选项 "--maximum-failed-tests" 必须为正整数。值“{0}”无效。</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -848,16 +848,16 @@
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</source>
-        <target state="new">Force the built-in file logger to write the log synchronously.
-Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-Note that this is slowing down the test execution.</target>
+        <target state="translated">强制内置文件记录器同步写入日志。
+适用于不想丢失任何日志的情况(即在故障的情况下)。
+请注意，这会减慢测试的执行速度。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="translated">启用诊断日志记录。默认日志级别为 "Trace"。
+文件将写入输出目录，名称为 log_[yyMMddHHmmssfff].diag。</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -873,8 +873,8 @@ The file will be written in the output directory with the name log_[yyMMddHHmmss
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="new">Output directory of the diagnostic logging.
-If not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <target state="translated">诊断日志记录的输出目录。
+如果未指定，则会在默认的 "TestResults" 目录中生成该文件。</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -885,8 +885,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
+        <target state="translated">定义 --diagnostic 的详细程度。
+可用值为 "Trace"、"Debug"、"Information"、"Warning"、"Error" 和 "Critical"。</target>
         <note>{Locked="--diagnostic"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
@@ -897,8 +897,8 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="new">List available tests.
-Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</target>
+        <target state="translated">列出可用的测试。
+(可选)接受 "text" (默认的人类可读输出)或 "json"，以便将发现的测试作为 JSON 文档打印到标准输出。</target>
         <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
@@ -969,7 +969,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="new">Invalid PID '{0}'
+        <target state="translated">无效的 PID“{0}”
 {1}</target>
         <note>{0} is the invalid process ID. {1} is the exception message.</note>
       </trans-unit>
@@ -1007,9 +1007,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">不报告指定退出代码的非成功退出值。
+例如，"--ignore-exit-code 8;9" 将在这些情况下忽略退出代码 8 和 9 并返回 0。
+有关退出代码的详细信息，请参阅 https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes。</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -1019,7 +1019,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">指定测试失败次数上限。超过此上限后，测试运行将中止。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1035,8 +1035,8 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value
-(e.g. '--minimum-expected-tests 10')</target>
+        <target state="translated">"--minimum-expected-tests" 应有单个非零正整数值
+(例如 "--minimum-expected-tests 10")</target>
         <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -1078,9 +1078,9 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</source>
-        <target state="new">The directory where the test results are going to be placed.
-If the specified directory doesn't exist, it's created.
-The default is TestResults in the directory that contains the test application.</target>
+        <target state="translated">将要放置测试结果的目录。
+如果指定的目录不存在，则创建该目录。
+默认值是包含测试应用程序的目录中的 TestResults。</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
@@ -1123,8 +1123,8 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
-        <target state="new">Specifies how a run that executed no tests is treated.
-Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</target>
+        <target state="translated">指定如何处理未执行任何测试的运行。
+有效值为 "allow-skipped" (默认值) 和 "strict"。前者将跳过的测试计为已运行，因此只有完全找不到任何测试的运行才会以退出代码 8 失败；后者将跳过的测试视为未运行，因此如果每个测试都被跳过(或找不到任何测试)，运行将以退出代码 8 失败。</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -1139,7 +1139,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">由于失败次数已达到 "--maximum-failed-tests" 选项指定的值(“{0}”)，测试会话正在中止。</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,12 +1174,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <target state="translated">运行服务器模式时使用的 "ITestHost" 实现。</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="new">Server mode test host</target>
+        <target state="translated">服务器模式测试主机</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -1219,12 +1219,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
-        <target state="new">Starting test session.</target>
+        <target state="translated">正在启动测试会话。</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="new">Starting test session. The log file path is '{0}'.</target>
+        <target state="translated">正在启动测试会话。日志文件路径为“{0}”。</target>
         <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">
@@ -1249,12 +1249,12 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="new">Telemetry
+        <target state="translated">遥测
 ---------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数据由 Microsoft 收集，不会与任何人共享。
+可通过使用喜欢的 shell 将 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 环境变量设置为 "1" 或 "true" 来选择退出遥测。
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</target>
+阅读有关 Microsoft 测试平台遥测功能的详细信息: https://aka.ms/testingplatform/telemetry</target>
         <note>{Locked="TESTINGPLATFORM_TELEMETRY_OPTOUT"}{Locked="DOTNET_CLI_TELEMETRY_OPTOUT"}{Locked="1"}{Locked="true"}{Locked="https://aka.ms/testingplatform/telemetry"}</note>
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
@@ -1466,7 +1466,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 未处理的异常: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">
