@@ -192,6 +192,7 @@ public sealed class AsyncReaderWriterLockMutationTests : TestContainer
         // callback state keeps the waiter and the lock alive.
         for (int i = 0; i < 5 && lockReference.IsAlive; i++)
         {
+            // Force collection so the weak-reference assertion is deterministic.
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }

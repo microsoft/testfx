@@ -129,7 +129,8 @@ public sealed class UnitTestRunnerMutationTests : TestContainer
 
         _ = new UnitTestRunner(CreateSettings(TestOutputCaptureMode.None), []);
 
-        _provider.TestRunCancellationToken.Should().NotBeNull();
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken? token = _provider.TestRunCancellationToken;
+        token.Should().NotBeNull();
     }
 
     public void ConstructorPublishesThePlannedTestsOfTheRunThroughTestRun()

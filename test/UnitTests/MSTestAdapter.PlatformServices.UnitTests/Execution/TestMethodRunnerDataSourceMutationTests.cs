@@ -387,6 +387,7 @@ public sealed class TestMethodRunnerDataSourceMutationTests : TestContainer
         var spinner = Stopwatch.StartNew();
         while (spinner.Elapsed == TimeSpan.Zero)
         {
+            // Wait for the stopwatch clock resolution to advance.
         }
     }
 

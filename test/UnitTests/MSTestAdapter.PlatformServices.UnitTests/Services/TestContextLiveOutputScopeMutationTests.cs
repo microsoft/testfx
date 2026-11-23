@@ -47,7 +47,13 @@ public sealed class TestContextLiveOutputScopeMutationTests : TestContainer
                 context.WriteLine("-and-more");
             }
 
-            context.GetDiagnosticMessages().Should().StartWith("captured-and-more");
+            string? diagnosticMessages = context.GetDiagnosticMessages();
+            diagnosticMessages.Should().NotBeNull();
+            diagnosticMessages!.Replace("\r\n", "\n").Should().Be(
+                """
+                captured-and-more
+
+                """.Replace("\r\n", "\n"));
         }
     }
 
@@ -71,7 +77,13 @@ public sealed class TestContextLiveOutputScopeMutationTests : TestContainer
                 context.WriteLine("live-2");
             }
 
-            context.GetDiagnosticMessages().Should().Contain("not-live-Result").And.Contain("not-live-None");
+            string? diagnosticMessages = context.GetDiagnosticMessages();
+            diagnosticMessages.Should().NotBeNull();
+            diagnosticMessages!.Replace("\r\n", "\n").Should().Be(
+                """
+                live-1not-live-Resultnot-live-Nonelive-2
+
+                """.Replace("\r\n", "\n"));
         }
 
         liveWriter.Calls.Should().Equal("Write(live-1)", "WriteLine(live-2)");

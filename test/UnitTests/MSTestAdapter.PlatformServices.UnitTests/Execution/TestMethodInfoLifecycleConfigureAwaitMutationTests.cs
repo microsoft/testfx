@@ -279,7 +279,11 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
         public TestContext? TestContext
         {
             get => null;
-            set => throw new InvalidOperationException("The test context cannot be set.");
+            set
+            {
+                _ = value;
+                throw new InvalidOperationException("The test context cannot be set.");
+            }
         }
 
         public void Run()

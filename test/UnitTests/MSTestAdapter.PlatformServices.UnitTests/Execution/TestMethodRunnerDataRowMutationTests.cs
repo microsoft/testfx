@@ -201,6 +201,7 @@ public sealed class TestMethodRunnerDataRowMutationTests : TestContainer
         var spinner = Stopwatch.StartNew();
         while (spinner.Elapsed == TimeSpan.Zero)
         {
+            // Wait for the stopwatch clock resolution to advance.
         }
     }
 

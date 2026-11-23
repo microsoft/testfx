@@ -78,7 +78,14 @@ public sealed class TestContextOutputMutationTests : TestContainer
                 context.WriteLine("{0}?", "six");
             }
 
-            context.GetDiagnosticMessages().Should().StartWith("5!").And.Contain("six?");
+            string? diagnosticMessages = context.GetDiagnosticMessages();
+            diagnosticMessages.Should().NotBeNull();
+            diagnosticMessages!.Replace("\r\n", "\n").Should().Be(
+                """
+                5!
+                six?
+
+                """.Replace("\r\n", "\n"));
         }
 
         liveWriter.Calls.Should().Equal("WriteLine(5!)", "WriteLine(six?)");
