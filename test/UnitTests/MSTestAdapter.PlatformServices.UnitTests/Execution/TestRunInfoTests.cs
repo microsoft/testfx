@@ -122,4 +122,30 @@ public sealed class TestRunInfoTests : TestContainer
         plannedTest.TestCategories.Should().Equal("Smoke");
         plannedTest.TestProperties.Should().Equal([new KeyValuePair<string, string>("Owner", "alice")]);
     }
+
+    public void CreateFromReusesTheSharedEmptyCollectionsForElementsWithoutTraitsOrCategories()
+    {
+        // Distinct empty arrays: a collection expression would resolve to the shared Array.Empty<T>() instance.
+        int none = 0;
+        var withEmptyCollections = new UnitTestElement(new TestMethod("M1", "Tests.MyClass", "MyTests.dll", displayName: null))
+        {
+            TestCategory = new string[none],
+            Traits = new TestTrait[none],
+        };
+        var otherWithEmptyCollections = new UnitTestElement(new TestMethod("M2", "Tests.MyClass", "MyTests.dll", displayName: null))
+        {
+            TestCategory = new string[none],
+            Traits = new TestTrait[none],
+        };
+        var withoutCollections = new UnitTestElement(new TestMethod("M3", "Tests.MyClass", "MyTests.dll", displayName: null));
+
+        var info = TestRunInfo.CreateFrom([withEmptyCollections, otherWithEmptyCollections, withoutCollections]);
+
+        PlannedTest[] planned = [.. info.PlannedTests];
+        planned.Should().HaveCount(3);
+        planned[1].TestCategories.Should().BeSameAs(planned[0].TestCategories);
+        planned[2].TestCategories.Should().BeSameAs(planned[0].TestCategories);
+        planned[1].TestProperties.Should().BeSameAs(planned[0].TestProperties);
+        planned[2].TestProperties.Should().BeSameAs(planned[0].TestProperties);
+    }
 }
