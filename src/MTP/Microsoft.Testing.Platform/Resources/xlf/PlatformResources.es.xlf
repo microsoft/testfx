@@ -1352,6 +1352,11 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
         <target state="translated">Las extensiones de controlador de host de prueba que requieren reinicio del proceso no se admiten en plataformas de explorador o WebAssembly.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">El middleware "{0}" interrumpió la canalización del orquestador de ejecución del host de pruebas (no invocó a "next"), pero devolvió el código de salida correcto. El middleware de cortocircuito debe devolver un código de salida explícito que no sea correcto, por lo que la ejecución omitida no se puede notificar como si las pruebas se ejecutaran y pasaran realmente.</target>

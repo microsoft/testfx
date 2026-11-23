@@ -1352,6 +1352,11 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">프로세스를 다시 시작해야 하는 테스트 호스트 컨트롤러 확장은 브라우저/WebAssembly 플랫폼에서 지원되지 않습니다.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">미들웨어 '{0}'이(가) 테스트 호스트 실행 오케스트레이터 파이프라인을 조기에 종료('next'를 호출하지 않음)했지만 성공 종료 코드를 반환했습니다. 조기에 종료하는 미들웨어는 명시적인 비성공 종료 코드를 반환해야 합니다. 그래야 건너뛴 실행이 마치 테스트가 실제로 실행되어 통과된 것처럼 보고되지 않습니다.</target>

@@ -1352,6 +1352,11 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
         <target state="translated">プロセスの再起動を必要とするテスト ホスト コントローラー拡張機能は、ブラウザー/WebAssembly プラットフォームではサポートされていません。</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">ミドルウェア '{0}' はテスト ホスト実行オーケストレーター パイプラインの実行を途中で終了しました ('next' を呼び出しませんでした) が、成功の終了コードを返しました。実行を途中で終了するミドルウェアは、スキップされた実行が実際にテストが実行され成功したものとして報告されないように、成功以外の終了コードを明示的に返す必要があります。</target>

@@ -36,7 +36,7 @@ public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory,
 """
 You cannot compose extensions that belong to different areas.
 Valid composition are:
-TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
+TestHostControllers: IDataConsumer, ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
 TestHost: IDataConsumer, ITestApplicationLifetime
 """;
 #pragma warning restore RS0051 // Add internal types and members to the declared API
