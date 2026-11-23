@@ -3,7 +3,7 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-11-16T06:31:14.193733166Z
+generatedAt: 2026-11-23T06:28:14.714504959Z
 manifestHash: sha256:a462424b4f11ba4c4b3765369c3ebc1414b782f3713f5e16e4d8eee9766011f8
 plugins:
     - id: dotnet
@@ -13,7 +13,7 @@ plugins:
         owner: dotnet
         repo: skills
       requestedRef: main
-      resolvedRef: 2877c712edc20643b72f64e2983b168e6661d607
+      resolvedRef: c227688ed14de4467e3e45f95dc69a94e905e219
       layout: dotnet-skills
       install:
         mode: summary
@@ -140,7 +140,7 @@ plugins:
         owner: dotnet
         repo: skills
       requestedRef: main
-      resolvedRef: 2877c712edc20643b72f64e2983b168e6661d607
+      resolvedRef: c227688ed14de4467e3e45f95dc69a94e905e219
       layout: dotnet-skills
       install:
         mode: summary
