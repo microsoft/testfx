@@ -256,7 +256,6 @@ internal static class DynamicDataSourceBuilder
     // A value is safe to read into the generated `(object?)` delegate only when it can be boxed / implicitly
     // converted to object. Pointers, function pointers, and ref-like (ref struct) values cannot, so members of
     // those shapes must stay on the reflection fallback rather than break the generated build.
-    // Stryker disable once Logical: a TypeKind cannot be both Pointer and FunctionPointer, so De Morgan's negated disjunction remains true for every non-pointer-like kind.
     private static bool IsObjectConvertible(ITypeSymbol type)
         => type.TypeKind is not (TypeKind.Pointer or TypeKind.FunctionPointer)
             && !type.IsRefLikeType;

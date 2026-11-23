@@ -169,10 +169,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
     }
 
     private static EquatableArray<DiagnosticInfo> ToEquatable(List<DiagnosticInfo> diagnostics)
-        // Stryker disable once Conditional: both branches produce the same empty EquatableArray value.
-        => diagnostics.Count == 0
-            ? EquatableArray<DiagnosticInfo>.Empty
-            : new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutableArray());
+        => new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutableArray());
 
     private static bool IsGenericOrInsideGeneric(INamedTypeSymbol type)
     {
