@@ -282,14 +282,14 @@
     {
       "id": "platform-terminal-ansi-detector",
       "local_path": "src/MTP/Microsoft.Testing.Platform/OutputDevice/Terminal/AnsiDetector.cs",
-      "notes": "Ported from Spectre.Console's AnsiDetector (with additional regexes from supports-ansi).",
+      "notes": "Ported from Spectre.Console's AnsiDetector (with additional matching rules from supports-ansi). Uses allocation-free ordinal string matching and retains the eterm-color exclusion. IsAnsiSupported already provides the testable terminal predicate extracted upstream as IsAnsiTerminal.",
       "sources": [
         {
           "repo": "spectreconsole/spectre.console",
           "ref": "main",
           "path": "src/Spectre.Console.Ansi/AnsiDetector.cs",
-          "baseline_ref_sha": "bbf51e4c2841dae4d574193a7a5695499d453f60",
-          "baseline_blob_sha": "a31831944cb05dac9b48942fe7cb14dac89444d8",
+          "baseline_ref_sha": "04b5dac6398dce0838c48cc3a3b6d1cc8a7f1747",
+          "baseline_blob_sha": "3cfb811c22434230f62b9ee11c4f25b7b49f449c",
           "scope": "terminal regex list and ANSI capability detection logic"
         }
       ]
