@@ -50,6 +50,29 @@ public sealed class AzureDevOpsClientBehaviorTests
     }
 
     [TestMethod]
+    public async Task UpdateRun_RetriesCompletionPatchAfterTransientFailure()
+    {
+        using var fixture = new CiReporterFixture();
+        var resumeRetry = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture.Delay = (_, _) => resumeRetry.Task;
+        int attempts = 0;
+        using var handler = new Handler(_ => ReplyAsync(++attempts == 1 ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK, "{}"));
+        using var http = new HttpClient(handler);
+        var client = new AzureDevOpsTestResultsClient(http, fixture.TaskService.Object, fixture.Clock.Object);
+
+        Task update = client.UpdateTestRunStateAsync(fixture.PublishConfiguration(), 73, "Completed", CancellationToken.None);
+        // Let the retry clone the request only after UpdateTestRunStateAsync has returned to its caller.
+        resumeRetry.SetResult(true);
+        await update;
+
+        Assert.HasCount(2, handler.Requests);
+        Request retry = handler.Requests[1];
+        Assert.AreEqual("PATCH", retry.Method);
+        Assert.AreEqual("https://ci.invalid/org/project/_apis/test/runs/73?api-version=7.1", retry.Uri);
+        Assert.AreEqual("{\"state\":\"Completed\"}", retry.Body);
+    }
+
+    [TestMethod]
     [DataRow(0, DisplayName = "Attachment_Run")]
     [DataRow(1, DisplayName = "Attachment_Result")]
     [DataRow(2, DisplayName = "Attachment_SubResult")]
