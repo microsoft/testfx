@@ -132,6 +132,18 @@
     <value>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</value>
     <comment>{0} is the processor UID. {1} is an artifact kind or file extension.</comment>
   </data>
+  <data name="InvocationLifetimeCleanupFailedErrorMessage" xml:space="preserve">
+    <value>Invocation lifetime handler '{0}' failed after the tests ran: {1}</value>
+    <comment>{0} is the handler UID. {1} is the exception message.</comment>
+  </data>
+  <data name="InvocationLifetimeInvalidEnvironmentVariableName" xml:space="preserve">
+    <value>The environment variable name '{0}' is invalid. A name cannot be blank, cannot contain '=' or a null character, and cannot start with the reserved prefix '{1}'.</value>
+    <comment>{0} is the environment variable name. {1} is the reserved prefix.</comment>
+  </data>
+  <data name="InvocationLifetimeSetupFailedErrorMessage" xml:space="preserve">
+    <value>Invocation lifetime handler '{0}' failed before the tests ran, so no test ran: {1}</value>
+    <comment>{0} is the handler UID. {1} is the exception message.</comment>
+  </data>
   <data name="ArtifactPostProcessingDispatcherDescription" xml:space="preserve">
     <value>Dispatches artifact post-processing jobs selected by dotnet test.</value>
     <comment>Do not localize command name {Locked="dotnet test"}.</comment>

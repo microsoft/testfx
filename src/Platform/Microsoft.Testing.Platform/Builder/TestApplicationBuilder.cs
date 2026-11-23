@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.DynamicExtensions;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
@@ -25,7 +26,7 @@ namespace Microsoft.Testing.Platform.Builder;
 /// <summary>
 /// A builder for test applications and services.
 /// </summary>
-internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder, IDynamicExtensionRegistrationGuard
+internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder, IInvocationLifetimeApplicationBuilder, IDynamicExtensionRegistrationGuard
 {
     private readonly DateTimeOffset _createBuilderStart;
     private readonly ApplicationLoggingState _loggingState;
@@ -109,6 +110,13 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
     /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IToolsManager Tools => _testHostBuilder.Tools;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public IInvocationLifetimeManager InvocationLifetime => _testHostBuilder.InvocationLifetime;
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,

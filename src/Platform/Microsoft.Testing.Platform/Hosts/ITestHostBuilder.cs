@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Telemetry;
@@ -37,6 +38,8 @@ internal interface ITestHostBuilder
     IToolsManager Tools { get; }
 
     IArtifactPostProcessingManager ArtifactPostProcessing { get; }
+
+    IInvocationLifetimeManager InvocationLifetime { get; }
 
     Task<IHost> BuildAsync(ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
 }

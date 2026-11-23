@@ -1,3 +1,16 @@
 #nullable enable
 [TPEXP]Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions
 [TPEXP]static Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions.GetIsStateful(this Microsoft.Testing.Platform.Services.IClientCapabilities! capabilities) -> bool?
+[TPEXP]Microsoft.Testing.Platform.Builder.IInvocationLifetimeApplicationBuilder
+[TPEXP]Microsoft.Testing.Platform.Builder.IInvocationLifetimeApplicationBuilder.InvocationLifetime.get -> Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager!
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler.OnInvocationCompletedAsync(Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationCompletedContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler.OnInvocationStartingAsync(Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationStartingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeManager.AddInvocationLifetimeHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.InvocationLifetime.IInvocationLifetimeHandler!>! factory) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationCompletedContext
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationCompletedContext.ExitCode.get -> int
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationCompletedContext.InvocationCompletedContext(int exitCode, bool isCanceled) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationCompletedContext.IsCanceled.get -> bool
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationStartingContext
+[TPEXP]Microsoft.Testing.Platform.Extensions.InvocationLifetime.InvocationStartingContext.SetEnvironmentVariable(string! name, string? value) -> void

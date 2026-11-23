@@ -5,6 +5,7 @@ using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -93,6 +94,8 @@ internal sealed partial class TestHostBuilder
             return new InformativeCommandLineHost(0, context.ServiceProvider);
         }
 
+        context.InvocationLifetimeHandlers = await BuildInvocationLifetimeHandlersIfOwnerAsync(context).ConfigureAwait(false);
+
         return await TryBuildTestHostOrchestratorHostAsync(context).ConfigureAwait(false) is { } testHostOrchestratorHost
             ? testHostOrchestratorHost
             : await TryBuildTestHostControllersHostAsync(context).ConfigureAwait(false) is { } testHostControllerHost
@@ -151,6 +154,7 @@ internal sealed partial class TestHostBuilder
         ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
             await _testHostOrchestratorManager.BuildTestHostOrchestratorApplicationLifetimesAsync(context.ServiceProvider).ConfigureAwait(false);
         context.ServiceProvider.AddServices(orchestratorLifetimes);
+        AddInvocationLifetimeRunner(context, context.ServiceProvider, setOwnerMarker: true);
 
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostOrchestratorHost));
         return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, context.ServiceProvider);
@@ -193,6 +197,7 @@ internal sealed partial class TestHostBuilder
         }
 
         context.TestHostControllerInfo.IsCurrentProcessTestHostController = true;
+        AddInvocationLifetimeRunner(context, testHostControllersServiceProvider, setOwnerMarker: true);
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostController;
         await context.ProxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
@@ -215,8 +220,69 @@ internal sealed partial class TestHostBuilder
         return testHostControllersHost;
     }
 
+    private async Task<IReadOnlyList<IInvocationLifetimeHandler>?> BuildInvocationLifetimeHandlersIfOwnerAsync(BuildContext context)
+    {
+        // Server mode is deferred to a later stage and never runs the hooks, and a process launched by the owner of
+        // the invocation (marker set) is only a participant.
+        if (!((InvocationLifetimeManager)InvocationLifetime).HasHandlers
+            || context.IsJsonRpcProtocol
+            || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+            || !RoslynString.IsNullOrEmpty(context.SystemEnvironment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER)))
+        {
+            return null;
+        }
+
+        // Kept even when every handler is disabled: the owner still publishes its marker, so a handler that a child
+        // process sees as enabled (for example through a variable set by an environment provider) does not run there
+        // once per test host process.
+        return await ((InvocationLifetimeManager)InvocationLifetime).BuildAsync(context.ServiceProvider).ConfigureAwait(false);
+    }
+
+    private static void AddInvocationLifetimeRunner(BuildContext context, ServiceProvider serviceProvider, bool setOwnerMarker)
+    {
+        if (context.InvocationLifetimeHandlers is not { } handlers)
+        {
+            return;
+        }
+
+        serviceProvider.AddService(new InvocationLifetimeRunner(
+            handlers,
+            context.SystemEnvironment,
+            context.ProxyOutputDevice,
+            context.LoggerFactory.CreateLogger<InvocationLifetimeRunner>(),
+            setOwnerMarker,
+            restoreEnvironment: false));
+    }
+
+    private static void ClearInvocationLifetimeEnvironmentVariables(IEnvironment environment)
+    {
+        List<string>? names = null;
+        foreach (DictionaryEntry entry in environment.GetEnvironmentVariables())
+        {
+            if (entry.Key is string name
+                && name.StartsWith(EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_PREFIX, StringComparison.OrdinalIgnoreCase))
+            {
+                (names ??= []).Add(name);
+            }
+        }
+
+        if (names is null)
+        {
+            return;
+        }
+
+        foreach (string name in names)
+        {
+            environment.SetEnvironmentVariable(name, null);
+        }
+    }
+
     private async Task<IHost> BuildTestHostModeAsync(BuildContext context)
     {
+        // A test host is a leaf of the invocation: clear the reserved variables it inherited, so an application
+        // launched by a test starts its own invocation instead of believing it is a participant of this one.
+        ClearInvocationLifetimeEnvironmentVariables(context.SystemEnvironment);
+
         context.PoliciesService.ProcessRole = TestProcessRole.TestHost;
         await context.ProxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
@@ -342,6 +408,8 @@ internal sealed partial class TestHostBuilder
         {
             context.BuilderMetrics[TelemetryProperties.HostProperties.IsHotReloadPropertyName] = context.ServiceProvider.GetRuntimeFeature().IsHotReloadEnabled.AsTelemetryBool();
         }
+
+        AddInvocationLifetimeRunner(context, context.ServiceProvider, setOwnerMarker: false);
 
         ConsoleTestHost consoleHost = CreateConsoleTestHost(
             context.ServiceProvider,

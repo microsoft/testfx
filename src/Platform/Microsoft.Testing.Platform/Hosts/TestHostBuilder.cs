@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -50,6 +51,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     public IToolsManager Tools { get; } = CreateToolsManager();
 
     public IArtifactPostProcessingManager ArtifactPostProcessing { get; } = new ArtifactPostProcessingManager();
+
+    public IInvocationLifetimeManager InvocationLifetime { get; } = new InvocationLifetimeManager();
 
     private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
 
@@ -160,5 +163,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
         public bool IsInfoCommand { get; set; }
 
         public IHost? EarlyHost { get; set; }
+
+        // Null when the current process does not own the invocation lifetime hooks.
+        public IReadOnlyList<IInvocationLifetimeHandler>? InvocationLifetimeHandlers { get; set; }
     }
 }

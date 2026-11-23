@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -18,6 +19,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 /// This doesn't represent an orchestrator host.
 /// </summary>
 [StackTraceHidden]
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The graceful stop source has no timer and its wait handle is never created, so it holds no resource to release.")]
 internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IHost
 {
 #if NET9_0_OR_GREATER
@@ -26,6 +28,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
     private readonly object _activeGracefulStopCapabilitiesSync = new();
 #endif
     private readonly List<IGracefulStopTestExecutionCapability> _activeGracefulStopCapabilities = [];
+    private readonly CancellationTokenSource _gracefulSessionStopRequestedSource = new();
     private CancellationToken _gracefulSessionStopCancellationToken;
     private bool _isGracefulSessionStopRequested;
 
@@ -158,6 +161,13 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
             // Dispose the activity
             activity?.Dispose();
 
+            // Handlers are built before the host runs: release them when the host exited before the setup started
+            // (incompatible protocol, a throwing BeforeRunAsync, ...).
+            if (ServiceProvider.GetService<InvocationLifetimeRunner>() is { } invocationLifetimeRunner)
+            {
+                await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+            }
+
             await DisposeServiceProviderCoreAsync(
                 ServiceProvider,
                 filter: null,
@@ -253,6 +263,43 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the server requested a graceful stop of the session, which cancels it without
+    /// necessarily canceling the application token.
+    /// </summary>
+    protected bool IsGracefulSessionStopRequested
+    {
+        get
+        {
+            lock (_activeGracefulStopCapabilitiesSync)
+            {
+                return _isGracefulSessionStopRequested;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Runs the invocation setup with a token that is also canceled when the server requests a graceful stop.
+    /// </summary>
+    protected async Task<int?> RunInvocationSetupAsync(InvocationLifetimeRunner invocationLifetimeRunner, CancellationToken cancellationToken)
+    {
+        using var setupCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _gracefulSessionStopRequestedSource.Token);
+        return await invocationLifetimeRunner.RunSetupAsync(setupCancellationTokenSource.Token).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Runs the invocation cleanup, reporting the run as canceled when the application token was canceled or the
+    /// server requested a graceful stop.
+    /// </summary>
+    /// <remarks>
+    /// A canceled application token always makes the host exit with <see cref="ExitCode.TestSessionAborted"/>
+    /// (see <see cref="RunAsync"/>): the handlers see that verdict rather than the one computed before.
+    /// </remarks>
+    protected Task<int> RunInvocationCleanupAsync(InvocationLifetimeRunner invocationLifetimeRunner, int exitCode, CancellationToken cancellationToken)
+        => invocationLifetimeRunner.RunCleanupAsync(
+            cancellationToken.IsCancellationRequested ? (int)ExitCode.TestSessionAborted : exitCode,
+            cancellationToken.IsCancellationRequested || IsGracefulSessionStopRequested);
+
     protected async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
     {
         IGracefulStopTestExecutionCapability[] capabilities;
@@ -261,6 +308,20 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
             _isGracefulSessionStopRequested = true;
             _gracefulSessionStopCancellationToken = cancellationToken;
             capabilities = [.. _activeGracefulStopCapabilities.Distinct()];
+        }
+
+        // A stop request does not cancel the application token: the invocation setup observes it through this source.
+        try
+        {
+#if NET
+            await _gracefulSessionStopRequestedSource.CancelAsync().ConfigureAwait(false);
+#else
+            _gracefulSessionStopRequestedSource.Cancel();
+#endif
+        }
+        catch (Exception)
+        {
+            // A setup callback that throws must not prevent stopping the test execution.
         }
 
         if (capabilities.Length > 0)

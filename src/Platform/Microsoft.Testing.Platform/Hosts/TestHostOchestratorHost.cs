@@ -3,6 +3,7 @@
 
 using System.Runtime.ExceptionServices;
 
+using Microsoft.Testing.Platform.Extensions.InvocationLifetime;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -23,8 +24,14 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
     {
         using IPlatformActivity? activity = _serviceProvider.GetPlatformOTelService()?.StartActivity("TestHostOrchestratorHost");
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
+        InvocationLifetimeRunner? invocationLifetimeRunner = _serviceProvider.GetService<InvocationLifetimeRunner>();
         if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
         {
+            if (invocationLifetimeRunner is not null)
+            {
+                await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+            }
+
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }
 
@@ -46,6 +53,11 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
             if (!isProtocolCompatible)
             {
+                if (invocationLifetimeRunner is not null)
+                {
+                    await invocationLifetimeRunner.ReleaseIfNotStartedAsync().ConfigureAwait(false);
+                }
+
                 return (int)ExitCode.IncompatibleProtocolVersion;
             }
 
@@ -66,6 +78,16 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
         try
         {
+            // The invocation setup wraps the orchestrator lifetimes, and every test host process the orchestrator
+            // starts inherits the variables it publishes and the owner marker.
+            if (invocationLifetimeRunner is not null
+                && await invocationLifetimeRunner.RunSetupAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false) is { } setupExitCode)
+            {
+                // The orchestrator lifetimes were initialized when the host was built: release them, best-effort.
+                await RunAfterRunAsync(setupExitCode, swallowFailures: true).ConfigureAwait(false);
+                return await invocationLifetimeRunner.RunCleanupAsync(setupExitCode, applicationCancellationToken.CancellationToken.IsCancellationRequested).ConfigureAwait(false);
+            }
+
             foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
             {
                 await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
@@ -87,6 +109,11 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             // the build's Tests tab. Failures during that release are swallowed so they cannot replace the
             // exception that actually caused the run to fail.
             await RunAfterRunAsync((int)ExitCode.GenericFailure, swallowFailures: true).ConfigureAwait(false);
+            if (invocationLifetimeRunner is not null)
+            {
+                await invocationLifetimeRunner.RunCleanupAsync((int)ExitCode.GenericFailure, applicationCancellationToken.CancellationToken.IsCancellationRequested).ConfigureAwait(false);
+            }
+
             throw;
         }
 
@@ -94,7 +121,24 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         // releasing what BeforeRunAsync acquired matters most. Cleanup failures only surface after normally
         // completed orchestration; cancellation and fault paths already have their outcome, so cleanup is
         // best-effort.
-        await RunAfterRunAsync(exitCode, swallowFailures: orchestrationCanceled).ConfigureAwait(false);
+        try
+        {
+            await RunAfterRunAsync(exitCode, swallowFailures: orchestrationCanceled).ConfigureAwait(false);
+        }
+        catch when (exitCode == (int)ExitCode.Success)
+        {
+            // The invocation fails with the orchestrator lifetime: the invocation cleanup must not see a success.
+            exitCode = (int)ExitCode.GenericFailure;
+            throw;
+        }
+        finally
+        {
+            if (invocationLifetimeRunner is not null)
+            {
+                bool isCanceled = orchestrationCanceled || applicationCancellationToken.CancellationToken.IsCancellationRequested;
+                exitCode = await invocationLifetimeRunner.RunCleanupAsync(isCanceled ? (int)ExitCode.TestSessionAborted : exitCode, isCanceled).ConfigureAwait(false);
+            }
+        }
 
         return exitCode;
 
