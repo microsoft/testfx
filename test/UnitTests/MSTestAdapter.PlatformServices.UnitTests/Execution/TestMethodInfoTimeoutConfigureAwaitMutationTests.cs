@@ -21,7 +21,7 @@ public sealed class TestMethodInfoTimeoutConfigureAwaitMutationTests : TestConta
 {
     private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
-    public async Task InvokeAsync_WithCooperativeTimeoutAndPendingGlobalTestInitialize_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithCooperativeTimeoutAndPendingGlobalTestInitialize_ResumesOnTheCapturedSynchronizationContext()
     {
         var probe = new ContinuationProbe();
         var globalInitializeGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -38,10 +38,10 @@ public sealed class TestMethodInfoTimeoutConfigureAwaitMutationTests : TestConta
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
-        probe.PostCount.Should().Be(0, "the cooperative timeout wrappers must not capture the caller's synchronization context");
+        probe.PostCount.Should().Be(1, "the pending global initialization must resume on the test's captured synchronization context");
     }
 
-    public async Task InvokeAsync_WithTimeoutAndCancelledTestWaitingForPendingTestCleanup_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithTimeoutAndCancelledTestWaitingForPendingTestCleanup_ResumesOnTheCapturedSynchronizationContext()
     {
         var context = new InlineSynchronizationContext();
         var cleanupGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -59,10 +59,10 @@ public sealed class TestMethodInfoTimeoutConfigureAwaitMutationTests : TestConta
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Timeout);
-        context.PostCount.Should().Be(0, "neither the execution nor the monitor of a cancelled test may resume on the captured synchronization context");
+        context.PostCount.Should().Be(1, "the pending test cleanup must resume on the test's captured synchronization context");
     }
 
-    public async Task InvokeAsync_WithTimeoutAndCancelledPendingTestWaitingForDispatchedTestCleanup_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithTimeoutAndCancelledPendingTestWaitingForDispatchedTestCleanup_ResumesOnTheCapturedSynchronizationContext()
     {
         var context = new InlineSynchronizationContext();
         var bodyGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -82,7 +82,7 @@ public sealed class TestMethodInfoTimeoutConfigureAwaitMutationTests : TestConta
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Timeout);
-        context.PostCount.Should().Be(0, "neither the dispatched cleanup nor the monitor of a cancelled test may resume on the captured synchronization context");
+        context.PostCount.Should().Be(1, "the dispatched cleanup must resume on the test's captured synchronization context");
 
         // Let the abandoned test unwind so that nothing outlives this test.
         bodyGate.SetResult(true);

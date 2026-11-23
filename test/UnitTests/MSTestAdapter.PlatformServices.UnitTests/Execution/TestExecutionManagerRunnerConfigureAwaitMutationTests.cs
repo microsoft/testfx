@@ -90,7 +90,7 @@ public sealed class TestExecutionManagerRunnerConfigureAwaitMutationTests : Test
         probe.PostCount.Should().Be(0, "recording the start of a test must not capture the caller's synchronization context");
     }
 
-    public async Task RunTestsAsync_WhenTheTestCleanupIsPending_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task RunTestsAsync_WhenTheTestCleanupIsPending_ResumesOnTheCapturedSynchronizationContext()
     {
         var probe = new ContinuationProbe();
         var recorder = new GatedRecorder(PendingOperation.None);
@@ -109,7 +109,7 @@ public sealed class TestExecutionManagerRunnerConfigureAwaitMutationTests : Test
             gate.SetResult(true);
             await WaitFor(run);
 
-            probe.PostCount.Should().Be(0, "running a test must not capture the caller's synchronization context");
+            probe.PostCount.Should().Be(1, "the pending test cleanup must resume on the test's captured synchronization context");
         }
         finally
         {

@@ -18,7 +18,7 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
 {
     private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(30);
 
-    public async Task InvokeAsync_WithPendingGlobalTestInitialize_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithPendingGlobalTestInitialize_ResumesOnTheCapturedSynchronizationContext()
     {
         var probe = new ContinuationProbe();
         var globalInitializeGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -35,10 +35,10 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
-        probe.PostCount.Should().Be(0, "the global test initialization must not capture the caller's synchronization context");
+        probe.PostCount.Should().Be(1, "the pending global test initialization must resume on the test's captured synchronization context");
     }
 
-    public async Task InvokeAsync_WithPendingBaseTestInitialize_OnlyResumesOnTheCapturedSynchronizationContextAfterTestInitialize()
+    public async Task InvokeAsync_WithPendingBaseTestInitialize_ResumesOnTheCapturedSynchronizationContextBeforeAndAfterTestInitialize()
     {
         var probe = new ContinuationProbe();
         var baseInitializeGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -55,7 +55,7 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
-        probe.PostCount.Should().Be(1, "only the deliberate capture right after the test initialization may resume on the caller's synchronization context");
+        probe.PostCount.Should().Be(2, "the base initialization and subsequent test initialization must resume on the test's captured synchronization context");
     }
 
     public async Task InvokeAsync_WithPendingTestInitialize_OnlyResumesOnTheCapturedSynchronizationContextAfterTestInitialize()
@@ -75,10 +75,10 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
-        probe.PostCount.Should().Be(1, "only the deliberate capture right after the test initialization may resume on the caller's synchronization context");
+        probe.PostCount.Should().Be(1, "the pending test initialization must resume on the test's captured synchronization context");
     }
 
-    public async Task InvokeAsync_WithPendingBaseTestCleanup_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithPendingBaseTestCleanup_ResumesOnTheCapturedSynchronizationContext()
     {
         var probe = new ContinuationProbe();
         var baseCleanupGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -95,10 +95,10 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
-        probe.PostCount.Should().Be(0, "the base test cleanup must not capture the caller's synchronization context");
+        probe.PostCount.Should().Be(1, "the pending base cleanup must resume on the test's captured synchronization context");
     }
 
-    public async Task InvokeAsync_WithPendingTestClassInstanceDisposal_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithPendingTestClassInstanceDisposal_ResumesOnTheCapturedSynchronizationContext()
     {
         var probe = new ContinuationProbe();
         var disposalGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -117,7 +117,7 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
             (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
         }
 
-        probe.PostCount.Should().Be(0, "the disposal of the test class instance must not capture the caller's synchronization context");
+        probe.PostCount.Should().Be(1, "disposing the test class instance must resume on the test's captured synchronization context");
     }
 
     public async Task InvokeAsync_WithPendingTestClassInstanceDisposalAfterTestContextFailure_NeverResumesOnTheCapturedSynchronizationContext()
@@ -143,7 +143,7 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
     }
 
 #if NET6_0_OR_GREATER
-    public async Task InvokeAsync_WithPendingAsyncDisposableTestClass_NeverResumesOnTheCapturedSynchronizationContext()
+    public async Task InvokeAsync_WithPendingAsyncDisposableTestClass_ResumesOnTheCapturedSynchronizationContextAtBothSteps()
     {
         var probe = new ContinuationProbe();
         var disposalGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -159,7 +159,7 @@ public sealed class TestMethodInfoLifecycleConfigureAwaitMutationTests : TestCon
         await WaitFor(runner);
 
         (await runner).Outcome.Should().Be(UnitTestOutcome.Passed);
-        probe.PostCount.Should().Be(0, "the asynchronous disposal of the test class instance must not capture the caller's synchronization context");
+        probe.PostCount.Should().Be(2, "asynchronous disposal and its enclosing cleanup must resume on the test's captured synchronization context");
     }
 #endif
 

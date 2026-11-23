@@ -450,7 +450,16 @@ public sealed class TestMethodInfoLifecycleMutationTests : TestContainer
             => await (SynchronizationContextPreservingTask<bool>)RunTestCleanupMethod.Invoke(Subject, [result, timeoutTokenSource, invocationState])!;
 
         public async Task<bool> RunTestInitializeAsync(object? classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
-            => await (SynchronizationContextPreservingTask<bool>)RunTestInitializeMethod.Invoke(Subject, [classInstance, result, timeoutTokenSource])!;
+        {
+            object?[] arguments = RunTestInitializeMethod.GetParameters().Length switch
+            {
+                3 => [classInstance, result, timeoutTokenSource],
+                4 => [classInstance, result, timeoutTokenSource, CreateInvocationState(classInstance, lease: null, testContextSetSuccessful: true)],
+                _ => throw new InvalidOperationException("Unexpected RunTestInitializeMethodAsync signature."),
+            };
+
+            return await (SynchronizationContextPreservingTask<bool>)RunTestInitializeMethod.Invoke(Subject, arguments)!;
+        }
 
         public async Task<TestFailedException?> InvokeInitializeAsync(MethodInfo method, object? classInstance, CancellationTokenSource? timeoutTokenSource)
             => await (SynchronizationContextPreservingTask<TestFailedException?>)InvokeInitializeMethod.Invoke(Subject, [method, classInstance, timeoutTokenSource])!;
