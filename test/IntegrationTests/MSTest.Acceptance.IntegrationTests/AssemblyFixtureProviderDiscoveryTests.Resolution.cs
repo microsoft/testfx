@@ -230,7 +230,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
         }
 
         using var key = new RSACryptoServiceProvider(2048) { PersistKeyInCsp = false };
-        File.WriteAllBytes(Path.Combine(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
+        File.WriteAllBytes(Path.Join(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
     }
 
     private const string ActualProviderSource = """
