@@ -41,7 +41,9 @@ For .NET and .NET Framework, the adapter and platform-services assemblies, and t
 satellite resources, are ordinary NuGet `lib/<tfm>` assets. NuGet resolves them as
 package references and copies them through the standard copy-local and satellite
 pipelines, so `ExcludeAssets`, `SatelliteResourceLanguages` and publish behave as they
-do for any package. Excluding `runtime` assets therefore removes the adapter from the
+do for any package. Native modern UWP test apps using MTP keep the neutral adapter
+messages by default. Set `SatelliteResourceLanguages` (for example, `fr`) to deploy
+the requested adapter translations. Excluding `runtime` assets removes the adapter from the
 test output. Projects with `IsTestApplication=false` reference the adapter without
 copying it or its satellites. Projects using `packages.config` receive the
 adapter references from the package build targets when the project file does not

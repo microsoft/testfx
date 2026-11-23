@@ -85,7 +85,7 @@
     - non-test applications (IsTestApplication=false) reference the adapter without copying it;
     - EnableMSTestV2CopyResources=false skips the localized satellites;
     - under VSTest the UI language is the build-machine culture, so only that culture hierarchy is copied
-      (MTP selects the language at run time, so every culture allowed by SatelliteResourceLanguages is kept).
+      (MTP selects the language at run time; native UWP tooling requires an explicit SatelliteResourceLanguages list).
     The package's nuspec <references> keep the .NET Framework TestFramework sidecar out of compile and runtime assets.
   -->
   <Target Name="_MSTestComputeAdapterPackageAssetPolicyInputs">
@@ -93,6 +93,8 @@
       <_MSTestAdapterSatelliteResourceLanguage Include="$(SatelliteResourceLanguages)" />
     </ItemGroup>
     <PropertyGroup>
+      <_MSTestCopyAdapterResources>$(EnableMSTestV2CopyResources)</_MSTestCopyAdapterResources>
+      <_MSTestCopyAdapterResources Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseUwpTools)' == 'true' AND '$(SatelliteResourceLanguages)' == '' ">false</_MSTestCopyAdapterResources>
       <_MSTestUICultureHierarchy>;$([System.Globalization.CultureInfo]::CurrentUICulture.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name);$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name);</_MSTestUICultureHierarchy>
       <_MSTestUICultureHierarchy>$([System.String]::Copy('$(_MSTestUICultureHierarchy)').ToLowerInvariant())</_MSTestUICultureHierarchy>
       <_MSTestAdapterSatelliteResourceLanguages Condition=" '$(SatelliteResourceLanguages)' != '' ">;@(_MSTestAdapterSatelliteResourceLanguage);</_MSTestAdapterSatelliteResourceLanguages>
@@ -116,7 +118,7 @@
       </_MSTestAdapterResourceAsset>
       <_MSTestAdapterResourceAssetToRemove Include="@(_MSTestAdapterResourceAsset)"
                                            Condition=" '$(IsTestApplication)' == 'false'
-                                                       OR '$(EnableMSTestV2CopyResources)' != 'true'
+                                                       OR '$(_MSTestCopyAdapterResources)' != 'true'
                                                        OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterResourceAsset._MSTestCulture);'))) " />
 
       <RuntimeCopyLocalItems Remove="@(_MSTestAdapterRuntimeAssetToRemove)" />
@@ -140,7 +142,7 @@
       <_MSTestAdapterPublishAssetToRemove Include="@(_MSTestAdapterPublishAsset)"
                                           Condition=" '$(IsTestApplication)' == 'false'
                                                       OR ('%(_MSTestAdapterPublishAsset._MSTestCulture)' != ''
-                                                          AND ('$(EnableMSTestV2CopyResources)' != 'true'
+                                                          AND ('$(_MSTestCopyAdapterResources)' != 'true'
                                                                OR ('$(EnableMSTestRunner)' != 'true' AND !$([System.String]::Copy('$(_MSTestUICultureHierarchy)').Contains(';%(_MSTestAdapterPublishAsset._MSTestCulture);'))))) " />
 
       <_ResolvedCopyLocalPublishAssets Remove="@(_MSTestAdapterPublishAssetToRemove)" />

@@ -79,8 +79,6 @@ public sealed class FrameworkTargetingTests : AcceptanceTestBase<NopAssetFixture
             </Project>
 
             #file RuntimeTests.cs
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
             [TestClass]
             public sealed class RuntimeTests
             {
@@ -97,7 +95,12 @@ public sealed class FrameworkTargetingTests : AcceptanceTestBase<NopAssetFixture
         string importedTargets = File.ReadAllText(Path.Combine(asset.TargetAssetPath, "obj", $"{assetName}.csproj.nuget.g.targets"))
             .Replace('\\', '/');
         Assert.Contains($"buildTransitive/{targetFramework}/MSTest.TestAdapter.targets", importedTargets);
-        Assert.Contains("buildTransitive/MSTest.TestFramework.targets", importedTargets);
+        // The Windows pack's net10.0 target forwards to the common implicit-usings target;
+        // the portable pack imports that target directly.
+        string frameworkTargets = OperatingSystem.IsWindows()
+            ? "buildTransitive/net10.0/MSTest.TestFramework.targets"
+            : "buildTransitive/MSTest.TestFramework.targets";
+        Assert.Contains(frameworkTargets, importedTargets);
 
         var host = TestHost.LocateFrom(asset.TargetAssetPath, assetName, targetFramework);
         await AssertMatchingAssemblyAsync("MSTest.TestFramework", MSTestVersion, $"lib/{targetFramework}/MSTest.TestFramework.dll", host.DirectoryName);

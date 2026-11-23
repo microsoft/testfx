@@ -1468,3 +1468,183 @@ cover the current design.
 - Classic UWP AppX `pri` merging through the hint-path reference, and native
   classic/modern UWP and packaged/unpackaged WinUI activation, are not executed
   here; the gated `WindowsApplicationModel` tests cover them in CI.
+
+## PR #12578 CI repair: 2026-11-23
+
+### Confirmed failures and decision
+
+[Azure build 1693680](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1693680)
+tested PR head `4d586f71f6e3242063648f4510eef91e18afd408` through merge
+`b177b8983476232239c5e719a1fa36fcbcff7bfa`. Its two failing jobs are
+PR-caused, not a transient restore/runner failure:
+
+| Check | Cause | Action |
+| --- | --- | --- |
+| `microsoft.testfx` | Aggregate of the two failures below. | Fix both in this PR; a retry of the unchanged head is insufficient. |
+| Windows Release | Log 167: both `PackedPackages_UseMatchingFrameworkAssetsAndRuntime` rows expected the common import, but Windows packages correctly select the `net10.0` wrapper. | Expect that exact wrapper on Windows and the common import for portable packs. Retain the exact adapter import, packed-binary equality, and requested-runtime assertions; omit the generated explicit MSTest using to exercise the wrapper's implicit-using forwarding. |
+| Windows application-model acceptance | Log 102: `ModernUwp_Net10`, `ModernUwp_Net11`, and `ModernUwp_UnsupportedDeployment` failed after actual activation. Adapter satellites copied from `lib` replaced the neutral fallback under `fr-FR`. The unsupported-deployment TRX identifies the unexpected failed French-fallback case; application-owned English/French resources and UI dispatch passed. | Restore the previous adapter-only default policy in both copy-local and re-resolved publish assets. Leave native fallback assertions unchanged. |
+
+The merge base `be6de2f432898fe8f5d624a2d364d65df0ef97cd` included MTP
+adapter satellites only when `UseUwpTools != true` or
+`SatelliteResourceLanguages` was nonempty. The earlier proposal to change
+native UWP to French-by-default was not approved; package consolidation does
+not authorize that behavior change. The shared policy now retains
+`EnableMSTestV2CopyResources`, but suppresses adapter satellites for native
+modern UWP MTP only when the language list is empty. Explicit selection,
+ordinary MTP/VSTest, WinUI, framework resources, and application PRI resources
+keep their existing contracts. No resource strings, CI configuration, or
+public API changes are needed.
+
+### Focused validation contract
+
+The producer is the local Windows `MSTest.TestAdapter` / `MSTest.TestFramework`
+pack, composed with the matching MTP and packaged-app controller packages on
+this PR's `main` delivery line. This repairs an unmerged PR regression; no
+servicing/backport is proposed. The PR owner retains rollout ownership.
+No launcher handshake, cancellation, or multi-module protocol is changed.
+
+| Requirement | Automated evidence |
+| --- | --- |
+| Default native fallback and unrelated app resources | Unchanged `ModernUwp_Net10`, `ModernUwp_Net11`, and `ModernUwp_UnsupportedDeployment`: real x64 AppX activation, exact result identities/outcomes, English fallback under French UI culture, and application English/French PRI lookup. Normal children pass all six tests with MSBuild exit 0; the negative child has exactly two deployment failures and MSBuild exit 1. |
+| Explicit UWP language selection and publish bypass | Added `SatelliteResourceLanguages_ModernUwpDefault/French` and `RuntimeStorePublish_ModernUwpDefault/French` rows exercise the same policy with real packed managed consumers, checking both adapter satellite filenames and exact culture sets. These portable policy probes are not native UWP activation proof. |
+| Ordinary consumers remain unchanged | Existing MTP/VSTest satellite-selection and runtime-store publish rows. |
+| Correct framework import still forwards implicit usings | Both `PackedPackages_UseMatchingFrameworkAssetsAndRuntime` rows, retaining exact payload bytes and runtime-major assertions. |
+
+Parallel-safety preflight: the acceptance assembly keeps method-level
+parallelization (CPU-count workers). Each new row owns its generated asset
+directory; the fixture provides a fresh per-run package cache. Build UI culture
+is a child-process override, not a test-process mutation. The existing native
+class exclusion and unique AppX identity/cleanup remain unchanged. No scheduling
+or lock changes are required.
+
+The interrupted attempt's `artifacts/TestResults/appmodel-ci-22ee5623`
+artifacts were inspected: Debug pack succeeded with zero warnings/errors;
+the outer TRX contains 27 executed/passed, zero failed/skipped, including all
+three native rows. This is prior local evidence, not CI proof or execution
+of the four newly added rows. Final paired validation is recorded below.
+
+The first Release run executed 31 cases: 30 passed, and the new build-only
+French policy probe found no satellites. Its generated `MSTest.Sdk` project
+had `OutputType=Library` / `CopyLocalLockFileAssemblies=false`: UWP projects
+own their output type, unlike ordinary SDK test applications. The two
+portable build probes now explicitly use `OutputType=Exe` to exercise
+application copy-local assets, as the publish probes already did. No
+expectation or product behavior was weakened. All three native cases and
+the explicit-French publish case already passed in that run.
+
+### Executed paired validation
+
+The corrected Release pack completed with exit 0, zero warnings and zero
+errors. The isolated comparison at `artifacts\ci12578r` used production
+from `4d586f71f6e3242063648f4510eef91e18afd408` with the final tests retained.
+Its first pack encountered duplicate inherited `.globalconfig` inputs;
+this was experiment setup, not behavioral red evidence. The two files
+were byte-identical (SHA-256
+`98BC48C6E58340572B44DEC62CC92DB5D650EB945C83372B3F408D58B40EAE50`).
+Removing only the comparison's duplicate left the same ancestor analyzer
+configuration effective. No diagnostic was disabled and no build/CI
+configuration change is included in the repair. Repacking the comparison
+then succeeded with exit 0, zero warnings and zero errors.
+
+Revision binding:
+
+- Corrected source: the same head plus `final-source.patch`, SHA-256
+  `D0D563199B47CFF5B7A5C44079820381732827A52ED50DE4952CB1495EBF67E9`
+  (production targets, package readme and both changed test files).
+- Retained-test patch: SHA-256
+  `F1901E739009E2168B53D27561D41F4E92F149B25649356DC9120D2FF4E47312`.
+- Complete comparison patch, including duplicate-config removal: SHA-256
+  `FA1101A8840D29817E1B87D1380AA42F2C570D375201E30B7286D41037B180BD`.
+- `FrameworkTargetingTests.cs`, `SdkTests.cs`, and unchanged
+  `ModernUwpTests.cs` were byte-identical between the paired runs. Protected
+  source hashes were rechecked after the comparison.
+
+Both runs used SDK `12.0.100-alpha.1.26562.108`, Release Windows packages,
+the `net12.0` outer acceptance host, and distinct fresh NuGet caches.
+Native activation used x64 `net10.0-windows10.0.26100.0` and
+`net11.0-windows10.0.26100.0`; managed SDK policy probes used `net11.0`.
+MSTest packages were `5.0.0-dev`, composed with MTP `3.0.0-dev`.
+
+The exact common commands, run from each corresponding checkout, were:
+
+```powershell
+.\build.cmd -pack -c Release -bl
+
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj'
+$filter = 'FullyQualifiedName~ModernUwpTests.ModernUwp_ConsumesUwpAssets|FullyQualifiedName~PackedPackages_UseMatchingFrameworkAssetsAndRuntime|FullyQualifiedName~SdkTests.RuntimeStorePublish_AppliesAdapterAssetPolicy|FullyQualifiedName~SdkTests.SatelliteResourceLanguages_FiltersAdapterResources'
+
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build `
+  --list-tests text --filter $filter -p:UsingDotNetTest=true `
+  -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= `
+  "-bl:$results\discovery.binlog"
+
+.\.dotnet\dotnet.exe test --project $project -c Release --no-build `
+  --filter $filter -p:UsingDotNetTest=true `
+  "-p:ArtifactsTestResultsDir=$results" "-bl:$results\test.binlog" `
+  --show-test-results all
+```
+
+`$results` was the absolute `red-final` or `green-final` directory under
+`artifacts\TestResults\ci-fix-12578-20261123` in the primary workspace.
+Process-local settings were `DOTNET_ROOT=<primary-workspace>\.dotnet`
+(also prepended to `PATH`), `TESTFX_RUN_WINDOWS_APP_MODEL_TESTS=1`,
+`DOTNET_CLI_CONTEXT_VERBOSE=1`, and
+`Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup=0`.
+`TEMP`/`TMP` used the task-owned `artifacts\ci12578` directory;
+`TESTFX_COLLECTION_NUGET_CACHE` selected separate marked `red-packages`
+and `green-final-packages` directories beneath it. No shared cache was
+cleared. Discovery used explicit `--list-tests text`; an earlier bare
+`--list-tests` invocation failed argument parsing and is not execution evidence.
+
+### Test-value evidence
+
+| Contract / cases | Pre-fix production, final tests | Corrected production, same tests | Interpretation |
+| --- | --- | --- | --- |
+| Native UWP neutral fallback: three unchanged cases | All three failed. Child TRX showed French adapter messages instead of the expected English prefix; normal children had 5 passed/1 failed, and the negative child had 5 passed/3 failed. | All three passed. Normal children had 6 passed/0 failed; the negative child had 6 passed and exactly the two intended deployment failures. | **Executed: detected.** Actual AppX activation, not a launch/build failure; application French/English resources and UI dispatch passed in both states. |
+| Default UWP copy-local and runtime-store publish: two new rows | Both failed exact culture-set assertions: expected no adapter satellites, actual all 13 cultures. | Both passed, with neither adapter nor platform-services satellites copied. | **Executed: detected.** The publish row exercises the SDK's re-resolved asset path. |
+| Explicit French and ordinary MTP/VSTest controls: 24 rows | All passed. | All passed. | Preservation evidence, including exact `fr` selection for both adapter resource DLLs. |
+| Framework targeting: two rows | Corrected tests passed against the original Windows packs. CI log 167 separately records the original incorrect common-import expectation. | Both passed, including implicit-using forwarding, exact packed assembly bytes and requested runtime major. | Test-repair/preservation evidence, not a production behavior-removal experiment. |
+
+Both discoveries exited 0 and matched the independently prepared 31-case
+plan. The comparison executed 31: **26 passed, 5 failed, 0 skipped**, exit 2.
+The final run executed 31: **31 passed, 0 failed, 0 skipped**, exit 0.
+The repository's `verify_execution.py` green gate independently confirmed
+planned/selected/executed/passed counts of 31, fresh timestamps, unique
+execution identities, and exit 0. Red failures were checked separately
+against the five intended identities and their actual assertion messages.
+No setup failure, skipped case, or expected negative child was counted as
+regression detection.
+
+For each variant, all 31 generated `project.assets.json` files resolved
+through its own cache. Twelve consumed locally packed archives matched
+the current `.nupkg` files byte-for-byte, and their NuGet metadata named
+the corresponding Release Shipping feed. Each native layout's five MSTest
+assemblies matched its resolved package inputs; framework French satellites
+remained present while only adapter satellites changed.
+
+| `MSTest.TestAdapter.5.0.0-dev.nupkg` | SHA-256 |
+| --- | --- |
+| Pre-fix comparison | `A3793D8D4F19FD1CBD45223746E7F44AE9030C59AB96D7116E54E60F1C0FEE1C` |
+| Corrected | `47171484ACFEB7231B0D5B7D399B56E4BAE512B6D442E341F410DA520A7E60C5` |
+
+Local evidence is retained under
+`artifacts\TestResults\ci-fix-12578-20261123`: pack logs/binlogs and
+source patches; per-run discovery, outer TRX/JUnit/CTRF, child outcome
+records, package hashes, and `provenance.json`; and `consumer-evidence.zip`
+archives containing generated projects, effective restore/import files,
+native manifests, resolved-asset reports, child TRX and binlogs.
+The first 30/31 setup experiment is retained separately under `green`;
+only `green-final` represents the final passing run.
+Cleanup verified all nine run-owned AppX identities unregistered, stopped
+only the comparison's verified MSBuild-node PIDs, and removed the 93
+generated consumers, comparison worktree, and owned caches/scratch.
+The primary SDK and protected source files remained intact.
+
+The final diff preserves method-level scheduling, the existing native-class
+exclusion, per-row generated directories, and child-only build UI culture.
+No additional serialization is needed. This is a package/resource-selection
+repair, not a UI-layout change; the real child result/exception evidence is
+the relevant demonstration. Explicit French was tested through packed
+build/publish probes, not an additional native activation case. Linux/Bazel
+packs and unrelated application-model cases were not rerun. These local
+results do not replace fresh blocking CI checks on the published head.

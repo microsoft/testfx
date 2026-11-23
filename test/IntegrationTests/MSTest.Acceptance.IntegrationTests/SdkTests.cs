@@ -372,6 +372,8 @@ namespace MSTestSdkTest
     [DataRow("MTP", "ParentCultureDoesNotMatchSpecific", "<SatelliteResourceLanguages>pt</SatelliteResourceLanguages>", "")]
     [DataRow("MTP", "NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
     [DataRow("MTP", "NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
+    [DataRow("MTP", "ModernUwpDefault", "<UseUwpTools>true</UseUwpTools><OutputType>Exe</OutputType>", "", DisplayName = "SatelliteResourceLanguages_ModernUwpDefault")]
+    [DataRow("MTP", "ModernUwpFrench", "<UseUwpTools>true</UseUwpTools><OutputType>Exe</OutputType><SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr", DisplayName = "SatelliteResourceLanguages_ModernUwpFrench")]
     [DataRow("VSTest", "Unset", "", "fr")]
     [DataRow("VSTest", "Empty", "<SatelliteResourceLanguages />", "fr")]
     [DataRow("VSTest", "SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
@@ -410,6 +412,8 @@ namespace MSTestSdkTest
     [DataRow("VSTestDefault", "", true, "fr")]
     [DataRow("VSTestWithoutCopyResources", "<EnableMSTestV2CopyResources>false</EnableMSTestV2CopyResources>", true, "")]
     [DataRow("MTPDefault", "<EnableMSTestRunner>true</EnableMSTestRunner><OutputType>Exe</OutputType>", true, "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("ModernUwpDefault", "<EnableMSTestRunner>true</EnableMSTestRunner><OutputType>Exe</OutputType><UseUwpTools>true</UseUwpTools>", true, "", DisplayName = "RuntimeStorePublish_ModernUwpDefault")]
+    [DataRow("ModernUwpFrench", "<EnableMSTestRunner>true</EnableMSTestRunner><OutputType>Exe</OutputType><UseUwpTools>true</UseUwpTools><SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", true, "fr", DisplayName = "RuntimeStorePublish_ModernUwpFrench")]
     [DataRow("NotTestApplication", "<IsTestApplication>false</IsTestApplication>", false, "")]
     public async Task RuntimeStorePublish_AppliesAdapterAssetPolicy(string scenario, string properties, bool expectAdapterAssemblies, string expectedCultures)
     {
