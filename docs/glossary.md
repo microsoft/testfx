@@ -468,7 +468,7 @@ A built-in MTP test filter that matches no tests. Used primarily in scenarios wh
 
 ### Orchestrator
 
-A component in MTP that coordinates multi-process test execution. The orchestrator manages the lifecycle of one or more test host processes, aggregates results, and handles communication between the outer process (e.g., `dotnet test`) and the inner test runner processes.
+A component in MTP that coordinates multi-process test execution. The orchestrator manages the lifecycle of one or more test host processes, aggregates results, and handles communication between the outer process (e.g., `dotnet test`) and the inner test runner processes. Today at most one orchestrator can be enabled per run; see the [multiple test orchestrators design record](decisions/multiple-test-orchestrators.md) for the proposed composition model.
 
 ### OpenTelemetry extension
 
