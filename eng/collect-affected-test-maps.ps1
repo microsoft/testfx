@@ -31,7 +31,8 @@ $resultsRoot = if ([string]::IsNullOrEmpty($ResultsDirectory)) {
     [System.IO.Path]::GetFullPath($ResultsDirectory)
 }
 $resultsDirectory = Join-Path $resultsRoot ([guid]::NewGuid().ToString("N"))
-Write-Host "Collecting $($modules.Count) modules with $slots SDK slots and at most $($slots * $batchesPerModule) instrumentation children."
+$moduleNoun = if ($modules.Count -eq 1) { "module" } else { "modules" }
+Write-Host "Collecting test maps for $($modules.Count) $moduleNoun (up to $slots at a time, at most $($slots * $batchesPerModule) instrumentation children)."
 $timer = [System.Diagnostics.Stopwatch]::StartNew()
 $sourceRevision = & git -C $Repository rev-parse HEAD
 if ($LASTEXITCODE -ne 0) {
@@ -80,5 +81,16 @@ try {
         throw $metadataError
     }
 }
-Write-Host "Collection finished: $($result.Completed)/$($result.Planned) modules, exit $($result.ExitCode), duration $($timer.Elapsed)."
+$verdict = if ($result.ExitCode -eq 0) { "Completed!" } else { "Failed! (exit code $($result.ExitCode))" }
+Write-Host ""
+Write-Host "Test map collection summary: $verdict"
+Write-Host "  modules: $($result.Completed)/$($result.Planned)"
+$canceledCount = @($result.CanceledModules | Where-Object { $_.Canceled }).Count
+if ($canceledCount -gt 0) {
+    Write-Host "  canceled: $canceledCount"
+}
+Write-Host "  tests mapped: $($result.TestsMapped)"
+Write-Host "  duration: $(Format-CollectionDuration -Duration $timer.Elapsed)"
+Write-Host ""
+Write-Host "  Module logs: $resultsDirectory"
 exit $result.ExitCode

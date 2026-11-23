@@ -76,117 +76,206 @@ try {
     }
     Write-Output "PASS ModulePoolSkipsOnlyOversizedMaps"
 
+    $mtpAcceptanceContext = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64]"
+    $sampleContext = "[affected-tests] [Sample.Tests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26570.125 | win-x64]"
+    $analyzersModule = [pscustomobject]@{
+        Project = "MSTest.Analyzers.UnitTests"
+        Framework = "net10.0"
+        RelativePath = "artifacts/bin/MSTest.Analyzers.UnitTests/Release/net10.0/MSTest.Analyzers.UnitTests.dll"
+    }
+    $analyzersContext = "[affected-tests] [MSTest.Analyzers.UnitTests | .NETCoreApp,Version=v10.0 | .NET 10.0.15 | win-x64]"
+    $analyzersMap = "azdo://public/1695348/TestFx_AffectedTestsMaps/affected-tests/v2/6e9a61bde3d41e2c75a44a898550f5810ff47bba60ae06c2fdad553d84a8a654/17763394b8af3d4972f53efc536a64adb62ea1da90b77552fcc0769de2e16ec1.json"
     $outputCases = @(
         @{
-            Name = "ModuleOutputDoesNotRepeatAffectedTestContext"
-            Line = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4"
-            Expected = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4"
+            Name = "ModuleOutputReplacesModuleContextWithProjectAndFramework"
+            Lines = @("$sampleContext Collector error: Pipe is broken.", "   at System.IO.Pipes.PipeStream.WriteCore()")
+            Expected = @("[Sample.Tests net12.0] Collector error: Pipe is broken.", "[Sample.Tests net12.0]    at System.IO.Pipes.PipeStream.WriteCore()")
         },
         @{
-            Name = "ModuleOutputPreservesAlternateAssemblyContext"
-            Line = "[affected-tests] [Shared.TestAssembly | .NETFramework,Version=v4.6.2 | .NET Framework 4.8 | win-x64] Discovered 2 tests."
-            Expected = "[affected-tests] [Shared.TestAssembly | .NETFramework,Version=v4.6.2 | .NET Framework 4.8 | win-x64] Discovered 2 tests."
+            Name = "ModuleOutputDoesNotRepeatAffectedTestContext"
+            Lines = @("$mtpAcceptanceContext Test-map collection child failed: MSTest v5.0.0-preview.26553.4")
+            Expected = @("[Microsoft.Testing.Platform.Acceptance.IntegrationTests net12.0] Test-map collection child failed: MSTest v5.0.0-preview.26553.4")
+        },
+        @{
+            Name = "ModuleOutputShortensAlternateAssemblyContext"
+            Lines = @("[affected-tests] [Shared.TestAssembly | .NETFramework,Version=v4.6.2 | .NET Framework 4.8 | win-x64] Discovered 2 tests.")
+            Expected = @("[Shared.TestAssembly net462] Discovered 2 tests.")
+        },
+        @{
+            Name = "ModuleOutputShortensAlternateAssemblyPartialContext"
+            Lines = @("[affected-tests] [Other.Tests | .NETCoreApp,Version=v12.0] Child failed.")
+            Expected = @("[Other.Tests net12.0] Child failed.")
         },
         @{
             Name = "ModuleOutputPreservesBracketedModuleContext"
-            Line = '[affected-tests] [Sample.Tests[Rows](Debug)+Long.Component.Name | net12.0 | .NET 12.0 | win-x64] Child failed: "quoted <value> & details".'
-            Expected = '[affected-tests] [Sample.Tests[Rows](Debug)+Long.Component.Name | net12.0 | .NET 12.0 | win-x64] Child failed: "quoted <value> & details".'
+            Lines = @('[affected-tests] [Sample.Tests[Rows](Debug)+Long.Component.Name | net12.0 | .NET 12.0 | win-x64] Child failed: "quoted <value> & details".')
+            Expected = @('[Sample.Tests[Rows](Debug)+Long.Component.Name net12.0] Child failed: "quoted <value> & details".')
         },
         @{
             Name = "ModuleOutputDoesNotRepeatRuntimeAndRid"
-            Line = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026) [win-x64 - .NET 12.0.0-alpha.1.26509.101]"
-            Expected = "[affected-tests] [Microsoft.Testing.Platform.Acceptance.IntegrationTests | .NETCoreApp,Version=v12.0 | .NET 12.0.0-alpha.1.26509.101 | win-x64] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026)"
+            Lines = @("$mtpAcceptanceContext Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026) [win-x64 - .NET 12.0.0-alpha.1.26509.101]")
+            Expected = @("[Microsoft.Testing.Platform.Acceptance.IntegrationTests net12.0] Test-map collection child failed: MSTest v5.0.0-preview.26553.4 (UTC 11/4/2026)")
         },
         @{
             Name = "ModuleOutputDoesNotRepeatRuntimeAndRidForBracketedAssembly"
-            Line = "[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
-            Expected = "[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0"
+            Lines = @("[affected-tests] [Sample.Tests[Rows](Debug) | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
+            Expected = @("[Sample.Tests[Rows](Debug) net12.0] Test-map collection child failed: MSTest v5.0.0")
         },
         @{
             Name = "ModuleOutputPreservesDifferentChildRuntime"
-            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]"
-            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]"
+            Lines = @("[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]")
+            Expected = @("[Sample.Tests net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 11.0]")
         },
         @{
             Name = "ModuleOutputPreservesDifferentChildRid"
-            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-arm64 - .NET 12.0]"
-            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-arm64 - .NET 12.0]"
+            Lines = @("[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-arm64 - .NET 12.0]")
+            Expected = @("[Sample.Tests net12.0] Test-map collection child failed: MSTest v5.0.0 [win-arm64 - .NET 12.0]")
         },
         @{
             Name = "ModuleOutputPreservesUnscopedRuntimeAndRid"
-            Line = "Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
-            Expected = "[Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Lines = @("Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
+            Expected = @("[Sample.Tests net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
         },
         @{
             Name = "ModuleOutputPreservesRuntimeAndRidWithoutFullContext"
-            Line = "[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
-            Expected = "[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Lines = @("[affected-tests] [Sample.Tests | net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
+            Expected = @("[Sample.Tests net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
         },
         @{
             Name = "ModuleOutputPreservesEmbeddedBannerAfterShortContext"
-            Line = "[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
-            Expected = "[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Lines = @("[affected-tests] [Sample.Tests | net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
+            Expected = @("[Sample.Tests net12.0] Child output: [worker | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
         },
         @{
             Name = "ModuleOutputPreservesNonBannerRuntimeAndRid"
-            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: Assertion expected [win-x64 - .NET 12.0]"
-            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: Assertion expected [win-x64 - .NET 12.0]"
+            Lines = @("[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: Assertion expected [win-x64 - .NET 12.0]")
+            Expected = @("[Sample.Tests net12.0] Test-map collection child failed: Assertion expected [win-x64 - .NET 12.0]")
         },
         @{
             Name = "ModuleOutputPreservesBannerFollowedByDiagnostics"
-            Line = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0] Additional failure details."
-            Expected = "[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0] Additional failure details."
+            Lines = @("[affected-tests] [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0] Additional failure details.")
+            Expected = @("[Sample.Tests net12.0] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0] Additional failure details.")
         },
         @{
             Name = "ModuleOutputPrefixesUnscopedDiagnostics"
-            Line = "Test run failed with exit code 37."
-            Expected = "[Sample.Tests | net12.0] Test run failed with exit code 37."
+            Lines = @("Test run failed with exit code 37.")
+            Expected = @("[Sample.Tests net12.0] Test run failed with exit code 37.")
         },
         @{
-            Name = "ModuleOutputPrefixesUnscopedAffectedTestDiagnostics"
-            Line = "[affected-tests] Resolving test-map storage."
-            Expected = "[Sample.Tests | net12.0] [affected-tests] Resolving test-map storage."
+            Name = "ModuleOutputReplacesUnscopedAffectedTestPrefix"
+            Lines = @("[affected-tests] Resolving test-map storage.")
+            Expected = @("[Sample.Tests net12.0] Resolving test-map storage.")
         },
         @{
             Name = "ModuleOutputPrefixesBracketedNonModuleDiagnostics"
-            Line = "[affected-tests] [warning] No test map is available."
-            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] No test map is available."
+            Lines = @("[affected-tests] [warning] No test map is available.")
+            Expected = @("[Sample.Tests net12.0] [warning] No test map is available.")
         },
         @{
             Name = "ModuleOutputPrefixesDiagnosticsContainingBracketedText"
-            Line = "[affected-tests] [warning] saw [a | b] in output"
-            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] saw [a | b] in output"
+            Lines = @("[affected-tests] [warning] saw [a | b] in output")
+            Expected = @("[Sample.Tests net12.0] [warning] saw [a | b] in output")
         },
         @{
             Name = "ModuleOutputPreservesEmbeddedBannerInUnscopedDiagnostic"
-            Line = "[affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
-            Expected = "[Sample.Tests | net12.0] [affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]"
+            Lines = @("[affected-tests] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
+            Expected = @("[Sample.Tests net12.0] [warning] saw [Sample.Tests | net12.0 | .NET 12.0 | win-x64] Test-map collection child failed: MSTest v5.0.0 [win-x64 - .NET 12.0]")
         },
         @{
             Name = "ModuleOutputPrefixesIncompleteModuleContext"
-            Line = "[affected-tests] [Sample.Tests | net12.0"
-            Expected = "[Sample.Tests | net12.0] [affected-tests] [Sample.Tests | net12.0"
+            Lines = @("[affected-tests] [Sample.Tests | net12.0")
+            Expected = @("[Sample.Tests net12.0] [Sample.Tests | net12.0")
         },
         @{
             Name = "ModuleOutputPrefixesEmbeddedModuleContext"
-            Line = "Child output: [affected-tests] [Sample.Tests | net12.0] Failed."
-            Expected = "[Sample.Tests | net12.0] Child output: [affected-tests] [Sample.Tests | net12.0] Failed."
+            Lines = @("Child output: [affected-tests] [Sample.Tests | net12.0] Failed.")
+            Expected = @("[Sample.Tests net12.0] Child output: [affected-tests] [Sample.Tests | net12.0] Failed.")
         },
         @{
-            Name = "ModuleOutputPrefixesBlankLines"
-            Line = ""
-            Expected = "[Sample.Tests | net12.0] "
+            Name = "ModuleOutputDropsTrailingBlankLine"
+            Lines = @("")
+            Expected = @()
+        },
+        @{
+            Name = "ModuleOutputKeepsBlankLinesBeforeOutput"
+            Lines = @("", "", "Next.")
+            Expected = @("", "", "[Sample.Tests net12.0] Next.")
+        },
+        @{
+            Name = "ModuleOutputSummarizesModuleDiscoveryAndMap"
+            Module = $analyzersModule
+            Lines = @(
+                "Telemetry is: Enabled",
+                "Collecting test maps for 1 module(s). Child test-result reporting is suppressed.",
+                "$analyzersContext Experimental test-map collection: child SDK reporting is suppressed; only this parent summary and test map are produced. Counts below describe discovery and planning, not execution results.",
+                "$analyzersContext Discovered 3060 tests; planning to run all 3060 for test-map collection (not execution results).",
+                "$analyzersContext Collected test map '$analyzersMap': 3060 discovered test UID(s) in map, 827 source paths, adaptive batches of 16-256, up to 2 concurrent (not execution results).",
+                "$analyzersContext Mapping timing: 24 measured batch(es), 0 conservative fallback batch(es).",
+                "",
+                "Test map collection: Completed.",
+                "  modules finished: 1/1",
+                "  Module completion is not a test verdict. Discovery and mapping counts do not represent executed test outcomes.",
+                "  duration: 5m 43s 632ms")
+            Expected = @("Telemetry is: Enabled")
+            Captured = @{ Discovered = 3060; Tests = 3060; SourcePaths = 827; MapUri = $analyzersMap; Runtime = ".NET 10.0.15"; Rid = "win-x64" }
+        },
+        @{
+            Name = "ModuleOutputKeepsConservativeFallbackTiming"
+            Lines = @("$sampleContext Mapping timing: 193 measured batch(es), 3 conservative fallback batch(es).")
+            Expected = @("[Sample.Tests net12.0] Mapping timing: 193 measured batch(es), 3 conservative fallback batch(es).")
+        },
+        @{
+            Name = "ModuleOutputMatchesModuleByAssemblyFileName"
+            Module = [pscustomobject]@{
+                Project = "TestFramework.UnitTests"
+                Framework = "net48"
+                RelativePath = "artifacts/bin/TestFramework.UnitTests/Release/net48/Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.exe"
+            }
+            Lines = @(
+                "[affected-tests] [Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests | .NETFramework,Version=v4.8 | .NET Framework 4.8.9363.0 | win-x64] Mapping timing: 13 measured batch(es), 0 conservative fallback batch(es).",
+                "[affected-tests] [Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests | .NETFramework,Version=v4.8 | .NET Framework 4.8.9363.0 | win-x64] Collector error: Pipe is broken.")
+            Expected = @("[TestFramework.UnitTests net48] Collector error: Pipe is broken.")
+            Captured = @{ Runtime = ".NET Framework 4.8.9363.0"; Rid = "win-x64" }
+        },
+        @{
+            Name = "ModuleOutputDoesNotSuppressAlternateAssemblyProgress"
+            Lines = @("[affected-tests] [Other.Tests | .NETCoreApp,Version=v12.0 | .NET 12.0.0 | win-x64] Discovered 5 tests; planning to run all 5 for test-map collection (not execution results).")
+            Expected = @("[Other.Tests net12.0] Discovered 5 tests; planning to run all 5 for test-map collection (not execution results).")
+            Captured = @{ Discovered = $null; Runtime = $null }
+        },
+        @{
+            Name = "ModuleOutputEndsCompletedBlockAtOtherOutput"
+            Lines = @("Test map collection: Completed.", "  modules finished: 1/1", "Unexpected trailer.", "  duration: 1s 000ms")
+            Expected = @("[Sample.Tests net12.0] Unexpected trailer.", "[Sample.Tests net12.0]   duration: 1s 000ms")
+        },
+        @{
+            Name = "ModuleOutputKeepsFailedSummary"
+            Lines = @("", "Test map collection: Failed.", "  modules finished: 0/1", "  duration: 2s 001ms")
+            Expected = @("", "[Sample.Tests net12.0] Test map collection: Failed.", "[Sample.Tests net12.0]   modules finished: 0/1", "[Sample.Tests net12.0]   duration: 2s 001ms")
+        },
+        @{
+            Name = "ModuleOutputPassesPipelineCommandsThrough"
+            Lines = @("##vso[task.logissue type=warning]Map upload retried.", "##[warning]Map upload retried.", "  ::error::Map upload failed.")
+            Expected = @("##vso[task.logissue type=warning]Map upload retried.", "##[warning]Map upload retried.", "  ::error::Map upload failed.")
+        },
+        @{
+            Name = "ModuleOutputShowsTelemetryOnce"
+            Lines = @("Telemetry is: Enabled", "Telemetry is: Enabled")
+            Expected = @("Telemetry is: Enabled")
         }
     )
+    $defaultOutputModule = [pscustomobject]@{ Project = "Sample.Tests"; Framework = "net12.0" }
     $outputFailures = [System.Collections.Generic.List[string]]::new()
     foreach ($case in $outputCases) {
         $previousFailureCount = $outputFailures.Count
+        $expected = @($case.Expected)
+        $caseInput = ($case.Lines | ForEach-Object { $_ + [Environment]::NewLine }) -join ""
         foreach ($stream in @("Output", "Error")) {
-            $reader = [System.IO.StringReader]::new($case.Line + [Environment]::NewLine)
+            $reader = [System.IO.StringReader]::new($caseInput)
             $writer = [System.IO.StringWriter]::new()
             try {
                 $state = [pscustomobject]@{
-                    Module = [pscustomobject]@{ Project = "Sample.Tests"; Framework = "net12.0" }
+                    Module = $(if ($case.ContainsKey("Module")) { $case.Module } else { $defaultOutputModule })
                     Writer = $writer
                     OutputReader = $null
                     ErrorReader = $null
@@ -195,13 +284,19 @@ try {
                 }
                 $state."${stream}Reader" = $reader
                 $state."${stream}Task" = $reader.ReadLineAsync()
-                $output = @(Read-CollectionModuleOutput -State $state 6>&1)
-                if ($output.Count -ne 1 -or $output[0].ToString() -cne $case.Expected) {
-                    $outputFailures.Add("$($case.Name) ($stream): expected '$($case.Expected)', got '$($output -join " | ")'.")
+                $output = @(Read-CollectionModuleOutput -State $state 6>&1 | ForEach-Object { $_.ToString() })
+                if ($output.Count -ne $expected.Count -or ($output -join "`n") -cne ($expected -join "`n")) {
+                    $outputFailures.Add("$($case.Name) ($stream): expected '$($expected -join " | ")', got '$($output -join " | ")'.")
                 }
-                if ($writer.ToString() -cne ($case.Line + [Environment]::NewLine) -or
-                    $null -ne $state.OutputTask -or $null -ne $state.ErrorTask) {
-                    $outputFailures.Add("$($case.Name) ($stream): the original log line must be preserved and the stream drained.")
+                if ($writer.ToString() -cne $caseInput -or $null -ne $state.OutputTask -or $null -ne $state.ErrorTask) {
+                    $outputFailures.Add("$($case.Name) ($stream): the original log lines must be preserved and the stream drained.")
+                }
+                if ($case.ContainsKey("Captured")) {
+                    foreach ($key in $case.Captured.Keys) {
+                        if ("$($state.Presentation.$key)" -cne "$($case.Captured[$key])") {
+                            $outputFailures.Add("$($case.Name) ($stream): expected $key '$($case.Captured[$key])', got '$($state.Presentation.$key)'.")
+                        }
+                    }
                 }
             } finally {
                 $reader.Dispose()
@@ -215,6 +310,85 @@ try {
     if ($outputFailures.Count -gt 0) {
         throw ($outputFailures -join [Environment]::NewLine)
     }
+
+    $durationFailures = foreach ($durationCase in @(
+        @{ Duration = [timespan]::Zero; Expected = "0ms" },
+        @{ Duration = [timespan]::FromMilliseconds(937); Expected = "937ms" },
+        @{ Duration = [timespan]::FromMilliseconds(34016); Expected = "34s 016ms" },
+        @{ Duration = [timespan]::FromMilliseconds(63559); Expected = "1m 03s 559ms" },
+        @{ Duration = [timespan]::FromMilliseconds(4408379); Expected = "1h 13m 28s 379ms" },
+        @{ Duration = [timespan]::FromMilliseconds(86405007); Expected = "1d 00h 00m 05s 007ms" }
+    )) {
+        $actual = Format-CollectionDuration -Duration $durationCase.Duration
+        if ($actual -cne $durationCase.Expected) { "expected '$($durationCase.Expected)', got '$actual'" }
+    }
+    if (@($durationFailures).Count -gt 0) {
+        throw "CollectionDurationMatchesTerminalReporter: $(@($durationFailures) -join '; ')."
+    }
+    Write-Output "PASS CollectionDurationMatchesTerminalReporter"
+
+    $displayFailures = foreach ($displayCase in @(
+        @{ Framework = "net10.0"; Rid = "win-x64"; Runtime = ".NET 10.0.15"; Expected = "net10.0|x64" },
+        @{ Framework = "net12.0"; Rid = "linux-arm64"; Runtime = ".NET 12.0.0-alpha.1.26570.125"; Expected = "net12.0|arm64" },
+        @{ Framework = "net48"; Rid = "win-x64"; Runtime = ".NET Framework 4.8.9363.0"; Expected = "net48|x64" },
+        @{ Framework = "net472"; Rid = "win-x64"; Runtime = ".NET Framework 4.8.9363.0"; Expected = "net472|x64, runtime: net48" },
+        @{ Framework = "net10.0"; Rid = "win-x64"; Runtime = ".NET 11.0.0"; Expected = "net10.0|x64, runtime: net11.0" },
+        @{ Framework = "net11.0-windows10.0.19041.0"; Rid = "win-x64"; Runtime = ".NET 11.0.0"; Expected = "net11.0-windows10.0.19041.0|x64" },
+        @{ Framework = "net10.0"; Rid = "win-x64"; Runtime = "Mono 6.12"; Expected = "net10.0|x64, runtime: Mono 6.12" },
+        @{ Framework = "net10.0"; Rid = $null; Runtime = $null; Expected = "net10.0" }
+    )) {
+        $runtimeFramework = ConvertTo-CollectionRuntimeFramework -Description $displayCase.Runtime
+        $actual = Get-CollectionModuleDisplay -Framework $displayCase.Framework -Rid $displayCase.Rid -Runtime $runtimeFramework
+        if ($actual -cne $displayCase.Expected) { "expected '$($displayCase.Expected)', got '$actual'" }
+    }
+    if (@($displayFailures).Count -gt 0) {
+        throw "CollectionModuleDisplayOmitsMatchingRuntime: $(@($displayFailures) -join '; ')."
+    }
+    Write-Output "PASS CollectionModuleDisplayOmitsMatchingRuntime"
+
+    $completionModule = [pscustomobject]@{
+        Project = "Sample.Tests"
+        Framework = "net10.0"
+        RelativePath = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll"
+    }
+    $completionFailures = foreach ($completionCase in @(
+        @{ ExitCode = 0; Tests = 3060; SourcePaths = 827; MapUri = "azdo://map"; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) mapped 3060 tests to 827 source paths (0ms)" },
+        @{ ExitCode = 0; Tests = 1; SourcePaths = 1; MapUri = "azdo://map"; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) mapped 1 test to 1 source path (0ms)" },
+        @{ ExitCode = 37; Tests = 3060; SourcePaths = 827; MapUri = "azdo://map"; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) failed with exit code 37 (0ms)" },
+        @{ ExitCode = 0; Canceled = $true; Rid = "win-x64"; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0|x64) canceled (0ms)" },
+        @{ ExitCode = 0; Expected = "artifacts/bin/Sample.Tests/Release/net10.0/Sample.Tests.dll (net10.0) completed without a test map (0ms)" }
+    )) {
+        $completionState = [pscustomobject]@{ Module = $completionModule; Timer = [System.Diagnostics.Stopwatch]::new() }
+        $presentation = Get-CollectionOutputPresentation -State $completionState
+        $presentation.Tests = $completionCase.Tests
+        $presentation.SourcePaths = $completionCase.SourcePaths
+        $presentation.MapUri = $completionCase.MapUri
+        $presentation.Rid = $completionCase.Rid
+        $presentation.Runtime = $(if ($null -ne $completionCase.Rid) { ".NET 10.0.15" } else { $null })
+        $actual = @(Write-CollectionModuleCompletion -State $completionState -ExitCode $completionCase.ExitCode -Canceled:($completionCase.Canceled -eq $true) 6>&1 |
+            ForEach-Object { $_.ToString() })
+        if ($actual.Count -ne 2 -or $actual[0] -cne "" -or $actual[1] -cne $completionCase.Expected) {
+            "expected '| $($completionCase.Expected)', got '$($actual -join " | ")'"
+        }
+    }
+    if (@($completionFailures).Count -gt 0) {
+        throw "CollectionModuleCompletionReportsOutcome: $(@($completionFailures) -join '; ')."
+    }
+    Write-Output "PASS CollectionModuleCompletionReportsOutcome"
+
+    $sharedPresenter = New-CollectionOutputPresenter
+    $telemetryOutput = foreach ($telemetryModule in @("First.Tests", "Second.Tests")) {
+        $telemetryState = [pscustomobject]@{
+            Module = [pscustomobject]@{ Project = $telemetryModule; Framework = "net12.0" }
+            Presenter = $sharedPresenter
+        }
+        ConvertTo-CollectionConsoleLine -State $telemetryState -Stream Output -Line "Telemetry is: Enabled"
+        ConvertTo-CollectionConsoleLine -State $telemetryState -Stream Output -Line "Ready."
+    }
+    if ((@($telemetryOutput) -join "`n") -cne "Telemetry is: Enabled`n[First.Tests net12.0] Ready.`n[Second.Tests net12.0] Ready.") {
+        throw "CollectionTelemetryShownOncePerPool: expected one telemetry line across modules, got '$(@($telemetryOutput) -join " | ")'."
+    }
+    Write-Output "PASS CollectionTelemetryShownOncePerPool"
 
     $worker = Join-Path $fixture "worker.ps1"
     @'
@@ -388,8 +562,15 @@ $($completed.Module.Project) finished
     $modules = @("failure", "never-started") | ForEach-Object {
         [pscustomobject]@{ Project = $_; Framework = "fake"; RelativePath = $_ }
     }
-    $result = Invoke-CollectionModulePool -Modules $modules -Repository $fixture -ResultsDirectory (Join-Path $fixture "failure") `
-        -DotnetPath $powershellPath -MaximumParallelModules 1 -CommandPrefix $prefix
+    $failureConsole = @(Invoke-CollectionModulePool -Modules $modules -Repository $fixture -ResultsDirectory (Join-Path $fixture "failure") `
+        -DotnetPath $powershellPath -MaximumParallelModules 1 -CommandPrefix $prefix 6>&1)
+    $result = @($failureConsole | Where-Object { $_ -isnot [System.Management.Automation.InformationRecord] })[-1]
+    $failureConsoleText = @($failureConsole | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } |
+        ForEach-Object { $_.ToString() }) -join "`n"
+    if ($failureConsoleText -cnotmatch '^Collecting test map from failure \(fake\)\n\[failure fake\] failure started\n\nfailure \(fake\) failed with exit code 37 \(\d+(?:ms|s \d{3}ms)\)$') {
+        throw "ModulePoolReportsModuleLikeTestRun: expected start, labeled output, and completion lines, got '$($failureConsoleText.Replace("`n", " | "))'."
+    }
+    Write-Output "PASS ModulePoolReportsModuleLikeTestRun"
     $expectedFailureLog = @'
 failure started
 
@@ -451,6 +632,35 @@ error stream second
     }
     Write-Output "PASS ModulePoolPreservesNativeFailureDuringOutputError"
 
+    try {
+        function Read-CollectionModuleOutput {
+            param($State)
+            $deadline = [datetimeoffset]::UtcNow.AddSeconds(10)
+            while (-not $State.Process.HasExited -or $null -ne $State.OutputTask -or $null -ne $State.ErrorTask) {
+                if ([datetimeoffset]::UtcNow -ge $deadline) {
+                    throw "The native failure child did not exit and drain."
+                }
+                & $savedRead -State $State
+                Start-Sleep -Milliseconds 10
+            }
+            throw "Injected output failure after native exit."
+        }
+        $nativeFailureConsole = @(Invoke-CollectionModulePool -Modules @(
+            [pscustomobject]@{ Project = "failure"; Framework = "fake"; RelativePath = "failure" }) `
+            -Repository $fixture -ResultsDirectory (Join-Path $fixture "drained-output-error") `
+            -DotnetPath $powershellPath -MaximumParallelModules 1 -CommandPrefix $prefix 6>&1 3>$null)
+        $result = @($nativeFailureConsole | Where-Object { $_ -isnot [System.Management.Automation.InformationRecord] })[-1]
+        $nativeFailureText = @($nativeFailureConsole | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } |
+            ForEach-Object { $_.ToString() }) -join "`n"
+        if ($result.ExitCode -ne 37 -or $result.CanceledModules.Count -ne 1 -or $result.CanceledModules[0].Canceled -or
+            $nativeFailureText -cnotmatch '\nfailure \(fake\) failed with exit code 37 \(\d+(?:ms|s \d{3}ms)\)$') {
+            throw "ModulePoolReportsNativeFailureDuringOutputError: a native failure drained after an output error must be reported as failed, got '$($nativeFailureText.Replace("`n", " | "))'."
+        }
+    } finally {
+        Set-Item -LiteralPath function:Read-CollectionModuleOutput -Value $savedRead
+    }
+    Write-Output "PASS ModulePoolReportsNativeFailureDuringOutputError"
+
     $modules = @("slow", "failure") | ForEach-Object {
         [pscustomobject]@{ Project = $_; Framework = "fake"; RelativePath = $_ }
     }
@@ -464,6 +674,7 @@ slow started
 
 '@
     if ($result.ExitCode -ne 37 -or -not $result.TeardownConfirmed -or $result.CanceledModules.Count -ne 1 -or
+        -not $result.CanceledModules[0].Canceled -or
         (Get-Process -Id ([int]$pidText) -ErrorAction SilentlyContinue) -or
         (Get-Process -Id $grandchildPid -ErrorAction SilentlyContinue) -or
         (Get-Content -LiteralPath $result.CanceledModules[0].LogPath -Raw).Replace("`r`n", "`n") -ne $expectedCanceledLog.Replace("`r`n", "`n")) {
@@ -629,7 +840,7 @@ slow started
     if ($orphanFailures.Count -gt 0) {
         throw ($orphanFailures -join [Environment]::NewLine)
     }
-    $passedCount = $(if ($IsWindows) { 14 } else { 12 }) + $outputCases.Count
+    $passedCount = $(if ($IsWindows) { 20 } else { 18 }) + $outputCases.Count
     Write-Output "Collection module-pool self-tests: $passedCount passed."
 } finally {
     Remove-Item -LiteralPath $fixture -Recurse -Force

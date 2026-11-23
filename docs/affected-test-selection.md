@@ -835,6 +835,8 @@ usually two module slots with two child batches each. Each module owns logs/resu
 publication still uses the provider's shared-container coordination. Scheduling must not silently multiply
 per-module child limits, omit frameworks or turn partial/canceled collection into success.
 
+The label design in this paragraph and its evidence below are superseded by
+[Collection console presentation](#collection-console-presentation-2026-11-23) and retained as history.
 The pool adds a project/TFM label to unscoped stdout and stderr. Affected-test diagnostics that already start
 with `[affected-tests] [assembly | framework | ...]` retain that context without an additional pool label.
 Assembly names may contain balanced bracketed text, but recognition cannot cross an unscoped tag such as
@@ -942,6 +944,87 @@ is supported for legacy .NET Framework deployment paths. With the unchanged publ
 196-UID startup-heavy two-framework fixture, the first interleaved measurement was 18.79 seconds with one module
 slot and 11.91 seconds with two, both with ten startups and two complete 98-UID maps. This isolates module overlap,
 not the new batching feedback or cache benefit, and is not a full-suite forecast.
+
+#### Collection console presentation (2026-11-23)
+
+The `Test and collect affected-test map` step of
+[build 1695348](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1695348&view=logs&j=88896cab-fdcf-5663-ba27-dbd4faf1ed02&t=38027b7a-cac6-5a9e-d77b-89d30e80d7fd)
+(job `Windows AffectedTests`, log 244) printed 610 console lines for 46 modules and was hard to read:
+
+- `[affected-tests]` appeared only on provider diagnostics, not on pool or SDK lines, so it identified nothing.
+- Full contexts such as `[MSTest.SelfRealExamples.UnitTests | .NETCoreApp,Version=v11.0 | .NET 11.0.0 | win-x64]`
+  restated the framework up to three times on every line.
+- Module success was spread over provider banners (`Experimental test-map collection:`, `Discovered`,
+  `Mapping timing:`, `Collected test map`) and a per-module SDK `Test map collection: Completed.` block with
+  a repeated `Module completion is not a test verdict` line. No single line said which module finished,
+  how long it took or what it produced.
+
+The console now mirrors a normal MTP run of the same modules (log 134 of that build:
+`Running tests from <path> (net11.0|x64)`, then `<path> (net462|x64, runtime: net48) passed [...] (7s 507ms)`
+and a `Test run summary:` block), with only the extra collection details:
+
+- `eng/collect-affected-test-maps.ps1` writes one header,
+  `Collecting test maps for N modules (up to S at a time, at most C instrumentation children).`
+- `eng/collection-module-pool.ps1` writes `Collecting test map from <module path> (<tfm>)` when a module starts.
+- Diagnostics are prefixed with `[<project> <tfm>]` for the module's own lines and `[<assembly> <tfm>]` for other
+  assemblies. Neither `[affected-tests]` nor the runtime/RID is repeated. Azure DevOps (`##vso[`, `##[`) and
+  GitHub (`::`) commands pass through unlabeled; other bracket shapes are kept verbatim.
+- After a blank line, each module gets one completion line in MTP's framework display:
+  `<path> (<tfm>|<arch>[, runtime: <runtime>]) <outcome> (<duration>)`. Outcome is
+  `mapped N tests to M source paths`, `completed without a test map`, `failed with exit code X` or `canceled`.
+  As in MTP, the runtime is shown only when it differs from the TFM (`net48|x64`, not
+  `.NETFramework,Version=v4.8 | .NET Framework 4.8.9363.0`).
+- The entry script ends with `Test map collection summary: Completed!` or `Failed! (exit code X)`, followed by
+  `modules`, `canceled` (only when non-zero), `tests mapped`, `duration` and the module-log directory.
+
+Only lines whose information moves into the completion line or summary are suppressed: those provider
+banners, `Mapping timing` with zero conservative fallback, the SDK's successful completion block, its
+`Child test-result reporting is suppressed` banner and repeated `Telemetry is:` lines (shown once per pool).
+Non-zero conservative fallback, failed completion blocks, warnings and errors are kept. The
+`Test-map collection child failed: MSTest v...` banner drops its `[RID - runtime]` suffix because the
+completion line carries it. Per-module `collection.log` still holds the raw child output. `module.json`
+additionally records `ProcessId`, `Discovered`, `Tests`, `SourcePaths`, `MapUri`, `Runtime` and `Rid`.
+
+The same change fixes one reporting defect. A module that had already exited non-zero when the pool drained its
+active children in `finally` was reported as canceled. It is now shown as `failed with exit code X`, its
+`module.json` records `Canceled: false`, and the summary's `canceled` count excludes it. The drained
+`CanceledModules` set, cleanup behavior and pool exit code are unchanged.
+
+Alternatives considered:
+
+- Applying `[affected-tests]` consistently to pool and SDK lines: every line would carry the same constant.
+- Always showing the full `[assembly | framework | runtime | RID]` context: correct, but MTP shows
+  architecture/runtime once per module rather than on every line.
+- Changing provider or SDK text: neither is owned here. Rewriting only console presentation avoids
+  cross-repository package flow. The provider-owned `Process launch attempts`,
+  `Mapping batch timing feedback is unavailable` and multi-line `Collector error:` stacks remain verbatim and
+  are follow-up candidates for their owner.
+- Buffering each module's output until it completes, like grouped test output: long acceptance modules run
+  for over an hour in log 244 and would give no live progress.
+
+The start line has no architecture because the RID is known only after the child reports it. Full-context
+lines are attributed to their module by assembly file name or project name, which relies on each child having
+its own output pipe. Colors and the live progress area of the MTP terminal reporter are not reproduced; this
+is plain CI log text in English.
+
+**Evidence (2026-11-23):** the change is based on `be3cf477a83f9b94e416b0401163a48580e389aa`; its
+source/test patch (`git --no-pager diff --binary -- eng`, redirected through `cmd`), excluding this document,
+has SHA-256 `49472E5378645885599C880E2DF7F7A485E89581E48C4E2DD57D95B4E4DC68F4`. All runs use Windows,
+PowerShell 7.7.0 and `pwsh -NoLogo -NoProfile -File .\eng\validate-collection-module-pool.ps1`, with
+process-scoped `TEMP`/`TMP` under `artifacts\tmp`, in isolated comparisons outside the repository:
+
+- base validator and scripts: exit 0, 34 passed;
+- new validator with the base scripts: exit 1, all 31 exact multi-line output cases fail on stdout and stderr;
+- new validator and scripts with drained native-failure detection disabled: exit 1 in
+  `ModulePoolReportsNativeFailureDuringOutputError`, which sees `canceled` rather than
+  `failed with exit code 37`;
+- new validator and scripts: exit 0, 51 passed.
+
+A session-local replay of the new presenter over log 244, attributing lines to modules by their labels,
+reduces 610 console lines to 205: 46 completion lines, a 57,399 `tests mapped` total equal to the sum of the
+original `Collected test map` counts, and two unattributed `Skipping map collection` notices printed by the
+entry script before the pool starts. It is not an SDK collection run. Linux/macOS execution (expected 49
+checks) and hosted Azure DevOps rendering remain unverified until CI runs this change.
 
 #### Final local composition and performance evidence
 
