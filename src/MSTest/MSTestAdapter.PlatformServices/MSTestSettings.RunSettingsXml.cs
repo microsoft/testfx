@@ -21,6 +21,7 @@ internal sealed partial class MSTestSettings
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
+        CurrentSettings.DiscoverReferencedAssemblyFixtureProviders = settings.DiscoverReferencedAssemblyFixtureProviders;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
@@ -114,6 +115,9 @@ internal sealed partial class MSTestSettings
                         break;
                     case "TREATDISCOVERYWARNINGSASERRORS":
                         ParseBoolSetting(reader.ReadInnerXml(), "TreatDiscoveryWarningsAsErrors", logger, v => settings.TreatDiscoveryWarningsAsErrors = v);
+                        break;
+                    case "DISCOVERREFERENCEDASSEMBLYFIXTUREPROVIDERS":
+                        ParseBoolSetting(reader.ReadInnerXml(), nameof(DiscoverReferencedAssemblyFixtureProviders), logger, v => settings.DiscoverReferencedAssemblyFixtureProviders = v);
                         break;
                     case "PARALLELIZE":
                         SetParallelSettings(reader.ReadSubtree(), settings);
