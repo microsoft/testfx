@@ -54,9 +54,9 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
             ["Coverage.Dependency.One", "Coverage.Dependency.Two"],
             [(false, MarkerNamespace, MarkerName)]);
 
-        (bool result, bool hasMarker, AssemblyName[] references) = TryReadProviderMetadata(path);
+        (string result, bool hasMarker, AssemblyName[] references) = TryReadProviderMetadata(path);
 
-        result.Should().BeTrue();
+        result.Should().Be("Read");
         hasMarker.Should().BeTrue();
         references.Select(reference => reference.Name).Should().Equal(
             "Coverage.Dependency.One",
@@ -69,9 +69,9 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         using var directory = new TemporaryDirectory();
         string path = directory.WriteAssembly("Coverage.TypeDefinitionMarker", [], [(true, MarkerNamespace, MarkerName)]);
 
-        (bool result, bool hasMarker, AssemblyName[] references) = TryReadProviderMetadata(path);
+        (string result, bool hasMarker, AssemblyName[] references) = TryReadProviderMetadata(path);
 
-        result.Should().BeTrue();
+        result.Should().Be("Read");
         hasMarker.Should().BeTrue();
         references.Should().BeEmpty();
     }
@@ -82,12 +82,12 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         string sameNameOtherNamespace = directory.WriteAssembly("Coverage.SameNameMarker", [], [(true, OtherNamespace, MarkerName)]);
         string sameNamespaceOtherName = directory.WriteAssembly("Coverage.SameNamespaceMarker", [], [(true, MarkerNamespace, "OtherAttribute")]);
 
-        (bool resultForName, bool hasMarkerForName, _) = TryReadProviderMetadata(sameNameOtherNamespace);
-        (bool resultForNamespace, bool hasMarkerForNamespace, _) = TryReadProviderMetadata(sameNamespaceOtherName);
+        (string resultForName, bool hasMarkerForName, _) = TryReadProviderMetadata(sameNameOtherNamespace);
+        (string resultForNamespace, bool hasMarkerForNamespace, _) = TryReadProviderMetadata(sameNamespaceOtherName);
 
-        resultForName.Should().BeTrue();
+        resultForName.Should().Be("Read");
         hasMarkerForName.Should().BeFalse("only the attribute name matches the provider marker");
-        resultForNamespace.Should().BeTrue();
+        resultForNamespace.Should().Be("Read");
         hasMarkerForNamespace.Should().BeFalse("only the attribute namespace matches the provider marker");
     }
 
@@ -104,9 +104,9 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
                 (false, OtherNamespace, "ThirdAttribute"),
             ]);
 
-        (bool result, bool hasMarker, _) = TryReadProviderMetadata(path);
+        (string result, bool hasMarker, _) = TryReadProviderMetadata(path);
 
-        result.Should().BeTrue();
+        result.Should().Be("Read");
         hasMarker.Should().BeTrue();
     }
 
@@ -117,13 +117,13 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         string notAnAssembly = Path.Combine(directory.DirectoryPath, "NotAnAssembly.dll");
         File.WriteAllText(notAnAssembly, "This is not a portable executable.");
 
-        (bool resultForMissing, bool hasMarkerForMissing, AssemblyName[] referencesForMissing) = TryReadProviderMetadata(missing);
-        (bool resultForInvalid, bool hasMarkerForInvalid, AssemblyName[] referencesForInvalid) = TryReadProviderMetadata(notAnAssembly);
+        (string resultForMissing, bool hasMarkerForMissing, AssemblyName[] referencesForMissing) = TryReadProviderMetadata(missing);
+        (string resultForInvalid, bool hasMarkerForInvalid, AssemblyName[] referencesForInvalid) = TryReadProviderMetadata(notAnAssembly);
 
-        resultForMissing.Should().BeFalse("a missing file cannot be read");
+        resultForMissing.Should().Be("Unreadable");
         hasMarkerForMissing.Should().BeFalse();
         referencesForMissing.Should().BeEmpty();
-        resultForInvalid.Should().BeFalse("a file that is not a managed assembly cannot be read");
+        resultForInvalid.Should().Be("Unreadable");
         hasMarkerForInvalid.Should().BeFalse();
         referencesForInvalid.Should().BeEmpty();
     }
@@ -148,9 +148,9 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(false);
         using var directory = new TemporaryDirectory();
 
-        (bool result, _, _) = TryReadProviderMetadata(Path.Combine(directory.DirectoryPath, "Missing.dll"));
+        (string result, _, _) = TryReadProviderMetadata(Path.Combine(directory.DirectoryPath, "Missing.dll"));
 
-        result.Should().BeFalse();
+        result.Should().Be("Unreadable");
         _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Warning(It.IsAny<string>(), It.IsAny<object?[]>()), Times.Never);
     }
 
@@ -159,17 +159,23 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
     {
         List<(string Format, object?[] Arguments)> warnings = CaptureWarnings();
         string name = "Coverage.Stale." + Guid.NewGuid().ToString("N");
-        using var trustedAssemblies = new TrustedPlatformAssembliesOverride(Path.Combine(Path.GetTempPath(), name + ".dll"));
+        string missing = Path.Combine(Path.GetTempPath(), name + ".dll");
+        using var trustedAssemblies = new TrustedPlatformAssembliesOverride(missing);
         var referenceName = new AssemblyName(name);
+        var root = new RootAssembly(referenceName);
 
-        string? path = Resolve(CreateResolver(), new RootAssembly(), referenceName);
+        List<Assembly> discovered = EnumerateCandidateAssemblies(root);
 
-        path.Should().BeNull();
-        warnings.Should().ContainSingle();
-        warnings[0].Format.Should().Be("TypeCache: Could not resolve a metadata path for {0}; using runtime resolution for AssemblyFixtureProvider discovery. {1}");
+        discovered.Should().ContainSingle().Which.Should().BeSameAs(root);
+        warnings.Should().HaveCount(2);
+        warnings[0].Format.Should().Be(ReadFailureFormat);
         warnings[0].Arguments.Should().HaveCount(2);
-        warnings[0].Arguments[0].Should().Be(referenceName.FullName);
-        warnings[0].Arguments[1].Should().BeAssignableTo<IOException>();
+        warnings[0].Arguments[0].Should().Be(missing);
+        warnings[0].Arguments[1].Should().BeOfType<FileNotFoundException>();
+        warnings[1].Format.Should().Be("TypeCache: Could not load referenced assembly {0} for AssemblyFixtureProvider discovery. {1}");
+        warnings[1].Arguments.Should().HaveCount(2);
+        warnings[1].Arguments[0].Should().Be(referenceName.FullName);
+        warnings[1].Arguments[1].Should().BeOfType<FileNotFoundException>();
     }
 
     public void TrustedPlatformAssemblyThatCannotBeInspectedIsNotReportedWhenWarningsAreDisabled()
@@ -178,9 +184,10 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
         string name = "Coverage.Stale." + Guid.NewGuid().ToString("N");
         using var trustedAssemblies = new TrustedPlatformAssembliesOverride(Path.Combine(Path.GetTempPath(), name + ".dll"));
 
-        string? path = Resolve(CreateResolver(), new RootAssembly(), new AssemblyName(name));
+        var root = new RootAssembly(new AssemblyName(name));
+        List<Assembly> discovered = EnumerateCandidateAssemblies(root);
 
-        path.Should().BeNull();
+        discovered.Should().ContainSingle().Which.Should().BeSameAs(root);
         _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Warning(It.IsAny<string>(), It.IsAny<object?[]>()), Times.Never);
     }
 
@@ -274,14 +281,15 @@ public class TypeCacheProviderDiscoveryMetadataMutationTests : TestContainer
     }
 #endif
 
-    private static (bool Result, bool HasMarker, AssemblyName[] References) TryReadProviderMetadata(string path)
+    private static (string Result, bool HasMarker, AssemblyName[] References) TryReadProviderMetadata(string path)
     {
         MethodInfo tryReadProviderMetadata = typeof(TypeCache).GetMethod("TryReadProviderMetadata", BindingFlags.NonPublic | BindingFlags.Static)!;
-        object?[] arguments = [path, false, null];
+        var expectedIdentity = new AssemblyName($"{Path.GetFileNameWithoutExtension(path)}, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null");
+        object?[] arguments = [path, expectedIdentity, false, null];
 
-        bool result = (bool)tryReadProviderMetadata.Invoke(null, arguments)!;
+        var result = (Enum)tryReadProviderMetadata.Invoke(null, arguments)!;
 
-        return (result, (bool)arguments[1]!, (AssemblyName[])arguments[2]!);
+        return (result.ToString(), (bool)arguments[2]!, (AssemblyName[])arguments[3]!);
     }
 
     private static byte[] BuildAssembly(string name, string[] references, (bool IsTypeDefinition, string Namespace, string Name)[] attributes)
