@@ -138,7 +138,7 @@ extends:
             timeoutInMinutes: 180
             pool:
               name: $(DncEngInternalBuildPool)
-              image: windows.vs2026preview.scout.amd64
+              image: windows.vs2026.amd64
               os: windows
             steps:
             - template: /eng/pipelines/steps/install-windows-prereqs.yml@self
