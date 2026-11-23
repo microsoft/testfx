@@ -156,24 +156,27 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = CreateTestContextImplementation();
 
-        _testContextImplementation.AddResultFile("C:\\temp.txt");
+        string file = Path.GetFullPath("temp.txt");
+        _testContextImplementation.AddResultFile(file);
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        resultsFiles.Should().Contain("C:\\temp.txt");
+        resultsFiles.Should().Contain(file);
     }
 
     public void AddResultFileShouldAddMultipleFilesToResultsFiles()
     {
         _testContextImplementation = CreateTestContextImplementation();
 
-        _testContextImplementation.AddResultFile("C:\\files\\file1.txt");
-        _testContextImplementation.AddResultFile("C:\\files\\files2.html");
+        string first = Path.GetFullPath(Path.Combine("files", "file1.txt"));
+        string second = Path.GetFullPath(Path.Combine("files", "files2.html"));
+        _testContextImplementation.AddResultFile(first);
+        _testContextImplementation.AddResultFile(second);
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        resultsFiles.Should().Contain("C:\\files\\file1.txt");
-        resultsFiles.Should().Contain("C:\\files\\files2.html");
+        resultsFiles.Should().Contain(first);
+        resultsFiles.Should().Contain(second);
     }
 
     public void WriteShouldWriteToStringWriter()
@@ -333,14 +336,16 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = CreateTestContextImplementation();
 
-        _testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
-        _testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");
+        string first = Path.GetFullPath(Path.Combine("files", "myfile.txt"));
+        string second = Path.GetFullPath(Path.Combine("files", "myfile2.txt"));
+        _testContextImplementation.AddResultFile(first);
+        _testContextImplementation.AddResultFile(second);
 
         IList<string>? resultFiles = _testContextImplementation.GetResultFiles();
 
         resultFiles!.Count.Should().BeGreaterThan(0, "GetResultFiles returned added elements");
-        resultFiles.Should().Contain("C:\\files\\myfile.txt");
-        resultFiles.Should().Contain("C:\\files\\myfile2.txt");
+        resultFiles.Should().Contain(first);
+        resultFiles.Should().Contain(second);
     }
 #endif
 

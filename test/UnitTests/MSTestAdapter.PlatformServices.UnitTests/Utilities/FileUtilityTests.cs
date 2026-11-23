@@ -29,8 +29,9 @@ public class FileUtilityTests : TestContainer
 
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
-        string fileName = "galaxy<>far:far?away";
-        FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be("galaxy__far_far_away");
+        char[] invalid = Path.GetInvalidFileNameChars();
+        string fileName = $"galaxy{new string(invalid)}away";
+        FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be($"galaxy{new string('_', invalid.Length)}away");
     }
 
     public void CopyFileOverwriteShouldIncludeHResultAndExceptionDetailsInWarningWhenCopyFails()
@@ -129,16 +130,8 @@ public class FileUtilityTests : TestContainer
     public void AddFilesWithIgnoreDirectory()
     {
         // Setup
-        string[] allFiles =
-        [
-            "c:\\MainClock\\Results\\tickmain.trx",
-            "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
-            "c:\\MainClock\\tickmain.txt",
-            "c:\\MainClock\\tock.tick.txt",
-            "c:\\MainClock\\Folder1\\tick.txt",
-            "c:\\MainClock\\Folder1\\tock.tick.txt",
-            "c:\\MainClock\\Folder2\\backup\\Data.csv",
-        ];
+        string root = Path.GetFullPath("MainClock");
+        string[] allFiles = GetFilesUnderRoot(root);
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
@@ -149,7 +142,7 @@ public class FileUtilityTests : TestContainer
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => [.. allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct()]);
 
         // Act
-        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", directory => directory.Contains("Results"), false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory(root, directory => directory.Contains("Results"), false);
 
         // Validate
         foreach (string sourceFile in allFiles)
@@ -169,16 +162,8 @@ public class FileUtilityTests : TestContainer
     public void AddFilesWithNoIgnoreDirectory()
     {
         // Setup
-        string[] allFiles =
-        [
-            "c:\\MainClock\\Results\\tickmain.trx",
-            "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
-            "c:\\MainClock\\tickmain.txt",
-            "c:\\MainClock\\tock.tick.txt",
-            "c:\\MainClock\\Folder1\\tick.txt",
-            "c:\\MainClock\\Folder1\\tock.tick.txt",
-            "c:\\MainClock\\Folder2\\backup\\Data.csv",
-        ];
+        string root = Path.GetFullPath("MainClock");
+        string[] allFiles = GetFilesUnderRoot(root);
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
@@ -189,7 +174,7 @@ public class FileUtilityTests : TestContainer
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => [.. allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct()]);
 
         // Act
-        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory(root, false);
 
         // Validate
         foreach (string sourceFile in allFiles)
@@ -197,6 +182,17 @@ public class FileUtilityTests : TestContainer
             files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)).Should().BeTrue($"{sourceFile} not returned in the list from AddFilesFromDirectory");
         }
     }
+
+    private static string[] GetFilesUnderRoot(string root) =>
+    [
+        Path.Combine(root, "Results", "tickmain.trx"),
+        Path.Combine(root, "Results", "Run1", "tock.tick.txt"),
+        Path.Combine(root, "tickmain.txt"),
+        Path.Combine(root, "tock.tick.txt"),
+        Path.Combine(root, "Folder1", "tick.txt"),
+        Path.Combine(root, "Folder1", "tock.tick.txt"),
+        Path.Combine(root, "Folder2", "backup", "Data.csv"),
+    ];
 
     private static bool IsFileUnderDirectory(string directory, string fileName)
     {

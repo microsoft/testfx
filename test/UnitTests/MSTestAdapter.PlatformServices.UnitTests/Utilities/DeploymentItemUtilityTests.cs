@@ -339,37 +339,40 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
     {
-        DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeFalse();
+        const string invalidPath = "file\0name";
+        DeploymentItemUtility.IsValidDeploymentItem(invalidPath, _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeFalse();
 
         warning.Should().Contain(
             string.Format(
                 CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
-                "C:<>",
+                invalidPath,
                 _defaultDeploymentItemOutputDirectory));
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
     {
-        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out string? warning).Should().BeFalse();
+        const string invalidDirectory = "dir\0name";
+        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, invalidDirectory, out string? warning).Should().BeFalse();
 
         warning.Should().Contain(
             string.Format(
                 CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 _defaultDeploymentItemPath,
-                "<>"));
+                invalidDirectory));
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
     {
-        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out string? warning).Should().BeFalse();
+        string rootedDirectory = Path.GetFullPath("deployment");
+        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, rootedDirectory, out string? warning).Should().BeFalse();
 
         warning.Should().Contain(
            string.Format(
                CultureInfo.InvariantCulture,
                Resource.DeploymentItemOutputDirectoryMustBeRelative,
-               "C:\\temp"));
+               rootedDirectory));
     }
 
     public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()
