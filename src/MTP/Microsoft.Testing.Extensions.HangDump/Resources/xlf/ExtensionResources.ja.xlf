@@ -76,7 +76,7 @@ Disk info:
         <target state="translated">ハング ダンプの実行中に次の例外が発生しました:
 {0}
 
-危険な情報:
+ディスク情報:
 {1}</target>
         <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
@@ -108,12 +108,12 @@ The timeout value is specified in one of the following formats:
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">ダンプが生成されるまでのタイムアウトを指定します。
-タイムアウトの値は、次のいずれかの形式で指定します。
-    500ms, 500mil, 500millisecond, 500milliseconds,
-    5400s, 5400sec, 5400second, 5400seconds,
-    90m, 90min, 90minute, 90minutes,
-    1.5h, 1.5hour, 1.5hours,
-    1d, 1day, 1days。
+タイムアウトの値は、次のいずれかの形式で指定します:
+    500ms、500mil、500millisecond、500milliseconds、
+    5400s、5400sec、5400second、5400seconds、
+    90m、90min、90minute、90minutes、
+    1.5h、1.5hour、1.5hours、
+    1d、1day、1days。
     サフィックスのない数値はミリ秒として解釈されます。
     既定値は 30m です。</target>
         <note>Do not localize time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>

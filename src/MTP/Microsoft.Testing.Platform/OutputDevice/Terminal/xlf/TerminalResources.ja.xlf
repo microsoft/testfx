@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactCount">
         <source>Artifacts: {0}</source>
-        <target state="new">Artifacts: {0}</target>
+        <target state="translated">Artifacts: {0}</target>
         <note>{0} is the number of file artifacts.</note>
       </trans-unit>
       <trans-unit id="CancelledLowercase">
@@ -570,7 +570,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
         <target state="translated">ターミナルにテストごとの結果ブロック (詳細情報、スタック トレース、キャプチャされた出力を含む) をレンダリングするテスト結果の種類を選択します。
-有効な値は 'passed'、'failed' (エラー、タイムアウト、およびキャンセルされたテストも含む)、'skipped'、'all'、'none' です。複数の値は、コンマ区切りまたはスペース区切りのリストとして指定するか、オプションを繰り返して指定します。'all' と 'none' は、他の値と組み合わせることはできません。
+有効な値は 'passed'、'failed' (エラー、タイムアウト、キャンセルされたテストも含む)、'skipped'、'all'、'none' です。複数の値は、コンマ区切りまたはスペース区切りのリストとして指定するか、オプションを繰り返して指定します。'all' と 'none' は、他の値と組み合わせることはできません。
 '--output' が 'Minimal' の場合の既定値は 'failed'、'Normal' の場合または省略時は 'failed' と 'skipped'、'Detailed' の場合は 'all' です。明示的な '--show-test-results' は、指定する順序にかかわらず、常に '--output' よりも優先されます。</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>

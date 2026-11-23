@@ -547,7 +547,7 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="translated">Das Element bei Index {0} stimmt nicht überein.
+        <target state="translated">Das Element am Index {0} stimmt nicht überein.
 Erwartet: {1}
 Tatsächlich: {2}</target>
         <note>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</note>
@@ -594,7 +594,7 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">Ungültige GitHub-Ticket-URL.</target>
+        <target state="translated">Ungültige GitHub-Ticket-URL</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
@@ -748,10 +748,10 @@ Tatsächlich: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Das angegebene Mitglied ({0}) wurde nicht gefunden. Sie müssen möglicherweise Ihren privaten Accessor erneut generieren,
-      oder das Mitglied ist möglicherweise privat und für eine Basisklasse definiert. Wenn Letzteres  true ist, müssen Sie den Typ übergeben,
-      der das Mitglied für den PrivateObject-Konstruktor definiert.
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -761,10 +761,10 @@ Tatsächlich: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Der Konstruktor mit der angegebenen Signatur wurde nicht gefunden. Sie müssen möglicherweise Ihren privaten Accessor erneut generieren,
-      oder das Mitglied ist möglicherweise privat und für eine Basisklasse definiert. Wenn Letzteres true ist, müssen Sie den Typ übergeben,
-      der das Mitglied für den PrivateObject-Konstruktor definiert.
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>

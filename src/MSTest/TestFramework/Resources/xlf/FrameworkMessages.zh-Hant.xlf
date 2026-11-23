@@ -549,7 +549,7 @@ Expected: {1}
 Actual: {2}</source>
         <target state="translated">位於索引 {0} 的項目不符。
 預期為: {1}
-實際為: {2}</target>
+實際: {2}</target>
         <note>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -594,7 +594,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">無效的 GitHub 票證 URL</target>
+        <target state="translated">GitHub 工單 URL 無效</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
@@ -748,10 +748,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      找不到所指定的成員 ({0})。您可能必須重新產生私用存取子，
-      或者該成員可能為私用，並且定義在基底類別上。如果是後者為 true，
-      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -761,10 +761,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      找不到具有所指定簽章的建構函式。您可能必須重新產生私用存取子，
-      或者該成員可能為私用，並且定義在基底類別上。如果是後者為 true，
-      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>

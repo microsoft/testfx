@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
         <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
-        <target state="translated">Не удалось создать каталог повторов из-за конфликтов в '{0}' несмотря на повторную попытку.</target>
+        <target state="translated">Не удалось создать каталог повторов из-за конфликтов в {0}, несмотря на повторную попытку.</target>
         <note>'{0}' is the directory where collisions happen</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicy">

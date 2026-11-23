@@ -44,11 +44,11 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="translated">Nepovedlo se najít hostitele {0} pro architekturu{1}.
+        <target state="translated">Nelze nalézt '{0}' hostitele pro '{1}' architekturu.
 
-Tento problém můžete vyřešit instalací rozhraní .NET {1}.
+Problém můžete vyřešit instalací '{1}' .NET.
 
-Zadanou architekturu najdete na adrese:
+Zadanou architekturu najdete na:
   - https://aka.ms/dotnet-download</target>
         <note>0 is the host name. 1 is the architecture. Do not localize {Locked=".NET"} or {Locked="https://aka.ms/dotnet-download"}.</note>
       </trans-unit>

@@ -594,7 +594,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">Nieprawidłowy adres URL biletu usługi GitHub</target>
+        <target state="translated">Nieprawidłowy adres URL zgłoszenia w serwisie GitHub</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">

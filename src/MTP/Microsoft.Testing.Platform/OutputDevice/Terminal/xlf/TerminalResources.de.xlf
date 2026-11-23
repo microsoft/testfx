@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactCount">
         <source>Artifacts: {0}</source>
-        <target state="new">Artifacts: {0}</target>
+        <target state="translated">Artefakte: {0}</target>
         <note>{0} is the number of file artifacts.</note>
       </trans-unit>
       <trans-unit id="CancelledLowercase">
@@ -470,7 +470,7 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
         <target state="translated">Legen Sie die pro Test angezeigten Ergebnisblöcke im Terminal fest.
-Gültige Werte sind 'Minimal', 'Normal' und 'Detailed'. Der Standardwert ist 'Normal'. Verwenden Sie '--show-test-results' für eine genaue Auswahl des Ergebnisses.</target>
+Gültige Werte sind „Minimal“, „Normal“ und „Detailed“. Der Standardwert ist „Normal“. Verwenden Sie „--show-test-results“ für eine genaue Auswahl des Ergebnisses.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
@@ -507,9 +507,9 @@ Gültige Werte sind 'Minimal', 'Normal' und 'Detailed'. Der Standardwert ist 'No
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="translated">Steuern Sie, ob der Status an den Bildschirm gemeldet wird.
-Gültige Werte sind „auto“ (Standard), 'on' (akzeptiert auch „true“, „enable“, „1“) oder „off“ (akzeptiert auch „false“, „disable“, „0“).
-„auto“ zeigt den Fortschritt an, es sei denn, das Terminal kann nicht direkt aktualisiert werden (z. B. mit „--ansi off“ oder in CI).</target>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
@@ -549,15 +549,15 @@ Passing the option without a value turns it on.</target>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="translated">Legt fest, wann die erfasste Fehlerausgabe eines Tests angezeigt werden soll.
-Gültige Werte sind „All“, „Failed“ und „None“. Der Standardwert ist „Failed“.</target>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
-        <target state="translated">Legt fest, wann die erfasste Standardausgabe eines Tests angezeigt werden soll.
-Gültige Werte sind „All“, „Failed“ und „None“. Der Standardwert ist „Failed“.</target>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
@@ -569,9 +569,9 @@ Gültige Werte sind „All“, „Failed“ und „None“. Der Standardwert ist
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="translated">Wählen Sie aus, welche Testergebnisse im Terminal einen Ergebnisblock pro Test mit zugehörigen Details, Stacktrace und erfasster Ausgabe ausgeben.
-Gültige Werte sind 'passed', 'failed' (deckt auch fehlerhafte, abgelaufene und abgebrochene Tests ab), 'skipped', 'all' und 'none'. Mehrere Werte können als durch Kommas oder Leerzeichen getrennte Liste oder durch mehrmaliges Angeben der Option kombiniert werden. Die Werte 'all' und 'none' können nicht mit anderen Werten kombiniert werden.
-Der Standardwert ist 'failed', wenn '--output' auf 'Minimal' festgelegt ist, 'failed' und 'skipped', wenn er 'Normal' ist oder weggelassen wird, und 'all', wenn er 'Detailed' ist. Ein explizites '--show-test-results' hat immer Vorrang vor '--output', unabhängig von der Reihenfolge der übergebenen Optionen.</target>
+        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">

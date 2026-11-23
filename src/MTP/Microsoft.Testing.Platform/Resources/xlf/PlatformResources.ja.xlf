@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">'--maximum-failed-tests' をサポートするために使用される拡張機能。指定されたエラーのしきい値に達すると、テストの実行が中止されます。</target>
+        <target state="translated">'--maximum-failed-tests' をサポートするために使用する拡張機能。指定された失敗数のしきい値に達すると、テストの実行を中止します。</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -590,7 +590,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="translated">ログをチャネルに書き込めませんでした。ログの内容が見つかりません:
+        <target state="translated">チャネルにログを書き込めませんでした。ログの内容が見つかりません:
 {0}</target>
         <note>{0} is the log content that could not be written.</note>
       </trans-unit>
@@ -611,7 +611,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="translated">テスト セッションを終了しました。</target>
+        <target state="translated">テスト セッションが終了しました。</target>
         <note />
       </trans-unit>
       <trans-unit id="FromFile">
@@ -736,7 +736,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="translated">オプション '--maximum-failed-tests' は正の整数である必要があります。'{0}' 値が無効です。</target>
+        <target state="translated">オプション '--maximum-failed-tests' には正の整数を指定する必要があります。値 '{0}' は無効です。</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">{0} テストを実行しています</target>
+        <target state="translated">{0} 個のテストが実行中</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
@@ -771,12 +771,12 @@
       </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
-        <target state="translated">利用できません</target>
+        <target state="translated">使用できません</target>
         <note />
       </trans-unit>
       <trans-unit id="NotFound">
         <source>Not found</source>
-        <target state="translated">見つかりません</target>
+        <target state="translated">見つかりませんでした</target>
         <note />
       </trans-unit>
       <trans-unit id="OnlyOneFilterSupported">
@@ -898,7 +898,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
         <target state="translated">使用可能なテストを一覧します。
-必要に応じて、'text' (既定の人間が判読できる出力) または 'json' を指定すると、検出されたテストを標準出力に JSON ドキュメントとして印刷します。</target>
+必要に応じて、'text' (既定の人間が判読できる出力) または 'json' を指定すると、検出されたテストを標準出力に JSON ドキュメントとして出力します。</target>
         <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
@@ -1019,7 +1019,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">テストの実行を中止するテスト エラーの最大数を指定します。</target>
+        <target state="translated">テストの失敗数の上限を指定します。この上限を超えると、テストの実行を中止します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1124,7 +1124,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
         <target state="translated">テストを実行しなかった実行の処理方法を指定します。
-有効な値は 'allow-skipped' (既定) と 'strict' です。'allow-skipped' はスキップされたテストを実行済みとして扱うため、テストが1つも見つからなかった実行のみが終了コード 8 で失敗します。'strict' はスキップされたテストを未実行として扱うため、すべてのテストがスキップされた場合、またはテストが 1 つも見つからなかった場合に終了コード 8 で失敗します。</target>
+有効な値は 'allow-skipped' (既定値) と 'strict' です。'allow-skipped' はスキップされたテストを実行済みとして扱うため、テストが 1 つも見つからなかった実行のみが終了コード 8 で失敗します。'strict' はスキップされたテストを未実行として扱うため、すべてのテストがスキップされた場合、またはテストが 1 つも見つからなかった場合に終了コード 8 で失敗します。</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -1139,7 +1139,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">'--maximum-failed-tests' オプションで指定されたエラー ('{0}') に達したため、テスト セッションを中止しています。</target>
+        <target state="translated">'--maximum-failed-tests' オプションで指定された失敗数 ('{0}') に達したため、テスト セッションを中止しています。</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,12 +1174,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">サーバー モードの実行時に使用される 'ITestHost' 実装。</target>
+        <target state="translated">サーバー モードの実行時に使用する 'ITestHost' の実装。</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="translated">サーバー モード テスト ホスト</target>
+        <target state="translated">サーバー モードのテスト ホスト</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -1249,7 +1249,7 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="translated">テレメトリ 
+        <target state="translated">テレメトリ
 ---------
 Microsoft Testing Platform は、お客様のエクスペリエンスの向上に役立てるために使用状況データを収集します。データは Microsoft によって収集され、誰とも共有されません。
 テレメトリをオプトアウトするには、お気に入りのシェルを使用して、TESTINGPLATFORM_TELEMETRY_OPTOUT または DOTNET_CLI_TELEMETRY_OPTOUT 環境変数を '1' または 'true' に設定します。
@@ -1466,7 +1466,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">ハンドルされない例外 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] ハンドルされない例外: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

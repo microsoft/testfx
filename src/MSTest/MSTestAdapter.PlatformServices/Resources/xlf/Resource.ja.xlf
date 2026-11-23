@@ -224,7 +224,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="translated">ソース '{0}' の検出に失敗しました。{1} エラー:
+        <target state="translated">ソース '{0}' の検出に失敗しました。エラー {1}:
 {2}</target>
         <note>{0} is the source path. {1} is the error count. {2} is the error details.</note>
       </trans-unit>

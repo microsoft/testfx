@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="translated">当前测试框架未实现 “--maximum-failed-tests” 功能所需的 “IGracefulStopTestExecutionCapability”。</target>
+        <target state="translated">当前测试框架未实现 "--maximum-failed-tests" 功能所需的 "IGracefulStopTestExecutionCapability"。</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">用于支持 “--maximum-failed-tests” 的扩展。达到给定失败阈值时，将中止测试运行。</target>
+        <target state="translated">用于支持 "--maximum-failed-tests" 的扩展。达到指定的失败阈值后，测试运行将中止。</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -559,7 +559,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="translated">取消请求 ID 期间出现异常 '{0}'</target>
+        <target state="translated">取消请求 ID“{0}”时发生异常</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -590,7 +590,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="translated">无法将日志写入通道。遗漏的日志内容: 
+        <target state="translated">无法将日志写入通道。丢失的日志内容：
 {0}</target>
         <note>{0} is the log content that could not be written.</note>
       </trans-unit>
@@ -611,7 +611,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="translated">已完成测试会话。</target>
+        <target state="translated">测试会话已完成。</target>
         <note />
       </trans-unit>
       <trans-unit id="FromFile">
@@ -736,7 +736,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="translated">选项 “--maximum-failed-tests” 必须是正整数。值 '{0}' 无效。</target>
+        <target state="translated">选项 "--maximum-failed-tests" 必须为正整数。值“{0}”无效。</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">正在运行 {0} 测试</target>
+        <target state="translated">{0} 个测试正在运行</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
@@ -898,7 +898,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
         <target state="translated">列出可用的测试。
-(可选)接受 "text"(默认的人类可读输出)或 "json"，以便将发现的测试作为 JSON 文档打印到标准输出。</target>
+(可选)接受 "text" (默认的人类可读输出)或 "json"，以便将发现的测试作为 JSON 文档打印到标准输出。</target>
         <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
@@ -1008,7 +1008,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
         <target state="translated">不报告指定退出代码的非成功退出值。
-例如，使用“--ignore-exit-code 8;9”会在这些情况下忽略退出代码 8 和 9 并返回 0。
+例如，"--ignore-exit-code 8;9" 将在这些情况下忽略退出代码 8 和 9 并返回 0。
 有关退出代码的详细信息，请参阅 https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes。</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
@@ -1019,7 +1019,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">指定超过测试失败数后将中止测试运行的最大数目。</target>
+        <target state="translated">指定测试失败次数上限。超过此上限后，测试运行将中止。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1139,7 +1139,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">由于达到“--maximum-failed-tests”选项指定的失败 ('{0}')，测试会话正在中止。</target>
+        <target state="translated">由于失败次数已达到 "--maximum-failed-tests" 选项指定的值(“{0}”)，测试会话正在中止。</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,7 +1174,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">运行服务器模式时使用的 “ITestHost” 实现。</target>
+        <target state="translated">运行服务器模式时使用的 "ITestHost" 实现。</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
@@ -1224,7 +1224,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="translated">正在启动测试会话。日志文件路径 '{0}'。</target>
+        <target state="translated">正在启动测试会话。日志文件路径为“{0}”。</target>
         <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">
@@ -1252,7 +1252,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">遥测
 ---------
 Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数据由 Microsoft 收集，不会与任何人共享。
-可通过使用喜欢的 shell 将 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 环境变量设置为 '1' 或 'true' 来选择退出遥测。
+可通过使用喜欢的 shell 将 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 环境变量设置为 "1" 或 "true" 来选择退出遥测。
 
 阅读有关 Microsoft 测试平台遥测功能的详细信息: https://aka.ms/testingplatform/telemetry</target>
         <note>{Locked="TESTINGPLATFORM_TELEMETRY_OPTOUT"}{Locked="DOTNET_CLI_TELEMETRY_OPTOUT"}{Locked="1"}{Locked="true"}{Locked="https://aka.ms/testingplatform/telemetry"}</note>
@@ -1460,13 +1460,13 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="translated">日志文件 "{0}" 的 "FileLogger" 写入循环中出现意外异常。日志文件可能不完整。
+        <target state="translated">日志文件 '{0}' 的 'FileLogger' 写循环中出现意外异常。日志文件可能不完整。
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 未经处理的异常： {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 未处理的异常: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

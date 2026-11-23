@@ -749,8 +749,8 @@ Réel : {2}</target>
       that defines the member into PrivateObject's constructor.
     </source>
         <target state="translated">
-      Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est true, vous devez transmettre le type
+      Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private, 
+      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est true, vous devez transmettre le type 
       qui définit le membre dans le constructeur de PrivateObject.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
@@ -762,8 +762,8 @@ Réel : {2}</target>
       that defines the member into PrivateObject's constructor.
     </source>
         <target state="translated">
-      Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est true, vous devez transmettre le type
+      Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private, 
+      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est true, vous devez transmettre le type 
       qui définit le membre dans le constructeur de PrivateObject.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>

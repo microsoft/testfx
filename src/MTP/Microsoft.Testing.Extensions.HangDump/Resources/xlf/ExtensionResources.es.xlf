@@ -73,7 +73,7 @@
 
 Disk info:
 {1}</source>
-        <target state="translated">Se produjo la siguiente excepción al realizar el volcado de memoria: 
+        <target state="translated">Se produjo la siguiente excepción al realizar el volcado de memoria:
 {0}
 
 Información del disco:
@@ -150,7 +150,7 @@ El tipo predeterminado es "Full".</target>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="translated">"{0}" no es un tipo de volcado válido.
+        <target state="translated">'{0}' no es un tipo de volcado válido.
 Las opciones válidas son {1}</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>

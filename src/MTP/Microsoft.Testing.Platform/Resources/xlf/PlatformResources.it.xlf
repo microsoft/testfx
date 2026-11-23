@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="translated">Il framework di test corrente non implementa 'IGracefulStopTestExecutionCapability', necessario per la funzionalità '--maximum-failed-tests'.</target>
+        <target state="translated">Il framework di test corrente non implementa 'IGracefulStopTestExecutionCapability' necessario per '--maximum-failed-tests' funzionalità.</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">Estensione usata per supportare '--maximum-failed-tests'. Quando viene raggiunta una soglia di errori specificata, l'esecuzione dei test verrà interrotta.</target>
+        <target state="translated">Estensione usata per supportare '--maximum-failed-tests'. Quando viene raggiunta una determinata soglia di errori, l'esecuzione dei test viene interrotta.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -590,7 +590,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="translated">Impossibile scrivere il log nel canale. Contenuto del log perso:
+        <target state="translated">Impossibile scrivere il log nel canale. Contenuto del log mancante:
 {0}</target>
         <note>{0} is the log content that could not be written.</note>
       </trans-unit>
@@ -848,15 +848,15 @@
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</source>
-        <target state="translated">Forzare il logger di file predefinito per scrivere il log in modo sincrono.
-Utile per uno scenario in cui non si desidera perdere alcun log, ad esempio in caso di arresto anomalo.
+        <target state="translated">Forzare il logger di file predefinito in modo che scriva il log in modo sincrono.
+Utile per uno scenario in cui non si vuole perdere alcun log, ad esempio in caso di arresto anomalo.
 Tenere presente ciò rallenta l'esecuzione del test.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="translated">Abilita la registrazione diagnostica. Il livello di registro per impostazione predefinita è ''Trace'.
+        <target state="translated">Abilita la registrazione diagnostica. Il livello di log predefinito è 'Trace'.
 Il file verrà scritto nella directory di output con il nome log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -874,7 +874,7 @@ Il file verrà scritto nella directory di output con il nome log_[yyMMddHHmmssff
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
         <target state="translated">Directory di output della registrazione diagnostica.
-Se non specificata, il file verrà generato all'interno della directory 'TestResults' predefinita.</target>
+Se non specificato, il file verrà generato all'interno della directory di 'TestResults' predefinita.</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -898,7 +898,7 @@ I valori disponibili sono 'Trace', 'Debug', 'Information', 'Warning', 'Error' e 
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
         <target state="translated">Elenca i test disponibili.
-Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per stampare i test individuati come documento JSON nell'output standard.</target>
+Facoltativamente accetta ''text' (output leggibile predefinito) o 'json' per stampare i test individuati come documento JSON nell'output standard.</target>
         <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
@@ -969,7 +969,7 @@ Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per 
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">PID non valido '{0}'
+        <target state="translated">PID '{0}' non valido
 {1}</target>
         <note>{0} is the invalid process ID. {1} is the exception message.</note>
       </trans-unit>
@@ -1019,7 +1019,7 @@ Per altre informazioni sui codici di uscita, vedere https://learn.microsoft.com/
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">Specifica un numero massimo di errori di test che, se superati, interromperanno l'esecuzione dei test.</target>
+        <target state="translated">Specifica il numero massimo di errori dei test oltre il quale l'esecuzione dei test viene interrotta.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1078,7 +1078,7 @@ Per altre informazioni sui codici di uscita, vedere https://learn.microsoft.com/
         <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">La directory in cui verranno collocati i risultati del test.
+        <target state="translated">Directory in cui verranno collocati i risultati del test.
 Se la directory specificata non esiste, viene creata.
 L’impostazione predefinita è TestResults nella directory che contiene l'applicazione di test.</target>
         <note>{Locked="TestResults"}</note>
@@ -1105,14 +1105,14 @@ L’impostazione predefinita è TestResults nella directory che contiene l'appli
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="translated">L'opzione 'timeout' richiede un argomento costituito da un valore temporale con un suffisso di unità esplicito e un valore numerico positivo compreso nell'intervallo supportato (fino a circa 49,7 giorni). I suffissi accettati sono 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' e 'd'/'day(s)', ad esempio '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="translated">Timeout globale per l'esecuzione dei test.
-Accetta un argomento come valore di ora con un suffisso di unità esplicito. I suffissi accettati sono 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' e 'd'/'day(s)', ad esempio '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="new">A global test execution timeout.
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
@@ -1124,7 +1124,7 @@ Accetta un argomento come valore di ora con un suffisso di unità esplicito. I s
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
         <target state="translated">Specifica come viene gestita un'esecuzione che non ha eseguito test.
-I valori validi sono ''allow-skipped'' (impostazione predefinita) che conta i test ignorati come eseguiti, quindi solo un'esecuzione in cui non è stato trovato alcun test ha esito negativo con codice di uscita 8 e ''strict'' che considera i test ignorati come non eseguiti, quindi un'esecuzione in cui ogni test è stato ignorato (o non è stato trovato alcun test) ha esito negativo con codice di uscita 8.</target>
+I valori validi sono 'allow-skipped' (impostazione predefinita) che conta i test ignorati come eseguiti, quindi solo un'esecuzione in cui non è stato trovato alcun test ha esito negativo con codice di uscita 8 e 'strict' che considera i test ignorati come non eseguiti, quindi un'esecuzione in cui ogni test è stato ignorato (o non è stato trovato alcun test) ha esito negativo con codice di uscita 8.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -1139,7 +1139,7 @@ I valori validi sono ''allow-skipped'' (impostazione predefinita) che conta i te
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">La sessione di test verrà interrotta perché sono stati individuati errori ('{0}') specificati dall'opzione '--maximum-failed-tests'.</target>
+        <target state="translated">È in corso l'interruzione della sessione di test sta perché è stato raggiunto il numero massimo di errori ('{0}') specificato dall'opzione '--maximum-failed-tests'.</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,7 +1174,7 @@ I valori validi sono ''allow-skipped'' (impostazione predefinita) che conta i te
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">Implementazione di 'ITestHost' usata durante l'esecuzione della modalità server.</target>
+        <target state="translated">Implementazione di 'ITestHost' usata durante l'esecuzione in modalità server.</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
@@ -1249,7 +1249,7 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="translated">Telemetria
+        <target state="translated">Dati di telemetria
 ---------
 La piattaforma di test Microsoft raccoglie i dati di utilizzo per consentirci di migliorare l'esperienza dell'utente. I dati vengono raccolti da Microsoft e non vengono condivisi con terzi.
 È possibile rifiutare esplicitamente la telemetria impostando la variabile di ambiente TESTINGPLATFORM_TELEMETRY_OPTOUT o DOTNET_CLI_TELEMETRY_OPTOUT su '1' o 'true' tramite la shell preferita.
@@ -1460,13 +1460,13 @@ Altre informazioni sulla telemetria della piattaforma di test Microsoft: https:/
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="translated">Si è verificata un'eccezione imprevista nel ciclo di scrittura di 'FileLogger' per il file di log '{0}'. Il file di log potrebbe essere incompleto.
+        <target state="translated">Si è verificata un'eccezione imprevista nel ciclo di scrittura 'FileLogger' per il file di log '{0}'. Il file di log potrebbe essere incompleto.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] eccezione non gestita: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Eccezione non gestita: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

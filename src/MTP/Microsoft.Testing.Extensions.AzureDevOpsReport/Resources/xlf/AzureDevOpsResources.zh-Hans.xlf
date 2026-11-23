@@ -554,7 +554,7 @@
       </trans-unit>
       <trans-unit id="UploadArtifactsOptionDescription">
         <source>Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</source>
-        <target state="new">Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</target>
+        <target state="translated">上传测试结果 files 和/或向 Azure DevOps 添加生成标记。选项包括: off (默认)、 tags-only、files 和 all。</target>
         <note>{Locked="off"}{Locked="tags-only"}{Locked="files"}{Locked="all"}</note>
       </trans-unit>
     </body>

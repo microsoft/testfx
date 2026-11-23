@@ -36,7 +36,7 @@
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
         <target state="translated">Zadejte název souboru výpisu paměti.
-Podporuje následující zástupné symboly: {pname} (název spustitelného souboru procesu, odloženo na modul runtime .NET jako „%e“), {pid} (ID procesu, odloženo na modul runtime .NET jako „%p“), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {time} (časové razítko při konfiguraci prostředí crashdump). Podporují se také starší tokeny %p / %e / %h / %t spotřebované přímo v createdump modulu runtime .NET.</target>
+Podporuje následující zástupné symboly: {pname} (název spustitelného souboru procesu, odložený na modul runtime .NET jako "%e"), {pid} (ID procesu, odložený na modul runtime .NET jako "%p"), {asm} (název vstupního sestavení), {tfm} (moniker cílové architektury), {time} (časové razítko při konfiguraci prostředí crashdump). Podporují se také starší tokeny %p / %e / %h / %t spotřebovávané přímo createdump modulu runtime .NET.</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
@@ -167,9 +167,9 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Určuje, jestli se spolu s výpisem stavu systému při chybovém ukončení nebo se sestavou o chybovém ukončení vygeneruje soubor s posloupností testů spuštěných a ukončených během relace testování.
+Soubor umožňuje identifikovat testy, které v okamžiku chybového ukončení právě běžely, aniž by bylo nutné procházet výpis paměti.
+Platné hodnoty jsou 'on' (výchozí, lze také zadat 'true', 'enable' nebo '1') a 'off' (lze také zadat 'false', 'disable' nebo '0').</target>
         <note>Do not localize option values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">

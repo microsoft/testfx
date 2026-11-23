@@ -44,9 +44,9 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="translated">'{1}' アーキテクチャの '{0}' ホストが見つかりませんでした。
+        <target state="translated">'{1}' アーキテクチャ '{0}' ホストが見つかりませんでした。
 
-'{1}' .NET をインストールしてこの問題を解決することができます。
+ '{1}' .NET をインストールすると、問題を解決できます。
 
 指定されたフレームワークは次の場所にあります:
   - https://aka.ms/dotnet-download</target>

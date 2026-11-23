@@ -54,32 +54,32 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">Warnung: Trx-Datei '{0}' bereits vorhanden und wird überschrieben.</target>
+        <target state="translated">Warnung: Die Trx-Datei „{0}“ ist bereits vorhanden und wird überschrieben.</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultConflictingTestDefinitionName">
         <source>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</target>
+        <target state="translated">Testknoten „{0}“ („{1}“), gemeldet von {2} hat den Testdefinitionsnamen „{3}“. Ein vorheriges Ergebnis für denselben Testknoten, gemeldet von {4}, hat jedoch den Testdefinitionsnamen „{5}“. Alle Ergebnisse eines Testknotens müssen denselben TrxTestDefinitionName verwenden.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultDuplicateProperties">
         <source>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</target>
+        <target state="translated">Testknoten „{0}“ („{1}“), gemeldet von {2} enthält mehrere Eigenschaften desselben Typs in einer einzigen TestNodeUpdateMessage. Für jeden dieser Typen ist jedoch nur eine Eigenschaft zulässig: {3}.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsDetailsHeader">
         <source>Details for the authors of the reporting component:</source>
-        <target state="new">Details for the authors of the reporting component:</target>
+        <target state="translated">Details zur Autorenschaft der meldenden Komponente:</target>
         <note>Header of the technical details listed after this line.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsErrorMessage">
         <source>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</source>
-        <target state="new">The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</target>
+        <target state="translated">Der TRX Bericht ist unvollständig: {0} Testergebnisse wurden ausgelassen, und der Testlauf wird als fehlerhaft markiert, da sie mit Daten gemeldet wurden, die in einem TRX Bericht nicht dargestellt werden können. Dies ist ein Problem in der Komponente, die diese Ergebnisse gemeldet hat, nicht in Ihren Tests. Aktualisieren Sie sie auf eine neuere Version, oder melden Sie dieses Problem den Autoren: {1}.</target>
         <note>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsMoreDetails">
         <source>... and {0} more omitted test result(s).</source>
-        <target state="new">... and {0} more omitted test result(s).</target>
+        <target state="translated">… und {0} weitere nicht aufgeführte Testergebnisse.</target>
         <note>{0} is the number of omitted test results whose details are not listed.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
@@ -171,9 +171,9 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: 'MyReport_{tfm}.trx'.</source>
-        <target state="translated">Der Name des generierten TRX-Berichts. Kann einen relativen oder absoluten Pfad enthalten. Relative Pfade werden anhand des Verzeichnisses mit den Testergebnissen aufgelöst, und fehlende Verzeichnisse werden erstellt.
-Unterstützt die folgenden Platzhalter: {pname} (Name der Testanwendung), {pid} (Prozess-ID), {asm} (Name der Entry-Assembly), {tfm} (Zielframeworkmoniker), {arch} (Prozessorarchitektur), {time} (Zeitstempel).
-Beispiel: „MyReport_{tfm}.trx“.</target>
+        <target state="translated">Der Name des generierten TRX Berichts. Kann einen relativen oder absoluten Pfad enthalten; Relative Pfade werden anhand des Testergebnisverzeichnisses aufgelöst, und fehlende Verzeichnisse werden erstellt.
+Unterstützt die folgenden Platzhalter: {pname} (Testanwendungsname), {pid} (Prozess-ID), {asm} (Eintragsassemblyname), {tfm} (Zielframeworkmoniker), {arch} (Prozessarchitektur), {time} (Zeitstempel).
+Beispiel: "MyReport_{tfm}.trx".</target>
         <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">

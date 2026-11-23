@@ -73,7 +73,7 @@
 
 Disk info:
 {1}</source>
-        <target state="translated">При создании дампа зависания возникло следующее исключение: 
+        <target state="translated">При создании дампа зависания возникло следующее исключение:
 {0}
 
 Сведения о диске:
@@ -115,7 +115,7 @@ The timeout value is specified in one of the following formats:
     1.5h, 1.5hour, 1.5hours,
     1d, 1day, 1days.
     Одно число (без суффикса) интерпретируется как миллисекунды.
-    Значение по умолчанию — 30m (30 минут).</target>
+    Значение по умолчанию — 30m.</target>
         <note>Do not localize time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -150,8 +150,8 @@ Default type is 'Full'.</source>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="translated">"{0}" не является допустимым типом дампа.
-Допустимые варианты: {1}</target>
+        <target state="translated">'{0}' не является допустимым типом дампа.
+Допустимые параметры: {1}</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

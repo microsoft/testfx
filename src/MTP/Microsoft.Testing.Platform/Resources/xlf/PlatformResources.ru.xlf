@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="translated">Текущая платформа тестирования не реализует параметр "IGracefulStopTestExecutionCapability", необходимый для функции "--maximum-failed-tests".</target>
+        <target state="translated">Текущая тестовая платформа не реализует возможность "IGracefulStopTestExecutionCapability", требуемую для функции "--maximum-failed-tests".</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">Расширение, используемое для поддержки "--maximum-failed-tests". При превышении заданного порогового значения сбоев тестовый запуск будет прерван.</target>
+        <target state="translated">Расширение для поддержки параметра "--maximum-failed-tests". При достижении указанного порога выполнение теста будет прервано.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -404,12 +404,12 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
-        <target state="translated">Файл диагностики (уровень '{0}' асинхронной очисткой): {1}</target>
+        <target state="translated">Файл диагностики (уровень '{0}' с асинхронной очисткой): {1}</target>
         <note>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
-        <target state="translated">Файл диагностики (уровень '{0}' синхронизации на диск): {1}</target>
+        <target state="translated">Файл диагностики (уровень '{0}' с очисткой синхронизации): {1}</target>
         <note>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -559,7 +559,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="translated">Исключение при отмене запроса '{0}'</target>
+        <target state="translated">Исключение при отмене запроса с идентификатором "{0}"</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -590,7 +590,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="translated">Не удалось записать журнал в канал. Отсутствует содержимое журнала:
+        <target state="translated">Не удалось записать журнал в канал. Отсутствующее содержимое журнала:
 {0}</target>
         <note>{0} is the log content that could not be written.</note>
       </trans-unit>
@@ -736,7 +736,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="translated">Параметр "--maximum-failed-tests" должен быть положительным целым числом. Недопустимое '{0}' значение.</target>
+        <target state="translated">Параметр "--maximum-failed-tests" должен быть положительным целым числом. Недопустимое значение "{0}".</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">{0} тестов</target>
+        <target state="translated">Выполняется тестов: {0}</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
@@ -873,7 +873,7 @@ The file will be written in the output directory with the name log_[yyMMddHHmmss
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Каталог выходных данных журнала диагностики.
+        <target state="translated">Выходной каталог ведения журнала диагностики.
 Если не указано иное, файл будет создан в каталоге по умолчанию "TestResults".</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
@@ -1008,7 +1008,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
         <target state="translated">Не сообщать о неуспешном значении завершения для указанных кодов завершения.
-Например, "--ignore-exit-code 8;9" игнорирует коды завершения 8 и 9 и в этих случаях возвращает 0.
+Например, "'--ignore-exit-code 8;9" игнорирует коды завершения 8 и 9 и в этих случаях возвращает 0.
 Дополнительные сведения о кодах завершения см. на странице https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
@@ -1019,7 +1019,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">Указывает максимальное число сбоев тестов, которые при превышении прервют тестовый запуск.</target>
+        <target state="translated">Указывает максимальное количество неудачных тестов, при превышении которого выполнение теста будет прервано.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1124,7 +1124,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
         <target state="translated">Указывает, как обрабатывается запуск, в котором не выполнялся ни один тест.
-Допустимые значения: allow-skipped (по умолчанию), при котором пропущенные тесты считаются выполненными, поэтому ошибкой с кодом выхода 8 завершается только запуск, в котором не найден ни один тест, и strict, при котором пропущенные тесты считаются невыполненными, поэтому ошибкой с кодом выхода 8 завершается запуск, в котором был пропущен каждый тест (или не найден ни один тест).</target>
+Допустимые значения: "allow-skipped" (по умолчанию), при котором пропущенные тесты считаются выполненными, поэтому ошибкой с кодом выхода 8 завершается только запуск, в котором не найден ни один тест, и "strict", при котором пропущенные тесты считаются невыполненными, поэтому ошибкой с кодом выхода 8 завершается запуск, в котором был пропущен каждый тест (или не найден ни один тест).</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -1139,7 +1139,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">Тестовый сеанс прерывается из-за сбоев ('{0}'), указанных параметром "--maximum-failed-tests".</target>
+        <target state="translated">Тестовый сеанс прерывается, так как достигнуто количество сбоев ("{0}"), указанное параметром "--maximum-failed-tests".</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,12 +1174,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">Реализация "ITestHost", используемая при работе в режиме сервера.</target>
+        <target state="translated">Реализация "ITestHost", используемая при запуске в режиме сервера.</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="translated">Тестовый хост в режиме сервера</target>
+        <target state="translated">Тестовый узел в режиме сервера</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -1224,7 +1224,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="translated">Запуск тестового сеанса. Путь к файлу журнала '{0}'.</target>
+        <target state="translated">Запуск тестового сеанса. Путь к файлу журнала: '{0}'.</target>
         <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">
@@ -1460,13 +1460,13 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="translated">В цикле записи 'FileLogger' возникло непредвиденное исключение для файла журнала "{0}". Файл журнала может быть неполным.
+        <target state="translated">В цикле записи 'FileLogger' для файла журнала '{0}' произошло непредвиденное исключение. Файл журнала может быть неполным.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] необработанное исключение: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Необработанное исключение: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

@@ -549,7 +549,7 @@ Expected: {1}
 Actual: {2}</source>
         <target state="translated">索引 {0} 处的元素不匹配。
 预计值: {1}
-实际值: {2}</target>
+实际: {2}</target>
         <note>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -594,7 +594,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">GitHub 票证 URL 无效</target>
+        <target state="translated">GitHub 工单 URL 无效</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">

@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactCount">
         <source>Artifacts: {0}</source>
-        <target state="new">Artifacts: {0}</target>
+        <target state="translated">Artifacts: {0}</target>
         <note>{0} is the number of file artifacts.</note>
       </trans-unit>
       <trans-unit id="CancelledLowercase">
@@ -456,9 +456,9 @@
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</source>
-        <target state="translated">Określ, czy znaki ucieczki ANSI są emitowane.
-Prawidłowe wartości to „auto” (domyślnie), 'on' (akceptowane są również wartości „true”, „enable” i „1”) lub 'off' (akceptowane są również wartości „false”, „disable” i „0”).
-Wartość 'on' wymusza stosowanie kodów ucieczki ANSI (w tym przemieszczanie kursora) nawet wtedy, gdy właściwość stdout jest przekierowywana; użyj jej razem z poleceniem --progress off, jeśli zależy Ci wyłącznie na kolorach.</target>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -470,7 +470,7 @@ Wartość 'on' wymusza stosowanie kodów ucieczki ANSI (w tym przemieszczanie ku
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
         <target state="translated">Wstępnie ustawiono bloki wyników dla poszczególnych testów wyświetlane w terminalu.
-Prawidłowe wartości to 'Minimal', 'Normal', or 'Detailed'. Wartość domyślna to 'Normal'. Aby precyzyjnie wybrać wyniki, użyj opcji '--show-test-results'.</target>
+Prawidłowe wartości to „Minimal”, „Normal” lub „Detailed”. Wartość domyślna to „Normal”. Aby precyzyjnie wybrać wyniki, użyj opcji '--show-test-results'.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
@@ -507,9 +507,9 @@ Prawidłowe wartości to 'Minimal', 'Normal', or 'Detailed'. Wartość domyślna
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="translated">Określ, czy postęp ma być wyświetlany na ekranie.
-Prawidłowe wartości to „auto” (domyślnie), 'on' (akceptowane są również wartości „true”, „enable” i „1”) lub „off” (akceptowane są również wartości „false”, „disable” i „0”).
-Wartość „auto” przedstawia postęp, chyba że terminal nie może go zaktualizować w miejscu (na przykład przy użyciu polecenia --ansi off lub w ramach ciągłej integracji).</target>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
@@ -571,7 +571,7 @@ Valid values are 'passed', 'failed' (also covers errored, timed out, and cancele
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
         <target state="translated">Określa, które wyniki testów powodują wyświetlenie w terminalu bloku wyników dla danego testu (wraz z informacjami szczegółowymi, śladem stosu i przechwyconym wyjściem).
 Dopuszczalne wartości to 'passed', 'failed' (obejmuje to również testy zakończone błędem, przekroczeniem limitu czasu i anulowane), 'skipped', 'all', and 'none'. Wiele wartości można połączyć, tworząc listę rozdzieloną przecinkami lub spacjami, albo poprzez powtórzenie opcji; wartości 'all' i 'none' nie można łączyć z żadną inną wartością.
-Domyślną wartością jest 'failed', gdy opcja '--output' ma wartość 'Minimal', 'failed' i 'skipped', gdy ma wartość 'Normal' lub została pominięta; oraz 'all', gdy ma wartość 'Detailed'. Jawny element '--show-test-results' zawsze ma pierwszeństwo przed opcją '--output', niezależnie od kolejności, w jakiej został przekazany.</target>
+Domyślną wartością jest „failed”, gdy opcja „--output” ma wartość „Minimal”, „failed” i „skipped”, gdy ma wartość „Normal” lub została pominięta; oraz „all”, gdy ma wartość „Detailed”. Jawny element „--show-test-results” zawsze ma pierwszeństwo przed opcją „--output”, niezależnie od kolejności, w jakiej został przekazany.</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">

@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="translated">Error del conjunto de pruebas con código de salida distinto de 2 (pruebas con errores). Error relacionado con una condición inesperada. '{0}' de código de salida</target>
+        <target state="translated">Error en el conjunto de pruebas con un código de salida distinto de 2 (pruebas con errores). Error relacionado con una condición inesperada. Código de salida '{0}'</target>
         <note>{0} is the exit code.</note>
       </trans-unit>
     </body>

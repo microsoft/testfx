@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">'--maximum-failed-tests'를 지원하는 데 사용되는 확장입니다. 지정된 실패 임계값에 도달하면 테스트 실행이 중단됩니다.</target>
+        <target state="translated">'--maximum-failed-tests' 옵션을 지원하는 확장입니다. 지정된 실패 임계값에 도달하면 테스트 실행이 중단됩니다.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -299,7 +299,7 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
-        <target state="translated">콘솔의 세부 정보 표시를 비교하려면 '--output {0}'를 사용합니다. 콘솔 출력MTP 다르게 구성되었으므로 정확한 대체가 아닙니다.</target>
+        <target state="translated">콘솔의 세부 정보 표시를 비교하려면 '--output {0}' 사용하세요. 콘솔 출력MTP 다르게 구성되었으므로 정확한 대체가 아닙니다.</target>
         <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
@@ -344,12 +344,12 @@
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
         <source>A composite test execution filter cannot contain a null child filter.</source>
-        <target state="translated">복합 테스트 실행 필터는 null 자식 필터를 포함할 수 없습니다.</target>
+        <target state="new">A composite test execution filter cannot contain a null child filter.</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
         <source>A composite test execution filter requires at least two child filters.</source>
-        <target state="translated">복합 테스트 실행 필터에는 두 개 이상의 자식 필터가 필요합니다.</target>
+        <target state="new">A composite test execution filter requires at least two child filters.</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -559,7 +559,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="translated">요청 ID를 취소하는 동안 예외가 '{0}'</target>
+        <target state="translated">요청 ID '{0}' 취소 중 예외 발생</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -611,7 +611,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="translated">테스트 세션을 마쳤습니다.</target>
+        <target state="translated">테스트 세션을 완료했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FromFile">
@@ -736,7 +736,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="translated">'--maximum-failed-tests' 옵션은 양의 정수여야 합니다. '{0}' 값이 잘못되었습니다.</target>
+        <target state="translated">'--maximum-failed-tests' 옵션에는 양의 정수를 지정해야 합니다. '{0}' 값이 잘못되었습니다.</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">실행 중인 테스트 {0}</target>
+        <target state="translated">실행 중인 테스트 {0}개</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
@@ -1019,7 +1019,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">테스트 실행을 중단하는 최대 테스트 실패 수를 지정합니다.</target>
+        <target state="translated">실패한 테스트 수가 지정된 최대값을 초과하면 테스트 실행을 중단하도록 최대 테스트 실패 횟수를 지정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1139,7 +1139,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">'--maximum-failed-tests' 옵션에 지정된 실패('{0}')에 도달하여 테스트 세션이 중단됩니다.</target>
+        <target state="translated">'--maximum-failed-tests' 옵션에 지정된 실패 수('{0}')에 도달하여 테스트 세션을 중단합니다.</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,7 +1174,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">서버 모드를 실행할 때 사용되는 'ITestHost' 구현입니다.</target>
+        <target state="translated">서버 모드로 실행할 때 사용하는 'ITestHost' 구현입니다.</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
@@ -1219,12 +1219,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
-        <target state="translated">테스트 세션을 시작하는 중입니다.</target>
+        <target state="translated">테스트 세션을 시작합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="translated">테스트 세션을 시작하는 중입니다. 로그 파일 경로가 '{0}'.</target>
+        <target state="translated">테스트 세션을 시작합니다. 로그 파일 경로는 '{0}'입니다.</target>
         <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">
@@ -1314,7 +1314,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="translated">testconfig.json 파일의 'environmentVariables' 섹션에 선언된 환경 변수를 테스트 호스트 자식 프로세스에 적용합니다.</target>
+        <target state="new">Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</target>
         <note>{Locked="environmentVariables"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
@@ -1460,13 +1460,13 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="translated">로그 파일 '{0}'에 대한 'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다. 로그 파일이 완전하지 않을 수 있습니다.
+        <target state="translated">로그 파일 '{0}'에 대한 'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다. 로그 파일이 불완전할 수 있습니다.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">처리되지 않은 예외 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 처리되지 않은 예외: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

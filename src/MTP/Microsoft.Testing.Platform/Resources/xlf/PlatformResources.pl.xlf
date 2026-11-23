@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="translated">Bieżąca platforma testowa nie implementuje interfejsu "IGracefulStopTestExecutionCapability", który jest wymagany dla funkcji "--maximum-failed-tests".</target>
+        <target state="translated">Bieżąca platforma testowa nie implementuje interfejsu „IGracefulStopTestExecutionCapability”, który jest wymagany przez funkcję „--maximum-failed-tests”.</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">Rozszerzenie używane do obsługi "--maximum-failed-tests". Po osiągnięciu podanego progu niepowodzeń przebieg testu zostanie przerwany.</target>
+        <target state="translated">Rozszerzenie obsługujące opcję „--maximum-failed-tests”. Po osiągnięciu określonego progu niepowodzeń testy zostaną przerwane.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -559,7 +559,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="translated">Wyjątek podczas anulowania '{0}' identyfikatora żądania</target>
+        <target state="translated">Wystąpił wyjątek podczas anulowania żądania o identyfikatorze „{0}”</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -611,7 +611,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="translated">Zakończono sesję testą.</target>
+        <target state="translated">Zakończono sesję testową.</target>
         <note />
       </trans-unit>
       <trans-unit id="FromFile">
@@ -736,7 +736,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="translated">Opcja "--maximum-failed-tests" musi być dodatnią liczbą całkowitą. Wartość '{0}' jest nieprawidłowa.</target>
+        <target state="translated">Opcja „--maximum-failed-tests” musi mieć wartość będącą dodatnią liczbą całkowitą. Wartość „{0}” jest nieprawidłowa.</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">testy {0} uruchomione</target>
+        <target state="translated">Liczb uruchomionych testów: {0}</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
@@ -856,8 +856,8 @@ Pamiętaj, że to spowalnia wykonywanie testu.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="translated">Włącz rejestrowanie diagnostyczne. Domyślny poziom dziennika to „Trace”.
-Plik zostanie zapisany w katalogu wyjściowym pod nazwą log_[yyMMddHHmmssfff].diag.</target>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -1007,9 +1007,9 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="translated">Nie zgłaszaj wartości niepomyślnego zakończenia dla określonych kodów zakończenia.
-Na przykład „--ignore-exit-code 8;9” ignoruje kody zakończenia 8 i 9 i zwraca wartość 0 w tych przypadkach.
-Aby uzyskać więcej informacji na temat kodów zakończenia, zobacz stronę https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="new">Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -1019,7 +1019,7 @@ Aby uzyskać więcej informacji na temat kodów zakończenia, zobacz stronę htt
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">Określa maksymalną liczbę niepowodzeń testów, które po przekroczeniu spowoduje przerwanie przebiegu testu.</target>
+        <target state="translated">Określa maksymalną liczbę niepowodzeń testów. Po przekroczeniu tej liczby testy zostaną przerwane.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1139,7 +1139,7 @@ Prawidłowe wartości to „allow-skipped” (wartość domyślna), która zlicz
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">Sesja testowa jest przerywana z powodu błędów ('{0}') określonych przez opcję "--maximum-failed-tests".</target>
+        <target state="translated">Sesja testowa jest przerywana, ponieważ osiągnięto określoną przez opcję „--maximum-failed-tests” liczbę niepowodzeń („{0}”).</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,12 +1174,12 @@ Prawidłowe wartości to „allow-skipped” (wartość domyślna), która zlicz
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">Implementacja "ITestHost" używana podczas uruchamiania trybu serwera.</target>
+        <target state="translated">Implementacja interfejsu „ITestHost” używana podczas uruchamiania w trybie serwera.</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="translated">Host testów trybu serwera</target>
+        <target state="translated">Host testów w trybie serwera</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -1466,7 +1466,7 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Nieobsługiwany wyjątek: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Nieobsłużony wyjątek: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

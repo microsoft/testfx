@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactCount">
         <source>Artifacts: {0}</source>
-        <target state="new">Artifacts: {0}</target>
+        <target state="translated">Artefatti: {0}</target>
         <note>{0} is the number of file artifacts.</note>
       </trans-unit>
       <trans-unit id="CancelledLowercase">
@@ -469,8 +469,8 @@ I valori validi sono 'auto' (impostazione predefinita), 'on' (accetta anche 'tru
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="translated">Preimposta i blocchi dei risultati per test mostrati nel terminale.
-I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinita è 'Normal'. Usa '--show-test-results' per selezionare con precisione i risultati.</target>
+        <target state="translated">Preimpostare i blocchi dei risultati per test mostrati nel terminale.
+I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinita è 'Normal'. Usare '--show-test-results' per selezionare con precisione i risultati.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
@@ -508,8 +508,8 @@ I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinit
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
         <target state="translated">Controllare se lo stato viene visualizzato sullo schermo.
-I valori validi sono "auto" (impostazione predefinita), 'on' (accetta anche "true", "enable", "1") o "off" (accetta anche "false", "disable", "0").
-"auto" mostra lo stato, a meno che il terminale non possa eseguire l'aggiornamento sul posto, ad esempio con --ansi off o in CI.</target>
+I valori validi sono 'auto' (impostazione predefinita), 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0').
+'auto' mostra lo stato, a meno che il terminale non possa eseguire l'aggiornamento sul posto, ad esempio con --ansi off o in CI.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
@@ -521,9 +521,9 @@ I valori validi sono "auto" (impostazione predefinita), 'on' (accetta anche "tru
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="translated">Controllare se i test non riusciti almeno una volta ma poi superati dopo un nuovo tentativo sono elencati nel riepilogo dell'esecuzione.
-I valori validi sono 'on' (l'impostazione predefinita; accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0').
-Passando l'opzione senza un valore, la si attiva.</target>
+        <target state="translated">Controllare se i test non superati almeno una volta ma poi superati dopo un nuovo tentativo sono elencati nel riepilogo dell'esecuzione.
+I valori validi sono 'on' (impostazione predefinita; accetta anche 'true', 'enable', '1') e 'off' (accetta anche 'false', 'disable', '0').
+Se si passa l'opzione senza un valore, la si attiva.</target>
         <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
@@ -569,8 +569,8 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'Fai
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="translated">Consente di selezionare quali risultati di test visualizzare in un blocco di risultati per test (con i dettagli informativi, l'analisi dello stack e l'output acquisito) nel terminale.
-I valori validi sono 'passed', 'failed' (comprende anche i test con errori, in timeout e annullati), 'skipped', 'all' e 'none'. Combina più valori come elenco separato da virgole o spazi, oppure ripetendo l'opzione; non è possibile combinare 'all' e 'none' con altri valori.
+        <target state="translated">Consente di selezionare quali risultati di test visualizzare in un blocco di risultati per test (con i dettagli informativi, la traccia dello stack e l'output acquisito) nel terminale.
+I valori validi sono 'passed', 'failed' (comprende anche i test con errori, in timeout e annullati), 'skipped', 'all' e 'none'. Combinare più valori come elenco separato da virgole o spazi, oppure ripetendo l'opzione; non è possibile combinare 'all' e 'none' con altri valori.
 Il valore predefinito è 'failed' quando '--output' è 'Minimal', 'failed' e 'skipped' quando è 'Normal', oppure non è specificato, e 'all' quando è 'Detailed'. Un '--show-test-results' esplicito ha sempre la precedenza su '--output', indipendentemente dall'ordine in cui vengono passati.</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>

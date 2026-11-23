@@ -54,32 +54,32 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">Upozornění: Soubor Trx '{0}' již existuje a bude přepsán.</target>
+        <target state="translated">Upozornění: Soubor Trx {0} už existuje a přepíše se.</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultConflictingTestDefinitionName">
         <source>Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} has test definition name '{3}', but a previous result for the same test node reported by {4} has test definition name '{5}'. All results of a test node must use the same TrxTestDefinitionName.</target>
+        <target state="translated">Testovací uzel '{0}' ('{1}') nahlášený {2} má název definice testu '{3}', ale předchozí výsledek pro stejný testovací uzel hlášený {4} má název definice testu '{5}'. Všechny výsledky testovacího uzlu musí používat stejnou TrxTestDefinitionName.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} and {4} are the reporting components (display name, UID and version). {3} and {5} are the test definition names. Do not localize {Locked="TrxTestDefinitionName"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultDuplicateProperties">
         <source>Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</source>
-        <target state="new">Test node '{0}' ('{1}') reported by {2} contains several properties of the same type in a single TestNodeUpdateMessage, but only one property of each of these types is allowed: {3}.</target>
+        <target state="translated">Testovací uzel '{0}' ('{1}') ohlášený {2} obsahuje několik vlastností stejného typu v jednom TestNodeUpdateMessage, ale je povolena pouze jedna vlastnost každého z těchto typů: {3}.</target>
         <note>{0} is the test node UID. {1} is the test node display name. {2} is the reporting component (display name, UID and version). {3} is the list of property type names with their number of occurrences. Do not localize {Locked="TestNodeUpdateMessage"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsDetailsHeader">
         <source>Details for the authors of the reporting component:</source>
-        <target state="new">Details for the authors of the reporting component:</target>
+        <target state="translated">Podrobnosti o autorech komponenty pro vytváření sestav:</target>
         <note>Header of the technical details listed after this line.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsErrorMessage">
         <source>The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</source>
-        <target state="new">The TRX report is incomplete: {0} test result(s) were omitted and the test run is marked as failed, because they were reported with data that cannot be represented in a TRX report. This is a problem in the component that reported these results, not in your tests. Update it to a newer version, or report this issue to its authors: {1}.</target>
+        <target state="translated">Sestava TRX je neúplná: Některé výsledky testů (celkem {0}) byly vynechány a běh testů je označen jako neúspěšný, protože výsledky obsahovaly data, která nelze v sestavě TRX reprezentovat. Nejde o problém vašich testů, ale o problém komponenty, která tyto výsledky nahlásila. Aktualizujte komponentu na novější verzi nebo tento problém nahlaste jejím autorům: {1}.</target>
         <note>{0} is the number of omitted test results. {1} is the list of reporting components (display name, UID and version). Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxInvalidTestResultsMoreDetails">
         <source>... and {0} more omitted test result(s).</source>
-        <target state="new">... and {0} more omitted test result(s).</target>
+        <target state="translated">... a další výsledky testů (celkem {0}), u kterých se podrobnosti neuvádějí.</target>
         <note>{0} is the number of omitted test results whose details are not listed.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
@@ -171,9 +171,9 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: 'MyReport_{tfm}.trx'.</source>
-        <target state="translated">Název vygenerované sestavy TRX. Může obsahovat relativní nebo absolutní cestu; relativní cesty se vyhodnocují vůči adresáři výsledků testů a chybějící adresáře se vytvoří.
+        <target state="translated">Název vygenerované sestavy TRX. Může obsahovat relativní nebo absolutní cestu; Relativní cesty jsou přeloženy proti adresáři výsledků testu a jsou vytvořeny chybějící adresáře.
 Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název vstupního sestavení), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko).
-Příklad: ‚MyReport_{tfm}.trx‘.</target>
+Příklad: MyReport_{tfm}.trx</target>
         <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">

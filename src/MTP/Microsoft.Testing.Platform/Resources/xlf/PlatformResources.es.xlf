@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">Extensión usada para admitir "--maximum-failed-tests". Cuando se alcance un umbral de errores determinado, se anulará la serie de pruebas.</target>
+        <target state="translated">Extensión que se usa para admitir "--maximum-failed-tests". Cuando se alcanza un umbral de errores determinado, se anulará la serie de pruebas.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -856,8 +856,8 @@ Tenga en cuenta que esto ralentiza la ejecución de pruebas.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="translated">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Trace".
-El archivo se escribirá en el directorio de salida con el nombre log_[yyMMddHHmmssfff].diag.</target>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -874,7 +874,7 @@ El archivo se escribirá en el directorio de salida con el nombre log_[yyMMddHHm
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
         <target state="translated">Directorio de salida del registro de diagnóstico.
-Si no se especifica, el archivo se generará dentro del directorio predeterminado 'TestResults'.</target>
+Si no se especifica, el archivo se generará dentro del directorio predeterminado "TestResults".</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -885,8 +885,8 @@ Si no se especifica, el archivo se generará dentro del directorio predeterminad
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="translated">Defina el nivel de detalle de --diagnostic.
-Los valores disponibles son 'Trace', 'Debug', 'Information', 'Warning', 'Error' y 'Critical'.</target>
+        <target state="new">Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
         <note>{Locked="--diagnostic"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
@@ -897,7 +897,7 @@ Los valores disponibles son 'Trace', 'Debug', 'Information', 'Warning', 'Error' 
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="translated">Enumera las pruebas disponibles.
+        <target state="translated">Enumerar las pruebas disponibles.
 Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o "json" para imprimir las pruebas detectadas como un documento JSON en la salida estándar.</target>
         <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
@@ -969,7 +969,7 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">PID inválido '{0}'
+        <target state="translated">PID inválido "{0}"
 {1}</target>
         <note>{0} is the invalid process ID. {1} is the exception message.</note>
       </trans-unit>
@@ -1007,9 +1007,9 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="translated">No informe de un valor de salida no correcto para los códigos de salida especificados.
-Por ejemplo, '--ignore-exit-code 8;9' omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
-Para obtener más información sobre los códigos de salida, consulte https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="new">Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -1019,7 +1019,7 @@ Para obtener más información sobre los códigos de salida, consulte https://le
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">Especifica un número máximo de errores de prueba que, si se superan, anularán la serie de pruebas.</target>
+        <target state="translated">Especifica un número máximo de errores de prueba que, cuando se superan, anularán la ejecución de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -1035,8 +1035,8 @@ Para obtener más información sobre los códigos de salida, consulte https://le
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' espera un único valor entero positivo distinto de cero
-(por ejemplo, '--minimum-expected-tests 10')</target>
+        <target state="translated">"--minimum-expected-tests" espera un único valor entero positivo distinto de cero
+(por ejemplo, "--minimum-expected-tests 10")</target>
         <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -1078,7 +1078,7 @@ Para obtener más información sobre los códigos de salida, consulte https://le
         <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">Directorio donde se van a colocar los resultados de las pruebas.
+        <target state="translated">El directorio donde se van a colocar los resultados de la prueba.
 Si el directorio especificado no existe, se crea.
 El valor predeterminado es TestResults en el directorio que contiene la aplicación de prueba.</target>
         <note>{Locked="TestResults"}</note>
@@ -1139,7 +1139,7 @@ Los valores válidos son "allow-skipped" (valor predeterminado) que cuenta las p
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">La sesión de prueba se está anulando debido a errores ('{0}') especificados por la opción "--maximum-failed-tests".</target>
+        <target state="translated">La sesión de prueba se está anulando debido a errores ("{0}") especificados por la opción "--maximum-failed-tests".</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -1174,7 +1174,7 @@ Los valores válidos son "allow-skipped" (valor predeterminado) que cuenta las p
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">Implementación de 'ITestHost' usada al ejecutar el modo de servidor.</target>
+        <target state="translated">Implementación de "ITestHost" usada al ejecutar el modo de servidor.</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
@@ -1251,7 +1251,7 @@ You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
         <target state="translated">Telemetría
 ---------
-La Plataforma de pruebas de Microsoft recopila datos de uso para ayudarnos a mejorar su experiencia. Microsoft recopila datos y no se comparten con nadie.
+La Plataforma de pruebas de Microsoft recopila datos de uso para ayudarnos a mejorar su experiencia. Microsoft recopila los datos y no se comparten con nadie.
 Puede optar por no participar en la telemetría si establece la variable de entorno TESTINGPLATFORM_TELEMETRY_OPTOUT o DOTNET_CLI_TELEMETRY_OPTOUT como "1" o "true" mediante su shell preferido.
 
 Más información sobre la telemetría de la Plataforma de pruebas de Microsoft: https://aka.ms/testingplatform/telemetry</target>
@@ -1460,13 +1460,13 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="translated">Se produjo una excepción inesperada en el bucle de escritura de "FileLogger" para el archivo de registro "{0}". El archivo de registro puede estar incompleto.
+        <target state="translated">Excepción inesperada en el bucle de escritura 'FileLogger' para el archivo de registro '{0}'. Es posible que el archivo de registro esté incompleto.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] excepción no controlada: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Excepción no controlada: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">

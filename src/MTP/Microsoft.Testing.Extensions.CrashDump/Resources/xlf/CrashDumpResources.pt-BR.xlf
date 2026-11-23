@@ -36,7 +36,7 @@
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
         <target state="translated">Especifique o nome do arquivo de despejo.
-Há suporte para os seguintes espaços reservados: {pname} (nome do executável do processo, repassado ao runtime do .NET como "%e"), {pid} (ID do processo, repassado ao runtime do .NET como "%p"), {asm} (nome do assembly de entrada), {tfm} (identificador da plataforma de destino) {time} (carimbo de data e hora em que o ambiente do despejo de memória é configurado). Também há suporte aos tokens herdados %p/%e/%h/%t consumidos diretamente pelo createdump do runtime do .NET.</target>
+Há suporte para os seguintes espaços reservados: {pname} (nome do executável do processo, repassado ao runtime do .NET como "%e"), {pid} (ID do processo, repassado ao runtime do .NET como "%p"), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino) {time} (carimbo de data e hora em que o ambiente do despejo de memória é configurado). Também há suporte aos tokens herdados %p/%e/%h/%t consumidos diretamente pelo createdump do runtime do .NET.</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
@@ -108,7 +108,7 @@ Há suporte para os seguintes espaços reservados: {pname} (nome do executável 
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
-        <target state="translated">Especifique o tipo do despejo de memória.
+        <target state="translated">Especifique o tipo de despejo.
 Os valores válidos são 'Mini', 'Heap', 'Triage' ou 'Full'. O tipo padrão é 'Full'.
 Para obter mais informações, visite https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>

@@ -594,7 +594,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">GitHub チケット URL が無効です</target>
+        <target state="translated">GitHub チケットの URL が無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
@@ -748,10 +748,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      指定されたメンバー ({0}) が見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
-      またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者が true である場合は、メンバーを
-      定義する型を PrivateObject のコンストラクターに渡す必要があります。
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -761,10 +761,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      指定されたシグネチャを使用するコンストラクターが見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
-      またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者が true である場合は、メンバーを
-      定義する型を PrivateObject のコンストラクターに渡す必要があります。
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>

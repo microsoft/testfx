@@ -547,9 +547,9 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="translated">Элемент по индексу {0} не совпадает.
+        <target state="translated">Элементы с индексом {0} не совпадают.
 Ожидается: {1}
-Фактическое значение: {2}</target>
+Фактически: {2}</target>
         <note>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -594,7 +594,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="translated">Недопустимый URL-адрес билета GitHub</target>
+        <target state="translated">Недопустимый URL-адрес запроса GitHub</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
@@ -835,7 +835,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
-        <target state="translated">Свойство или метод {0} в {1} тип возвращаемого значения не может быть назначен "IEnumerable".</target>
+        <target state="translated">Свойство или метод {0} возвращаемого типа {1} не могут быть назначены для "IEnumerable".</target>
         <note>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

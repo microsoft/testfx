@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactCount">
         <source>Artifacts: {0}</source>
-        <target state="new">Artifacts: {0}</target>
+        <target state="translated">Артефакты: {0}</target>
         <note>{0} is the number of file artifacts.</note>
       </trans-unit>
       <trans-unit id="CancelledLowercase">
@@ -456,9 +456,9 @@
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</source>
-        <target state="translated">Управляйте тем, выводятся ли escape-символы ANSI.
-Допустимые значения: "auto" (по умолчанию), 'on' (также принимает "true", "enable", "1") и "off" (также принимает "false", "disable", "0").
-'on' принудительно включает escape-коды ANSI (включая перемещение курсора), даже если stdout перенаправлен, сочетайте с --progress off, если нужны только цвета.</target>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -507,9 +507,9 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</source>
-        <target state="translated">Управляйте тем, отображаются ли сведения о ходе выполнения на экране.
-Допустимые значения: "auto" (по умолчанию), 'on' (также принимает "true", "enable", "1") и "off" (также принимает "false", "disable", "0").
-"auto" показывает ход выполнения, кроме случаев, когда терминал не может обновляться на месте (например, с --ansi off или в CI).</target>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --ansi off or in CI).</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--ansi off"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
@@ -550,14 +550,14 @@ Passing the option without a value turns it on.</target>
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
         <target state="translated">Определяет, когда показывать зафиксированный вывод ошибок теста.
-Допустимые значения: 'All', 'Failed', 'None'. По умолчанию — 'Failed'.</target>
+Допустимые значения: "All", "Failed", "None". По умолчанию — "Failed".</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'Failed'.</source>
         <target state="translated">Определяет, когда показывать зафиксированный стандартный вывод теста.
-Допустимые значения: 'All', 'Failed', 'None'. По умолчанию — 'Failed'.</target>
+Допустимые значения: "All", "Failed", "None". По умолчанию — "Failed".</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">

@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactCount">
         <source>Artifacts: {0}</source>
-        <target state="new">Artifacts: {0}</target>
+        <target state="translated">Artifacts: {0}</target>
         <note>{0} is the number of file artifacts.</note>
       </trans-unit>
       <trans-unit id="CancelledLowercase">
@@ -470,7 +470,7 @@ Geçerli değerler: 'auto' (varsayılan), 'on' ('true', 'enable', '1' değerleri
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
         <target state="translated">Terminalde gösterilen test başına sonuç bloklarını önceden ayarlayın.
-Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: 'Normal'. Kesin sonuç seçimi için '--show-test-results' kullanın.</target>
+Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: ‘Normal’. Kesin sonuç seçimi için '--show-test-results' kullanın.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
