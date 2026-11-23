@@ -216,7 +216,8 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests : AcceptanceTe
         bool disableAppDomain = true,
         bool assertFallbackTrace = false,
         string hostProjectDirectory = "Tests",
-        string hostProjectName = ProjectName)
+        string hostProjectName = ProjectName,
+        bool? discoverReferencedProviders = null)
     {
         string outputDirectory = Path.Combine(asset.TargetAssetPath, "Tests", "bin", "Release", tfm);
         string evidenceDirectory = TestContext.TestTempDirectory!;
@@ -232,7 +233,8 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests : AcceptanceTe
                 new XElement(
                     "MSTest",
                     new XElement("DeploymentEnabled", false),
-                    new XElement("CaptureTraceOutput", false))))
+                    new XElement("CaptureTraceOutput", false),
+                    discoverReferencedProviders.HasValue ? new XElement("DiscoverReferencedAssemblyFixtureProviders", discoverReferencedProviders.Value) : null)))
             .Save(settings);
         var environment = new Dictionary<string, string?>
         {

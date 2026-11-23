@@ -34,7 +34,10 @@ internal sealed partial class TypeCache
             // carries the marker so those cases are not silent.
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                foreach (Assembly loaded in AppDomain.CurrentDomain.GetAssemblies())
+                Assembly[] candidates = MSTestSettings.CurrentSettings.DiscoverReferencedAssemblyFixtureProviders
+                    ? AppDomain.CurrentDomain.GetAssemblies()
+                    : [currentAssembly];
+                foreach (Assembly loaded in candidates)
                 {
                     if (loaded.IsDynamic)
                     {
@@ -221,14 +224,19 @@ internal sealed partial class TypeCache
 
     private static IEnumerable<Assembly> EnumerateCandidateAssemblies(Assembly currentAssembly)
     {
+        // A consumer can register fixtures itself even when it opts out of searching references.
+        yield return currentAssembly;
+        if (!MSTestSettings.CurrentSettings.DiscoverReferencedAssemblyFixtureProviders)
+        {
+            yield break;
+        }
+
         var visited = new HashSet<string>(StringComparer.Ordinal);
         var queue = new Queue<ProviderDiscoveryNode>();
         var metadataResolver = new ProviderDiscoveryMetadataResolver();
         visited.Add(currentAssembly.FullName ?? string.Empty);
 
-        // A consumer can register fixtures itself. For references, inspect PE metadata first:
-        // loading an unmarked library just to read its references changes user-visible runtime state.
-        yield return currentAssembly;
+        // Inspect references as metadata first: loading an unmarked library changes user-visible runtime state.
         queue.Enqueue(new(currentAssembly, GetProviderDiscoveryReferences(currentAssembly)));
 
         while (queue.Count > 0)

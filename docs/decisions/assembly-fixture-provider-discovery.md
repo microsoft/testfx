@@ -29,8 +29,8 @@ The fix must preserve:
 - Existing unsupported-AOT behavior and MSTEST0072.
 
 The supplying library opts into **providing** fixtures with the attribute.
-Consuming assemblies do not separately opt into **discovery**. This fix does not
-add a setting or change that compatibility contract.
+Consuming assemblies do not separately opt into **discovery**. The metadata-first
+fix kept this default; the later opt-out below lets consumers restrict the search.
 
 The shipping boundary is `MSTest.TestAdapter` (which bundles
 `MSTestAdapter.PlatformServices.dll`) plus the aligned `MSTest.TestFramework`,
@@ -87,6 +87,30 @@ therefore remains on the diagnosed runtime fallback path.
 
 ## Alternatives and decision
 
+### 2026-11-23: strong-named dependencies
+
+For [#12570](https://github.com/microsoft/testfx/issues/12570), keep the CLR
+authoritative for strong names. An adjacent DLL of the requested identity does
+not prove that Fusion will bind to that image: the GAC, publisher policy,
+redirects, `codeBase`, or a resolver may select a different provider. Inspecting
+only direct references would also miss providers behind unmarked intermediaries.
+[The unsigned-reference optimization](https://github.com/microsoft/testfx/pull/12575)
+did not remove these constraints.
+
+Keep automatic discovery as the default. When the consumer explicitly disables
+`DiscoverReferencedAssemblyFixtureProviders`, inspect the test assembly itself
+but do not walk its references. Unlike declaring two empty local hooks, this
+allows an explicit marker on the consumer to supply a shared fixture. Markers
+declared only in dependencies, and diagnostics from those markers, are then
+intentionally ignored. This does not prevent assemblies from loading for other
+reasons or change how explicitly requested fixture types bind.
+
+Exercise the packed adapter with a passive signed intermediary, a transitive
+provider, and a local hook. Assert loaded assemblies and fixture events in the
+child process rather than imposing a machine-dependent timing threshold.
+
+### Original metadata-first decision
+
 | Approach | Decision |
 | --- | --- |
 | Keep eager discovery and recommend empty local hooks | Rejected: leaves the regression in place and makes a workaround look like mandatory setup. |
@@ -113,6 +137,40 @@ These are implementation decisions, not a claim that a fixed package has
 already shipped.
 
 ## Validation and demonstration
+
+### 2026-11-23: reference discovery opt-out
+
+The baseline was `b2f3d20f130f70639b93a35432fa094a211bd0c3`, with the new
+acceptance tests retained. Both baseline and fixed packages were built on
+Windows with `.\build.cmd -pack -c Release -bl` (exit 0). The generated
+consumers verify the loaded PlatformServices DLL against the packed adapter.
+
+```powershell
+$project = 'test\IntegrationTests\MSTest.Acceptance.IntegrationTests'
+$env:PATH = "$(Resolve-Path .dotnet);$env:PATH"
+.\.dotnet\dotnet.exe run --project $project -c Release -f net12.0 --no-build -- --filter 'FullyQualifiedName~DisabledReferenceDiscovery'
+```
+
+With the baseline adapter, `DisabledReferenceDiscoveryDoesNotLoadSignedDependencies`
+failed in both net472 child hosts (MTP and VSTest): the unused signed
+intermediary or its provider was already loaded. `DisabledReferenceDiscoveryStillHonorsConsumerMarker`
+passed. With the fixed adapter the same three cases passed: neither signed
+dependency was loaded by the opt-out case, its local initializer ran, and the
+consumer-marked case retained its provider cleanup. The outer exits were 2
+and 0, respectively. All 15 selected default-mode signed-reference,
+redirect/codeBase, LoadFile-decoy, and duplicate-slot cases passed, as did
+`ConfigJson_WithValidValues_ValuesAreSetCorrectly` on net48. Machine and
+publisher policy were not separately exercised; enabled discovery continues
+to use the unchanged runtime fallback.
+
+On Windows net472, a generated dependency graph of 256 passive strong-named
+assemblies was measured with fresh MTP processes in eight interleaved rounds
+after one excluded warmup per condition. The public `4.6.0-preview.26509.15`
+and unmodified baseline both loaded all 256 (median end-to-end times 3.68 s
+and 3.90 s respectively). With the same fixed executable, default discovery
+loaded all 256 (3.27 s); switching reference discovery off loaded none (1.77 s).
+The opt-out was faster in every round. These are whole-run times on a synthetic
+workload, not a claim that default discovery became faster.
 
 ### Final implementation and package provenance
 

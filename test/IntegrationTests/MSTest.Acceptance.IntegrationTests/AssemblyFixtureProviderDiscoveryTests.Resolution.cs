@@ -7,6 +7,11 @@ namespace MSTest.Acceptance.IntegrationTests;
 
 public sealed partial class AssemblyFixtureProviderDiscoveryTests
 {
+    private const string Signing = """
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../fixture.snk</AssemblyOriginatorKeyFile>
+""";
+
     [TestMethod]
     public async Task CustomLoadContextUsesItsProviderInsteadOfAnUnmarkedSameIdentityFile()
     {
@@ -96,16 +101,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
     [DataRow("VSTest")]
     public async Task FrameworkBindingRedirectDoesNotTreatWrongVersionAsUnmarked(string runner)
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            Assert.Fail("This Windows-only test must not execute on another OS.");
-        }
-
         const string tfm = "net472";
-        const string signing = """
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>../fixture.snk</AssemblyOriginatorKeyFile>
-""";
         using TestAsset asset = await CreateAssetAsync(tfm, "none", "ProviderLibrary", "ProviderLibrary.SharedFixtures",
             ProviderAssertions + """
 
@@ -115,13 +111,9 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
         """,
             libraryMarker: false,
             extraSource: ActualProviderSource.PatchCodeWithReplace("$ActualVersion$", "2.0.0.0"),
-            signing: signing, useVSTest: runner == "VSTest");
+            signing: Signing, useVSTest: runner == "VSTest");
 
-        using (var key = new RSACryptoServiceProvider(2048) { PersistKeyInCsp = false })
-        {
-            File.WriteAllBytes(Path.Combine(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
-        }
-
+        WriteSigningKey(asset);
         await BuildConsumerAsync(asset);
         await BuildConsumerAsync(asset, "ActualProvider", "ActualProvider");
         string outputDirectory = Path.Combine(asset.TargetAssetPath, "Tests", "bin", "Release", tfm);
@@ -165,16 +157,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
     [DataRow("VSTest", "transitive")]
     public async Task FrameworkStrongNamedDependenciesUseRuntimeResolution(string runner, string placement)
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            Assert.Fail("This Windows-only test must not execute on another OS.");
-        }
-
         const string tfm = "net472";
-        const string signing = """
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>../fixture.snk</AssemblyOriginatorKeyFile>
-""";
         bool unmarked = placement == "unmarked";
         string assertions = unmarked
             ? """
@@ -197,14 +180,10 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
             unmarked ? "UnmarkedDependency" : "Intermediate",
             unmarked ? "UnmarkedDependency.Marker" : "Intermediate.Marker",
             assertions,
-            signing: signing,
+            signing: Signing,
             useVSTest: runner == "VSTest");
 
-        using (var key = new RSACryptoServiceProvider(2048) { PersistKeyInCsp = false })
-        {
-            File.WriteAllBytes(Path.Combine(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
-        }
-
+        WriteSigningKey(asset);
         await BuildConsumerAsync(asset);
         string outputDirectory = Path.Combine(asset.TargetAssetPath, "Tests", "bin", "Release", tfm);
         string dependency = Path.Combine(outputDirectory, (unmarked ? "UnmarkedDependency" : "Intermediate") + ".dll");
@@ -213,6 +192,45 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests
             "The dependency must be strong-named to exercise the runtime fallback.");
 
         await RunConsumerAsync(asset, tfm, runner, unmarked ? "test" : "provider-initialize | test | provider-cleanup");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [DataRow("MTP")]
+    [DataRow("VSTest")]
+    public async Task DisabledReferenceDiscoveryDoesNotLoadSignedDependencies(string runner)
+    {
+        const string tfm = "net472";
+        using TestAsset asset = await CreateAssetAsync(tfm, "initialize", "Intermediate", "Intermediate.Marker", """
+        Assert.IsFalse(AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name is "Intermediate" or "ProviderLibrary"),
+            "Opting out must not load the signed intermediary or its fixture provider.");
+""", signing: Signing, useVSTest: runner == "VSTest");
+
+        WriteSigningKey(asset);
+        await BuildConsumerAsync(asset);
+        await RunConsumerAsync(asset, tfm, runner, "local-initialize | test",
+            disableAppDomain: runner != "VSTest", discoverReferencedProviders: false);
+    }
+
+    [TestMethod]
+    public async Task DisabledReferenceDiscoveryStillHonorsConsumerMarker()
+    {
+        using TestAsset asset = await CreateAssetAsync(TargetFrameworks.NetCurrent, "initialize", "ProviderLibrary", "ProviderLibrary.SharedFixtures",
+            ProviderAssertions.Replace("$ExpectedInitialized$", "false", StringComparison.Ordinal), consumerMarker: true, libraryMarker: false);
+
+        await BuildConsumerAsync(asset);
+        await RunConsumerAsync(asset, TargetFrameworks.NetCurrent, "MTP", "local-initialize | test | provider-cleanup", discoverReferencedProviders: false);
+    }
+
+    private static void WriteSigningKey(TestAsset asset)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Fail("This Windows-only test must not execute on another OS.");
+        }
+
+        using var key = new RSACryptoServiceProvider(2048) { PersistKeyInCsp = false };
+        File.WriteAllBytes(Path.Combine(asset.TargetAssetPath, "fixture.snk"), key.ExportCspBlob(includePrivateParameters: true));
     }
 
     private const string ActualProviderSource = """

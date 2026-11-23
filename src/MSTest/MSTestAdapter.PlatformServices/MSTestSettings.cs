@@ -37,6 +37,7 @@ internal sealed partial class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
+        DiscoverReferencedAssemblyFixtureProviders = true;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
@@ -104,6 +105,11 @@ internal sealed partial class MSTestSettings
     /// Gets a value indicating whether or not test discovery warnings should be treated as errors.
     /// </summary>
     public bool TreatDiscoveryWarningsAsErrors { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether to look for assembly fixture providers beyond the test assembly itself.
+    /// </summary>
+    internal bool DiscoverReferencedAssemblyFixtureProviders { get; private set; }
 
     /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.

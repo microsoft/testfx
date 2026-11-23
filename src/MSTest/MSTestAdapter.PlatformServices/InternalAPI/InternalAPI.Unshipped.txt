@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.DiscoverReferencedAssemblyFixtureProviders.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel.GetCurrentPackagePath() -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer.AppModel.IsPackagedProcess() -> bool
