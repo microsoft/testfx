@@ -188,7 +188,7 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
         await SendAsync(request, cancellationToken, AttachmentRequestTimeout).ConfigureAwait(false);
     }
 
-    public Task UpdateTestRunStateAsync(AzureDevOpsPublishConfiguration configuration, int runId, string state, CancellationToken cancellationToken)
+    public async Task UpdateTestRunStateAsync(AzureDevOpsPublishConfiguration configuration, int runId, string state, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = CreateRequest(
             PatchMethod,
@@ -196,6 +196,6 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
             configuration.AccessToken,
             new UpdateTestRunStateRequest(state));
 
-        return SendAsync(request, cancellationToken);
+        await SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 }
