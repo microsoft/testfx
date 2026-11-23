@@ -16,9 +16,10 @@ not declare the same TFM: `mstest-analyzers`, `analyzer-code-fixes`, and
 `mstest-source-generation` mutate `netstandard2.0` assemblies while their tests
 execute on `net10.0`.
 
-Mutation builds retain the source MSTest analyzer for test-host compilation and
-delay-sign the core with its Microsoft public key. This preserves its assembly
-identity while using Stryker's supported signing path; normal builds are unchanged.
+Mutation builds reference the source MSTest framework directly: the adapter's
+framework dependency is private on non-Windows. They retain the source MSTest
+analyzer for test-host compilation and delay-sign the core with its Microsoft
+public key to preserve its assembly identity during mutation.
 
 Choose test projects that exercise the mutated production assembly. Inspect both
 `ProjectReference` dependencies and `<Compile Include>` source links: tests

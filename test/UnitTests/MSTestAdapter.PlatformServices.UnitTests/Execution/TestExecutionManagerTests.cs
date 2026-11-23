@@ -212,12 +212,15 @@ public class TestExecutionManagerTests : TestContainer
 
         List<string> expectedTestCaseStartList = ["PassingTest", "FailingTest"];
         List<string> expectedTestCaseEndList = ["PassingTest:Passed", "FailingTest:Failed"];
-        List<string> expectedResultList = ["PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assertion failed."];
+        const string expectedFailure = """
+            FailingTest  Failed
+              Message: Assertion failed.
+            """;
 
         expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList).Should().BeTrue();
         expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList).Should().BeTrue();
-        _frameworkHandle.ResultsList[0].Should().Be(expectedResultList[0]);
-        _frameworkHandle.ResultsList[1].Should().Contain(expectedResultList[1]);
+        _frameworkHandle.ResultsList[0].Should().Be("PassingTest  Passed");
+        _frameworkHandle.ResultsList[1].Replace("\r\n", "\n").Should().Contain(expectedFailure.Replace("\r\n", "\n"));
     }
 
     public async Task RunTestsForCancellationTokenCanceledSetToTrueShouldSendZeroResults()

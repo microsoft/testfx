@@ -474,13 +474,23 @@ public sealed class AssertionFailureDiagnosticsContinuationTests : TestContainer
         using IDisposable? scope = context.StartAssertionFailureDiagnosticsScope();
         Directory.Delete(path);
 
+        // File.Delete can report a missing parent directory rather than treating the file as already gone.
+        // Probe the same filesystem independently; the OS name alone doesn't determine cleanup behavior.
+        int captureWarningIndex = 0;
+        try
+        {
+            File.Delete(Path.Combine(path, "probe.json"));
+        }
+        catch (DirectoryNotFoundException)
+        {
+            captureWarningIndex = 1;
+        }
+
         TestContextImplementation.CaptureAssertionFailureDiagnostics("missing output directory", null, null);
 
-        bool onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        int warningCount = onWindows ? 2 : 1;
-        int captureWarningIndex = onWindows ? 1 : 0;
+        int warningCount = captureWarningIndex + 1;
         _warnings.Should().HaveCount(warningCount);
-        if (onWindows)
+        if (captureWarningIndex == 1)
         {
             _warnings[0].Format.Should().Be("Failed to delete incomplete assertion failure diagnostics artifact '{0}': {1}");
             _warnings[0].Arguments[0].Should().BeOfType<string>().Which.Should().StartWith(path + Path.DirectorySeparatorChar);

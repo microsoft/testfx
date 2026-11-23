@@ -39,6 +39,10 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers\MSTest.Analyzers.csproj" />
     <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
+    <!-- GlobalConfigGeneratorContinuationTests launches the tool from its own output, not from the test host. -->
+    <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.GlobalConfigsGenerator\MSTest.GlobalConfigsGenerator.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all"
+                      SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
     <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.Extensions.Hosting\MSTest.Extensions.Hosting.csproj" />
     <ProjectReference Include="$(RepoRoot)src\MSTest\TestFramework\TestFramework.csproj" />
     <ProjectReference Include="$(RepoRoot)src\MSTest\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
