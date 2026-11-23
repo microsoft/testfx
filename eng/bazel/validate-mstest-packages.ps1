@@ -6,13 +6,11 @@
 [CmdletBinding()]
 param(
     [string] $OutputRoot,
-    [switch] $VerifySatelliteSensitivity,
-    [switch] $IncludeWindowsPlatformPackages
+    [switch] $VerifySatelliteSensitivity
 )
 
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
-if ($IncludeWindowsPlatformPackages -and -not $IsWindows) { throw 'Native UI package validation requires Windows.' }
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
 if (-not $OutputRoot) { $OutputRoot = Join-Path $root 'artifacts\bazel-mstest-validation' }
@@ -21,10 +19,6 @@ $feed = Join-Path $directory 'feed'
 New-Item -ItemType Directory -Path $feed -Force | Out-Null
 $frameworks = @('net10.0', 'net11.0')
 $coreFrameworks = @('netstandard2.0', 'net462') + $frameworks
-$platformFrameworks = @{
-    'MSTest.Uwp' = 'net10.0-windows10.0.18362'
-    'MSTest.WinUI' = 'net10.0-windows10.0.18362'
-}
 $portableIds = @(
     'MSTest.TestFramework', 'MSTest.TestAdapter', 'MSTest.Analyzers',
     'Microsoft.Testing.Platform', 'Microsoft.Testing.Platform.MSBuild',
@@ -32,7 +26,6 @@ $portableIds = @(
     'Microsoft.Testing.Extensions.TrxReport.Abstractions'
 )
 $expectedIds = $portableIds
-if ($IncludeWindowsPlatformPackages) { $expectedIds += @('MSTest.Uwp', 'MSTest.WinUI') }
 $passingTests = @('NativeAssembliesAreLoadedFromConsumer', 'KoreanSatellitesAreCopiedAndLoadable', 'PackagedTargetsProvideCoreAndParallelization')
 $packages = @{}
 $steps = [System.Collections.Generic.List[object]]::new()
@@ -101,10 +94,9 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
     $packageFrameworks = switch ($Id) {
         'MSTest.TestFramework' { $coreFrameworks }
         'MSTest.TestAdapter' { $frameworks }
-        { $platformFrameworks.ContainsKey($_) } { @($platformFrameworks[$Id]) }
         default { $frameworks }
     }
-    if ($Id -in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.Telemetry', 'MSTest.Uwp', 'MSTest.WinUI')) {
+    if ($Id -in @('MSTest.TestFramework', 'MSTest.TestAdapter', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.Testing.Extensions.Telemetry')) {
         Assert-Names $packageFrameworks @($groups | ForEach-Object targetFramework) "$Id framework groups"
     }
     $allDependencies = @($Metadata.SelectNodes('.//*[local-name()="dependency"]'))
@@ -139,24 +131,6 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                     throw 'The adapter must ship its assemblies and satellites as lib assets, not build payloads.'
                 }
             }
-            { $platformFrameworks.ContainsKey($_) } {
-                foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
-                    $null = Get-ZipHash $Archive "buildTransitive/$framework/$name.dll"
-                }
-                $null = Get-ZipHash $Archive "lib/$framework/$Id.dll"
-                foreach ($extension in @('props', 'targets')) {
-                    $null = Get-ZipHash $Archive "buildTransitive/$framework/$Id.$extension"
-                }
-                $null = Get-ZipHash $Archive "buildTransitive/$framework/Parallelize.targets"
-                if (@($Archive.Entries | Where-Object FullName -Like 'buildTransitive/common/*').Count) {
-                    throw "$Id must use package-local targets, not a shared wrapper directory."
-                }
-                if (@($Archive.Entries | Where-Object { $_.FullName -like '*/MSTest.TestFramework.dll' -or
-                    ($_.FullName -like 'lib/*/MSTest.Uwp.dll' -and $Id -ne 'MSTest.Uwp') -or
-                    ($_.FullName -like 'lib/*/MSTest.WinUI.dll' -and $Id -ne 'MSTest.WinUI') }).Count) {
-                    throw "$Id must depend on shared core and isolate its own UI assembly."
-                }
-            }
             'Microsoft.Testing.Platform.MSBuild' {
                 $null = Get-ZipHash $Archive "lib/$framework/Microsoft.Testing.Extensions.MSBuild.dll"
                 $null = Get-ZipHash $Archive '_MSBuildTasks/netstandard2.0/Microsoft.Testing.Platform.MSBuild.dll'
@@ -189,14 +163,6 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
             @{ Directory = 'src\MSTest\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
             @{ Directory = 'src\MSTest\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($frameworks | ForEach-Object { "lib/$_" }) }
         }
-        { $platformFrameworks.ContainsKey($_) } {
-            $folder = "buildTransitive/$($platformFrameworks[$Id])/_localization"
-            @{ Directory = 'src\MSTest\MSTest.TestAdapter\Resources\xlf'; Stem = 'PlatformAdapterResources'; Assembly = 'MSTest.TestAdapter'; Folders = @($folder) }
-            @{ Directory = 'src\MSTest\MSTestAdapter.PlatformServices\Resources\xlf'; Stem = 'Resource'; Assembly = 'MSTestAdapter.PlatformServices'; Folders = @($folder) }
-        }
-        'MSTest.WinUI' {
-            @{ Directory = 'src\MSTest\MSTest.WinUI\Resources\xlf'; Stem = 'FrameworkExtensionsMessages'; Assembly = 'MSTest.WinUI'; Folders = @("lib/$($platformFrameworks[$Id])") }
-        }
     }
     foreach ($catalog in $catalogs) {
         foreach ($source in Get-ChildItem -LiteralPath (Join-Path $root $catalog.Directory) -Filter "$($catalog.Stem).*.xlf" -File) {
@@ -216,17 +182,11 @@ function Assert-PackageLayout($Archive, $Metadata, [string] $Id) {
                     throw 'The framework must retain native analyzer/build assets and exclude only compile/runtime.'
                 }
             }
-            { $_ -in @('MSTest.TestAdapter', 'MSTest.Uwp', 'MSTest.WinUI') } {
+            'MSTest.TestAdapter' {
                 $ids = @('Microsoft.Testing.Extensions.TrxReport.Abstractions', 'Microsoft.Testing.Extensions.Telemetry', 'Microsoft.Testing.Platform.MSBuild', 'Microsoft.TestPlatform.ObjectModel')
-                if ($IsWindows -or $Id -ne 'MSTest.TestAdapter') { $ids += 'MSTest.TestFramework' }
+                if ($IsWindows) { $ids += 'MSTest.TestFramework' }
                 Assert-Names $ids @($dependencies | ForEach-Object id) "$Id dependencies"
-                if ($platformFrameworks.ContainsKey($Id)) {
-                    $core = @($dependencies | Where-Object id -CEQ 'MSTest.TestFramework')
-                    if ($core.Count -ne 1 -or $core[0].version -cne "[$mstestVersion]") {
-                        throw "$Id must pin the matching core package version exactly."
-                    }
-                }
-                foreach ($dependency in $dependencies | Where-Object { $_.id -ne 'Microsoft.TestPlatform.ObjectModel' -and $_.id -notlike 'System.*' }) {
+                foreach ($dependency in $dependencies | Where-Object id -NE 'Microsoft.TestPlatform.ObjectModel') {
                     if ($dependency.HasAttribute('exclude')) { throw "The adapter must retain build/analyzer assets from $($dependency.id)." }
                 }
             }
@@ -425,11 +385,10 @@ try {
     [xml]$versions = Get-Content -LiteralPath (Join-Path $root 'eng\Versions.props') -Raw
     $mstestVersion = $versions.SelectSingleNode('//*[local-name()="VersionPrefix"]').InnerText + '-preview.bazel'
     $mtpVersion = $versions.SelectSingleNode('//*[local-name()="TestingPlatformVersionPrefix"]').InnerText + '-preview.bazel'
-    $packageClosure = if ($IncludeWindowsPlatformPackages) { '//:mstest_platform_package_closure' } else { '//:mstest_package_closure' }
-    $null = Invoke-Step 'native-pack' $bazel @('build', $packageClosure, '--jobs=2', '--noshow_progress', '--show_result=0')
+    $null = Invoke-Step 'native-pack' $bazel @('build', '//:mstest_package_closure', '--jobs=2', '--noshow_progress', '--show_result=0')
     $executionRoot = & $bazel info execution_root
     if ($LASTEXITCODE -ne 0) { throw 'Could not locate the native execution root.' }
-    $paths = @(& $bazel cquery $packageClosure --output=files --noshow_progress)
+    $paths = @(& $bazel cquery //:mstest_package_closure --output=files --noshow_progress)
     if ($LASTEXITCODE -ne 0 -or $paths.Count -ne $expectedIds.Count) { throw "Expected $($expectedIds.Count) native packages in the MSTest validation closure." }
     foreach ($path in $paths) {
         $packagePath = Join-Path $executionRoot $path
@@ -463,23 +422,7 @@ try {
         finally { $archive.Dispose() }
     }
     Assert-Names $expectedIds @($packages.Keys) 'Native feed'
-    if ($IncludeWindowsPlatformPackages) {
-        # Modern UWP and WinUI must ship the same shared adapter build.
-        $sharedAdapterHashes = @{}
-        foreach ($id in $platformFrameworks.Keys) {
-            $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[$id].Path)
-            try {
-                foreach ($name in @('MSTest.TestAdapter', 'MSTestAdapter.PlatformServices')) {
-                    $hash = Get-ZipHash $archive "buildTransitive/$($platformFrameworks[$id])/$name.dll"
-                    if ($sharedAdapterHashes.ContainsKey($name) -and $sharedAdapterHashes[$name] -cne $hash) {
-                        throw "MSTest.Uwp and MSTest.WinUI must ship the same $name payload."
-                    }
-                    $sharedAdapterHashes[$name] = $hash
-                }
-            }
-            finally { $archive.Dispose() }
-        }
-    }
+
     $sdkVersion = [regex]::Match((Get-Content -LiteralPath (Join-Path $root 'MODULE.bazel') -Raw), 'dotnet\.toolchain\(dotnet_version = "([^"]+)"\)').Groups[1].Value
     if (-not $sdkVersion) { throw 'Could not identify the native toolchain SDK.' }
     $dotnetName = if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' }
@@ -548,7 +491,7 @@ try {
         Run-Consumer $restored
     }
     $succeeded = $true
-    Write-Host "Native MSTest ordinary package consumers passed. Optional UI packages cover modern native layouts, not classic UAP production or UI activation. Evidence: $directory"
+    Write-Host "Native MSTest package consumers passed. Native packages omit the MSBuild-only UWP/WinUI buildTransitive payloads. Evidence: $directory"
 }
 finally {
     foreach ($name in $environmentNames) {
@@ -557,7 +500,7 @@ finally {
         else { Remove-ProcessEnvironmentVariable $name }
     }
     Pop-Location
-    [pscustomobject]@{ Passed = $succeeded; IncludeWindowsPlatformPackages = [bool]$IncludeWindowsPlatformPackages; ClassicUapProduced = $false; UIActivationValidated = $false; BaseRevision = $revision; WorkingTree = $workingTree; Packages = @($packages.Values); Runs = $runs; Steps = $steps } |
+    [pscustomobject]@{ Passed = $succeeded; BaseRevision = $revision; WorkingTree = $workingTree; Packages = @($packages.Values); Runs = $runs; Steps = $steps } |
         ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
 }
 

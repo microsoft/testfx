@@ -207,46 +207,52 @@ internal static class WindowsApplicationModelTestTools
         Assert.IsTrue(File.Exists(reportPath), $"The resolved MSTest asset report '{reportPath}' does not exist.");
         string report = File.ReadAllText(reportPath).Replace('\\', '/');
 
+        // Modern UI payloads and the classic adapter are outside lib/<tfm>; classic framework assets are ordinary lib references.
+        const string OrdinaryAdapterPattern = "/mstest\\.testadapter/[^/]+/lib/";
         (string[] Required, string[] Rejected) assetPaths = assetKind switch
         {
             WindowsApplicationModelAssetKind.ClassicUwp =>
             (
                 [
-                    "/buildTransitive/uap10.0.16299/MSTest.TestAdapter.dll",
-                    "/buildTransitive/uap10.0.16299/MSTestAdapter.PlatformServices.dll",
-                    "/lib/netstandard2.0/MSTest.TestFramework.dll",
-                    "/lib/netstandard2.0/MSTest.TestFramework.Extensions.dll",
-                    "/lib/uap10.0.16299/MSTest.Uwp.dll",
+                    "/mstest.testadapter/[^/]+/buildTransitive/uap10\\.0/MSTest\\.TestAdapter\\.dll",
+                    "/mstest.testadapter/[^/]+/buildTransitive/uap10\\.0/MSTestAdapter\\.PlatformServices\\.dll",
+                    "/mstest.testframework/[^/]+/lib/uap10\\.0\\.16299/MSTest\\.TestFramework\\.dll",
+                    "/mstest.testframework/[^/]+/lib/uap10\\.0\\.16299/MSTest\\.TestFramework\\.Extensions\\.dll",
+                    "/mstest.testframework/[^/]+/lib/uap10\\.0\\.16299/MSTest\\.Uwp\\.dll",
                 ],
                 [
-                    "/mstest.testadapter/",
-                    "/mstest.winui/",
+                    OrdinaryAdapterPattern,
+                    "/mstest\\.test(adapter|framework)/[^/]+/buildTransitive/net10\\.0/",
+                    "/mstest\\.(uwp|winui)/",
+                    "MSTest\\.WinUI\\.dll",
                 ]),
             WindowsApplicationModelAssetKind.ModernUwp =>
             (
                 [
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.Extensions.dll",
-                    "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
-                    "/lib/net10.0-windows10.0.18362/MSTest.Uwp.dll",
+                    $"/mstest.testframework/[^/]+/lib/{Regex.Escape(targetFramework.Split('-')[0])}/MSTest\\.TestFramework\\.dll",
+                    $"/mstest.testframework/[^/]+/lib/{Regex.Escape(targetFramework.Split('-')[0])}/MSTest\\.TestFramework\\.Extensions\\.dll",
+                    "/mstest.testadapter/[^/]+/buildTransitive/net10\\.0/ui/MSTest\\.TestAdapter\\.dll",
+                    "/mstest.testadapter/[^/]+/buildTransitive/net10\\.0/ui/MSTestAdapter\\.PlatformServices\\.dll",
+                    "/mstest.testframework/[^/]+/buildTransitive/net10\\.0/uwp/MSTest\\.Uwp\\.dll",
                 ],
                 [
-                    "/mstest.testadapter/",
-                    "/mstest.winui/",
+                    OrdinaryAdapterPattern,
+                    "/mstest\\.testframework/[^/]+/buildTransitive/net10\\.0/winui/",
+                    "/mstest\\.(uwp|winui)/",
                 ]),
             WindowsApplicationModelAssetKind.WinUI =>
             (
                 [
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
-                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.Extensions.dll",
-                    "/buildTransitive/net10.0-windows10.0.18362/MSTest.TestAdapter.dll",
-                    "/buildTransitive/net10.0-windows10.0.18362/MSTestAdapter.PlatformServices.dll",
-                    "/lib/net10.0-windows10.0.18362/MSTest.WinUI.dll",
+                    $"/mstest.testframework/[^/]+/lib/{Regex.Escape(targetFramework.Split('-')[0])}/MSTest\\.TestFramework\\.dll",
+                    $"/mstest.testframework/[^/]+/lib/{Regex.Escape(targetFramework.Split('-')[0])}/MSTest\\.TestFramework\\.Extensions\\.dll",
+                    "/mstest.testadapter/[^/]+/buildTransitive/net10\\.0/ui/MSTest\\.TestAdapter\\.dll",
+                    "/mstest.testadapter/[^/]+/buildTransitive/net10\\.0/ui/MSTestAdapter\\.PlatformServices\\.dll",
+                    "/mstest.testframework/[^/]+/buildTransitive/net10\\.0/winui/MSTest\\.WinUI\\.dll",
                 ],
                 [
-                    "/mstest.testadapter/",
-                    "/mstest.uwp/",
+                    OrdinaryAdapterPattern,
+                    "/mstest\\.testframework/[^/]+/buildTransitive/net10\\.0/uwp/",
+                    "/mstest\\.(uwp|winui)/",
                 ]),
             _ => throw new ArgumentOutOfRangeException(nameof(assetKind), assetKind, "Unknown Windows application model."),
         };
@@ -276,8 +282,8 @@ internal static class WindowsApplicationModelTestTools
                 $"The resolved MSTest report '{reportPath}' does not prove the classic UWP consumer used desktop MSBuild.");
         }
 
-        string[] missing = required.Where(path => !report.Contains(path, StringComparison.OrdinalIgnoreCase)).ToArray();
-        string[] unexpectedlyResolved = rejected.Where(path => report.Contains(path, StringComparison.OrdinalIgnoreCase)).ToArray();
+        string[] missing = required.Where(pattern => !Regex.IsMatch(report, pattern, RegexOptions.IgnoreCase)).ToArray();
+        string[] unexpectedlyResolved = rejected.Where(pattern => Regex.IsMatch(report, pattern, RegexOptions.IgnoreCase)).ToArray();
         Assert.IsEmpty(
             missing,
             $"The resolved MSTest report '{reportPath}' is missing the following {assetKind} assets:{Environment.NewLine}" +

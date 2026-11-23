@@ -68,14 +68,14 @@
                     Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
 
     <!--
-      The selected adapter package carries MSTestAdapter.PlatformServices.dll which
+      MSTest.TestAdapter is required because it carries MSTestAdapter.PlatformServices.dll which
       contains the runtime hook types (ReflectionMetadataHook, SourceGeneratedReflectionDataProvider)
       that the MSTest.SourceGeneration analyzer emits calls into.
       -->
-    <PackageReference Include="$(_MSTestAdapterPackageId)" Sdk="MSTest">
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="$(_MSTestAdapterPackageId)" Version="$(MSTestVersion)"
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

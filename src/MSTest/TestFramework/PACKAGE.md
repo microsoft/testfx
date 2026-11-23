@@ -2,9 +2,19 @@
 
 MSTest is Microsoft supported Test Framework.
 
-This package contains the shared non-UI libraries for writing MSTest tests and
-helper libraries. Add `MSTest.TestAdapter` for ordinary test applications,
-`MSTest.Uwp` for UWP, or `MSTest.WinUI` for WinUI.
+This package contains the libraries for writing MSTest tests and shared test
+helper libraries. Add `MSTest.TestAdapter` to the test application that runs
+the tests.
+
+UWP and WinUI projects also get the UI-thread APIs, such as
+`[UITestMethod]`. The package selects `MSTest.WinUI.dll` when `UseWinUI` is
+`true`, and `MSTest.Uwp.dll` for UWP tooling (`UseUwpTools`, or `UseUwp`
+without an explicit `UseUwpTools=false`). Those assemblies are build-time
+references because modern UWP and WinUI share a Windows target framework.
+For classic UWP, NuGet selects the framework and `MSTest.Uwp.dll` directly
+from `lib/uap10.0.16299`. A helper library that
+references only this package gets the UI APIs without becoming a test
+application.
 
 ## Getting started
 
@@ -41,9 +51,10 @@ the core definitions without a rebuild.
 
 The old Extensions implementation and package-owner project are retired.
 The facade contains no UI APIs or implementation. UI APIs now belong to
-`MSTest.Uwp` and `MSTest.WinUI`; migrate package/assembly references and
-recompile. All applications and ordinary helper libraries use the same non-UI
-core selected through `lib/<tfm>`. Modern UI consumers therefore see the shared
+`MSTest.Uwp.dll` and `MSTest.WinUI.dll`, which this package references for UWP
+and WinUI projects; migrate assembly references and recompile. All applications
+and ordinary helper libraries use the same non-UI core selected through
+`lib/<tfm>`. Modern UI consumers therefore see the shared
 directory and deployment APIs, but UI hosts return null for all six directory
 getters, even when same-named property-bag values exist, and reject
 `DeploymentItemAttribute` before the test body executes.

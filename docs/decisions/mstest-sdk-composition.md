@@ -1,5 +1,15 @@
 # MSTest SDK composition: layer 3
 
+> **Status (2026-11-20):** `MSTestApplicationModel` and the `MSTest.Uwp` /
+> `MSTest.WinUI` packages were removed before shipping. `MSTest.Sdk` now injects
+> only `MSTest.TestFramework` and `MSTest.TestAdapter`, whose `buildTransitive`
+> targets select the UI payloads from `UseWinUI`, `UseUwpTools` or `UseUwp`.
+> See [core packages only](mstest-adapter-lib-assets.md#core-packages-only-2026-11-20).
+> UWP and WinUI helpers now get their UI APIs from `MSTest.TestFramework` and no
+> longer receive a private adapter reference; helpers still receive one only for
+> source generation. The hook contract below still applies; the package
+> selection rules are history.
+
 ## Problem and contract
 
 This layer replaces the SDK/helper/composition portion of

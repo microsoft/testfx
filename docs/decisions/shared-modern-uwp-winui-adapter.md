@@ -1,5 +1,12 @@
 # Shared modern UWP and WinUI adapter: research and decisions
 
+> **Status (2026-11-20):** the shared modern UWP/WinUI adapter build still
+> applies, but it now ships once in `MSTest.TestAdapter` under
+> `buildTransitive/net10.0/ui/` instead of in the removed `MSTest.Uwp` and
+> `MSTest.WinUI` packages. See
+> [core packages only](mstest-adapter-lib-assets.md#core-packages-only-2026-11-20).
+> Package paths and hashes below are history.
+
 ## Problem and contract
 
 Build one `MSTest.TestAdapter.dll` and one `MSTestAdapter.PlatformServices.dll`

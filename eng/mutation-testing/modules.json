@@ -31,7 +31,7 @@
       "reason": "Internal, non-packable source generator with no dedicated test project; its generated framework behavior is exercised by consumer tests, not as a standalone Stryker module."
     },
     {
-      "project": "src/MSTest/TestFramework.Compatibility/TestFramework.Compatibility.csproj",
+      "project": "src/MSTest/MSTest.TestFramework.Extensions/MSTest.TestFramework.Extensions.csproj",
       "reason": "Forwarding-only compatibility facade with no executable implementation to mutate; its type-forwarding and binary-compatibility contracts are covered by packed metadata and precompiled consumer tests."
     },
     {

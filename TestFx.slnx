@@ -72,7 +72,7 @@
     <Project Path="src/MSTest/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
     <Project Path="src/MSTest/MSTest.Uwp/MSTest.Uwp.csproj" />
     <Project Path="src/MSTest/MSTest.WinUI/MSTest.WinUI.csproj" />
-    <Project Path="src/MSTest/TestFramework.Compatibility/TestFramework.Compatibility.csproj" />
+    <Project Path="src/MSTest/MSTest.TestFramework.Extensions/MSTest.TestFramework.Extensions.csproj" />
     <Project Path="src/MSTest/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj" />
     <Project Path="src/MSTest/TestFramework/TestFramework.csproj" />
     <Project Path="src/MSTest/TestFramework.SourceGeneration/TestFramework.SourceGeneration.csproj" />

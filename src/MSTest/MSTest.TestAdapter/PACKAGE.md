@@ -24,20 +24,26 @@ Supported platforms:
 
 - .NET 4.6.2+
 - .NET 10.0+
+- UWP 10.0.16299
+- UWP and WinUI with .NET 10.0 Windows 10.0.18362+
 
-Use `MSTest.Uwp` for classic or modern UWP applications and `MSTest.WinUI` for
-packaged or unpackaged WinUI applications. Those packages own their matching
-UI attributes, adapters, platform services and satellites. This ordinary adapter
-no longer switches assemblies based on `UseWinUI` or `UseUwpTools`; do not
-combine it with either UI package.
+UWP and WinUI applications use the same `MSTest.TestAdapter` and `MSTest.TestFramework`
+packages. For modern UWP and WinUI projects (`UseUwp`/`UseUwpTools` or `UseWinUI` on a
+.NET Windows target), the package build targets replace the ordinary `lib/net10.0`
+adapter with the Windows-specific build shipped under `buildTransitive/net10.0/ui`.
+Classic UWP (`uap10.0`) projects reference the adapter shipped under
+`buildTransitive/uap10.0`. Shared test libraries only need `MSTest.TestFramework`;
+reference `MSTest.TestAdapter` from the test application.
 
 ## Package assets
 
-The adapter and platform-services assemblies, and their satellite resources, are
-ordinary NuGet `lib/<tfm>` assets. NuGet resolves them as package references and
-copies them through the standard copy-local and satellite pipelines, so
-`ExcludeAssets`, `SatelliteResourceLanguages` and publish behave as they do for
-any package. Excluding `runtime` assets therefore removes the adapter from the
+For .NET and .NET Framework, the adapter and platform-services assemblies, and their
+satellite resources, are ordinary NuGet `lib/<tfm>` assets. NuGet resolves them as
+package references and copies them through the standard copy-local and satellite
+pipelines, so `ExcludeAssets`, `SatelliteResourceLanguages` and publish behave as they
+do for any package. Native modern UWP test apps using MTP keep the neutral adapter
+messages by default. Set `SatelliteResourceLanguages` (for example, `fr`) to deploy
+the requested adapter translations. Excluding `runtime` assets removes the adapter from the
 test output. Projects with `IsTestApplication=false` reference the adapter without
 copying it or its satellites. Projects using `packages.config` receive the
 adapter references from the package build targets when the project file does not

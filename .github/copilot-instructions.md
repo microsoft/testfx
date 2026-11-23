@@ -6,10 +6,10 @@ This is a .NET based repository that contains the MSTest testing framework and M
 
 The codebase ships several distinct (but related) products. Knowing which product a change belongs to is essential because they have different conventions, target frameworks, and public API surfaces:
 
-The only source subfolders are `MTP`, `MSTest`, and `Polyfills`. MSTest projects sit directly under `src/MSTest`, without adapter, analyzer, framework, or package grouping folders. `Shared`, `PlatformPackage`, and `APIHistory` hold shared sources, packaging support, and archived API records; `Polyfills` contains compatibility sources shared across both products.
+The only source subfolders are `MTP`, `MSTest`, and `Polyfills`. MSTest projects sit directly under `src/MSTest`, without adapter, analyzer, framework, or package grouping folders. `Shared` and `APIHistory` hold shared sources and archived API records; `Polyfills` contains compatibility sources shared across both products.
 
 - `src/MTP/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/MTP/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
-- `src/MSTest/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …). The sibling `TestFramework.Compatibility` project provides the `TestFramework.Extensions` compatibility facade.
+- `src/MSTest/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …). The sibling `MSTest.TestFramework.Extensions` project builds the compatibility DLL that forwards older non-UI type references to the core framework.
 - `src/MSTest/MSTest.TestAdapter` and `src/MSTest/MSTestAdapter.PlatformServices` — bridge MSTest to test hosts (the VSTest adapter and platform-services abstraction shared by both hosts).
 - `src/MSTest/MSTest.Analyzers*` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
 - `src/MSTest/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.

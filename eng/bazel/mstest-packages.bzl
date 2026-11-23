@@ -1,4 +1,4 @@
-"""MSTest package layouts, with explicitly owned core and platform payloads."""
+"""The portable MSTest package layouts, with explicitly owned bundled payloads."""
 
 load(
     "@rules_dotnet//dotnet/private:providers.bzl",
@@ -56,7 +56,6 @@ def _package_impl(ctx):
     groups = []
     version_files = [ctx.file.version_file]
     platform_version_file = None
-    core_version_file = None
     dependencies = []
     for target in ctx.attr.deps:
         package = target[NuGetPackInfo]
@@ -67,10 +66,6 @@ def _package_impl(ctx):
             if not version_file:
                 fail("The native platform dependency must carry its generated version file.")
             platform_version_file = version_file
-        if ctx.attr.exact_core_dependency and package.package_id == "MSTest.TestFramework":
-            if not version_file:
-                fail("The native core dependency must carry its generated version file.")
-            core_version_file = version_file
         dependencies.append(struct(
             id = package.package_id,
             version = package.version or "",
@@ -80,10 +75,6 @@ def _package_impl(ctx):
 
     if ctx.attr.bound_platform and not platform_version_file:
         fail("A bounded package must declare the native platform dependency.")
-    if ctx.attr.exact_core_dependency and not core_version_file:
-        fail("An exact core package must declare the native framework dependency.")
-    if core_version_file and platform_version_file:
-        fail("Core pinning and platform bounds must use separate package contracts.")
     if len(ctx.attr.directories) != len(ctx.attr.resource_directories):
         fail("Each assembly directory needs an explicit satellite-resource policy.")
     for framework in ctx.attr.target_frameworks:
@@ -131,8 +122,7 @@ def _package_impl(ctx):
     nupkg = ctx.actions.declare_file(ctx.label.name + "/" + ctx.label.name + ".nupkg")
     nuspec = ctx.actions.declare_file(ctx.label.name + "/" + ctx.label.name + ".nuspec")
     request = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.json")
-    range_version_file = core_version_file or platform_version_file
-    template = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.template.json") if range_version_file else request
+    template = ctx.actions.declare_file(ctx.label.name + "/nuget_pack_request.template.json") if platform_version_file else request
     ctx.actions.write(template, json.encode(struct(
         output = nupkg.path,
         nuspecOutput = nuspec.path,
@@ -148,18 +138,13 @@ def _package_impl(ctx):
         dependencyGroups = groups,
         files = [struct(source = by_path[path].path, target = path) for path in sorted(by_path.keys())],
     )))
-    if range_version_file:
-        arguments = [template.path, range_version_file.path, request.path]
-        inputs = [template, range_version_file]
-        if core_version_file:
-            arguments.append("--exact-framework")
-            inputs.append(ctx.file.version_file)
+    if platform_version_file:
         ctx.actions.run(
             executable = ctx.executable._range_tool,
-            arguments = arguments,
-            inputs = depset(inputs),
+            arguments = [template.path, platform_version_file.path, request.path],
+            inputs = [template, platform_version_file],
             outputs = [request],
-            mnemonic = "TestFxFrameworkDependencyRange" if core_version_file else "TestFxPlatformDependencyRange",
+            mnemonic = "TestFxPlatformDependencyRange",
         )
     ctx.actions.run(
         executable = ctx.attr._packer[DefaultInfo].files_to_run,
@@ -197,7 +182,6 @@ _package = rule(
         "dependency_excludes": attr.string_list_dict(),
         "nuget_deps": attr.label_list(providers = [DotnetAssemblyRuntimeInfo], cfg = _frameworks),
         "bound_platform": attr.bool(),
-        "exact_core_dependency": attr.bool(),
         "package_id": attr.string(mandatory = True),
         "description": attr.string(mandatory = True),
         "readme": attr.label(allow_single_file = True, mandatory = True),
@@ -214,7 +198,7 @@ def _asset(files, name, source, destination):
     files[":" + name] = destination
 
 def native_mstest_packages():
-    """Declare ordinary packages and opt-in modern Windows platform packages."""
+    """Declare portable packages; the UWP/WinUI buildTransitive payloads are MSBuild-only."""
     package_version(name = "mstest_package_version", property_name = "VersionPrefix")
     framework_project = "src/MSTest/TestFramework"
     adapter_project = "src/MSTest/MSTest.TestAdapter"
@@ -297,42 +281,4 @@ def native_mstest_packages():
     native.filegroup(
         name = "mstest_package_closure",
         srcs = [":mstest_packages", ":packages", ":analyzers_package"],
-    )
-
-    platform_packages = []
-
-    # Modern UWP and WinUI ship the same adapter build at Windows 18362, matching MSBuild.
-    for flavor, package_id, framework in [
-        ("uwp", "MSTest.Uwp", "net10.0-windows10.0.18362.0"),
-        ("winui", "MSTest.WinUI", "net10.0-windows10.0.18362.0"),
-    ]:
-        name = "mstest_" + flavor + "_package"
-        project = "src/MSTest/" + package_id
-        tfm = mstest_package_tfm(framework)
-        files = {
-            adapter_project + "/buildTransitive/common/MSTest.TestAdapter.targets": "buildTransitive/" + tfm + "/" + package_id + ".targets",
-            adapter_project + "/buildTransitive/Parallelize.targets": "buildTransitive/" + tfm + "/Parallelize.targets",
-            "src/MSTest/PlatformPackage/MSTest.Platform.props": "buildTransitive/" + tfm + "/" + package_id + ".props",
-        }
-        _package(
-            name = name,
-            package_id = package_id,
-            version_file = ":mstest_package_version",
-            description = "Provides UI-thread test attributes and matching MSTest adapters for " + package_id + ".",
-            readme = project + "/PACKAGE.md",
-            libraries = [":mstest_" + flavor, ":adapter_winui", ":platform_services_winui"],
-            target_frameworks = [framework],
-            directories = ["lib/{tfm}", "buildTransitive/{tfm}", "buildTransitive/{tfm}"],
-            resource_directories = ["lib/{tfm}", "buildTransitive/{tfm}/_localization", "buildTransitive/{tfm}/_localization"],
-            files = files,
-            deps = [":framework_package", ":trx_abstractions_package", ":telemetry_package", ":platform_msbuild_package"],
-            exact_core_dependency = True,
-            nuget_deps = ["@paket.source//microsoft.testplatform.objectmodel"],
-            target_compatible_with = ["@platforms//os:windows"],
-        )
-        platform_packages.append(":" + name)
-    native.filegroup(
-        name = "mstest_platform_package_closure",
-        srcs = [":mstest_package_closure"] + platform_packages,
-        target_compatible_with = ["@platforms//os:windows"],
     )

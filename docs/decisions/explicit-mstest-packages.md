@@ -1,5 +1,12 @@
 # Explicit MSTest packages: layer 2
 
+> **Status (2026-11-20):** the `MSTest.Uwp` and `MSTest.WinUI` package IDs
+> described here were removed before shipping. Their UI framework assemblies now
+> ship in `MSTest.TestFramework` and their adapter builds in
+> `MSTest.TestAdapter`, as `buildTransitive` payloads. See
+> [core packages only](mstest-adapter-lib-assets.md#core-packages-only-2026-11-20).
+> This record is kept as history.
+
 ## Problem and contract
 
 This is the package-extraction layer replacing
