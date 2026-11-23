@@ -1352,6 +1352,11 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
         <target state="translated">Testhostcontrollererweiterungen, die einen Prozessneustart erfordern, werden auf Browser- und WebAssembly-Plattformen nicht unterstützt.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">Middleware „{0}“ hat die Testhostausführungsorchestrator-Pipeline kurzgeschlossen (sie hat „next“ nicht aufgerufen), aber den Exitcode „Erfolgreich“ zurückgegeben. Das Kurzschließen der Middleware muss einen expliziten nicht erfolgreichen Exitcode zurückgeben, sodass die übersprungene Ausführung nicht so gemeldet werden kann, als ob Tests tatsächlich ausgeführt und bestanden worden wären.</target>

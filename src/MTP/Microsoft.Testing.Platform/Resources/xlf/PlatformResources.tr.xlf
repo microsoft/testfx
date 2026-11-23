@@ -1352,6 +1352,11 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
         <target state="translated">İşlem yeniden başlatmayı gerektiren test ana bilgisayar denetleyici uzantıları, tarayıcı/WebAssembly platformlarında desteklenmez.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">'{0}' ara yazılımı, test konağı yürütme düzenleyicisi işlem hattında kısa devreye neden oldu ('next' çağırmadı), ancak başarı çıkış kodunu döndürdü. Atlanan yürütmenin, testler gerçekten çalıştırılıp başarılı olmuş gibi raporlanmaması için kısa devre yapan ara yazılım, açıkça başarı olmayan bir çıkış kodu döndürmelidir.</target>

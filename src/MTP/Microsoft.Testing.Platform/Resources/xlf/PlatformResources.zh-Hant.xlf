@@ -1352,6 +1352,11 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <target state="translated">需要重新啟動程序的測試主機控制器擴充功能不支援瀏覽器/WebAssembly 平台。</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">中介軟體 '{0}' 讓測試主機執行協調器管線提前結束 (未叫用 'next')，卻傳回成功結束代碼。讓管線提前結束的中介軟體必須傳回明確的非成功結束代碼，以免系統將略過的執行誤報為測試確實執行且通過。</target>

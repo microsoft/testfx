@@ -1352,6 +1352,11 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
         <target state="translated">Não há suporte para extensões de controlador de host de teste que exigem reinício do processo em plataformas de navegador/WebAssembly.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">O middleware ''{0}'' interrompeu antecipadamente o pipeline do orquestrador de execução do host de teste (não invocou ''next''), mas retornou o código de saída de sucesso. O middleware que interrompe a execução antecipadamente deve retornar um código de saída explicitamente diferente de sucesso, para que uma execução ignorada não seja reportada como se os testes tivessem sido realmente executados e aprovados.</target>

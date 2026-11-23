@@ -1110,6 +1110,10 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</value>
     <comment>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</comment>
   </data>
+  <data name="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage" xml:space="preserve">
+    <value>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</value>
+    <comment>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</comment>
+  </data>
   <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
     <value>Synchronous flush is not supported in browser environments.</value>
   </data>

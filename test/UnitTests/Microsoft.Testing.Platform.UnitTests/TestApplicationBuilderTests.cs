@@ -1109,6 +1109,7 @@ public sealed class TestApplicationBuilderTests
     [DataRow("lifetime")]
     [DataRow("launcher")]
     [DataRow("consumer")]
+    [DataRow("observer-consumer")]
     public void ControllerRegistration_NullCompositeFactoryIsRejectedBeforeBuild(string kind)
     {
         TestHostControllersManager manager = new();
@@ -1117,7 +1118,8 @@ public sealed class TestApplicationBuilderTests
             "environment" => () => manager.AddEnvironmentVariableProvider((CompositeExtensionFactory<TestHostEnvironmentVariableProvider>)null!),
             "lifetime" => () => manager.AddProcessLifetimeHandler((CompositeExtensionFactory<TestHostProcessLifetimeHandler>)null!),
             "launcher" => () => manager.AddTestHostLauncher((CompositeExtensionFactory<TestHostLauncher>)null!),
-            _ => () => manager.AddDataConsumer((CompositeExtensionFactory<Consumer>)null!),
+            "consumer" => () => manager.AddDataConsumer((CompositeExtensionFactory<Consumer>)null!),
+            _ => () => ((ITestHostControllersManager)manager).AddDataConsumerWhenControllerStarts((CompositeExtensionFactory<Consumer>)null!),
         };
         ArgumentNullException error = Assert.ThrowsExactly<ArgumentNullException>(register);
         Assert.AreEqual("compositeServiceFactory", error.ParamName);
@@ -1128,6 +1130,7 @@ public sealed class TestApplicationBuilderTests
     [DataRow("lifetime")]
     [DataRow("launcher")]
     [DataRow("consumer")]
+    [DataRow("observer-consumer")]
     public void ControllerRegistration_SameCompositeFactoryCannotBeRegisteredTwiceInOneCategory(string kind)
     {
         TestHostControllersManager manager = new();
@@ -1147,10 +1150,15 @@ public sealed class TestApplicationBuilderTests
             CompositeExtensionFactory<TestHostLauncher> factory = new(() => new TestHostLauncher("launcher"));
             register = () => manager.AddTestHostLauncher(factory);
         }
-        else
+        else if (kind == "consumer")
         {
             CompositeExtensionFactory<Consumer> factory = new(() => new Consumer("consumer"));
             register = () => manager.AddDataConsumer(factory);
+        }
+        else
+        {
+            CompositeExtensionFactory<Consumer> factory = new(() => new Consumer("observer.consumer"));
+            register = () => ((ITestHostControllersManager)manager).AddDataConsumerWhenControllerStarts(factory);
         }
 
         register();
@@ -1275,6 +1283,80 @@ public sealed class TestApplicationBuilderTests
         {
             Assert.AreSame(observer.Object, configuration.RunCompletionHandlers[0]);
         }
+    }
+
+    [TestMethod]
+    public async Task ControllerDataConsumerObserver_DoesNotCreateControllerByItself()
+    {
+        TestHostControllersManager manager = new();
+        ITestHostControllersManager publicManager = manager;
+        int constructions = 0;
+        publicManager.AddDataConsumerWhenControllerStarts(_ =>
+        {
+            constructions++;
+            return new Consumer("controller.observer");
+        });
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsFalse(configuration.RequireProcessRestart);
+        Assert.AreEqual(0, constructions);
+        Assert.IsEmpty(configuration.DataConsumer);
+        Assert.IsEmpty(_serviceProvider.GetServicesInternal(typeof(IDataConsumer)));
+    }
+
+    [TestMethod]
+    public async Task ControllerDataConsumerObserver_IsAddedWhenAnotherExtensionRequiresController()
+    {
+        TestHostControllersManager manager = new();
+        ITestHostControllersManager publicManager = manager;
+        Consumer consumer = new("controller.observer");
+        manager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("controller"));
+        publicManager.AddDataConsumerWhenControllerStarts(_ => consumer);
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsTrue(configuration.RequireProcessRestart);
+        Assert.AreSame(consumer, Assert.ContainsSingle(configuration.DataConsumer));
+        Assert.Contains(service => ReferenceEquals(service, consumer), _serviceProvider.Services);
+    }
+
+    [TestMethod]
+    public async Task ControllerDataConsumerObserver_CompositeFactoryIsAddedOnlyWhenControllerIsRequired()
+    {
+        TestHostControllersManager manager = new();
+        ITestHostControllersManager publicManager = manager;
+        Consumer? consumer = null;
+        int constructions = 0;
+        CompositeExtensionFactory<Consumer> factory = new(_ =>
+        {
+            constructions++;
+            return consumer = new Consumer("controller.observer");
+        });
+        publicManager.AddDataConsumerWhenControllerStarts(factory);
+        TestHostControllerConfiguration withoutController = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsFalse(withoutController.RequireProcessRestart);
+        Assert.AreEqual(0, constructions);
+
+        manager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("controller"));
+        TestHostControllerConfiguration withController = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsTrue(withController.RequireProcessRestart);
+        Assert.AreEqual(1, constructions);
+        Assert.AreSame(consumer, Assert.ContainsSingle(withController.DataConsumer));
+        Assert.Contains(service => ReferenceEquals(service, consumer), _serviceProvider.Services);
+    }
+
+    [TestMethod]
+    public void ControllerDataConsumerObserver_UnsupportedManagerThrowsActionableError()
+    {
+        ITestHostControllersManager manager = Mock.Of<ITestHostControllersManager>();
+
+        NotSupportedException error = Assert.ThrowsExactly<NotSupportedException>(
+            () => manager.AddDataConsumerWhenControllerStarts(_ => new Consumer("controller.observer")));
+
+        Assert.Contains("ITestHostControllerDataConsumerManager", error.Message);
     }
 
     [TestMethod]

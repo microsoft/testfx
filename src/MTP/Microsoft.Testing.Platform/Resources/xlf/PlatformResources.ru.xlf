@@ -1352,6 +1352,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">Расширения контроллера узла тестирования, требующие перезапуска процесса, не поддерживаются на платформах браузера/WebAssembly.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostControllersManagerDoesNotSupportDataConsumersErrorMessage">
+        <source>Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</source>
+        <target state="new">Test host controllers manager of type '{0}' does not support controller data consumer registration. Implement 'ITestHostControllerDataConsumerManager' on the manager type to support it.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostControllerDataConsumerManager"}</note>
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
         <target state="translated">ПО промежуточного слоя "{0}" прервало выполнение конвейера оркестратора на тестовом узле (не вызвало функцию "next"), но вернуло код успешного завершения. ПО промежуточного слоя, прерывающее выполнение, должно возвращать явный код завершения, означающий неудачу, чтобы пропущенное выполнение не отображалось как будто тесты действительно прошли и завершились успешно.</target>

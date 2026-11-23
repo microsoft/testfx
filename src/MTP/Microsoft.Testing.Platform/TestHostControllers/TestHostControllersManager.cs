@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal sealed class TestHostControllersManager : ITestHostControllersManager
+internal sealed class TestHostControllersManager : ITestHostControllersManager, ITestHostControllerDataConsumerManager
 {
     // Registration ordering
     private readonly List<object> _factoryOrdering = [];
@@ -18,6 +18,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _controllerObserverEnvironmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostLauncher>> _testHostLauncherFactories = [];
+    private readonly List<Func<IServiceProvider, IDataConsumer>> _controllerObserverDataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostControllerRunCompletionHandler>> _runCompletionHandlerFactories = [];
     private readonly List<ICompositeExtensionFactory> _environmentVariableProviderCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _lifetimeHandlerCompositeFactories = [];
@@ -170,6 +171,10 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             return new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false);
         }
 
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(
+            _controllerObserverDataConsumerFactories, serviceProvider, dataConsumers, _factoryOrdering,
+            registerInServiceProvider: true).ConfigureAwait(false);
+
         await ExtensionBuilderHelper.BuildAndRegisterCompositeExtensionsInPlaceAsync<IDataConsumer>(
             _controllerObserverDataConsumersCompositeServiceFactories, serviceProvider, dataConsumers,
             _alreadyBuiltServices, _factoryOrdering).ConfigureAwait(false);
@@ -219,6 +224,29 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         _controllerObserverDataConsumersCompositeServiceFactories.Add(compositeServiceFactory);
         _factoryOrdering.Add(compositeServiceFactory);
+    }
+
+    void ITestHostControllerDataConsumerManager.AddDataConsumerWhenControllerStarts(Func<IServiceProvider, IDataConsumer> factory)
+    {
+        _ = factory ?? throw new ArgumentNullException(nameof(factory));
+        if (OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
+        _controllerObserverDataConsumerFactories.Add(factory);
+        _factoryOrdering.Add(factory);
+    }
+
+    void ITestHostControllerDataConsumerManager.AddDataConsumerWhenControllerStarts<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+    {
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
+        if (OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
+        AddDataConsumerWhenControllerStarts(compositeServiceFactory);
     }
 
     internal async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)
