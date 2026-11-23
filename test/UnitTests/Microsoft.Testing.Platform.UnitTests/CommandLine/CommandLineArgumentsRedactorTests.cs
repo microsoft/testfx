@@ -37,6 +37,49 @@ public sealed class CommandLineArgumentsRedactorTests
     }
 
     [TestMethod]
+    public void Redact_TokenValueStartingWithDashIsRedactedAndLaterValuesStayPlain()
+        => Assert.AreEqual(
+            "--dotnet-test-http-token ***REDACTED*** plain --server dotnettestcli",
+            CommandLineArgumentsRedactor.Redact(
+                ["--dotnet-test-http-token", "-secret", "plain", "--server", "dotnettestcli"]));
+
+    [TestMethod]
+    public void Redact_EndpointValueStartingWithDashIsRedactedAndLaterValuesStayPlain()
+        => Assert.AreEqual(
+            "--dotnet-test-http-endpoint ***REDACTED*** plain",
+            CommandLineArgumentsRedactor.Redact(
+                ["--dotnet-test-http-endpoint", "-https://gateway.example/private/run-id", "plain"]));
+
+    [TestMethod]
+    [DataRow("-")]
+    [DataRow("--")]
+    [DataRow("---")]
+    [DataRow(" --")]
+    public void Redact_ArgumentMadeOnlyOfDashesIsReturnedUnchanged(string argument)
+        => Assert.AreEqual(argument, CommandLineArgumentsRedactor.Redact([argument]));
+
+    [TestMethod]
+    [DataRow(" --other")]
+    [DataRow("--")]
+    [DataRow("-")]
+    [DataRow("---other")]
+    public void Redact_ArgumentThatIsNotAnOptionNameAfterInlineTokenIsTreatedAsPositional(string next)
+        => Assert.AreEqual(
+            "--dotnet-test-http-token=***REDACTED*** ***REDACTED***",
+            CommandLineArgumentsRedactor.Redact(["--dotnet-test-http-token=secret", next]));
+
+    [TestMethod]
+    public void Redact_EndpointKeepsHttpSchemeHostAndPortButDropsPath()
+    {
+        Assert.AreEqual(
+            "--dotnet-test-http-endpoint http://localhost:8080",
+            CommandLineArgumentsRedactor.Redact(["--dotnet-test-http-endpoint", "http://localhost:8080/path/x"]));
+        Assert.AreEqual(
+            "--dotnet-test-http-endpoint ***REDACTED***",
+            CommandLineArgumentsRedactor.Redact(["--dotnet-test-http-endpoint", "ftp://localhost:8080/path/x"]));
+    }
+
+    [TestMethod]
     public void Redact_RepeatedTokenOptionDoesNotExposeValue()
         => Assert.AreEqual(
             "--dotnet-test-http-token --dotnet-test-http-token ***REDACTED***",

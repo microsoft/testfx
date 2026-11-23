@@ -180,4 +180,127 @@ public sealed class CommandLineOptionsProviderBaseTests
         public static Task<ValidationResult> ValidateAsync(string value)
             => ValidateAllowedValuesAsync(value, ["first", "second"], "Rejected '{0}'; choose {1}.");
     }
+
+    [TestMethod]
+    [DataRow(true, true, false)]
+    [DataRow(true, false, true)]
+    [DataRow(false, true, false)]
+    [DataRow(false, false, false)]
+    public void RequiresMainOption_SingleMain_IsInvalidOnlyWhenSubOptionIsSetWithoutMain(bool subSet, bool mainSet, bool expectedInvalid)
+    {
+        var setOptions = new List<string>();
+        if (subSet)
+        {
+            setOptions.Add("sub");
+        }
+
+        if (mainSet)
+        {
+            setOptions.Add("main");
+        }
+
+        Task<ValidationResult>? result = RequiresMainOptionProvider.Single(
+            new TestCommandLineOptions(ToDictionary([.. setOptions])),
+            ["sub"],
+            "main");
+
+        if (expectedInvalid)
+        {
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Result.IsValid);
+            Assert.AreEqual("main option required", result.Result.ErrorMessage);
+        }
+        else
+        {
+            Assert.IsNull(result);
+        }
+    }
+
+    [TestMethod]
+    public void RequiresMainOption_SingleMain_OnlyOneOfSeveralSubOptionsSet_IsInvalid()
+    {
+        Task<ValidationResult>? result = RequiresMainOptionProvider.Single(
+            new TestCommandLineOptions(ToDictionary(["sub2"])),
+            ["sub1", "sub2", "sub3"],
+            "main");
+
+        Assert.IsNotNull(result);
+        Assert.IsFalse(result.Result.IsValid);
+        Assert.AreEqual("main option required", result.Result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void RequiresMainOption_SingleMain_ErrorFactoryIsNotInvokedWhenValid()
+    {
+        bool invoked = false;
+
+        Task<ValidationResult>? result = RequiresMainOptionProvider.Single(
+            new TestCommandLineOptions(ToDictionary(["sub", "main"])),
+            ["sub"],
+            "main",
+            () =>
+            {
+                invoked = true;
+                return "unexpected";
+            });
+
+        Assert.IsNull(result);
+        Assert.IsFalse(invoked);
+    }
+
+    [TestMethod]
+    public void RequiresMainOption_MultipleMains_SubOptionSetWithoutAnyMain_IsInvalid()
+    {
+        Task<ValidationResult>? result = RequiresMainOptionProvider.Multiple(
+            new TestCommandLineOptions(ToDictionary(["sub"])),
+            ["sub"],
+            ["main1", "main2"]);
+
+        Assert.IsNotNull(result);
+        Assert.IsFalse(result.Result.IsValid);
+        Assert.AreEqual("main option required", result.Result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void RequiresMainOption_MultipleMains_OnlyOneOfSeveralSubOptionsSet_IsInvalid()
+    {
+        Task<ValidationResult>? result = RequiresMainOptionProvider.Multiple(
+            new TestCommandLineOptions(ToDictionary(["sub2"])),
+            ["sub1", "sub2"],
+            ["main1", "main2"]);
+
+        Assert.IsNotNull(result);
+        Assert.IsFalse(result.Result.IsValid);
+    }
+
+    [TestMethod]
+    public void RequiresMainOption_MultipleMains_OnlyOneOfSeveralMainsSet_IsValid()
+    {
+        Task<ValidationResult>? result = RequiresMainOptionProvider.Multiple(
+            new TestCommandLineOptions(ToDictionary(["sub", "main2"])),
+            ["sub"],
+            ["main1", "main2"]);
+
+        Assert.IsNull(result);
+    }
+
+    [TestMethod]
+    public void RequiresMainOption_MultipleMains_NoSubOption_IsValidWithOrWithoutMain()
+    {
+        Assert.IsNull(RequiresMainOptionProvider.Multiple(new TestCommandLineOptions(ToDictionary(["main1"])), ["sub"], ["main1", "main2"]));
+        Assert.IsNull(RequiresMainOptionProvider.Multiple(new TestCommandLineOptions(ToDictionary([])), ["sub"], ["main1", "main2"]));
+    }
+
+    private static Dictionary<string, string[]> ToDictionary(string[] setOptions)
+        => setOptions.ToDictionary(name => name, _ => Array.Empty<string>());
+
+    private sealed class RequiresMainOptionProvider()
+        : CommandLineOptionsProviderBase("requires-main", "1.0", "Requires main", "Exposes RequiresMainOption", [])
+    {
+        public static Task<ValidationResult>? Single(ICommandLineOptions options, string[] subOptionNames, string mainOptionName, Func<string>? errorFactory = null)
+            => RequiresMainOption(options, subOptionNames, mainOptionName, errorFactory ?? (() => "main option required"));
+
+        public static Task<ValidationResult>? Multiple(ICommandLineOptions options, string[] subOptionNames, string[] mainOptionNames)
+            => RequiresMainOption(options, subOptionNames, mainOptionNames, () => "main option required");
+    }
 }

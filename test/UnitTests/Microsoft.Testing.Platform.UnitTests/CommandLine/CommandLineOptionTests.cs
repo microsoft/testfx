@@ -140,4 +140,28 @@ public sealed class CommandLineOptionTests
 
         Assert.AreEqual(opt1.GetHashCode(), opt2.GetHashCode());
     }
+
+    [TestMethod]
+    public void GetHashCode_DifferentName_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineOption("opt1", "Desc.", ArgumentArity.ExactlyOne, false).GetHashCode(),
+            new CommandLineOption("opt2", "Desc.", ArgumentArity.ExactlyOne, false).GetHashCode());
+
+    [TestMethod]
+    public void GetHashCode_DifferentDescription_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineOption("opt", "Desc1.", ArgumentArity.ExactlyOne, false).GetHashCode(),
+            new CommandLineOption("opt", "Desc2.", ArgumentArity.ExactlyOne, false).GetHashCode());
+
+    [TestMethod]
+    public void GetHashCode_DifferentArity_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineOption("opt", "Desc.", ArgumentArity.ExactlyOne, false).GetHashCode(),
+            new CommandLineOption("opt", "Desc.", ArgumentArity.ZeroOrMore, false).GetHashCode());
+
+    [TestMethod]
+    public void GetHashCode_DifferentIsHidden_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineOption("opt", "Desc.", ArgumentArity.ExactlyOne, isHidden: false).GetHashCode(),
+            new CommandLineOption("opt", "Desc.", ArgumentArity.ExactlyOne, isHidden: true).GetHashCode());
 }

@@ -4,11 +4,13 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests";
     private const string FilterProviderAEnvironmentVariable = "MTP_TEST_FILTER_PROVIDER_A";
     private const string FilterProviderBEnvironmentVariable = "MTP_TEST_FILTER_PROVIDER_B";
+    private const string UseMixedTreeNodePathsEnvironmentVariable = "MTP_TEST_USE_MIXED_TREE_NODE_PATHS";
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -123,6 +125,44 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenMixedPrecedenceFilterIsSpecified_OnlyMatchingTestIsRun(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        const string filter = "A|B&C/D";
+        Dictionary<string, string?> discoveryEnvironmentVariables = new()
+        {
+            [UseMixedTreeNodePathsEnvironmentVariable] = "1",
+        };
+
+        TestHostResult discoveryResult = await testHost.ExecuteAsync(
+            $"--list-tests --treenode-filter \"{filter}\"",
+            environmentVariables: discoveryEnvironmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        discoveryResult.AssertExitCodeIs(ExitCode.Success);
+        discoveryResult.AssertOutputMatchesRegex("""
+              Test1
+            Test discovery summary: found 1 test\(s\)
+            """);
+        Assert.DoesNotContain("Test2", discoveryResult.StandardOutput);
+
+        Dictionary<string, string?> runEnvironmentVariables = new()
+        {
+            [UseMixedTreeNodePathsEnvironmentVariable] = "1",
+        };
+        TestHostResult runResult = await testHost.ExecuteAsync(
+            $"--treenode-filter \"{filter}\"",
+            environmentVariables: runEnvironmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        runResult.AssertExitCodeIs(ExitCode.Success);
+        runResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        Assert.Contains("Executed Test1", runResult.StandardOutput);
+        Assert.DoesNotContain("Executed Test2", runResult.StandardOutput);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -401,6 +441,7 @@ public sealed class EnvironmentFilterProvider(string uid, string environmentVari
 
 public class DummyTestFramework : ITestFramework, IDataProducer
 {
+    private const string UseMixedTreeNodePathsEnvironmentVariable = "MTP_TEST_USE_MIXED_TREE_NODE_PATHS";
     private readonly MyExtension _myExtension;
 
     public DummyTestFramework(MyExtension myExtension)
@@ -432,8 +473,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         // Simulate that here.
         TestExecutionRequest request = (TestExecutionRequest)context.Request;
         bool isDiscovery = request is DiscoverTestExecutionRequest;
-        bool excludeUid0 = !MatchesFilter(request.Filter, "0", "/<whatever>");
-        bool excludeUid1 = !MatchesFilter(request.Filter, "1", "/other");
+        bool useMixedTreeNodePaths = Environment.GetEnvironmentVariable(UseMixedTreeNodePathsEnvironmentVariable) is not null;
+        bool excludeUid0 = !MatchesFilter(request.Filter, "0", useMixedTreeNodePaths ? "/A/D" : "/<whatever>");
+        bool excludeUid1 = !MatchesFilter(request.Filter, "1", useMixedTreeNodePaths ? "/B/C/D" : "/other");
 
         if (!excludeUid0)
         {
@@ -445,6 +487,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            if (useMixedTreeNodePaths)
+            {
+                Console.WriteLine("Executed Test1");
+            }
         }
 
         if (!excludeUid1)
@@ -456,6 +502,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             {
                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                     new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+                if (useMixedTreeNodePaths)
+                {
+                    Console.WriteLine("Executed Test2");
+                }
             }
         }
 
