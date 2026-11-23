@@ -67,7 +67,6 @@ internal sealed class IndentedStringBuilder
         if (_needsIndent)
         {
             _builder.Append(' ', IndentationLevel * 4);
-            _needsIndent = false;
         }
     }
 

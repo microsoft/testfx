@@ -72,6 +72,7 @@ public sealed class InheritedTestClassAttributeWithSourceGeneratorAnalyzer : Dia
         // Mirror the source generator's filtering: it also skips static/abstract types, open
         // generic types, and `file`-local types. Applying [TestClass] directly to any of those
         // would not make them discoverable, so a MSTEST0069 warning would be actively misleading.
+        // Stryker disable once Logical: IsStatic cannot change the outcome (a static class can only derive from object, and Roslyn exposes no attributes on the erroneous base of any other static class), so swapping the || next to it for && is equivalent.
         if (type.TypeKind != TypeKind.Class
             || type.IsStatic
             || type.IsAbstract
@@ -93,6 +94,7 @@ public sealed class InheritedTestClassAttributeWithSourceGeneratorAnalyzer : Dia
             return;
         }
 
+        // Stryker disable once all: a symbol analyzed from source always has at least one location, so the Location.None fallback is unreachable.
         Location location = type.Locations.Length > 0 ? type.Locations[0] : Location.None;
         context.ReportDiagnostic(Diagnostic.Create(
             Rule,

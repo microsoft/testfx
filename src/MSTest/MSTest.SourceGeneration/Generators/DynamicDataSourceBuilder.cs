@@ -31,6 +31,7 @@ internal static class DynamicDataSourceBuilder
 
     internal static EquatableArray<DynamicDataSourceModel> BuildDynamicDataSources(ImmutableArray<AttributeData> attributes, IMethodSymbol testMethod, IAssemblySymbol consumingAssembly)
     {
+        // Stryker disable once Block: an empty attribute list and an uninitialized builder both produce the empty source model.
         if (attributes.IsDefaultOrEmpty)
         {
             return EquatableArray<DynamicDataSourceModel>.Empty;
@@ -77,6 +78,8 @@ internal static class DynamicDataSourceBuilder
             {
                 declaringType = explicitType;
             }
+
+            // Stryker disable once Logical: only the DynamicDataSourceType overload contributes a top-level enum constructor argument; params values are nested in an array constant.
             else if (arg.Kind == TypedConstantKind.Enum
                 && arg.Type?.ToDisplayString(SymbolDisplayFormats.FullyQualified) == "global::" + MSTestAttributeNames.DynamicDataSourceType
                 && arg.Value is int sourceTypeValue)

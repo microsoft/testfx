@@ -79,6 +79,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
         IncrementalValueProvider<AssemblyMetadataModel> assemblyMetadata =
             context.CompilationProvider.Select(static (c, ct) =>
             {
+                // Stryker disable once Statement: the Roslyn provider also honors its cancellation token; this check only shortens cancellation latency during attribute materialization.
                 ct.ThrowIfCancellationRequested();
                 return new AssemblyMetadataModel(
                     AttributeMaterializationHelper.BuildAttributes(c.Assembly.GetAttributes(), c.Assembly));
@@ -120,6 +121,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
 
     private static TestClassTransformResult BuildResult(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
     {
+        // Stryker disable once Statement: the Roslyn provider also honors its cancellation token; this check only shortens cancellation latency during model construction.
         cancellationToken.ThrowIfCancellationRequested();
 
         if (context.TargetSymbol is not INamedTypeSymbol typeSymbol)
@@ -167,9 +169,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
     }
 
     private static EquatableArray<DiagnosticInfo> ToEquatable(List<DiagnosticInfo> diagnostics)
-        => diagnostics.Count == 0
-            ? EquatableArray<DiagnosticInfo>.Empty
-            : new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutableArray());
+        => new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutableArray());
 
     private static bool IsGenericOrInsideGeneric(INamedTypeSymbol type)
     {

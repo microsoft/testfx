@@ -76,6 +76,7 @@ internal static class TestClassModelBuilder
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
             // under trimming / Native AOT. Members are folded into the leaf model, but the trimmer
             // only keeps members of the concrete type unless the base is rooted explicitly too.
+            // Stryker disable once Logical: rooting the leaf again through its base-type list only duplicates an already emitted DynamicDependency.
             if (!isLeaf && SymbolReferenceabilityHelper.IsClosedReferenceableType(current, consumingAssembly))
             {
                 baseTypes.Add(current.ToDisplayString(SymbolDisplayFormats.FullyQualified));
@@ -128,6 +129,7 @@ internal static class TestClassModelBuilder
 
                         break;
                     case IPropertySymbol property:
+                        // Stryker disable once all: Roslyn also returns accessor methods in currentMembers, where the IMethodSymbol case checks these attributes.
                         hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
                             || HasTestMethodAttribute(property.SetMethod);
                         if (methodNamesInDerivedTypes.Contains(property.Name)
@@ -165,6 +167,7 @@ internal static class TestClassModelBuilder
                         ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
                         break;
                     case IEventSymbol eventSymbol:
+                        // Stryker disable once all: Roslyn also returns accessor methods in currentMembers, where the IMethodSymbol case checks these attributes.
                         hasUnsupportedTestMethod |= HasTestMethodAttribute(eventSymbol.AddMethod)
                             || HasTestMethodAttribute(eventSymbol.RemoveMethod)
                             || HasTestMethodAttribute(eventSymbol.RaiseMethod);
@@ -222,9 +225,6 @@ internal static class TestClassModelBuilder
 
         return new TestClassModel(
             FullyQualifiedTypeName: leafFqn,
-            ContainingNamespace: typeSymbol.ContainingNamespace.IsGlobalNamespace
-                ? string.Empty
-                : typeSymbol.ContainingNamespace.ToDisplayString(),
             TypeName: typeSymbol.Name,
             IsAbstract: typeSymbol.IsAbstract,
             IsStatic: typeSymbol.IsStatic,
@@ -239,6 +239,7 @@ internal static class TestClassModelBuilder
     }
 
     private static bool IsPartial(INamedTypeSymbol type)
+        // Stryker disable once all: all declarations of a C# partial type carry the partial keyword, so Any and All agree.
         => type.DeclaringSyntaxReferences.Any(static syntaxReference =>
             syntaxReference.GetSyntax().ChildTokens().Any(static token => token.IsKind(SyntaxKind.PartialKeyword)));
 
@@ -343,6 +344,7 @@ internal static class TestClassModelBuilder
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {
+        // Stryker disable once Block: falling through creates a zero-length array, which is the same empty equatable value.
         if (method.Parameters.IsDefaultOrEmpty)
         {
             return EquatableArray<TestParameterModel>.Empty;

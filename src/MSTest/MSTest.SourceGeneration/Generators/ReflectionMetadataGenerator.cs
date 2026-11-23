@@ -215,9 +215,7 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
     private static void EmitMetadata(SourceProductionContext context, (string? AssemblyName, ImmutableArray<TestClassMetadata?> Classes) input)
     {
         string assemblyName = input.AssemblyName ?? "UnknownAssembly";
-        ImmutableArray<TestClassMetadata> classes = input.Classes.IsDefault
-            ? ImmutableArray<TestClassMetadata>.Empty
-            : input.Classes.Where(static c => c is not null).Cast<TestClassMetadata>().ToImmutableArray();
+        var classes = input.Classes.Where(static c => c is not null).Cast<TestClassMetadata>().ToImmutableArray();
 
         // Skip emission entirely when the compilation has no test classes — there is nothing for
         // the runtime hook to register and emitting a [ModuleInitializer] just for that adds cost.

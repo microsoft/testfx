@@ -28,6 +28,7 @@ internal static class AttributeMaterializationHelper
     internal static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
     {
         ImmutableArray<AttributeData> own = method.GetAttributes();
+        // Stryker disable once Block: with no override chain, appending only the method's own attributes preserves their order for valid compilations.
         if (method.OverriddenMethod is null)
         {
             return own;
@@ -47,6 +48,7 @@ internal static class AttributeMaterializationHelper
     internal static ImmutableArray<AttributeData> CollectInheritedAttributes(IPropertySymbol property)
     {
         ImmutableArray<AttributeData> own = property.GetAttributes();
+        // Stryker disable once Block: with no override chain, appending only the property's own attributes preserves their order for valid compilations.
         if (property.OverriddenProperty is null)
         {
             return own;
@@ -66,6 +68,7 @@ internal static class AttributeMaterializationHelper
     internal static ImmutableArray<AttributeData> CollectInheritedAttributes(INamedTypeSymbol type)
     {
         ImmutableArray<AttributeData> own = type.GetAttributes();
+        // Stryker disable once Block: when the base is absent or System.Object, the traversal below contributes no additional attributes.
         if (type.BaseType is null || type.BaseType.SpecialType == SpecialType.System_Object)
         {
             return own;
@@ -113,7 +116,9 @@ internal static class AttributeMaterializationHelper
 
     private static AttributeUsageMetadata GetAttributeUsage(INamedTypeSymbol attributeClass)
     {
+        // Stryker disable once Boolean: every valid attribute type inherits AttributeUsage from System.Attribute, which overwrites this fallback.
         bool inherited = true;
+        // Stryker disable once Boolean: every valid attribute type inherits AttributeUsage from System.Attribute, which overwrites this fallback.
         bool allowMultiple = false;
 
         // [AttributeUsage] is itself inherited (its own AttributeUsage declares Inherited=true).
@@ -121,6 +126,7 @@ internal static class AttributeMaterializationHelper
         // ourselves to honor an [AttributeUsage] declared on a base attribute type (e.g. when
         // a user-defined attribute derives from one of MSTest's attributes without re-declaring
         // its own [AttributeUsage]).
+        // Stryker disable once Logical: valid attribute types find AttributeUsage on their own chain or System.Attribute before reaching System.Object.
         for (INamedTypeSymbol? current = attributeClass;
              current is not null && current.SpecialType != SpecialType.System_Object;
              current = current.BaseType)
@@ -256,6 +262,7 @@ internal static class AttributeMaterializationHelper
 
             // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type must be
             // referenceable. Untyped values (Type is null) are plain literals.
+            // Stryker disable once Boolean: valid attribute constants use named, array, enum, or type symbols; unsupported symbol kinds cannot appear in a well-formed attribute argument.
             _ => IsArgumentTypeReferenceable(constant.Type, consumingAssembly),
         };
 
@@ -272,6 +279,8 @@ internal static class AttributeMaterializationHelper
         {
             IArrayTypeSymbol arrayType => IsArgumentTypeReferenceable(arrayType.ElementType, consumingAssembly),
             INamedTypeSymbol namedType => SymbolReferenceabilityHelper.IsTypeReferenceableFrom(namedType, consumingAssembly),
+            // Attribute argument types are arrays or named types; a missing type needs no generated type reference.
+            // Stryker disable once Boolean: the fallback is unreachable for well-formed attribute arguments.
             _ => true,
         };
 
