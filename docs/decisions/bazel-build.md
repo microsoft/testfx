@@ -2273,6 +2273,40 @@ must pass `-TargetFrameworks net10.0` because these targets compile only that
 framework. The repository build also succeeds with the new SDK. Other host
 archives were checked only against published checksums, and CI was not run.
 
+### SDK pin refresh (2026-11-21)
+
+Both `global.json` pins and the opt-in engineering registration advance to
+`12.0.100-alpha.1.26570.125` and runtime `12.0.0-alpha.1.26570.125`, the build
+selected for every host by the public .NET 12 daily `productCommit-<rid>.txt`
+links. All six archive SHA-512 values were read from the version-specific
+`https://ci.dot.net/public-checksums/Sdk/12.0.100-alpha.1.26570.125/` manifests;
+the downloaded Windows x64 archive matches its published value. The `global.json`
+runtimes (10.0.15 and 11.0.0) are already the latest releases and are unchanged.
+
+The SDK's `.version` identifies commit `3654b1a3c5e56a83b7160a2d9282cd093322b8c8`;
+the executed compiler is
+`5.14.0-1.26570.125 (3654b1a3c5e56a83b7160a2d9282cd093322b8c8)`.
+Its runtimeconfig requests the matching runtime. The bundled maximum/default
+target remains `net12.0`, and C# 15.0 and F# 11.2 remain the verified language
+versions. The default published SDK 11, SDK 10 bootstrap, and independently
+pinned .NET 8/9/10/11 target-pack graph are unchanged.
+
+All 12 verifier fixtures pass. With the same valid four-framework fixture and
+real compiler, the previous verifier (blob
+`61e1ac5cda55434ee95ffac065e8c065d722b143`, run from an isolated copy) rejects
+the new SDK with `Unexpected compiler identity: 5.14.0-1.26570.125` after
+compiler exit 0, while the updated verifier accepts the identical input.
+
+The opt-in Windows `//:platform` build succeeds with 79 native actions in
+task-owned output/cache roots. Native `//:protocol_contract_tests` (28 cases)
+and `//:simple1_test` (one case) pass on the .NET 12 host with fresh TRX
+results. The action-graph audit of the same three targets, with
+`-TargetFrameworks net10.0`, covers 200 declared source actions; all use the new
+engineering SDK, the two bootstrap actions retain SDK 10.0.401, and the actual
+`net10.0` reference pack remains 10.0.14. The repository build also succeeds
+with the new SDK (0 warnings, 0 errors). Other host archives were checked only
+against published checksums, and CI was not run.
+
 ### Narrow, reversible registration decision
 
 Use the pinned rules' existing `dotnet_sdk_repositories` and
