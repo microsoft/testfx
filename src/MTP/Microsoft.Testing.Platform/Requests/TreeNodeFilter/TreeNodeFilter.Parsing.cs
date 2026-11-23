@@ -253,7 +253,6 @@ public sealed partial class TreeNodeFilter
             {
                 OperatorKind topStackOperator = operatorStack.Pop();
                 ProcessStackOperator(topStackOperator, expressionStack, operatorStack, currentFilter);
-                break;
             }
 
             operatorStack.Push(currentOp);

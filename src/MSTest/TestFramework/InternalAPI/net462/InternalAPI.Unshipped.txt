@@ -1,5 +1,4 @@
 #nullable enable
-const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.Beta2SectionName = "microsoft.visualstudio.qualitytools" -> string!
 const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.ConnectionStringAttributeName = "connectionString" -> string!
 const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataAccessMethodAttributeName = "dataAccessMethod" -> string!
 const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataSourcesSectionName = "dataSources" -> string!

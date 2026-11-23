@@ -14,6 +14,8 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
 
     public string? Id => activity.Id;
 
+    internal ActivityContext? W3CContext => activity.IdFormat == ActivityIdFormat.W3C ? activity.Context : null;
+
     public string? TraceId => activity.IdFormat == ActivityIdFormat.W3C ? activity.TraceId.ToHexString() : null;
 
     public string? SpanId => activity.IdFormat == ActivityIdFormat.W3C ? activity.SpanId.ToHexString() : null;

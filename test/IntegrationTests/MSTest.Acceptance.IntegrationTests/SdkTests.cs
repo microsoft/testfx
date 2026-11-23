@@ -336,8 +336,9 @@ namespace MSTestSdkTest
                 buildConfiguration.ToString(),
                 targetFramework,
                 $"{AssetName}.{(isNetFramework ? "exe" : "dll")}");
-            string reportedFrameworkPattern = isNetFramework ? @"net4\d+" : Regex.Escape(targetFramework);
-            compilationResult.AssertOutputMatchesRegex($@"{Regex.Escape(modulePath)} \({reportedFrameworkPattern}\|x64\) passed");
+            // The SDK reports the installed .NET Framework runtime separately from the net462 target.
+            string runtimePattern = isNetFramework ? @", runtime: net4\d+" : string.Empty;
+            compilationResult.AssertOutputMatchesRegex($@"{Regex.Escape(modulePath)} \({Regex.Escape(targetFramework)}\|x64{runtimePattern}\) passed");
         }
     }
 

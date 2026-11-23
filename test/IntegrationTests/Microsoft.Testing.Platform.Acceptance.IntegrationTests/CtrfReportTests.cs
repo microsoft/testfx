@@ -106,12 +106,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         // AtLeastOneTestFailed regardless of whether the CTRF report is enabled.
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
-        // The CTRF report is published as an in-process artifact; check the correct block.
-        string outputPattern = """
-  In process file artifacts produced:
-    - .+?\.ctrf\.json
-""";
-        testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
+        testHostResult.AssertOutputDoesNotMatchRegex(@"    - .+?\.ctrf\.json");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -127,7 +122,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 2
     - For test 'FailingTest': .+?failure\.log
     - {ctrfPathPattern}
 """;
@@ -217,7 +212,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 2
     - For test 'FailingTest': .+?failure\.log
     - {expectedFilePath}
 """;
@@ -247,7 +242,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 2
     - For test 'FailingTest': .+?failure\.log
     - {expectedFilePath}
 """;

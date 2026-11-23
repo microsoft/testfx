@@ -646,7 +646,7 @@ class CompiledWarningContractTests(unittest.TestCase):
         script = gateway["run"]
         marker = '"github": '
         server, _ = json.JSONDecoder().raw_decode(script[script.index(marker) + len(marker):])
-        self.assertEqual("ghcr.io/github/github-mcp-server:v2.0.3", server["container"])
+        self.assertEqual("ghcr.io/github/github-mcp-server:v2.1.0", server["container"])
         self.assertEqual("1", server["env"]["GITHUB_READ_ONLY"])
         self.assertEqual("all,dependabot", server["env"]["GITHUB_TOOLSETS"])
         self.assertEqual("${GITHUB_MCP_SERVER_TOKEN}", server["env"]["GITHUB_PERSONAL_ACCESS_TOKEN"])

@@ -14,6 +14,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class CommandLineInformationalOutputTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private const string IncompleteResponse = "The test host exited without completing the expected help or discovery protocol. No complete informational result was received.";
 
     [TestMethod]
@@ -180,6 +182,276 @@ public sealed class CommandLineInformationalOutputTests
         _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
         output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "other", "execution"));
         _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task QuestionMarkOption_IsTreatedAsHelp()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--?"], text);
+
+        HandshakeMessage reply = output.AcceptHandshake(CreateHandshake(help: true));
+
+        Assert.AreEqual("1.4.0", reply.Properties![HandshakeMessagePropertyNames.SupportedProtocolVersions]);
+        Assert.AreEqual("False", reply.Properties[HandshakeMessagePropertyNames.IsIDE]);
+    }
+
+    [TestMethod]
+    [DataRow("--help", "--list-tests", "json")]
+    [DataRow("--list-tests", "xml", "--other")]
+    public async Task HandshakeReply_IsOnlyIdeForJsonDiscoveryWithoutHelp(string first, string second, string third)
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", [first, second, third], text);
+
+        HandshakeMessage reply = output.AcceptHandshake(CreateHandshake(help: first == "--help"));
+
+        Assert.AreEqual("False", reply.Properties![HandshakeMessagePropertyNames.IsIDE]);
+    }
+
+    [TestMethod]
+    public async Task CompleteAsync_WithValidStateButNoPipeConnection_Throws()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+        output.ValidateCompletion();
+
+        InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(output.CompleteAsync);
+
+        Assert.AreEqual(IncompleteResponse, failure.Message);
+        Assert.AreEqual(string.Empty, text.ToString());
+    }
+
+    [TestMethod]
+    public async Task Handshake_UnsupportedVersionDoesNotAllowLaterSessionToComplete()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+
+        _ = output.AcceptHandshake(CreateHandshake(help: false, "99.0.0"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task Handshake_RepeatedFailuresFollowedByValidHandshakeStayInvalid()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+
+        _ = output.AcceptHandshake(CreateHandshake(help: false, "99.0.0"));
+        _ = output.AcceptHandshake(CreateHandshake(help: false, "99.0.0"));
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task ObserveSession_BeforeHandshakeMakesTheResponseInvalid()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task ObserveSession_InHelpModeMakesTheResponseInvalid()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--help"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: true));
+        await output.WriteHelpAsync([]);
+        output.ValidateCompletion();
+
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task ObserveSession_AfterCompletionMakesTheResponseInvalid()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+        output.ValidateCompletion();
+
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    [DataRow("end-before-start")]
+    [DataRow("end-null-uid")]
+    [DataRow("end-other-uid")]
+    [DataRow("second-start")]
+    [DataRow("unknown-type")]
+    public async Task ObserveSession_UnexpectedEventsPoisonAnOtherwiseCompleteSession(string scenario)
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        TestSessionEvent[] prefix = scenario switch
+        {
+            "end-before-start" => [new(SessionEventTypes.TestSessionEnd, "session", "execution")],
+            "end-null-uid" => [new(SessionEventTypes.TestSessionStart, "session", "execution"), new(SessionEventTypes.TestSessionEnd, null, "execution")],
+            "end-other-uid" => [new(SessionEventTypes.TestSessionStart, "session", "execution"), new(SessionEventTypes.TestSessionEnd, "other", "execution")],
+            "second-start" => [new(SessionEventTypes.TestSessionStart, "session", "execution"), new(SessionEventTypes.TestSessionStart, "other", "execution")],
+            _ => [new(SessionEventTypes.TestSessionStart, "session", "execution"), new(255, "session", "execution")],
+        };
+        foreach (TestSessionEvent sessionEvent in prefix)
+        {
+            output.ObserveSession(sessionEvent);
+        }
+
+        if (scenario == "end-before-start")
+        {
+            output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        }
+
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task WriteDiscoveredTests_WithoutStartedSessionIsRejectedWithoutOutput(bool json)
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", json ? ["--list-tests", "json"] : ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+
+        await output.WriteDiscoveredTestsAsync(new("execution", "instance", [new("uid", "Hidden", null, null, null, null, null, null, [])]));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+
+        Assert.AreEqual(string.Empty, text.ToString());
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task WriteDiscoveredTests_AfterSessionCompletionIsRejectedWithoutOutput()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+        output.ValidateCompletion();
+
+        await output.WriteDiscoveredTestsAsync(new("execution", "instance", [new("uid", "Late", null, null, null, null, null, null, [])]));
+
+        Assert.AreEqual(string.Empty, text.ToString());
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task WriteDiscoveredTests_InTextModePrintsEveryRowIndented()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+
+        await output.WriteDiscoveredTestsAsync(new("execution", "instance",
+        [
+            new("first", "First", null, null, null, null, null, null, []),
+            new("second", "Second", null, null, null, null, null, null, []),
+        ]));
+
+        Assert.AreEqual("  First\n  Second\n", text.ToString().ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    public async Task WriteDiscoveredTests_InJsonModeCollectsNodesInsteadOfPrintingRows()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests", "json"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+
+        await output.WriteDiscoveredTestsAsync(new("execution", "instance",
+        [
+            new("first", "First", null, null, null, null, null, null, []),
+            new("second", "Second", null, null, null, null, null, null, []),
+        ]));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+
+        Assert.AreEqual(string.Empty, text.ToString());
+        output.ValidateCompletion();
+    }
+
+    [TestMethod]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    public async Task WriteHelp_RejectedWhenModeHandshakeOrRepeatDoesNotAllowIt(bool beforeHandshake, bool repeated)
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--help"], text);
+        if (beforeHandshake)
+        {
+            await output.WriteHelpAsync([]);
+            Assert.AreEqual(string.Empty, text.ToString());
+            _ = output.AcceptHandshake(CreateHandshake(help: true));
+            await output.WriteHelpAsync([]);
+            _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+        }
+
+        if (repeated)
+        {
+            _ = output.AcceptHandshake(CreateHandshake(help: true));
+            await output.WriteHelpAsync([]);
+            output.ValidateCompletion();
+            string firstOutput = text.ToString();
+
+            await output.WriteHelpAsync([]);
+
+            Assert.AreEqual(firstOutput, text.ToString());
+            _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+        }
+    }
+
+    [TestMethod]
+    public async Task WriteHelp_InDiscoveryModeIsRejectedWithoutOutput()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+
+        await output.WriteHelpAsync([]);
+
+        Assert.AreEqual(string.Empty, text.ToString());
+        _ = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+    }
+
+    [TestMethod]
+    public async Task DisposeAsync_ClosesThePipeServer()
+    {
+        using StringWriter text = new();
+        CommandLineInformationalOutput output = new("Tests.exe", ["--help"], text);
+        string pipeName = output.PipeName;
+
+        await output.DisposeAsync();
+
+        using System.IO.Pipes.NamedPipeClientStream client = new(".", pipeName, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous | System.IO.Pipes.PipeOptions.CurrentUserOnly);
+        _ = await Assert.ThrowsExactlyAsync<TimeoutException>(() => client.ConnectAsync(500, TestContext.CancellationToken));
     }
 
     private static HandshakeMessage CreateHandshake(bool help, string version = "1.0.0;1.4.0")

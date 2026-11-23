@@ -131,15 +131,26 @@ internal sealed partial class TestHostBuilder
         }
 
         // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
-        // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
+        // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace. An ambient
+        // in-process activity (for example an application-owned root span started before building the test
+        // application) is the closer parent, so the environment is only a fallback when there is none.
         if (serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>() is { } registeredPlatformOTelService)
         {
+            string? environmentParentId = registeredPlatformOTelService.HasCurrentActivity
+                ? null
+                : EnvironmentTraceContext.TryGetParentId(systemEnvironment);
+
             // Set before creating any span so every span picks it up, including the ones created with an
-            // explicit parent id (which do not inherit tracestate).
-            registeredPlatformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+            // explicit parent id (which do not inherit tracestate). Only the environment parent carries this
+            // tracestate; an ambient parent propagates its own.
+            if (environmentParentId is not null)
+            {
+                registeredPlatformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+            }
+
             context.BuilderActivity = registeredPlatformOTelService.StartActivity(
                 TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
+                parentId: environmentParentId,
                 startTime: buildBuilderStart);
         }
 

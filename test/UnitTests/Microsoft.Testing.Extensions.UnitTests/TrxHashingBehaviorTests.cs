@@ -35,6 +35,36 @@ public sealed class TrxHashingBehaviorTests
     }
 
     [TestMethod]
+    [DataRow(0, "D9265CC53BB2B9AE6131B78F753823CD", DisplayName = "Hash empty input")]
+    [DataRow(1, "FB39FB176FBE631520B77B9979362F8E", DisplayName = "Hash one byte")]
+    [DataRow(3, "DC730C9EC4E5AFA8C0E524100826C0E4", DisplayName = "Hash three bytes")]
+    [DataRow(4, "8261B3C95E7A99880AA8C5F82592AB81", DisplayName = "Hash four bytes")]
+    [DataRow(8, "BB4E2A0FAEFD106C38A1E9F5CD5387F3", DisplayName = "Hash eight bytes")]
+    [DataRow(16, "2D718E8231035ED7C6DDDB57E2653164", DisplayName = "Hash sixteen bytes")]
+    [DataRow(32, "285F49C3054C54A51F625B5DC8D8339A", DisplayName = "Hash 32 bytes")]
+    [DataRow(64, "BC0F1DD3B95ECA99B2927C750B232BB0", DisplayName = "Hash 64 bytes")]
+    [DataRow(96, "CF9C1C58C8A1738603E171B136DCEBD3", DisplayName = "Hash 96 bytes")]
+    [DataRow(128, "343FCDAAC01731908D253A956233A901", DisplayName = "Hash 128 bytes")]
+    [DataRow(129, "2B513AD0EC6BEA4BE7E641ACC77046CA", DisplayName = "Hash 129 bytes")]
+    [DataRow(160, "D1F4BA820F6E9F268E4C3287FEFED0D1", DisplayName = "Hash 160 bytes")]
+    [DataRow(192, "DC47B57C69A16054020BF0EAD8B8EFBD", DisplayName = "Hash 192 bytes")]
+    [DataRow(240, "E66436B05AE2A87BBCD855D44805F253", DisplayName = "Hash 240 bytes")]
+    public void Hash_ShortAndMidsizeInputsMatchReference(int length, string expectedHex)
+    {
+        byte[] source = CreateInput(length);
+        byte[] expected = ParseHex(expectedHex);
+        const long seed = 1;
+
+        byte[] destination = new byte[16];
+        Assert.AreEqual(16, ProductHash128.Hash(source, destination, seed));
+        Assert.AreSequenceEqual(expected, destination);
+
+        var streaming = new ProductHash128(seed);
+        streaming.Append(source);
+        Assert.AreSequenceEqual(expected, streaming.GetCurrentHash());
+    }
+
+    [TestMethod]
     [DataRow(0)]
     [DataRow(15)]
     public void TryHash_ShortDestinationWritesNothingAndHashReportsExactParameter(int length)

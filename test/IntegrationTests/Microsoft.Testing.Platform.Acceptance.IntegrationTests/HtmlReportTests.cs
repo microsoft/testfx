@@ -18,7 +18,7 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
 
         // The HTML report is published as an in-process artifact; check the correct block.
         string outputPattern = """
-  In process file artifacts produced:
+  In process file artifacts produced: \d+
     - .+?\.html
 """;
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
@@ -37,7 +37,7 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 1
     - {htmlPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -144,7 +144,7 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 1
     - {expectedFilePath}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -175,7 +175,7 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  In process file artifacts produced: 1
     - {expectedFilePath}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);

@@ -16,6 +16,7 @@ try {
         -not $poolScript.Contains('Floor($effectiveBudget / $batchesPerModule)') -or
         -not $entryScript.Contains('$result.TeardownConfirmed') -or
         -not $entryScript.Contains('Get-OrderedCollectionModule') -or
+        -not $entryScript.Contains('Get-MappableCollectionModule') -or
         -not $fixtureScript.Contains('CollectionPackageCache.Select(')) {
         throw "CollectionPoolWiringPreservesBudgets: Windows collection must use the bounded pool, prioritize known long workloads and retain the cache opt-in contract."
     }
@@ -63,6 +64,17 @@ try {
         throw "ModulePoolStartsLargestKnownWorkloadsFirst: long acceptance/analyzer work must not be delayed behind small modules."
     }
     Write-Output "PASS ModulePoolStartsLargestKnownWorkloadsFirst"
+
+    $mappable = @(Get-MappableCollectionModule -Modules @(
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net462"; RelativePath = "a" },
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net48"; RelativePath = "b" },
+        [pscustomobject]@{ Project = "MSTestAdapter.PlatformServices.UnitTests"; Framework = "net10.0"; RelativePath = "c" },
+        [pscustomobject]@{ Project = "TestFramework.UnitTests"; Framework = "net48"; RelativePath = "d" }
+    ) 6>$null)
+    if (($mappable.RelativePath -join ",") -ne "c,d") {
+        throw "ModulePoolSkipsOnlyOversizedMaps: only the module/TFM maps above the collector's 128-MiB limit may be skipped."
+    }
+    Write-Output "PASS ModulePoolSkipsOnlyOversizedMaps"
 
     $outputCases = @(
         @{

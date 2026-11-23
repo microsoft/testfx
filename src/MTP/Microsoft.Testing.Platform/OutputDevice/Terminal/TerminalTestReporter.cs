@@ -176,8 +176,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            terminal.Append(SingleIndentation);
-            terminal.AppendLine(TerminalResources.OutOfProcessArtifactsProduced);
+            terminal.AppendLine($"{SingleIndentation}{TerminalResources.OutOfProcessArtifactsProduced} {_artifacts.Count}");
 
             foreach (TestRunArtifact artifact in _artifacts)
             {

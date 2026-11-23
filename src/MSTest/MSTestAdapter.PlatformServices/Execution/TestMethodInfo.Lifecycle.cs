@@ -100,15 +100,17 @@ internal partial class TestMethodInfo
             {
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
+                // Resuming on the test's synchronization context keeps the remaining cleanup steps on it
+                // even when a cleanup method completes on another thread (#12561).
                 testCleanupException = testCleanupMethod is not null
-                    ? await InvokeCleanupMethodAsync(testCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeCleanupMethodAsync(testCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(invocationState.IsRunningOnTestSynchronizationContext())
                     : null;
                 if (testCleanupException is null)
                 {
                     foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
                     {
                         testCleanupMethod = baseCleanupMethod;
-                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false);
+                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(invocationState.IsRunningOnTestSynchronizationContext());
                         if (testCleanupException is not null)
                         {
                             break;
@@ -124,7 +126,8 @@ internal partial class TestMethodInfo
             {
                 if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
                 {
-                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
+                    // Keep global test cleanups on the test's synchronization context even when disposal completes on another thread (#12561).
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(invocationState.IsRunningOnTestSynchronizationContext());
                 }
 
                 CancellationTokenSource? globalCleanupSource = null;
@@ -161,7 +164,8 @@ internal partial class TestMethodInfo
                     currentGlobalTestCleanupMethod = method;
                     try
                     {
-                        globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                        // Keep the next global test cleanup on the test's synchronization context (#12561).
+                        globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(invocationState.IsRunningOnTestSynchronizationContext());
                     }
                     catch (Exception ex)
                     {
@@ -262,9 +266,14 @@ internal partial class TestMethodInfo
     /// <param name="classInstance">Instance of TestClass.</param>
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
+    /// <param name="invocationState">The activation and cleanup state for this invocation.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object? classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(
+        object? classInstance,
+        TestResult result,
+        CancellationTokenSource? timeoutTokenSource,
+        TestInvocationState invocationState)
     {
         DebugEx.Assert(classInstance is not null || Parent.IsFSharpModule, "classInstance is null for a non-module test");
         DebugEx.Assert(result is not null, "result != null");
@@ -280,8 +289,11 @@ internal partial class TestMethodInfo
             for (int i = baseTestInitializeList.Count - 1; i >= 0; i--)
             {
                 testInitializeMethod = baseTestInitializeList[i];
+
+                // Keep derived test initializations on the test's synchronization context
+                // even when a base initialization completes on another thread (#12561).
                 testInitializeException = testInitializeMethod is not null
-                    ? await InvokeInitializeMethodAsync(testInitializeMethod, classInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeInitializeMethodAsync(testInitializeMethod, classInstance, timeoutTokenSource).ConfigureAwait(invocationState.IsRunningOnTestSynchronizationContext())
                     : null;
                 if (testInitializeException is not null)
                 {

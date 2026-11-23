@@ -55,7 +55,13 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests : AcceptanceTe
     [DynamicData(nameof(UnmarkedCases))]
     public async Task UnmarkedDependenciesRemainUnloadedAndDeletable(string tfm, string runner, string hooks)
     {
-        using TestAsset asset = await CreateAssetAsync(tfm, hooks, "UnmarkedDependency", "UnmarkedDependency.Marker", """
+        using TestAsset asset = await CreateAssetAsync(tfm, hooks, "UnmarkedDependency", "UnmarkedDependency.Marker", UnmarkedAssertions, useVSTest: runner == "VSTest");
+
+        await BuildConsumerAsync(asset);
+        await RunConsumerAsync(asset, tfm, runner, ExpectedLocalEvents(hooks));
+    }
+
+    private const string UnmarkedAssertions = """
         foreach (string name in new[] { "UnmarkedDependency", "UnmarkedLeaf" })
         {
             bool loaded = AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == name);
@@ -76,11 +82,7 @@ public sealed partial class AssemblyFixtureProviderDiscoveryTests : AcceptanceTe
             Assert.IsNull(deletionFailure, "A metadata probe must not retain a DLL handle: " + deletionFailure);
             Assert.IsFalse(File.Exists(path), "The unused dependency must be deletable: " + path);
         }
-        """, useVSTest: runner == "VSTest");
-
-        await BuildConsumerAsync(asset);
-        await RunConsumerAsync(asset, tfm, runner, ExpectedLocalEvents(hooks));
-    }
+""";
 
     [TestMethod]
     [DynamicData(nameof(ProviderCases))]
@@ -442,6 +444,7 @@ internal static class Events
   <PropertyGroup>
     <TargetFramework>$TargetFramework$</TargetFramework>
     <LangVersion>preview</LangVersion>
+$Signing$
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../UnmarkedLeaf/UnmarkedLeaf.csproj" />
@@ -462,6 +465,7 @@ public sealed class Marker
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>$TargetFramework$</TargetFramework>
+$Signing$
   </PropertyGroup>
 </Project>
 
@@ -476,6 +480,7 @@ namespace UnmarkedLeaf
   <PropertyGroup>
     <TargetFramework>$TargetFramework$</TargetFramework>
     <LangVersion>preview</LangVersion>
+$Signing$
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ProviderLibrary/ProviderLibrary.csproj" />

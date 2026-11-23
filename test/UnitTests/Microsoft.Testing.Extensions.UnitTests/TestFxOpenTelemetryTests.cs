@@ -199,7 +199,24 @@ public sealed class TestFxOpenTelemetryTests
     [TestMethod]
     public void FileExporters_SharedDirectoryNeverOverwriteAndReleaseFiles()
     {
-        string directory = Path.Combine(TestContext.TestTempDirectory!, "traces");
+        // The exporter appends a long module/GUID file name; CTS nests TestTempDirectory deeply
+        // enough to exceed MAX_PATH on .NET Framework, so keep this directory short.
+        string root = Path.Combine(Path.GetTempPath(), $"tfx-otel-{Guid.NewGuid():N}");
+        try
+        {
+            AssertSharedDirectoryExportersNeverOverwriteAndReleaseFiles(Path.Combine(root, "traces"));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    private static void AssertSharedDirectoryExportersNeverOverwriteAndReleaseFiles(string directory)
+    {
         Resource resource = ResourceBuilder.CreateEmpty().AddAttributes([new("test.assembly.name", "owned-module")]).Build();
         using Activity activity = new Activity("retained-before-disposal").SetIdFormat(ActivityIdFormat.W3C).Start();
         activity.Stop();

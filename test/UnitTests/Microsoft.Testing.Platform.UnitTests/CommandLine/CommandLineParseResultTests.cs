@@ -292,6 +292,30 @@ public sealed class CommandLineParseResultTests
     }
 
     [TestMethod]
+    public void GetHashCode_SameContent_ReturnsSameHash()
+        => Assert.AreEqual(
+            new CommandLineParseResult(null, [new CommandLineParseOption("verbose", ["a"])], ["e"]).GetHashCode(),
+            new CommandLineParseResult(null, [new CommandLineParseOption("verbose", ["a"])], ["e"]).GetHashCode());
+
+    [TestMethod]
+    public void GetHashCode_DifferentOptionName_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineParseResult(null, [new CommandLineParseOption("verbose", [])], []).GetHashCode(),
+            new CommandLineParseResult(null, [new CommandLineParseOption("quiet", [])], []).GetHashCode());
+
+    [TestMethod]
+    public void GetHashCode_DifferentOptionArgument_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineParseResult(null, [new CommandLineParseOption("filter", ["a"])], []).GetHashCode(),
+            new CommandLineParseResult(null, [new CommandLineParseOption("filter", ["b"])], []).GetHashCode());
+
+    [TestMethod]
+    public void GetHashCode_DifferentError_ReturnsDifferentHash()
+        => Assert.AreNotEqual(
+            new CommandLineParseResult(null, [], ["first error"]).GetHashCode(),
+            new CommandLineParseResult(null, [], ["second error"]).GetHashCode());
+
+    [TestMethod]
     public void ToString_PreservesMultipleErrorOptionAndArgumentOrdering()
     {
         CommandLineParseResult parsed = new(

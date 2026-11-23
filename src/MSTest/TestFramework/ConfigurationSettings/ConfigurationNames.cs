@@ -15,11 +15,6 @@ internal static class ConfigurationNames
     internal const string SectionName = "microsoft.visualstudio.testtools";
 
     /// <summary>
-    /// The configuration section name for Beta2. Left around for compat.
-    /// </summary>
-    internal const string Beta2SectionName = "microsoft.visualstudio.qualitytools";
-
-    /// <summary>
     /// Section name for Data source.
     /// </summary>
     internal const string DataSourcesSectionName = "dataSources";

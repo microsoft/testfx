@@ -18,8 +18,6 @@ public static class TestConfiguration
 
     private static TestConfigurationSection LoadConfiguration()
         => (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.SectionName)
-        /* If could not find RTM section, try Beta2 section name. */
-        ?? (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.Beta2SectionName)
         ?? new TestConfigurationSection();
 }
 #endif

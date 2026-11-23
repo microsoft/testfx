@@ -44,7 +44,7 @@ weakening permissions, detection, network policy, or safe-output bounds.
 | Workflow | Required contract |
 | --- | --- |
 | Build failure analysis | `safe-outputs.needs` directly includes `fetch-binlog`, so publisher checkouts resolve the same validated head SHA and base ref as the analysis. Keep the binlog/source identity and publication gates intact. |
-| Dependabot PR bundler | gh-aw v1.0.1 excludes `dependabot` from the `all` alias. Opt into that toolset explicitly to expose both alert-read tools, without replacing the existing repository/PR tools or expanding permissions. |
+| Dependabot PR bundler | gh-aw v1.0.1 through v1.2.2 exclude `dependabot` from the `all` alias. Opt into that toolset explicitly to expose both alert-read tools, without replacing the existing repository/PR tools or expanding permissions. |
 | `/parallel-audit` | Trusted extraction writes `/tmp/gh-aw/parallel-audit/audit-inputs.json` and its four input files inside the agent-visible tree. The prompt reads the resolved PR/revisions, counts, paths, scope, and HEAD-side regions at runtime, never from activation-time custom-step expressions. Missing required inputs mean incomplete analysis, not an empty scope. |
 | Unskip closed tests | The fresh publisher checkout does not persist credentials. Initial pushes and every branch-cleanup push use a command-scoped `gh auth git-credential` helper, leaving no credential/helper in checkout configuration. Verification, duplicate/race checks, and publication remain separate from the read-only agent. |
 
@@ -101,7 +101,7 @@ those steps run. Missing inputs are incomplete analysis, not an empty scope.
 
 [The review on PR #12204](https://github.com/microsoft/testfx/pull/12204#pullrequestreview-5783835641)
 displayed escaped `<table>`, `<code>`, and `<br>` markup instead of a scorecard.
-The pinned gh-aw v1.0.1 report parser imports Markdown pipe tables as typed
+The gh-aw v1.0.1 through v1.2.2 report parser imports Markdown pipe tables as typed
 tables; raw HTML table markup is literal text, not an allowed table element.
 Both reviewers therefore use Markdown pipe tables, including evidence and
 parallel-safety tables, without changing the renderer or weakening sanitization.
@@ -137,6 +137,12 @@ passes both methods with no skips (exit 0), and the complete runtime suite
 passes all 15 methods. Strict compilation with ShellCheck passes both consumers
 with zero warnings; only their generated body hashes change.
 
+Revalidation for v1.2.2 (November 20, 2026): with `$actions` pointing to the
+v1.2.2 setup scripts at `53d0749e19424a918acd82b4d140264ce48f2f14`, the same
+baseline selection still fails the scorecard case for both consumers with
+`&lt;table&gt;` while the escaped-cell case passes (exit 1); the corrected
+selection passes both methods (exit 0).
+
 The GitHub Markdown API rendered the actual emitted fixture payload into two
 five-column tables. A local-only browser preview in the original review layout
 (1280 × 721 viewport, 800- and 480-pixel review widths) preserved test/result
@@ -152,7 +158,7 @@ and four other inspected test-review runs failed during review finalization with
 `Report nodes cannot appear in scalar fields`. Analysis and threat detection
 completed; the publisher failed before submitting the review.
 
-The pinned gh-aw v1.0.1 runtime represents `{history_link}` as a typed inline
+The gh-aw v1.0.1 through v1.2.2 runtime represents `{history_link}` as a typed inline
 fragment containing the separator and complete optional history link, not a URL.
 Insert it directly after `{ai_credits_suffix}`. Do not wrap it in
 `[label]({history_link})`, a code span, or another scalar field. A missing history
@@ -198,6 +204,12 @@ python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions --
 python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions @cases -v
 python .github\scripts\test_gh_aw_runtime_contracts.py --actions-dir $actions -v
 ```
+
+Revalidation for v1.2.2 (November 20, 2026): the same selection against the
+v1.2.2 setup scripts at `53d0749e19424a918acd82b4d140264ce48f2f14` still fails
+both baseline cases with the same errors (exit 1) and passes both corrected
+cases (exit 0), so the upstream runtime did not make the footer contract
+unnecessary.
 
 The full final suite passes all 13 methods, including all 33 authored footer
 templates with and without history. Existing warning-contract, checkout,
@@ -264,7 +276,7 @@ The shared prompt also resolves the PR number from centralized slash-command
 diff-read failure reports both missing data and a terminal incomplete result;
 it must not pretend that delegation or review succeeded.
 Resolve the fallback in frontmatter `env.REVIEW_PR_NUMBER` and reference that
-environment value in the prompt: v1.0.1 rejects `fromJSON(...)` directly in
+environment value in the prompt: v1.0.1 through v1.2.2 reject `fromJSON(...)` directly in
 runtime-imported prompt text. Keep `allowed-repos: public` explicit too;
 setting only `min-integrity: none` otherwise changes the compiler's repository
 scope default to `all`.
@@ -322,8 +334,8 @@ for the provisional CONNECT and then `TCP_TUNNEL:HIER_DIRECT / 200` for the same
 client connection. There was no `TCP_DENIED` entry in the agent's raw log.
 The v0.89.21 footer classifier nevertheless treats every `NONE_NONE` as blocked.
 
-gh-aw v1.0.1 recognizes successful provisional CONNECT records, but its
-status-first classifier hides explicit `TCP_DENIED / 200` records. The two
+gh-aw v1.0.1 through v1.2.2 recognize successful provisional CONNECT records, but
+their status-first classifier hides explicit `TCP_DENIED / 200` records. The two
 test-review workflows retain a checksum-guarded correction through their shared
 `safe-outputs.steps`, after script setup and before review publication. It checks
 explicit `TCP_DENIED` decisions before the upstream status checks, preserving
@@ -366,6 +378,12 @@ explicit denial, proxy authentication failure, and unknown outcomes produced
 the expected domain warning. This is local execution evidence, not a live
 workflow rerun or verification of GitHub publication.
 
+Revalidation for v1.2.2 (November 20, 2026): the setup action at
+`53d0749e19424a918acd82b4d140264ce48f2f14` ships a byte-identical module (same
+SHA-256 as above), so the correction still applies. The same
+`--without-correction` selection fails for the same reason (one test, exit 1),
+and the full seven-test suite passes with the correction (exit 0).
+
 ### Compile on the pinned toolchain, and check the pins afterwards
 
 > [!WARNING]
@@ -373,31 +391,43 @@ workflow rerun or verification of GitHub publication.
 
 The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
 
-The current toolchain is [gh-aw v1.0.1](https://github.com/github/gh-aw/releases/tag/v1.0.1),
-the latest stable release checked on November 3, 2026. Both `setup` and
+The current toolchain is [gh-aw v1.2.2](https://github.com/github/gh-aw/releases/tag/v1.2.2),
+the latest stable release checked on November 20, 2026. Both `setup` and
 `setup-cli` use the matching immutable action commit
-`221ba4f4319de6b8e809d1a15528b3ae6a818aa5`. Use the matching released compiler,
+`53d0749e19424a918acd82b4d140264ce48f2f14`. Use the matching released compiler,
 not an older installed extension; even `--no-emit` can update the action cache
 to the extension's version. The Windows amd64 release binary used for this
 refresh has SHA-256
-`1998b3443f0f7c85604ba8cdee897834033484d77daad9ff4e56d386c6e06d07`,
+`5ed67185ce18c9b4c2bc6ea16f5ec914773fae12ac18782b59028c7c8605ae91`,
 verified against the release's `checksums.txt`.
 
-The migration renames the deprecated `missing-tool` and `missing-data`
-safe-output configuration keys to `report-missing-tool` and
-`report-missing-data`, and removes the unsupported Copilot `web-fetch` tool.
-The two workflows with explicit Copilot CLI versions now use 1.0.103, whose
-checksum manifest is reviewed by the pinned setup action; the old 1.0.79 and
-1.0.85 overrides are not in its trusted release catalog. Other workflows retain
-compat-driven toolcache selection. Custom prompts, triggers, credentials,
-network allowlists, and publication bounds are retained.
+The v1.2.2 refresh (from v1.0.1) applies one codemod,
+`cli-proxy-false-when-bash-disabled`: the three review workflows and
+[`shared/review-shared.md`](./shared/review-shared.md) disable `bash`, so they now
+declare `cli-proxy: false` explicitly. The `agentic-workflows` agent and skill are
+refreshed with the repository overlay preserved. Generated workflows now use
+firewall 0.29.11, MCP gateway v0.5.6, and GitHub MCP server v2.1.0, all pinned by
+digest. The offline runtime contracts follow the release's step-level environment
+hardening and its `require(process.env.GH_AW_ACTIONS_DIR + ...)` loader form.
+The two explicit Copilot CLI overrides remain 1.0.103, which the v1.2.2 setup
+action still trusts. Custom prompts, triggers, credentials, network allowlists,
+and publication bounds are unchanged.
+
+The earlier v1.0.1 migration renamed the deprecated `missing-tool` and
+`missing-data` safe-output configuration keys to `report-missing-tool` and
+`report-missing-data`, removed the unsupported Copilot `web-fetch` tool, and
+replaced the 1.0.79 and 1.0.85 Copilot CLI overrides with 1.0.103, whose
+checksum manifest is reviewed by the pinned setup action. Other workflows retain
+compat-driven toolcache selection.
 
 [`aw.json`](./aw.json) redirects the compiler's remaining embedded
 `actions/upload-artifact@v7.0.1` reference to v7.0.2. Keep this redirect until
 the embedded version catches up, and align handwritten workflows whenever
-updating a shared action pin. The released v1.0.1 catalog already matches this
-repository's Node.js and SARIF action pins, so the v0.89.21 catalog-only source
-build workaround is no longer needed. Regeneration must update generated
+updating a shared action pin. The released v1.2.2 catalog still matches this
+repository's Node.js and SARIF action pins. Apart from the `setup` refresh, its
+generated jobs add more steps (one `actions/download-artifact` per workflow and
+more `actions/github-script` steps), but they use the SHAs already pinned here;
+no new action or SHA is introduced. Regeneration must update generated
 manifests as well as executable steps; changing only `uses:` lines leaves the
 repository broken.
 
@@ -411,27 +441,35 @@ run the action-pin audit. The executable steps, generated action inventory, and
 `gh-aw-manifest` must all agree.
 
 Align mutable-name container cache entries with the release catalog too. This
-refresh updates `ghcr.io/github/gh-aw-node` to the v1.0.1 catalog's digest
-`sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f`;
+refresh updates `ghcr.io/github/gh-aw-node` to the v1.2.2 catalog's digest
+`sha256:8735428c2d4e602f90781ba0c571c400e8ff93c7ee1508a75d71f87e34e415cc`;
 an existing cache entry otherwise keeps the old image even with the new
-compiler. Versioned unused cache entries need not be deleted to upgrade the
+compiler (the v1.0.1 digest `sha256:2c2ea524…` survived the first v1.2.2
+compile). Versioned unused cache entries need not be deleted to upgrade the
 images selected by the compiler. Launching the aligned image by digest reported
-Node.js v24.22.1.
+Node.js v26.13.0 (the v1.0.1 image reported v24.22.1).
 
-Strict compilation succeeded for all 37 inputs (35 runnable workflows and two
-shared components), and ShellCheck passed for 2,100 shell resources. After
-aligning the Node image cache, the 70 affected shell resources (18 unique scripts)
-passed the same pinned ShellCheck with the compiler's exclusions; every other
-generated run script was byte-identical. The initial refresh reported 32
+For v1.2.2, strict compilation with ShellCheck
+(`compile --strict --no-check-update --shellcheck`) succeeded for all 37 inputs
+(35 runnable workflows and two shared components) with one warning: the
+accepted checkout-safety warning for the automatic build analyst, explained in
+[Runtime analysis inputs and native triage issue types](#runtime-analysis-inputs-and-native-triage-issue-types).
+The action-pin audit and the firewall (7), runtime (19), review-footer (2), and
+build-analysis checkout (6) contract suites pass. The authoring-warning suite
+also passes, except one publisher test that fails the same way on the unchanged
+base revision in a Windows CRLF checkout. The firewall, table, footer, and
+Dependabot-toolset workarounds were revalidated: each counterfactual still
+fails on v1.2.2 without its correction.
+
+The earlier v1.0.1 refresh compiled all 37 inputs and passed ShellCheck for
+2,100 shell resources, but initially reported 32
 existing authoring warnings: transitive `fetch-binlog`
 references, Dependabot alert tools not declared in the effective inventory,
 pre-extraction prompt references in the parallel-audit command, and persisted
 credentials in the trusted unskip publisher. The
 [authoring-contract fixes](#authoring-warning-runtime-contracts) resolve all 32
-without suppressing diagnostics or widening authored permissions. Full strict
-compilation and ShellCheck now pass with zero warnings; all 25 offline contract
-tests pass, with the same retained suite detecting the defects on the initial
-upgrade revision.
+without suppressing diagnostics or widening authored permissions, and v1.2.2
+reintroduces none of them.
 
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
@@ -479,18 +517,30 @@ publication limits remain unchanged. A queued creation is not publication;
 failed creation cannot provide an issue target for type assignment.
 
 The warning tracked by [#12385](https://github.com/microsoft/testfx/issues/12385)
-was instead a pre-agent apt mirror DNS failure, already fixed by
-[#12405](https://github.com/microsoft/testfx/pull/12405). Recent review runs with
-no jobs, such as [43187028649](https://github.com/microsoft/testfx/actions/runs/43187028649),
+is gh-aw's auto-managed detection-runs tracker. Its only recorded case,
+[Markdown Linter run 43034387593](https://github.com/microsoft/testfx/actions/runs/43034387593),
+was a pre-agent apt mirror DNS failure (`azure.archive.ubuntu.com`) already
+fixed by [#12405](https://github.com/microsoft/testfx/pull/12405); later runs
+are green, so the tracker is closed. Recent review runs with no jobs, such as
+[43187028649](https://github.com/microsoft/testfx/actions/runs/43187028649),
 expired while waiting for GitHub approval. Neither is evidence of a detected
-threat, and the approval gates remain intact.
+threat, and the approval gates remain intact. gh-aw recreates the tracker when a
+new detection-run failure occurs.
 
-gh-aw v1.2.2 was evaluated in an isolated snapshot on November 12, 2026.
-Its issue runtime still treats `Type` as a custom field, so an upgrade does
-not repair these authored contracts. The probe also introduces a checkout-safety
-warning for the existing verified PR-head checkout. This focused fix retains
-the aligned v1.0.1 compiler/runtime rather than broadening checkout policy or
-changing every workflow to mask the failures.
+gh-aw v1.2.2 was first evaluated in an isolated snapshot on November 12, 2026,
+and the repository now uses it (see
+[Compile on the pinned toolchain](#compile-on-the-pinned-toolchain-and-check-the-pins-afterwards)).
+Its issue runtime still treats `Type` as a custom field, so the
+`set_issue_type` contract above remains required. The release also reports one
+checkout-safety warning for the automatic build analyst. It is accepted, not
+suppressed: `check_run` carries no pull-request payload, so the compiler-managed
+PR checkout never runs. The verified-SHA checkout is followed by a sparse
+base-revision checkout and a pre-agent restore of every engine
+agent-configuration folder and file (plus `.mcp.json`), a superset of the
+`.agents`, `.github`, and `AGENTS.md` paths v1.2.2 protects. Later host
+steps run only trusted pinned or temporary scripts (the exporter uses
+`python3 -I`), and nothing builds the checked-out code. Restructuring the
+checkout would change runtime behavior without an end-to-end validation path.
 
 Local validation completed strict compilation and ShellCheck for all three
 changed workflows, syntax checks, a generated-control comparison, and the action-pin

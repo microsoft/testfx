@@ -82,6 +82,7 @@ internal partial class TestMethodInfo
 
         var result = new TestResult();
         invocationState ??= new();
+        invocationState.CaptureTestSynchronizationContext();
 
         Exception? testRunnerException = null;
         object? classInstance = null;
@@ -96,7 +97,9 @@ internal partial class TestMethodInfo
                 // After that, we invoke local cleanups (including Dispose) and finally global cleanups at last.
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestInitializations)
                 {
-                    TestFailedException? globalTestInitException = await InvokeGlobalInitializeMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    // Keep the test class creation, test initializations, and test method on the test's synchronization context
+                    // even when a global test initialization completes on another thread (#12561).
+                    TestFailedException? globalTestInitException = await InvokeGlobalInitializeMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(invocationState.IsRunningOnTestSynchronizationContext());
                     if (globalTestInitException is not null)
                     {
                         // The returned TestFailedException already carries the per-method timeout/cancellation
@@ -115,7 +118,7 @@ internal partial class TestMethodInfo
                 }
                 else if (_executionContext is null)
                 {
-                    classInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
+                    classInstance = CreateTestClassInstance(invocationState.TestSynchronizationContext, out ITestClassInstanceLease? classInstanceLease);
                     invocationState.PublishActivation(classInstance, classInstanceLease);
                     try
                     {
@@ -137,7 +140,7 @@ internal partial class TestMethodInfo
                     {
                         try
                         {
-                            classInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
+                            classInstance = CreateTestClassInstance(invocationState.TestSynchronizationContext, out ITestClassInstanceLease? classInstanceLease);
                             invocationState.PublishActivation(classInstance, classInstanceLease);
                             try
                             {
@@ -162,7 +165,7 @@ internal partial class TestMethodInfo
                 {
                     // Intentionally using ConfigureAwait(true) here to ensure the continuation is posted to the synchronization context.
                     // In case of WinUI's default synchronization context, this will ensure that the test method runs on the UI thread.
-                    if (await RunTestInitializeMethodAsync(classInstance, result, timeoutTokenSource).ConfigureAwait(true))
+                    if (await RunTestInitializeMethodAsync(classInstance, result, timeoutTokenSource, invocationState).ConfigureAwait(true))
                     {
                         arguments = GetArgumentsWithCancellationToken(arguments);
                         if (_executionContext is null)
@@ -285,4 +288,12 @@ internal partial class TestMethodInfo
 
         return testRunnerException is not null ? throw testRunnerException : result;
     }
+
+    // Lifecycle steps resume on a synchronization context only if it was already current when the test started
+    // (for example, a pumped UI or STA context) and is still current (#12561). A context installed later by user
+    // code might not be pumped, so resuming on it could deadlock.
+    private static bool IsRunningOnSynchronizationContext(SynchronizationContext? synchronizationContext)
+        => synchronizationContext is not null
+            && synchronizationContext.GetType() != typeof(SynchronizationContext)
+            && ReferenceEquals(SynchronizationContext.Current, synchronizationContext);
 }
