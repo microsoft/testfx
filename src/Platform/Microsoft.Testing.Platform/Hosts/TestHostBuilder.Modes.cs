@@ -222,11 +222,14 @@ internal sealed partial class TestHostBuilder
 
     private async Task<IReadOnlyList<IInvocationLifetimeHandler>?> BuildInvocationLifetimeHandlersIfOwnerAsync(BuildContext context)
     {
-        // Server mode is deferred to a later stage and never runs the hooks, and a process launched by the owner of
-        // the invocation (marker set) is only a participant.
+        // Server mode is deferred to a later stage and never runs the hooks. A process launched by the owner of the
+        // invocation (marker set) is only a participant, and so is any process launched by a test host controller:
+        // the controller identifies itself on the command line, which also reaches hosts that do not inherit its
+        // environment (for example an AUMID-activated packaged application).
         if (!((InvocationLifetimeManager)InvocationLifetime).HasHandlers
             || context.IsJsonRpcProtocol
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+            || context.TestHostControllerInfo.HasTestHostController
             || !RoslynString.IsNullOrEmpty(context.SystemEnvironment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_INVOCATIONLIFETIME_OWNER)))
         {
             return null;
