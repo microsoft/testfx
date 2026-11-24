@@ -39,7 +39,11 @@
         "ignore": [
           ".github/**",
           "docs/**",
-          "**/*.md"
+          "**/*.md",
+          "**/InternalAPI.Shipped.txt",
+          "**/InternalAPI.Unshipped.txt",
+          "**/PublicAPI.Shipped.txt",
+          "**/PublicAPI.Unshipped.txt"
         ],
         "forceAllTests": [
           "global.json",
@@ -54,6 +58,12 @@
           "test.sh",
           "eng/**",
           "src/**/Directory.Build.*",
+          "src/MSTest/TestFramework/PublicAPI/PublicAPI.Shipped.txt",
+          "src/MSTest/TestFramework/PublicAPI/PublicAPI.Unshipped.txt",
+          "src/MSTest/TestFramework/PublicAPI/net/PublicAPI.Shipped.txt",
+          "src/MSTest/TestFramework/PublicAPI/net/PublicAPI.Unshipped.txt",
+          "src/MSTest/TestFramework/PublicAPI/net10.0/PublicAPI.Shipped.txt",
+          "src/MSTest/TestFramework/PublicAPI/net10.0/PublicAPI.Unshipped.txt",
           "test/**/Directory.Build.*"
         ]
       },
