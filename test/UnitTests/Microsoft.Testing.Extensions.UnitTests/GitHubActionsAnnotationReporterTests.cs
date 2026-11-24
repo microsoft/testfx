@@ -304,6 +304,25 @@ public sealed class GitHubActionsAnnotationReporterTests
     }
 
     [TestMethod]
+    [DataRow(4, 2, "boom Historical context: flaked 2 of 4 prior run attempts within the latest 5 run attempts and 14-day history window.")]
+    [DataRow(5, 0, "boom Historical context: passed all 5 prior run attempts within the latest 5 run attempts and 14-day history window.")]
+    public void AppendHistoryContext_ReportsRunAttemptWindowForFlakyAndPassedRuns(int passCount, int flakyCount, string expected)
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount, failCount: 0, flakyCount: flakyCount),
+            historyWindowInRuns: 5);
+
+        string? message = reporter.AppendHistoryContext(
+            "test-id",
+            "Tests.Sample",
+            "Sample",
+            "boom",
+            exception: null);
+
+        Assert.AreEqual(expected, message);
+    }
+
+    [TestMethod]
     [DataRow(4, "boom")]
     [DataRow(5, "boom Historical context: passed all 5 prior runs within the 14-day history window.")]
     public void AppendHistoryContext_AppliesRegressionSampleBoundary(int passCount, string expected)

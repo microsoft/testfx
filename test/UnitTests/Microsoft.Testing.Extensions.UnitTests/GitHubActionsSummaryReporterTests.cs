@@ -55,6 +55,22 @@ public sealed partial class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task SessionFinishing_FailureDetailsIncludeConfiguredRunAttemptWindow()
+    {
+        using SummaryExecutionFixture fixture = new(exitCode: 2);
+        fixture.History.Stats = new GitHubActionsHistoryStats(passCount: 2, failCount: 1, flakyCount: 1);
+        fixture.History.HistoryWindowInRuns = 5;
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(new FailedTestNodeStateProperty("boom"), 1, false, "Tests.WithHistory"), TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains("Tests.WithHistory", markdown);
+        Assert.Contains("boom Historical context: failed 1 and flaked 1 of 3 prior run attempts within the latest 5 run attempts and 30-day history window.", markdown);
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_DataDrivenTest_PreservesHistoryIdentity()
     {
         using SummaryExecutionFixture fixture = new();
@@ -3713,7 +3729,7 @@ public sealed partial class GitHubActionsSummaryReporterTests
 
         public int HistoryWindowInDays => IsEnabled ? 30 : 0;
 
-        public int? HistoryWindowInRuns => null;
+        public int? HistoryWindowInRuns { get; set; }
 
         public bool TryGetStats(
             string testId,
