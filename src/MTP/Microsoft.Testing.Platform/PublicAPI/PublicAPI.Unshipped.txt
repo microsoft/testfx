@@ -1,4 +1,11 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.IComposableTestHostExecutionOrchestrator
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.IComposableTestHostExecutionOrchestrator.Stage.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage.Distribution = 200 -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage.Recovery = 400 -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage.Repetition = 300 -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage.Selection = 100 -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.TestHostExecutionOrchestratorStage
 *REMOVED*Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.HasExitedGracefully.get -> bool
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.HasReceivedTestHostCompletedMessage.get -> bool
 *REMOVED*Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty

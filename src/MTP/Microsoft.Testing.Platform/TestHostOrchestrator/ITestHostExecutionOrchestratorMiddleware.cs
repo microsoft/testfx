@@ -10,8 +10,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 /// <remarks>
 /// <para>
 /// This is a v1, initial composition boundary for test host execution orchestration. Exactly one
-/// <see cref="ITestHostExecutionOrchestrator"/> is still active per run; middleware wraps that single
-/// invocation and can only observe or short-circuit it, not replace it with a typed multi-run engine.
+/// <see cref="ITestHostExecutionOrchestrator"/> is active per process; middleware wraps the invocation
+/// in the outermost orchestrator process and can only observe or short-circuit it, not replace it with a
+/// typed multi-run engine.
 /// In particular, this version of the API does not provide repeat/retry-style re-invocation, sharding,
 /// phases, protocol metadata, or the ability to mutate identifiers such as attempt number, execution id,
 /// or instance id. The existing <c>--retry-failed-tests</c> orchestrator is not reentrant and is not

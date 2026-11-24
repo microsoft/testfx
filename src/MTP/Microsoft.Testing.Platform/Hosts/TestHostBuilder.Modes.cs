@@ -28,6 +28,12 @@ internal sealed partial class TestHostBuilder
 {
     private async Task<IHost> BuildHostAsync(BuildContext context)
     {
+        string? orchestratorChain = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN);
+        if (orchestratorChain is not null)
+        {
+            _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTORCHESTRATORCHAIN, null);
+        }
+
         if (context.EarlyHost is not null)
         {
             return context.EarlyHost;
@@ -93,9 +99,9 @@ internal sealed partial class TestHostBuilder
             return new InformativeCommandLineHost(0, context.ServiceProvider);
         }
 
-        return await TryBuildTestHostOrchestratorHostAsync(context).ConfigureAwait(false) is { } testHostOrchestratorHost
+        return await TryBuildTestHostOrchestratorHostAsync(context, orchestratorChain).ConfigureAwait(false) is { } testHostOrchestratorHost
             ? testHostOrchestratorHost
-            : await TryBuildTestHostControllersHostAsync(context).ConfigureAwait(false) is { } testHostControllerHost
+            : await TryBuildTestHostControllersHostAsync(context, orchestratorChain).ConfigureAwait(false) is { } testHostControllerHost
             ? testHostControllerHost
             : await BuildTestHostModeAsync(context).ConfigureAwait(false);
     }
@@ -123,17 +129,21 @@ internal sealed partial class TestHostBuilder
         return toolsHost;
     }
 
-    private async Task<IHost?> TryBuildTestHostOrchestratorHostAsync(BuildContext context)
+    private async Task<IHost?> TryBuildTestHostOrchestratorHostAsync(BuildContext context, string? orchestratorChain)
     {
-        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(context.ServiceProvider).ConfigureAwait(false);
+        if (context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        {
+            return null;
+        }
+
+        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(context.ServiceProvider, orchestratorChain).ConfigureAwait(false);
 
         // Middleware only wraps an existing orchestrator invocation (see
         // ITestHostExecutionOrchestratorMiddleware); it does not stand in for one. Registering middleware
         // without also registering exactly one orchestrator is a misconfiguration, not silently ignored.
         bool hasActiveMiddleware = testHostOrchestratorConfiguration.Middleware.Length > 0;
 
-        if ((testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0 && !hasActiveMiddleware)
-            || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0 && !hasActiveMiddleware)
         {
             return null;
         }
@@ -158,8 +168,9 @@ internal sealed partial class TestHostBuilder
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
         await context.ProxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
-        ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
-            await _testHostOrchestratorManager.BuildTestHostOrchestratorApplicationLifetimesAsync(context.ServiceProvider).ConfigureAwait(false);
+        ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes = testHostOrchestratorConfiguration.IsOutermostProcess
+            ? await _testHostOrchestratorManager.BuildTestHostOrchestratorApplicationLifetimesAsync(context.ServiceProvider).ConfigureAwait(false)
+            : [];
         context.ServiceProvider.AddServices(orchestratorLifetimes);
 
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostOrchestratorHost));
@@ -178,7 +189,7 @@ internal sealed partial class TestHostBuilder
         }
     }
 
-    private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context)
+    private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context, string? orchestratorChain)
     {
         if (ShouldSkipTestHostControllersHost(
             context.TestHostControllerInfo,
@@ -225,7 +236,10 @@ internal sealed partial class TestHostBuilder
             passiveNode,
             context.SystemEnvironment,
             context.LoggerFactory,
-            context.SystemClock);
+            context.SystemClock)
+        {
+            OrchestratorChain = orchestratorChain,
+        };
 
         await LogTestHostCreatedAsync(
             context.ServiceProvider,
