@@ -1713,3 +1713,67 @@ because `uap10.0` is a real NuGet TFM.
 Non-SDK (`packages.config`) classic UWP projects were not exercised. They
 may receive adapter satellites from both NuGet and the culture-policy
 `Content` items.
+
+### Non-SDK review follow-up
+
+A non-SDK MSBuild probe using the packed UWP adapter confirmed that
+`IsTestApplication=false` leaves both adapter DLLs in
+`ReferenceCopyLocalPaths`. The classic UWP targets did not import the existing
+non-SDK asset policy. The proposed correction shares that policy with classic
+UWP and avoids adding adapter `Content` for non-SDK projects, which already
+copy resolved references. It also retains the old explicit-reference behavior
+for upgraded `packages.config` projects, which do not automatically acquire
+new `lib` references. A synthetic probe is not proof of an AppX layout; real
+non-SDK UWP packaging and satellite behavior still require verification.
+
+The four `ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets` cases were
+independently discovered with `--list-tests` and then run with
+`--filter 'FullyQualifiedName~ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets'
+--report-trx`. The current package passed all four; the identical acceptance
+host and tests against an isolated **reconstructed** pre-fix package failed all
+four at the asset assertions (no skips). The failures included unfiltered
+satellites, adapter content duplicated with copy-local items, and missing
+adapter references for the simulated upgrade. The tested shipping package's
+SHA-256 was
+`C4AECB8312D3D9A8D366D943A3574D3D0B4C6CEDE78D18D0E8427D4F08B930C0`;
+the reconstructed control's was
+`E8B0224E4504B1695CD3FA4088A8DE3AA49753CBB4038ADD9250E490B68B18B0`.
+The broader focused acceptance run passed 32 tests with no skips.
+
+```powershell
+# Green: from the repository root, with the repo-local SDK on PATH.
+artifacts\bin\MSTest.Acceptance.IntegrationTests\Debug\net12.0\MSTest.Acceptance.IntegrationTests.exe `
+  --filter 'FullyQualifiedName~ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets' `
+  --report-trx --results-directory artifacts\TestResults\uwp-policy-green3
+# Exit 0: 4 passed, 0 failed, 0 skipped.
+
+# Red: $red is the isolated session files\uwp-policy-red directory.
+& "$red\artifacts\bin\MSTest.Acceptance.IntegrationTests\Debug\net12.0\MSTest.Acceptance.IntegrationTests.exe" `
+  --filter 'FullyQualifiedName~ClassicUwpNonSdkAssetPolicy_FiltersResolvedAdapterAssets' `
+  --report-trx --results-directory "$red\results3"
+# Exit 2: 0 passed, 4 failed at asset assertions, 0 skipped.
+```
+
+A separate non-SDK UWP `PackageReference` app restored that exact shipping
+package into an isolated cache and successfully produced an unsigned native
+x64 MSIX with Visual Studio MSBuild and `SatelliteResourceLanguages=fr`.
+Its real resolved copy-local items contained both adapter DLLs and only their
+two French satellites, with no adapter `Content` items. Separate
+`PrepareForBuild;ResolveReferences` runs confirmed that disabling resource
+copy leaves only the two main adapter DLLs, and `IsTestApplication=false`
+leaves no adapter items. These are build and item-policy checks, not a test
+run inside the packaged app. The generated native MSIX contains the compiled
+app rather than standalone adapter DLLs; it does not prove runtime satellite
+loading. A non-native packaging attempt stopped at the Windows SDK's
+framework-injection check. A real `packages.config` AppX upgrade and its
+VSTest satellite-duplication behavior remain unverified.
+
+```powershell
+# $probe is the session files\uwp-nonsdk-appx directory;
+# $msbuild is the Visual Studio 18 Insiders MSBuild.exe.
+& $msbuild "$probe\PolicyApp.csproj" /restore /p:Configuration=Debug `
+  /p:Platform=x64 /p:PlatformTarget=x64 /p:UseDotNetNativeToolchain=true `
+  /p:SatelliteResourceLanguages=fr /p:GenerateAppxPackageOnBuild=true `
+  /bl:"$probe\build6.binlog" /v:minimal
+# Exit 0; native compilation emitted missing-assembly and runtime-directives warnings.
+```

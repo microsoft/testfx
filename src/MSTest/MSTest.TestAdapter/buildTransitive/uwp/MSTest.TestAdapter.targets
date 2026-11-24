@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="$(MSBuildThisFileDirectory)MSTest.TestAdapter.AssetPolicy.targets" />
+
   <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
   <PropertyGroup>
     <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
@@ -37,7 +39,7 @@
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.CoreUtilities'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.TestPlatform.PlatformAbstractions'
                  OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'Microsoft.VisualStudio.TestPlatform.ObjectModel'
-                 OR ( '$(IsTestApplication)' != 'false'
+                 OR ( '$(UsingMicrosoftNETSdk)' == 'true' AND '$(IsTestApplication)' != 'false'
                    AND ( '%(_MSTestUwpRuntimeDependency.Filename)' == 'MSTest.TestAdapter'
                      OR '%(_MSTestUwpRuntimeDependency.Filename)' == 'MSTestAdapter.PlatformServices' ) ) ">
         <Link>%(_MSTestUwpRuntimeDependency.Filename)%(_MSTestUwpRuntimeDependency.Extension)</Link>

@@ -138,6 +138,8 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net11.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
+    <None Include="buildTransitive\MSTest.TestAdapter.AssetPolicy.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\MSTest.TestAdapter.AssetPolicy.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
   </ItemGroup>
@@ -148,6 +150,7 @@ $(CommonProductDescription)]]></PackageDescription>
 
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net462\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net462\" />
+    <None Include="buildTransitive\MSTest.TestAdapter.AssetPolicy.targets" Pack="true" PackagePath="buildTransitive\net462\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net462\" />
   </ItemGroup>
 
@@ -201,6 +204,7 @@ $(CommonProductDescription)]]></PackageDescription>
       <TfmSpecificPackageFile Include="$(TargetDir)MSTestAdapter.PlatformServices.dll" PackagePath="lib\$(UwpMinimum)\" />
       <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\uwp\MSTest.TestAdapter.props" PackagePath="buildTransitive\uap10.0\" />
       <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\uwp\MSTest.TestAdapter.targets" PackagePath="buildTransitive\uap10.0\" />
+      <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\MSTest.TestAdapter.AssetPolicy.targets" PackagePath="buildTransitive\uap10.0\" />
       <TfmSpecificPackageFile Include="$(MSBuildProjectDirectory)\buildTransitive\Parallelize.targets" PackagePath="buildTransitive\uap10.0\" />
 
       <!-- Localized satellites, packed under lib/uap10.0.16299/<culture>/ (the culture folder comes from RecursiveDir). -->
